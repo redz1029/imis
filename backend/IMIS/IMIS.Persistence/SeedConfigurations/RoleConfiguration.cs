@@ -10,7 +10,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
             new IdentityRole
             {
                 Id = "b5fdea0d-3825-4cba-82f1-e1f570c00edc",
-                Name = "Administrator",  // Direct string usage
+                Name = "Administrator", 
                 NormalizedName = "ADMINISTRATOR",
                 ConcurrencyStamp = Guid.NewGuid().ToString(),
             }

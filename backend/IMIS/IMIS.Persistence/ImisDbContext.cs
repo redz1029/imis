@@ -23,7 +23,7 @@ public class ImisDbContext : IdentityDbContext
     {
         optionsBuilder
             .ConfigureWarnings(warnings =>
-                warnings.Ignore(RelationalEventId.PendingModelChangesWarning)); // Ignore the pending model changes warning
+                warnings.Ignore(RelationalEventId.PendingModelChangesWarning)); 
     }
 
 }

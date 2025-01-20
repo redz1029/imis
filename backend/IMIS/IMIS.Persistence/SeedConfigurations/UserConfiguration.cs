@@ -13,13 +13,13 @@ public class UserConfiguration : IEntityTypeConfiguration<IdentityUser>
 
         builder.HasData(new IdentityUser
         {
-            Id = "475e45a8-4dd9-425c-b405-b6598ef700fd", // Use a fixed GUID or generate one
+            Id = "475e45a8-4dd9-425c-b405-b6598ef700fd",
             UserName = defaultAdminUsername,
             NormalizedUserName = defaultAdminUsername.ToUpper(),
             Email = defaultAdminEmail.ToUpper(),
             NormalizedEmail = defaultAdminEmail.ToUpper(),
-            PasswordHash = hasher.HashPassword(null, "Abc123*@"), // Hash the default password
-            ConcurrencyStamp = Guid.NewGuid().ToString() // For concurrency tracking
+            PasswordHash = hasher.HashPassword(null, "Abc123*@"),
+            ConcurrencyStamp = Guid.NewGuid().ToString() 
         });
     }
 }
