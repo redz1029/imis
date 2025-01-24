@@ -3,45 +3,48 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
-public class ImisDbContext : IdentityDbContext
+namespace IMIS.Persistence
 {
-    public DbSet<Auditor> Auditors { get; set; }
-    public DbSet<Office> Offices { get; set; }
-    public DbSet<AuditorOffices> AuditorOffices { get; set; }
-
-    public ImisDbContext(DbContextOptions<ImisDbContext> options)
-        : base(options)  // Pass the options to the base DbContext constructor
+    public class ImisDbContext : IdentityDbContext
     {
+        public DbSet<Auditor> Auditors { get; set; }
+        public DbSet<Office> Offices { get; set; }
+        public DbSet<AuditorOffices> AuditorOffices { get; set; }
+
+        public ImisDbContext(DbContextOptions<ImisDbContext> options)
+            : base(options)  // Pass the options to the base DbContext constructor
+        {
+        }
+
+        protected override void OnModelCreating(ModelBuilder builder)
+        {
+            builder.Entity<AuditorOffices>()
+                .HasKey(ao => new { ao.AuditorId, ao.OfficeId });
+
+            builder.Entity<AuditorOffices>()
+                .HasOne(ao => ao.Auditor)
+                .WithMany(a => a.AuditorOffices)
+                .HasForeignKey(a => a.AuditorId);
+
+            builder.Entity<AuditorOffices>()
+               .HasOne(ao => ao.Office)
+               .WithMany(a => a.AuditorOffices)
+               .HasForeignKey(a => a.OfficeId);
+
+            base.OnModelCreating(builder);
+
+            // Apply seed configurations
+            builder.ApplyConfiguration(new RoleConfiguration());
+            builder.ApplyConfiguration(new UserConfiguration());
+            builder.ApplyConfiguration(new UserRoleConfiguration());
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder
+                .ConfigureWarnings(warnings =>
+                    warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
+        }
+
     }
-
-    protected override void OnModelCreating(ModelBuilder builder)
-    {
-        builder.Entity<AuditorOffices>()
-            .HasKey(ao => new { ao.AuditorId, ao.OfficeId });
-
-        builder.Entity<AuditorOffices>()
-            .HasOne(ao => ao.Auditor)
-            .WithMany(a => a.AuditorOffices)
-            .HasForeignKey(a => a.AuditorId);
-
-        builder.Entity<AuditorOffices>()
-           .HasOne(ao => ao.Office)
-           .WithMany(a => a.AuditorOffices)
-           .HasForeignKey(a => a.OfficeId);
-
-        base.OnModelCreating(builder);
-
-        // Apply seed configurations
-        builder.ApplyConfiguration(new RoleConfiguration());
-        builder.ApplyConfiguration(new UserConfiguration());
-        builder.ApplyConfiguration(new UserRoleConfiguration());
-    }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    {
-        optionsBuilder
-            .ConfigureWarnings(warnings =>
-                warnings.Ignore(RelationalEventId.PendingModelChangesWarning)); 
-    }
-
 }
