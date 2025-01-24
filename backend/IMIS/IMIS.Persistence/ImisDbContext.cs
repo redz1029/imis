@@ -1,9 +1,14 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using IMIS.Domain;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 public class ImisDbContext : IdentityDbContext
 {
+    public DbSet<Auditor> Auditors { get; set; }
+    public DbSet<Office> Offices { get; set; }
+    public DbSet<AuditorOffices> AuditorOffices { get; set; }
+
     public ImisDbContext(DbContextOptions<ImisDbContext> options)
         : base(options)  // Pass the options to the base DbContext constructor
     {
@@ -11,6 +16,19 @@ public class ImisDbContext : IdentityDbContext
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        builder.Entity<AuditorOffices>()
+            .HasKey(ao => new { ao.AuditorId, ao.OfficeId });
+
+        builder.Entity<AuditorOffices>()
+            .HasOne(ao => ao.Auditor)
+            .WithMany(a => a.AuditorOffices)
+            .HasForeignKey(a => a.AuditorId);
+
+        builder.Entity<AuditorOffices>()
+           .HasOne(ao => ao.Office)
+           .WithMany(a => a.AuditorOffices)
+           .HasForeignKey(a => a.OfficeId);
+
         base.OnModelCreating(builder);
 
         // Apply seed configurations

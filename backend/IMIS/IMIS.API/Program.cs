@@ -1,8 +1,8 @@
-using IMIS.Infrastructure.Auths;
-using IMIS.Persistence;
+using Carter;
+using DotNetEnv;
+using IMIS.Persistence.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using DotNetEnv;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,7 +14,8 @@ if (string.IsNullOrWhiteSpace(sqlServerConnectionString))
 {
     throw new InvalidOperationException("SQL_SERVER_CONN environment variable is not set or empty.");
 }
-
+builder.Services.AddCarter();
+builder.Services.AddPersistence(); // Insject Persistence Layer
 // Add services to the container
 builder.Services.AddDbContext<ImisDbContext>(options => options.UseSqlServer(sqlServerConnectionString));
 
@@ -38,7 +39,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthorization();
 
-app.MapControllers();
+app.MapCarter();
 app.MapIdentityApi<IdentityUser>(); // Maps Identity API endpoints
 
 app.Run();
