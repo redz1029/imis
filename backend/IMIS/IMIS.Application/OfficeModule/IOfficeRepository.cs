@@ -10,7 +10,6 @@ namespace IMIS.Application.OfficeModule
 {
     public interface IOfficeRepository : IRepository<Office, int>
     {
-        Task<Office> GetById(int id, CancellationToken cancellationToken);
         Task<IEnumerable<Office>> GetAll(CancellationToken cancellationToken);
     }
 }

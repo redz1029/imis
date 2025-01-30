@@ -12,10 +12,9 @@ namespace IMIS.Application.AuditorModule
 {
     public class AuditorDto : BaseDto<Auditor, int>
     {
-        public string Name {  get; set; }
-        public bool IsActive { get; set; }
-        [Timestamp]
-        public virtual byte[]? RowVersion { get; init; }
+        public required string Name {  get; set; }
+        public required bool IsActive { get; set; }
+        public bool IsTeamLeader { get; set; }
 
         public AuditorDto() { }
 
@@ -27,7 +26,6 @@ namespace IMIS.Application.AuditorModule
                 Id = auditor.Id;
                 Name = auditor.Name;
                 IsActive = auditor.IsActive;
-                RowVersion = auditor.RowVersion;
             }
         }
 
