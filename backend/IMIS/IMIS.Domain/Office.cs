@@ -6,6 +6,7 @@ namespace IMIS.Domain
     {
         public required string Name { get; set; }
         public required bool IsActive { get; set; }
-        public IEnumerable<AuditorOffices> AuditorOffices { get; set; }
+        public IEnumerable<AuditorOffices>? AuditorOffices { get; set; }
+        public IEnumerable<AuditableOffices>? AuditableOffices { get; set; }
     }
 }
