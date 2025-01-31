@@ -1,5 +1,9 @@
 ﻿using IMIS.Application.AuditorModule;
+using IMIS.Application.OfficeModule;
+using IMIS.Application.TeamModule;
 using IMIS.Persistence.AuditorModule;
+using IMIS.Persistence.OfficeModule;
+using IMIS.Persistence.TeamModule;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace IMIS.Persistence.DependencyInjection
@@ -10,6 +14,12 @@ namespace IMIS.Persistence.DependencyInjection
         {
             services.AddScoped<IAuditorRepository, AuditorRepository>();
             services.AddScoped<IAuditorService, AuditorService>();
+
+            services.AddScoped<IOfficeRepository, OfficeRepository>();
+            services.AddScoped<IOfficeService, OfficeService>();
+
+            services.AddScoped<ITeamRepository, TeamRepository>();
+            services.AddScoped<ITeamService, TeamService>();
             return services;
         }
     }

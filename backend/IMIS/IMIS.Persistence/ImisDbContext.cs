@@ -13,7 +13,8 @@ namespace IMIS.Persistence
         public DbSet<Team> Teams { get; set; }
         public DbSet<AuditorTeams> AuditoTeams { get; set; }
         public DbSet<AuditSchedule> AuditSchedules { get; set; }
-        public DbSet<AuditSchduleDetails> AuditSchduleDetails { get; set; }
+        public DbSet<AuditScheduleDetails> AuditSchduleDetails { get; set; }
+        public DbSet<AuditableOffices> AuditableOffices { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)  // Pass the options to the base DbContext constructor
@@ -47,6 +48,24 @@ namespace IMIS.Persistence
                 .HasOne<Auditor>(a => a.Auditor)
                 .WithMany(at => at.AuditorTeams)
                 .HasForeignKey(at => at.AuditorId);
+
+            builder.Entity<AuditableOffices>()
+                .HasKey(ao => new { ao.AuditScheduleId, ao.OfficeId });
+
+            builder.Entity<AuditableOffices>()
+                .HasOne(ao => ao.AuditSchedule)
+                .WithMany(a => a.AuditableOffices)
+                .HasForeignKey(a => a.AuditScheduleId);
+
+            builder.Entity<AuditableOffices>()
+                .HasOne(ao => ao.Office)
+                .WithMany(o => o.AuditableOffices)
+                .HasForeignKey(ao => ao.OfficeId);
+
+            builder.Entity<AuditScheduleDetails>()
+                .HasOne(asd => asd.AuditSchedule)
+                .WithMany(a => a.AuditSchduleDetails)
+                .HasForeignKey(asd => asd.AuditScheduleId);
 
             base.OnModelCreating(builder);
 

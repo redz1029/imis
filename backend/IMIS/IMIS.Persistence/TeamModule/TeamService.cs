@@ -43,9 +43,9 @@ namespace IMIS.Persistence.TeamModule
                     {
                         auditorTeams.Add(new AuditorTeams() { AuditorId = auditor.Id, TeamId = team.Id, IsTeamLeader = auditor.IsTeamLeader });
                     }
-                    _teamRepository.Add(team);
-                    await _teamRepository.SaveOrUpdateAsync(team, cancellationToken).ConfigureAwait(false);
                 }
+                _teamRepository.Add(team);
+                await _teamRepository.SaveOrUpdateAsync(team, cancellationToken).ConfigureAwait(false);
             }
         }
     }
