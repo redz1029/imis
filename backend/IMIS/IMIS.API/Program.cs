@@ -12,6 +12,7 @@ using IMIS.Persistence;
 using IMIS.Persistence.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,7 +39,8 @@ builder.Services.AddDbContext<ImisDbContext>(options =>
     options.UseSqlServer(sqlServerConnectionString));
 
 // Identity Configuration
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+builder.Services.AddIdentityCore<IdentityUser>()
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ImisDbContext>()
     .AddDefaultTokenProviders();
 
@@ -74,12 +76,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddCarter();
 builder.Services.AddPersistence();
 
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -88,12 +88,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAllOrigins");  
+app.MapCustomIdentityApi<IdentityUser>(); // Maps Identity API endpoints
+app.MapCarter();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapCarter();
-app.MapIdentityApi<IdentityUser>(); // Maps Identity API endpoints
 
 app.Run();
