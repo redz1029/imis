@@ -6,6 +6,11 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
 using IMIS.Infrastructure.Auths;
+using Carter;
+using DotNetEnv;
+using IMIS.Persistence.DependencyInjection;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -65,6 +70,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddCarter();
+builder.Services.AddPersistence();
+
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -84,7 +92,7 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapCustomIdentityApi<IdentityUser>(); 
-
+app.MapCarter();
+app.MapIdentityApi<IdentityUser>(); // Maps Identity API endpoints
 
 app.Run();
