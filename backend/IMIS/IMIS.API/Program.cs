@@ -1,12 +1,10 @@
 using IMIS.Presentation.UserModule;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using DotNetEnv;
-using Microsoft.AspNetCore.Routing.Patterns;
 using IMIS.Infrastructure.Auths;
 
 var builder = WebApplication.CreateBuilder(args);
