@@ -2,7 +2,7 @@
 
 namespace IMIS.Application.AuditScheduleModule
 {
-    public interface IAuditorScheduleService : IService
+    public interface IAuditScheduleService : IService
     {
         Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<List<AuditScheduleDto>?> GetAllActiveAsync(CancellationToken cancellationToken);
