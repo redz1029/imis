@@ -41,7 +41,7 @@ namespace IMIS.Presentation.AuditorModule
 
             app.MapGet("/{id}", async (int id, IAuditorService service, CancellationToken cancellationToken) =>
             {
-                var auditor = await service.GetById(id, cancellationToken).ConfigureAwait(false);
+                var auditor = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 return auditor != null ? Results.Ok(auditor) : Results.NotFound();
             })
             .WithTags(_auditorTag);
