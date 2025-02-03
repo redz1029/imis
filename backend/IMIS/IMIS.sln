@@ -25,10 +25,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IMIS.API", "IMIS.API\IMIS.A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Base", "..\..\..\DotNetBase\Base\Base.csproj", "{7EE3C3FB-8C65-44D4-8FE5-4D18567B86FD}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C9D0A3F8-9EFA-47C3-9C84-CB5BE8A6753B}"
-	ProjectSection(SolutionItems) = preProject
-		.editorconfig = .editorconfig
-	EndProjectSection
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{D43630E9-65D1-4392-8106-11FCA182CC96}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImisTest", "ImisTest\ImisTest.csproj", "{17FA4562-8FCA-4135-B063-9602CE0BA994}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -64,6 +63,10 @@ Global
 		{7EE3C3FB-8C65-44D4-8FE5-4D18567B86FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EE3C3FB-8C65-44D4-8FE5-4D18567B86FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EE3C3FB-8C65-44D4-8FE5-4D18567B86FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{17FA4562-8FCA-4135-B063-9602CE0BA994}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{17FA4562-8FCA-4135-B063-9602CE0BA994}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{17FA4562-8FCA-4135-B063-9602CE0BA994}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{17FA4562-8FCA-4135-B063-9602CE0BA994}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -79,5 +82,6 @@ Global
 		{4E5EF4BF-2C49-4BFB-B840-37877C80C687} = {28B8AF12-94E9-4E81-AE8F-1F411BEDB007}
 		{59C54FAB-E3EF-483C-95FF-2B94EC4C33C7} = {F107D670-78B8-4D2B-B19E-5FD896264937}
 		{7EE3C3FB-8C65-44D4-8FE5-4D18567B86FD} = {30EF2D65-D96F-417E-9B48-94E355D6D4D1}
+		{17FA4562-8FCA-4135-B063-9602CE0BA994} = {D43630E9-65D1-4392-8106-11FCA182CC96}
 	EndGlobalSection
 EndGlobal
