@@ -5,7 +5,7 @@ using IMIS.Domain;
 
 namespace IMIS.Persistence.AuditScheduleModule
 {
-    public class AuditScheduleService(IAuditScheduleRepository auditScheduleRepository, ITeamRepository teamRepository) : IAuditorScheduleService
+    public class AuditScheduleService(IAuditScheduleRepository auditScheduleRepository, ITeamRepository teamRepository) : IAuditScheduleService
     {
         private readonly IAuditScheduleRepository _auditScheduleRepository = auditScheduleRepository;
         private readonly ITeamRepository _teamRepository = teamRepository;

@@ -38,7 +38,7 @@ namespace IMIS.Persistence.TeamModule
             {
                 if (tDto?.Auditors?.Count > 0)
                 {
-                    List<AuditorTeams> auditorTeams = new List<AuditorTeams>();
+                    List<AuditorTeams> auditorTeams = [];
                     foreach (var auditor in tDto.Auditors)
                     {
                         auditorTeams.Add(new AuditorTeams() { AuditorId = auditor.Id, TeamId = team.Id, IsTeamLeader = auditor.IsTeamLeader });
