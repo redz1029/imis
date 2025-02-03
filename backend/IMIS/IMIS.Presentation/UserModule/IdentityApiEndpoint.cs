@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
-using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
@@ -13,6 +10,9 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.AspNetCore.Authorization;
 
 namespace IMIS.Presentation.UserModule
 {
@@ -22,18 +22,21 @@ namespace IMIS.Presentation.UserModule
         private const string IdentityGroup = "Identity";
 
         public static IEndpointConventionBuilder MapCustomIdentityApi<TUser>(this IEndpointRouteBuilder endpoints)
-            where TUser : IdentityUser, new()
+        where TUser : IdentityUser, new()
         {
             var routeGroup = endpoints.MapGroup("").WithTags(IdentityGroup);
 
+            // Register endpoints
             routeGroup.MapPost("/register", (UserRegistrationDto registration, IServiceProvider sp) => RegisterUser<TUser>(registration, sp));
             routeGroup.MapPost("/login", LoginUser<TUser>);
-            routeGroup.MapPut("/changePassword", ChangePassword<TUser>).RequireAuthorization();
+            routeGroup.MapPut("/changePassword", ChangePassword<TUser>);
             routeGroup.MapPost("/refresh", RefreshToken<TUser>);
             routeGroup.MapDelete("/revokeRefreshToken", RevokeRefreshToken<TUser>);
+
             return routeGroup;
         }
 
+        // User Registration method
         private static async Task<IResult> RegisterUser<TUser>(UserRegistrationDto registration, IServiceProvider sp)
             where TUser : IdentityUser, new()
         {
@@ -56,6 +59,7 @@ namespace IMIS.Presentation.UserModule
             return Results.Ok("User registered successfully.");
         }
 
+        // User Login method - Returns JWT token
         private static async Task<IResult> LoginUser<TUser>(
             [FromBody] UserLoginDto login,
             IServiceProvider sp) where TUser : IdentityUser
@@ -87,14 +91,19 @@ namespace IMIS.Presentation.UserModule
             });
         }
 
+       
         private static async Task<IResult> ChangePassword<TUser>(
             [FromBody] ChangePasswordRequest request,
-            IServiceProvider sp) where TUser : IdentityUser
+            [FromServices] UserManager<TUser> userManager,
+            HttpContext httpContext) where TUser : IdentityUser
         {
-            Console.WriteLine($"ChangePassword called for username: {request.Username}");
+           
 
-            var userManager = sp.GetRequiredService<UserManager<TUser>>();
-            var user = await userManager.FindByIdAsync(request.Username);
+            var username = request.Username;
+
+            Console.WriteLine($"ChangePassword called for username: {username}");
+
+            var user = await userManager.FindByNameAsync(username);  // Find user by username
 
             if (user == null)
             {
@@ -102,6 +111,7 @@ namespace IMIS.Presentation.UserModule
                 return Results.NotFound("User not found.");
             }
 
+            // Extract current password and new password
             var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
 
             if (!result.Succeeded)
@@ -111,9 +121,11 @@ namespace IMIS.Presentation.UserModule
             }
 
             Console.WriteLine("Password changed successfully.");
-            return Results.Ok();
+            return Results.Ok("Password changed successfully.");
         }
 
+
+        // Refresh Token method
         private static async Task<IResult> RefreshToken<TUser>(
             [FromBody] UserRefreshDto refresh,
             IServiceProvider sp)
@@ -140,6 +152,7 @@ namespace IMIS.Presentation.UserModule
             return Results.Ok(new { user.Id, accessToken, refreshToken = newRefreshToken });
         }
 
+        // Revoke Refresh Token method
         private static async Task<IResult> RevokeRefreshToken<TUser>(
             [FromBody] UserRefreshDto refresh,
             IServiceProvider sp)
@@ -160,4 +173,3 @@ namespace IMIS.Presentation.UserModule
         }
     }
 }
-

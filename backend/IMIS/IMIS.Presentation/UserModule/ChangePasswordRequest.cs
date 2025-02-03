@@ -14,9 +14,5 @@ namespace IMIS.Presentation.UserModule
         public string NewPassword { get; set; }
 
 
-
-
-
-
    }
 }

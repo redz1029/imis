@@ -10,7 +10,7 @@ namespace IMIS.Infrastructure.Auths
 {
     public static class TokenUtils
     {
-        // Static properties for configuration
+        
         public static string? ExpInMinutes { get; set; }
         public static string? ExpInDays { get; set; }
         public static string? SecretKey { get; set; }

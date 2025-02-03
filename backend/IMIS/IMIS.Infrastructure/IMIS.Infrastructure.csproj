@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\DotNetBase\Base\Base.csproj" />
+    <ProjectReference Include="..\..\..\..\DotNetBase\Base\Base.csproj" />
     <ProjectReference Include="..\IMIS.Application\IMIS.Application.csproj" />
     <ProjectReference Include="..\IMIS.Domain\IMIS.Domain.csproj" />
   </ItemGroup>

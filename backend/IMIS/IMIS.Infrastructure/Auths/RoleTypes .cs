@@ -10,6 +10,6 @@ namespace IMIS.Infrastructure.Auths
     {
         public const string Administrator = "Administrator";
         public const string LdnaUser = "LdnaUser";
-        // Add more roles as needed
+       
     }
 }

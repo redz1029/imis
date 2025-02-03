@@ -9,13 +9,12 @@ using DotNetEnv;
 using Microsoft.AspNetCore.Routing.Patterns;
 using IMIS.Infrastructure.Auths;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 
 Env.Load();
 
-
+// Load environment variables for SQL Server connection and JWT settings
 var sqlServerConnectionString = Environment.GetEnvironmentVariable("SQL_SERVER_CONN")
     ?? throw new InvalidOperationException("SQL_SERVER_CONN environment variable is not set or empty.");
 
@@ -28,16 +27,16 @@ TokenUtils.Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
 TokenUtils.SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
     ?? throw new InvalidOperationException("JWT_SECRET_KEY environment variable is not set or empty.");
 
+// Register services in the DI container
 
-// Ni modify bago lang
+// SQL Server DB Context
 builder.Services.AddDbContext<ImisDbContext>(options =>
     options.UseSqlServer(sqlServerConnectionString));
 
+// Identity Configuration
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ImisDbContext>()
     .AddDefaultTokenProviders();
-
-
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -54,7 +53,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Authorization Setup
 builder.Services.AddAuthorization();
+
+// Add CORS support: Configure the allowed origins
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins", builder =>
+    {
+        builder.AllowAnyOrigin()  
+               .AllowAnyMethod()  
+               .AllowAnyHeader(); 
+    });
+});
+
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -67,10 +80,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1"));
 }
 
+app.UseCors("AllowAllOrigins");  
+
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapCustomIdentityApi<IdentityUser>();
-app.Run();
+app.MapCustomIdentityApi<IdentityUser>(); 
 
+
+app.Run();
