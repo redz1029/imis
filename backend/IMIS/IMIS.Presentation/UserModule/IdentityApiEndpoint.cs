@@ -50,7 +50,7 @@ namespace IMIS.Presentation.UserModule
             if (!result.Succeeded)
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
-            Console.WriteLine($"User registered successfully: {registration.Username}");
+            
             return Results.Ok("User registered successfully.");
         }
 
@@ -65,7 +65,7 @@ namespace IMIS.Presentation.UserModule
             var user = await userManager.FindByNameAsync(login.Username).ConfigureAwait(false);
             if (user == null || !await userManager.CheckPasswordAsync(user, login.Password))
             {
-                Console.WriteLine($"Login failed for username: {login.Username}");
+              
                 return Results.Json(new { message = "Invalid username or password." }, statusCode: StatusCodes.Status401Unauthorized);
             }
 
@@ -77,7 +77,6 @@ namespace IMIS.Presentation.UserModule
             await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "access_token", accessToken).ConfigureAwait(false);
             await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "refresh_token", refreshToken).ConfigureAwait(false);
 
-            Console.WriteLine($"User logged in successfully: {login.Username}");
             return Results.Ok(new
             {
                 user.Id,
@@ -96,13 +95,12 @@ namespace IMIS.Presentation.UserModule
 
             var username = request.Username;
 
-            Console.WriteLine($"ChangePassword called for username: {username}");
 
             var user = await userManager.FindByNameAsync(username);  // Find user by username
 
             if (user == null)
             {
-                Console.WriteLine("User not found.");
+              
                 return Results.NotFound("User not found.");
             }
 
@@ -111,11 +109,11 @@ namespace IMIS.Presentation.UserModule
 
             if (!result.Succeeded)
             {
-                Console.WriteLine("Password change failed.");
+               
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
             }
 
-            Console.WriteLine("Password changed successfully.");
+         
             return Results.Ok("Password changed successfully.");
         }
 
@@ -132,7 +130,7 @@ namespace IMIS.Presentation.UserModule
             var user = await userManager.FindByIdAsync(refresh.Id);
             if (user == null)
             {
-                Console.WriteLine("User not found for token refresh.");
+              
                 return Results.NotFound("User not found.");
             }
 
@@ -143,7 +141,7 @@ namespace IMIS.Presentation.UserModule
             await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "access_token", accessToken);
             await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "refresh_token", newRefreshToken);
 
-            Console.WriteLine("Token refreshed successfully.");
+            
             return Results.Ok(new { user.Id, accessToken, refreshToken = newRefreshToken });
         }
 
@@ -158,12 +156,12 @@ namespace IMIS.Presentation.UserModule
 
             if (user == null)
             {
-                Console.WriteLine("User not found for revoking refresh token.");
+              
                 return Results.NotFound("User not found.");
             }
 
             await signInManager.UserManager.RemoveAuthenticationTokenAsync(user, "IMIS_API", "refresh_token");
-            Console.WriteLine("Refresh token revoked successfully.");
+          
             return Results.Ok("Refresh token revoked successfully.");
         }
     }
