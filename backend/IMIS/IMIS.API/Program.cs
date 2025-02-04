@@ -7,11 +7,8 @@ using System.Text;
 using DotNetEnv;
 using IMIS.Infrastructure.Auths;
 using Carter;
-using DotNetEnv;
 using IMIS.Persistence;
 using IMIS.Persistence.DependencyInjection;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +91,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapCarter();
-app.MapIdentityApi<IdentityUser>(); // Maps Identity API endpoints
-
+//app.MapIdentityApi<IdentityUser>(); // Maps Identity API endpoints
+app.MapCustomIdentityApi<IdentityUser>(); // Maps Identity API endpoints
 app.Run();

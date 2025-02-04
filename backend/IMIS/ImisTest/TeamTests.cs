@@ -1,6 +1,6 @@
 ﻿using Bogus;
 using IMIS.Application.TeamModule;
-using IMIS.Persistence.TeamModule;
+//using IMIS.Persistence.TeamModule;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,8 +16,8 @@ namespace ImisTest
         {
             base.Setup();
 
-            _services.AddScoped<ITeamRepository, TeamRepository>();
-            _services.AddScoped<ITeamService, TeamService>();
+            _services.AddScoped<ITeamRepository, IMIS.Persistence.TeamModule.TeamRepository>();
+            _services.AddScoped<ITeamService, IMIS.Persistence.TeamModule.TeamService>();
 
             BuildServiceProvider();
 
