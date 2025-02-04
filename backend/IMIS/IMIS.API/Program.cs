@@ -7,12 +7,8 @@ using System.Text;
 using DotNetEnv;
 using IMIS.Infrastructure.Auths;
 using Carter;
-using DotNetEnv;
 using IMIS.Persistence;
 using IMIS.Persistence.DependencyInjection;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +90,4 @@ app.MapCarter();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
-
-
 app.Run();

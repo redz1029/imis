@@ -259,7 +259,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                             IsActive = officeDto.IsActive 
                         };
 
-                        _auditScheduleRepository.GetDbContext().Attach(office);
+                        object value = _auditScheduleRepository.GetDbContext().Attach(office);
                         offices.Add(new AuditableOffices() 
                         { 
                             AuditSchedule = auditSchedule, 

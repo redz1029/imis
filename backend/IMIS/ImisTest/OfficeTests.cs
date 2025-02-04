@@ -1,6 +1,6 @@
 using Bogus;
 using IMIS.Application.OfficeModule;
-using IMIS.Persistence.OfficeModule;
+//using IMIS.Persistence.OfficeModule;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -16,8 +16,8 @@ namespace ImisTest
         {
             base.Setup();
 
-            _services.AddScoped<IOfficeRepository, OfficeRepository>();
-            _services.AddScoped<IOfficeService, OfficeService>();
+            _services.AddScoped<IOfficeRepository, IMIS.Persistence.OfficeModule.OfficeRepository>();
+            _services.AddScoped<IOfficeService, IMIS.Persistence.OfficeModule.OfficeService>();
 
             BuildServiceProvider();
 

@@ -16,6 +16,12 @@ namespace IMIS.Persistence
         public DbSet<AuditScheduleDetails> AuditSchduleDetails { get; set; }
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
 
+
+
+        public DbSet<PGS> PGS { get; set; }
+
+
+
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)  // Pass the options to the base DbContext constructor
         {

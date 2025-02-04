@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -19,5 +20,6 @@ namespace IMIS.Persistence.TeamModule
         {
             return await _dbContext.Teams.Where(t => t.IsActive && !t.IsDeleted).ToListAsync(cancellationToken).ConfigureAwait(false);
         }
+        
     }
 }
