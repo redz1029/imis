@@ -12,7 +12,5 @@ namespace IMIS.Domain
         public required string ByWhen_1 { get; set; }
         public required string Percent_Deliverables { get; set; }
         public required string Status { get; set; }
-        
-
     }    
 }
