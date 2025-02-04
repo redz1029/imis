@@ -169,7 +169,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
               // Register Button
               ElevatedButton(
-                onPressed: _registerUser,
+                onPressed: _registerUser, 
                 child: Text("Register"),
               ),
             ],
