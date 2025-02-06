@@ -48,28 +48,58 @@ namespace ImisTest
         [Test]
         public async Task TestAuditScheduleGeneration()
         {
+            // Prepare Test Data
+
+            int noOfAuditors = 84;
+            var auditors = await GenerateAuditors(noOfAuditors).ConfigureAwait(false);
+
+            int noOfAuditableOffices = 77;
+            int noOfNonAuditableOffices = 33;
+
+            int noOfMembersPerTeam = Math.Abs(noOfAuditors / noOfAuditableOffices);
+
+            int noOfAuditorsToAssignOnNonAuditableOffices = Math.Abs(noOfAuditors / noOfNonAuditableOffices);
+            int noOfAuditorsWithoutOffice = (noOfNonAuditableOffices * noOfAuditorsToAssignOnNonAuditableOffices);
+            int noOfAuditorsToAssignOnAuditableOffices = (noOfAuditors - noOfAuditorsWithoutOffice) / noOfAuditableOffices > 1 
+                ? Math.Abs((noOfAuditors - noOfAuditorsWithoutOffice) / noOfAuditableOffices) : 1;
+
+            int noOfAuditorsAssignedInAnOffice = 0;
+            List<OfficeDto> auditableOffices;
+            await GenerateTeams(14, noOfMembersPerTeam, auditors).ConfigureAwait(false);
+            (_, noOfAuditorsAssignedInAnOffice) = await GenerateAndGetOffices(noOfAuditorsAssignedInAnOffice, false, noOfNonAuditableOffices, noOfAuditorsToAssignOnNonAuditableOffices, auditors).ConfigureAwait(false);
+            (auditableOffices, _) = await GenerateAndGetOffices(noOfAuditorsAssignedInAnOffice, true, noOfAuditableOffices, noOfAuditorsToAssignOnAuditableOffices, auditors).ConfigureAwait(false);
+
             DateTime startDate = new DateTime(2025, 1, 29) + new TimeSpan(13, 0, 0);
             DateTime endDate = new DateTime(2025, 1, 31) + new TimeSpan(17, 0, 0);
-
             int noOfHoursPerAudit = 2;
-
-            await GenerateAuditors(100).ConfigureAwait(false);
-            await GenerateTeams(14).ConfigureAwait(false);
-            var offices = await GenerateAndGetOffices(77).ConfigureAwait(false);
             var auditScheduleFaker = new Faker<AuditScheduleDto>()
                 .RuleFor(a => a.AuditTitle, f => f.Lorem.Text())
                 .RuleFor(a => a.StartDate, startDate)
                 .RuleFor(a => a.EndDate, endDate)
-                .RuleFor(a => a.Offices, offices);
+                .RuleFor(a => a.Offices, auditableOffices);
 
             var auditSchedule = auditScheduleFaker.Generate();
 
             await _auditScheduleService.SaveOrUpdateAsync(auditSchedule, CancellationToken.None).ConfigureAwait(false);
         }
 
-        private async Task<List<OfficeDto>> GenerateAndGetOffices(int noOfOffices)
+        private async Task<(List<OfficeDto>, int)> GenerateAndGetOffices(int noOfAuditorsAssignedInAnOffice, 
+            bool isAuditableOffices, int noOfOffices, int noOfAuditorPerOffice, List<AuditorDto> auditors)
         {
-            var offices = await _officeService.GetAllAsync(CancellationToken.None);
+            var offices = isAuditableOffices 
+                ? await _officeService.GetAuditableOffices(null, CancellationToken.None).ConfigureAwait(false)
+                : await _officeService.GetNonAuditableOffices(null, CancellationToken.None).ConfigureAwait(false);
+
+
+            if (offices != null && offices.Count > 0)
+            {
+                foreach (var office in offices)
+                {
+                    var noOfAuditorsToAssign = noOfAuditorPerOffice - office.Auditors?.Count;
+
+                    bool hasOfficeHead = 
+                }
+            }
 
             if (offices == null || noOfOffices > offices?.Count)
             {
@@ -84,27 +114,86 @@ namespace ImisTest
                     await _officeService.SaveOrUpdateAsync(office, CancellationToken.None).ConfigureAwait(false);
 
                     var savedOffice = await _context.Offices.FirstOrDefaultAsync(o => o.Name == office.Name).ConfigureAwait(false);
-                    offices!.Add(new OfficeDto() { Id = savedOffice!.Id, Name = savedOffice.Name, IsActive = savedOffice.IsActive});
+                    offices!.Add(new OfficeDto() 
+                    { 
+                        Id = savedOffice!.Id, 
+                        Name = savedOffice.Name, 
+                        IsActive = savedOffice.IsActive
+                    });
                     noOfOfficesToGenerate--;
                 }
             }
 
-            return offices!;
+            return (offices!, noOfAuditorsAssignedInAnOffice);
         }
 
-        private async Task GenerateTeams(int noOfTeams)
+        private async Task GenerateTeams(int noOfTeams, int noOfMembersPerTeam, List<AuditorDto> auditors)
         {
             var teams = await _teamService.GetAllActiveAsync(CancellationToken.None).ConfigureAwait(false);
+            int noOfAssignedAuditors = 0;
+            int noOfAssignedTeamMembers = 0;
+            if (teams != null && teams.Count > 0)
+            {
+                var teamsToAddAuditors = teams.Where(t => t.Auditors != null && t.Auditors.Count < noOfMembersPerTeam);
+                foreach(var team in teamsToAddAuditors)
+                {
+                    noOfAssignedTeamMembers = noOfMembersPerTeam - team.Auditors!.Count();
+                    bool hasTeamLeader = team.Auditors!.FirstOrDefault(a => a.IsTeamLeader) != null;
+                    do
+                    {
+                        if (!hasTeamLeader)
+                        {
+                            var teamLeader = auditors.First();
+                            teamLeader.IsTeamLeader = true;
+
+                            team.Auditors!.Add(teamLeader);
+                            noOfAssignedAuditors++;
+                            noOfAssignedTeamMembers--;
+                        }
+                    } while (noOfAssignedTeamMembers > 0);
+                    {
+                        var auditor = auditors.Skip(noOfAssignedAuditors).First();
+                        auditor.IsTeamLeader = false;
+                        team.Auditors!.Add(auditor);
+
+                        noOfAssignedAuditors++;
+                        noOfAssignedTeamMembers--;
+                    }
+
+                    await _teamService.SaveOrUpdateAsync(team, CancellationToken.None).ConfigureAwait(false);
+                }
+            }
+
             if(teams == null || noOfTeams > teams?.Count)
             {
                 var noOfTeamsToGenerate = noOfTeams - teams?.Count;
                 var teamFaker = new Faker<TeamDto>()
-                .RuleFor(t => t.Name, f => f.Lorem.Word())
-                .RuleFor(t => t.IsActive, true);
+                    .RuleFor(t => t.Name, f => f.Lorem.Word())
+                    .RuleFor(t => t.IsActive, true);
 
                 while(noOfTeamsToGenerate > 0)
                 {
                     var team = teamFaker.Generate();
+                    noOfAssignedAuditors = 0;
+                    noOfAssignedTeamMembers = 0;
+                    team.Auditors = [];
+                    do
+                    {
+                        var teamLeader = auditors.Skip(noOfAssignedAuditors).First();
+                        teamLeader.IsTeamLeader = true;
+                        team.Auditors!.Add(teamLeader);
+                        noOfAssignedAuditors++;
+                        noOfAssignedTeamMembers--;
+
+                    } while (noOfAssignedAuditors > 0);
+                    {
+                        var auditor = auditors.Skip(noOfAssignedAuditors).First();
+                        auditor.IsTeamLeader = false;
+                        team.Auditors!.Add(auditor);
+
+                        noOfAssignedAuditors++;
+                        noOfAssignedTeamMembers--;
+                    }
 
                     await _teamService.SaveOrUpdateAsync(team, CancellationToken.None).ConfigureAwait(false);
 
@@ -113,7 +202,7 @@ namespace ImisTest
             }
         }
 
-        private async Task GenerateAuditors(int noOfAuditors)
+        private async Task<List<AuditorDto>> GenerateAuditors(int noOfAuditors)
         {
             var auditors = await _auditorService.GetAll(CancellationToken.None).ConfigureAwait(false);
             if(auditors == null || noOfAuditors > auditors?.Count)
@@ -128,9 +217,18 @@ namespace ImisTest
                     var auditor = auditorFaker.Generate();
 
                     await _auditorService.SaveOrUpdateAsync(auditor, CancellationToken.None).ConfigureAwait(false);
+
+                    auditors!.Add(new AuditorDto() 
+                    { 
+                        Id = auditor.Id, 
+                        Name = auditor.Name, 
+                        IsActive = auditor.IsActive 
+                    });
                     noOfAuditorsToGenerate--;
                 }
             }
+
+            return auditors!;
         }
     }
 }
