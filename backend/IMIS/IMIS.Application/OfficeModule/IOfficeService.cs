@@ -6,5 +6,7 @@ namespace IMIS.Application.OfficeModule
     {
         Task<List<OfficeDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<OfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
+        Task<List<OfficeDto>?> GetNonAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
     }
 }
