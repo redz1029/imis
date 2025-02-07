@@ -12,6 +12,7 @@ namespace IMIS.Domain
         public Team? Team { get; set; }
         public required int OfficeId { get; set; }
         public Office? Office { get; set; }
-       
+  
+
     }
 }

@@ -1,5 +1,8 @@
 ﻿using Base.Primitives;
+using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
+using IMIS.Domain;
+using IMIS.Persistence.AuditorModule;
 
 namespace IMIS.Persistence.OfficeModule
 {
@@ -7,30 +10,33 @@ namespace IMIS.Persistence.OfficeModule
     {
         private readonly IOfficeRepository _repository = repository;
 
+
         public async Task<List<OfficeDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return offices?.Select(o => 
-                new OfficeDto() 
-                    { 
-                        Id = o.Id, 
-                        Name = o.Name, 
-                        IsActive = o.IsActive 
+            return offices?.Select(o =>
+                new OfficeDto()
+                {
+                    Id = o.Id,
+                    Name = o.Name,
+                    IsActive = o.IsActive
                 }).ToList();
         }
 
         public async Task<OfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var office = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return office != null 
-                ? new OfficeDto() 
-                { 
-                    Id = office.Id, 
-                    Name = office.Name, 
+            return office != null
+                ? new OfficeDto()
+                {
+                    Id = office.Id,
+                    Name = office.Name,
                     IsActive = office.IsActive
-                } 
+                }
                 : null;
         }
+
+    
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {

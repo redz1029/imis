@@ -107,7 +107,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                     }
                 }
 
-                auditSchedule.AuditSchduleDetails = auditScheduleDetails;
+                auditSchedule.AuditScheduleDetails = auditScheduleDetails;
                 await _auditScheduleRepository
                     .SaveOrUpdateAsync(auditSchedule, cancellationToken)
                     .ConfigureAwait(false);
@@ -119,7 +119,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                     StartDate = auditSchedule.StartDate,
                     EndDate = auditSchedule.EndDate,
                     IsActive = auditSchedule.IsActive,
-                    AuditSchduleDetails = auditSchedule.AuditSchduleDetails.Select(a => new AuditScheduleDetailDto()
+                    AuditSchduleDetails = auditSchedule.AuditScheduleDetails.Select(a => new AuditScheduleDetailDto()
                     {
                         Id = a.Id,
                         AuditScheduleId = a.AuditScheduleId,

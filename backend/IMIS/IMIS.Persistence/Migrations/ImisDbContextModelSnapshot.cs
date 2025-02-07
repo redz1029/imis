@@ -32,13 +32,16 @@ namespace IMIS.Persistence.Migrations
 
                     b.Property<string>("AuditTitle")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasAnnotation("Relational:JsonPropertyName", "auditTitle");
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "EndDate");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("bit")
+                        .HasAnnotation("Relational:JsonPropertyName", "isActive");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -49,7 +52,8 @@ namespace IMIS.Persistence.Migrations
                         .HasColumnType("rowversion");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasAnnotation("Relational:JsonPropertyName", "StartDate");
 
                     b.HasKey("Id");
 
@@ -96,6 +100,8 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("TeamId");
 
                     b.ToTable("AuditSchduleDetails");
+
+                    b.HasAnnotation("Relational:JsonPropertyName", "auditScheduleDetails");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -111,6 +117,8 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("OfficeId");
 
                     b.ToTable("AuditableOffices");
+
+                    b.HasAnnotation("Relational:JsonPropertyName", "auditableOffices");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Auditor", b =>
@@ -180,6 +188,35 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("AuditoTeams");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.Kra", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Kra");
+                });
+
             modelBuilder.Entity("IMIS.Domain.Office", b =>
                 {
                     b.Property<int>("Id")
@@ -208,36 +245,24 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("Offices");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.PGS", b =>
+            modelBuilder.Entity("IMIS.Domain.PgsAuditDetails", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ByWhen_1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Delivarables_1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Direct_1")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("Indirect_1")
-                        .HasColumnType("bit");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("KRA_1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("OfficeId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("Percent_Deliverables")
+                    b.Property<int?>("PgsPeriodId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Remarks")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -246,17 +271,96 @@ namespace IMIS.Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Year")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.ToTable("PGS");
+                    b.HasIndex("OfficeId");
+
+                    b.HasIndex("PgsPeriodId");
+
+                    b.ToTable("PgsProjectStatus");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("ByWhen")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeliverableName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Direct")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Indirect")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("KraId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("PercentDeliverables")
+                        .HasColumnType("float");
+
+                    b.Property<long?>("PgsAuditDetailsId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("KraId");
+
+                    b.HasIndex("PgsAuditDetailsId");
+
+                    b.ToTable("Deliverable");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.PgsPeriod", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PgsPeriod");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Team", b =>
@@ -317,7 +421,7 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "b5fdea0d-3825-4cba-82f1-e1f570c00edc",
-                            ConcurrencyStamp = "f751e1b3-2b58-464a-9efe-c2ec4de08909",
+                            ConcurrencyStamp = "65a32621-02c6-4a7c-b818-a57a0b637e13",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });
@@ -417,15 +521,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "475e45a8-4dd9-425c-b405-b6598ef700fd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a25d27a4-3ed1-4876-9310-a2996df733b5",
+                            ConcurrencyStamp = "c8f8b43d-73e8-4872-83df-484a3d87c6b7",
                             Email = "ADMIN@MAIL.COM",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP3Aw5JUQ1dYsbuWba2ylAzVXq+0jYuyprscRwqzZEuOrEn9iLbRZTjoDeU2EJpkJg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECDGMC303bvkUezJxame/vU5lqlp3EcxYx/ECQe/gxjWgJJKA9iweiytlFeG2wYhHw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "626747e6-d280-4361-97b5-67b21b4e4096",
+                            SecurityStamp = "b5d0f944-ef9d-4512-9dba-3f4b063d6677",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
@@ -522,7 +626,7 @@ namespace IMIS.Persistence.Migrations
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
                 {
                     b.HasOne("IMIS.Domain.AuditSchedule", "AuditSchedule")
-                        .WithMany("AuditSchduleDetails")
+                        .WithMany("AuditScheduleDetails")
                         .HasForeignKey("AuditScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -603,6 +707,36 @@ namespace IMIS.Persistence.Migrations
                     b.Navigation("Team");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.PgsAuditDetails", b =>
+                {
+                    b.HasOne("IMIS.Domain.Office", "Office")
+                        .WithMany()
+                        .HasForeignKey("OfficeId");
+
+                    b.HasOne("IMIS.Domain.PgsPeriod", "PgsPeriod")
+                        .WithMany()
+                        .HasForeignKey("PgsPeriodId");
+
+                    b.Navigation("Office");
+
+                    b.Navigation("PgsPeriod");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
+                {
+                    b.HasOne("IMIS.Domain.Kra", "Kra")
+                        .WithMany()
+                        .HasForeignKey("KraId");
+
+                    b.HasOne("IMIS.Domain.PgsAuditDetails", "PgsAuditDetails")
+                        .WithMany()
+                        .HasForeignKey("PgsAuditDetailsId");
+
+                    b.Navigation("Kra");
+
+                    b.Navigation("PgsAuditDetails");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -656,7 +790,7 @@ namespace IMIS.Persistence.Migrations
 
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
                 {
-                    b.Navigation("AuditSchduleDetails");
+                    b.Navigation("AuditScheduleDetails");
 
                     b.Navigation("AuditableOffices");
                 });

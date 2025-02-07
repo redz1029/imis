@@ -1,4 +1,4 @@
-using Carter;
+﻿using Carter;
 using DotNetEnv;
 using IMIS.Infrastructure.Auths;
 using IMIS.Persistence;
@@ -15,7 +15,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 Env.Load();
 
-// Load environment variables for SQL Server connection and JWT settings
+
 var sqlServerConnectionString = Environment.GetEnvironmentVariable("SQL_SERVER_CONN")
     ?? throw new InvalidOperationException("SQL_SERVER_CONN environment variable is not set or empty.");
 
@@ -28,9 +28,6 @@ TokenUtils.Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
 TokenUtils.SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
     ?? throw new InvalidOperationException("JWT_SECRET_KEY environment variable is not set or empty.");
 
-// Register services in the DI container
-
-// SQL Server DB Context
 builder.Services.AddDbContext<ImisDbContext>(options =>
     options.UseSqlServer(sqlServerConnectionString));
 
@@ -39,6 +36,14 @@ builder.Services.AddIdentityCore<IdentityUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ImisDbContext>()
     .AddDefaultTokenProviders();
+
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.AllowTrailingCommas = true;
+    options.SerializerOptions.PropertyNameCaseInsensitive = true;
+});
+
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -58,16 +63,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 // Authorization Setup
 builder.Services.AddAuthorization();
 
-// Add CORS support: Configure the allowed origins
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins", builder =>
     {
-        builder.AllowAnyOrigin()  
-               .AllowAnyMethod()  
-               .AllowAnyHeader(); 
+        builder.AllowAnyOrigin()
+               .AllowAnyMethod()
+               .AllowAnyHeader();
     });
 });
+
 
 builder.Services.AddCarter();
 builder.Services.AddPersistence();
@@ -83,11 +89,13 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1"));
 }
 
-app.UseCors("AllowAllOrigins");  
-app.MapCustomIdentityApi<IdentityUser>(); // Maps Identity API endpoints
+app.UseCors("AllowAllOrigins");
+app.MapCustomIdentityApi<IdentityUser>();
 app.MapCarter();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.Run();
+
+

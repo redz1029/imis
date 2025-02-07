@@ -11,5 +11,7 @@ namespace IMIS.Application.OfficeModule
     public interface IOfficeRepository : IRepository<Office, int>
     {
         Task<IEnumerable<Office>> GetAll(CancellationToken cancellationToken);
+    
+      
     }
 }

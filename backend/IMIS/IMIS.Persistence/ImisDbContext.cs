@@ -16,9 +16,10 @@ namespace IMIS.Persistence
         public DbSet<AuditScheduleDetails> AuditSchduleDetails { get; set; }
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
 
-
-
-        public DbSet<PGS> PGS { get; set; }
+        public DbSet<PgsDeliverable> Deliverable { get; set; }
+        public DbSet<Kra> Kra { get; set; }
+        public DbSet<PgsAuditDetails> PgsProjectStatus { get; set; }
+        public DbSet<PgsPeriod> PgsPeriod { get; set; }
 
 
 
@@ -70,8 +71,12 @@ namespace IMIS.Persistence
 
             builder.Entity<AuditScheduleDetails>()
                 .HasOne(asd => asd.AuditSchedule)
-                .WithMany(a => a.AuditSchduleDetails)
+                .WithMany(a => a.AuditScheduleDetails)
                 .HasForeignKey(asd => asd.AuditScheduleId);
+
+
+            builder.Entity<PgsAuditDetails>().Property(p => p.Status)
+           .HasConversion<int>();
 
             base.OnModelCreating(builder);
 
