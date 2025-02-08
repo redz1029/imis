@@ -108,6 +108,10 @@ namespace IMIS.Persistence.AuditScheduleModule
                 }
 
                 auditSchedule.AuditSchduleDetails = auditScheduleDetails;
+
+                if(auditSchedule.Id == 0)
+                    _auditScheduleRepository.Add(auditSchedule);
+
                 await _auditScheduleRepository
                     .SaveOrUpdateAsync(auditSchedule, cancellationToken)
                     .ConfigureAwait(false);

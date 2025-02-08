@@ -57,7 +57,10 @@ namespace IMIS.Persistence.TeamModule
                         });
                     }
                 }
-                _teamRepository.Add(team);
+                if(team.Id == 0)
+                {
+                    _teamRepository.Add(team);
+                }
                 await _teamRepository.SaveOrUpdateAsync(team, cancellationToken).ConfigureAwait(false);
             }
         }
