@@ -7,7 +7,7 @@ namespace IMIS.Persistence.AuditorModule
 {
     public class AuditorRepository(ImisDbContext dbContext) : BaseRepository<Auditor, int, ImisDbContext>(dbContext), IAuditorRepository
     {
-        public async Task<IEnumerable<Auditor>> FilteByName(string name, int noOfResults, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Auditor>?> FilteByName(string name, int noOfResults, CancellationToken cancellationToken)
         {
             return await _dbContext.Auditors
                 .Where(a => EF.Functions.Like(a.Name, $"{name}%") && !a.IsDeleted)
@@ -17,7 +17,7 @@ namespace IMIS.Persistence.AuditorModule
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Auditor>> GetAll(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Auditor>?> GetAll(CancellationToken cancellationToken)
         {
             return await _dbContext.Auditors
                 .Where(a => !a.IsDeleted)

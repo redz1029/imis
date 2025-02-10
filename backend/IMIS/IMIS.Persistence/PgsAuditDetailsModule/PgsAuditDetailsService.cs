@@ -12,33 +12,6 @@ namespace IMIS.Persistence.PgsModule
 
         private readonly IPgsAuditDetailsRepository _repository = repository;
 
-        //public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto PGSDto, CancellationToken cancellationToken)
-        //{
-        //    if (PGSDto == null) throw new ArgumentNullException(nameof(PGSDto));
-
-        //    var pgsEntity = PGSDto.ToEntity();
-        //    var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
-
-        //    return new PgsAuditDetailsDto
-        //    {
-        //        Id = createdPgs.Id,
-        //        Status = createdPgs.Status,
-        //        Remarks = createdPgs.Remarks,
-        //        PgsPeriod = createdPgs.PgsPeriod != null ? new PgsPeriodDto
-        //        {
-        //            Id = createdPgs.PgsPeriod.Id,
-        //            StartDate = createdPgs.PgsPeriod.StartDate,
-        //            EndDate = createdPgs.PgsPeriod.EndDate
-        //        } : null,
-        //        Office = new OfficeDto
-        //        {
-        //            Id = createdPgs.Office.Id,
-        //            Name = createdPgs.Office.Name,
-        //            IsActive = createdPgs.Office.IsActive
-        //        }
-        //    };
-        //}
-
         public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto PGSDto, CancellationToken cancellationToken)
         {
             if (PGSDto == null) throw new ArgumentNullException(nameof(PGSDto));

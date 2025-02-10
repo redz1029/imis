@@ -1,5 +1,4 @@
 ﻿using Base.Primitives;
-using IMIS.Application.AuditorModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsKraModule

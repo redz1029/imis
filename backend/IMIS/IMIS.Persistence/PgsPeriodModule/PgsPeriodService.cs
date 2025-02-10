@@ -1,6 +1,4 @@
-﻿
-using Base.Primitives;
-using IMIS.Application.PgsKraModule;
+﻿using Base.Primitives;
 using IMIS.Application.PgsPeriodModule;
 
 namespace IMIS.Persistence.PgsPeriodModule

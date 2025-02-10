@@ -1,5 +1,4 @@
 ﻿using Base.Abstractions;
-using IMIS.Application.OfficeModule;
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -11,6 +10,7 @@ namespace IMIS.Persistence.TeamModule
         public async Task<IEnumerable<Team>> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.Teams
+                .Include(t => t.AuditorTeams)
                 .Where(t => !t.IsDeleted)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

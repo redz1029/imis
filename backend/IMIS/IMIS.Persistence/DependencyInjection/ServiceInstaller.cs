@@ -42,12 +42,6 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IPgsPeriodService, PgsPeriodService>();
 
 
-
-
-
-
-
-
             return services;
         }
     }

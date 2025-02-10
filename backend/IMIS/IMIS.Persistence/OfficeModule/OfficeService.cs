@@ -2,7 +2,6 @@
 using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Domain;
-using IMIS.Persistence.AuditorModule;
 
 namespace IMIS.Persistence.OfficeModule
 {
@@ -10,30 +9,45 @@ namespace IMIS.Persistence.OfficeModule
     {
         private readonly IOfficeRepository _repository = repository;
 
+        private static OfficeDto ConvOfficeToDTO(Office office)
+        {
+            return new OfficeDto()
+            {
+                Id = office.Id,
+                Name = office.Name,
+                IsActive = office.IsActive,
+                Auditors = office.AuditorOffices?.Select(a => new AuditorDto()
+                {
+                    Id = a.AuditorId,
+                    Name = a.Auditor.Name,
+                    IsActive = a.Auditor.
+                    IsActive
+                }).ToList(),
+            };
+        }
 
         public async Task<List<OfficeDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return offices?.Select(o =>
-                new OfficeDto()
-                {
-                    Id = o.Id,
-                    Name = o.Name,
-                    IsActive = o.IsActive
-                }).ToList();
+            return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
+        }
+
+        public async Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
+        {
+            var offices = await _repository.GetAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
+            return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
         }
 
         public async Task<OfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var office = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return office != null
-                ? new OfficeDto()
-                {
-                    Id = office.Id,
-                    Name = office.Name,
-                    IsActive = office.IsActive
-                }
-                : null;
+            return office != null ? ConvOfficeToDTO(office) : null;
+        }
+
+        public async Task<List<OfficeDto>?> GetNonAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
+        {
+            var offices = await _repository.GetNonAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
+            return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
         }
 
     

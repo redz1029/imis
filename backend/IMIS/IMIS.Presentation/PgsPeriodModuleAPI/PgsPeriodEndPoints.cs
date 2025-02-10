@@ -1,5 +1,4 @@
 ﻿using Carter;
-using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -8,8 +7,6 @@ using Microsoft.AspNetCore.Routing;
 
 namespace IMIS.Presentation.PgsPeriodModuleAPI
 {
-
-
     public class PgsPeriodEndPoints : CarterModule
     {
         private const string _pgsTag = "Create PGS Period";
