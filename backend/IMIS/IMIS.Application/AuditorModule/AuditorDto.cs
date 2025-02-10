@@ -9,6 +9,7 @@ namespace IMIS.Application.AuditorModule
         public required string Name {  get; set; }
         public required bool IsActive { get; set; }
         public bool IsTeamLeader { get; set; }
+        public bool IsOfficeHead { get; set; }
 
         public AuditorDto() { }
 

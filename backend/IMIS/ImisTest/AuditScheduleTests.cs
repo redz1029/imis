@@ -66,21 +66,28 @@ namespace ImisTest
             int noOfAuditorsAssignedInAnOffice = 0;
             List<OfficeDto> auditableOffices;
             await GenerateTeams(14, noOfMembersPerTeam, auditors).ConfigureAwait(false);
+
             (_, noOfAuditorsAssignedInAnOffice) = await GenerateAndGetOffices(noOfAuditorsAssignedInAnOffice, false, noOfNonAuditableOffices, noOfAuditorsToAssignOnNonAuditableOffices, auditors).ConfigureAwait(false);
             (auditableOffices, _) = await GenerateAndGetOffices(noOfAuditorsAssignedInAnOffice, true, noOfAuditableOffices, noOfAuditorsToAssignOnAuditableOffices, auditors).ConfigureAwait(false);
 
             DateTime startDate = new DateTime(2025, 1, 29) + new TimeSpan(13, 0, 0);
             DateTime endDate = new DateTime(2025, 1, 31) + new TimeSpan(17, 0, 0);
             int noOfHoursPerAudit = 2;
+
             var auditScheduleFaker = new Faker<AuditScheduleDto>()
                 .RuleFor(a => a.AuditTitle, f => f.Lorem.Text())
                 .RuleFor(a => a.StartDate, startDate)
                 .RuleFor(a => a.EndDate, endDate)
+                .RuleFor(a => a.IsActive, true)
                 .RuleFor(a => a.Offices, auditableOffices);
 
             var auditSchedule = auditScheduleFaker.Generate();
-
+            string auditTitle = auditSchedule.AuditTitle;
             await _auditScheduleService.SaveOrUpdateAsync(auditSchedule, CancellationToken.None).ConfigureAwait(false);
+
+            var savedAuditSchedule = await _context.AuditSchedules.FirstOrDefaultAsync(a => a.AuditTitle == auditTitle).ConfigureAwait(false);
+            Assert.NotNull(savedAuditSchedule);
+            Assert.That(savedAuditSchedule.AuditTitle, Is.EqualTo(auditTitle));
         }
 
         private async Task<(List<OfficeDto>, int)> GenerateAndGetOffices(int noOfAuditorsAssignedInAnOffice, 
@@ -90,14 +97,37 @@ namespace ImisTest
                 ? await _officeService.GetAuditableOffices(null, CancellationToken.None).ConfigureAwait(false)
                 : await _officeService.GetNonAuditableOffices(null, CancellationToken.None).ConfigureAwait(false);
 
-
-            if (offices != null && offices.Count > 0)
+            if (offices != null && offices.Count > 0 && noOfAuditorsAssignedInAnOffice <= auditors.Count)
             {
                 foreach (var office in offices)
                 {
+                    office.Auditors = office.Auditors ?? [];
                     var noOfAuditorsToAssign = noOfAuditorPerOffice - office.Auditors?.Count;
 
-                    bool hasOfficeHead = true; 
+                    bool hasOfficeHead = office.Auditors?.FirstOrDefault(a => a.IsOfficeHead) != null;
+                    while (noOfAuditorsToAssign > 0)
+                    {
+                        if (noOfAuditorsAssignedInAnOffice > auditors.Count)
+                        {
+                            noOfAuditorsToAssign = 0;
+                            continue;
+                        }
+
+                        var auditor = noOfAuditorsAssignedInAnOffice == auditors.Count 
+                            ? auditors.Last() 
+                            : auditors.Skip(noOfAuditorsAssignedInAnOffice).First();
+                        if (!hasOfficeHead)
+                        {
+                            auditor.IsOfficeHead = true;
+                            hasOfficeHead = true;
+                        }
+                        office.Auditors!.Add(auditor);
+
+                        noOfAuditorsToAssign--;
+                        noOfAuditorsAssignedInAnOffice++;
+                    }
+
+                    await _context.Offices.FirstOrDefaultAsync(o => o.Name == office.Name).ConfigureAwait(false);
                 }
             }
 
@@ -108,9 +138,36 @@ namespace ImisTest
                     .RuleFor(o => o.Name, f => f.Commerce.Department())
                     .RuleFor(o => o.IsActive, true);
 
-                while(noOfOfficesToGenerate > 0)
+                while(noOfOfficesToGenerate > 0 && noOfAuditorsAssignedInAnOffice <= auditors.Count)
                 {
                     var office = officeFaker.Generate();
+                    office.Auditors = office.Auditors ?? [];
+                    var noOfAuditorsToAssign = noOfAuditorPerOffice;
+                    bool hasOfficeHead = false;
+                    while (noOfAuditorsToAssign > 0)
+                    {
+                        if (noOfAuditorsAssignedInAnOffice > auditors.Count)
+                        {
+                            noOfAuditorsToAssign = 0;
+                            continue;
+                        }
+                            
+
+                        var auditor = noOfAuditorsAssignedInAnOffice == auditors.Count
+                            ? auditors.Last()
+                            : auditors.Skip(noOfAuditorsAssignedInAnOffice).First();
+
+                        if (!hasOfficeHead)
+                        {
+                            auditor.IsOfficeHead = true;
+                            hasOfficeHead = true;
+                        }
+                        office.Auditors!.Add(auditor);
+
+                        noOfAuditorsToAssign--;
+                        noOfAuditorsAssignedInAnOffice++;
+                    }
+
                     await _officeService.SaveOrUpdateAsync(office, CancellationToken.None).ConfigureAwait(false);
 
                     var savedOffice = await _context.Offices.FirstOrDefaultAsync(o => o.Name == office.Name).ConfigureAwait(false);
@@ -139,20 +196,21 @@ namespace ImisTest
                 {
                     noOfAssignedTeamMembers = noOfMembersPerTeam - team.Auditors!.Count();
                     bool hasTeamLeader = team.Auditors!.FirstOrDefault(a => a.IsTeamLeader) != null;
-                    do
+                    while (noOfAssignedTeamMembers > 0)
                     {
+                        if (noOfAssignedAuditors > auditors.Count)
+                        {
+                            noOfAssignedTeamMembers = 0;
+                            continue;
+                        }
+                        var auditor = noOfAssignedTeamMembers == auditors.Count
+                            ? auditors.Last()
+                            : auditors.Skip(noOfAssignedTeamMembers).First();
                         if (!hasTeamLeader)
                         {
-                            var teamLeader = auditors.First();
-                            teamLeader.IsTeamLeader = true;
-
-                            team.Auditors!.Add(teamLeader);
-                            noOfAssignedAuditors++;
-                            noOfAssignedTeamMembers--;
+                            auditor.IsTeamLeader = true;
+                            hasTeamLeader = true;
                         }
-                    } while (noOfAssignedTeamMembers > 0);
-                    {
-                        var auditor = auditors.Skip(noOfAssignedAuditors).First();
                         auditor.IsTeamLeader = false;
                         team.Auditors!.Add(auditor);
 
@@ -176,18 +234,24 @@ namespace ImisTest
                     var team = teamFaker.Generate();
                     noOfAssignedAuditors = 0;
                     noOfAssignedTeamMembers = 0;
+                    bool hasTeamLeader = false;
                     team.Auditors = [];
-                    do
+                    while (noOfAssignedAuditors > 0)
                     {
-                        var teamLeader = auditors.Skip(noOfAssignedAuditors).First();
-                        teamLeader.IsTeamLeader = true;
-                        team.Auditors!.Add(teamLeader);
-                        noOfAssignedAuditors++;
-                        noOfAssignedTeamMembers--;
+                        if (noOfAssignedAuditors > auditors.Count)
+                        {
+                            noOfAssignedAuditors = 0;
+                            continue;
+                        }
 
-                    } while (noOfAssignedAuditors > 0);
-                    {
-                        var auditor = auditors.Skip(noOfAssignedAuditors).First();
+                        var auditor = noOfAssignedTeamMembers == auditors.Count
+                           ? auditors.Last()
+                           : auditors.Skip(noOfAssignedTeamMembers).First();
+                        if (!hasTeamLeader)
+                        {
+                            auditor.IsTeamLeader = true;
+                            hasTeamLeader = true;
+                        }
                         auditor.IsTeamLeader = false;
                         team.Auditors!.Add(auditor);
 

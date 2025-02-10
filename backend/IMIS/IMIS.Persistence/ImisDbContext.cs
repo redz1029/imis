@@ -71,7 +71,7 @@ namespace IMIS.Persistence
 
             builder.Entity<AuditScheduleDetails>()
                 .HasOne(asd => asd.AuditSchedule)
-                .WithMany(a => a.AuditScheduleDetails)
+                .WithMany(a => a.AuditSchduleDetails)
                 .HasForeignKey(asd => asd.AuditScheduleId);
 
 

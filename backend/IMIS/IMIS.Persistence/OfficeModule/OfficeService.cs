@@ -20,8 +20,8 @@ namespace IMIS.Persistence.OfficeModule
                 {
                     Id = a.AuditorId,
                     Name = a.Auditor.Name,
-                    IsActive = a.Auditor.
-                    IsActive
+                    IsActive = a.Auditor.IsActive,
+                    IsOfficeHead = a.IsOfficeHead,
                 }).ToList(),
             };
         }
@@ -56,7 +56,12 @@ namespace IMIS.Persistence.OfficeModule
         {
             var ODto = dto as OfficeDto;
             var office = ODto!.ToEntity();
-            _repository.Add(office);
+
+            if (office.Id == 0)
+                _repository.Add(office);
+            else
+                await _repository.UpdateAsync(office, office.Id, cancellationToken).ConfigureAwait(false);
+
             await _repository.SaveOrUpdateAsync(office, cancellationToken).ConfigureAwait(false);
         }
     }

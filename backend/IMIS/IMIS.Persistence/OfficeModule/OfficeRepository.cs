@@ -48,7 +48,7 @@ namespace IMIS.Persistence.OfficeModule
                 ? await GetAuditableOffices(auditScheduleId.Value, cancellationToken).ConfigureAwait(false)
                 : await GetAuditableOffices(null, cancellationToken).ConfigureAwait(false);
 
-            return auditableOffices != null 
+            return auditableOffices != null && auditableOffices.Count() > 0 
                 ? await _dbContext.Offices
                     .Where(o => !auditableOffices.Any(a => a.Id == o.Id))
                     .AsNoTracking()
