@@ -9,7 +9,7 @@ namespace IMIS.Domain
 
         public required String AuditTitle { get; set; }
         public required bool IsActive { get; set; }
-        public IEnumerable<AuditableOffices>? AuditableOffices { get; set; }
-        public IEnumerable<AuditScheduleDetails>? AuditSchduleDetails { get; set; }
+        public ICollection<AuditableOffices>? AuditableOffices { get; set; }
+        public ICollection<AuditScheduleDetails>? AuditSchduleDetails { get; set; }
     }
 }

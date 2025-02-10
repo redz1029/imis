@@ -60,6 +60,9 @@ namespace IMIS.Persistence.TeamModule
                 if(team.Id == 0)
                 {
                     _teamRepository.Add(team);
+                } else
+                {
+                    await _teamRepository.UpdateAsync(team, team.Id, cancellationToken).ConfigureAwait(false);
                 }
                 await _teamRepository.SaveOrUpdateAsync(team, cancellationToken).ConfigureAwait(false);
             }

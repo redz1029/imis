@@ -274,6 +274,13 @@ namespace IMIS.Persistence.AuditScheduleModule
                     }
                     auditSchedule.AuditableOffices = offices;
                 }
+                if(auditSchedule.Id == 0)
+                {
+                    _auditScheduleRepository.Add(auditSchedule);
+                } else
+                {
+                    await _auditScheduleRepository.UpdateAsync(auditSchedule, auditSchedule.Id, cancellationToken).ConfigureAwait(false);
+                }
                 await _auditScheduleRepository.SaveOrUpdateAsync(auditSchedule, cancellationToken).ConfigureAwait(false);
             }
         }

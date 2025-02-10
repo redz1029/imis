@@ -44,6 +44,10 @@ namespace IMIS.Persistence.AuditorModule
             var auditor = auditorDto!.ToEntity();
             if(auditor.Id == 0)
                 _auditorRepository.Add(auditor);
+            else
+            {
+                await _auditorRepository.UpdateAsync(auditor, auditor.Id, cancellationToken).ConfigureAwait(false);
+            }
             await _auditorRepository.SaveOrUpdateAsync(auditor, cancellationToken).ConfigureAwait(false);
         }
     }

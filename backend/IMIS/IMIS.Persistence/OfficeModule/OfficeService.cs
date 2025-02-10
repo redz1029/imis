@@ -55,8 +55,10 @@ namespace IMIS.Persistence.OfficeModule
             var ODto = dto as OfficeDto;
             var office = ODto!.ToEntity();
 
-            if(office.Id == 0)
+            if (office.Id == 0)
                 _repository.Add(office);
+            else
+                await _repository.UpdateAsync(office, office.Id, cancellationToken).ConfigureAwait(false);
 
             await _repository.SaveOrUpdateAsync(office, cancellationToken).ConfigureAwait(false);
         }
