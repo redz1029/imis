@@ -10,8 +10,7 @@ namespace IMIS.Application.PgsModule
     public class PGSDeliverableDto : BaseDto<PgsDeliverable, long>
     {   
         public  KraDto? Kra { get; set; }
-        public required bool Direct { get; set; }
-        public required bool Indirect { get; set; }
+        public required bool IsDirect { get; set; }      
         public required string DeliverableName { get; set; }
         public required DateTime ByWhen { get; set; }
         public required double PercentDeliverables { get; set; }
@@ -27,8 +26,7 @@ namespace IMIS.Application.PgsModule
             return new PgsDeliverable()
             {
                 Id = Id,               
-                Direct = Direct,
-                Indirect = Indirect,
+                IsDirect = IsDirect,               
                 DeliverableName = DeliverableName,
                 ByWhen = ByWhen,
                 PercentDeliverables = PercentDeliverables,
