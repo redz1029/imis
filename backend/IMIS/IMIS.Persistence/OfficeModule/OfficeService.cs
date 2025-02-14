@@ -8,7 +8,6 @@ namespace IMIS.Persistence.OfficeModule
     public class OfficeService(IOfficeRepository repository) : IOfficeService
     {
         private readonly IOfficeRepository _repository = repository;
-
         private static OfficeDto ConvOfficeToDTO(Office office)
         {
             return new OfficeDto()
@@ -25,38 +24,30 @@ namespace IMIS.Persistence.OfficeModule
                 }).ToList(),
             };
         }
-
         public async Task<List<OfficeDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
         }
-
         public async Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
         }
-
         public async Task<OfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var office = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return office != null ? ConvOfficeToDTO(office) : null;
         }
-
         public async Task<List<OfficeDto>?> GetNonAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {
             var offices = await _repository.GetNonAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
-        }
-
-    
-
+        }  
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var ODto = dto as OfficeDto;
             var office = ODto!.ToEntity();
-
             if (office.Id == 0)
                 _repository.Add(office);
             else

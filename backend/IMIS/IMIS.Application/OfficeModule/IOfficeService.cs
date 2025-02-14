@@ -1,6 +1,5 @@
 ﻿using Base.Abstractions;
 
-
 namespace IMIS.Application.OfficeModule
 {
     public interface IOfficeService : IService

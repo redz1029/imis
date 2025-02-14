@@ -6,8 +6,7 @@ using IMIS.Domain;
 namespace IMIS.Application.AuditScheduleModule
 {
     public class AuditScheduleDetailDto : BaseDto<AuditScheduleDetails, int>
-    {
-    
+    {    
         public required int AuditScheduleId { get; set; }
         public AuditScheduleDto? AuditSchedule { get; set; }
         public DateTime StartDateTime { get; set; }
@@ -18,7 +17,6 @@ namespace IMIS.Application.AuditScheduleModule
         public required int OfficeId { get; set; }
         public string? OfficeName { get; set; }
         public OfficeDto? Office { get; set; }
-
         public override AuditScheduleDetails ToEntity()
         {
             return new AuditScheduleDetails() 

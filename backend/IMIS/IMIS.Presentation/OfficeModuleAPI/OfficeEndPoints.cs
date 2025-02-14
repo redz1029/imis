@@ -9,13 +9,10 @@ namespace IMIS.Presentation.OfficeModuleAPI
 {
     public class OfficeEndPoints : CarterModule
     {
-
         private const string _auditorTag = "Office";
         public OfficeEndPoints() : base("/Office")
         {
-
-        }
-       
+        }       
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] OfficeDto Office, IOfficeService service, CancellationToken cancellationToken) =>
@@ -30,30 +27,14 @@ namespace IMIS.Presentation.OfficeModuleAPI
                 var auditors = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(auditors);
             })
-            .WithTags(_auditorTag);
-
-         
+            .WithTags(_auditorTag);        
             app.MapGet("/{id}", async (int id, IOfficeService service, CancellationToken cancellationToken) =>
             {
                 var Office = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 return Office != null ? Results.Ok(Office) : Results.NotFound();
             })
             .WithTags(_auditorTag);
-
-
         }
-
-
-
-
     }
-
-    
-
-
-
-
-
-
 }
 

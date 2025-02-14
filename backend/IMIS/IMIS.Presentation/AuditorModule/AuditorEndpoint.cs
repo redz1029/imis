@@ -12,9 +12,7 @@ namespace IMIS.Presentation.AuditorModule
         private const string _auditorTag = "Auditor";
         public AuditorEndpoint() : base("/auditors")
         {
-
         }
-
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] AuditorDto auditor, IAuditorService service, CancellationToken cancellationToken) =>

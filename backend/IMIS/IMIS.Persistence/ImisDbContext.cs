@@ -15,13 +15,10 @@ namespace IMIS.Persistence
         public DbSet<AuditSchedule> AuditSchedules { get; set; }
         public DbSet<AuditScheduleDetails> AuditSchduleDetails { get; set; }
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
-
         public DbSet<PgsDeliverable> Deliverable { get; set; }
         public DbSet<Kra> Kra { get; set; }
         public DbSet<PgsAuditDetails> PgsProjectStatus { get; set; }
         public DbSet<PgsPeriod> PgsPeriod { get; set; }
-
-
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)  // Pass the options to the base DbContext constructor
@@ -85,13 +82,11 @@ namespace IMIS.Persistence
             builder.ApplyConfiguration(new UserConfiguration());
             builder.ApplyConfiguration(new UserRoleConfiguration());
         }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder
                 .ConfigureWarnings(warnings =>
                     warnings.Ignore(RelationalEventId.PendingModelChangesWarning));
         }
-
     }
 }

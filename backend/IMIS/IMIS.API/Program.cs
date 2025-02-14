@@ -12,9 +12,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-
 Env.Load();
-
 
 var sqlServerConnectionString = Environment.GetEnvironmentVariable("SQL_SERVER_CONN")
     ?? throw new InvalidOperationException("SQL_SERVER_CONN environment variable is not set or empty.");
@@ -32,18 +30,15 @@ builder.Services.AddDbContext<ImisDbContext>(options =>
     options.UseSqlServer(sqlServerConnectionString));
 
 // Identity Configuration
-builder.Services.AddIdentityCore<IdentityUser>()
-    .AddRoles<IdentityRole>()
+builder.Services.AddIdentity<IdentityUser, IdentityRole>() // Change this line
     .AddEntityFrameworkStores<ImisDbContext>()
     .AddDefaultTokenProviders();
-
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.AllowTrailingCommas = true;
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
-
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -62,8 +57,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 // Authorization Setup
 builder.Services.AddAuthorization();
-
-
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins", builder =>
@@ -73,22 +66,16 @@ builder.Services.AddCors(options =>
                .AllowAnyHeader();
     });
 });
-
-
 builder.Services.AddCarter();
 builder.Services.AddPersistence();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
 var app = builder.Build();
-
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1"));
 }
-
 app.UseCors("AllowAllOrigins");
 app.MapCustomIdentityApi<IdentityUser>();
 app.MapCarter();
@@ -97,5 +84,3 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.Run();
-
-

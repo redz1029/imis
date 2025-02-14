@@ -12,7 +12,6 @@ namespace IMIS.Application.AuditScheduleModule
         public required bool IsActive { get; set; }
         public List<OfficeDto>? Offices { get; set; }
         public List<AuditScheduleDetailDto>? AuditSchduleDetails { get; set; }
-
         public override AuditSchedule ToEntity()
         {
             return new AuditSchedule() 

@@ -1,5 +1,4 @@
-﻿
-using Base.Primitives;
+﻿using Base.Primitives;
 using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 using System.Text.Json;
@@ -17,10 +16,8 @@ namespace IMIS.Application.PgsModule
         public required PgsStatus Status { get; set; }       
         public  PgsAuditDetailsDto? PgsAuditDetails { get; set; }
         public  string? Remarks { get; set; }
-
         [JsonConverter(typeof(Base64JsonConverter))]
         public byte[] RowVersion { get; set; }
-
         public override PgsDeliverable ToEntity()
         {
             return new PgsDeliverable()
@@ -31,44 +28,33 @@ namespace IMIS.Application.PgsModule
                 ByWhen = ByWhen,
                 PercentDeliverables = PercentDeliverables,
                 Status = Status,
-                RowVersion = RowVersion,
-                 
+                RowVersion = RowVersion,                 
                 Kra = Kra?.ToEntity(),
                 PgsAuditDetails = PgsAuditDetails?.ToEntity(),
                 Remarks = Remarks
-
-
-
-            };
-          
+            };          
         }
-    }
-
-   
-  public class Base64JsonConverter : JsonConverter<byte[]>
-{
-    public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    }   
+    public class Base64JsonConverter : JsonConverter<byte[]>
     {
-        try
+        public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            var base64String = reader.GetString();
-            if (base64String == null)
-                return null;
-
-        
-            return Convert.FromBase64String(base64String);
+            try
+            {
+                var base64String = reader.GetString();
+                if (base64String == null)
+                    return null;        
+                return Convert.FromBase64String(base64String);
+            }
+            catch (FormatException ex)
+            {
+                throw new JsonException($"Invalid Base64 string format for RowVersion: {ex.Message}");
+            }
         }
-        catch (FormatException ex)
+        public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
         {
-            throw new JsonException($"Invalid Base64 string format for RowVersion: {ex.Message}");
+            writer.WriteStringValue(value == null ? null : Convert.ToBase64String(value));
         }
     }
-
-    public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
-    {
-        writer.WriteStringValue(value == null ? null : Convert.ToBase64String(value));
-    }
-}
-
 }
 

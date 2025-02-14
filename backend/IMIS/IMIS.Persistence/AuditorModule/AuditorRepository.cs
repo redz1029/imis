@@ -16,7 +16,6 @@ namespace IMIS.Persistence.AuditorModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
         public async Task<IEnumerable<Auditor>?> GetAll(CancellationToken cancellationToken)
         {
             return await _dbContext.Auditors

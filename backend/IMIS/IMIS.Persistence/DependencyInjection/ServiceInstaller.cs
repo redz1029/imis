@@ -37,10 +37,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IPgsAuditDetailsRepository, PgsAuditDetailsRepository>();
             services.AddScoped<IPgsAuditDetailsService, PgsAuditDetailsService>();
 
-
             services.AddScoped<IPgsPeriodRepository, PgsPeriodRepository>();
             services.AddScoped<IPgsPeriodService, PgsPeriodService>();
-
 
             return services;
         }

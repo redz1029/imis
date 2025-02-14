@@ -6,9 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IMIS.Persistence.OfficeModule
 {
     public class OfficeRepository(ImisDbContext dbContext) : BaseRepository<Office, int, ImisDbContext>(dbContext), IOfficeRepository
-    {
-
-       
+    {       
         public async Task<IEnumerable<Office>> GetAll(CancellationToken cancellationToken)
         {
             return await _dbContext.Offices
@@ -18,7 +16,6 @@ namespace IMIS.Persistence.OfficeModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
         public async Task<IEnumerable<Office>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {
             if (auditScheduleId.HasValue)
@@ -41,13 +38,11 @@ namespace IMIS.Persistence.OfficeModule
                    .ConfigureAwait(false);
             }
         }
-
         public async Task<IEnumerable<Office>?> GetNonAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {
             var auditableOffices = auditScheduleId.HasValue 
                 ? await GetAuditableOffices(auditScheduleId.Value, cancellationToken).ConfigureAwait(false)
                 : await GetAuditableOffices(null, cancellationToken).ConfigureAwait(false);
-
             return auditableOffices != null && auditableOffices.Count() > 0 
                 ? await _dbContext.Offices
                     .Where(o => !auditableOffices.Any(a => a.Id == o.Id))
@@ -59,9 +54,5 @@ namespace IMIS.Persistence.OfficeModule
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
         }
-
-
-       
-
     }
 }

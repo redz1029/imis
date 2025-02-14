@@ -4,26 +4,19 @@ using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 
 namespace IMIS.Persistence.PGSModules
-{
-    
+{    
     public class PGSDeliverableService(IPGSDeliverableRepository repository) : IPGSDeliverableService
     {
         private readonly IPGSDeliverableRepository _repository = repository;
-
-
         public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDto, CancellationToken cancellationToken)
         {
             if (pgsDto == null) throw new ArgumentNullException(nameof(pgsDto));
-
             var pgsEntity = pgsDto.ToEntity();
-
             var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
-
             return new PGSDeliverableDto
             {
                 Id = createdPgs.Id,
-                Direct = createdPgs.Direct,
-                Indirect = createdPgs.Indirect,
+                IsDirect = createdPgs.IsDirect,               
                 DeliverableName = createdPgs.DeliverableName,
                 ByWhen = createdPgs.ByWhen,
                 PercentDeliverables = createdPgs.PercentDeliverables,
@@ -31,14 +24,12 @@ namespace IMIS.Persistence.PGSModules
                 RowVersion = createdPgs.RowVersion ?? Array.Empty<byte>(),
                 Remarks = createdPgs.Remarks ?? string.Empty,
 
-
                 Kra = createdPgs.Kra != null ? new KraDto
                 {
                     Id = createdPgs.Kra.Id,
                     Name = createdPgs.Kra.Name,
                     Remarks = createdPgs.Kra.Remarks ?? string.Empty
                 } : null,
-
 
                 PgsAuditDetails = createdPgs.PgsAuditDetails != null ? new PgsAuditDetailsDto
                 {
@@ -54,7 +45,6 @@ namespace IMIS.Persistence.PGSModules
                 } : null
             };
         }
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             if (dto is not PGSDeliverableDto pgsDto) throw new ArgumentException("Invalid DTO type", nameof(dto));

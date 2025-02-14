@@ -14,7 +14,6 @@ namespace IMIS.Persistence.AuditScheduleModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
         public async Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.AuditSchedules
@@ -22,9 +21,6 @@ namespace IMIS.Persistence.AuditScheduleModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
-
-
         public object GetDbContext()
         {
             throw new NotImplementedException();

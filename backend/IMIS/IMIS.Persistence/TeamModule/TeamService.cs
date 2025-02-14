@@ -9,7 +9,6 @@ namespace IMIS.Persistence.TeamModule
     {
         private readonly ITeamRepository _teamRepository = teamRepository;
 
-
         private static TeamDto ConvTeamToDto(Team team)
         {
             return new TeamDto()
@@ -25,19 +24,16 @@ namespace IMIS.Persistence.TeamModule
                 }).ToList(),
             };
         }
-
         public async Task<List<TeamDto>?> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             var teams = await _teamRepository.GetAllActiveAsync(cancellationToken).ConfigureAwait(false);
             return teams?.Select(t => ConvTeamToDto(t)).ToList();
         }
-
         public async Task<List<TeamDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var teams = await _teamRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
             return teams?.Select(t => ConvTeamToDto(t)).ToList();
         }
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var tDto = dto as TeamDto;

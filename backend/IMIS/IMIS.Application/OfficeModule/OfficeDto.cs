@@ -2,7 +2,6 @@ using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Domain;
 
-
 namespace IMIS.Application.OfficeModule
 {
     public class OfficeDto : BaseDto<Office, int>

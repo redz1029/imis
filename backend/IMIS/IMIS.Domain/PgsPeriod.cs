@@ -6,7 +6,6 @@ namespace IMIS.Domain
     {
         public required DateOnly StartDate { get; set;}
         public required DateOnly EndDate { get; set;}
-
     }
 }
 

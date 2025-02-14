@@ -13,6 +13,5 @@ namespace IMIS.Domain
         public  PgsAuditDetails? PgsAuditDetails { get; set; }
         public string? Remarks { get; set; } 
     }
-
 }
 

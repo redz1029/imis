@@ -15,11 +15,9 @@ namespace IMIS.Persistence.TeamModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
         public async Task<IEnumerable<Team>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.Teams.Where(t => t.IsActive && !t.IsDeleted).ToListAsync(cancellationToken).ConfigureAwait(false);
-        }
-        
+        }        
     }
 }

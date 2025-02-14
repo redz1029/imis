@@ -32,16 +32,13 @@ namespace IMIS.Persistence.Migrations
 
                     b.Property<string>("AuditTitle")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasAnnotation("Relational:JsonPropertyName", "auditTitle");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("EndDate")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "EndDate");
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit")
-                        .HasAnnotation("Relational:JsonPropertyName", "isActive");
+                        .HasColumnType("bit");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
@@ -52,8 +49,7 @@ namespace IMIS.Persistence.Migrations
                         .HasColumnType("rowversion");
 
                     b.Property<DateTime>("StartDate")
-                        .HasColumnType("datetime2")
-                        .HasAnnotation("Relational:JsonPropertyName", "StartDate");
+                        .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
@@ -100,8 +96,6 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("TeamId");
 
                     b.ToTable("AuditSchduleDetails");
-
-                    b.HasAnnotation("Relational:JsonPropertyName", "auditScheduleDetails");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -117,8 +111,6 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("OfficeId");
 
                     b.ToTable("AuditableOffices");
-
-                    b.HasAnnotation("Relational:JsonPropertyName", "auditableOffices");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Auditor", b =>
@@ -298,13 +290,10 @@ namespace IMIS.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Direct")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("Indirect")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDirect")
                         .HasColumnType("bit");
 
                     b.Property<int?>("KraId")
@@ -421,7 +410,7 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "b5fdea0d-3825-4cba-82f1-e1f570c00edc",
-                            ConcurrencyStamp = "65a32621-02c6-4a7c-b818-a57a0b637e13",
+                            ConcurrencyStamp = "8f065b16-7910-46f1-bccd-8a559625dc5a",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });
@@ -521,15 +510,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "475e45a8-4dd9-425c-b405-b6598ef700fd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c8f8b43d-73e8-4872-83df-484a3d87c6b7",
+                            ConcurrencyStamp = "08d53584-06f3-4801-8654-3d9a39a2d711",
                             Email = "ADMIN@MAIL.COM",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAECDGMC303bvkUezJxame/vU5lqlp3EcxYx/ECQe/gxjWgJJKA9iweiytlFeG2wYhHw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHpcAXz8KtmyU6OINMA5W3PPNQ0quJrX/8So6JR0s3Rweh/WzKH2Ni3IMQM7EB7/1A==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b5d0f944-ef9d-4512-9dba-3f4b063d6677",
+                            SecurityStamp = "a6c52be2-b421-4de6-9006-07f8d7572686",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
@@ -626,7 +615,7 @@ namespace IMIS.Persistence.Migrations
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
                 {
                     b.HasOne("IMIS.Domain.AuditSchedule", "AuditSchedule")
-                        .WithMany("AuditScheduleDetails")
+                        .WithMany("AuditSchduleDetails")
                         .HasForeignKey("AuditScheduleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -790,7 +779,7 @@ namespace IMIS.Persistence.Migrations
 
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
                 {
-                    b.Navigation("AuditScheduleDetails");
+                    b.Navigation("AuditSchduleDetails");
 
                     b.Navigation("AuditableOffices");
                 });

@@ -11,7 +11,6 @@ namespace IMIS.Application.PgsModule
         public required OfficeDto Office { get; set; } 
         public PgsStatus Status { get; set; }
         public required string Remarks { get; set; }
-
         public override PgsAuditDetails ToEntity()
         {
             return new PgsAuditDetails()
