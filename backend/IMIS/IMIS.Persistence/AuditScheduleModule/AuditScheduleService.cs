@@ -9,7 +9,6 @@ namespace IMIS.Persistence.AuditScheduleModule
     {
         private readonly IAuditScheduleRepository _auditScheduleRepository = auditScheduleRepository;
         private readonly ITeamRepository _teamRepository = teamRepository;
-
         public async Task<AuditScheduleDto?> GenerateAuditScheduleDetail(int auditScheduleId, double noOfHoursPerAudit, CancellationToken cancellationToken)
         {
             var auditSchedule = await _auditScheduleRepository.GetByIdAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
@@ -57,7 +56,8 @@ namespace IMIS.Persistence.AuditScheduleModule
 
                         noOfParallelAuditsBeingScheduled++;
                         noOfOfficesToSchedule++;
-                    }                    
+                    }
+                    
                 } while (noOfOfficesToSchedule < noOfAuditableOffices);
                 {
                     DateTime startDateTime = DateTime.Now;
@@ -105,6 +105,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                         noOfOfficesToSchedule++;
                     }
                 }
+
                 auditSchedule.AuditSchduleDetails = auditScheduleDetails;
 
                 if(auditSchedule.Id == 0)
@@ -113,6 +114,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                 await _auditScheduleRepository
                     .SaveOrUpdateAsync(auditSchedule, cancellationToken)
                     .ConfigureAwait(false);
+
                 return new AuditScheduleDto()
                 {
                     Id = auditSchedule.Id,
@@ -135,6 +137,7 @@ namespace IMIS.Persistence.AuditScheduleModule
             }
             return null;
         }
+
         private static double CalculateWorkingHours(DateTime startDate, DateTime endDate, 
             TimeSpan workingDayStart, TimeSpan workingDayEnd, TimeSpan lunchBreakStart, TimeSpan lunchBreakEnd)
         {
@@ -201,13 +204,16 @@ namespace IMIS.Persistence.AuditScheduleModule
                     }
                 }
             }
+
             return totalHours;
         }
+
         public async Task<List<AuditScheduleDto>?> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository
                 .GetAllActiveAsync(cancellationToken)
                 .ConfigureAwait(false);
+
             return auditSchedules?.Select(a => 
                 new AuditScheduleDto() 
                 { 
@@ -218,6 +224,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                     IsActive = a.IsActive }
                 ).ToList();
         }
+
         public async Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository
@@ -235,6 +242,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                 }
                 ).ToList();
         }
+
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var aDto = dto as AuditScheduleDto;

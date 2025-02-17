@@ -3,7 +3,9 @@
 namespace IMIS.Application.PgsPeriodModule
 {
     public interface IPgsPeriodService : IService
-    {
-        Task<PgsPeriodDto> SaveOrUpdateAsync(PgsPeriodDto PeriodDto, CancellationToken cancellationToken);
-    } 
+    {        
+        Task<List<PgsPeriodDto>?> GetAllAsync(CancellationToken cancellationToken);
+        Task<PgsPeriodDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<PgsPeriodDto> SaveOrUpdateAsync(PgsPeriodDto periodDto, CancellationToken cancellationToken);
+    }
 }

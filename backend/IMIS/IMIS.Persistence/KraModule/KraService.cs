@@ -16,6 +16,7 @@ namespace IMIS.Persistence.KraModule
         private KraDto ConvOfficeToDTO(Kra kra)
         {
             if (kra == null) return null;
+
             return new KraDto
             {
                 Id = kra.Id,
@@ -52,7 +53,6 @@ namespace IMIS.Persistence.KraModule
             where TEntity : Entity<TId>
         {
             if (dto is not KraDto pgsDto) throw new ArgumentException("Invalid DTO type", nameof(dto));
-
             var pgsEntity = pgsDto.ToEntity();
             await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
         }

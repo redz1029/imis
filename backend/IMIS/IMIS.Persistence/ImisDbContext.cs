@@ -24,7 +24,6 @@ namespace IMIS.Persistence
             : base(options)  // Pass the options to the base DbContext constructor
         {
         }
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             builder.Entity<AuditorOffices>()
@@ -70,13 +69,9 @@ namespace IMIS.Persistence
                 .HasOne(asd => asd.AuditSchedule)
                 .WithMany(a => a.AuditSchduleDetails)
                 .HasForeignKey(asd => asd.AuditScheduleId);
-
-
             builder.Entity<PgsAuditDetails>().Property(p => p.Status)
            .HasConversion<int>();
-
             base.OnModelCreating(builder);
-
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
             builder.ApplyConfiguration(new UserConfiguration());

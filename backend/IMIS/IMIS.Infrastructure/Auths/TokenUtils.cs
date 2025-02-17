@@ -7,14 +7,12 @@ using Microsoft.IdentityModel.Tokens;
 namespace IMIS.Infrastructure.Auths
 {
     public static class TokenUtils
-    {
-        
+    {        
         public static string? ExpInMinutes { get; set; }
         public static string? ExpInDays { get; set; }
         public static string? SecretKey { get; set; }
         public static string? Issuer { get; set; }
         public static string? Audience { get; set; }
-
     
         public static string GenerateAccessToken(IdentityUser user, IList<string> roles)
         {
@@ -35,7 +33,6 @@ namespace IMIS.Infrastructure.Auths
 
             return GenerateToken(DateTime.UtcNow.AddMinutes(GetExpirationInMinutes()), claims);
         }
-
         public static string GenerateRefreshToken()
         {
             if (string.IsNullOrWhiteSpace(SecretKey) || string.IsNullOrWhiteSpace(Issuer) || string.IsNullOrWhiteSpace(Audience))
@@ -45,9 +42,7 @@ namespace IMIS.Infrastructure.Auths
             {
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             });
-        }
-
-          
+        }          
         private static string GenerateToken(DateTime expiration, IEnumerable<Claim> claims)
         {
             if (string.IsNullOrWhiteSpace(SecretKey))
@@ -62,17 +57,12 @@ namespace IMIS.Infrastructure.Auths
                 claims: claims,
                 expires: expiration,
                 signingCredentials: creds);
-
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-      
+        }      
         private static int GetExpirationInMinutes()
         {
             return int.TryParse(ExpInMinutes, out var minutes) ? minutes : 30;
-        }
-
-        
+        }        
         private static int GetExpirationInDays()
         {
             return int.TryParse(ExpInDays, out var days) ? days : 7;

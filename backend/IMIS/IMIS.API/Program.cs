@@ -11,7 +11,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
-
 Env.Load();
 
 var sqlServerConnectionString = Environment.GetEnvironmentVariable("SQL_SERVER_CONN")
@@ -33,13 +32,11 @@ builder.Services.AddDbContext<ImisDbContext>(options =>
 builder.Services.AddIdentity<IdentityUser, IdentityRole>() // Change this line
     .AddEntityFrameworkStores<ImisDbContext>()
     .AddDefaultTokenProviders();
-
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.AllowTrailingCommas = true;
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
-
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -79,8 +76,9 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowAllOrigins");
 app.MapCustomIdentityApi<IdentityUser>();
 app.MapCarter();
-
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.Run();
+
+

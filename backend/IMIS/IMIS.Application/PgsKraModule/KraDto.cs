@@ -7,6 +7,7 @@ namespace IMIS.Application.PgsKraModule
     {
         public  required string Name { get; set; }
         public required string Remarks { get; set; }
+
         public override Kra ToEntity()
         {            
             return new Kra() { Id = Id, Name = Name, Remarks = Remarks };

@@ -32,9 +32,10 @@ namespace IMIS.Application.PgsModule
                 Kra = Kra?.ToEntity(),
                 PgsAuditDetails = PgsAuditDetails?.ToEntity(),
                 Remarks = Remarks
-            };          
+            };
+          
         }
-    }   
+    }
     public class Base64JsonConverter : JsonConverter<byte[]>
     {
         public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -43,7 +44,8 @@ namespace IMIS.Application.PgsModule
             {
                 var base64String = reader.GetString();
                 if (base64String == null)
-                    return null;        
+                    return null;
+        
                 return Convert.FromBase64String(base64String);
             }
             catch (FormatException ex)
@@ -56,5 +58,6 @@ namespace IMIS.Application.PgsModule
             writer.WriteStringValue(value == null ? null : Convert.ToBase64String(value));
         }
     }
+
 }
 
