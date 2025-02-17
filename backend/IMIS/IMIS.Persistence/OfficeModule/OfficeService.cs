@@ -43,11 +43,12 @@ namespace IMIS.Persistence.OfficeModule
         {
             var offices = await _repository.GetNonAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
-        }  
+        }   
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var ODto = dto as OfficeDto;
             var office = ODto!.ToEntity();
+
             if (office.Id == 0)
                 _repository.Add(office);
             else

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IMIS.Persistence.PgsModule
 {
     public class PgsAuditDetailsRepository(ImisDbContext dbContext)
-   : BaseRepository<PgsAuditDetails, long, ImisDbContext>(dbContext), IPgsAuditDetailsRepository
+   :BaseRepository<PgsAuditDetails, long, ImisDbContext>(dbContext), IPgsAuditDetailsRepository
     {
         public new async Task<PgsAuditDetails> SaveOrUpdateAsync(PgsAuditDetails pgs, CancellationToken cancellationToken)
         {

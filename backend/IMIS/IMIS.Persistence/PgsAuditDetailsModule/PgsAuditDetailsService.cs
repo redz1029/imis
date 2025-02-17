@@ -14,8 +14,7 @@ namespace IMIS.Persistence.PgsModule
             // Convert DTO to entity
             var pgsEntity = PGSDto.ToEntity();
             // Handle Save or Update
-            var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
-            // Return updated DTO with nested values (handle potential nulls)
+            var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);            
             return new PgsAuditDetailsDto
             {
                 Id = createdPgs.Id,

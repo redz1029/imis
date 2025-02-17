@@ -5,26 +5,43 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PgsPeriodModule
 {
-    public class PgsPeriodRepository(ImisDbContext dbContext)
-  : BaseRepository<PgsPeriod, int, ImisDbContext>(dbContext), IPgsPeriodRepository
+    public class PgsPeriodRepository : BaseRepository<PgsPeriod, int, ImisDbContext>, IPgsPeriodRepository
     {
+        public PgsPeriodRepository(ImisDbContext dbContext)
+            : base(dbContext)
+        {
+
+        }
+        public async Task<IEnumerable<PgsPeriod>> GetAll(CancellationToken cancellationToken)
+        {
+            return await _dbContext.PgsPeriod
+                .Where(o => !o.IsDeleted) 
+                .AsNoTracking()           
+                .ToListAsync(cancellationToken) 
+                .ConfigureAwait(false);
+        }
         public new async Task<PgsPeriod> SaveOrUpdateAsync(PgsPeriod PgsPeriod, CancellationToken cancellationToken)
         {
             if (PgsPeriod == null) throw new ArgumentNullException(nameof(PgsPeriod));
 
             var existingPgsPeriod = await _dbContext.PgsPeriod
                 .FirstOrDefaultAsync(d => d.Id == PgsPeriod.Id, cancellationToken)
-            .ConfigureAwait(false);
+                .ConfigureAwait(false);
             if (existingPgsPeriod != null)
             {
-                _dbContext.Entry(existingPgsPeriod).CurrentValues.SetValues(existingPgsPeriod);
+                // Update the existing PgsPeriod entity
+                _dbContext.Entry(existingPgsPeriod).CurrentValues.SetValues(PgsPeriod);
             }
             else
             {
+                // Add the new PgsPeriod entity
                 await _dbContext.PgsPeriod.AddAsync(PgsPeriod, cancellationToken).ConfigureAwait(false);
             }
 
+            // Save changes to the database
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+
+            // Return the saved or updated entity
             return PgsPeriod;
         }
     }

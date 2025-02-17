@@ -8,7 +8,6 @@ namespace IMIS.Persistence.TeamModule
     public class TeamService(ITeamRepository teamRepository) : ITeamService
     {
         private readonly ITeamRepository _teamRepository = teamRepository;
-
         private static TeamDto ConvTeamToDto(Team team)
         {
             return new TeamDto()

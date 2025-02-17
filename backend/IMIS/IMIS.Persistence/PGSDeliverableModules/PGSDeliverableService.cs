@@ -23,14 +23,12 @@ namespace IMIS.Persistence.PGSModules
                 Status = createdPgs.Status,
                 RowVersion = createdPgs.RowVersion ?? Array.Empty<byte>(),
                 Remarks = createdPgs.Remarks ?? string.Empty,
-
                 Kra = createdPgs.Kra != null ? new KraDto
                 {
                     Id = createdPgs.Kra.Id,
                     Name = createdPgs.Kra.Name,
                     Remarks = createdPgs.Kra.Remarks ?? string.Empty
                 } : null,
-
                 PgsAuditDetails = createdPgs.PgsAuditDetails != null ? new PgsAuditDetailsDto
                 {
                     Id = createdPgs.PgsAuditDetails.Id,

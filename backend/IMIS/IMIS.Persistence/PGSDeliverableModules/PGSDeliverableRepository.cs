@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IMIS.Persistence.PGSModules
 {   
     public class PGSDeliverableRepository(ImisDbContext dbContext)
-        : BaseRepository<PgsDeliverable, long, ImisDbContext>(dbContext), IPGSDeliverableRepository
+    : BaseRepository<PgsDeliverable, long, ImisDbContext>(dbContext), IPGSDeliverableRepository
     {
         public new async Task<PgsDeliverable> SaveOrUpdateAsync(PgsDeliverable pgs, CancellationToken cancellationToken)
         {
