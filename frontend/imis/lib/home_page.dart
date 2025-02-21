@@ -1,5 +1,10 @@
-
 import 'package:flutter/material.dart';
+import 'package:imis/PGS/Deliverables_List.dart';
+import 'package:imis/Settings/Auditor/Auditor_List.dart';
+import 'package:imis/Settings/KRA/Kra_List.dart';
+import 'package:imis/Settings/PGS%20Period/PGS_Period.dart';
+import 'package:imis/login/pages/login_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -21,14 +26,33 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  void _logout(BuildContext context) {
+  bool _isLoading = false; // Track loading state
+  Widget _selectedScreen = const Center(
+    child: Text("Welcome to IMIS! Wilbur B. Pimentel"),
+  );
+
+  void _setScreen(Widget screen) {
+    setState(() {
+      _isLoading = true;
+    });
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      setState(() {
+        _selectedScreen = screen;
+        _isLoading = false;
+      });
+    });
+
+    Navigator.pop(context); // Close drawer
+  }
+
+  void _logout(BuildContext context) async {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -40,10 +64,12 @@ class _HomePageState extends State<HomePage> {
             child: const Text('Cancel'),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(context).pop();
+              SharedPreferences prefs = await SharedPreferences.getInstance();
+              await prefs.clear();
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const MyApp()),
+                MaterialPageRoute(builder: (context) => const LoginPage()),
               );
             },
             child: const Text('Logout'),
@@ -53,15 +79,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
         title: const Text("Integrated Management Information System"),
+        foregroundColor: Colors.white,
+        backgroundColor: const Color(0xFF1A67A3),
+        centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.menu),
+          color: Colors.white,
           onPressed: () {
             _scaffoldKey.currentState?.openDrawer();
           },
@@ -71,21 +100,32 @@ class _HomePageState extends State<HomePage> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            // Drawer Header with Close Button in Upper Right
             DrawerHeader(
               decoration: const BoxDecoration(
-                color: Colors.blue,
+                color: Color(0xFF1A67A3),
               ),
               child: Stack(
                 children: [
-                  const Positioned(
-                    left: 10,
-                    child: Text(
-                      'Menu',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
+                  Positioned(
+                    left: 15,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'lib/assets/CRMC.png',
+                          width: 105,
+                          height: 105,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Cotabato Regional and Medical Center',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.normal,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Positioned(
@@ -94,7 +134,7 @@ class _HomePageState extends State<HomePage> {
                     child: IconButton(
                       icon: const Icon(Icons.menu, color: Colors.white),
                       onPressed: () {
-                        Navigator.pop(context); // Close the drawer
+                        Navigator.pop(context);
                       },
                     ),
                   ),
@@ -102,37 +142,105 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.file_copy),
-              title: const Text('PGS'),
+              leading: const Icon(Icons.file_copy, size: 20),
+              title: const Text(
+                'Performance Governance System',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w100),
+              ),
               onTap: () {
-                Navigator.pop(context);
+
+                _setScreen((Deliverables_List()));
+
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.home),
-              title: const Text('Home'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+            ExpansionTile(
+              leading: const Icon(Icons.settings, size: 20),
+              title: const Text(
+                'Settings',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w100),
+              ),
+              children: [
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.medical_information, size: 18),
+                  title: const Text(
+                    'Key Result Area',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  onTap: () { //=> _setScreen(KRAListScreen()
+                    _setScreen(KRAListScreen());
+                  }, // Load with delay                 
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.house_rounded, size: 18),
+                  title: const Text(
+                    'Offices',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  onTap: () {},
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.person_2_rounded, size: 18),
+                  title: const Text(
+                    'Auditor',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  onTap: () {
+
+                     _setScreen(AuditorListScreen());
+
+                    
+                  },
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.people_alt_rounded, size: 18),
+                  title: const Text(
+                    'Teams',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  onTap: () {},
+                ),
+                ListTile(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
+                  leading: const Icon(Icons.date_range, size: 18),
+                  title: const Text(
+                    'PGS Period',
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  onTap: () {
+
+                     _setScreen(PGSPeriodScreen());
+                  },
+                ),
+              ],
             ),
             ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('Settings'),
-              onTap: () {
-                Navigator.pop(context);
-              },
+              leading: const Icon(Icons.folder_rounded, size: 20),
+              title: const Text(
+                'Reports',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w100),
+              ),
+              onTap: () {},
             ),
             ListTile(
-              leading: const Icon(Icons.exit_to_app),
-              title: const Text('Logout'),
+              leading: const Icon(Icons.exit_to_app, size: 20),
+              title: const Text(
+                'Logout',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w100),
+              ),
               onTap: () => _logout(context),
             ),
           ],
         ),
       ),
-      body: const Center(
-        child: Text("Welcome to IMIS! Wilbur B. Pimentel"),
-      ),
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(),
+            )
+          : _selectedScreen,
     );
   }
 }
