@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:imis/login/pages/login_page.dart';
 import 'dart:convert';
 
-import 'package:imis/login/pages/login_page.dart';  // Import login page
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -13,165 +13,195 @@ class RegistrationPage extends StatefulWidget {
 }
 
 class _RegistrationPageState extends State<RegistrationPage> {
-  // Controllers to capture text field input
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  // Function to handle registration logic
+  bool _showModal = true; // Initially show the modal
+  String _modalMessage = '';
+
   Future<void> _registerUser() async {
     final username = _usernameController.text;
-    final email = _emailController.text;  
+    final email = _emailController.text;
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    // Simple validation
     if (username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      _showError("Please fill in all fields.");
+      _setModal("Please fill in all fields.");
       return;
     }
 
     if (password != confirmPassword) {
-      _showError("Passwords do not match.");
+      _setModal("Passwords do not match.");
       return;
     }
 
-    // Sending data to the backend (replace with your API URL)
-    final apiUrl = 'https://localhost:44333/register';  // Use IP address or emulator local IP
+    final apiUrl = 'https://localhost:44333/register'; // Replace with your API URL
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
           'username': username,
-          'email': email,       
+          'email': email,
           'password': password,
         }),
       );
 
-      // Debugging: Print status code and body
-      // print("Server Response: ${response.statusCode}");
-      // print("Response Body: ${response.body}");
-
-      // Handle the response from the server
       if (response.statusCode == 200) {
-        _showSuccess("Registration successful!");
-      } else if (response.statusCode == 400) {
-        _showError("Invalid data. Please check your input.");
-      } else if (response.statusCode == 500) {
-        _showError("Server error. Please try again later.");
+        _setModal("Registration successful!");
+
+        // Navigate to LoginPage after registration success  
+        Future.delayed(Duration(seconds: 2), () {
+          Navigator.pushReplacement(
+            // ignore: use_build_context_synchronously
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()), // Navigate to LoginPage
+          );          
+        });
+
+
       } else {
-        _showError("Registration failed. Please try again.");
+        _setModal("Registration failed. Please try again.");
       }
     } catch (e) {
-      // Handle network errors or exceptions
-      print("Error: $e");
-      _showError("An error occurred. Please check your internet connection and try again.");
+     
+      _setModal("An error occurred. Please check your internet connection and try again.");
     }
   }
 
-  // Function to show error messages
-  void _showError(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Error"),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            child: Text("OK"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Function to show success messages
-  void _showSuccess(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text("Success"),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();  // Close the success dialog
-              Navigator.pushReplacement(
-                context,  
-                MaterialPageRoute(builder: (context) => LoginPage()),
-              );
-            },
-            child: Text("OK"),
-          ),
-        ],
-      ),
-    );
+  void _setModal(String message) {
+    setState(() {
+      _modalMessage = message;
+      _showModal = true;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Registration"),
+        title: Text("Create New Account"),
+        backgroundColor: Color.fromARGB(255, 230, 225, 225),
       ),
-      body: Center(
+      backgroundColor: Color.fromARGB(255, 230, 225, 225),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(20.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Username Field
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: "Username",
-                  border: OutlineInputBorder(),
+              if (_showModal)
+                Center(
+                  child: Container(
+                    width: 370,
+                    height: 430,
+                    padding: const EdgeInsets.all(10.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10.0),
+                      boxShadow: [
+                        BoxShadow(color: Colors.black26, blurRadius: 5.0),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          _modalMessage,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        SizedBox(height: 20),
+                        TextField(
+                          controller: _usernameController,
+                          decoration: InputDecoration(
+                            labelText: "Username",
+                            labelStyle: TextStyle(color: Color.fromARGB(255, 44, 49, 56)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.5),
+                              borderSide: BorderSide(color: Colors.blue[800]!, width: 2.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.5),
+                              borderSide: BorderSide(color: Colors.blue[800]!, width: 1.2),
+                            ),
+                            filled: true,
+                            fillColor: Color.fromARGB(255, 255, 255, 255),
+                          ),
+                        ),
+                        SizedBox(height: 20.0),
+                        TextField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            labelText: "Email",
+                            labelStyle: TextStyle(color: Color.fromARGB(255, 44, 49, 56)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.5),
+                              borderSide: BorderSide(color: Colors.blue[800]!, width: 2.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.5),
+                              borderSide: BorderSide(color: Colors.blue[800]!, width: 1.2),
+                            ),
+                            filled: true,
+                            fillColor: Color.fromARGB(255, 255, 255, 255),
+                          ),
+                        ),
+                        SizedBox(height: 20.0),
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: "Password",
+                            labelStyle: TextStyle(color: Color.fromARGB(255, 44, 49, 56)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.5),
+                              borderSide: BorderSide(color: Colors.blue[800]!, width: 2.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.5),
+                              borderSide: BorderSide(color: Colors.blue[800]!, width: 1.2),
+                            ),
+                            filled: true,
+                            fillColor: Color.fromARGB(255, 255, 255, 255),
+                          ),
+                        ),
+                        SizedBox(height: 20.0),
+                        TextField(
+                          controller: _confirmPasswordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: "Confirm Password",
+                            labelStyle: TextStyle(color: Color.fromARGB(255, 44, 49, 56)),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.5),
+                              borderSide: BorderSide(color: Colors.blue[800]!, width: 2.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8.5),
+                              borderSide: BorderSide(color: Colors.blue[800]!, width: 1.2),
+                            ),
+                            filled: true,
+                            fillColor: Color.fromARGB(255, 255, 255, 255),
+                          ),
+                        ),
+                        SizedBox(height: 20.0),
+                        ElevatedButton(
+                          onPressed: _registerUser,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue[800],
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 143.0),
+                          ),
+                          child: Text("Register", style: TextStyle(fontSize: 16, color: Colors.white)),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-              SizedBox(height: 20.0),
-
-              // Email Field
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: "Email",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 20.0),
-              
-              // Password Field
-              TextField(
-                controller: _passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: "Password",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 20.0),
-
-              // Confirm Password Field
-              TextField(
-                controller: _confirmPasswordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: "Confirm Password",
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 20.0),
-
-              // Register Button
-              ElevatedButton(
-                onPressed: _registerUser, 
-                child: Text("Register"),
-              ),
             ],
           ),
         ),
