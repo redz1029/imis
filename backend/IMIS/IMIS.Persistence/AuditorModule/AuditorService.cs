@@ -1,7 +1,6 @@
 ﻿using Base.Primitives;
 using IMIS.Application.AuditorModule;
 
-
 namespace IMIS.Persistence.AuditorModule
 {
     public class AuditorService : IAuditorService
