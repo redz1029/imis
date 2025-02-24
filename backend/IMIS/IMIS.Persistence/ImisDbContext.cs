@@ -20,6 +20,9 @@ namespace IMIS.Persistence
         public DbSet<PgsAuditDetails> PgsProjectStatus { get; set; }
         public DbSet<PgsPeriod> PgsPeriod { get; set; }
 
+        public DbSet<PGSReadinessRatingCancerCare> PgsReadiness { get; set; }
+
+
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)  // Pass the options to the base DbContext constructor
         {
