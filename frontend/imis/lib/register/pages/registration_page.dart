@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'package:imis/login/pages/login_page.dart';
 import 'dart:convert';
 
-
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
 
@@ -27,7 +26,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
-    if (username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
+    if (username.isEmpty ||
+        email.isEmpty ||
+        password.isEmpty ||
+        confirmPassword.isEmpty) {
       _setModal("Please fill in all fields.");
       return;
     }
@@ -37,7 +39,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
       return;
     }
 
-    final apiUrl = 'https://localhost:44333/register'; // Replace with your API URL
+    final apiUrl =
+        'https://localhost:7273/register'; // Replace with your API URL
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -52,22 +55,21 @@ class _RegistrationPageState extends State<RegistrationPage> {
       if (response.statusCode == 200) {
         _setModal("Registration successful!");
 
-        // Navigate to LoginPage after registration success  
+        // Navigate to LoginPage after registration success
         Future.delayed(Duration(seconds: 2), () {
           Navigator.pushReplacement(
             // ignore: use_build_context_synchronously
             context,
-            MaterialPageRoute(builder: (context) => LoginPage()), // Navigate to LoginPage
-          );          
+            MaterialPageRoute(
+                builder: (context) => LoginPage()), // Navigate to LoginPage
+          );
         });
-
-
       } else {
         _setModal("Registration failed. Please try again.");
       }
     } catch (e) {
-     
-      _setModal("An error occurred. Please check your internet connection and try again.");
+      _setModal(
+          "An error occurred. Please check your internet connection and try again.");
     }
   }
 
@@ -117,14 +119,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           controller: _usernameController,
                           decoration: InputDecoration(
                             labelText: "Username",
-                            labelStyle: TextStyle(color: Color.fromARGB(255, 44, 49, 56)),
+                            labelStyle: TextStyle(
+                                color: Color.fromARGB(255, 44, 49, 56)),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.5),
-                              borderSide: BorderSide(color: Colors.blue[800]!, width: 2.0),
+                              borderSide: BorderSide(
+                                  color: Colors.blue[800]!, width: 2.0),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.5),
-                              borderSide: BorderSide(color: Colors.blue[800]!, width: 1.2),
+                              borderSide: BorderSide(
+                                  color: Colors.blue[800]!, width: 1.2),
                             ),
                             filled: true,
                             fillColor: Color.fromARGB(255, 255, 255, 255),
@@ -135,14 +140,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           controller: _emailController,
                           decoration: InputDecoration(
                             labelText: "Email",
-                            labelStyle: TextStyle(color: Color.fromARGB(255, 44, 49, 56)),
+                            labelStyle: TextStyle(
+                                color: Color.fromARGB(255, 44, 49, 56)),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.5),
-                              borderSide: BorderSide(color: Colors.blue[800]!, width: 2.0),
+                              borderSide: BorderSide(
+                                  color: Colors.blue[800]!, width: 2.0),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.5),
-                              borderSide: BorderSide(color: Colors.blue[800]!, width: 1.2),
+                              borderSide: BorderSide(
+                                  color: Colors.blue[800]!, width: 1.2),
                             ),
                             filled: true,
                             fillColor: Color.fromARGB(255, 255, 255, 255),
@@ -154,14 +162,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           obscureText: true,
                           decoration: InputDecoration(
                             labelText: "Password",
-                            labelStyle: TextStyle(color: Color.fromARGB(255, 44, 49, 56)),
+                            labelStyle: TextStyle(
+                                color: Color.fromARGB(255, 44, 49, 56)),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.5),
-                              borderSide: BorderSide(color: Colors.blue[800]!, width: 2.0),
+                              borderSide: BorderSide(
+                                  color: Colors.blue[800]!, width: 2.0),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.5),
-                              borderSide: BorderSide(color: Colors.blue[800]!, width: 1.2),
+                              borderSide: BorderSide(
+                                  color: Colors.blue[800]!, width: 1.2),
                             ),
                             filled: true,
                             fillColor: Color.fromARGB(255, 255, 255, 255),
@@ -173,14 +184,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
                           obscureText: true,
                           decoration: InputDecoration(
                             labelText: "Confirm Password",
-                            labelStyle: TextStyle(color: Color.fromARGB(255, 44, 49, 56)),
+                            labelStyle: TextStyle(
+                                color: Color.fromARGB(255, 44, 49, 56)),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.5),
-                              borderSide: BorderSide(color: Colors.blue[800]!, width: 2.0),
+                              borderSide: BorderSide(
+                                  color: Colors.blue[800]!, width: 2.0),
                             ),
                             focusedBorder: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8.5),
-                              borderSide: BorderSide(color: Colors.blue[800]!, width: 1.2),
+                              borderSide: BorderSide(
+                                  color: Colors.blue[800]!, width: 1.2),
                             ),
                             filled: true,
                             fillColor: Color.fromARGB(255, 255, 255, 255),
@@ -194,9 +208,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8.0),
                             ),
-                            padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 143.0),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 20.0, horizontal: 143.0),
                           ),
-                          child: Text("Register", style: TextStyle(fontSize: 16, color: Colors.white)),
+                          child: Text("Register",
+                              style:
+                                  TextStyle(fontSize: 16, color: Colors.white)),
                         ),
                       ],
                     ),

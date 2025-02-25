@@ -10,12 +10,13 @@ class AuditorListScreen extends StatefulWidget {
   // ignore: library_private_types_in_public_api
   _AuditorListScreenState createState() => _AuditorListScreenState();
 }
+
 class _AuditorListScreenState extends State<AuditorListScreen> {
   // ignore: non_constant_identifier_names
   List<Map<String, dynamic>> AuditorList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
-  final String apiUrl = 'https://localhost:44333/auditors';
+  final String apiUrl = 'https://localhost:7273/auditors';
 
   @override
   void initState() {
@@ -32,8 +33,9 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
         // Parse the response and assign the data to AuditorList
         List<dynamic> data = json.decode(response.body);
         setState(() {
-          AuditorList = data.map((auditor) => auditor as Map<String, dynamic>).toList();
-          filteredList = List.from(AuditorList);  // Initially show all auditors
+          AuditorList =
+              data.map((auditor) => auditor as Map<String, dynamic>).toList();
+          filteredList = List.from(AuditorList); // Initially show all auditors
         });
       } else {
         if (kDebugMode) {
@@ -46,6 +48,7 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
       }
     }
   }
+
   // Add or update auditor
   Future<void> addOrUpdateAuditor(String? id, String name) async {
     try {
@@ -58,11 +61,11 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
           'isActive': true,
           'isTeamLeader': false,
           'isOfficeHead': false,
-          'isDeleted': false,  // Default to false
+          'isDeleted': false, // Default to false
           'rowVersion': '',
         }),
       );
-      if (response.statusCode == 201 || response.statusCode == 200) {      
+      if (response.statusCode == 201 || response.statusCode == 200) {
         fetchAuditors();
         Navigator.pop(context); // Close the dialog
       } else {
@@ -76,13 +79,16 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
       }
     }
   }
+
   // Filter search results based on query
   void filterSearchResults(String query) {
     setState(() {
       filteredList = AuditorList.where((auditor) =>
-          auditor['name']!.toLowerCase().contains(query.toLowerCase())).toList();
+              auditor['name']!.toLowerCase().contains(query.toLowerCase()))
+          .toList();
     });
   }
+
   // Show the form to add or update auditor
   void showFormDialog({String? id, String? name}) {
     TextEditingController AuditorController = TextEditingController(text: name);
@@ -90,8 +96,10 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-          title: Text(id == null ? 'Add Auditor' : 'Edit Auditor', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+          title: Text(id == null ? 'Add Auditor' : 'Edit Auditor',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -115,13 +123,15 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
               child: Text('Cancel', style: TextStyle(color: Colors.white)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF1A67A3)),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Color(0xFF1A67A3)),
               onPressed: () async {
                 bool? confirmAction = await showDialog<bool>(
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: Text(id == null ? "Confirm Save" : "Confirm Update"),
+                      title:
+                          Text(id == null ? "Confirm Save" : "Confirm Update"),
                       content: Text(id == null
                           ? "Are you sure you want to save this record?"
                           : "Are you sure you want to update this record?"),
@@ -143,18 +153,21 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
                   addOrUpdateAuditor(id, AuditorController.text);
                 }
               },
-              child: Text(id == null ? 'Save' : 'Update', style: TextStyle(color: Colors.white)),
+              child: Text(id == null ? 'Save' : 'Update',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         );
       },
     );
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Auditor Information', style: TextStyle(color: Colors.white)),
+        title:
+            Text('Auditor Information', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1A67A3),
       ),
       body: Padding(
@@ -166,7 +179,8 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
               decoration: InputDecoration(
                 labelText: 'Search Auditor',
                 prefixIcon: Icon(Icons.search, color: Colors.blue),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0)),
                 filled: true,
                 fillColor: Colors.grey[200],
               ),
@@ -188,7 +202,9 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
                             padding: EdgeInsets.only(right: 10),
                             child: Text(
                               '#',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -199,7 +215,9 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
                             padding: EdgeInsets.only(right: 10),
                             child: Text(
                               'Auditor Name',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -210,7 +228,9 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
                             padding: EdgeInsets.only(right: 1),
                             child: Text(
                               'Actions',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -222,65 +242,80 @@ class _AuditorListScreenState extends State<AuditorListScreen> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: Column(
-                        children: filteredList.asMap().map((index, auditor) {
-                          return MapEntry(
-                            index,
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 1, horizontal: 16),
-                              decoration: BoxDecoration(
-                                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(right: 1),
-                                      child: Text(
-                                        (index + 1).toString(),
-                                        style: TextStyle(fontWeight: FontWeight.normal),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
+                        children: filteredList
+                            .asMap()
+                            .map((index, auditor) {
+                              return MapEntry(
+                                index,
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 1, horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                        bottom: BorderSide(
+                                            color: Colors.grey.shade300)),
                                   ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(right: 1),
-                                      child: Text(
-                                        auditor['name'],
-                                        style: TextStyle(fontWeight: FontWeight.normal),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(right: 1),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        children: [
-                                          IconButton(
-                                            icon: Icon(Icons.edit, color: Color(0xFF1A67A3)),
-                                            onPressed: () => showFormDialog(id: auditor['id'].toString(), name: auditor['name']),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        flex: 1,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(right: 1),
+                                          child: Text(
+                                            (index + 1).toString(),
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.normal),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          SizedBox(width: 1),
-                                          IconButton(
-                                            icon: Icon(Icons.delete, color: Color.fromARGB(255, 221, 79, 79)),
-                                            onPressed: () async {
-                                            },
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(right: 1),
+                                          child: Text(
+                                            auditor['name'],
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.normal),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(right: 1),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(Icons.edit,
+                                                    color: Color(0xFF1A67A3)),
+                                                onPressed: () => showFormDialog(
+                                                    id: auditor['id']
+                                                        .toString(),
+                                                    name: auditor['name']),
+                                              ),
+                                              SizedBox(width: 1),
+                                              IconButton(
+                                                icon: Icon(Icons.delete,
+                                                    color: Color.fromARGB(
+                                                        255, 221, 79, 79)),
+                                                onPressed: () async {},
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).values.toList(),
+                                ),
+                              );
+                            })
+                            .values
+                            .toList(),
                       ),
                     ),
                   ),

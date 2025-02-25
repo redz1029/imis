@@ -4,7 +4,7 @@ import 'package:http/io_client.dart';
 import 'dart:io';
 
 class ApiEndpoint {
-  static String baseUrl = 'https://localhost:44333'; // Local API URL
+  static String baseUrl = 'https://localhost:7273'; // Local API URL
 
   late String login;
   late String register;
@@ -13,19 +13,18 @@ class ApiEndpoint {
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
-    changepassword = '$baseUrl/changePassword'; 
+    changepassword = '$baseUrl/changePassword';
   }
 
-  
   Future<http.Client> createHttpClient() async {
     final client = HttpClient();
     client.badCertificateCallback =
-        (X509Certificate cert, String host, int port) => true; 
+        (X509Certificate cert, String host, int port) => true;
     return IOClient(client);
   }
 
- 
-  Future<Map<String, dynamic>> LoginPage(String username, String password) async {
+  Future<Map<String, dynamic>> LoginPage(
+      String username, String password) async {
     final client = await createHttpClient();
     try {
       final response = await client.post(
@@ -39,7 +38,6 @@ class ApiEndpoint {
         }),
       );
 
-    
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
@@ -51,12 +49,13 @@ class ApiEndpoint {
   }
 
   // Registration function
-  Future<Map<String, dynamic>> registrationPage(String username, String email, String password) async {
+  Future<Map<String, dynamic>> registrationPage(
+      String username, String email, String password) async {
     final client = await createHttpClient();
 
     try {
       final response = await client.post(
-        Uri.parse(register), 
+        Uri.parse(register),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -66,7 +65,7 @@ class ApiEndpoint {
           'password': password,
         }),
       );
-    
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         return jsonDecode(response.body);
       } else {
@@ -76,7 +75,4 @@ class ApiEndpoint {
       throw Exception('An error occurred during registration: $e');
     }
   }
-
- 
 }
-

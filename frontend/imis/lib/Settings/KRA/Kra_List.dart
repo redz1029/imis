@@ -13,7 +13,7 @@ class _KRAListScreenState extends State<KRAListScreen> {
   List<Map<String, dynamic>> kraList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
-  final String apiUrl = 'https://localhost:44333/Kra';
+  final String apiUrl = 'https://localhost:7273/Kra';
 
   @override
   void initState() {
@@ -27,12 +27,14 @@ class _KRAListScreenState extends State<KRAListScreen> {
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         setState(() {
-          kraList = data.map((kra) => {
-            'id': kra['id'],
-            'name': kra['name'],
-            'remarks': kra['remarks'],
-            'isDeleted': kra['isDeleted']
-          }).toList();
+          kraList = data
+              .map((kra) => {
+                    'id': kra['id'],
+                    'name': kra['name'],
+                    'remarks': kra['remarks'],
+                    'isDeleted': kra['isDeleted']
+                  })
+              .toList();
           filteredList = List.from(kraList);
         });
       }
@@ -50,7 +52,7 @@ class _KRAListScreenState extends State<KRAListScreen> {
           'id': id ?? '0',
           'name': name,
           'remarks': remarks,
-          'isDeleted': false,  // Default to false
+          'isDeleted': false, // Default to false
           'rowVersion': '',
         }),
       );
@@ -64,21 +66,26 @@ class _KRAListScreenState extends State<KRAListScreen> {
 
   void filterSearchResults(String query) {
     setState(() {
-      filteredList = kraList.where((kra) =>
-          kra['name']!.toLowerCase().contains(query.toLowerCase())).toList();
+      filteredList = kraList
+          .where(
+              (kra) => kra['name']!.toLowerCase().contains(query.toLowerCase()))
+          .toList();
     });
   }
 
   void showFormDialog({String? id, String? name, String? remarks}) {
     TextEditingController nameController = TextEditingController(text: name);
-    TextEditingController remarksController = TextEditingController(text: remarks);
+    TextEditingController remarksController =
+        TextEditingController(text: remarks);
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-          title: Text(id == null ? 'Add KRA' : 'Edit KRA', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+          title: Text(id == null ? 'Add KRA' : 'Edit KRA',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -113,13 +120,15 @@ class _KRAListScreenState extends State<KRAListScreen> {
               child: Text('Cancel', style: TextStyle(color: Colors.white)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF1A67A3)),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Color(0xFF1A67A3)),
               onPressed: () async {
                 bool? confirmAction = await showDialog<bool>(
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: Text(id == null ? "Confirm Save" : "Confirm Update"),
+                      title:
+                          Text(id == null ? "Confirm Save" : "Confirm Update"),
                       content: Text(id == null
                           ? "Are you sure you want to save this record?"
                           : "Are you sure you want to update this record?"),
@@ -138,11 +147,13 @@ class _KRAListScreenState extends State<KRAListScreen> {
                 );
 
                 if (confirmAction == true) {
-                  addOrUpdateKRA(id, nameController.text, remarksController.text);
+                  addOrUpdateKRA(
+                      id, nameController.text, remarksController.text);
                   Navigator.pop(context);
                 }
               },
-              child: Text(id == null ? 'Save' : 'Update', style: TextStyle(color: Colors.white)),
+              child: Text(id == null ? 'Save' : 'Update',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -151,41 +162,41 @@ class _KRAListScreenState extends State<KRAListScreen> {
   }
 
   Future<void> deleteKRA(String id) async {
-  try {
-    final response = await http.put(
-      Uri.parse('$apiUrl/$id'),
-      headers: {'Content-Type': 'application/json'},
-      body: json.encode({
-        'id': id,
-        'isDeleted': true, // Mark as deleted
-        'rowVersion': '', // Add rowVersion if needed for concurrency
-      }),
-    );
+    try {
+      final response = await http.put(
+        Uri.parse('$apiUrl/$id'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode({
+          'id': id,
+          'isDeleted': true, // Mark as deleted
+          'rowVersion': '', // Add rowVersion if needed for concurrency
+        }),
+      );
 
-    if (response.statusCode == 200) {
-      fetchKRAs();
+      if (response.statusCode == 200) {
+        fetchKRAs();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('KRA marked as deleted!'),
+          ));
+        }
+      } else {
+        print('Failed to delete KRA. Response: ${response.body}');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Failed to delete KRA.'),
+          ));
+        }
+      }
+    } catch (e) {
+      print('Error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('KRA marked as deleted!'),
+          content: Text('An error occurred while trying to delete KRA.'),
         ));
       }
-    } else {
-      print('Failed to delete KRA. Response: ${response.body}');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Failed to delete KRA.'),
-        ));
-      }
-    }
-  } catch (e) {
-    print('Error: $e');
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('An error occurred while trying to delete KRA.'),
-      ));
     }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +214,8 @@ class _KRAListScreenState extends State<KRAListScreen> {
               decoration: InputDecoration(
                 labelText: 'Search KRA',
                 prefixIcon: Icon(Icons.search, color: Colors.blue),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0)),
                 filled: true,
                 fillColor: Colors.grey[200],
               ),
@@ -225,7 +237,9 @@ class _KRAListScreenState extends State<KRAListScreen> {
                             padding: EdgeInsets.only(right: 10),
                             child: Text(
                               '#',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -236,7 +250,9 @@ class _KRAListScreenState extends State<KRAListScreen> {
                             padding: EdgeInsets.only(right: 10),
                             child: Text(
                               'KRA Name',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -247,7 +263,9 @@ class _KRAListScreenState extends State<KRAListScreen> {
                             padding: EdgeInsets.only(right: 10),
                             child: Text(
                               'Remarks',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -258,7 +276,9 @@ class _KRAListScreenState extends State<KRAListScreen> {
                             padding: EdgeInsets.only(right: 1),
                             child: Text(
                               'Actions',
-                              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
@@ -270,76 +290,92 @@ class _KRAListScreenState extends State<KRAListScreen> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: Column(
-                        children: filteredList.asMap().map((index, kra) {
-                          return MapEntry(
-                            index,
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 1, horizontal: 16),
-                              decoration: BoxDecoration(
-                                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    flex: 1,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(right: 1),
-                                      child: Text(
-                                        (index + 1).toString(),
-                                        style: TextStyle(fontWeight: FontWeight.normal),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
+                        children: filteredList
+                            .asMap()
+                            .map((index, kra) {
+                              return MapEntry(
+                                index,
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 1, horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                        bottom: BorderSide(
+                                            color: Colors.grey.shade300)),
                                   ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(right: 1),
-                                      child: Text(
-                                        kra['name'],
-                                        style: TextStyle(fontWeight: FontWeight.normal),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 3,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(right: 1),
-                                      child: Text(
-                                        kra['remarks'] ?? '',
-                                        style: TextStyle(fontWeight: FontWeight.normal),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Padding(
-                                      padding: EdgeInsets.only(right: 1),
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.start,
-                                        children: [
-                                          IconButton(
-                                            icon: Icon(Icons.edit, color: Color(0xFF1A67A3)),
-                                            onPressed: () => showFormDialog(id: kra['id'].toString(), name: kra['name'], remarks: kra['remarks']),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        flex: 1,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(right: 1),
+                                          child: Text(
+                                            (index + 1).toString(),
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.normal),
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          SizedBox(width: 1),
-                                          IconButton(
-                                            icon: Icon(Icons.delete, color: Color.fromARGB(255, 221, 79, 79)),
-                                            onPressed: () async {
-                                            },
-                                          ),
-                                        ],
+                                        ),
                                       ),
-                                    ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(right: 1),
+                                          child: Text(
+                                            kra['name'],
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.normal),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(right: 1),
+                                          child: Text(
+                                            kra['remarks'] ?? '',
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.normal),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Padding(
+                                          padding: EdgeInsets.only(right: 1),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(Icons.edit,
+                                                    color: Color(0xFF1A67A3)),
+                                                onPressed: () => showFormDialog(
+                                                    id: kra['id'].toString(),
+                                                    name: kra['name'],
+                                                    remarks: kra['remarks']),
+                                              ),
+                                              SizedBox(width: 1),
+                                              IconButton(
+                                                icon: Icon(Icons.delete,
+                                                    color: Color.fromARGB(
+                                                        255, 221, 79, 79)),
+                                                onPressed: () async {},
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).values.toList(),
+                                ),
+                              );
+                            })
+                            .values
+                            .toList(),
                       ),
                     ),
                   ),

@@ -3,19 +3,33 @@ using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
-using IMIS.Application.PGSReadinessRatingCancerCareModule;
 
 
 namespace IMIS.Persistence.PgsModule
 {   
-    public class PgsAuditDetailsService(IPgsAuditDetailsRepository repository) : IPgsAuditDetailsService
+    public class PgsAuditDetailsService(IPgsAuditDetailsRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKraRepository kraRepository) : IPgsAuditDetailsService
     {
         private readonly IPgsAuditDetailsRepository _repository = repository;
+        private readonly IOfficeRepository _officeRepository = officeRepository;
+        private readonly IPgsPeriodRepository _pgsPeriodRepository = pgsPeriodRepository;
+        private readonly IKraRepository _kraRepository = kraRepository;
         public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto PGSDto, CancellationToken cancellationToken)
         {
             if (PGSDto == null) throw new ArgumentNullException(nameof(PGSDto));
+
             // Convert DTO to entity
             var pgsEntity = PGSDto.ToEntity();
+
+            pgsEntity.Office = await _officeRepository.GetByIdAsync(pgsEntity.Office.Id, cancellationToken).ConfigureAwait(false);
+            pgsEntity.PgsPeriod = await _pgsPeriodRepository.GetByIdAsync(pgsEntity.PgsPeriod.Id, cancellationToken).ConfigureAwait(false);
+            
+            if(pgsEntity.PgsDeliverables != null)
+            {
+                foreach (var deliverable in pgsEntity.PgsDeliverables)
+                {
+                    deliverable.Kra = await _kraRepository.GetByIdAsync(deliverable!.Kra!.Id, cancellationToken).ConfigureAwait(false);
+                }
+            }
             // Handle Save or Update
             var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);            
             return new PgsAuditDetailsDto
@@ -23,19 +37,18 @@ namespace IMIS.Persistence.PgsModule
                 Id = createdPgs.Id,
                 Status = createdPgs.Status,
                 Remarks = createdPgs.Remarks,
-                PgsPeriod = createdPgs.PgsPeriod != null ? new PgsPeriodDto
+                PgsPeriod =  new PgsPeriodDto
                 {
                     Id = createdPgs.PgsPeriod.Id,
                     StartDate = createdPgs.PgsPeriod.StartDate,
                     EndDate = createdPgs.PgsPeriod.EndDate
-                } : null,
-                Office = createdPgs.Office != null ? new OfficeDto
+                },
+                Office = new OfficeDto
                 {
                     Id = createdPgs.Office.Id,
                     Name = createdPgs.Office.Name,
                     IsActive = createdPgs.Office.IsActive
-                } : null,
-
+                },
                 PgsDeliverables = createdPgs.PgsDeliverables?
                 .Select(deliverable => new PGSDeliverableDto
                 {
@@ -45,24 +58,13 @@ namespace IMIS.Persistence.PgsModule
                     ByWhen = deliverable.ByWhen,
                     PercentDeliverables = deliverable.PercentDeliverables,
                     Status = deliverable.Status,
-                    RowVersion = deliverable.RowVersion ?? Array.Empty<byte>(),
-
+                    RowVersion = deliverable.RowVersion,
                     Kra = deliverable.Kra != null ? new KraDto
                     {
                         Id = deliverable.Kra.Id,
                         Name = deliverable.Kra.Name,  
                         Remarks = deliverable.Kra.Remarks 
                     } : null,
-                    PGSReadinessRatingCancerCare = deliverable.PgsReadinessRatingCancerCare != null
-                    ? new PGSReadinessRatingCancerCareDto
-                    {
-                        Id = deliverable.PgsReadinessRatingCancerCare.Id,
-                        Score1 = deliverable.PgsReadinessRatingCancerCare.Score1,
-                        Score2 = deliverable.PgsReadinessRatingCancerCare.Score2,
-                        Score3 = deliverable.PgsReadinessRatingCancerCare.Score3,
-                        TotalScore = deliverable.PgsReadinessRatingCancerCare.TotalScore
-                    }
-                    : null,
                     Remarks = deliverable.Remarks
                 }).ToList()
             };

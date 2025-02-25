@@ -13,7 +13,8 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
   List<Map<String, dynamic>> pgsList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
-  final String apiUrl = 'https://localhost:44333/PgsPeriod'; // Your API endpoint for PGS Period
+  final String apiUrl =
+      'https://localhost:7273/PgsPeriod'; // Your API endpoint for PGS Period
 
   @override
   void initState() {
@@ -27,12 +28,14 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
       if (response.statusCode == 200) {
         List<dynamic> data = json.decode(response.body);
         setState(() {
-          pgsList = data.map((pgs) => {
-            'id': pgs['id'],
-            'startDate': pgs['startDate'],
-            'endDate': pgs['endDate'],
-            'isDeleted': pgs['isDeleted']
-          }).toList();
+          pgsList = data
+              .map((pgs) => {
+                    'id': pgs['id'],
+                    'startDate': pgs['startDate'],
+                    'endDate': pgs['endDate'],
+                    'isDeleted': pgs['isDeleted']
+                  })
+              .toList();
           filteredList = List.from(pgsList);
         });
       }
@@ -41,7 +44,8 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
     }
   }
 
-  Future<void> addOrUpdatePGSPeriod(String? id, String startDate, String endDate) async {
+  Future<void> addOrUpdatePGSPeriod(
+      String? id, String startDate, String endDate) async {
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -50,7 +54,7 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
           'id': id ?? '0',
           'startDate': startDate,
           'endDate': endDate,
-          'isDeleted': false,  // Default to false
+          'isDeleted': false, // Default to false
           'rowVersion': '',
         }),
       );
@@ -65,22 +69,28 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
 
   void filterSearchResults(String query) {
     setState(() {
-      filteredList = pgsList.where((pgs) =>
-          pgs['startDate']!.toLowerCase().contains(query.toLowerCase()) ||
-          pgs['endDate']!.toLowerCase().contains(query.toLowerCase())).toList();
+      filteredList = pgsList
+          .where((pgs) =>
+              pgs['startDate']!.toLowerCase().contains(query.toLowerCase()) ||
+              pgs['endDate']!.toLowerCase().contains(query.toLowerCase()))
+          .toList();
     });
   }
 
   void showFormDialog({String? id, String? startDate, String? endDate}) {
-    TextEditingController startDateController = TextEditingController(text: startDate);
-    TextEditingController endDateController = TextEditingController(text: endDate);
+    TextEditingController startDateController =
+        TextEditingController(text: startDate);
+    TextEditingController endDateController =
+        TextEditingController(text: endDate);
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-          title: Text(id == null ? 'Add PGS Period' : 'Edit PGS Period', style: TextStyle(fontWeight: FontWeight.bold)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+          title: Text(id == null ? 'Add PGS Period' : 'Edit PGS Period',
+              style: TextStyle(fontWeight: FontWeight.bold)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -102,7 +112,8 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
                       lastDate: DateTime(2101),
                     );
                     if (picked != null) {
-                      startDateController.text = picked.toLocal().toString().split(' ')[0];
+                      startDateController.text =
+                          picked.toLocal().toString().split(' ')[0];
                     }
                   },
                 ),
@@ -126,7 +137,8 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
                       lastDate: DateTime(2101),
                     );
                     if (picked != null) {
-                      endDateController.text = picked.toLocal().toString().split(' ')[0];
+                      endDateController.text =
+                          picked.toLocal().toString().split(' ')[0];
                     }
                   },
                 ),
@@ -140,13 +152,16 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
               child: Text('Cancel', style: TextStyle(color: Colors.white)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Color(0xFF1A67A3)),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Color(0xFF1A67A3)),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(  // Confirm action dialog
+                bool? confirmAction = await showDialog<bool>(
+                  // Confirm action dialog
                   context: context,
                   builder: (context) {
                     return AlertDialog(
-                      title: Text(id == null ? "Confirm Save" : "Confirm Update"),
+                      title:
+                          Text(id == null ? "Confirm Save" : "Confirm Update"),
                       content: Text(id == null
                           ? "Are you sure you want to save this record?"
                           : "Are you sure you want to update this record?"),
@@ -165,11 +180,13 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
                 );
 
                 if (confirmAction == true) {
-                  addOrUpdatePGSPeriod(id, startDateController.text, endDateController.text);
+                  addOrUpdatePGSPeriod(
+                      id, startDateController.text, endDateController.text);
                   Navigator.pop(context);
                 }
               },
-              child: Text(id == null ? 'Save' : 'Update', style: TextStyle(color: Colors.white)),
+              child: Text(id == null ? 'Save' : 'Update',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         );
@@ -193,7 +210,8 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
               decoration: InputDecoration(
                 labelText: 'Search Period',
                 prefixIcon: Icon(Icons.search, color: Colors.blue),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12.0)),
                 filled: true,
                 fillColor: Colors.grey[200],
               ),
@@ -209,10 +227,30 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Expanded(flex: 1, child: Text('#', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                        Expanded(flex: 3, child: Text('Start Date', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                        Expanded(flex: 3, child: Text('End Date', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
-                        Expanded(flex: 1, child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white))),
+                        Expanded(
+                            flex: 1,
+                            child: Text('#',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white))),
+                        Expanded(
+                            flex: 3,
+                            child: Text('Start Date',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white))),
+                        Expanded(
+                            flex: 3,
+                            child: Text('End Date',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white))),
+                        Expanded(
+                            flex: 1,
+                            child: Text('Actions',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white))),
                       ],
                     ),
                   ),
@@ -220,42 +258,56 @@ class _PGSPeriodScreenState extends State<PGSPeriodScreen> {
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: Column(
-                        children: filteredList.asMap().map((index, period) {
-                          return MapEntry(
-                            index,
-                            Container(
-                              padding: EdgeInsets.symmetric(vertical: 1, horizontal: 16),
-                              decoration: BoxDecoration(
-                                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Expanded(flex: 1, child: Text((index + 1).toString())),
-                                  Expanded(flex: 3, child: Text(period['startDate'])),
-                                  Expanded(flex: 3, child: Text(period['endDate'])),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        IconButton(
-                                          icon: Icon(Icons.edit, color: Color(0xFF1A67A3)),                                          
-                                          onPressed: () => showFormDialog(
-                                            id: period['id'].toString(),
-                                            startDate: period['startDate'],
-                                            endDate: period['endDate'],
-                                            
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                        children: filteredList
+                            .asMap()
+                            .map((index, period) {
+                              return MapEntry(
+                                index,
+                                Container(
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 1, horizontal: 16),
+                                  decoration: BoxDecoration(
+                                    border: Border(
+                                        bottom: BorderSide(
+                                            color: Colors.grey.shade300)),
                                   ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }).values.toList(),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                          flex: 1,
+                                          child: Text((index + 1).toString())),
+                                      Expanded(
+                                          flex: 3,
+                                          child: Text(period['startDate'])),
+                                      Expanded(
+                                          flex: 3,
+                                          child: Text(period['endDate'])),
+                                      Expanded(
+                                        flex: 1,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: [
+                                            IconButton(
+                                              icon: Icon(Icons.edit,
+                                                  color: Color(0xFF1A67A3)),
+                                              onPressed: () => showFormDialog(
+                                                id: period['id'].toString(),
+                                                startDate: period['startDate'],
+                                                endDate: period['endDate'],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            })
+                            .values
+                            .toList(),
                       ),
                     ),
                   ),

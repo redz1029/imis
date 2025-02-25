@@ -1,7 +1,6 @@
 ﻿using Base.Primitives;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
-using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.PGSModules
@@ -48,18 +47,7 @@ namespace IMIS.Persistence.PGSModules
                     Id = deliverable.Kra.Id,
                     Name = deliverable.Kra.Name,
                     Remarks = deliverable.Kra.Remarks ?? string.Empty
-                } : null,
-
-                PGSReadinessRatingCancerCare = deliverable.PgsReadinessRatingCancerCare != null
-                ? new PGSReadinessRatingCancerCareDto
-                {
-                    Id = deliverable.PgsReadinessRatingCancerCare.Id,
-                    Score1 = deliverable.PgsReadinessRatingCancerCare.Score1,
-                    Score2 = deliverable.PgsReadinessRatingCancerCare.Score2,
-                    Score3 = deliverable.PgsReadinessRatingCancerCare.Score3,
-                    TotalScore = deliverable.PgsReadinessRatingCancerCare.TotalScore
-                }
-                : null
+                } : null
             };
         }
 

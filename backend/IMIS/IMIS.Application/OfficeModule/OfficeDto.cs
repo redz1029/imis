@@ -6,7 +6,7 @@ namespace IMIS.Application.OfficeModule
 {
     public class OfficeDto : BaseDto<Office, int>
     {
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public bool IsActive { get; set; }
         public List<AuditorDto>? Auditors { get; set; }
         public override Office ToEntity()

@@ -141,7 +141,7 @@ namespace ImisTest
                 while(noOfOfficesToGenerate > 0 && noOfAuditorsAssignedInAnOffice <= auditors.Count)
                 {
                     var office = officeFaker.Generate();
-                    office.Auditors = office.Auditors ?? [];
+                    office.Auditors = office.Auditors ?? new List<AuditorDto>();
                     var noOfAuditorsToAssign = noOfAuditorPerOffice;
                     bool hasOfficeHead = false;
                     while (noOfAuditorsToAssign > 0)

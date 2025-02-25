@@ -21,9 +21,5 @@ namespace IMIS.Persistence.AuditScheduleModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-        public object GetDbContext()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

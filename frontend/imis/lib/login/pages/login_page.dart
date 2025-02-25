@@ -23,13 +23,13 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoginButtonDisabled = false; // Disable button while logging in
   bool _isLoading = false; // Track the loading state
 
-  static const String loginUrl = 'https://localhost:44333/login';
+  static const String loginUrl = 'https://localhost:7273/login';
 
   // Function to handle login request
   Future<void> _login(String username, String password) async {
     setState(() {
-      _isLoading = true;  // Show loading indicator inside button
-      _isLoginButtonDisabled = true;  // Disable the button during login
+      _isLoading = true; // Show loading indicator inside button
+      _isLoginButtonDisabled = true; // Disable the button during login
     });
 
     // Simulate a delay (e.g., 2 seconds) before sending the request
@@ -49,7 +49,7 @@ class _LoginPageState extends State<LoginPage> {
 
       if (response.statusCode == 200) {
         jsonDecode(response.body);
-        
+
         _usernameController.clear();
         _passwordController.clear();
 
@@ -62,22 +62,24 @@ class _LoginPageState extends State<LoginPage> {
           _isPageLoaded = true;
         });
 
-         // Navigate to HomePage after login
-         Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => HomePage()),
-          );     
+        // Navigate to HomePage after login
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
       } else {
-
         _passwordController.clear();
-        _showErrorDialog(context, 'Invalid username or password. Please try again.');
+        _showErrorDialog(
+            context, 'Invalid username or password. Please try again.');
       }
     } catch (e) {
-      _showErrorDialog(context, 'An error occurred. Please check your internet connection and try again.');
+      _showErrorDialog(context,
+          'An error occurred. Please check your internet connection and try again.');
     } finally {
       setState(() {
-        _isLoading = false;  // Hide loading indicator
-        _isLoginButtonDisabled = false; // Re-enable the button after login attempt
+        _isLoading = false; // Hide loading indicator
+        _isLoginButtonDisabled =
+            false; // Re-enable the button after login attempt
       });
     }
   }
@@ -110,14 +112,17 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     // ignore: deprecated_member_use
     return WillPopScope(
-      onWillPop: () async => false, 
+      onWillPop: () async => false,
       child: Scaffold(
         appBar: AppBar(
           backgroundColor: Color(0xFF1A67A3),
           centerTitle: true,
           title: Text(
             "Integrated Management Information System",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.normal, color: Colors.white),
+            style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.normal,
+                color: Colors.white),
           ),
           automaticallyImplyLeading: false,
         ),
@@ -211,9 +216,10 @@ class _LoginPageState extends State<LoginPage> {
               ),
               padding: EdgeInsets.symmetric(vertical: 20.0, horizontal: 143.0),
             ),
-            child: _isLoading 
-              ? CircularProgressIndicator(color: Colors.white)
-              : Text("Log In", style: TextStyle(fontSize: 15, color: Colors.white)),
+            child: _isLoading
+                ? CircularProgressIndicator(color: Colors.white)
+                : Text("Log In",
+                    style: TextStyle(fontSize: 15, color: Colors.white)),
           ),
           SizedBox(height: 10.0),
           ElevatedButton(
@@ -230,7 +236,8 @@ class _LoginPageState extends State<LoginPage> {
               ),
               padding: EdgeInsets.symmetric(vertical: 18.0, horizontal: 40.0),
             ),
-            child: Text("Create New Account", style: TextStyle(fontSize: 15, color: Colors.white)),
+            child: Text("Create New Account",
+                style: TextStyle(fontSize: 15, color: Colors.white)),
           ),
           SizedBox(height: 9.0),
           TextButton(
