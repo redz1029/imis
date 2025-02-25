@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:imis/PGS/pgs.dart';
 import 'package:intl/intl.dart';
 import 'package:http/http.dart' as http;
 
@@ -115,13 +116,9 @@ class _DeliverablesScreenState extends State<Deliverables_List> {
   }
 
   // ignore: unused_element, non_constant_identifier_names
-  void _SaveAllData() async {
-    List<int> rowIndexes = [0, 1, 2]; // Ensure this is a list
-
-    for (var index in rowIndexes) {
-      // Now it works!
-      // await saveAllDataToAPI();
-    }
+  void _SaveAllData(Pgs pgs) async {
+    final response = await http.post(Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'}, body: pgs.toJson());
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('All Data Saved Successfully')),
