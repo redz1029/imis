@@ -6,7 +6,7 @@ namespace IMIS.Application.PgsKraModule
     public class KraDto : BaseDto<Kra, int>
     {
         public  required string Name { get; set; }
-        public required string Remarks { get; set; }
+        public string? Remarks { get; set; } // ⬅️ Remove `required`, allowing it to be null
 
         public override Kra ToEntity()
         {            

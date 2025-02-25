@@ -1,10 +1,7 @@
 ﻿using Base.Primitives;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Domain;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
+
 
 namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
 {

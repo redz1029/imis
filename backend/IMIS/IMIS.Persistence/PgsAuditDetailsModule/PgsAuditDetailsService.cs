@@ -1,7 +1,10 @@
 ﻿using Base.Primitives;
 using IMIS.Application.OfficeModule;
+using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
+using IMIS.Application.PGSReadinessRatingCancerCareModule;
+
 
 namespace IMIS.Persistence.PgsModule
 {   
@@ -31,7 +34,37 @@ namespace IMIS.Persistence.PgsModule
                     Id = createdPgs.Office.Id,
                     Name = createdPgs.Office.Name,
                     IsActive = createdPgs.Office.IsActive
-                } : null
+                } : null,
+
+                PgsDeliverables = createdPgs.PgsDeliverables?
+                .Select(deliverable => new PGSDeliverableDto
+                {
+                    Id = deliverable.Id,
+                    IsDirect = deliverable.IsDirect,
+                    DeliverableName = deliverable.DeliverableName,
+                    ByWhen = deliverable.ByWhen,
+                    PercentDeliverables = deliverable.PercentDeliverables,
+                    Status = deliverable.Status,
+                    RowVersion = deliverable.RowVersion ?? Array.Empty<byte>(),
+
+                    Kra = deliverable.Kra != null ? new KraDto
+                    {
+                        Id = deliverable.Kra.Id,
+                        Name = deliverable.Kra.Name,  
+                        Remarks = deliverable.Kra.Remarks 
+                    } : null,
+                    PGSReadinessRatingCancerCare = deliverable.PgsReadinessRatingCancerCare != null
+                    ? new PGSReadinessRatingCancerCareDto
+                    {
+                        Id = deliverable.PgsReadinessRatingCancerCare.Id,
+                        Score1 = deliverable.PgsReadinessRatingCancerCare.Score1,
+                        Score2 = deliverable.PgsReadinessRatingCancerCare.Score2,
+                        Score3 = deliverable.PgsReadinessRatingCancerCare.Score3,
+                        TotalScore = deliverable.PgsReadinessRatingCancerCare.TotalScore
+                    }
+                    : null,
+                    Remarks = deliverable.Remarks
+                }).ToList()
             };
         }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>

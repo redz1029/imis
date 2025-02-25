@@ -1,14 +1,19 @@
 ﻿using Base.Primitives;
-using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using IMIS.Domain;
 
 namespace IMIS.Persistence.PGSModules
 {
-    public class PGSDeliverableService(IPGSDeliverableRepository repository) : IPGSDeliverableService
+    public class PGSDeliverableService : IPGSDeliverableService
     {
-        private readonly IPGSDeliverableRepository _repository = repository;
+        private readonly IPGSDeliverableRepository _repository;
+
+        public PGSDeliverableService(IPGSDeliverableRepository repository)
+        {
+            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+        }
 
         public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDto, CancellationToken cancellationToken)
         {
@@ -17,52 +22,49 @@ namespace IMIS.Persistence.PGSModules
             var pgsEntity = pgsDto.ToEntity();
             var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
 
+            return ConvertToDto(createdPgs);
+        }      
+        public async Task<List<PGSDeliverableDto>?> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return offices?.Select(o => ConvertToDto(o)).ToList();
+        }
+
+        private static PGSDeliverableDto ConvertToDto(PgsDeliverable deliverable)
+        {
             return new PGSDeliverableDto
             {
-                Id = createdPgs.Id,
-                IsDirect = createdPgs.IsDirect,
-                DeliverableName = createdPgs.DeliverableName,
-                ByWhen = createdPgs.ByWhen,
-                PercentDeliverables = createdPgs.PercentDeliverables,
-                Status = createdPgs.Status,
-                RowVersion = createdPgs.RowVersion ?? Array.Empty<byte>(),
-                Remarks = createdPgs.Remarks ?? string.Empty,
+                Id = deliverable.Id,
+                IsDirect = deliverable.IsDirect,
+                DeliverableName = deliverable.DeliverableName,
+                ByWhen = deliverable.ByWhen,
+                PercentDeliverables = deliverable.PercentDeliverables,
+                Status = deliverable.Status,
+                RowVersion = deliverable.RowVersion ?? Array.Empty<byte>(),
+                Remarks = deliverable.Remarks ?? string.Empty,
 
-                Kra = createdPgs.Kra != null ? new KraDto
+                Kra = deliverable.Kra != null ? new KraDto
                 {
-                    Id = createdPgs.Kra.Id,
-                    Name = createdPgs.Kra.Name,
-                    Remarks = createdPgs.Kra.Remarks ?? string.Empty
+                    Id = deliverable.Kra.Id,
+                    Name = deliverable.Kra.Name,
+                    Remarks = deliverable.Kra.Remarks ?? string.Empty
                 } : null,
 
-                PgsAuditDetails = createdPgs.PgsAuditDetails != null ? new PgsAuditDetailsDto
-                {
-                    Id = createdPgs.PgsAuditDetails.Id,
-                    Status = createdPgs.PgsAuditDetails.Status,
-                    Remarks = createdPgs.PgsAuditDetails.Remarks ?? string.Empty,
-                    Office = new OfficeDto
-                    {
-                        Id = createdPgs.PgsAuditDetails.Office.Id,
-                        Name = createdPgs.PgsAuditDetails.Office.Name,
-                        IsActive = createdPgs.PgsAuditDetails.Office.IsActive
-                    }
-                } : null,
-
-                PGSReadinessRatingCancerCare = createdPgs.PgsReadinessRatingCancerCare != null
+                PGSReadinessRatingCancerCare = deliverable.PgsReadinessRatingCancerCare != null
                 ? new PGSReadinessRatingCancerCareDto
                 {
-                    Id = createdPgs.PgsReadinessRatingCancerCare.Id,
-                    Score1 = createdPgs.PgsReadinessRatingCancerCare.Score1,
-                    Score2 = createdPgs.PgsReadinessRatingCancerCare.Score2,
-                    Score3 = createdPgs.PgsReadinessRatingCancerCare.Score3,
-                    TotalScore = createdPgs.PgsReadinessRatingCancerCare.TotalScore
+                    Id = deliverable.PgsReadinessRatingCancerCare.Id,
+                    Score1 = deliverable.PgsReadinessRatingCancerCare.Score1,
+                    Score2 = deliverable.PgsReadinessRatingCancerCare.Score2,
+                    Score3 = deliverable.PgsReadinessRatingCancerCare.Score3,
+                    TotalScore = deliverable.PgsReadinessRatingCancerCare.TotalScore
                 }
                 : null
-
             };
         }
 
-        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
+            where TEntity : Entity<TId>
         {
             if (dto is not PGSDeliverableDto pgsDto)
                 throw new ArgumentException("Invalid DTO type", nameof(dto));

@@ -1,4 +1,5 @@
 ﻿using Carter;
+using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -25,7 +26,15 @@ namespace IMIS.Presentation.PGSModule
                 var createdPgs = await service.SaveOrUpdateAsync(pgsDto, cancellationToken).ConfigureAwait(false);
                 return Results.Created($"/Deliverable/{createdPgs.Id}", createdPgs); 
             })
-            .WithTags(_pgsTag);                   
+            .WithTags(_pgsTag);
+
+            app.MapGet("/", async (IPGSDeliverableService service, CancellationToken cancellationToken) => // Get allAsync Data in the KRA Database
+            {
+                var Pgsdto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(Pgsdto);
+            })
+
+         .WithTags(_pgsTag);
         }
     }
 }

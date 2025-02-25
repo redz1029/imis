@@ -15,7 +15,7 @@ namespace IMIS.Application.PgsModule
         public required DateTime ByWhen { get; set; }
         public required double PercentDeliverables { get; set; }
         public required PgsStatus Status { get; set; }
-        public PgsAuditDetailsDto? PgsAuditDetails { get; set; }
+        //public PgsAuditDetailsDto? PgsAuditDetails { get; set; }
         public PGSReadinessRatingCancerCareDto? PGSReadinessRatingCancerCare { get; set; }
         public string? Remarks { get; set; }
 
@@ -34,14 +34,14 @@ namespace IMIS.Application.PgsModule
                 Status = Status,
                 RowVersion = RowVersion ?? Array.Empty<byte>(),  // Handles potential null case
                 Kra = Kra?.ToEntity(),
-                PgsAuditDetails = PgsAuditDetails?.ToEntity(),
-                PgsReadinessRatingCancerCare = PGSReadinessRatingCancerCare?.ToEntity(), // Ensure safety in conversion
+                //PgsAuditDetails = PgsAuditDetails?.ToEntity(),
+                //PgsReadinessRatingCancerCare = PGSReadinessRatingCancerCare?.ToEntity(), // Ensure safety in conversion
+                PgsReadinessRatingCancerCare = PGSReadinessRatingCancerCare?.ToEntity(),
                 Remarks = Remarks
              
             };
         }
     }
-
     public class Base64JsonConverter : JsonConverter<byte[]>
     {
         public override byte[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
@@ -56,7 +56,6 @@ namespace IMIS.Application.PgsModule
                 throw new JsonException($"Invalid Base64 string format for RowVersion: {ex.Message}");
             }
         }
-
         public override void Write(Utf8JsonWriter writer, byte[] value, JsonSerializerOptions options)
         {
             writer.WriteStringValue(value != null ? Convert.ToBase64String(value) : string.Empty);
