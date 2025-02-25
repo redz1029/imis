@@ -15,12 +15,12 @@ class _DeliverablesScreenState extends State<Deliverables_List> {
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final String apiUrl = 'https://localhost:44333/Deliverables';
-
+  
   List<String> kraOptions = []; //KRA Get Settings    
   Map<int, bool> selectedDirect = {};
   Map<int, bool> selectedIndirect = {};   
   List<int> rows = [];
-  Map<int, int> selectedKRA = {};
+  Map<int, int?> selectedKRA = {};
   Map<int, String> selectedByWhen = {};
   Map<int, TextEditingController> deliverablesControllers = {};   
   Map<int, bool> tempSelectedDirect = {};
@@ -32,6 +32,10 @@ class _DeliverablesScreenState extends State<Deliverables_List> {
 
   List<String> StatusOptions = ['PATIENT', 'RESEARCH', 'LINKAGES', 'HR'];
   Map<int, String> selectedStatusOptions = {};
+
+   late Future<List<Map<String, dynamic>>> deliverables;
+ 
+
 
 
   //Readiness Rating-Cancer Care------------------------------------------------------------------------------------------------
@@ -53,15 +57,29 @@ class _DeliverablesScreenState extends State<Deliverables_List> {
   //Readiness Rating-Cancer Care------------------------------------------------------------------------------------------------------
 
   
-  @override
+
+
+  //Strategic Contributions------------------------------------------------------------------------------------------------------
+  // @override
+  // void initState() {
+  //   super.initState();    
+  //    fetchDeliverables();
+  //    fetchDropdownData().then((_) {
+  //   setState(() {}); // Update UI after fetching data
+  //   });
+  // }
+
+   @override
   void initState() {
     super.initState();    
-     fetchDropdownData().then((_) {
-    setState(() {}); // Update UI after fetching data
-  });
+    fetchDropdownData().then((_) {
+      setState(() {});
+    });
   }
-  
 
+ 
+  //Strategic Contributions------------------------------------------------------------------------------------------------------  
+  //Strategic Contributions------------------------------------------------------------------------------------------------------
   Future<void> fetchDropdownData() async {
     try {
       final response = await http.get(Uri.parse("https://localhost:44333/Kra"));
@@ -85,34 +103,40 @@ class _DeliverablesScreenState extends State<Deliverables_List> {
     }
   }
 
-  Future<void> fetchDeliverables() async { // Fetch to API
-    try {      
-   
-    } catch (e) {
-      print(e);
-    }
-  }
-   // Add rows-------------
+  //Strategic Contributions------------------------------------------------------------------------------------------------------
+  //Strategic Contributions------------------------------------------------------------------------------------------------------
+
+  //Strategic Contributions------------------------------------------------------------------------------------------------------
+  //Strategic Contributions------------------------------------------------------------------------------------------------------
+
+
+    //Add rows-------------
     void _addRow() {
       setState(() {
         int newRowId = DateTime.now().millisecondsSinceEpoch;  // Unique ID
         rows.add(newRowId);
       });
     }
-    // ignore: non_constant_identifier_names
-    void _SaveAsData() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Data Saved Successfully')),
-    );
-  }
+   
+      // ignore: unused_element, non_constant_identifier_names
+      void _SaveAllData() async {
+        List<int> rowIndexes = [0, 1, 2]; // Ensure this is a list
+
+        for (var index in rowIndexes) { // Now it works!
+          // await saveAllDataToAPI();
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('All Data Saved Successfully')),
+        );
+      }
     // ignore: non_constant_identifier_names
     void _SubmitData() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('Data Submitted Successfully')),
     );
   }
-
-  
+  //Strategic Contributions------------------------------------------------------------------------------------------------------
 
   void showFormDialog() {
   showDialog(
@@ -163,7 +187,9 @@ class _DeliverablesScreenState extends State<Deliverables_List> {
                       ],
                     ),
 
-
+                    //Strategic Contributions------------------------------------------------------------------------------------------------------
+                    //Strategic Contributions------------------------------------------------------------------------------------------------------
+                    //First Tab
                     // Tab Views
                     Expanded(
                       child: TabBarView(
@@ -203,6 +229,10 @@ class _DeliverablesScreenState extends State<Deliverables_List> {
                               ],
                             ),
                           ),
+                            //First Tab
+                            //Strategic Contributions------------------------------------------------------------------------------------------------------
+                            //Strategic Contributions------------------------------------------------------------------------------------------------------
+                           
 
                             // Readiness Rating-Cancer Care ---------------------------------------------------------------------------------------------------------
                             // Second Tab: Additional Content------------------------------------------------------------------------
@@ -319,11 +349,6 @@ class _DeliverablesScreenState extends State<Deliverables_List> {
                             child: Text("Additional"),
                           ),
 
-
-
-
-
-
                         ],
                       ),
                     ),
@@ -362,7 +387,8 @@ class _DeliverablesScreenState extends State<Deliverables_List> {
                   );
 
                   if (confirm == true) {
-                    _SaveAsData();
+                     _SaveAllData();
+                    
                     Navigator.pop(context);
                   }
                 },
@@ -505,34 +531,33 @@ Widget buildScoreRow(String title, List<String> descriptions, ValueNotifier<doub
 
 
 
+    //Strategic Contributions------------------------------------------------------------------------------------------------------
+    //Strategic Contributions------------------------------------------------------------------------------------------------------
+    // PGS Table Row (Body) 
+      TableRow _buildTableRow(int index, String direct, String indirect, Function setState, Function setDialogState) {
+      deliverablesControllers.putIfAbsent(index, () => TextEditingController());
+      selectedDirect.putIfAbsent(index, () => false);
+      selectedIndirect.putIfAbsent(index, () => false);
+      selectedByWhen.putIfAbsent(index, () => '');
 
+      // Define alternating row colors
+      Color rowColor = (index % 2 == 0) ? const Color.fromARGB(255, 255, 255, 255) : Colors.white;  
 
-      // PGS Table Row (Body) 
-        TableRow _buildTableRow(int index, String direct, String indirect, Function setState, Function setDialogState) {
-        deliverablesControllers.putIfAbsent(index, () => TextEditingController());
-        selectedDirect.putIfAbsent(index, () => false);
-        selectedIndirect.putIfAbsent(index, () => false);
-        selectedByWhen.putIfAbsent(index, () => '');
+     return TableRow(
+    decoration: BoxDecoration(color: rowColor),
+    children: [
+      _buildDropdownCell(index, ),
+      _buildCheckboxCell(index, selectedDirect, setDialogState),
+      _buildCheckboxCell(index, selectedIndirect, setDialogState),
+      _buildExpandableTextAreaCell(index),
+      _buildDatePickerCell(index, setDialogState),
+      _buildDropdownCellStatus(index, () => (index)), // Save on status change
+      _buildRemoveButton(index, setDialogState),
+    ],
+  );
+  }
 
-        // Define alternating row colors
-        Color rowColor = (index % 2 == 0) ? const Color.fromARGB(255, 255, 255, 255) : Colors.white;
-
-      
-        return TableRow(
-        decoration: BoxDecoration(color: rowColor),
-        children: [
-          _buildDropdownCell(index),
-          _buildCheckboxCell(index, selectedDirect,  setDialogState), 
-          _buildCheckboxCell(index, selectedIndirect, setDialogState), 
-          _buildExpandableTextAreaCell(index),
-          _buildDatePickerCell(index,  setDialogState), 
-          _buildDropdownCellStatus(index, () => setDialogState), 
-          _buildRemoveButton(index, setDialogState), 
-        ],
-      );
-    }
-
- // Status Dropdown----------------
+ // Status Dropdown for Status--------------------------
   Widget _buildDropdownCellStatus(int index, VoidCallback setDialogState) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -555,8 +580,6 @@ Widget buildScoreRow(String title, List<String> descriptions, ValueNotifier<doub
       ),
     );
   }
-
-
 
    void confirmSelection() {
       setState(() {
@@ -582,240 +605,256 @@ Widget buildScoreRow(String title, List<String> descriptions, ValueNotifier<doub
     );
   } 
   
-   // Text Field Area Cell
-  Widget _buildExpandableTextAreaCell(int index) {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: 50.0),
-          child: TextField(
-            controller: deliverablesControllers[index],
-            maxLines: null,
-            keyboardType: TextInputType.multiline,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.all(8.0),
-            ),
-            onChanged: (value) {
-              setState(() {});
-            },
-          ),
-        ),
-      );
-    } 
+   
 
-     Widget _buildDropdownCell(int index) {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: DropdownButtonFormField<int>(
-          value: selectedKRA[index], // Ensure this is an int
-          onChanged: (int? newValue) {
-            setState(() {
-              selectedKRA[index] = newValue!; // Store selected ID
-            });
-          },
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.all(8.0),
-          ),
-          items: options.isEmpty
-              ? [DropdownMenuItem<int>(value: null, child: Text("Loading..."))] // Show loading text
-              : options.map<DropdownMenuItem<int>>((Map<String, dynamic> option) { // Explicitly specify type
-                  return DropdownMenuItem<int>(
-                    value: option['id'], // Store ID (hidden)
-                    child: Text(option['name']), // Display only Name
-                  );
-                }).toList(),
-        ),
-      );
-    }
-
-    // Dropdown for By When
-    Widget _buildDatePickerCell(int index, Function setDialogState) {
-    // Ensure the controller exists for this row
-    selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextFormField(
-        controller: selectedByWhenControllers[index], // Use persistent controller
-        readOnly: true,
-        decoration: const InputDecoration(
+  Widget _buildExpandableTextAreaCell(int index,) {
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: ConstrainedBox(
+      constraints: BoxConstraints(minHeight: 50.0),
+      child: TextField(
+        controller: deliverablesControllers[index],
+        maxLines: null,
+        keyboardType: TextInputType.multiline,
+        decoration: InputDecoration(
           border: OutlineInputBorder(),
           contentPadding: EdgeInsets.all(8.0),
-          suffixIcon: Icon(Icons.calendar_today),
         ),
-        onTap: () async {
-          DateTime? pickedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-          );
-          if (pickedDate != null) {
-            String formattedDate = DateFormat('MMMM yyyy').format(pickedDate);
-            setDialogState(() {
-              selectedByWhen[index] = formattedDate;
-              selectedByWhenControllers[index]?.text = formattedDate; // Update the text field
-            });
-          }
+        onChanged: (value) {
+          setState(() {
+            // Optionally handle any local state updates
+          });
+          // saveDataToAPI(index); // Call save function on text change
         },
+      ),
+    ),
+  );
+}
+
+
+
+    // Kra Dropdown -----------------------------------------------------------------------------------    
+  Widget _buildDropdownCell(int index, ) {
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: DropdownButtonFormField<int>(
+      value: selectedKRA[index] ?? (options.isNotEmpty ? options.first['id'] : null), // Set default if null
+      onChanged: (int? newValue) {
+        setState(() {
+          selectedKRA[index] = newValue!; // Store selected ID
+        });
+        // saveDataToAPI(index); // Call save function on change
+      },
+      decoration: InputDecoration(
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.all(8.0),
+      ),
+      items: options.isEmpty
+          ? [DropdownMenuItem<int>(value: null, child: Text("Loading..."))] // Show loading text
+          : options.map<DropdownMenuItem<int>>((Map<String, dynamic> option) {
+              return DropdownMenuItem<int>(
+                value: option['id'],
+                child: Text(option['name']),
+              );
+            }).toList(),
+    ),
+  );
+}
+   
+   
+    Widget _buildDatePickerCell(int index, Function setDialogState) {
+  selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
+
+  // Check if there's already a selected date
+  if (selectedByWhen[index] == null || selectedByWhenControllers[index]?.text.isEmpty == true) {
+    DateTime now = DateTime.now();
+    String defaultDate = DateFormat('MMMM yyyy').format(now);
+    selectedByWhen[index] = defaultDate;
+    selectedByWhenControllers[index]?.text = defaultDate; // Set default text
+  }
+
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: TextFormField(
+      controller: selectedByWhenControllers[index], // Use persistent controller
+      readOnly: true,
+      decoration: const InputDecoration(
+        border: OutlineInputBorder(),
+        contentPadding: EdgeInsets.all(8.0),
+        suffixIcon: Icon(Icons.calendar_today),
+      ),
+      onTap: () async {
+        DateTime? pickedDate = await showDatePicker(
+          context: context,
+          initialDate: DateTime.now(),
+          firstDate: DateTime(2000),
+          lastDate: DateTime(2100),
+        );
+        if (pickedDate != null) {
+          String formattedDate = DateFormat('MMMM yyyy').format(pickedDate);
+          setDialogState(() {
+            selectedByWhen[index] = formattedDate;
+            selectedByWhenControllers[index]?.text = formattedDate; // Update text field
+          });
+          // saveDataToAPI(index); // Call save function after selecting the date
+        }
+      },
+    ),
+  );
+}
+
+
+
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Deliverable Information', style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF1A67A3),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                labelText: 'Search Deliverable',
+                prefixIcon: Icon(Icons.search, color: Color.fromARGB(255, 44, 45, 46)),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
+                filled: true,
+                fillColor: Colors.grey[200],
+              ),
+              onChanged: filterSearchResults,
+            ),
+            SizedBox(height: 20),
+            Expanded(
+              child: Column(
+                children: [
+                  Container(
+                    color: Color(0xFF1A67A3),
+                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 10),
+                            child: Text('#', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 10),
+                            child: Text('Description', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 1),
+                            child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Column(
+                        children: filteredList.asMap().map((index, deliverable) {
+                          return MapEntry(
+                            index,
+                            Container(
+                              padding: EdgeInsets.symmetric(vertical: 1, horizontal: 16),
+                              decoration: BoxDecoration(
+                                border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 1,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(right: 1),
+                                      child: Text(
+                                        (index + 1).toString(),
+                                        style: TextStyle(fontWeight: FontWeight.normal),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(right: 1),
+                                      child: Text(
+                                        deliverable['deliverableName'],
+                                        style: TextStyle(fontWeight: FontWeight.normal),
+                                      ),
+                                    ),
+                                  ),
+                                  Expanded(
+                                    flex: 1,
+                                    child: Padding(
+                                      padding: EdgeInsets.only(right: 1),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(Icons.delete, color: Color.fromARGB(255, 221, 79, 79)),
+                                            onPressed: () async {
+                                              setState(() {
+                                                filteredList.removeAt(index);
+                                              });
+                                            },
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }).values.toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Color(0xFF1A67A3),
+        onPressed: () => showFormDialog(),
+        child: Icon(Icons.add, color: Colors.white),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-      return Scaffold(
-        appBar: AppBar(
-          title: Text('Deliverable Information', style: TextStyle(color: Colors.white)),
-          backgroundColor: Color(0xFF1A67A3),
-        ),
-        body: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            children: [
-              TextField(
-                controller: searchController,
-                decoration: InputDecoration(
-                  labelText: 'Search Deliverable',
-                  prefixIcon: Icon(Icons.search, color: const Color.fromARGB(255, 44, 45, 46)),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12.0)),
-                  filled: true,
-                  fillColor: Colors.grey[200],
-                ),
-                onChanged: filterSearchResults,
-              ),
-              SizedBox(height: 20),
-              Expanded(
-                child: Column(
-                  children: [
-                    Container(
-                      color: Color(0xFF1A67A3),
-                      padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-    
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 1,
-                            child: Padding(
-                              padding: EdgeInsets.only(right: 10),
-                              child: Text(
-                                '#',
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 3,
-                            child: Padding(
-                              padding: EdgeInsets.only(right: 10),
-                              child: Text(
-                                'Description',
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 1,
-                            child: Padding(
-                              padding: EdgeInsets.only(right: 1),
-                              child: Text(
-                                'Actions',
-                                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: Column(
-                          children: filteredList.asMap().map((index, auditor) {
-                            return MapEntry(
-                              index,
-                              Container(
-                                padding: EdgeInsets.symmetric(vertical: 1, horizontal: 16),
-                                decoration: BoxDecoration(
-                                  border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-                                ),
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  children: [
-                                    Expanded(
-                                      flex: 1,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: 1),
-                                        child: Text(
-                                          (index + 1).toString(),
-                                          style: TextStyle(fontWeight: FontWeight.normal),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 3,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: 1),
-                                        child: Text(
-                                          auditor['name'],
-                                          style: TextStyle(fontWeight: FontWeight.normal),
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Padding(
-                                        padding: EdgeInsets.only(right: 1),
-                                        child: Row(
-                                          mainAxisAlignment: MainAxisAlignment.start,
-                                          children: [
-                                            // IconButton(
-                                            //   icon: Icon(Icons.edit, color: Color(0xFF1A67A3)),
-                                            //   // onPressed: () => showFormDialog(id: auditor['id'].toString(), name: auditor['name']),
-                                            // ),
-                                            SizedBox(width: 1),
-                                            IconButton(
-                                              icon: Icon(Icons.delete, color: Color.fromARGB(255, 221, 79, 79)),
-                                              onPressed: () async {
-                                              },
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          }).values.toList(),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          backgroundColor: Color(0xFF1A67A3),
-          onPressed: () => showFormDialog(),
-          child: Icon(Icons.add, color: Colors.white),
-        ),
-      );
+
+
+   // Filter search results based on query
+  void filterSearchResults(String query) {
+    deliverables.then((data) {
+      setState(() {
+        filteredList = data.where((item) => item['deliverableName'].toLowerCase().contains(query.toLowerCase())).toList();
+      });
+    });
   }
 }
 
+//PGS Deliverable List-----------------------------------------------------------------------------------------------------------
+
 // Tab End--------------------------
 
+
+    //Strategic Contributions------------------------------------------------------------------------------------------------------
+    //Strategic Contributions------------------------------------------------------------------------------------------------------
     // PGS Main Header 
    TableRow _buildMainHeader() {
       return TableRow(
@@ -848,34 +887,36 @@ Widget buildScoreRow(String title, List<String> descriptions, ValueNotifier<doub
       );
     }  
 
-  // Check Box
-    Widget _buildCheckboxCell(int index, Map<int, bool> selectedValues, Function setDialogState) {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: const Color.fromARGB(255, 255, 255, 255), width: 0.5),
-          color: const Color.fromARGB(255, 255, 255, 255), // Light background color
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: Checkbox(
-              value: selectedValues[index] ?? false, // Read from state
-              onChanged: (bool? newValue) {
-                if (newValue != null) {
-                  setDialogState(() { // Use setDialogState to update
-                    selectedValues[index] = newValue;
-                  });
-                }
-              },
-               activeColor: const Color.fromARGB(255, 255, 255, 255), // Change checkbox color when checked
-                checkColor: Colors.black, 
-            ),
-          ),
+  // Check Box  
+  Widget _buildCheckboxCell(int index, Map<int, bool> selectedValues, Function setDialogState) {
+  return Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: const Color.fromARGB(255, 255, 255, 255), width: 0.5),
+        color: const Color.fromARGB(255, 255, 255, 255), // Light background color
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+        child: Checkbox(
+          value: selectedValues[index] ?? false, // Read from state
+          onChanged: (bool? newValue) {
+            if (newValue != null) {
+              setDialogState(() { // Use setDialogState to update
+                selectedValues[index] = newValue;
+              });
+              // saveDataToAPI(index); // Call save function on change
+            }
+          },
+          activeColor: const Color.fromARGB(255, 255, 255, 255), // Change checkbox color when checked
+          checkColor: Colors.black,
         ),
-      );
-    }  
+      ),
+    ),
+  );
+}
+
   Widget _buildHeaderCell(String text, {Color color = Colors.black, double fontSize = 15, FontStyle fontStyle = FontStyle.normal,}) {
       return Padding(
         padding: const EdgeInsets.all(20.0),
@@ -889,12 +930,8 @@ Widget buildScoreRow(String title, List<String> descriptions, ValueNotifier<doub
       );
     }
 
-    // Filter search results based on query
-  void filterSearchResults(String query) {
-    // setState(() {
-    //   filteredList = AuditorList.where((auditor) =>
-    //       auditor['name']!.toLowerCase().contains(query.toLowerCase())).toList();
-    // });
-  }
+   
+  //Strategic Contributions------------------------------------------------------------------------------------------------------
+  //Strategic Contributions------------------------------------------------------------------------------------------------------
 
   

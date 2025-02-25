@@ -6,6 +6,10 @@ import 'package:imis/Settings/PGS%20Period/PGS_Period.dart';
 import 'package:imis/login/pages/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+void main() {
+  runApp(const MyApp());
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -32,10 +36,25 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  bool _isLoading = false; // Track loading state
+  bool _isLoading = false;
+  String _userName = "User"; // Default username
   Widget _selectedScreen = const Center(
-    child: Text("Welcome to IMIS! Wilbur B. Pimentel"),
+    child: Text("Welcome to IMIS!"),
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  /// Load user's name from SharedPreferences
+  Future<void> _loadUserName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('UserName') ?? "User"; // Default if not found
+    });
+  }
 
   void _setScreen(Widget screen) {
     setState(() {
@@ -49,7 +68,7 @@ class _HomePageState extends State<HomePage> {
       });
     });
 
-    Navigator.pop(context); // Close drawer
+    Navigator.pop(context);
   }
 
   void _logout(BuildContext context) async {
@@ -79,23 +98,77 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _changePassword() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Change Password Clicked')),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
-        title: const Text("Integrated Management Information System"),
-        foregroundColor: Colors.white,
-        backgroundColor: const Color(0xFF1A67A3),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.menu),
-          color: Colors.white,
-          onPressed: () {
-            _scaffoldKey.currentState?.openDrawer();
-          },
+  backgroundColor: const Color(0xFF1A67A3),
+  foregroundColor: Colors.white,
+  title: Row(
+  mainAxisAlignment: MainAxisAlignment.spaceBetween, // Ensures spacing
+  children: [
+    Expanded(
+      child: Center( // Centering the title
+        child: Text(
+          "Integrated Management Information System",
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.normal),
         ),
       ),
+    ),
+
+    // Username & Dropdown stays on the right
+    PopupMenuButton<String>(
+      onSelected: (value) {
+        if (value == "change_password") {
+          _changePassword();
+        } else if (value == "logout") {
+          _logout(context);
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem<String>(
+          value: "change_password",
+          child: Row(
+            children: [
+              Icon(Icons.lock, color: Colors.black54),
+              SizedBox(width: 10),
+              Text("Change Password"),
+            ],
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: "logout",
+          child: Row(
+            children: [
+              Icon(Icons.exit_to_app, color: Colors.black54),
+              SizedBox(width: 10),
+              Text("Logout"),
+            ],
+          ),
+        ),
+      ],
+      child: Row(
+        children: [
+          Text(
+            "Welcome, $_userName",
+            style: const TextStyle(fontSize: 16, color: Colors.white),
+          ),
+          const Icon(Icons.arrow_drop_down, color: Colors.white),
+        ],
+      ),
+    ),
+  ],
+),
+
+),
+
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
@@ -148,9 +221,7 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w100),
               ),
               onTap: () {
-
-                _setScreen((Deliverables_List()));
-
+                _setScreen(Deliverables_List());
               },
             ),
             ExpansionTile(
@@ -167,18 +238,9 @@ class _HomePageState extends State<HomePage> {
                     'Key Result Area',
                     style: TextStyle(fontSize: 14),
                   ),
-                  onTap: () { //=> _setScreen(KRAListScreen()
+                  onTap: () {
                     _setScreen(KRAListScreen());
-                  }, // Load with delay                 
-                ),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: const Icon(Icons.house_rounded, size: 18),
-                  title: const Text(
-                    'Offices',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  onTap: () {},
+                  },
                 ),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
@@ -188,20 +250,8 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(fontSize: 14),
                   ),
                   onTap: () {
-
-                     _setScreen(AuditorListScreen());
-
-                    
+                    _setScreen(AuditorListScreen());
                   },
-                ),
-                ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 18),
-                  leading: const Icon(Icons.people_alt_rounded, size: 18),
-                  title: const Text(
-                    'Teams',
-                    style: TextStyle(fontSize: 14),
-                  ),
-                  onTap: () {},
                 ),
                 ListTile(
                   contentPadding: const EdgeInsets.symmetric(horizontal: 18),
@@ -211,8 +261,7 @@ class _HomePageState extends State<HomePage> {
                     style: TextStyle(fontSize: 14),
                   ),
                   onTap: () {
-
-                     _setScreen(PGSPeriodScreen());
+                    _setScreen(PGSPeriodScreen());
                   },
                 ),
               ],
@@ -243,8 +292,4 @@ class _HomePageState extends State<HomePage> {
           : _selectedScreen,
     );
   }
-}
-
-void main() {
-  runApp(const MyApp());
 }
