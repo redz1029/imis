@@ -8,10 +8,14 @@ namespace IMIS.Persistence.PGSModules
     public class PGSDeliverableService : IPGSDeliverableService
     {
         private readonly IPGSDeliverableRepository _repository;
+        private readonly IKeyResultAreaRepository _kraRepository;
 
-        public PGSDeliverableService(IPGSDeliverableRepository repository)
+
+        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _kraRepository = kraRepository ?? throw new ArgumentNullException(nameof(kraRepository));
+
         }
 
         public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDto, CancellationToken cancellationToken)
@@ -19,6 +23,9 @@ namespace IMIS.Persistence.PGSModules
             if (pgsDto == null) throw new ArgumentNullException(nameof(pgsDto));
 
             var pgsEntity = pgsDto.ToEntity();
+
+            pgsEntity.Kra = await _kraRepository.GetByIdAsync(pgsEntity!.Kra!.Id, cancellationToken).ConfigureAwait(false);
+
             var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
 
             return ConvertToDto(createdPgs);
@@ -42,7 +49,7 @@ namespace IMIS.Persistence.PGSModules
                 RowVersion = deliverable.RowVersion ?? Array.Empty<byte>(),
                 Remarks = deliverable.Remarks ?? string.Empty,
 
-                Kra = deliverable.Kra != null ? new KraDto
+                Kra = deliverable.Kra != null ? new KeyResultAreaDto
                 {
                     Id = deliverable.Kra.Id,
                     Name = deliverable.Kra.Name,

@@ -12,6 +12,7 @@ namespace IMIS.Application.PgsModule
         public required PgsPeriodDto PgsPeriod { get; set; }  
         public required OfficeDto Office { get; set; } 
         public string? Remarks { get; set; }
+
         public List<PGSDeliverableDto>? PgsDeliverables { get; set; }
 
         public override PgsAuditDetails ToEntity()

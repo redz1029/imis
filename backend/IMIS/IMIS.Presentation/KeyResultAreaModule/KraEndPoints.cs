@@ -15,7 +15,7 @@ namespace IMIS.Presentation.KraModuleAPI
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/", async ([FromBody] KraDto KraDto, IKraService service, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] KeyResultAreaDto KraDto, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 if (KraDto == null)
                 {
@@ -25,20 +25,20 @@ namespace IMIS.Presentation.KraModuleAPI
                 return Results.Created($"/Kra/{createdKra.Id}", createdKra);
             })
             .WithTags(_pgsTag);
-            app.MapGet("/", async (IKraService service, CancellationToken cancellationToken) => // Get allAsync Data in the KRA Database
+            app.MapGet("/", async (IKeyResultAreaService service, CancellationToken cancellationToken) => // Get allAsync Data in the KRA Database
             {
                 var Kradto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(Kradto);
             })
 
            .WithTags(_pgsTag);
-            app.MapGet("/{id}", async (int id, IKraService service, CancellationToken cancellationToken) =>
+            app.MapGet("/{id}", async (int id, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 var Kradto = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 return Kradto != null ? Results.Ok(Kradto) : Results.NotFound();
             })
             .WithTags(_pgsTag);
-            app.MapPut("/{id}", async (int id, [FromBody] KraDto KraDto, IKraService service, CancellationToken cancellationToken) =>
+            app.MapPut("/{id}", async (int id, [FromBody] KeyResultAreaDto KraDto, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 if (KraDto == null)
                 {

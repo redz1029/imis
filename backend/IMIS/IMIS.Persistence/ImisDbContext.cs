@@ -16,12 +16,11 @@ namespace IMIS.Persistence
         public DbSet<AuditScheduleDetails> AuditSchduleDetails { get; set; }
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
         public DbSet<PgsDeliverable> Deliverable { get; set; }
-        public DbSet<Kra> Kra { get; set; }
-        public DbSet<PgsAuditDetails> PgsProjectStatus { get; set; }
+        public DbSet<KeyResultArea> KeyResultArea { get; set; }
+        public DbSet<PgsAuditDetails> PgsAuditDetails { get; set; }
         public DbSet<PgsPeriod> PgsPeriod { get; set; }
 
         public DbSet<PGSReadinessRatingCancerCare> PgsReadiness { get; set; }
-
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)  // Pass the options to the base DbContext constructor
@@ -66,14 +65,7 @@ namespace IMIS.Persistence
             builder.Entity<AuditableOffices>()
                 .HasOne(ao => ao.Office)
                 .WithMany(o => o.AuditableOffices)
-                .HasForeignKey(ao => ao.OfficeId);
-
-            builder.Entity<AuditScheduleDetails>()
-                .HasOne(asd => asd.AuditSchedule)
-                .WithMany(a => a.AuditSchduleDetails)
-                .HasForeignKey(asd => asd.AuditScheduleId);
-            builder.Entity<PgsAuditDetails>().Property(p => p.Status)
-           .HasConversion<int>();
+                .HasForeignKey(ao => ao.OfficeId);           
             base.OnModelCreating(builder);
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());

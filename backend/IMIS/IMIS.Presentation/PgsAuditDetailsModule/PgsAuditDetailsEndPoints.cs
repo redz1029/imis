@@ -9,9 +9,10 @@ namespace IMIS.Presentation.PgsModuleAPI
 {
     public class PgsAuditDetailsEndPoints : CarterModule
     {
-        private const string _pgsTag = "Create PgsProjectAudit";
-        public PgsAuditDetailsEndPoints() : base("/PgsAudit")
+        private const string _pgsTag = "Create PgsAuditDetails";
+        public PgsAuditDetailsEndPoints() : base("/PgsAuditDetails")
         {
+
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {            

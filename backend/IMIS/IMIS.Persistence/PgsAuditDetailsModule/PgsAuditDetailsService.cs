@@ -7,12 +7,12 @@ using IMIS.Application.PgsPeriodModule;
 
 namespace IMIS.Persistence.PgsModule
 {   
-    public class PgsAuditDetailsService(IPgsAuditDetailsRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKraRepository kraRepository) : IPgsAuditDetailsService
+    public class PgsAuditDetailsService(IPgsAuditDetailsRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository) : IPgsAuditDetailsService
     {
         private readonly IPgsAuditDetailsRepository _repository = repository;
         private readonly IOfficeRepository _officeRepository = officeRepository;
         private readonly IPgsPeriodRepository _pgsPeriodRepository = pgsPeriodRepository;
-        private readonly IKraRepository _kraRepository = kraRepository;
+        private readonly IKeyResultAreaRepository _kraRepository = kraRepository;
         public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto PGSDto, CancellationToken cancellationToken)
         {
             if (PGSDto == null) throw new ArgumentNullException(nameof(PGSDto));
@@ -30,12 +30,12 @@ namespace IMIS.Persistence.PgsModule
                     deliverable.Kra = await _kraRepository.GetByIdAsync(deliverable!.Kra!.Id, cancellationToken).ConfigureAwait(false);
                 }
             }
+
             // Handle Save or Update
             var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);            
             return new PgsAuditDetailsDto
             {
-                Id = createdPgs.Id,
-                Status = createdPgs.Status,
+                Id = createdPgs.Id,              
                 Remarks = createdPgs.Remarks,
                 PgsPeriod =  new PgsPeriodDto
                 {
@@ -49,8 +49,8 @@ namespace IMIS.Persistence.PgsModule
                     Name = createdPgs.Office.Name,
                     IsActive = createdPgs.Office.IsActive
                 },
-                PgsDeliverables = createdPgs.PgsDeliverables?
-                .Select(deliverable => new PGSDeliverableDto
+
+                PgsDeliverables = createdPgs.PgsDeliverables?.Select(deliverable => new PGSDeliverableDto
                 {
                     Id = deliverable.Id,
                     IsDirect = deliverable.IsDirect,
@@ -59,7 +59,7 @@ namespace IMIS.Persistence.PgsModule
                     PercentDeliverables = deliverable.PercentDeliverables,
                     Status = deliverable.Status,
                     RowVersion = deliverable.RowVersion,
-                    Kra = deliverable.Kra != null ? new KraDto
+                    Kra = deliverable.Kra != null ? new KeyResultAreaDto
                     {
                         Id = deliverable.Kra.Id,
                         Name = deliverable.Kra.Name,  

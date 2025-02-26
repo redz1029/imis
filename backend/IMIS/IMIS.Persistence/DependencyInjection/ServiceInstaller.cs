@@ -33,8 +33,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IPGSDeliverableRepository, PGSDeliverableRepository>();
             services.AddScoped<IPGSDeliverableService, PGSDeliverableService>();
 
-            services.AddScoped<IKraRepository, KraRepository>();
-            services.AddScoped<IKraService, KraService>();
+            services.AddScoped<IKeyResultAreaRepository, KeyResultAreaRepository>();
+            services.AddScoped<IKeyResultAreaService, KeyResultAreaService>();
 
             services.AddScoped<IPgsAuditDetailsRepository, PgsAuditDetailsRepository>();
             services.AddScoped<IPgsAuditDetailsService, PgsAuditDetailsService>();

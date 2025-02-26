@@ -3,14 +3,14 @@ using IMIS.Domain;
 
 namespace IMIS.Application.PgsKraModule
 {
-    public class KraDto : BaseDto<Kra, int>
+    public class KeyResultAreaDto : BaseDto<KeyResultArea, int>
     {
         public string Name { get; set; }
         public string? Remarks { get; set; }
 
-        public override Kra ToEntity()
+        public override KeyResultArea ToEntity()
         {            
-            return new Kra() { Id = Id, Name = Name, Remarks = Remarks };
+            return new KeyResultArea() { Id = Id, Name = Name, Remarks = Remarks };
         }
     }
 }

@@ -5,23 +5,23 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.KraModule
 {
-    public class KraRepository : BaseRepository<Kra, int, ImisDbContext>, IKraRepository
+    public class KeyResultAreaRepository : BaseRepository<KeyResultArea, int, ImisDbContext>, IKeyResultAreaRepository
     {       
-        public KraRepository(ImisDbContext dbContext) : base(dbContext) { }
-        public async Task<IEnumerable<Kra>> GetAll(CancellationToken cancellationToken)
+        public KeyResultAreaRepository(ImisDbContext dbContext) : base(dbContext) { }
+        public async Task<IEnumerable<KeyResultArea>> GetAll(CancellationToken cancellationToken)
         {
-                return await _dbContext.Kra
+                return await _dbContext.KeyResultArea
                .Where(o => !o.IsDeleted)  
                .AsNoTracking()            
                .ToListAsync(cancellationToken)
                .ConfigureAwait(false);
         }        
         // Save or Update method
-        public new async Task<Kra> SaveOrUpdateAsync(Kra kra, CancellationToken cancellationToken)
+        public new async Task<KeyResultArea> SaveOrUpdateAsync(KeyResultArea kra, CancellationToken cancellationToken)
         {
             if (kra == null) throw new ArgumentNullException(nameof(kra));
             // Check if the entity already exists
-            var existingKra = await _dbContext.Kra
+            var existingKra = await _dbContext.KeyResultArea
                 .FirstOrDefaultAsync(d => d.Id == kra.Id, cancellationToken)
                 .ConfigureAwait(false);
             if (existingKra != null)
@@ -32,7 +32,7 @@ namespace IMIS.Persistence.KraModule
             else
             {
                 // Add new entity
-                await _dbContext.Kra.AddAsync(kra, cancellationToken).ConfigureAwait(false);
+                await _dbContext.KeyResultArea.AddAsync(kra, cancellationToken).ConfigureAwait(false);
             }
             // Save changes to the database
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

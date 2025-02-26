@@ -6,7 +6,7 @@ namespace IMIS.Application.PgsModule
 {
     public class PGSDeliverableDto : BaseDto<PgsDeliverable, long>
     {
-        public KraDto? Kra { get; set; }
+        public KeyResultAreaDto? Kra { get; set; }
         public required bool IsDirect { get; set; }
         public required string DeliverableName { get; set; }
         public required DateTime ByWhen { get; set; }

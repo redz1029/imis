@@ -11,7 +11,7 @@ namespace IMIS.Persistence.PgsModule
         public new async Task<PgsAuditDetails> SaveOrUpdateAsync(PgsAuditDetails pgs, CancellationToken cancellationToken)
         {
             if (pgs == null) throw new ArgumentNullException(nameof(pgs));
-            var existingPgs = await _dbContext.PgsProjectStatus
+            var existingPgs = await _dbContext.PgsAuditDetails
                 .FirstOrDefaultAsync(d => d.Id == pgs.Id, cancellationToken)
             .ConfigureAwait(false);
             if (existingPgs != null)
@@ -20,7 +20,7 @@ namespace IMIS.Persistence.PgsModule
             }
             else
             {
-                await _dbContext.PgsProjectStatus.AddAsync(pgs, cancellationToken).ConfigureAwait(false);
+                await _dbContext.PgsAuditDetails.AddAsync(pgs, cancellationToken).ConfigureAwait(false);
             }
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return pgs;
