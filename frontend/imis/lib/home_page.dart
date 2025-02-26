@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:imis/PGS/Deliverables_List.dart';
-import 'package:imis/Settings/Auditor/Auditor_List.dart';
-import 'package:imis/Settings/KRA/Kra_List.dart';
-import 'package:imis/Settings/PGS%20Period/PGS_Period.dart';
+import 'package:imis/pgs/deliverables_list.dart';
+import 'package:imis/settings/auditor/auditor_list.dart';
+import 'package:imis/settings/key_result_area/key_result_area_list.dart';
+import 'package:imis/settings/pgs_period/PGS_Period.dart';
 import 'package:imis/login/pages/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

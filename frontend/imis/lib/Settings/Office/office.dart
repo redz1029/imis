@@ -4,11 +4,11 @@ part 'office.g.dart';
 
 @JsonSerializable()
 class Office {
-  int id;
-  String name;
-  bool isActive;
+  final int id;
+  final String name;
+  final bool isActive;
 
-  Office(this.id, this.name, this.isActive);
+  const Office(this.id, this.name, this.isActive); // Ginawang `const`
 
   factory Office.fromJson(Map<String, dynamic> json) => _$OfficeFromJson(json);
   Map<String, dynamic> toJson() => _$OfficeToJson(this);

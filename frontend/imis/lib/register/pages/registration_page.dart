@@ -40,7 +40,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
 
     final apiUrl =
-        'https://localhost:7273/register'; // Replace with your API URL
+        'https://localhost:7273/register'; 
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
@@ -56,7 +56,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
         _setModal("Registration successful!");
 
         // Navigate to LoginPage after registration success
-        Future.delayed(Duration(seconds: 2), () {
+        Future.delayed(Duration(seconds: 1), () {
           Navigator.pushReplacement(
             // ignore: use_build_context_synchronously
             context,

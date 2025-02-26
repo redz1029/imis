@@ -9,11 +9,11 @@ part of 'pgs_deliverables.dart';
 PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
     PgsDeliverables(
       (json['id'] as num).toInt(),
-      KeyResultArea.fromJson(json['keyResultArea'] as Map<String, dynamic>),
+      KeyResultArea.fromJson(json['kra'] as Map<String, dynamic>),
       json['deliverableName'] as String,
       json['isDirect'] as bool,
       DateTime.parse(json['byWhen'] as String),
-      (json['percentageDeliverable'] as num).toDouble(),
+      (json['percentDeliverables'] as num).toDouble(),
       $enumDecode(_$PgsStatusEnumMap, json['status']),
       remarks: json['remarks'] as String?,
     );
@@ -21,11 +21,11 @@ PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$PgsDeliverablesToJson(PgsDeliverables instance) =>
     <String, dynamic>{
       'id': instance.id,
-      'keyResultArea': instance.keyResultArea,
+      'kra': instance.keyResultArea,
       'isDirect': instance.isDirect,
       'deliverableName': instance.deliverableName,
       'byWhen': instance.byWhen.toIso8601String(),
-      'percentageDeliverable': instance.percentageDeliverable,
+      'percentDeliverables': instance.percentDeliverables,
       'status': _$PgsStatusEnumMap[instance.status]!,
       'remarks': instance.remarks,
     };

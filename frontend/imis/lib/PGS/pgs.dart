@@ -1,6 +1,6 @@
-import 'package:imis/PGS/pgs_deliverables.dart';
-import 'package:imis/PGS/pgs_period.dart';
-import 'package:imis/Settings/Office/office.dart';
+import 'package:imis/pgs/pgs_deliverables.dart';
+import 'package:imis/pgs/pgs_period.dart';
+import 'package:imis/settings/office/office.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'pgs.g.dart';
