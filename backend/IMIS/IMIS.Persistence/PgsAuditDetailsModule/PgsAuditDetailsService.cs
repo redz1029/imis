@@ -4,17 +4,88 @@ using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
-using IMIS.Domain;
-
+using static IMIS.Application.PgsModule.PgsAuditDetailsDto;
 
 namespace IMIS.Persistence.PgsModule
-{   
-    public class PgsAuditDetailsService(IPgsAuditDetailsRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository) : IPgsAuditDetailsService
+{
+    public class PgsAuditDetailsService : IPgsAuditDetailsService
     {
-        private readonly IPgsAuditDetailsRepository _repository = repository;
-        private readonly IOfficeRepository _officeRepository = officeRepository;
-        private readonly IPgsPeriodRepository _pgsPeriodRepository = pgsPeriodRepository;
-        private readonly IKeyResultAreaRepository _kraRepository = kraRepository;       
+        private readonly IPgsAuditDetailsRepository _repository;
+        private readonly IOfficeRepository _officeRepository;
+        private readonly IPgsPeriodRepository _pgsPeriodRepository;
+        private readonly IKeyResultAreaRepository _kraRepository;
+
+        public PgsAuditDetailsService(IPgsAuditDetailsRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository)
+        {
+            _repository = repository;
+            _officeRepository = officeRepository;
+            _pgsPeriodRepository = pgsPeriodRepository;
+            _kraRepository = kraRepository;
+        }
+        
+        public async Task<PagedResult<PgsAuditDetailsDto>> GetPagedPgsAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            if (page <= 0 || pageSize <= 0)
+            {
+                throw new ArgumentException("Page and PageSize must be greater than 0.");
+            }
+         
+            int skip = (page - 1) * pageSize;
+           
+            var pgsAuditDetails = await _repository.GetPagedAsync(skip, pageSize, cancellationToken).ConfigureAwait(false);
+            var totalCount = await _repository.CountAsync(cancellationToken).ConfigureAwait(false);
+            
+            return new PagedResult<PgsAuditDetailsDto>
+            {
+             
+                Items = pgsAuditDetails.Select(pgs => new PgsAuditDetailsDto
+                {
+                    Id = pgs.Id,
+                    Remarks = pgs.Remarks,
+                    PgsPeriod = pgs.PgsPeriod != null ? new PgsPeriodDto
+                    {
+                        Id = pgs.PgsPeriod.Id,
+                        StartDate = pgs.PgsPeriod.StartDate,
+                        EndDate = pgs.PgsPeriod.EndDate
+                    } : null,
+                    Office = pgs.Office != null ? new OfficeDto
+                    {
+                        Id = pgs.Office.Id,
+                        Name = pgs.Office.Name,
+                        IsActive = pgs.Office.IsActive
+                    } : null,
+                    PgsReadinessRating = pgs.PgsReadinessRating != null ? new PgsReadinessRatingDto
+                    {
+                        Id = pgs.PgsReadinessRating.Id,
+                        CompetenceToDeliver = pgs.PgsReadinessRating.CompetenceToDeliver,
+                        ResourceAvailability = pgs.PgsReadinessRating.ResourceAvailability,
+                        ConfidenceToDeliver = pgs.PgsReadinessRating.ConfidenceToDeliver,
+                    } : null,
+                    PgsDeliverables = pgs.PgsDeliverables?.Select(deliverable => new PGSDeliverableDto
+                    {
+                        Id = deliverable.Id,
+                        IsDirect = deliverable.IsDirect,
+                        DeliverableName = deliverable.DeliverableName,
+                        ByWhen = deliverable.ByWhen,
+                        PercentDeliverables = deliverable.PercentDeliverables,
+                        Status = deliverable.Status,
+                        RowVersion = deliverable.RowVersion,
+                        Kra = deliverable.Kra != null ? new KeyResultAreaDto
+                        {
+                            Id = deliverable.Kra.Id,
+                            Name = deliverable.Kra.Name,
+                            Remarks = deliverable.Kra.Remarks
+                        } : null, 
+                        Remarks = deliverable.Remarks
+                    }).ToList() ?? new List<PGSDeliverableDto>() 
+                }).ToList(),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        // Save or Update PgsAuditDetails
         public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto PGSDto, CancellationToken cancellationToken)
         {
             if (PGSDto == null) throw new ArgumentNullException(nameof(PGSDto));
@@ -24,8 +95,7 @@ namespace IMIS.Persistence.PgsModule
 
             pgsEntity.Office = await _officeRepository.GetByIdAsync(pgsEntity.Office.Id, cancellationToken).ConfigureAwait(false);
             pgsEntity.PgsPeriod = await _pgsPeriodRepository.GetByIdAsync(pgsEntity.PgsPeriod.Id, cancellationToken).ConfigureAwait(false);
-       
-         
+
             if (pgsEntity.PgsDeliverables != null)
             {
                 foreach (var deliverable in pgsEntity.PgsDeliverables)
@@ -35,12 +105,13 @@ namespace IMIS.Persistence.PgsModule
             }
 
             // Handle Save or Update
-            var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);            
+            var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
+
             return new PgsAuditDetailsDto
             {
-                Id = createdPgs.Id,              
+                Id = createdPgs.Id,
                 Remarks = createdPgs.Remarks,
-                PgsPeriod =  new PgsPeriodDto
+                PgsPeriod = new PgsPeriodDto
                 {
                     Id = createdPgs.PgsPeriod.Id,
                     StartDate = createdPgs.PgsPeriod.StartDate,
@@ -71,15 +142,15 @@ namespace IMIS.Persistence.PgsModule
                     Kra = deliverable.Kra != null ? new KeyResultAreaDto
                     {
                         Id = deliverable.Kra.Id,
-                        Name = deliverable.Kra.Name,  
-                        Remarks = deliverable.Kra.Remarks 
+                        Name = deliverable.Kra.Name,
+                        Remarks = deliverable.Kra.Remarks
                     } : null,
                     Remarks = deliverable.Remarks
-                }                         
-
-                ).ToList()
+                }).ToList()
             };
         }
+
+        // Save or Update Generic Method
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             if (dto is not PgsAuditDetailsDto pgsDto) throw new ArgumentException("Invalid DTO type", nameof(dto));

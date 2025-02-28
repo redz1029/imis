@@ -237,36 +237,6 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("Offices");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.PGSReadinessRatingCancerCare", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<double>("Score1")
-                        .HasColumnType("float");
-
-                    b.Property<double>("Score2")
-                        .HasColumnType("float");
-
-                    b.Property<double>("Score3")
-                        .HasColumnType("float");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PgsReadiness");
-                });
-
             modelBuilder.Entity("IMIS.Domain.PgsAuditDetails", b =>
                 {
                     b.Property<long>("Id")
@@ -284,6 +254,9 @@ namespace IMIS.Persistence.Migrations
                     b.Property<int>("PgsPeriodId")
                         .HasColumnType("int");
 
+                    b.Property<long?>("PgsReadinessRatingId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
@@ -297,6 +270,8 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("OfficeId");
 
                     b.HasIndex("PgsPeriodId");
+
+                    b.HasIndex("PgsReadinessRatingId");
 
                     b.ToTable("PgsAuditDetails");
                 });
@@ -383,6 +358,36 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("PgsPeriod");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.PgsReadinessRating", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<double>("CompetenceToDeliver")
+                        .HasColumnType("float");
+
+                    b.Property<double>("ConfidenceToDeliver")
+                        .HasColumnType("float");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<double>("ResourceAvailability")
+                        .HasColumnType("float");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PgsReadiness");
+                });
+
             modelBuilder.Entity("IMIS.Domain.Team", b =>
                 {
                     b.Property<int>("Id")
@@ -441,7 +446,7 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "b5fdea0d-3825-4cba-82f1-e1f570c00edc",
-                            ConcurrencyStamp = "021c20ed-7863-46dc-8bf8-b22f87943203",
+                            ConcurrencyStamp = "9d6371a3-6d91-42a4-971a-27ec1cd75c3c",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });
@@ -541,15 +546,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "475e45a8-4dd9-425c-b405-b6598ef700fd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "68060113-21d8-489b-8ccb-f1100ba58d26",
+                            ConcurrencyStamp = "227965bd-6564-4310-bb0c-f06aeed3af8c",
                             Email = "ADMIN@MAIL.COM",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMNt0lY+vYpU1Iwxu/lbolLEPy/2nxoV7tItYGhOmctCUuGlY4X88oWce6DZ06DDFQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP9OXrZGjYhR3hPQj8MzEMtK5klXGi5rqb7xKKT2SeY1lO7FZqi/23SHdMGK2r40UQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5ee80b2f-981f-444a-8dea-9e22ad540625",
+                            SecurityStamp = "d94e226e-bc76-4c7b-bb23-c942cf1680ad",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });
@@ -741,9 +746,15 @@ namespace IMIS.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("IMIS.Domain.PgsReadinessRating", "PgsReadinessRating")
+                        .WithMany()
+                        .HasForeignKey("PgsReadinessRatingId");
+
                     b.Navigation("Office");
 
                     b.Navigation("PgsPeriod");
+
+                    b.Navigation("PgsReadinessRating");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
@@ -756,7 +767,7 @@ namespace IMIS.Persistence.Migrations
                         .WithMany("PgsDeliverables")
                         .HasForeignKey("PgsAuditDetailsId");
 
-                    b.HasOne("IMIS.Domain.PGSReadinessRatingCancerCare", "PgsReadinessRatingCancerCare")
+                    b.HasOne("IMIS.Domain.PgsReadinessRating", "PgsReadinessRatingCancerCare")
                         .WithMany()
                         .HasForeignKey("PgsReadinessRatingCancerCareId");
 
