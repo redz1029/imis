@@ -14,7 +14,7 @@ namespace IMIS.Persistence.PgsModule
         private readonly IPgsAuditDetailsRepository _repository = repository;
         private readonly IOfficeRepository _officeRepository = officeRepository;
         private readonly IPgsPeriodRepository _pgsPeriodRepository = pgsPeriodRepository;
-        private readonly IKeyResultAreaRepository _kraRepository = kraRepository;
+        private readonly IKeyResultAreaRepository _kraRepository = kraRepository;       
         public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto PGSDto, CancellationToken cancellationToken)
         {
             if (PGSDto == null) throw new ArgumentNullException(nameof(PGSDto));
@@ -24,8 +24,9 @@ namespace IMIS.Persistence.PgsModule
 
             pgsEntity.Office = await _officeRepository.GetByIdAsync(pgsEntity.Office.Id, cancellationToken).ConfigureAwait(false);
             pgsEntity.PgsPeriod = await _pgsPeriodRepository.GetByIdAsync(pgsEntity.PgsPeriod.Id, cancellationToken).ConfigureAwait(false);
-            
-            if(pgsEntity.PgsDeliverables != null)
+       
+         
+            if (pgsEntity.PgsDeliverables != null)
             {
                 foreach (var deliverable in pgsEntity.PgsDeliverables)
                 {
@@ -51,7 +52,13 @@ namespace IMIS.Persistence.PgsModule
                     Name = createdPgs.Office.Name,
                     IsActive = createdPgs.Office.IsActive
                 },
-
+                PgsReadinessRating = new PgsReadinessRatingDto
+                {
+                    Id = createdPgs.PgsReadinessRating!.Id,
+                    CompetenceToDeliver = createdPgs.PgsReadinessRating.CompetenceToDeliver,
+                    ResourceAvailability = createdPgs.PgsReadinessRating.ResourceAvailability,
+                    ConfidenceToDeliver = createdPgs.PgsReadinessRating.ConfidenceToDeliver,
+                },
                 PgsDeliverables = createdPgs.PgsDeliverables?.Select(deliverable => new PGSDeliverableDto
                 {
                     Id = deliverable.Id,
@@ -68,7 +75,9 @@ namespace IMIS.Persistence.PgsModule
                         Remarks = deliverable.Kra.Remarks 
                     } : null,
                     Remarks = deliverable.Remarks
-                }).ToList()
+                }                         
+
+                ).ToList()
             };
         }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>

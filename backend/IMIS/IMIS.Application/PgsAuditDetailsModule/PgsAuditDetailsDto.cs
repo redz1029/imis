@@ -23,7 +23,7 @@ namespace IMIS.Application.PgsModule
                 Office = Office.ToEntity(),
                 Remarks = Remarks,
                 PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),
-                PgsReadinessRating = PgsReadinessRating?.ToEntity()
+                PgsReadinessRating = PgsReadinessRating!.ToEntity()
             };
         }
     }
