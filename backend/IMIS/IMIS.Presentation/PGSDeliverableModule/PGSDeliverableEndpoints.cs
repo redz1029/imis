@@ -1,40 +1,49 @@
 ﻿using Carter;
-using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using System.Text.Json;
 
 namespace IMIS.Presentation.PGSModule
 {
     public class PGSDeliverableEndpoints : CarterModule
     {
-        private const string _pgsTag = "Create PGS Deliverable"; 
+        private const string _pgsTag = "Create PGS Deliverable";
         public PGSDeliverableEndpoints() : base("/Deliverable")
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            // POST endpoint for creating a PGS record
-            app.MapPost("/", async ([FromBody] PGSDeliverableDto pgsDto, IPGSDeliverableService service, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] List<PGSDeliverableDto> pgsDtos, IPGSDeliverableService service, CancellationToken cancellationToken) =>
             {
-                if (pgsDto == null)
+                if (pgsDtos == null || !pgsDtos.Any())
                 {
-                    return Results.BadRequest("PGS data is required.");
+                    return Results.BadRequest("PGS data list is required.");
                 }
-                var createdPgs = await service.SaveOrUpdateAsync(pgsDto, cancellationToken).ConfigureAwait(false);
-                return Results.Created($"/Deliverable/{createdPgs.Id}", createdPgs); 
+
+                var createdPgsList = new List<PGSDeliverableDto>();
+
+                foreach (var pgsDto in pgsDtos)
+                {
+                    if (pgsDto.Id == 0) // Ensure ID is not explicitly set for new records
+                    {
+                        pgsDto.Id = 0;
+                    }
+
+                    var createdPgs = await service.SaveOrUpdateAsync(pgsDto, cancellationToken).ConfigureAwait(false);
+                    createdPgsList.Add(createdPgs);
+                }
+
+                // Log response
+                Console.WriteLine($"Created PGS Count: {createdPgsList.Count}");
+                Console.WriteLine("Created Deliverables:");
+                Console.WriteLine(JsonSerializer.Serialize(createdPgsList, new JsonSerializerOptions { WriteIndented = true }));
+
+                return Results.Created("/Deliverable", createdPgsList);
             })
             .WithTags(_pgsTag);
-
-            app.MapGet("/", async (IPGSDeliverableService service, CancellationToken cancellationToken) => // Get allAsync Data in the KRA Database
-            {
-                var Pgsdto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
-                return Results.Ok(Pgsdto);
-            })
-
-         .WithTags(_pgsTag);
         }
     }
 }
