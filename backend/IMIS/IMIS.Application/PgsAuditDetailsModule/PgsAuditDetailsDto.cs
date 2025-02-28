@@ -12,9 +12,8 @@ namespace IMIS.Application.PgsModule
         public required PgsPeriodDto PgsPeriod { get; set; }  
         public required OfficeDto Office { get; set; } 
         public string? Remarks { get; set; }
-
         public List<PGSDeliverableDto>? PgsDeliverables { get; set; }
-
+        public PgsReadinessRatingDto? PgsReadinessRating { get; set; }
         public override PgsAuditDetails ToEntity()
         {
             return new PgsAuditDetails()
@@ -23,7 +22,8 @@ namespace IMIS.Application.PgsModule
                 PgsPeriod = PgsPeriod.ToEntity(),
                 Office = Office.ToEntity(),
                 Remarks = Remarks,
-                PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList()
+                PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),
+                PgsReadinessRating = PgsReadinessRating?.ToEntity()
             };
         }
     }

@@ -3,6 +3,8 @@ using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
+using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using IMIS.Domain;
 
 
 namespace IMIS.Persistence.PgsModule
