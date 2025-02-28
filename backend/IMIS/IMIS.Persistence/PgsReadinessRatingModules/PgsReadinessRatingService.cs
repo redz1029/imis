@@ -5,41 +5,41 @@ using IMIS.Domain;
 
 namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
 {
-    public class PgsReadinessRatingCancerCareService : IPgsReadinessRatingCancerCareService
+    public class PgsReadinessRatingService : IPgsReadinessRatingService
     {
-        private readonly IPGSReadinessRatingCancerCareRepository _repository;
+        private readonly IPgsReadinessRatingRepository _repository;
 
-        public PgsReadinessRatingCancerCareService(IPGSReadinessRatingCancerCareRepository repository)
+        public PgsReadinessRatingService(IPgsReadinessRatingRepository repository)
         {
             _repository = repository;
         }
 
         // Converts the entity to DTO
-        private PGSReadinessRatingCancerCareDto ConvertToDTO(PGSReadinessRatingCancerCare entity)
+        private PgsReadinessRatingDto ConvertToDTO(PgsReadinessRating entity)
         {
             if (entity == null) return null;
 
-            return new PGSReadinessRatingCancerCareDto
+            return new PgsReadinessRatingDto
             {
                 Id = entity.Id,
-                Score1 = entity.Score1,
-                Score2 = entity.Score2,
-                Score3 = entity.Score3,
+                CompetenceToDeliver = entity.CompetenceToDeliver,
+                ResourceAvailability = entity.ResourceAvailability,
+                ConfidenceToDeliver = entity.ConfidenceToDeliver,
                 TotalScore = entity.TotalScore
             };
         }
 
         // Save or Update Readiness Rating Cancer Care Data
-        public async Task<PGSReadinessRatingCancerCareDto> SaveOrUpdateAsync(PGSReadinessRatingCancerCareDto dto, CancellationToken cancellationToken)
+        public async Task<PgsReadinessRatingDto> SaveOrUpdateAsync(PgsReadinessRatingDto dto, CancellationToken cancellationToken)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
 
-            var entity = new PGSReadinessRatingCancerCare
+            var entity = new PgsReadinessRating
             {
                 Id = dto.Id,
-                Score1 = dto.Score1,
-                Score2 = dto.Score2,
-                Score3 = dto.Score3
+                CompetenceToDeliver = dto.CompetenceToDeliver,
+                ResourceAvailability = dto.ResourceAvailability,
+                ConfidenceToDeliver = dto.ConfidenceToDeliver
             };
 
             var updatedEntity = await _repository.SaveOrUpdateAsync(entity, cancellationToken);
@@ -49,7 +49,7 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
         // Generic Save or Update
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            if (dto is not PGSReadinessRatingCancerCareDto PgsReadinessDto)
+            if (dto is not PgsReadinessRatingDto PgsReadinessDto)
                 throw new ArgumentException("Invalid DTO type", nameof(dto));
 
             var entity = PgsReadinessDto.ToEntity();

@@ -7,16 +7,16 @@ using Microsoft.AspNetCore.Routing;
 
 namespace IMIS.Presentation.PgsReadinessRatingCancerCareModules
 {
-    public class PgsReadinessRatingCancerCareEndPoints : CarterModule
+    public class PgsReadinessRatingEndPoints : CarterModule
     {
         private const string _pgsTag = "PGS Readiness Rating - Cancer Care";
 
-        public PgsReadinessRatingCancerCareEndPoints() : base("/PgsReadiness") { }
+        public PgsReadinessRatingEndPoints() : base("/PgsReadiness") { }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             // POST - Create or Update PGS Readiness Rating
-            app.MapPost("/", async ([FromBody] PGSReadinessRatingCancerCareDto pgsReadinessDto, IPgsReadinessRatingCancerCareService service, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] PgsReadinessRatingDto pgsReadinessDto, IPgsReadinessRatingService service, CancellationToken cancellationToken) =>
             {
                 if (pgsReadinessDto == null)
                 {
@@ -28,7 +28,7 @@ namespace IMIS.Presentation.PgsReadinessRatingCancerCareModules
             .WithTags(_pgsTag);
 
             // GET - Retrieve a PGS Readiness Rating by ID
-            app.MapGet("/{id:long}", async (long id, IPGSReadinessRatingCancerCareRepository repository, CancellationToken cancellationToken) =>
+            app.MapGet("/{id:long}", async (long id, IPgsReadinessRatingRepository repository, CancellationToken cancellationToken) =>
             {
                 var pgsReadiness = await repository.GetByIdAsync(id, cancellationToken);
                 return pgsReadiness != null ? Results.Ok(pgsReadiness) : Results.NotFound("PGS Readiness record not found.");
