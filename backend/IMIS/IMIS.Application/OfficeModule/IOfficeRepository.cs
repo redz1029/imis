@@ -8,5 +8,6 @@ namespace IMIS.Application.OfficeModule
         Task<IEnumerable<Office>> GetAll(CancellationToken cancellationToken);
         Task<IEnumerable<Office>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
         Task<IEnumerable<Office>?> GetNonAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
+        Task<IEnumerable<Office>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
     }
 }

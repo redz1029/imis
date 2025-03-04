@@ -6,7 +6,19 @@ using Microsoft.EntityFrameworkCore;
 namespace IMIS.Persistence.OfficeModule
 {
     public class OfficeRepository(ImisDbContext dbContext) : BaseRepository<Office, int, ImisDbContext>(dbContext), IOfficeRepository
-    {       
+    {
+
+
+        public async Task<IEnumerable<Office>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        {
+            return await _dbContext.Offices
+                .Where(a => EF.Functions.Like(a.Name, $"{name}%") && !a.IsDeleted)
+                .Take(noOfResults)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         public async Task<IEnumerable<Office>> GetAll(CancellationToken cancellationToken)
         {
             return await _dbContext.Offices

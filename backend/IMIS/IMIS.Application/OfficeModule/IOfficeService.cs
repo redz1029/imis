@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using IMIS.Application.AuditorModule;
 
 namespace IMIS.Application.OfficeModule
 {
@@ -8,5 +9,6 @@ namespace IMIS.Application.OfficeModule
         Task<OfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
         Task<List<OfficeDto>?> GetNonAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
+        Task<List<OfficeDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
     }
 }

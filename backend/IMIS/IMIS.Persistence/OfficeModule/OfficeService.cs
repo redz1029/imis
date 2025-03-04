@@ -8,6 +8,13 @@ namespace IMIS.Persistence.OfficeModule
     public class OfficeService(IOfficeRepository repository) : IOfficeService
     {
         private readonly IOfficeRepository _repository = repository;
+
+        public async Task<List<OfficeDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        {
+            var offices = await _repository.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);         
+            return offices != null && offices.Count() > 0 ? offices.Select(a => ConvOfficeToDTO(a)).ToList() : null;
+        }
+
         private static OfficeDto ConvOfficeToDTO(Office office)
         {
             return new OfficeDto()
