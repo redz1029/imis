@@ -3,6 +3,7 @@ using IMIS.Application.PgsModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using System.Text.Json;
 
@@ -16,7 +17,7 @@ namespace IMIS.Presentation.PGSModule
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/", async ([FromBody] List<PGSDeliverableDto> pgsDtos, IPGSDeliverableService service, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] List<PGSDeliverableDto> pgsDtos, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (pgsDtos == null || !pgsDtos.Any())
                 {
@@ -33,6 +34,7 @@ namespace IMIS.Presentation.PGSModule
                     }
 
                     var createdPgs = await service.SaveOrUpdateAsync(pgsDto, cancellationToken).ConfigureAwait(false);
+                    await cache.EvictByTagAsync(_pgsTag, cancellationToken);
                     createdPgsList.Add(createdPgs);
                 }
 
