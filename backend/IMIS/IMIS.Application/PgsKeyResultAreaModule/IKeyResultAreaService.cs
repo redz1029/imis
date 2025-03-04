@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using IMIS.Application.OfficeModule;
 
 namespace IMIS.Application.PgsKraModule
 {
@@ -7,5 +8,6 @@ namespace IMIS.Application.PgsKraModule
         Task<List<KeyResultAreaDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<KeyResultAreaDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<KeyResultAreaDto> SaveOrUpdateAsync(KeyResultAreaDto KraDto, CancellationToken cancellationToken);
+        Task<List<KeyResultAreaDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
     }   
 }

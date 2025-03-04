@@ -7,5 +7,6 @@ namespace IMIS.Application.PgsKraModule
     {       
         Task<IEnumerable<KeyResultArea>> GetAll(CancellationToken cancellationToken);
         new  Task<KeyResultArea> SaveOrUpdateAsync(KeyResultArea kra, CancellationToken cancellationToken);
+        Task<IEnumerable<KeyResultArea>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
     }   
 }

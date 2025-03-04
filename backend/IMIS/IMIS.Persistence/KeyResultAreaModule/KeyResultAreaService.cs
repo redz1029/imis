@@ -1,4 +1,5 @@
 ﻿using Base.Primitives;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 
@@ -6,12 +7,18 @@ namespace IMIS.Persistence.KraModule
 {
     public class KeyResultAreaService : IKeyResultAreaService
     {
-        private readonly IKeyResultAreaRepository _repository;
-        // Constructor for injecting the repository
+        private readonly IKeyResultAreaRepository _repository;      
         public KeyResultAreaService(IKeyResultAreaRepository repository)
         {
-            _repository = repository;  // Correct assignment
+            _repository = repository;
         }
+
+        public async Task<List<KeyResultAreaDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        {
+            var kra = await _repository.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
+            return kra != null && kra.Count() > 0 ? kra.Select(a => ConvOfficeToDTO(a)).ToList() : null;
+        }
+
         // Convert Kra entity to KraDto
         private KeyResultAreaDto ConvOfficeToDTO(KeyResultArea kra)
         {
