@@ -23,13 +23,29 @@ namespace IMIS.Persistence.PGSModules
             if (pgsDto == null) throw new ArgumentNullException(nameof(pgsDto));
 
             var pgsEntity = pgsDto.ToEntity();
+         
+            if (pgsEntity!.Kra == null || pgsEntity.Kra.Id == 0)
+            {
 
-            pgsEntity.Kra = await _kraRepository.GetByIdAsync(pgsEntity!.Kra!.Id, cancellationToken).ConfigureAwait(false);
+                throw new InvalidOperationException("Invalid kra ID");
 
+            }
+
+            var kra = await _kraRepository.GetByIdAsync(pgsEntity!.Kra!.Id, cancellationToken).ConfigureAwait(false);
+
+            if (kra == null)
+            {
+                throw new InvalidOperationException("KRA ID not found");
+            }
+
+            pgsEntity.Kra = kra;
             var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
 
             return ConvertToDto(createdPgs);
-        }      
+        }
+
+
+
         public async Task<List<PGSDeliverableDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);

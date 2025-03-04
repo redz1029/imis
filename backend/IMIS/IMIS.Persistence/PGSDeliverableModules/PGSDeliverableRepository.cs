@@ -8,7 +8,6 @@ namespace IMIS.Persistence.PGSModules
     public class PGSDeliverableRepository(ImisDbContext dbContext)
     : BaseRepository<PgsDeliverable, long, ImisDbContext>(dbContext), IPGSDeliverableRepository
     {
-
         public new async Task<PgsDeliverable> SaveOrUpdateAsync(PgsDeliverable pgs, CancellationToken cancellationToken)
         {
             if (pgs == null) throw new ArgumentNullException(nameof(pgs));          
@@ -26,7 +25,6 @@ namespace IMIS.Persistence.PGSModules
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return pgs;
         }
-
         async Task<List<PgsDeliverable>?> IPGSDeliverableRepository.GetAll(CancellationToken cancellationToken)
         {
             return await _dbContext.Deliverable
