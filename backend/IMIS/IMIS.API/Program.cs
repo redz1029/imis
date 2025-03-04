@@ -25,18 +25,19 @@ TokenUtils.Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
 TokenUtils.SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
     ?? throw new InvalidOperationException("JWT_SECRET_KEY environment variable is not set or empty.");
 
-builder.Services.AddDbContext<ImisDbContext>(options =>
-    options.UseSqlServer(sqlServerConnectionString));
+builder.Services.AddDbContext<ImisDbContext>(options => options.UseSqlServer(sqlServerConnectionString));
 
 // Identity Configuration
-builder.Services.AddIdentity<IdentityUser, IdentityRole>() // Change this line
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
     .AddEntityFrameworkStores<ImisDbContext>()
     .AddDefaultTokenProviders();
+
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.AllowTrailingCommas = true;
     options.SerializerOptions.PropertyNameCaseInsensitive = true;
 });
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -52,33 +53,49 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Authorization Setup
 builder.Services.AddAuthorization();
+
+// CORS Configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAllOrigins", builder =>
     {
-        builder.AllowAnyOrigin()
-               .AllowAnyMethod()
-               .AllowAnyHeader();
+        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
     });
 });
+
+// Register Output Caching
+builder.Services.AddOutputCache(options =>
+{
+    options.AddBasePolicy(c =>
+        c.AddPolicy<CustomOutputCachePolicy>()
+         .SetCacheKeyPrefix("IMIS-CACHE"),
+    true);
+});
+
+// Register other services
 builder.Services.AddCarter();
 builder.Services.AddPersistence();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1"));
 }
+
+// Middleware setup
 app.UseCors("AllowAllOrigins");
-app.MapCustomIdentityApi<IdentityUser>();
-app.MapCarter();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseOutputCache(); // Enable output caching middleware
+
+// Map routes
+app.MapCustomIdentityApi<IdentityUser>();
+app.MapCarter();
+
 app.Run();
-
-
