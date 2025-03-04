@@ -4,6 +4,7 @@ using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using static IMIS.Application.PgsModule.PgsAuditDetailsDto;
 
 namespace IMIS.Persistence.PgsModule
@@ -46,7 +47,7 @@ namespace IMIS.Persistence.PgsModule
                     {
                         Id = pgs.PgsPeriod.Id,
                         StartDate = pgs.PgsPeriod.StartDate,
-                        EndDate = pgs.PgsPeriod.EndDate
+                        EndDate = pgs.PgsPeriod.EndDate 
                     } : null,
                     Office = pgs.Office != null ? new OfficeDto
                     {
