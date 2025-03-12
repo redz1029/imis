@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IMIS.Persistence.Migrations
 {
     [DbContext(typeof(ImisDbContext))]
-    [Migration("20250228004137_RenameAndUpdatePgsReadiness")]
-    partial class RenameAndUpdatePgsReadiness
+    [Migration("20250307003804_UpdateUserOffice")]
+    partial class UpdateUserOffice
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -98,7 +98,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("AuditSchduleDetails");
+                    b.ToTable("AuditScheduleDetails");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -180,7 +180,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("AuditoTeams");
+                    b.ToTable("AuditorTeams");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KeyResultArea", b =>
@@ -419,6 +419,37 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("Teams");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.UserOffices", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OfficeId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserOffices");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -449,7 +480,7 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "b5fdea0d-3825-4cba-82f1-e1f570c00edc",
-                            ConcurrencyStamp = "9d6371a3-6d91-42a4-971a-27ec1cd75c3c",
+                            ConcurrencyStamp = "26919607-483d-490f-a285-746ebd469c46",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         });
@@ -549,15 +580,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "475e45a8-4dd9-425c-b405-b6598ef700fd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "227965bd-6564-4310-bb0c-f06aeed3af8c",
+                            ConcurrencyStamp = "1a7fe17f-3139-4a67-b276-870b47006e28",
                             Email = "ADMIN@MAIL.COM",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ADMIN@MAIL.COM",
                             NormalizedUserName = "ADMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP9OXrZGjYhR3hPQj8MzEMtK5klXGi5rqb7xKKT2SeY1lO7FZqi/23SHdMGK2r40UQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIEIrZEAvDwdIi80CqLpllHQtoZIoh2B0snUDmBMJSmVVRl7QXBEl0dvKPCNlQkm0w==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "d94e226e-bc76-4c7b-bb23-c942cf1680ad",
+                            SecurityStamp = "16849971-19f9-46e2-8be2-d6ef4e65f5bd",
                             TwoFactorEnabled = false,
                             UserName = "admin"
                         });

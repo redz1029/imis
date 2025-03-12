@@ -4,6 +4,7 @@ using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IMIS.Persistence.Migrations
 {
     [DbContext(typeof(ImisDbContext))]
-    partial class ImisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250307004130_updateUserAddNewField")]
+    partial class updateUserAddNewField
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -476,24 +479,10 @@ namespace IMIS.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
-                            ConcurrencyStamp = "0fcd4192-df8c-4123-89f9-cbf7998434d5",
+                            Id = "b5fdea0d-3825-4cba-82f1-e1f570c00edc",
+                            ConcurrencyStamp = "4b8606fa-cf96-42ed-b9dd-e0679bfea2ac",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
-                        },
-                        new
-                        {
-                            Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                            ConcurrencyStamp = "5852282c-953e-4426-9715-d4e8a99a270f",
-                            Name = "LDNA Manager",
-                            NormalizedName = "LDNA MANAGER"
-                        },
-                        new
-                        {
-                            Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            ConcurrencyStamp = "d833f27b-cff1-4c0a-9a06-816f5b860002",
-                            Name = "LDNA User",
-                            NormalizedName = "LDNA USER"
                         });
                 });
 
@@ -598,51 +587,19 @@ namespace IMIS.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
+                            Id = "475e45a8-4dd9-425c-b405-b6598ef700fd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0b9b414c-1e72-4a4c-9fbf-97dfca9c0061",
-                            Email = "marcrejohncastillano@gmail.com",
+                            ConcurrencyStamp = "763c74c4-5e2f-480c-8aff-ec9e1de0ec58",
+                            Email = "ADMIN@MAIL.COM",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
-                            NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
-                            NormalizedUserName = "REDZ1029",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO0vyQtbhI8HxsXfGLsjrKdlFTugXEVxmH/35ZFdkfOTz2cLOt2HYn2eTSlthCUePA==",
+                            NormalizedEmail = "ADMIN@MAIL.COM",
+                            NormalizedUserName = "ADMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJNIMKakk4PwH7A/D9A1H/wt09RaO88tzGJ/QCg6MV82SUK+ZFwLQUk/bc41JaMa3w==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5ce59748-dff3-4cb3-b25c-30e38448ab5a",
+                            SecurityStamp = "a7cf8a31-e4d3-4c50-83fc-732581748e2a",
                             TwoFactorEnabled = false,
-                            UserName = "redz1029"
-                        },
-                        new
-                        {
-                            Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "b7a28aeb-4eec-432b-a602-c623cf340805",
-                            Email = "alondealexa2021@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ALONDEALEXA2021@GMAIL.COM",
-                            NormalizedUserName = "ALYXX1988",
-                            PasswordHash = "AQAAAAIAAYagAAAAELNujDSxTolqQQIgyLFZpkxG4ylORas5c1ShDXjWTi58n11ZqHlfDAxwjRGJ6mJQVw==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "9a0456f4-b3e0-4093-be54-bfdc4dd7873c",
-                            TwoFactorEnabled = false,
-                            UserName = "alyxx1988"
-                        },
-                        new
-                        {
-                            Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ce67ac36-9a37-4297-9309-2ad0d82f4336",
-                            Email = "CrossVampireNe0@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "CROSSVAMPIRENE0@GMAIL.COM",
-                            NormalizedUserName = "DARKWIZWIZ",
-                            PasswordHash = "AQAAAAIAAYagAAAAEI+ZQ/GCcGUiXwlT7VdSP4oaNLAt4WrA7x4qIgUee1YkioP08/X0+1ys20JrBkcp1w==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "cb18d546-07e5-4ebd-984f-1d95082c6948",
-                            TwoFactorEnabled = false,
-                            UserName = "darkwizwiz"
+                            UserName = "admin"
                         });
                 });
 
@@ -710,18 +667,8 @@ namespace IMIS.Persistence.Migrations
                     b.HasData(
                         new
                         {
-                            UserId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            RoleId = "56996e97-9e8a-4d22-a693-c865144e9b96"
-                        },
-                        new
-                        {
-                            UserId = "176bcfeb-f12a-4d42-b790-5d2312660801",
-                            RoleId = "56996e97-9e8a-4d22-a693-c865144e9b96"
-                        },
-                        new
-                        {
-                            UserId = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
-                            RoleId = "56996e97-9e8a-4d22-a693-c865144e9b96"
+                            UserId = "475e45a8-4dd9-425c-b405-b6598ef700fd",
+                            RoleId = "b5fdea0d-3825-4cba-82f1-e1f570c00edc"
                         });
                 });
 
