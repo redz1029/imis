@@ -7,7 +7,6 @@ namespace IMIS.Application.PgsKraModule
     {
         public string Name { get; set; }
         public string? Remarks { get; set; }
-
         public override KeyResultArea ToEntity()
         {            
             return new KeyResultArea() { Id = Id, Name = Name, Remarks = Remarks };
