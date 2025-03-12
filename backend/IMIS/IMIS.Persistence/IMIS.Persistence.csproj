@@ -11,6 +11,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="8.0.12" />
     <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.1" />
+    <PackageReference Include="Refit" Version="8.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
   </ItemGroup>
@@ -18,6 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\IMIS.Application\IMIS.Application.csproj" />
     <ProjectReference Include="..\IMIS.Domain\IMIS.Domain.csproj" />
+    <ProjectReference Include="..\IMIS.Infrastructure\IMIS.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
