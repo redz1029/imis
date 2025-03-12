@@ -10,8 +10,7 @@ namespace IMIS.Persistence.PgsPeriodModule
         public PgsPeriodService(IPgsPeriodRepository repository)
         {
             _repository = repository;
-        }
-        // Convert PGS Period entity to PgsPeriodDTO       
+        }           
         private PgsPeriodDto ConvPgsPeriodToDTO(PgsPeriod period)
         {
             if (period == null) return null;
@@ -28,7 +27,7 @@ namespace IMIS.Persistence.PgsPeriodModule
             var period = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return period != null ? ConvPgsPeriodToDTO(period) : null;
         }
-        public async Task<List<PgsPeriodDto>?> GetAllAsync(CancellationToken cancellationToken) // Get all data in the PGS Period
+        public async Task<List<PgsPeriodDto>?> GetAllAsync(CancellationToken cancellationToken) 
         {
             var periods = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
             return periods?.Select(o => ConvPgsPeriodToDTO(o)).ToList();

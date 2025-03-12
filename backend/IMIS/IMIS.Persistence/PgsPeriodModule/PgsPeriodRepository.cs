@@ -7,10 +7,8 @@ namespace IMIS.Persistence.PgsPeriodModule
 {
     public class PgsPeriodRepository : BaseRepository<PgsPeriod, int, ImisDbContext>, IPgsPeriodRepository
     {
-        public PgsPeriodRepository(ImisDbContext dbContext)
-            : base(dbContext)
+        public PgsPeriodRepository(ImisDbContext dbContext) : base(dbContext)
         {
-
         }
         public async Task<IEnumerable<PgsPeriod>> GetAll(CancellationToken cancellationToken)
         {
@@ -37,11 +35,8 @@ namespace IMIS.Persistence.PgsPeriodModule
                 // Add the new PgsPeriod entity
                 await _dbContext.PgsPeriod.AddAsync(PgsPeriod, cancellationToken).ConfigureAwait(false);
             }
-
             // Save changes to the database
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-            // Return the saved or updated entity
+            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);           
             return PgsPeriod;
         }
     }
