@@ -10,7 +10,6 @@ public class PgsAuditDetailsRepository : BaseRepository<PgsAuditDetails, long, I
     {
 
     }
-
     public new async Task<PgsAuditDetails> SaveOrUpdateAsync(PgsAuditDetails pgs, CancellationToken cancellationToken)
     {
         if (pgs == null) throw new ArgumentNullException(nameof(pgs));

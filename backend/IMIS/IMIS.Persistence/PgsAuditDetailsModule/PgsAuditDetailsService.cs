@@ -4,7 +4,6 @@ using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using static IMIS.Application.PgsModule.PgsAuditDetailsDto;
 
 namespace IMIS.Persistence.PgsModule
@@ -22,8 +21,7 @@ namespace IMIS.Persistence.PgsModule
             _officeRepository = officeRepository;
             _pgsPeriodRepository = pgsPeriodRepository;
             _kraRepository = kraRepository;
-        }
-        
+        }        
         public async Task<PagedResult<PgsAuditDetailsDto>> GetPagedPgsAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             if (page <= 0 || pageSize <= 0)
@@ -85,7 +83,6 @@ namespace IMIS.Persistence.PgsModule
                 PageSize = pageSize
             };
         }
-
         // Save or Update PgsAuditDetails
         public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto PGSDto, CancellationToken cancellationToken)
         {
@@ -93,7 +90,6 @@ namespace IMIS.Persistence.PgsModule
 
             // Convert DTO to entity
             var pgsEntity = PGSDto.ToEntity();
-
             pgsEntity.Office = await _officeRepository.GetByIdAsync(pgsEntity.Office.Id, cancellationToken).ConfigureAwait(false);
             pgsEntity.PgsPeriod = await _pgsPeriodRepository.GetByIdAsync(pgsEntity.PgsPeriod.Id, cancellationToken).ConfigureAwait(false);
 
@@ -104,10 +100,8 @@ namespace IMIS.Persistence.PgsModule
                     deliverable.Kra = await _kraRepository.GetByIdAsync(deliverable!.Kra!.Id, cancellationToken).ConfigureAwait(false);
                 }
             }
-
             // Handle Save or Update
             var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
-
             return new PgsAuditDetailsDto
             {
                 Id = createdPgs.Id,
@@ -150,7 +144,6 @@ namespace IMIS.Persistence.PgsModule
                 }).ToList()
             };
         }
-
         // Save or Update Generic Method
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {

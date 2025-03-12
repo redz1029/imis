@@ -1,6 +1,7 @@
 ﻿using Base.Primitives;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
+using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.PGSModules
@@ -10,14 +11,11 @@ namespace IMIS.Persistence.PGSModules
         private readonly IPGSDeliverableRepository _repository;
         private readonly IKeyResultAreaRepository _kraRepository;
 
-
         public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _kraRepository = kraRepository ?? throw new ArgumentNullException(nameof(kraRepository));
-
         }
-
         public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDto, CancellationToken cancellationToken)
         {
             if (pgsDto == null) throw new ArgumentNullException(nameof(pgsDto));
@@ -26,11 +24,8 @@ namespace IMIS.Persistence.PGSModules
          
             if (pgsEntity!.Kra == null || pgsEntity.Kra.Id == 0)
             {
-
                 throw new InvalidOperationException("Invalid kra ID");
-
             }
-
             var kra = await _kraRepository.GetByIdAsync(pgsEntity!.Kra!.Id, cancellationToken).ConfigureAwait(false);
 
             if (kra == null)
@@ -43,20 +38,21 @@ namespace IMIS.Persistence.PGSModules
 
             return ConvertToDto(createdPgs);
         }
-
-
-
         public async Task<List<PGSDeliverableDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return offices?.Select(o => ConvertToDto(o)).ToList();
+            var pgsdeliverables = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return pgsdeliverables?.Select(o => ConvertToDto(o)).ToList();
         }
-
+        public async Task<PGSDeliverableDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var pgsdeliverables = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return pgsdeliverables != null ? ConvertToDto(pgsdeliverables) : null;
+        }
         private static PGSDeliverableDto ConvertToDto(PgsDeliverable deliverable)
         {
             return new PGSDeliverableDto
             {
-                Id = deliverable.Id,
+                Id = deliverable.Id,                
                 IsDirect = deliverable.IsDirect,
                 DeliverableName = deliverable.DeliverableName,
                 ByWhen = deliverable.ByWhen,
@@ -64,7 +60,8 @@ namespace IMIS.Persistence.PGSModules
                 Status = deliverable.Status,
                 RowVersion = deliverable.RowVersion ?? Array.Empty<byte>(),
                 Remarks = deliverable.Remarks ?? string.Empty,
-
+                KraId = deliverable.KraId,
+                
                 Kra = deliverable.Kra != null ? new KeyResultAreaDto
                 {
                     Id = deliverable.Kra.Id,
@@ -73,7 +70,6 @@ namespace IMIS.Persistence.PGSModules
                 } : null
             };
         }
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
             where TEntity : Entity<TId>
         {
