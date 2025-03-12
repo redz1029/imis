@@ -8,3 +8,4 @@
         public required Office Office { get; set; }
     }
 }
+
