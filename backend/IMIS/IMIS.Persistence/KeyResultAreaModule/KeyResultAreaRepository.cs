@@ -8,7 +8,6 @@ namespace IMIS.Persistence.KraModule
     public class KeyResultAreaRepository : BaseRepository<KeyResultArea, int, ImisDbContext>, IKeyResultAreaRepository
     {       
         public KeyResultAreaRepository(ImisDbContext dbContext) : base(dbContext) { }
-
         public async Task<IEnumerable<KeyResultArea>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
         {
             return await _dbContext.KeyResultArea

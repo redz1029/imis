@@ -1,5 +1,4 @@
 ﻿using Base.Primitives;
-using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 
@@ -12,14 +11,11 @@ namespace IMIS.Persistence.KraModule
         {
             _repository = repository;
         }
-
         public async Task<List<KeyResultAreaDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
         {
             var kra = await _repository.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
             return kra != null && kra.Count() > 0 ? kra.Select(a => ConvOfficeToDTO(a)).ToList() : null;
         }
-
-        // Convert Kra entity to KraDto
         private KeyResultAreaDto ConvOfficeToDTO(KeyResultArea kra)
         {
             if (kra == null) return null;
@@ -31,7 +27,6 @@ namespace IMIS.Persistence.KraModule
                 Remarks = kra.Remarks
             };
         }
-        // Fixed async method
         public async Task<KeyResultAreaDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var kradto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -41,8 +36,7 @@ namespace IMIS.Persistence.KraModule
         {          
             var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
-        }      
-        // Fixed async method
+        }            
         public async Task<KeyResultAreaDto> SaveOrUpdateAsync(KeyResultAreaDto KraDto, CancellationToken cancellationToken)
         {
             if (KraDto == null) throw new ArgumentNullException(nameof(KraDto));
@@ -54,10 +48,8 @@ namespace IMIS.Persistence.KraModule
                 Name = createdKra.Name,
                 Remarks = createdKra.Remarks
             };
-        }
-        // Fixed async method
-        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
-            where TEntity : Entity<TId>
+        }     
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)where TEntity : Entity<TId>
         {
             if (dto is not KeyResultAreaDto pgsDto) throw new ArgumentException("Invalid DTO type", nameof(dto));
             var pgsEntity = pgsDto.ToEntity();
