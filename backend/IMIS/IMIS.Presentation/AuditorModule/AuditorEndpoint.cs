@@ -1,5 +1,7 @@
 ﻿using Carter;
 using IMIS.Application.AuditorModule;
+using IMIS.Application.UserOfficeModule;
+using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +27,6 @@ namespace IMIS.Presentation.AuditorModule
                 return Results.Ok(auditor);
             })
             .WithTags(_auditorTag);
-
             app.MapGet("/", async (IAuditorService service, CancellationToken cancellationToken) =>
             {
                 var auditors = await service.GetAll(cancellationToken).ConfigureAwait(false);
@@ -33,7 +34,6 @@ namespace IMIS.Presentation.AuditorModule
             })
             .WithTags(_auditorTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
-
             app.MapGet("/filter/{name}", async (string name, IAuditorService service, CancellationToken cancellationToken) =>
             {
                 int noOfResults = 10;
@@ -42,7 +42,6 @@ namespace IMIS.Presentation.AuditorModule
             })
             .WithTags(_auditorTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
-
             app.MapGet("/{id}", async (int id, IAuditorService service, CancellationToken cancellationToken) =>
             {
                 var auditor = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -51,6 +50,23 @@ namespace IMIS.Presentation.AuditorModule
             .WithTags(_auditorTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
 
+            app.MapPut("/{id}", async (int id, [FromBody] AuditorDto Auditor, IAuditorService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                if (Auditor == null)
+                {
+                    return Results.BadRequest("Auditor data is required.");
+                }
+                var existingAuditor = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                if (existingAuditor == null)
+                {
+                    return Results.NotFound($"User Office with ID {id} not found.");
+                }
+
+                await service.SaveOrUpdateAsync(Auditor, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_auditorTag, cancellationToken);
+                return Results.Ok(Auditor);
+            })
+         .WithTags(_auditorTag);
         }
     }
 }

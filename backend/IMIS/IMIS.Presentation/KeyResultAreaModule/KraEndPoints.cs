@@ -28,24 +28,21 @@ namespace IMIS.Presentation.KraModuleAPI
                 return Results.Created($"/Kra/{createdKra.Id}", createdKra);
             })
             .WithTags(_pgsTag);
-
-            app.MapGet("/", async (IKeyResultAreaService service, CancellationToken cancellationToken) => // Get allAsync Data in the KRA Database
+            app.MapGet("/", async (IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 var Kradto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(Kradto);
             })
-           .WithTags(_pgsTag)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
+            .WithTags(_pgsTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
             app.MapGet("/filter/{name}", async (string name, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 int noOfResults = 10;
                 var kra = await service.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
                 return kra != null ? Results.Ok(kra) : Results.NoContent();
             })
-           .WithTags(_pgsTag)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
+            .WithTags(_pgsTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
             app.MapGet("/{id}", async (int id, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 var Kradto = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -53,12 +50,11 @@ namespace IMIS.Presentation.KraModuleAPI
             })
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
             app.MapPut("/{id}", async (int id, [FromBody] KeyResultAreaDto KraDto, IKeyResultAreaService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (KraDto == null)
                 {
-                    return Results.BadRequest("PGS data is required.");
+                    return Results.BadRequest("Kra data is required.");
                 }
                 var existingKra = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingKra == null)
@@ -68,7 +64,6 @@ namespace IMIS.Presentation.KraModuleAPI
                 
                 var updatedKra = await service.SaveOrUpdateAsync(KraDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
-
                 return Results.Ok(updatedKra);
             })
             .WithTags(_pgsTag);

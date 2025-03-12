@@ -16,7 +16,6 @@ namespace IMIS.Presentation.PgsModuleAPI
         public PgsAuditDetailsEndPoints() : base("/PgsAuditDetails")
         {
         }
-
         public override void AddRoutes(IEndpointRouteBuilder app)
         {           
             app.MapPost("/", async ([FromBody] PgsAuditDetailsDto PgsDto, IPgsAuditDetailsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -31,20 +30,13 @@ namespace IMIS.Presentation.PgsModuleAPI
 
             })
             .WithTags(_pgsTag);
-
             app.MapGet("/Page", async ([FromQuery] int page, [FromQuery] int pageSize, IPgsAuditDetailsService service, CancellationToken cancellationToken) =>
-            {
-                if (page <= 0 || pageSize <= 0)
-                {
-                    return Results.BadRequest("Page and PageSize must be greater than 0.");
-                }
-
+            {                
                 var pagedResult = await service.GetPagedPgsAsync(page, pageSize, cancellationToken);
                 return Results.Ok(pagedResult);
             })
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
         }
     }
 }

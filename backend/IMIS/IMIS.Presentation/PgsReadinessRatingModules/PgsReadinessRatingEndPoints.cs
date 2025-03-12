@@ -1,6 +1,7 @@
 ﻿using Carter;
-using IMIS.Application.OfficeModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using IMIS.Application.UserOfficeModule;
+using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -17,8 +18,7 @@ namespace IMIS.Presentation.PgsReadinessRatingCancerCareModules
         public PgsReadinessRatingEndPoints() : base("/PgsReadiness") { }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
-        {
-            
+        {            
             app.MapPost("/", async ([FromBody] PgsReadinessRatingDto pgsReadinessDto, IPgsReadinessRatingService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (pgsReadinessDto == null)
@@ -30,8 +30,7 @@ namespace IMIS.Presentation.PgsReadinessRatingCancerCareModules
                 return Results.Created($"/PgsReadiness/{createdPgsReadiness.Id}", createdPgsReadiness);
             })
             .WithTags(_pgsTag);
-
-            // GET - Retrieve a PGS Readiness Rating by ID
+           
             app.MapGet("/{id:long}", async (long id, IPgsReadinessRatingRepository repository, CancellationToken cancellationToken) =>
             {
                 var pgsReadiness = await repository.GetByIdAsync(id, cancellationToken);
@@ -40,6 +39,33 @@ namespace IMIS.Presentation.PgsReadinessRatingCancerCareModules
             })
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+            app.MapGet("/", async (IPgsReadinessRatingRepository service, CancellationToken cancellationToken) => 
+            {
+                var Kradto = await service.GetAll(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(Kradto);
+            })
+           .WithTags(_pgsTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+
+            app.MapPut("/{id}", async (int id, [FromBody] PgsReadinessRatingDto pgsReadiness, IPgsReadinessRatingService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                if (pgsReadiness == null)
+                {
+                    return Results.BadRequest("Pgs Readiness data is required.");
+                }
+                var existingPgsReadiness = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                if (existingPgsReadiness == null)
+                {
+                    return Results.NotFound($"Pgs Readiness with ID {id} not found.");
+                }
+
+                var updatedUserOffice = await service.SaveOrUpdateAsync(pgsReadiness, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+                return Results.Ok(updatedUserOffice);
+            })
+         .WithTags(_pgsTag);
         }
     }
 }

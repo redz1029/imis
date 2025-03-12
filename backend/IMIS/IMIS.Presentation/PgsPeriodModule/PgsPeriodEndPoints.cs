@@ -16,8 +16,7 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
-        {
-            
+        {            
             app.MapPost("/", async ([FromBody] PgsPeriodDto PgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (PgsPeriodDto == null)
@@ -62,7 +61,6 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
                 return Results.Ok(updatedPgsPeriod);
             })
             .WithTags(_pgsTag);         
-
         }
     }
 }
