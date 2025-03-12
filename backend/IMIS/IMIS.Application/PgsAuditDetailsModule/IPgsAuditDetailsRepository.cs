@@ -7,6 +7,6 @@ namespace IMIS.Application.PgsModule
     {
         Task<int> CountAsync(CancellationToken cancellationToken);
         Task<IEnumerable<PgsAuditDetails>> GetPagedAsync(int skip, int pageSize, CancellationToken cancellationToken);
-        Task<PgsAuditDetails> SaveOrUpdateAsync(PgsAuditDetails pgsAuditDetails, CancellationToken cancellationToken);
+        new Task<PgsAuditDetails> SaveOrUpdateAsync(PgsAuditDetails pgsAuditDetails, CancellationToken cancellationToken);
     }
 }

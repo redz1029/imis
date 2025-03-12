@@ -3,7 +3,6 @@ using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Domain;
-using System.Diagnostics.CodeAnalysis;
 
 namespace IMIS.Application.PgsModule
 {
@@ -26,7 +25,6 @@ namespace IMIS.Application.PgsModule
                 PgsReadinessRating = PgsReadinessRating!.ToEntity()
             };
         }
-
         public class PagedResult<T>
         {
             public IEnumerable<T> Items { get; set; }
