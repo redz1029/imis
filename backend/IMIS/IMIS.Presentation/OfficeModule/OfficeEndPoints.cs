@@ -1,7 +1,5 @@
 ﻿using Carter;
 using IMIS.Application.OfficeModule;
-using IMIS.Application.UserOfficeModule;
-using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,14 +28,17 @@ namespace IMIS.Presentation.OfficeModule
                 await cache.EvictByTagAsync(_OfficeTag, cancellationToken);
                 return Results.Ok(office);               
             })
-            .WithTags(_OfficeTag);             
+            .WithTags(_OfficeTag);
+
             app.MapGet("/", async (IOfficeService service, CancellationToken cancellationToken) =>
             {
                 var offices = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(offices);
             })
             .WithTags(_OfficeTag)
+            .RequireAuthorization()
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_OfficeTag), true);
+
             app.MapGet("/filter/{name}", async (string name, IOfficeService service, CancellationToken cancellationToken) =>
             {
                 int noOfResults = 10;

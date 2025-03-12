@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
- 
+
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
 
@@ -37,6 +37,12 @@ TokenUtils.Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
 TokenUtils.SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
     ?? throw new InvalidOperationException("JWT_SECRET_KEY environment variable is not set or empty.");
 
+TokenUtils.ExpInMinutes = Environment.GetEnvironmentVariable("JWT_EXP_IN_MINUTES")
+    ?? throw new InvalidOperationException("JWT_EXP_IN_MINUTES environment variable is not set or empty.");
+
+TokenUtils.ExpInDays = Environment.GetEnvironmentVariable("JWT_EXP_IN_DAYS")
+    ?? throw new InvalidOperationException("JWT_EXP_IN_DAYS environment variable is not set or empty.");
+
 Console.WriteLine($"Issuer: {TokenUtils.Issuer}, Audience: {TokenUtils.Audience}, SecretKey Length: {TokenUtils.SecretKey.Length}");
 
 
@@ -58,41 +64,6 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = TokenUtils.Audience,
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TokenUtils.SecretKey!)),       
     };
-
-    options.Events = new JwtBearerEvents
-    {
-        OnAuthenticationFailed = context =>
-        {
-            Console.WriteLine($"Authentication Failed: {context.Exception.Message}");
-
-            if (context.Exception is SecurityTokenExpiredException)
-            {
-                Console.WriteLine("Token has expired.");
-            }
-            else if (context.Exception is SecurityTokenInvalidSignatureException)
-            {
-                Console.WriteLine("Invalid token signature.");
-            }
-            else if (context.Exception is SecurityTokenInvalidIssuerException)
-            {
-                Console.WriteLine("Invalid issuer.");
-            }
-            else if (context.Exception is SecurityTokenInvalidAudienceException)
-            {
-                Console.WriteLine("Invalid audience.");
-            }
-            else if (context.Exception is SecurityTokenNotYetValidException)
-            {
-                Console.WriteLine("Token is not yet valid.");
-            }
-            else
-            {
-                Console.WriteLine("Other authentication error: " + context.Exception);
-            }
-
-            return Task.CompletedTask;
-        }
-    };
 });
 
 builder.Services.AddAuthorizationBuilder()
@@ -109,7 +80,7 @@ builder.Services.AddOutputCache(options =>
     true);
 });
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+builder.Services.AddIdentityCore<IdentityUser>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ImisDbContext>()
     .AddDefaultTokenProviders()
@@ -155,13 +126,17 @@ app.UseSwaggerUI();
 
 app.UseCors(allowedOrigins);
 
-app.MapCustomIdentityApi<IdentityUser>();
-app.MapCarter();
+
 
 if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
 app.UseRouting();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.MapCustomIdentityApi<IdentityUser>();
+app.MapCarter();
+
 app.UseOutputCache();
 app.Run();
