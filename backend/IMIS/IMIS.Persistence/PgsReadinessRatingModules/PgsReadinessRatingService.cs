@@ -1,5 +1,7 @@
 ﻿using Base.Primitives;
+using IMIS.Application.PgsKraModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 
 
@@ -8,13 +10,10 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
     public class PgsReadinessRatingService : IPgsReadinessRatingService
     {
         private readonly IPgsReadinessRatingRepository _repository;
-
         public PgsReadinessRatingService(IPgsReadinessRatingRepository repository)
         {
             _repository = repository;
-        }
-
-        // Converts the entity to DTO
+        }        
         private PgsReadinessRatingDto ConvertToDTO(PgsReadinessRating entity)
         {
             if (entity == null) return null;
@@ -27,9 +26,7 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
                 ConfidenceToDeliver = entity.ConfidenceToDeliver,
                 TotalScore = entity.TotalScore
             };
-        }
-
-        // Save or Update Readiness Rating Cancer Care Data
+        }      
         public async Task<PgsReadinessRatingDto> SaveOrUpdateAsync(PgsReadinessRatingDto dto, CancellationToken cancellationToken)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
@@ -41,12 +38,19 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
                 ResourceAvailability = dto.ResourceAvailability,
                 ConfidenceToDeliver = dto.ConfidenceToDeliver
             };
-
             var updatedEntity = await _repository.SaveOrUpdateAsync(entity, cancellationToken);
             return ConvertToDTO(updatedEntity);
         }
-
-        // Generic Save or Update
+        public async Task<List<PgsReadinessRatingDto>?> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var PgsReadiness = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return PgsReadiness?.Select(o => ConvertToDTO(o)).ToList();
+        }
+        public async Task<PgsReadinessRatingDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var PgsReadiness = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return PgsReadiness != null ? ConvertToDTO(PgsReadiness) : null;
+        }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             if (dto is not PgsReadinessRatingDto PgsReadinessDto)
