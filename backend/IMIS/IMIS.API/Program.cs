@@ -8,10 +8,22 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using System.Text;
-
+ 
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
+
+var allowedOrigins = "_allowedOrigins";
+
+builder.Services.AddCors(opts => opts.AddPolicy(allowedOrigins, policy =>
+{
+    policy.AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowAnyMethod();
+}));
+
+builder.Services.AddCarter();
 
 var sqlServerConnectionString = Environment.GetEnvironmentVariable("SQL_SERVER_CONN")
     ?? throw new InvalidOperationException("SQL_SERVER_CONN environment variable is not set or empty.");
@@ -25,44 +37,68 @@ TokenUtils.Audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
 TokenUtils.SecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
     ?? throw new InvalidOperationException("JWT_SECRET_KEY environment variable is not set or empty.");
 
-builder.Services.AddDbContext<ImisDbContext>(options => options.UseSqlServer(sqlServerConnectionString));
+Console.WriteLine($"Issuer: {TokenUtils.Issuer}, Audience: {TokenUtils.Audience}, SecretKey Length: {TokenUtils.SecretKey.Length}");
 
-// Identity Configuration
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<ImisDbContext>()
-    .AddDefaultTokenProviders();
 
-builder.Services.ConfigureHttpJsonOptions(options =>
+builder.Services.AddAuthentication(options =>
 {
-    options.SerializerOptions.AllowTrailingCommas = true;
-    options.SerializerOptions.PropertyNameCaseInsensitive = true;
-});
-
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddCookie(IdentityConstants.BearerScheme)
+.AddJwtBearer(options => {
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        options.TokenValidationParameters = new TokenValidationParameters
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = TokenUtils.Issuer,
+        ValidAudience = TokenUtils.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TokenUtils.SecretKey!)),       
+    };
+
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = TokenUtils.Issuer,
-            ValidAudience = TokenUtils.Audience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TokenUtils.SecretKey))
-        };
-    });
+            Console.WriteLine($"Authentication Failed: {context.Exception.Message}");
 
-builder.Services.AddAuthorization();
+            if (context.Exception is SecurityTokenExpiredException)
+            {
+                Console.WriteLine("Token has expired.");
+            }
+            else if (context.Exception is SecurityTokenInvalidSignatureException)
+            {
+                Console.WriteLine("Invalid token signature.");
+            }
+            else if (context.Exception is SecurityTokenInvalidIssuerException)
+            {
+                Console.WriteLine("Invalid issuer.");
+            }
+            else if (context.Exception is SecurityTokenInvalidAudienceException)
+            {
+                Console.WriteLine("Invalid audience.");
+            }
+            else if (context.Exception is SecurityTokenNotYetValidException)
+            {
+                Console.WriteLine("Token is not yet valid.");
+            }
+            else
+            {
+                Console.WriteLine("Other authentication error: " + context.Exception);
+            }
 
-// CORS Configuration
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAllOrigins", builder =>
-    {
-        builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-    });
+            return Task.CompletedTask;
+        }
+    };
 });
+
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(RoleTypes.Administrator, policy => policy.RequireRole(RoleTypes.Administrator))
+    .AddPolicy(RoleTypes.LdnaManager, policy => policy.RequireRole(RoleTypes.LdnaManager))
+    .AddPolicy(RoleTypes.LdnaUser, policy => policy.RequireRole(RoleTypes.LdnaUser));
 
 // Register Output Caching
 builder.Services.AddOutputCache(options =>
@@ -73,29 +109,59 @@ builder.Services.AddOutputCache(options =>
     true);
 });
 
-// Register other services
-builder.Services.AddCarter();
+builder.Services.AddIdentity<IdentityUser, IdentityRole>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<ImisDbContext>()
+    .AddDefaultTokenProviders()
+    .AddApiEndpoints();
+
+builder.Services.AddDbContext<ImisDbContext>(options => options.UseSqlServer(sqlServerConnectionString));
+
 builder.Services.AddPersistence();
+
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Identity API", Version = "v1" });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter a valid token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "Bearer"
+    });
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1"));
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
-// Middleware setup
-app.UseCors("AllowAllOrigins");
-app.UseHttpsRedirection();
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseOutputCache(); // Enable output caching middleware
+app.UseCors(allowedOrigins);
 
-// Map routes
 app.MapCustomIdentityApi<IdentityUser>();
 app.MapCarter();
 
+if (app.Environment.IsProduction())
+    app.UseHttpsRedirection();
+app.UseRouting();
+app.UseAuthentication();
+app.UseAuthorization();
+app.UseOutputCache();
 app.Run();
