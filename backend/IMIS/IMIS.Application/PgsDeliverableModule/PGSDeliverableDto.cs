@@ -6,6 +6,7 @@ namespace IMIS.Application.PgsModule
 {
     public class PGSDeliverableDto : BaseDto<PgsDeliverable, long>
     {
+        public int? KraId { get; set; }
         public KeyResultAreaDto? Kra { get; set; }
         public required bool IsDirect { get; set; }
         public required string DeliverableName { get; set; }
@@ -23,6 +24,7 @@ namespace IMIS.Application.PgsModule
                 ByWhen = ByWhen,
                 PercentDeliverables = PercentDeliverables,
                 Status = Status,
+                KraId = KraId,
                 Kra = Kra?.ToEntity(),
                 Remarks = Remarks
             };
