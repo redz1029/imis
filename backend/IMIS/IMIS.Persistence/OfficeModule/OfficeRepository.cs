@@ -7,8 +7,6 @@ namespace IMIS.Persistence.OfficeModule
 {
     public class OfficeRepository(ImisDbContext dbContext) : BaseRepository<Office, int, ImisDbContext>(dbContext), IOfficeRepository
     {
-
-
         public async Task<IEnumerable<Office>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
         {
             return await _dbContext.Offices
@@ -18,7 +16,6 @@ namespace IMIS.Persistence.OfficeModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
         public async Task<IEnumerable<Office>> GetAll(CancellationToken cancellationToken)
         {
             return await _dbContext.Offices
