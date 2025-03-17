@@ -10,8 +10,7 @@ namespace IMIS.Domain
         public required string DeliverableName { get; set; } 
         public required DateTime ByWhen { get; set; }  
         public required double PercentDeliverables { get; set; } 
-        public required PgsStatus Status { get; set; }                   
-        public PgsReadinessRating? PgsReadinessRatingCancerCare { get; set; }      
+        public required PgsStatus Status { get; set; }                         
         public string? Remarks { get; set; }         
     }
 }
