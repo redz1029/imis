@@ -19,14 +19,14 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                 new IdentityRole
                 {
                     Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                    Name = RoleTypes.LdnaManager,
+                    Name = RoleTypes.PgsManager,
                     NormalizedName = "LDNA MANAGER",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                 },
                 new IdentityRole
                 {
                     Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                    Name = RoleTypes.LdnaUser,
+                    Name = RoleTypes.PgsUser,
                     NormalizedName = "LDNA USER",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                 }            

@@ -5,42 +5,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 public class UserConfiguration : IEntityTypeConfiguration<IdentityUser>
 {
-    //public void Configure(EntityTypeBuilder<IdentityUser> builder)
-    //{
-    //    var hasher = new PasswordHasher<IdentityUser>();
-    //    string defaultAdminUsername = "admin";
-    //    string defaultAdminEmail = "admin@mail.com";
-
-    //    builder.HasData(new IdentityUser
-    //    {
-    //        Id = "b5fdea0d-3825-4cba-82f1-e1f570c00edc",
-    //        UserName = defaultAdminUsername,
-    //        NormalizedUserName = defaultAdminUsername.ToUpper(),
-    //        Email = defaultAdminEmail.ToUpper(),
-    //        NormalizedEmail = defaultAdminEmail.ToUpper(),
-    //        PasswordHash = hasher.HashPassword(null, "Abc123*@"),
-    //        ConcurrencyStamp = Guid.NewGuid().ToString() 
-    //    });
-    //}
-
+    
     public void Configure(EntityTypeBuilder<IdentityUser> builder)
     {
-        //var hasher = new PasswordHasher<IdentityUser>();
-        //string defaultAdminUsername = "admin";
-        //string defaultAdminEmail = "admin@mail.com";       
-
-        //builder.HasData(new IdentityUser
-        //{
-        //    Id = "475e45a8-4dd9-425c-b405-b6598ef700fd", // ✅ Ensure it matches UserRoleConfiguration
-        //    UserName = defaultAdminUsername,
-        //    NormalizedUserName = defaultAdminUsername.ToUpper(),
-        //    Email = defaultAdminEmail, // ✅ Keep original casing
-        //    NormalizedEmail = defaultAdminEmail.ToUpper(),
-        //    PasswordHash = hasher.HashPassword(null, "Abc123*@"), // ✅ Secure hashed password
-        //    ConcurrencyStamp = Guid.NewGuid().ToString()
-        //});
-
-
+ 
         var hasher = new PasswordHasher<IdentityUser>();
         string defaultPassword = "Abc123*@";
 
