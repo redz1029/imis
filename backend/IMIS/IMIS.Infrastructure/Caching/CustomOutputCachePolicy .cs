@@ -11,11 +11,8 @@ public sealed class CustomOutputCachePolicy : IOutputCachePolicy
         context.EnableOutputCaching = true;
         context.AllowCacheLookup = attemptOutputCaching;
         context.AllowCacheStorage = attemptOutputCaching;
-        context.AllowLocking = true;
-
-        // Vary by any query by default
+        context.AllowLocking = true;     
         context.CacheVaryByRules.QueryKeys = "*";
-
         return ValueTask.CompletedTask;
     }
 
@@ -29,15 +26,13 @@ public sealed class CustomOutputCachePolicy : IOutputCachePolicy
     ValueTask IOutputCachePolicy.ServeResponseAsync(OutputCacheContext context, CancellationToken cancellationToken)
     {
         var response = context.HttpContext.Response;
-
-        // Verify existence of cookie headers
+       
         if (!StringValues.IsNullOrEmpty(response.Headers.SetCookie))
         {
             context.AllowCacheStorage = false;
             return ValueTask.CompletedTask;
         }
-
-        // Check response code
+        
         if (response.StatusCode != StatusCodes.Status200OK)
         {
             context.AllowCacheStorage = false;
@@ -49,8 +44,7 @@ public sealed class CustomOutputCachePolicy : IOutputCachePolicy
 
     private static bool AttemptOutputCaching(OutputCacheContext context)
     {
-        // Check if the current request fulfills the requirements to be cached
-
+      
         var request = context.HttpContext.Request;
 
         // Verify the method
@@ -58,13 +52,11 @@ public sealed class CustomOutputCachePolicy : IOutputCachePolicy
         {
             return false;
         }
-
         // Verify existence of authorization headers
         //if (!StringValues.IsNullOrEmpty(request.Headers.Authorization) || request.HttpContext.User?.Identity?.IsAuthenticated == true)
         //{
         //    return false;
         //}
-
         return true;
     }
 }
