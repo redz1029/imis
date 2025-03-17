@@ -1,5 +1,6 @@
 ﻿using Carter;
 using IMIS.Application.PgsModule;
+using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -29,14 +30,16 @@ namespace IMIS.Presentation.PgsModuleAPI
                 return Results.Created($"/PgsAudit/{createdOrUpdatedPgs.Id}", createdOrUpdatedPgs);
 
             })
-            .WithTags(_pgsTag);
+            .WithTags(_pgsTag)
+            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
             app.MapGet("/Page", async ([FromQuery] int page, [FromQuery] int pageSize, IPgsAuditDetailsService service, CancellationToken cancellationToken) =>
             {                
                 var pagedResult = await service.GetPagedPgsAsync(page, pageSize, cancellationToken);
                 return Results.Ok(pagedResult);
             })
             .WithTags(_pgsTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true)
+            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
         }
     }
 }

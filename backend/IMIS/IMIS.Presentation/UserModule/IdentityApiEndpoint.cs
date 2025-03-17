@@ -1,7 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Data.Entity;
 using System.Security.Claims;
+using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
+using IMIS.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -21,7 +24,7 @@ namespace IMIS.Presentation.UserModule
         private const string UserRoleGroup = "User Roles";
         
         public static IEndpointConventionBuilder MapCustomIdentityApi<TUser>(this IEndpointRouteBuilder endpoints)
-        where TUser : IdentityUser, new()
+        where TUser : User, new()
         {
             // Authentication Endpoints
             var authGroup = endpoints.MapGroup("").WithTags(IdentityGroup);
@@ -33,7 +36,7 @@ namespace IMIS.Presentation.UserModule
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
-            roleGroup.MapGet("/roles", GetRoles);
+            roleGroup.MapGet("/roles", GetRoles).RequireAuthorization();
             roleGroup.MapPost("/roles", CreateRole);
             roleGroup.MapPut("/roles/{roleId}", EditRole);
             roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
@@ -50,7 +53,7 @@ namespace IMIS.Presentation.UserModule
         private const string _userRegister = "User's Registration";
         private static async Task<IResult> RegisterUser(UserRegistrationDto registration, IServiceProvider sp)
         {
-            var userManager = sp.GetRequiredService<UserManager<IdentityUser>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
             var cache = sp.GetRequiredService<IOutputCacheStore>(); 
 
             if (!EmailValidator.IsValid(registration.Email))
@@ -72,47 +75,58 @@ namespace IMIS.Presentation.UserModule
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
             return Results.Ok("User registered successfully.");
-        }        
-        private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp) where TUser : IdentityUser
+        }       
+        private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp) where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var userManager = signInManager.UserManager;
+            var dbContext = sp.GetRequiredService<ImisDbContext>(); // Inject DbContext
 
             var user = await userManager.FindByNameAsync(login.Username);
             if (user == null || !await userManager.CheckPasswordAsync(user, login.Password))
             {
-                return Results.Json(new { message = "Invalid username or password." }, statusCode: StatusCodes.Status401Unauthorized);
+                return Results.Json(new { message = "Invalid credentials." }, statusCode: StatusCodes.Status401Unauthorized);
             }
 
-            // Fetch user roles
             var roles = await userManager.GetRolesAsync(user);
-            // Debugging: Log the roles in the console
-            Console.WriteLine($"User Roles: {string.Join(", ", roles)}");
+          
+            // Fetch OfficeIds first
+            var officeIds = dbContext.UserOffices
+                .Where(uo => uo.UserId == user.Id)
+                .Select(uo => uo.OfficeId)
+                .ToList();
 
+            // Fetch only Office Names
+            var officeNames = dbContext.Offices
+                .Where(o => officeIds.Contains(o.Id))
+                .Select(o => o.Name)
+                .ToList();
+
+            // Generate tokens
             var accessToken = TokenUtils.GenerateAccessToken(user, roles);
             var refreshToken = TokenUtils.GenerateRefreshToken();
-
-            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "access_token", accessToken);
-            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "refresh_token", refreshToken);
-
             return Results.Ok(new
             {
                 user.Id,
+                user.FirstName,
+                user.MiddleName,
+                user.LastName,
+                user.Position,              
+                roles,
+                officeNames,
                 accessToken,
                 refreshToken,
             });
         }
-
         private static async Task<IResult> ChangePassword<TUser>([FromBody] ChangePasswordRequest request,[FromServices] UserManager<TUser> userManager,
-        HttpContext httpContext) where TUser : IdentityUser
+        HttpContext httpContext) where TUser : User
         {          
             var username = request.Username;
-            var user = await userManager.FindByNameAsync(username);  // Find user by username
+            var user = await userManager.FindByNameAsync(username);
             if (user == null)
             {              
                 return Results.NotFound("User not found.");
-            }
-            // Extract current password and new password
+            }            
             var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
             if (!result.Succeeded)
             {               
@@ -121,7 +135,7 @@ namespace IMIS.Presentation.UserModule
             return Results.Ok("Password changed successfully.");
         }
         // Refresh Token method
-        private static async Task<IResult> RefreshToken<TUser>([FromBody] UserRefreshDto refresh,IServiceProvider sp)where TUser : IdentityUser
+        private static async Task<IResult> RefreshToken<TUser>([FromBody] UserRefreshDto refresh,IServiceProvider sp)where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var userManager = signInManager.UserManager;
@@ -139,7 +153,7 @@ namespace IMIS.Presentation.UserModule
             return Results.Ok(new { user.Id, accessToken, refreshToken = newRefreshToken });
         }
         // Revoke Refresh Token method
-        private static async Task<IResult> RevokeRefreshToken<TUser>([FromBody] UserRefreshDto refresh,IServiceProvider sp)where TUser : IdentityUser
+        private static async Task<IResult> RevokeRefreshToken<TUser>([FromBody] UserRefreshDto refresh,IServiceProvider sp)where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var user = await signInManager.UserManager.FindByIdAsync(refresh.Id);
@@ -150,7 +164,6 @@ namespace IMIS.Presentation.UserModule
             await signInManager.UserManager.RemoveAuthenticationTokenAsync(user, "IMIS_API", "refresh_token");          
             return Results.Ok("Refresh token revoked successfully.");
         }
-
         private static async Task<IResult> CreateRole([FromBody] string roleName, IServiceProvider sp)
         {
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
@@ -167,8 +180,7 @@ namespace IMIS.Presentation.UserModule
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
             return Results.Ok("Role created successfully.");
-        }
-     
+        }     
         private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
         {
             var identity = (ClaimsIdentity)httpContext.User.Identity!;
@@ -185,8 +197,7 @@ namespace IMIS.Presentation.UserModule
             {
                 return Results.NotFound($"Role with ID {roleId} not found.");
             }
-
-            // Check if the new role name already exists
+            
             if (await roleManager.RoleExistsAsync(newRoleName))
             {
                 return Results.BadRequest($"Role name '{newRoleName}' already exists.");
@@ -199,10 +210,8 @@ namespace IMIS.Presentation.UserModule
             {
                 return Results.BadRequest(result.Errors);
             }
-
             return Results.Ok($"Role updated successfully to '{newRoleName}'.");
         }
-
 
         private static async Task<IResult> DeleteRole(string roleId, IServiceProvider sp)
         {
@@ -220,7 +229,7 @@ namespace IMIS.Presentation.UserModule
 
         private static async Task<IResult> GetUserRoles(IServiceProvider sp)
         {
-            var userManager = sp.GetRequiredService<UserManager<IdentityUser>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
 
             var users = userManager.Users.ToList();
@@ -243,23 +252,23 @@ namespace IMIS.Presentation.UserModule
                         });
                     }
                 }
-
                 userRolesList.Add(new
                 {
                     UserId = user.Id,
-                    UserName = user.UserName,                   
+                    UserName = user.UserName,  
+                    FirstName = user.FirstName, 
+                    MiddleName = user.MiddleName,
+                    LastName = user.LastName,
                     Roles = rolesWithIds
 
                 });
             }
-
             return Results.Ok(userRolesList);
         }
-
-        // Assigning UserRole-------
+       
         private static async Task<IResult> AssignUserRole([FromBody] IdentityUserRole<string> userRole, IServiceProvider sp)
         {
-            var userManager = sp.GetRequiredService<UserManager<IdentityUser>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
 
             var user = await userManager.FindByIdAsync(userRole.UserId);
@@ -278,7 +287,7 @@ namespace IMIS.Presentation.UserModule
         }
         private static async Task<IResult> UpdateUserRole(string userId, string newRoleId, IServiceProvider sp)
         {
-            var userManager = sp.GetRequiredService<UserManager<IdentityUser>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
 
             var user = await userManager.FindByIdAsync(userId);
@@ -303,10 +312,9 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok($"User role updated to: {newRole.Name}");
         }
-
         private static async Task<IResult> DeleteUserRole(string userId, string roleId, IServiceProvider sp)
         {
-            var userManager = sp.GetRequiredService<UserManager<IdentityUser>>();
+            var userManager = sp.GetRequiredService<UserManager<User>>();
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
 
             var user = await userManager.FindByIdAsync(userId);
@@ -326,6 +334,5 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok("Role removed from user successfully.");
         }
-
     }
 }

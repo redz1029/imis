@@ -2,6 +2,7 @@
 using IMIS.Application.PgsModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -30,11 +31,10 @@ namespace IMIS.Presentation.PGSModule
 
                 foreach (var pgsDto in pgsDtos)
                 {
-                    if (pgsDto.Id == 0) // Ensure ID is not explicitly set for new records
+                    if (pgsDto.Id == 0)
                     {
                         pgsDto.Id = 0;
                     }
-
                     var createdPgs = await service.SaveOrUpdateAsync(pgsDto, cancellationToken).ConfigureAwait(false);
                     await cache.EvictByTagAsync(_pgsTag, cancellationToken);
                     createdPgsList.Add(createdPgs);
@@ -45,14 +45,16 @@ namespace IMIS.Presentation.PGSModule
                 Console.WriteLine(JsonSerializer.Serialize(createdPgsList, new JsonSerializerOptions { WriteIndented = true }));
                 return Results.Created("/Deliverable", createdPgsList);
             })
-            .WithTags(_pgsTag);
+            .WithTags(_pgsTag)
+            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));          
 
-            app.MapGet("/", async (IPGSDeliverableService service, CancellationToken cancellationToken) => // Get allAsync Data in the KRA Database
+            app.MapGet("/", async (IPGSDeliverableService service, CancellationToken cancellationToken) => 
             {
                 var Kradto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(Kradto);
             })
-            .WithTags(_pgsTag);
+            .WithTags(_pgsTag)
+            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
 
             app.MapPut("/{id}", async (int id, [FromBody] PGSDeliverableDto pgsdeliverables, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -70,7 +72,8 @@ namespace IMIS.Presentation.PGSModule
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
                 return Results.Ok(updatedPgsDeliverables);
             })
-         .WithTags(_pgsTag);
+            .WithTags(_pgsTag)
+            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Carter;
 using IMIS.Application.OfficeModule;
+using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -35,8 +36,8 @@ namespace IMIS.Presentation.OfficeModule
                 var offices = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(offices);
             })
-            .WithTags(_OfficeTag)
-            .RequireAuthorization()
+            .WithTags(_OfficeTag)           
+            .RequireAuthorization(a => a.RequireRole(RoleTypes.Administrator))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_OfficeTag), true);
 
             app.MapGet("/filter/{name}", async (string name, IOfficeService service, CancellationToken cancellationToken) =>
