@@ -3,7 +3,7 @@
         public static class RoleTypes
         {
             public const string Administrator = "Administrator";
-            public const string LdnaManager = "LDNA Manager";
-            public const string LdnaUser = "LDNA User";
+            public const string PgsManager = "PGS Manager";
+            public const string PgsUser = "PGS User";
         }
     }
