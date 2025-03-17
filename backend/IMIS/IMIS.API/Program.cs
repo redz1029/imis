@@ -1,5 +1,6 @@
 ﻿using Carter;
 using DotNetEnv;
+using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
 using IMIS.Persistence;
 using IMIS.Persistence.DependencyInjection;
@@ -68,8 +69,8 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(RoleTypes.Administrator, policy => policy.RequireRole(RoleTypes.Administrator))
-    .AddPolicy(RoleTypes.LdnaManager, policy => policy.RequireRole(RoleTypes.LdnaManager))
-    .AddPolicy(RoleTypes.LdnaUser, policy => policy.RequireRole(RoleTypes.LdnaUser));
+    .AddPolicy(RoleTypes.PgsManager, policy => policy.RequireRole(RoleTypes.PgsManager))
+    .AddPolicy(RoleTypes.PgsUser, policy => policy.RequireRole(RoleTypes.PgsUser));
 
 // Register Output Caching
 builder.Services.AddOutputCache(options =>
@@ -79,8 +80,7 @@ builder.Services.AddOutputCache(options =>
          .SetCacheKeyPrefix("IMIS-CACHE"),
     true);
 });
-
-builder.Services.AddIdentityCore<IdentityUser>()
+builder.Services.AddIdentityCore<User>()
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<ImisDbContext>()
     .AddDefaultTokenProviders()
@@ -135,7 +135,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapCustomIdentityApi<IdentityUser>();
+app.MapCustomIdentityApi<User>();
 app.MapCarter();
 
 app.UseOutputCache();
