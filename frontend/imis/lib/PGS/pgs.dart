@@ -1,9 +1,9 @@
-import 'package:imis/pgs/pgs_deliverables.dart';
 import 'package:imis/pgs/pgs_period.dart';
+import 'package:imis/pgs/pgs_readiness.dart';
 import 'package:imis/settings/office/office.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'pgs.g.dart';
+//part 'pgs.g.dart';
 
 @JsonSerializable()
 class Pgs {
@@ -16,13 +16,11 @@ class Pgs {
   Office office;
 
   String? remarks;
+  PgsReadiness pgsReadinessRating;
+  bool isDeleted;
+  String? rowVersion;
 
-  @JsonKey()
-  List<PgsDeliverables> deliverables;
-
-  Pgs(this.id, this.pgsPeriod, this.office, this.deliverables, {this.remarks});
-
-  factory Pgs.fromJSON(Map<String, dynamic> json) => _$PgsFromJson(json);
-
-  Map<String, dynamic> toJson() => _$PgsToJson(this);
+  Pgs(this.id, this.pgsPeriod, this.office, this.pgsReadinessRating,
+      this.isDeleted,
+      {this.remarks, this.rowVersion});
 }
