@@ -156,9 +156,16 @@ dev_dependencies:
   flutter_lints: ^5.0.0
   build_runner: ^2.3.3
   json_serializable: ^6.8.0
+  table_calendar: ^3.2.0
+  percent_indicator: ^4.2.4
+  image_picker: ^1.0.4
 
 flutter:
   uses-material-design: true
 
   assets:
-    - lib/assets/CRMC.png  # Ensure this file exists in the 'assets' folder
+    - lib/assets/CRMC.png 
+    - lib/assets/pic1.png
+    - lib/assets/lock.png
+    - lib/assets/profile.png
+    - lib/assets/profile1.jpg
