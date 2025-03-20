@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:imis/login/pages/login_main.dart';
 import 'dart:io';
-
-import 'package:imis/login/pages/login_page.dart';
 
 void main() {
   // Allow localhost (self-signed SSL)
@@ -13,7 +12,8 @@ class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }
 
@@ -23,11 +23,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'IMIS',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-      ),     
-      home: LoginPage(),
+      ),
+      home: LoginMain(),
     );
   }
 }
