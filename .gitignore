@@ -400,3 +400,74 @@ FodyWeavers.xsd
 
 # Ignore changes from VaultService.cs
 backend/IHRISWebPortal/IHRISWebPortal.Infrastructure/Auths/VaultService.cs
+
+# Flutter & Dart build outputs
+frontend/imis/build/
+frontend/imis/.dart_tool/
+frontend/imis/.flutter-plugins
+frontend/imis/.flutter-plugins-dependencies
+frontend/imis/.flutter-versions
+frontend/imis/.packages
+frontend/imis/pubspec.lock
+frontend/imis/generated_plugin_registrant.*
+
+# IDE-Specific Files
+## VS Code
+frontend/imis/.vscode/
+
+## Android Studio / IntelliJ
+frontend/imis/*.iml
+frontend/imis/.idea/
+
+## Xcode (iOS)
+frontend/imis/ios/Flutter/.last_build_id
+frontend/imis/ios/Pods/
+frontend/imis/ios/.symlinks/
+frontend/imis/ios/.generated/
+frontend/imis/ios/.dart_tool/
+
+# OS-Specific Files
+## macOS
+.DS_Store
+
+## Windows
+Thumbs.db
+*.lnk
+
+# Platform-Specific Build Artifacts
+## Android
+frontend/imis/android/.gradle/
+frontend/imis/android/app/build/
+frontend/imis/android/.cxx/
+frontend/imis/android/local.properties
+
+## iOS
+frontend/imis/ios/Runner.xcworkspace/
+frontend/imis/ios/Runner.xcodeproj/
+frontend/imis/ios/Flutter/Flutter.framework
+frontend/imis/ios/Flutter/App.framework
+frontend/imis/ios/Flutter/generated_plugin_registrant.*
+
+## Web
+frontend/imis/web/.dart_tool/
+frontend/imis/web/generated_plugin_registrant.dart
+
+## Linux
+frontend/imis/linux/flutter/ephemeral/
+frontend/imis/linux/.dart_tool/
+frontend/imis/linux/flutter/generated_plugin_registrant.*
+
+## macOS
+frontend/imis/macos/Flutter/ephemeral/
+frontend/imis/macos/.dart_tool/
+frontend/imis/macos/Flutter/generated_plugin_registrant.*
+
+## Windows
+frontend/imis/windows/flutter/ephemeral/
+frontend/imis/windows/.dart_tool/
+frontend/imis/windows/flutter/generated_plugin_registrant.*
+
+# Other Temporary or Cache Files
+frontend/imis/*.log
+frontend/imis/*.tmp
+sh.exe.stackdump
