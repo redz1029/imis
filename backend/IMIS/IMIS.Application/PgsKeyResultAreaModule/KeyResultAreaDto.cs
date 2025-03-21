@@ -16,6 +16,7 @@ namespace IMIS.Application.PgsKraModule
         [SetsRequiredMembers]
         public KeyResultAreaDto(KeyResultArea keyResultArea)
         {
+            this.Id = keyResultArea.Id;
             this.Name = keyResultArea.Name;
             this.Remarks = keyResultArea.Remarks;
         }

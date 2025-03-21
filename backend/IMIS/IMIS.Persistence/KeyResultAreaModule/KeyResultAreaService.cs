@@ -32,10 +32,10 @@ namespace IMIS.Persistence.KraModule
         }
         public async Task<DtoPageList<KeyResultAreaDto, KeyResultArea, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var employees = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (employees.TotalCount == 0)
+            var kra = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (kra.TotalCount == 0)
                 return null;
-            return DtoPageList<KeyResultAreaDto, KeyResultArea, int>.Create(employees.Items, page, pageSize, employees.TotalCount);
+            return DtoPageList<KeyResultAreaDto, KeyResultArea, int>.Create(kra.Items, page, pageSize, kra.TotalCount);
         }
 
         public async Task<KeyResultAreaDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
