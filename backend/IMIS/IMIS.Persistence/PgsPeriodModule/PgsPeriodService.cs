@@ -1,4 +1,5 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Domain;
 
@@ -10,7 +11,17 @@ namespace IMIS.Persistence.PgsPeriodModule
         public PgsPeriodService(IPgsPeriodRepository repository)
         {
             _repository = repository;
-        }           
+        }
+
+        public async Task<DtoPageList<PgsPeriodDto, PgsPeriod, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var pgsperiod = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if(pgsperiod.TotalCount == 0)
+            {
+                return null;
+            }
+            return DtoPageList<PgsPeriodDto, PgsPeriod, int>.Create(pgsperiod.Items, page, pageSize, pgsperiod.TotalCount);
+        }
         private PgsPeriodDto ConvPgsPeriodToDTO(PgsPeriod period)
         {
             if (period == null) return null;

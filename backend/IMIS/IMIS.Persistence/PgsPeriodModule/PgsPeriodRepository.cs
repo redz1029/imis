@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,15 @@ namespace IMIS.Persistence.PgsPeriodModule
     {
         public PgsPeriodRepository(ImisDbContext dbContext) : base(dbContext)
         {
+        }
+
+        public async Task<EntityPageList<PgsPeriod, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var query = _dbContext.PgsPeriod.Where(k => !k.IsDeleted).AsNoTracking();
+
+            var pagperiod = await EntityPageList<PgsPeriod, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+            
+            return pagperiod;
         }
         public async Task<IEnumerable<PgsPeriod>> GetAll(CancellationToken cancellationToken)
         {
