@@ -1,5 +1,7 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.AuditorModule;
+using IMIS.Domain;
 
 namespace IMIS.Persistence.AuditorModule
 {
@@ -10,6 +12,17 @@ namespace IMIS.Persistence.AuditorModule
         {
             _auditorRepository = auditorRepository;
         }   
+
+        public async Task<DtoPageList<AuditorDto, Auditor, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var auditor = await _auditorRepository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if(auditor.TotalCount == 0)
+            {
+                return null;
+            }
+            return DtoPageList<AuditorDto, Auditor, int>.Create(auditor.Items, page, pageSize, auditor.TotalCount);
+
+        }
         public async Task<List<AuditorDto>?> FilteByName(string name, int noOfResults, CancellationToken cancellationToken)
         {
             var auditors = await _auditorRepository.FilteByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
