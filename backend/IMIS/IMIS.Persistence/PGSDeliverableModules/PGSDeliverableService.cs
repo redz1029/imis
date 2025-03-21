@@ -1,4 +1,5 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.UserOfficeModule;
@@ -16,6 +17,17 @@ namespace IMIS.Persistence.PGSModules
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _kraRepository = kraRepository ?? throw new ArgumentNullException(nameof(kraRepository));
         }
+
+        public async Task<DtoPageList<PGSDeliverableDto, PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var PgsDeliverable = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
+            if(PgsDeliverable.TotalCount == 0)
+            {
+                return null;
+            }
+            return DtoPageList<PGSDeliverableDto, PgsDeliverable, long>.Create(PgsDeliverable.Items, page, pageSize, PgsDeliverable.TotalCount);
+        }
+
         public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDto, CancellationToken cancellationToken)
         {
             if (pgsDto == null) throw new ArgumentNullException(nameof(pgsDto));

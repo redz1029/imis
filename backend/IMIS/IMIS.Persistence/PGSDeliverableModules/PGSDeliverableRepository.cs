@@ -1,6 +1,8 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PGSModules
@@ -8,6 +10,13 @@ namespace IMIS.Persistence.PGSModules
     public class PGSDeliverableRepository(ImisDbContext dbContext)
     : BaseRepository<PgsDeliverable, long, ImisDbContext>(dbContext), IPGSDeliverableRepository
     {
+
+        public async Task<EntityPageList<PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var query = _dbContext.Deliverable.Where(k => !k.IsDeleted).AsNoTracking();
+            var pgsdeliverable = await EntityPageList<PgsDeliverable, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+            return pgsdeliverable;
+        }
         public new async Task<PgsDeliverable> SaveOrUpdateAsync(PgsDeliverable pgs, CancellationToken cancellationToken)
         {
             if (pgs == null) throw new ArgumentNullException(nameof(pgs));          
