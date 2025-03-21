@@ -1,4 +1,6 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.UserOfficeModule;
@@ -58,6 +60,14 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
 
             var entity = PgsReadinessDto.ToEntity();
             await _repository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var pgsreadiness = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (pgsreadiness.TotalCount == 0)
+                return null;
+            return DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>.Create(pgsreadiness.Items, page, pageSize, pgsreadiness.TotalCount);
         }
     }
 }

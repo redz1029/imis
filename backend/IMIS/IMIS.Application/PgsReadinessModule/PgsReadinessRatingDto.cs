@@ -1,4 +1,5 @@
-﻿using Base.Primitives;
+﻿using System.Diagnostics.CodeAnalysis;
+using Base.Primitives;
 using IMIS.Domain;
 
 namespace IMIS.Application.PGSReadinessRatingCancerCareModule
@@ -8,7 +9,21 @@ namespace IMIS.Application.PGSReadinessRatingCancerCareModule
         public double CompetenceToDeliver { get; set; }
         public double ResourceAvailability { get; set; }
         public double ConfidenceToDeliver { get; set; }
-        public double TotalScore { get; set; }      
+        public double TotalScore { get; set; }     
+        public PgsReadinessRatingDto() { }
+        [SetsRequiredMembers]
+        public PgsReadinessRatingDto(PgsReadinessRating pgsReadinessRating)
+        {
+            this.Id = pgsReadinessRating.Id;
+            this.CompetenceToDeliver = pgsReadinessRating.CompetenceToDeliver;
+            this.ResourceAvailability = pgsReadinessRating.ResourceAvailability;
+            this.ConfidenceToDeliver = ConfidenceToDeliver;
+            this.TotalScore = pgsReadinessRating.TotalScore;
+
+
+
+
+        }
         public override PgsReadinessRating ToEntity()
         {
             return new PgsReadinessRating()

@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,13 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
     {
         public PgsReadinessRatingRepository(ImisDbContext context) : base(context)
         {
+        }
+        public async Task<EntityPageList<PgsReadinessRating, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var query = _dbContext.PgsReadiness.Where(k => !k.IsDeleted).AsNoTracking();
+
+            var pgsreadiness = await EntityPageList<PgsReadinessRating, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+            return pgsreadiness;
         }
         public async Task<IEnumerable<PgsReadinessRating>> GetAll(CancellationToken cancellationToken)
         {
