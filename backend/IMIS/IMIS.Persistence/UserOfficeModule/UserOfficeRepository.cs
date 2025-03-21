@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,14 @@ namespace IMIS.Persistence.UserOfficeModule
     {
         public UserOfficeRepository(ImisDbContext dbContext) : base(dbContext)
         {
+        }
+        public async Task<EntityPageList<UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var query = _dbContext.UserOffices.Where(k => !k.IsDeleted).AsNoTracking();
+            
+            var useroffice = await EntityPageList<UserOffices, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+           
+            return useroffice;
         }
         public async Task<IEnumerable<UserOffices>> GetAll(CancellationToken cancellationToken)
         {

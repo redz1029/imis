@@ -1,4 +1,5 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.UserOfficeModule;
@@ -14,6 +15,7 @@ namespace IMIS.Persistence.UserOfficeModule
         {
             _repository = repository;            
         }
+      
         private UserOfficeDto ConvertToDTO(UserOffices entity)
         {
             if (entity == null) return null;
@@ -26,6 +28,14 @@ namespace IMIS.Persistence.UserOfficeModule
                 IsActive = entity.IsActive
             };
         }
+        public async Task<DtoPageList<UserOfficeDto, UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var useroffice = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (useroffice.TotalCount == 0)
+                return null;
+            return DtoPageList<UserOfficeDto, UserOffices, int>.Create(useroffice.Items, page, pageSize, useroffice.TotalCount);
+        }
+
         public async Task<UserOfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var kradto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
