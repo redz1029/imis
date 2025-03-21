@@ -1,9 +1,11 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using IMIS.Domain;
 using static IMIS.Application.PgsModule.PgsAuditDetailsDto;
 
 namespace IMIS.Persistence.PgsModule
@@ -21,67 +23,13 @@ namespace IMIS.Persistence.PgsModule
             _officeRepository = officeRepository;
             _pgsPeriodRepository = pgsPeriodRepository;
             _kraRepository = kraRepository;
-        }        
-        public async Task<PagedResult<PgsAuditDetailsDto>> GetPagedPgsAsync(int page, int pageSize, CancellationToken cancellationToken)
+        }
+        public async Task<DtoPageList<PgsAuditDetailsDto, PgsAuditDetails, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            if (page <= 0 || pageSize <= 0)
-            {
-                throw new ArgumentException("Page and PageSize must be greater than 0.");
-            }
-         
-            int skip = (page - 1) * pageSize;
-           
-            var pgsAuditDetails = await _repository.GetPagedAsync(skip, pageSize, cancellationToken).ConfigureAwait(false);
-            var totalCount = await _repository.CountAsync(cancellationToken).ConfigureAwait(false);
-            
-            return new PagedResult<PgsAuditDetailsDto>
-            {
-             
-                Items = pgsAuditDetails.Select(pgs => new PgsAuditDetailsDto
-                {
-                    Id = pgs.Id,
-                    Remarks = pgs.Remarks,
-                    PgsPeriod = pgs.PgsPeriod != null ? new PgsPeriodDto
-                    {
-                        Id = pgs.PgsPeriod.Id,
-                        StartDate = pgs.PgsPeriod.StartDate,
-                        EndDate = pgs.PgsPeriod.EndDate 
-                    } : null,
-                    Office = pgs.Office != null ? new OfficeDto
-                    {
-                        Id = pgs.Office.Id,
-                        Name = pgs.Office.Name,
-                        IsActive = pgs.Office.IsActive
-                    } : null,
-                    PgsReadinessRating = pgs.PgsReadinessRating != null ? new PgsReadinessRatingDto
-                    {
-                        Id = pgs.PgsReadinessRating.Id,
-                        CompetenceToDeliver = pgs.PgsReadinessRating.CompetenceToDeliver,
-                        ResourceAvailability = pgs.PgsReadinessRating.ResourceAvailability,
-                        ConfidenceToDeliver = pgs.PgsReadinessRating.ConfidenceToDeliver,
-                    } : null,
-                    PgsDeliverables = pgs.PgsDeliverables?.Select(deliverable => new PGSDeliverableDto
-                    {
-                        Id = deliverable.Id,
-                        IsDirect = deliverable.IsDirect,
-                        DeliverableName = deliverable.DeliverableName,
-                        ByWhen = deliverable.ByWhen,
-                        PercentDeliverables = deliverable.PercentDeliverables,
-                        Status = deliverable.Status,
-                        RowVersion = deliverable.RowVersion,
-                        Kra = deliverable.Kra != null ? new KeyResultAreaDto
-                        {
-                            Id = deliverable.Kra.Id,
-                            Name = deliverable.Kra.Name,
-                            Remarks = deliverable.Kra.Remarks
-                        } : null, 
-                        Remarks = deliverable.Remarks
-                    }).ToList() ?? new List<PGSDeliverableDto>() 
-                }).ToList(),
-                TotalCount = totalCount,
-                Page = page,
-                PageSize = pageSize
-            };
+            var auditdetails = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (auditdetails.TotalCount == 0)
+                return null;
+            return DtoPageList<PgsAuditDetailsDto, PgsAuditDetails, long>.Create(auditdetails.Items, page, pageSize, auditdetails.TotalCount);
         }
         // Save or Update PgsAuditDetails
         public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto PGSDto, CancellationToken cancellationToken)

@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
@@ -9,6 +10,14 @@ public class PgsAuditDetailsRepository : BaseRepository<PgsAuditDetails, long, I
     public PgsAuditDetailsRepository(ImisDbContext dbContext) : base(dbContext)
     {
 
+    }
+    public async Task<EntityPageList<PgsAuditDetails, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+    {
+        var query = _dbContext.PgsAuditDetails.Where(k => !k.IsDeleted).AsNoTracking();
+
+        var auditdetails = await EntityPageList<PgsAuditDetails, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+
+        return auditdetails;
     }
     public new async Task<PgsAuditDetails> SaveOrUpdateAsync(PgsAuditDetails pgs, CancellationToken cancellationToken)
     {
