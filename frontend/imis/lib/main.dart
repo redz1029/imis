@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:imis/user/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
 
 void main() async {
@@ -12,7 +13,8 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: Scaffold(body: Center(child: Text('Hello World!'))),
+      debugShowCheckedModeBanner: false,
+      home: LoginPage(),
     );
   }
 }
