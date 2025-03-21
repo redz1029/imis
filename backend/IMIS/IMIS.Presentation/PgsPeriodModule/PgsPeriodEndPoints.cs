@@ -37,30 +37,34 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
             })
             .WithTags(_pgsTag)   
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
-            // PUT endpoint for updating an existing PGS period
+        
             app.MapPut("/{id}", async (int id, [FromBody] PgsPeriodDto PgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (PgsPeriodDto == null)
                 {
                     return Results.BadRequest("PGS data is required.");
                 }
-                // First, check if the period exists
+             
                 var existingPeriod = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingPeriod == null)
                 {
                     return Results.NotFound($"PGS Period with ID {id} not found.");
                 }
-                // Update the existing period with new data
+               
                 PgsPeriodDto.Id = id;
                 var updatedPgsPeriod = await service.SaveOrUpdateAsync(PgsPeriodDto, cancellationToken).ConfigureAwait(false);
-
-                //Clear the cache for this data after updating
+              
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
-
                 return Results.Ok(updatedPgsPeriod);
             })
             .WithTags(_pgsTag);         
+            app.MapGet("/page", async (int page, int pageSize, IPgsPeriodService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedPgsPeriod = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(paginatedPgsPeriod);
+            })
+            .WithTags(_pgsTag);
+                
         }
     }
 }

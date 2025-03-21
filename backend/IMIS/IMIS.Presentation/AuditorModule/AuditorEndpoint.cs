@@ -1,5 +1,6 @@
 ﻿using Carter;
 using IMIS.Application.AuditorModule;
+using IMIS.Application.PgsKraModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
@@ -61,12 +62,18 @@ namespace IMIS.Presentation.AuditorModule
                 {
                     return Results.NotFound($"User Office with ID {id} not found.");
                 }
-
                 await service.SaveOrUpdateAsync(Auditor, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_auditorTag, cancellationToken);
                 return Results.Ok(Auditor);
             })
-         .WithTags(_auditorTag);
+           .WithTags(_auditorTag);            
+            app.MapGet("/page", async (int page, int pageSize, IAuditorService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedAuditor = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(paginatedAuditor);
+            })
+          .WithTags(_auditorTag)
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
         }
     }
 }

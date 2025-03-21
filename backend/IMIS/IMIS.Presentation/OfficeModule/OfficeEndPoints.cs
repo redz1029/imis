@@ -1,5 +1,7 @@
 ﻿using Carter;
 using IMIS.Application.OfficeModule;
+using IMIS.Application.UserOfficeModule;
+using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -72,7 +74,14 @@ namespace IMIS.Presentation.OfficeModule
                 await cache.EvictByTagAsync(_OfficeTag, cancellationToken);
                 return Results.Ok(office);
             })
-        .WithTags(_OfficeTag);
+            .WithTags(_OfficeTag);
+            app.MapGet("/page", async (int page, int pageSize, IOfficeService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedOffice = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return paginatedOffice;
+            })
+            .WithTags(_OfficeTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_OfficeTag), true);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Data.Entity;
+using System.Drawing.Printing;
 using System.Security.Claims;
 using IMIS.Application.OfficeModule;
 using IMIS.Domain;
@@ -40,7 +41,7 @@ namespace IMIS.Presentation.UserModule
             roleGroup.MapPost("/roles", CreateRole);
             roleGroup.MapPut("/roles/{roleId}", EditRole);
             roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
-
+         
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
             userRoleGroup.MapGet("/userRoles", GetUserRoles); 
@@ -222,6 +223,8 @@ namespace IMIS.Presentation.UserModule
             return Results.Ok("Role deleted successfully.");
         }
 
+
+
         private static async Task<IResult> GetUserRoles(IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
@@ -260,7 +263,8 @@ namespace IMIS.Presentation.UserModule
             }
             return Results.Ok(userRolesList);
         }
-       
+
+     
         private static async Task<IResult> AssignUserRole([FromBody] IdentityUserRole<string> userRole, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();

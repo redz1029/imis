@@ -58,7 +58,16 @@ namespace IMIS.Presentation.UserOfficeModule
                 await cache.EvictByTagAsync(_useroffice, cancellationToken);
                 return Results.Ok(updatedUserOffice);
             })
-          .WithTags(_useroffice);
+           .WithTags(_useroffice);
+
+            app.MapGet("/page", async (int page, int pageSize, IUserOfficeService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedUserOffice = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return paginatedUserOffice;
+
+            })
+           .WithTags(_useroffice)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_useroffice), true);
         }
     }
 }

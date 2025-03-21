@@ -66,6 +66,15 @@ namespace IMIS.Presentation.PgsReadinessRatingCancerCareModules
                 return Results.Ok(updatedUserOffice);
             })
          .WithTags(_pgsTag);
+
+            app.MapGet("/page", async (int page, int pageSize, IPgsReadinessRatingService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedUserOffice = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return paginatedUserOffice;
+
+            })
+         .WithTags(_pgsTag)
+         .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
         }
     }
 }
