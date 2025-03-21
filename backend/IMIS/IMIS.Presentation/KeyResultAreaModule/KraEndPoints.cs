@@ -67,6 +67,13 @@ namespace IMIS.Presentation.KraModuleAPI
                 return Results.Ok(updatedKra);
             })
             .WithTags(_pgsTag);
+            app.MapGet("/page", async (int page, int pageSize, IKeyResultAreaService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedKras = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(paginatedKras);
+            })
+            .WithTags(_pgsTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
         }
     }
 }

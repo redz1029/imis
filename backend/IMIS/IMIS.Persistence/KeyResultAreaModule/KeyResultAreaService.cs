@@ -1,6 +1,9 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.PgsKraModule;
+using IMIS.Application.PgsModule;
 using IMIS.Domain;
+using static IMIS.Application.PgsModule.PgsAuditDetailsDto;
 
 namespace IMIS.Persistence.KraModule
 {
@@ -27,6 +30,14 @@ namespace IMIS.Persistence.KraModule
                 Remarks = kra.Remarks
             };
         }
+        public async Task<DtoPageList<KeyResultAreaDto, KeyResultArea, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var employees = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (employees.TotalCount == 0)
+                return null;
+            return DtoPageList<KeyResultAreaDto, KeyResultArea, int>.Create(employees.Items, page, pageSize, employees.TotalCount);
+        }
+
         public async Task<KeyResultAreaDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var kradto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -54,7 +65,7 @@ namespace IMIS.Persistence.KraModule
             if (dto is not KeyResultAreaDto pgsDto) throw new ArgumentException("Invalid DTO type", nameof(dto));
             var pgsEntity = pgsDto.ToEntity();
             await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
-        }
+        }      
     }
 }
 

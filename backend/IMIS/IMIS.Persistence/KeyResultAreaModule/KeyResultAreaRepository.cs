@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
 using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,17 @@ namespace IMIS.Persistence.KraModule
     public class KeyResultAreaRepository : BaseRepository<KeyResultArea, int, ImisDbContext>, IKeyResultAreaRepository
     {       
         public KeyResultAreaRepository(ImisDbContext dbContext) : base(dbContext) { }
+        public async Task<EntityPageList<KeyResultArea, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var query = _dbContext.KeyResultArea
+                .Where(k => !k.IsDeleted)
+                .AsNoTracking();
+          
+            var employees = await EntityPageList<KeyResultArea, int>
+             .CreateAsync(query, page, pageSize, cancellationToken)
+             .ConfigureAwait(false);
+            return employees;
+        }   
         public async Task<IEnumerable<KeyResultArea>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
         {
             return await _dbContext.KeyResultArea
@@ -24,7 +36,7 @@ namespace IMIS.Persistence.KraModule
                .AsNoTracking()            
                .ToListAsync(cancellationToken)
                .ConfigureAwait(false);
-        }        
+        }      
         // Save or Update method
         public new async Task<KeyResultArea> SaveOrUpdateAsync(KeyResultArea kra, CancellationToken cancellationToken)
         {

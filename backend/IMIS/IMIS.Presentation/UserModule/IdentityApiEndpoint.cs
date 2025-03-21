@@ -80,7 +80,7 @@ namespace IMIS.Presentation.UserModule
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var userManager = signInManager.UserManager;
-            var dbContext = sp.GetRequiredService<ImisDbContext>(); // Inject DbContext
+            var dbContext = sp.GetRequiredService<ImisDbContext>();
 
             var user = await userManager.FindByNameAsync(login.Username);
             if (user == null || !await userManager.CheckPasswordAsync(user, login.Password))
@@ -89,18 +89,13 @@ namespace IMIS.Presentation.UserModule
             }
 
             var roles = await userManager.GetRolesAsync(user);
-          
-            // Fetch OfficeIds first
-            var officeIds = dbContext.UserOffices
-                .Where(uo => uo.UserId == user.Id)
-                .Select(uo => uo.OfficeId)
-                .ToList();
-
-            // Fetch only Office Names
-            var officeNames = dbContext.Offices
-                .Where(o => officeIds.Contains(o.Id))
-                .Select(o => o.Name)
-                .ToList();
+           
+             var offices = dbContext.UserOffices
+             .Where(uo => uo.UserId == user.Id)
+             .Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id, (uo, o) => new { o.Id, o.Name }
+             )
+             .Distinct()
+             .ToList();
 
             // Generate tokens
             var accessToken = TokenUtils.GenerateAccessToken(user, roles);
@@ -113,7 +108,7 @@ namespace IMIS.Presentation.UserModule
                 user.LastName,
                 user.Position,              
                 roles,
-                officeNames,
+                offices,
                 accessToken,
                 refreshToken,
             });
