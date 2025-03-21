@@ -1,6 +1,8 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
+using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.OfficeModule
@@ -13,6 +15,14 @@ namespace IMIS.Persistence.OfficeModule
             var offices = await _repository.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);         
             return offices != null && offices.Count() > 0 ? offices.Select(a => ConvOfficeToDTO(a)).ToList() : null;
         }
+        public async Task<DtoPageList<OfficeDto, Office, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var useroffice = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (useroffice.TotalCount == 0)
+                return null;
+            return DtoPageList<OfficeDto, Office, int>.Create(useroffice.Items, page, pageSize, useroffice.TotalCount);
+        }
+
         private static OfficeDto ConvOfficeToDTO(Office office)
         {
             return new OfficeDto()

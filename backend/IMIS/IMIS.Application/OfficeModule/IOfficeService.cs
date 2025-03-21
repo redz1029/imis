@@ -1,9 +1,13 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
+using IMIS.Application.UserOfficeModule;
+using IMIS.Domain;
 
 namespace IMIS.Application.OfficeModule
 {
     public interface IOfficeService : IService
     {
+        public Task<DtoPageList<OfficeDto, Office, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<List<OfficeDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<OfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
