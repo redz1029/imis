@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/user/login_page.dart';
-import 'package:imis/user/models/user_registration.dart';
+import 'package:imis/user/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/validator/validator.dart';
 
@@ -91,8 +91,9 @@ class RegistrationPageState extends State<RegistrationPage> {
     try {
       var response = await dio.post(url, data: json.encode(userRegistration));
 
-      if (!context.mounted)
+      if (!context.mounted) {
         return; // Prevent running code if context is unmounted
+      }
 
       if (response.statusCode == 200) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -289,6 +290,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                   if (value == null || value.isEmpty) {
                     return "Please enter some text";
                   }
+                  return null;
                 },
                 decoration: InputDecoration(
                   labelText: 'Last name',
@@ -313,6 +315,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                   if (value == null || value.isEmpty) {
                     return "Please enter some text";
                   }
+                  return null;
                 },
                 decoration: InputDecoration(
                   labelText: 'First name',
@@ -337,6 +340,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                   if (value == null || value.isEmpty) {
                     return "Please enter some text";
                   }
+                  return null;
                 },
                 decoration: InputDecoration(
                   labelText: 'Middle name',
@@ -361,6 +365,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                   if (value == null || value.isEmpty) {
                     return "Please enter some text";
                   }
+                  return null;
                 },
                 decoration: InputDecoration(
                   labelText: 'Prefix',
@@ -385,6 +390,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                   if (value == null || value.isEmpty) {
                     return "Please enter some text";
                   }
+                  return null;
                 },
                 decoration: InputDecoration(
                   labelText: 'Suffix',
@@ -410,6 +416,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                   if (value == null || value.isEmpty) {
                     return "Please enter some text";
                   }
+                  return null;
                 },
                 decoration: InputDecoration(
                   labelText: 'Username',
