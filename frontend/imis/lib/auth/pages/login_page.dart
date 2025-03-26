@@ -46,6 +46,11 @@ class LoginPageState extends State<LoginPage> {
       await prefs.setString('firstName', firstName);
       await prefs.setString('position', position);
 
+      String accessToken = responseData['accessToken'] ?? '';
+      String refreshToken = responseData['refreshToken'] ?? '';
+      await prefs.setString('refreshToken', refreshToken);
+      await prefs.setString('accessToken', accessToken);
+      print("Access Token: ${prefs.getString('accessToken')}");
       if (context.mounted) {
         if (response.statusCode == 200) {
           Navigator.push(
