@@ -4,11 +4,13 @@ part 'office.g.dart';
 
 @JsonSerializable()
 class Office {
-  final int id;
-  final String name;
-  final bool isActive;
+  int id;
+  String name;
+  bool isActive;
+  bool isDeleted;
+  String? rowVersion;
 
-  Office(this.id, this.name, this.isActive);
+  Office(this.id, this.name, this.isActive, this.isDeleted, {this.rowVersion});
 
   factory Office.fromJson(Map<String, dynamic> json) => _$OfficeFromJson(json);
   Map<String, dynamic> toJson() => _$OfficeToJson(this);
