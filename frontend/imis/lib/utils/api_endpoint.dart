@@ -8,11 +8,21 @@ class ApiEndpoint {
   late String login;
   late String register;
   late String changepassword;
+  late String keyresult;
+  late String auditor;
+  late String pgsperiod;
+  late String deliverables;
+  late String pgsauditordetails;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
     changepassword = '$baseUrl/changePassword';
+    keyresult = '$baseUrl/Kra';
+    auditor = '$baseUrl/auditors';
+    pgsperiod = '$baseUrl/PgsPeriod';
+    deliverables = '$baseUrl/Deliverable';
+    pgsauditordetails = '$baseUrl/PgsAuditDetails';
   }
 
   static Future<void> setBaseUrl() async {
