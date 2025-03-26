@@ -2,7 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/performance_governance_system/auditor/pages/auditor_page.dart';
-import 'package:imis/auth/pages/deliverables_page.dart';
+import 'package:imis/performance_governance_system/deliverable/pages/deliverables_page.dart';
 import 'package:imis/auth/pages/home_page.dart';
 import 'package:imis/performance_governance_system/key_result_area/pages/key_result_area_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
@@ -256,12 +256,12 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
             0,
             () => _setScreen(HomePage(), 0),
           ),
-          // _buildListTile(
-          //   Icons.file_copy,
-          //   'Performance Governance System',
-          //   1,
-          //   () => _setScreen(DeliverablesPage(), 1),
-          // ),
+          _buildListTile(
+            Icons.file_copy,
+            'Performance Governance System',
+            1,
+            () => _setScreen(DeliverablesPage(), 1),
+          ),
           Theme(
             data: Theme.of(context).copyWith(dividerColor: lightGrey),
             child: ExpansionTile(
