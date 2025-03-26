@@ -6,11 +6,17 @@ part 'key_result_area.g.dart';
 class KeyResultArea {
   int id;
   String name;
-
-  @JsonKey(defaultValue: '')
   String remarks;
+  bool isDeleted;
+  String? rowVersion;
 
-  KeyResultArea(this.id, this.name, this.remarks);
+  KeyResultArea(
+    this.id,
+    this.name,
+    this.remarks,
+    this.isDeleted, {
+    this.rowVersion,
+  });
 
   factory KeyResultArea.fromJson(Map<String, dynamic> json) =>
       _$KeyResultAreaFromJson(json);
