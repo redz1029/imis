@@ -31,12 +31,12 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
       if (response.statusCode == 200 && response.data is List) {
         List<PgsPeriod> data =
             (response.data as List)
-                .map((pgs) => PgsPeriod.fromJson(pgs))
+                .map((period) => PgsPeriod.fromJson(period))
                 .toList();
 
         if (mounted) {
           setState(() {
-            pgsList = data.map((pgs) => pgs.toJson()).toList();
+            pgsList = data.map((period) => period.toJson()).toList();
             filteredList = List.from(pgsList);
           });
         }
@@ -50,10 +50,10 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     }
   }
 
-  Future<void> addOrUpdatePGSPeriod(PgsPeriod pgs) async {
+  Future<void> addOrUpdatePGSPeriod(PgsPeriod period) async {
     var url = ApiEndpoint().pgsperiod;
     try {
-      final response = await dio.post(url, data: pgs.toJson());
+      final response = await dio.post(url, data: period.toJson());
       if (response.statusCode == 200) {
         await fetchPGSPeriods();
         setState(() {
