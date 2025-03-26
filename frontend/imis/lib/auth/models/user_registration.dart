@@ -12,7 +12,7 @@ class UserRegistration {
   final String lastName;
   final String prefix;
   final String suffix;
-  final String? position;
+  final String position;
 
   UserRegistration(
     this.username,

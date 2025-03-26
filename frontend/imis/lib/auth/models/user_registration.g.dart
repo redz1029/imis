@@ -16,7 +16,7 @@ UserRegistration _$UserRegistrationFromJson(Map<String, dynamic> json) =>
       json['lastName'] as String,
       json['prefix'] as String,
       json['suffix'] as String,
-      json['position'] as String?,
+      json['position'] as String,
     );
 
 Map<String, dynamic> _$UserRegistrationToJson(UserRegistration instance) =>
