@@ -1,11 +1,13 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/navigation/dashboard_navigation_panel.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/user/models/user_login.dart';
-import 'package:imis/user/registration_page.dart';
+import 'package:imis/auth/models/user_login.dart';
+import 'package:imis/auth/pages/registration_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
@@ -23,9 +25,8 @@ class LoginPageState extends State<LoginPage> {
   final FocusNode focusIconUsername = FocusNode();
   final FocusNode focusIconPassword = FocusNode();
 
-  // bool _isPageLoaded = false;
   bool _isPasswordVisible = false;
-  // final bool _isLoginButtonDisabled = false;
+
   bool _isLoggingIn = false;
 
   final dio = Dio();
@@ -38,11 +39,25 @@ class LoginPageState extends State<LoginPage> {
     try {
       var response = await dio.post(url, data: json.encode(user));
 
+      var responseData = response.data;
+      String firstName = responseData['firstName'] ?? '';
+      String position = responseData['position'] ?? '';
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('firstName', firstName);
+      await prefs.setString('position', position);
+
+      String accessToken = responseData['accessToken'] ?? '';
+      String refreshToken = responseData['refreshToken'] ?? '';
+      await prefs.setString('refreshToken', refreshToken);
+      await prefs.setString('accessToken', accessToken);
+      print("Access Token: ${prefs.getString('accessToken')}");
       if (context.mounted) {
         if (response.statusCode == 200) {
           Navigator.push(
             context,
-             MaterialPageRoute(builder: (context) => const RegistrationPage()),
+            MaterialPageRoute(
+              builder: (context) => const DashboardNavigationPanel(),
+            ),
           );
         }
       } else {
@@ -84,6 +99,21 @@ class LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
+    focusIconUsername.addListener(() {
+      setState(() {});
+    });
+    focusIconPassword.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _passwordController.dispose();
+    focusIconUsername.dispose();
+    focusIconPassword.dispose();
+    super.dispose();
   }
 
   @override
@@ -92,6 +122,7 @@ class LoginPageState extends State<LoginPage> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
+        backgroundColor: secondaryColor,
         body: Center(
           child:
               isSmallScreen
@@ -156,7 +187,7 @@ class LoginPageState extends State<LoginPage> {
                 labelStyle: const TextStyle(color: grey, fontSize: 14),
                 prefixIcon: Icon(
                   Icons.email_outlined,
-                  color: focusIconPassword.hasFocus ? primaryColor : grey,
+                  color: focusIconUsername.hasFocus ? primaryColor : grey,
                 ),
                 border: const OutlineInputBorder(),
                 focusedBorder: const OutlineInputBorder(
@@ -250,13 +281,13 @@ class LoginPageState extends State<LoginPage> {
                                 ? null
                                 : () {
                                   if (_formKey.currentState!.validate()) {
-                                    // login(
-                                    //   context,
-                                    //   UserLogin(
-                                    //     username: _usernameController.text,
-                                    //     password: _passwordController.text,
-                                    //   ),
-                                    // );
+                                    login(
+                                      context,
+                                      UserLogin(
+                                        username: _usernameController.text,
+                                        password: _passwordController.text,
+                                      ),
+                                    );
                                   }
                                 },
                         child: Padding(
@@ -271,6 +302,7 @@ class LoginPageState extends State<LoginPage> {
                         ),
                       ),
             ),
+            gap,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
