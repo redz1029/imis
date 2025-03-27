@@ -1,4 +1,5 @@
 import 'package:imis/utils/date_time_converter.dart';
+
 import 'package:json_annotation/json_annotation.dart';
 
 part 'pgs_period.g.dart';
@@ -6,6 +7,7 @@ part 'pgs_period.g.dart';
 @JsonSerializable()
 class PgsPeriod {
   int id;
+  bool isDeleted;
 
   @JsonKey()
   @DateTimeConverter()
@@ -17,7 +19,13 @@ class PgsPeriod {
 
   String? rowVersion;
 
-  PgsPeriod(this.id, this.startDate, this.endDate, {this.rowVersion});
+  PgsPeriod(
+    this.id,
+    this.isDeleted,
+    this.startDate,
+    this.endDate, {
+    this.rowVersion,
+  });
 
   factory PgsPeriod.fromJson(Map<String, dynamic> json) =>
       _$PgsPeriodFromJson(json);
