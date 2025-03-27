@@ -1,6 +1,4 @@
 ﻿using Carter;
-using IMIS.Application.PgsKraModule;
-using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.UserOfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

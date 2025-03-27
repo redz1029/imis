@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.TeamModule;
@@ -8,6 +9,7 @@ namespace IMIS.Application.AuditScheduleModule
     public class AuditScheduleDetailDto : BaseDto<AuditScheduleDetails, int>
     {    
         public required int AuditScheduleId { get; set; }
+        [JsonIgnore]
         public AuditScheduleDto? AuditSchedule { get; set; }
         public DateTime StartDateTime { get; set; }
         public DateTime EndDateTime { get; set; }

@@ -1,8 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.PgsModule;
 using IMIS.Domain;
-using static IMIS.Application.PgsModule.PgsAuditDetailsDto;
 
 namespace IMIS.Application.PgsKraModule
 {

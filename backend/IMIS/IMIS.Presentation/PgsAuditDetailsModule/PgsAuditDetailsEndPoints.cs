@@ -1,4 +1,5 @@
 ﻿using Carter;
+using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Infrastructure.Auths;
@@ -20,28 +21,62 @@ namespace IMIS.Presentation.PgsModuleAPI
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/", async ([FromBody] PgsAuditDetailsDto PgsDto, IPgsAuditDetailsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] PgsAuditDetailsDto PgsAuditDetailsDto, IPgsAuditDetailsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                if (PgsDto == null)
+                if (PgsAuditDetailsDto == null)
                 {
-                    return Results.BadRequest("PGS data is required.");
+                    return Results.BadRequest("PGS Audit Details data is required.");
                 }
-                var createdOrUpdatedPgs = await service.SaveOrUpdateAsync(PgsDto, cancellationToken).ConfigureAwait(false);
+                var createdOrUpdatedPgsAuditDeatails = await service.SaveOrUpdateAsync(PgsAuditDetailsDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
-                return Results.Created($"/PgsAudit/{createdOrUpdatedPgs.Id}", createdOrUpdatedPgs);
+                return Results.Created($"/PgsAuditDetails/{createdOrUpdatedPgsAuditDeatails.Id}", createdOrUpdatedPgsAuditDeatails);
 
             })
             .WithTags(_pgsTag);
 
-              app.MapGet("/page", async (int page, int pageSize, IUserOfficeService service, CancellationToken cancellationToken) =>
-              {
-                  var paginatedUserOffice = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-                  return paginatedUserOffice;
-              })
+            app.MapGet("/", async (IPgsAuditDetailsService service, CancellationToken cancellationToken) =>
+            {
+                var PgsAuditDetails = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(PgsAuditDetails);
+            })
+           .WithTags(_pgsTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+            app.MapGet("/{id}", async (int id, IPgsAuditDetailsService service, CancellationToken cancellationToken) =>
+            {
+                var PgsAuditDetails = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                return PgsAuditDetails != null ? Results.Ok(PgsAuditDetails) : Results.NotFound();
+            })
+            .WithTags(_pgsTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+            app.MapPut("/{id}", async (int id, [FromBody] PgsAuditDetailsDto PgsAuditDetails, IPgsAuditDetailsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                if (PgsAuditDetails == null)
+                {
+                    return Results.BadRequest("Kra data is required.");
+                }
+                var existingPgsAuditDetails = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                if (existingPgsAuditDetails == null)
+                {
+                    return Results.NotFound($"PgsAuditDetails with ID {id} not found.");
+                }
+
+                var updatedexistingPgsAuditDetails = await service.SaveOrUpdateAsync(PgsAuditDetails, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+                return Results.Ok(updatedexistingPgsAuditDetails);
+            })
+           .WithTags(_pgsTag);
+
+            app.MapGet("/page", async (int page, int pageSize, IPgsAuditDetailsService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedAuditDetails = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return paginatedAuditDetails;
+            })
             .WithTags(_pgsTag)
             .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-                        
+
         }
     }
 }

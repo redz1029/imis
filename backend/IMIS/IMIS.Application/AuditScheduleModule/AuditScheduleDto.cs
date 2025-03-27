@@ -10,8 +10,9 @@ namespace IMIS.Application.AuditScheduleModule
         public required DateTime StartDate { get; set; }
         public required DateTime EndDate { get; set; }
         public required bool IsActive { get; set; }
-        public List<OfficeDto>? Offices { get; set; }
+        public List<OfficeDto>? Offices { get; set; }       
         public List<AuditScheduleDetailDto>? AuditSchduleDetails { get; set; }
+
         public override AuditSchedule ToEntity()
         {
             return new AuditSchedule() 
@@ -20,7 +21,7 @@ namespace IMIS.Application.AuditScheduleModule
                 AuditTitle = AuditTitle, 
                 StartDate = StartDate, 
                 EndDate = EndDate, 
-                IsActive = IsActive 
+                IsActive = IsActive,                
             };
         }
     }

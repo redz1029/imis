@@ -249,31 +249,31 @@ namespace IMIS.Persistence.AuditScheduleModule
             var auditSchedule = aDto?.ToEntity();
             if (auditSchedule != null)
             {
-                if(aDto!.Offices != null)
+                if (aDto!.Offices != null)
                 {
                     // Assign offices
                     List<AuditableOffices> offices = [];
-                    foreach(var officeDto in aDto!.Offices)
+                    foreach (var officeDto in aDto!.Offices)
                     {
-                        var office = new Office() 
-                        { 
-                            Id = officeDto.Id, 
-                            Name = officeDto.Name, 
-                            IsActive = officeDto.IsActive 
+                        var office = new Office()
+                        {
+                            Id = officeDto.Id,
+                            Name = officeDto.Name,
+                            IsActive = officeDto.IsActive
                         };
 
                         object value = _auditScheduleRepository.GetDbContext().Attach(office);
-                        offices.Add(new AuditableOffices() 
-                        { 
-                            AuditSchedule = auditSchedule, 
-                            AuditScheduleId = auditSchedule.Id, 
-                            Office = office, 
-                            OfficeId = office.Id 
+                        offices.Add(new AuditableOffices()
+                        {
+                            AuditSchedule = auditSchedule,
+                            AuditScheduleId = auditSchedule.Id,
+                            Office = office,
+                            OfficeId = office.Id
                         });
                     }
                     auditSchedule.AuditableOffices = offices;
                 }
-                if(auditSchedule.Id == 0)
+                if (auditSchedule.Id == 0)
                 {
                     _auditScheduleRepository.Add(auditSchedule);
                 } else
@@ -283,5 +283,22 @@ namespace IMIS.Persistence.AuditScheduleModule
                 await _auditScheduleRepository.SaveOrUpdateAsync(auditSchedule, cancellationToken).ConfigureAwait(false);
             }
         }
+
+        public async Task<AuditScheduleDto> SaveOrUpdateAsync(AuditScheduleDto dto, CancellationToken cancellationToken)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+
+            var entity = dto.ToEntity();
+            var savedEntity = await _auditScheduleRepository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
+
+            return new AuditScheduleDto
+            {
+                Id = savedEntity.Id,
+                AuditTitle = savedEntity.AuditTitle,
+                StartDate = savedEntity.StartDate,
+                EndDate = savedEntity.EndDate,
+                IsActive = savedEntity.IsActive,              
+            };
+        }       
     }
 }
