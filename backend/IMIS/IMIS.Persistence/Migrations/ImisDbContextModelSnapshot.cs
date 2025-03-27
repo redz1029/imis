@@ -53,7 +53,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditSchedules");
+                    b.ToTable("AuditSchedules", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
@@ -95,7 +95,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("AuditScheduleDetails");
+                    b.ToTable("AuditScheduleDetails", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -110,7 +110,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("AuditableOffices");
+                    b.ToTable("AuditableOffices", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.Auditor", b =>
@@ -138,7 +138,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Auditors");
+                    b.ToTable("Auditors", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditorOffices", b =>
@@ -156,7 +156,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("AuditorOffices");
+                    b.ToTable("AuditorOffices", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditorTeams", b =>
@@ -177,7 +177,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("AuditorTeams");
+                    b.ToTable("AuditorTeams", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.KeyResultArea", b =>
@@ -206,7 +206,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KeyResultArea");
+                    b.ToTable("KeyResultArea", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.Office", b =>
@@ -234,7 +234,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Offices");
+                    b.ToTable("Offices", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsAuditDetails", b =>
@@ -273,7 +273,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsReadinessRatingId");
 
-                    b.ToTable("PgsAuditDetails");
+                    b.ToTable("PgsAuditDetails", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
@@ -323,7 +323,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsAuditDetailsId");
 
-                    b.ToTable("Deliverable");
+                    b.ToTable("Deliverable", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsPeriod", b =>
@@ -350,7 +350,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsPeriod");
+                    b.ToTable("PgsPeriod", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsReadinessRating", b =>
@@ -380,7 +380,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsReadiness");
+                    b.ToTable("PgsReadiness", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.Team", b =>
@@ -408,7 +408,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.UserOffices", b =>
@@ -439,7 +439,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("UserOffices");
+                    b.ToTable("UserOffices", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

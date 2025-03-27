@@ -8,7 +8,6 @@ namespace IMIS.Domain
         public required DateTime EndDate { get; set; }      
         public required string AuditTitle { get; set; }      
         public required bool IsActive { get; set; }
-        public List<Office>? Offices { get; set; }
         public ICollection<AuditableOffices>? AuditableOffices { get; set; }
         public ICollection<AuditScheduleDetails>? AuditSchduleDetails { get; set; }
     }
