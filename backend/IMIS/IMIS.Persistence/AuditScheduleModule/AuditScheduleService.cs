@@ -1,5 +1,8 @@
 ﻿using Base.Primitives;
+using IMIS.Application.AuditableOfficesModule;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Application.PgsKraModule;
+using IMIS.Application.PgsModule;
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
 
@@ -284,6 +287,18 @@ namespace IMIS.Persistence.AuditScheduleModule
             }
         }
 
+        public async Task SaveAuditableOfficesAsync(List<AuditableOfficesDto> auditableOfficesList, CancellationToken cancellationToken)
+        {
+            var entities = auditableOfficesList.Select(dto => new AuditableOffices
+            {
+                AuditScheduleId = dto.AuditScheduleId,
+                OfficeId = dto.OfficeId
+            }).ToList();
+
+            await _auditScheduleRepository.AddAuditableOfficesAsync(entities, cancellationToken);
+        }
+      
+
         public async Task<AuditScheduleDto> SaveOrUpdateAsync(AuditScheduleDto dto, CancellationToken cancellationToken)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
@@ -297,8 +312,19 @@ namespace IMIS.Persistence.AuditScheduleModule
                 AuditTitle = savedEntity.AuditTitle,
                 StartDate = savedEntity.StartDate,
                 EndDate = savedEntity.EndDate,
-                IsActive = savedEntity.IsActive,              
+                IsActive = savedEntity.IsActive,
+
+                AuditSchduleDetails = savedEntity.AuditSchduleDetails?.Select(AuditScheduleDto => new AuditScheduleDetailDto
+                {
+                    Id = AuditScheduleDto.Id,
+                    AuditScheduleId = AuditScheduleDto.AuditScheduleId,
+                    TeamId = AuditScheduleDto.TeamId,
+                    StartDateTime = AuditScheduleDto.StartDateTime,
+                    EndDateTime = AuditScheduleDto.EndDateTime,
+                    OfficeId = AuditScheduleDto.OfficeId
+
+                }).ToList()
             };
-        }       
+        }
     }
 }

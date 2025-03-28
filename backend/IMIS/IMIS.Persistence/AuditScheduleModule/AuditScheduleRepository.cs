@@ -7,6 +7,13 @@ namespace IMIS.Persistence.AuditScheduleModule
 {
     public class AuditScheduleRepository(ImisDbContext dbContext) : BaseRepository<AuditSchedule, int, ImisDbContext>(dbContext), IAuditScheduleRepository
     {
+
+        public async Task AddAuditableOfficesAsync(List<AuditableOffices> auditableOffices, CancellationToken cancellationToken)
+        {
+            await _dbContext.AuditableOffices.AddRangeAsync(auditableOffices, cancellationToken);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
         public async Task<IEnumerable<AuditSchedule>> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.AuditSchedules

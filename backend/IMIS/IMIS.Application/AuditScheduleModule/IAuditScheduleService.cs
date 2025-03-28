@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using IMIS.Application.AuditableOfficesModule;
 using IMIS.Application.PgsKraModule;
 
 namespace IMIS.Application.AuditScheduleModule
@@ -9,5 +10,6 @@ namespace IMIS.Application.AuditScheduleModule
         Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<List<AuditScheduleDto>?> GetAllActiveAsync(CancellationToken cancellationToken);
         Task<AuditScheduleDto?> GenerateAuditScheduleDetail(int auditScheduleId, double noOfHoursPerAudit, CancellationToken cancellationToken);
+        Task SaveAuditableOfficesAsync(List<AuditableOfficesDto> auditableOfficesList, CancellationToken cancellationToken);       
     }
 }
