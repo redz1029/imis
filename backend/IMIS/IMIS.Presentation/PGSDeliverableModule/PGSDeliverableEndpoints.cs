@@ -1,7 +1,5 @@
 ﻿using Carter;
 using IMIS.Application.PgsModule;
-using IMIS.Application.UserOfficeModule;
-using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;

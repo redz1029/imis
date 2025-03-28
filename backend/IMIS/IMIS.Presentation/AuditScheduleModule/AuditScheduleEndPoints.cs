@@ -15,17 +15,36 @@ namespace IMIS.Presentation.AuditScheduleModule
         public AuditScheduleEndPoints() : base("/AuditSchedule")
         {
         }
+
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/", async ([FromBody] AuditScheduleDto auditScheduleDto, IAuditScheduleService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] AuditScheduleDto auditScheduleDto, 
+                                    IAuditScheduleService service, 
+                                    IAuditScheduleRepository auditRepository, // Added repository for validation
+                                    IOutputCacheStore cache, 
+                                    CancellationToken cancellationToken) =>
             {
                 if (auditScheduleDto == null)
                 {
                     return Results.BadRequest("Audit Schedule data is required.");
                 }
 
+                //  Check for overlapping audits before saving
+                foreach (var office in auditScheduleDto.AuditableOffices!)
+                {
+                    var overlappingSchedule = await auditRepository
+                        .GetOverlappingAuditAsync(office.OfficeId, auditScheduleDto.StartDate, auditScheduleDto.EndDate, auditScheduleDto.Id);
+
+                    if (overlappingSchedule != null)
+                    {
+                        return Results.BadRequest($"Office ID {office.OfficeId} is already scheduled for an audit during this period.");
+                    }
+                }
+
+                //  Save the audit schedule
                 var createdAuditSchedule = await service.SaveOrUpdateAsync(auditScheduleDto, cancellationToken).ConfigureAwait(false);
 
+                //  Save auditable offices if present
                 if (auditScheduleDto.AuditableOffices != null && auditScheduleDto.AuditableOffices.Count > 0)
                 {
                     List<AuditableOfficesDto> auditableOfficesList = new();
@@ -38,7 +57,9 @@ namespace IMIS.Presentation.AuditScheduleModule
                         });
                     }
                     await service.SaveAuditableOfficesAsync(auditableOfficesList, cancellationToken);
-                }              
+                }
+
+                //  Clear cache
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
                 return Results.Created($"/AuditSchedule/{createdAuditSchedule.Id}", createdAuditSchedule);
             })

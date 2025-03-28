@@ -8,6 +8,15 @@ namespace IMIS.Persistence.AuditScheduleModule
     public class AuditScheduleRepository(ImisDbContext dbContext) : BaseRepository<AuditSchedule, int, ImisDbContext>(dbContext), IAuditScheduleRepository
     {
 
+        public async Task<AuditSchedule?> GetOverlappingAuditAsync(int officeId, DateTime startDate, DateTime endDate, int currentAuditId)
+        {
+            return await _dbContext.AuditSchedules
+            .Where(a => a.Id != currentAuditId) // Exclude current audit if updating
+            .Where(a => a.AuditableOffices!.Any(o => o.OfficeId == officeId)) // Check same office
+            .Where(a => startDate < a.EndDate && endDate > a.StartDate) // Check overlapping dates
+            .FirstOrDefaultAsync();
+        }
+
         public async Task AddAuditableOfficesAsync(List<AuditableOffices> auditableOffices, CancellationToken cancellationToken)
         {
             await _dbContext.AuditableOffices.AddRangeAsync(auditableOffices, cancellationToken);
@@ -17,16 +26,16 @@ namespace IMIS.Persistence.AuditScheduleModule
         public async Task<IEnumerable<AuditSchedule>> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.AuditSchedules
-                .Where(a => !a.IsDeleted)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            .Where(a => !a.IsDeleted)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
         }
         public async Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.AuditSchedules
-                .Where(a => a.IsActive && !a.IsDeleted)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            .Where(a => a.IsActive && !a.IsDeleted)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
         }
      
         public new async Task<AuditSchedule> SaveOrUpdateAsync(AuditSchedule AuditDetails, CancellationToken cancellationToken)
