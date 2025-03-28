@@ -1,4 +1,5 @@
 ﻿using IMIS.Application.AuditorModule;
+using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
@@ -7,6 +8,7 @@ using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Persistence.AuditorModule;
+using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.PgsModule;
@@ -49,6 +51,14 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IUserOfficeRepository, UserOfficeRepository>();
             services.AddScoped<IUserOfficeService, UserOfficeService>();
+
+
+            services.AddScoped<IAuditScheduleRepository, AuditScheduleRepository>();
+            services.AddScoped<IAuditScheduleService, AuditScheduleService>();
+
+
+            services.AddScoped<IAuditScheduleDetailRepository, AuditScheduleDetailRepository>();
+            services.AddScoped<IAuditScheduleDetailService, AuditScheduleDetailService>();
 
             return services;
         }

@@ -15,10 +15,10 @@ namespace IMIS.Persistence.KraModule
                 .Where(k => !k.IsDeleted)
                 .AsNoTracking();
           
-            var employees = await EntityPageList<KeyResultArea, int>
+            var kra = await EntityPageList<KeyResultArea, int>
              .CreateAsync(query, page, pageSize, cancellationToken)
              .ConfigureAwait(false);
-            return employees;
+            return kra;
         }   
         public async Task<IEnumerable<KeyResultArea>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
         {

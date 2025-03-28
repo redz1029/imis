@@ -23,21 +23,81 @@ namespace IMIS.Persistence.PgsModule
             _officeRepository = officeRepository;
             _pgsPeriodRepository = pgsPeriodRepository;
             _kraRepository = kraRepository;
+        }     
+        private PgsAuditDetailsDto ConvPgsAuditDetailsToDTO(PgsAuditDetails auditDetails)
+        {
+            if (auditDetails == null) return null;
+
+            return new PgsAuditDetailsDto
+            {
+                Id = auditDetails.Id,
+                Remarks = auditDetails.Remarks,
+
+                PgsPeriod = auditDetails.PgsPeriod != null ? new PgsPeriodDto
+                {
+                    Id = auditDetails.PgsPeriod.Id,
+                    StartDate = auditDetails.PgsPeriod.StartDate,
+                    EndDate = auditDetails.PgsPeriod.EndDate
+                } : null,  
+
+                Office = auditDetails.Office != null ? new OfficeDto
+                {
+                    Id = auditDetails.Office.Id,
+                    Name = auditDetails.Office.Name,
+                    IsActive = auditDetails.Office.IsActive
+                } : null, 
+
+                PgsReadinessRating = auditDetails.PgsReadinessRating != null ? new PgsReadinessRatingDto
+                {
+                    Id = auditDetails.PgsReadinessRating.Id,
+                    CompetenceToDeliver = auditDetails.PgsReadinessRating.CompetenceToDeliver,
+                    ResourceAvailability = auditDetails.PgsReadinessRating.ResourceAvailability,
+                    ConfidenceToDeliver = auditDetails.PgsReadinessRating.ConfidenceToDeliver,
+                } : null,  
+
+                PgsDeliverables = auditDetails.PgsDeliverables?.Select(deliverable => new PGSDeliverableDto
+                {
+                    Id = deliverable.Id,
+                    IsDirect = deliverable.IsDirect,
+                    DeliverableName = deliverable.DeliverableName,
+                    ByWhen = deliverable.ByWhen,
+                    PercentDeliverables = deliverable.PercentDeliverables,
+                    Status = deliverable.Status,
+                    RowVersion = deliverable.RowVersion,
+                    Kra = deliverable.Kra != null ? new KeyResultAreaDto
+                    {
+                        Id = deliverable.Kra.Id,
+                        Name = deliverable.Kra.Name,
+                        Remarks = deliverable.Kra.Remarks
+                    } : null, 
+                    Remarks = deliverable.Remarks
+                }).ToList() ?? new List<PGSDeliverableDto>()  
+            };
+        }
+        public async Task<PgsAuditDetailsDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var pgsAuditDetails = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return pgsAuditDetails != null ? ConvPgsAuditDetailsToDTO(pgsAuditDetails) : null;
+        }
+        public async Task<List<PgsAuditDetailsDto>?> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var pgsAuditDetails = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return pgsAuditDetails?.Select(o => ConvPgsAuditDetailsToDTO(o)).ToList();
         }
         public async Task<DtoPageList<PgsAuditDetailsDto, PgsAuditDetails, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var auditdetails = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (auditdetails.TotalCount == 0)
+            var pgsAuditDetails = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (pgsAuditDetails.TotalCount == 0)
                 return null;
-            return DtoPageList<PgsAuditDetailsDto, PgsAuditDetails, long>.Create(auditdetails.Items, page, pageSize, auditdetails.TotalCount);
+            return DtoPageList<PgsAuditDetailsDto, PgsAuditDetails, long>.Create(pgsAuditDetails.Items, page, pageSize, pgsAuditDetails.TotalCount);
         }
         // Save or Update PgsAuditDetails
-        public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto PGSDto, CancellationToken cancellationToken)
+        public async Task<PgsAuditDetailsDto> SaveOrUpdateAsync(PgsAuditDetailsDto pgsAuditDetailsDto, CancellationToken cancellationToken)
         {
-            if (PGSDto == null) throw new ArgumentNullException(nameof(PGSDto));
+            if (pgsAuditDetailsDto == null) throw new ArgumentNullException(nameof(pgsAuditDetailsDto));
 
             // Convert DTO to entity
-            var pgsEntity = PGSDto.ToEntity();
+            var pgsEntity = pgsAuditDetailsDto.ToEntity();
             pgsEntity.Office = await _officeRepository.GetByIdAsync(pgsEntity.Office.Id, cancellationToken).ConfigureAwait(false);
             pgsEntity.PgsPeriod = await _pgsPeriodRepository.GetByIdAsync(pgsEntity.PgsPeriod.Id, cancellationToken).ConfigureAwait(false);
 

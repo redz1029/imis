@@ -90,6 +90,7 @@ builder.Services.AddDbContext<ImisDbContext>(options => options.UseSqlServer(sql
 
 builder.Services.AddPersistence();
 
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {

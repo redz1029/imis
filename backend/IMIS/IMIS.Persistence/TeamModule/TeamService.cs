@@ -2,6 +2,10 @@
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
 using IMIS.Application.AuditorModule;
+using Base.Abstractions;
+using Base.Pagination;
+using IMIS.Application.PgsKraModule;
+
 
 namespace IMIS.Persistence.TeamModule
 {
@@ -22,6 +26,24 @@ namespace IMIS.Persistence.TeamModule
                     Name = a.Auditor!.Name
                 }).ToList(),
             };
+        }
+        public async Task<DtoPageList<TeamDto, Team, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var team = await _teamRepository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (team.TotalCount == 0)
+                return null;
+            return DtoPageList<TeamDto, Team, int>.Create(team.Items, page, pageSize, team.TotalCount);
+        }
+
+        public async Task<TeamDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var Team = await _teamRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return Team != null ? ConvTeamToDto(Team) : null;
+        }
+        public async Task<List<TeamDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        {
+            var team = await _teamRepository.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
+            return team != null && team.Count() > 0 ? team.Select(a => ConvTeamToDto(a)).ToList() : null;
         }
         public async Task<List<TeamDto>?> GetAllActiveAsync(CancellationToken cancellationToken)
         {
@@ -62,5 +84,18 @@ namespace IMIS.Persistence.TeamModule
                 await _teamRepository.SaveOrUpdateAsync(team, cancellationToken).ConfigureAwait(false);
             }
         }
+
+        public async Task<TeamDto> SaveOrUpdateAsync(TeamDto TeamDto, CancellationToken cancellationToken)
+        {
+            if (TeamDto == null) throw new ArgumentNullException(nameof(TeamDto));
+            var TeamEntity = TeamDto.ToEntity();
+            var createdTeam = await _teamRepository.SaveOrUpdateAsync(TeamEntity, cancellationToken).ConfigureAwait(false);
+            return new TeamDto
+            {
+                Id = createdTeam.Id,
+                Name = createdTeam.Name,
+                IsActive = createdTeam.IsActive
+            };
+        }      
     }
 }

@@ -11,6 +11,15 @@ public class PgsAuditDetailsRepository : BaseRepository<PgsAuditDetails, long, I
     {
 
     }
+
+    public async Task<IEnumerable<PgsAuditDetails>> GetAll(CancellationToken cancellationToken)
+    {
+        return await _dbContext.PgsAuditDetails
+       .Where(o => !o.IsDeleted)
+       .AsNoTracking()
+       .ToListAsync(cancellationToken)
+       .ConfigureAwait(false);
+    }
     public async Task<EntityPageList<PgsAuditDetails, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
         var query = _dbContext.PgsAuditDetails.Where(k => !k.IsDeleted).AsNoTracking();
