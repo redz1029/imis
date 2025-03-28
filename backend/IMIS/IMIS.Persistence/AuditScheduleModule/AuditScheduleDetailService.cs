@@ -17,16 +17,16 @@ namespace IMIS.Persistence.AuditScheduleModule
         {
             if (AuditDetailDto == null) throw new ArgumentNullException(nameof(AuditDetailDto));
             var AuditEntity = AuditDetailDto.ToEntity();
-            var createdKra = await _repository.SaveOrUpdateAsync(AuditEntity, cancellationToken).ConfigureAwait(false);
+            var createdAuditDetailDto = await _repository.SaveOrUpdateAsync(AuditEntity, cancellationToken).ConfigureAwait(false);
             return new AuditScheduleDetailDto
             {
        
-                Id = createdKra.Id,
-                AuditScheduleId = createdKra.AuditScheduleId,
-                TeamId = createdKra.TeamId,
-                StartDateTime = createdKra.StartDateTime,
-                EndDateTime = createdKra.EndDateTime,
-                OfficeId = createdKra.OfficeId
+                Id = createdAuditDetailDto.Id,
+                AuditScheduleId = createdAuditDetailDto.AuditScheduleId,
+                TeamId = createdAuditDetailDto.TeamId,
+                StartDateTime = createdAuditDetailDto.StartDateTime,
+                EndDateTime = createdAuditDetailDto.EndDateTime,
+                OfficeId = createdAuditDetailDto.OfficeId
             };
         }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
