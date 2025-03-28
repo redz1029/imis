@@ -331,7 +331,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     );
   }
 
-  void _showPopupMenu(BuildContext context) {
+  void _showProfileSetting(BuildContext context) {
     final RenderBox renderBox =
         _menuKey.currentContext!.findRenderObject() as RenderBox;
     final Offset offset = renderBox.localToGlobal(Offset.zero);
@@ -408,33 +408,41 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     actions: [
                       GestureDetector(
                         key: _menuKey,
-                        onTap: () => _showPopupMenu(context),
+                        onTap: () => _showProfileSetting(context),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Column(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              Row(),
-                              Row(
+                              ClipOval(
+                                child: Image.asset(
+                                  'assets/profile1.jpg',
+                                  width: 40,
+                                  height: 40,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  ClipOval(
-                                    child: Image.asset(
-                                      'assets/profile1.jpg',
-                                      width: 24,
-                                      height: 24,
-                                      fit: BoxFit.cover,
-                                    ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [Text("Welcome, $firstName")],
                                   ),
-                                  const SizedBox(width: 8),
-                                  Text("Welcome, $firstName"),
-                                  const Icon(Icons.expand_more),
+                                  Text(
+                                    position,
+                                    style: TextStyle(fontSize: 12, color: grey),
+                                  ),
                                 ],
                               ),
-                              SizedBox(height: 0.5),
-                              Text(
-                                position,
-                                style: TextStyle(fontSize: 12, color: grey),
-                              ),
+                              const SizedBox(width: 8),
+                              Icon(Icons.expand_more, size: 32),
                             ],
                           ),
                         ),
