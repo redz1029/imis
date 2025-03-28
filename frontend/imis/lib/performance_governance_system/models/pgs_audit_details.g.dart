@@ -26,8 +26,8 @@ Map<String, dynamic> _$PgsAuditDetailsToJson(PgsAuditDetails instance) =>
       'office': instance.office,
       'pgsPeriod': instance.pgsPeriod,
       'remarks': instance.remarks,
-      'pgsReadinessRating': instance.pgsReadinessRating,
       'pgsDeliverables': instance.pgsDeliverables,
+      'pgsReadinessRating': instance.pgsReadinessRating,
       'isDeleted': instance.isDeleted,
       'rowVersion': instance.rowVersion,
     };
