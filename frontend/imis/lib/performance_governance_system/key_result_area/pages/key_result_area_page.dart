@@ -17,6 +17,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   int currentPage = 1;
+  int maxVisiblePages = 4;
 
   @override
   void initState() {
@@ -106,6 +107,8 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
 
     int itemsPerPage = 14;
     int totalPage = (filteredList.length / itemsPerPage).ceil();
+    int startPage = (currentPage - 1).clamp(1, totalPage - maxVisiblePages + 1);
+    int endPage = (startPage + maxVisiblePages - 1).clamp(1, totalPage);
 
     var paginatedList =
         filteredList
@@ -297,41 +300,43 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                         }
                                         : null,
                               ),
-                              for (int i = 1; i <= totalPage; i++)
-                                if (totalPage > 1)
-                                  Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                    ),
-                                    child: InkWell(
-                                      onTap: () {
-                                        setState(() {
-                                          currentPage = i;
-                                        });
-                                      },
-                                      child: Container(
-                                        padding: EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
+
+                              if (currentPage > 4)
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text("..."),
+                                ),
+                              for (int i = startPage; i <= endPage; i++)
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 4),
+                                  child: InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        currentPage = i;
+                                      });
+                                    },
+                                    child: Container(
+                                      padding: EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            currentPage == i
+                                                ? primaryColor
+                                                : null,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        "$i",
+                                        style: TextStyle(
                                           color:
                                               currentPage == i
-                                                  ? primaryColor
-                                                  : null,
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          "$i",
-                                          style: TextStyle(
-                                            color:
-                                                currentPage == i
-                                                    ? Colors.white
-                                                    : Colors.black,
-                                          ),
+                                                  ? Colors.white
+                                                  : Colors.black,
                                         ),
                                       ),
                                     ),
                                   ),
+                                ),
+
                               IconButton(
                                 icon: Icon(Icons.chevron_right),
                                 onPressed:
@@ -339,11 +344,15 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                         ? () {
                                           setState(() {
                                             currentPage++;
-                                            print("Next Page: $currentPage");
                                           });
                                         }
                                         : null,
                               ),
+                              if (currentPage < 4)
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text("..."),
+                                ),
                             ],
                           ),
                         ),
@@ -364,6 +373,32 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  Widget _buildPageButton(int page) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 4),
+      child: InkWell(
+        onTap: () {
+          setState(() {
+            currentPage = page;
+          });
+        },
+        child: Container(
+          padding: EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: currentPage == page ? primaryColor : null,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            "$page",
+            style: TextStyle(
+              color: currentPage == page ? Colors.white : Colors.black,
+            ),
+          ),
+        ),
+      ),
     );
   }
 
