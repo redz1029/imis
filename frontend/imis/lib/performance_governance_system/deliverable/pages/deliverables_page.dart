@@ -4,7 +4,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
-import 'package:imis/performance_governance_system/models/pgs_governance_system.dart';
+import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/performance_governance_system/models/pgs_readiness.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -82,7 +82,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
   final dio = Dio();
 
   //Save pgs
-  Future<void> savePGS(PgsGovernanceSystem audit) async {
+  Future<void> savePGS(PerformanceGovernanceSystem audit) async {
     var url = ApiEndpoint().pgsgovernancesystem;
 
     try {
@@ -148,7 +148,8 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
       if (response.statusCode == 200 && response.data is List) {
         List<Map<String, String>> formattedData =
             (response.data as List).map((pgsJson) {
-              PgsGovernanceSystem pgs = PgsGovernanceSystem.fromJson(pgsJson);
+              PerformanceGovernanceSystem pgs =
+                  PerformanceGovernanceSystem.fromJson(pgsJson);
               return {
                 'name': pgs.office.name,
                 'Start Date': DateTimeConverter().toJson(
@@ -378,8 +379,8 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
     return deliverablesList;
   }
 
-  PgsGovernanceSystem getPgsAuditDetails() {
-    return PgsGovernanceSystem(
+  PerformanceGovernanceSystem getPgsAuditDetails() {
+    return PerformanceGovernanceSystem(
       0,
       PgsPeriod(0, false, rowVersion: "", DateTime.now(), DateTime.now()),
       Office(0, "", false, false, rowVersion: ""),
@@ -1123,7 +1124,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                     );
 
                     if (confirm == true) {
-                      PgsGovernanceSystem audit = getPgsAuditDetails();
+                      PerformanceGovernanceSystem audit = getPgsAuditDetails();
                       await savePGS(audit);
                     }
                     Navigator.pop(context);
@@ -1175,7 +1176,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                     );
 
                     if (confirm == true) {
-                      PgsGovernanceSystem audit = getPgsAuditDetails();
+                      PerformanceGovernanceSystem audit = getPgsAuditDetails();
                       await savePGS(audit);
                     }
                     // ignore: use_build_context_synchronously
