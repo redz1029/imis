@@ -5,9 +5,11 @@ import 'package:imis/performance_governance_system/auditor/pages/auditor_page.da
 import 'package:imis/performance_governance_system/deliverable/pages/deliverables_page.dart';
 import 'package:imis/auth/pages/home_page.dart';
 import 'package:imis/performance_governance_system/key_result_area/pages/key_result_area_page.dart';
+import 'package:imis/performance_governance_system/office/pages/office_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/auth/pages/login_page.dart';
+import 'package:imis/performance_governance_system/team/pages/team_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardNavigationPanel extends StatefulWidget {
@@ -271,32 +273,60 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                 style: TextStyle(color: primaryTextColor),
               ),
               children: [
-                _buildListTile(
-                  Icons.medical_information,
-                  'Key Result Area',
-                  2,
-                  () => _setScreen(KeyResultAreaPage(), 2),
-                ),
-                _buildListTile(
-                  Icons.person,
-                  'Auditor',
-                  3,
-                  () => _setScreen(AuditorPage(), 3),
-                ),
-                _buildListTile(
-                  Icons.date_range,
-                  'PGS Period',
-                  4,
-                  () => _setScreen(PgsPeriodPage(), 4),
+                Padding(
+                  padding: const EdgeInsets.only(
+                    left: 40,
+                  ), // Adjust margin here
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _buildListTile(
+                        Icons.medical_information,
+                        hideIcon: true,
+                        'Key Result Area',
+                        2,
+                        () => _setScreen(KeyResultAreaPage(), 2),
+                      ),
+                      _buildListTile(
+                        Icons.person,
+                        hideIcon: true,
+                        'Auditor',
+                        3,
+                        () => _setScreen(AuditorPage(), 3),
+                      ),
+                      _buildListTile(
+                        Icons.date_range,
+                        hideIcon: true,
+                        'PGS Period',
+                        4,
+                        () => _setScreen(PgsPeriodPage(), 4),
+                      ),
+                      _buildListTile(
+                        Icons.date_range,
+                        hideIcon: true,
+                        'Team',
+                        5,
+                        () => _setScreen(TeamPage(), 5),
+                      ),
+                      _buildListTile(
+                        Icons.date_range,
+                        hideIcon: true,
+                        'Office',
+                        6,
+                        () => _setScreen(OfficePage(), 6),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
-          _buildListTile(Icons.folder, 'Reports', 5, () {}),
+
+          _buildListTile(Icons.folder, 'Reports', 7, () {}),
           _buildListTile(
             Icons.exit_to_app,
             'Logout',
-            5,
+            7,
             () => _logout(context),
           ),
         ],
@@ -308,21 +338,25 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     IconData icon,
     String title,
     int index,
-    VoidCallback onTap,
-  ) {
+    VoidCallback onTap, {
+    bool hideIcon = false, // New optional parameter
+  }) {
     return Container(
-      color:
-          _selectedIndex == index
-              ? secondaryBgButton
-              : Colors.transparent, // Background color
+      color: _selectedIndex == index ? secondaryBgButton : Colors.transparent,
       child: ListTile(
-        leading: Icon(
-          icon,
-          color: _selectedIndex == index ? primaryColor : primaryTextColor,
-        ),
+        leading:
+            hideIcon
+                ? null
+                : Icon(
+                  // Conditionally hide icon
+                  icon,
+                  color:
+                      _selectedIndex == index ? primaryColor : primaryTextColor,
+                ),
         title: Text(
           title,
           style: TextStyle(
+            // fontWeight: FontWeight.w600,
             color: _selectedIndex == index ? primaryColor : primaryTextColor,
           ),
         ),
