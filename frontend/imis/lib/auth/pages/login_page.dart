@@ -42,15 +42,27 @@ class LoginPageState extends State<LoginPage> {
       var responseData = response.data;
       String firstName = responseData['firstName'] ?? '';
       String position = responseData['position'] ?? '';
+      List<String> roles = List<String>.from(responseData['roles'] ?? []);
+
+      List<dynamic> offices = responseData['offices'] ?? [];
+      List<int> officeIds = offices.map<int>((o) => o['id'] as int).toList();
+      List<String> officeNames =
+          offices.map((o) => o['name'].toString()).toList();
+      List<String> officeIdsAsString =
+          officeIds.map((id) => id.toString()).toList();
+
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('firstName', firstName);
       await prefs.setString('position', position);
+      await prefs.setStringList("officeNames", officeNames);
+      await prefs.setStringList("officeIds", officeIdsAsString);
+      await prefs.setStringList('roles', roles);
 
       String accessToken = responseData['accessToken'] ?? '';
       String refreshToken = responseData['refreshToken'] ?? '';
       await prefs.setString('refreshToken', refreshToken);
       await prefs.setString('accessToken', accessToken);
-      print("Access Token: ${prefs.getString('accessToken')}");
+
       if (context.mounted) {
         if (response.statusCode == 200) {
           Navigator.push(
