@@ -20,11 +20,11 @@ namespace IMIS.Persistence.TeamModule
             return team;
         }
 
-        public async Task<IEnumerable<Team>> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Team>> FilterByName(string name, int teamNoOfResults, CancellationToken cancellationToken)
         {
             return await _dbContext.Teams
                 .Where(a => EF.Functions.Like(a.Name, $"{name}%") && !a.IsDeleted)
-                .Take(noOfResults)
+                .Take(teamNoOfResults)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

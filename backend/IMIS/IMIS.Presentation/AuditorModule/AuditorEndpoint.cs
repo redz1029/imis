@@ -1,8 +1,5 @@
 ﻿using Carter;
 using IMIS.Application.AuditorModule;
-using IMIS.Application.PgsKraModule;
-using IMIS.Application.UserOfficeModule;
-using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -51,20 +48,17 @@ namespace IMIS.Presentation.AuditorModule
             .WithTags(_auditorTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
 
-            app.MapPut("/{id}", async (int id, [FromBody] AuditorDto Auditor, IAuditorService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPut("/{id}", async (int id, [FromBody] AuditorDto auditor, IAuditorService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                if (Auditor == null)
-                {
-                    return Results.BadRequest("Auditor data is required.");
-                }
+               
                 var existingAuditor = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingAuditor == null)
                 {
-                    return Results.NotFound($"User Office with ID {id} not found.");
+                    return Results.NotFound($"Auditor with ID {id} not found.");
                 }
-                await service.SaveOrUpdateAsync(Auditor, cancellationToken).ConfigureAwait(false);
+                await service.SaveOrUpdateAsync(auditor, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_auditorTag, cancellationToken);
-                return Results.Ok(Auditor);
+                return Results.Ok(auditor);
             })
            .WithTags(_auditorTag);            
             app.MapGet("/page", async (int page, int pageSize, IAuditorService service, CancellationToken cancellationToken) =>

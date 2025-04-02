@@ -8,6 +8,6 @@ namespace IMIS.Application.UserOfficeModule
     {
         Task<EntityPageList<UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);     
         Task<IEnumerable<UserOffices>> GetAll(CancellationToken cancellationToken);
-        new Task<UserOffices> SaveOrUpdateAsync(UserOffices useroffice, CancellationToken cancellationToken);
+        new Task<UserOffices> SaveOrUpdateAsync(UserOffices userOffice, CancellationToken cancellationToken);
     }
 }

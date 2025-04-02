@@ -18,16 +18,14 @@ namespace IMIS.Persistence
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
         public DbSet<PgsDeliverable> Deliverable { get; set; }
         public DbSet<KeyResultArea> KeyResultArea { get; set; }
-        public DbSet<PgsAuditDetails> PgsAuditDetails { get; set; }
+        public DbSet<PerfomanceGovernanceSystem> PgsAuditDetails { get; set; }
         public DbSet<PgsPeriod> PgsPeriod { get; set; }
         public DbSet<PgsReadinessRating> PgsReadiness { get; set; }
         public DbSet<UserOffices> UserOffices { get; set; }
-
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
         {
         }
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             
@@ -73,13 +71,11 @@ namespace IMIS.Persistence
                 .HasOne(ao => ao.Office)
                 .WithMany(o => o.AuditableOffices)
                 .HasForeignKey(ao => ao.OfficeId);
-
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
             builder.ApplyConfiguration(new UserConfiguration());
             builder.ApplyConfiguration(new UserRoleConfiguration());
         }
-
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder

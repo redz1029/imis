@@ -5,7 +5,7 @@ namespace IMIS.Application.AuditScheduleModule
 {
     public interface IAuditScheduleDetailService : IService
     {
-        Task<AuditScheduleDetailDto> SaveOrUpdateAsync(AuditScheduleDetailDto AuditScheduleDetail, CancellationToken cancellationToken);
+        Task<AuditScheduleDetailDto> SaveOrUpdateAsync(AuditScheduleDetailDto auditScheduleDetail, CancellationToken cancellationToken);
     }
 }
 

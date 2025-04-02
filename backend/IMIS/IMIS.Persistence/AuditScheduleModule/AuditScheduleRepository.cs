@@ -12,8 +12,8 @@ namespace IMIS.Persistence.AuditScheduleModule
         {
             return await _dbContext.AuditSchedules
             .Where(a => a.Id != currentAuditId) // Exclude current audit if updating
-            .Where(a => a.AuditableOffices!.Any(o => o.OfficeId == officeId)) // Check same office
-            .Where(a => startDate < a.EndDate && endDate > a.StartDate) // Check overlapping dates
+            .Where(a => a.AuditSchduleDetails!.Any(o => o.OfficeId == officeId)) // Check same office
+            .Where(a => startDate < a.EndDate && endDate > a.StartDate) //Check overlapping dates
             .FirstOrDefaultAsync();
         }
 
@@ -38,26 +38,26 @@ namespace IMIS.Persistence.AuditScheduleModule
             .ConfigureAwait(false);
         }
      
-        public new async Task<AuditSchedule> SaveOrUpdateAsync(AuditSchedule AuditDetails, CancellationToken cancellationToken)
+        public new async Task<AuditSchedule> SaveOrUpdateAsync(AuditSchedule auditSchedule, CancellationToken cancellationToken)
         {
-            if (AuditDetails == null) throw new ArgumentNullException(nameof(AuditDetails));
+            if (auditSchedule == null) throw new ArgumentNullException(nameof(auditSchedule));
             // Check if the entity already exists
             var existingAuditDetails = await _dbContext.AuditSchedules
-                .FirstOrDefaultAsync(d => d.Id == AuditDetails.Id, cancellationToken)
+                .FirstOrDefaultAsync(d => d.Id == auditSchedule.Id, cancellationToken)
                 .ConfigureAwait(false);
             if (existingAuditDetails != null)
             {
                 // Update existing entity
-                _dbContext.Entry(existingAuditDetails).CurrentValues.SetValues(AuditDetails);
+                _dbContext.Entry(existingAuditDetails).CurrentValues.SetValues(auditSchedule);
             }
             else
             {
                 // Add new entity
-                await _dbContext.AuditSchedules.AddAsync(AuditDetails, cancellationToken).ConfigureAwait(false);
+                await _dbContext.AuditSchedules.AddAsync(auditSchedule, cancellationToken).ConfigureAwait(false);
             }
             // Save changes to the database
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return AuditDetails;
+            return auditSchedule;
         }
     }
 }

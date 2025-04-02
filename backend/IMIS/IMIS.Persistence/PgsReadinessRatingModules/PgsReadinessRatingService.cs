@@ -1,9 +1,6 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
-using IMIS.Application.OfficeModule;
-using IMIS.Application.PgsKraModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
-using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 
 
@@ -16,58 +13,58 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
         {
             _repository = repository;
         }        
-        private PgsReadinessRatingDto ConvertToDTO(PgsReadinessRating entity)
+        private PgsReadinessRatingDto ConvertToDTO(PgsReadinessRating pgsReadinessRating)
         {
-            if (entity == null) return null;
+            if (pgsReadinessRating == null) return null;
 
             return new PgsReadinessRatingDto
             {
-                Id = entity.Id,
-                CompetenceToDeliver = entity.CompetenceToDeliver,
-                ResourceAvailability = entity.ResourceAvailability,
-                ConfidenceToDeliver = entity.ConfidenceToDeliver,
-                TotalScore = entity.TotalScore
+                Id = pgsReadinessRating.Id,
+                CompetenceToDeliver = pgsReadinessRating.CompetenceToDeliver,
+                ResourceAvailability = pgsReadinessRating.ResourceAvailability,
+                ConfidenceToDeliver = pgsReadinessRating.ConfidenceToDeliver,
+                TotalScore = pgsReadinessRating.TotalScore
             };
         }      
-        public async Task<PgsReadinessRatingDto> SaveOrUpdateAsync(PgsReadinessRatingDto dto, CancellationToken cancellationToken)
+        public async Task<PgsReadinessRatingDto> SaveOrUpdateAsync(PgsReadinessRatingDto pgsReadinessRatingDto, CancellationToken cancellationToken)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            if (pgsReadinessRatingDto == null) throw new ArgumentNullException(nameof(pgsReadinessRatingDto));
 
-            var entity = new PgsReadinessRating
+            var pgsReadinessRating = new PgsReadinessRating
             {
-                Id = dto.Id,
-                CompetenceToDeliver = dto.CompetenceToDeliver,
-                ResourceAvailability = dto.ResourceAvailability,
-                ConfidenceToDeliver = dto.ConfidenceToDeliver
+                Id = pgsReadinessRatingDto.Id,
+                CompetenceToDeliver = pgsReadinessRatingDto.CompetenceToDeliver,
+                ResourceAvailability = pgsReadinessRatingDto.ResourceAvailability,
+                ConfidenceToDeliver = pgsReadinessRatingDto.ConfidenceToDeliver
             };
-            var updatedEntity = await _repository.SaveOrUpdateAsync(entity, cancellationToken);
-            return ConvertToDTO(updatedEntity);
+            var updatedPgsReadinessRating = await _repository.SaveOrUpdateAsync(pgsReadinessRating, cancellationToken);
+            return ConvertToDTO(updatedPgsReadinessRating);
         }
         public async Task<List<PgsReadinessRatingDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var PgsReadiness = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return PgsReadiness?.Select(o => ConvertToDTO(o)).ToList();
+            var pgsReadiness = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return pgsReadiness?.Select(o => ConvertToDTO(o)).ToList();
         }
         public async Task<PgsReadinessRatingDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var PgsReadiness = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return PgsReadiness != null ? ConvertToDTO(PgsReadiness) : null;
+            var pgsReadiness = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return pgsReadiness != null ? ConvertToDTO(pgsReadiness) : null;
         }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            if (dto is not PgsReadinessRatingDto PgsReadinessDto)
+            if (dto is not PgsReadinessRatingDto pgsReadinessDto)
                 throw new ArgumentException("Invalid DTO type", nameof(dto));
 
-            var entity = PgsReadinessDto.ToEntity();
+            var entity = pgsReadinessDto.ToEntity();
             await _repository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var pgsreadiness = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (pgsreadiness.TotalCount == 0)
+            var pgsReadiness = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (pgsReadiness.TotalCount == 0)
                 return null;
-            return DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>.Create(pgsreadiness.Items, page, pageSize, pgsreadiness.TotalCount);
+            return DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>.Create(pgsReadiness.Items, page, pageSize, pgsReadiness.TotalCount);
         }
     }
 }

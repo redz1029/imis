@@ -11,7 +11,6 @@ namespace IMIS.Application.TeamModule
         public required bool IsActive { get; set; }
         public List<AuditorDto>? Auditors { get; set; }
 
-
         public TeamDto() { }
      
         [SetsRequiredMembers]
@@ -23,7 +22,11 @@ namespace IMIS.Application.TeamModule
         }
         public override Team ToEntity()
         {
-            return new Team() { Id = Id, Name = Name, IsActive = IsActive };
+            return new Team()
+            { Id = Id, 
+              Name = Name, 
+              IsActive = IsActive
+            };
         }
     }
 }

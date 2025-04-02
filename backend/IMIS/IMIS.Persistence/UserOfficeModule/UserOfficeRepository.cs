@@ -15,9 +15,9 @@ namespace IMIS.Persistence.UserOfficeModule
         {
             var query = _dbContext.UserOffices.Where(k => !k.IsDeleted).AsNoTracking();
             
-            var useroffice = await EntityPageList<UserOffices, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+            var userOffice = await EntityPageList<UserOffices, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
            
-            return useroffice;
+            return userOffice;
         }
         public async Task<IEnumerable<UserOffices>> GetAll(CancellationToken cancellationToken)
         {
@@ -28,28 +28,28 @@ namespace IMIS.Persistence.UserOfficeModule
                 .ConfigureAwait(false);
         }
 
-        public new async Task<UserOffices> SaveOrUpdateAsync(UserOffices useroffice, CancellationToken cancellationToken)
+        public new async Task<UserOffices> SaveOrUpdateAsync(UserOffices userOffice, CancellationToken cancellationToken)
         {
-            if (useroffice == null) throw new ArgumentNullException(nameof(useroffice));
+            if (userOffice == null) throw new ArgumentNullException(nameof(userOffice));
 
-            var existinguseroffice = await _dbContext.UserOffices
-                .FirstOrDefaultAsync(d => d.Id == useroffice.Id, cancellationToken)
+            var existingUserOffice = await _dbContext.UserOffices
+                .FirstOrDefaultAsync(d => d.Id == userOffice.Id, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (existinguseroffice != null)
+            if (existingUserOffice != null)
             {
                 // Update the existing record's values
-                _dbContext.Entry(existinguseroffice).CurrentValues.SetValues(useroffice);
+                _dbContext.Entry(existingUserOffice).CurrentValues.SetValues(userOffice);
             }
             else
             {
                 // Add a new PgsAuditDetails if not found
-                await _dbContext.UserOffices.AddAsync(useroffice, cancellationToken).ConfigureAwait(false);
+                await _dbContext.UserOffices.AddAsync(userOffice, cancellationToken).ConfigureAwait(false);
             }
 
             // Save changes to the database
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return useroffice;
+            return userOffice;
         }
 
     }

@@ -11,7 +11,7 @@ namespace IMIS.Application.PgsModule
         public Task<DtoPageList<PGSDeliverableDto, PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<PGSDeliverableDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<List<PGSDeliverableDto>?> GetAllAsync(CancellationToken cancellationToken);
-        Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDto, CancellationToken cancellationToken);
+        Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDeliverableDto, CancellationToken cancellationToken);
     }
 }
 

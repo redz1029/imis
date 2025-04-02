@@ -19,11 +19,11 @@ namespace IMIS.Persistence.AuditorModule
 
 
         }
-        public async Task<IEnumerable<Auditor>?> FilteByName(string name, int noOfResults, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Auditor>?> FilteByName(string name, int auditorNoOfResults, CancellationToken cancellationToken)
         {
             return await _dbContext.Auditors
                 .Where(a => EF.Functions.Like(a.Name, $"{name}%") && !a.IsDeleted)
-                .Take(noOfResults)
+                .Take(auditorNoOfResults)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

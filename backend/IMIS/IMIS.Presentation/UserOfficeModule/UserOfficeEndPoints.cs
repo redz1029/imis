@@ -11,34 +11,34 @@ namespace IMIS.Presentation.UserOfficeModule
 {
     public class UserOfficeEndPoints : CarterModule
     {
-        private const string _useroffice = "Create User Office";
+        private const string _userOffice = "Create User Office";
         public UserOfficeEndPoints() : base("/UserOffice") { }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] UserOfficeDto userOfficeDto, IUserOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {                
-                var createdPgsReadiness = await service.SaveOrUpdateAsync(userOfficeDto, cancellationToken).ConfigureAwait(false);
-                await cache.EvictByTagAsync(_useroffice, cancellationToken);               
+                var createdUserOffice = await service.SaveOrUpdateAsync(userOfficeDto, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_userOffice, cancellationToken);               
                 return Results.Ok("Record has been successfully saved.");
             })
-            .WithTags(_useroffice);
+            .WithTags(_userOffice);
 
             app.MapGet("/", async (IUserOfficeService service, CancellationToken cancellationToken) =>
             {
-                var Kradto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
-                return Results.Ok(Kradto);
+                var userOffice = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(userOffice);
             })
-            .WithTags(_useroffice)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_useroffice), true);
+            .WithTags(_userOffice)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
 
             app.MapGet("/{id}", async (int id, IUserOfficeService service, CancellationToken cancellationToken) =>
             {
-                var Kradto = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-                return Kradto != null ? Results.Ok(Kradto) : Results.NotFound();
+                var userOffice = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                return userOffice != null ? Results.Ok(userOffice) : Results.NotFound();
             })
-           .WithTags(_useroffice)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_useroffice), true);
+           .WithTags(_userOffice)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] UserOfficeDto useroffice, IUserOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -53,10 +53,10 @@ namespace IMIS.Presentation.UserOfficeModule
                 }
 
                 var updatedUserOffice = await service.SaveOrUpdateAsync(useroffice, cancellationToken).ConfigureAwait(false);
-                await cache.EvictByTagAsync(_useroffice, cancellationToken);
+                await cache.EvictByTagAsync(_userOffice, cancellationToken);
                 return Results.Ok(updatedUserOffice);
             })
-           .WithTags(_useroffice);
+           .WithTags(_userOffice);
 
             app.MapGet("/page", async (int page, int pageSize, IUserOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -64,8 +64,8 @@ namespace IMIS.Presentation.UserOfficeModule
                 return paginatedUserOffice;
 
             })
-           .WithTags(_useroffice)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_useroffice), true);
+           .WithTags(_userOffice)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
         }
     }
 }

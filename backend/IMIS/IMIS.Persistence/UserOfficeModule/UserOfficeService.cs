@@ -1,7 +1,5 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
-using IMIS.Application.PgsKraModule;
-using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 
@@ -16,60 +14,60 @@ namespace IMIS.Persistence.UserOfficeModule
             _repository = repository;            
         }
       
-        private UserOfficeDto ConvertToDTO(UserOffices entity)
+        private UserOfficeDto ConvertToDTO(UserOffices userOffices)
         {
-            if (entity == null) return null;
+            if (userOffices == null) return null;
 
             return new UserOfficeDto
             {
-                Id = entity.Id,
-                UserId = entity.UserId,
-                OfficeId = entity.OfficeId, 
-                IsActive = entity.IsActive
+                Id = userOffices.Id,
+                UserId = userOffices.UserId,
+                OfficeId = userOffices.OfficeId, 
+                IsActive = userOffices.IsActive
             };
         }
         public async Task<DtoPageList<UserOfficeDto, UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var useroffice = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (useroffice.TotalCount == 0)
+            var userOffice = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (userOffice.TotalCount == 0)
                 return null;
-            return DtoPageList<UserOfficeDto, UserOffices, int>.Create(useroffice.Items, page, pageSize, useroffice.TotalCount);
+            return DtoPageList<UserOfficeDto, UserOffices, int>.Create(userOffice.Items, page, pageSize, userOffice.TotalCount);
         }
 
         public async Task<UserOfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var kradto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return kradto != null ? ConvertToDTO(kradto) : null;
+            var userOfficeDto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return userOfficeDto != null ? ConvertToDTO(userOfficeDto) : null;
         }
         public async Task<List<UserOfficeDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var PgsReadiness = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return PgsReadiness?.Select(o => ConvertToDTO(o)).ToList();
+            var userOfficeDto = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return userOfficeDto?.Select(o => ConvertToDTO(o)).ToList();
         }
 
-        public async Task<UserOfficeDto> SaveOrUpdateAsync(UserOfficeDto user, CancellationToken cancellationToken)
+        public async Task<UserOfficeDto> SaveOrUpdateAsync(UserOfficeDto userOfficeDto, CancellationToken cancellationToken)
         {
-            if (user == null) throw new ArgumentNullException(nameof(user));
+            if (userOfficeDto == null) throw new ArgumentNullException(nameof(userOfficeDto));
 
-            var pgsEntity = user.ToEntity();           
+            var userOfficeEntity = userOfficeDto.ToEntity();           
             // Handle Save or Update
-            var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken);
+            var createdUserOffice = await _repository.SaveOrUpdateAsync(userOfficeEntity, cancellationToken);
 
             return new UserOfficeDto
             {
-                Id = createdPgs.Id,
-                UserId = createdPgs.UserId,
-                OfficeId = createdPgs.OfficeId,
-                IsActive = createdPgs.IsActive,               
+                Id = createdUserOffice.Id,
+                UserId = createdUserOffice.UserId,
+                OfficeId = createdUserOffice.OfficeId,
+                IsActive = createdUserOffice.IsActive,               
             };
         }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             if (dto is not UserOfficeDto userOfficeDto)
-                throw new ArgumentException("Invalid DTO type", nameof(dto));
+                throw new ArgumentException("Invalid User Office Dto type", nameof(dto));
 
-            var pgsEntity = userOfficeDto.ToEntity();          
-            await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken);
+            var userOfficeEntity = userOfficeDto.ToEntity();          
+            await _repository.SaveOrUpdateAsync(userOfficeEntity, cancellationToken);
         }
     }
 }

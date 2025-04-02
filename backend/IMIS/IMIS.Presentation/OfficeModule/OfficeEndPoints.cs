@@ -12,56 +12,48 @@ namespace IMIS.Presentation.OfficeModule
 {
     public class OfficeEndPoints : CarterModule
     {
-        private const string _OfficeTag = "Office";
+        private const string _officeTag = "Office";
         public OfficeEndPoints() : base("/Office")
         {
 
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {            
-            app.MapPost("/", async ([FromBody] OfficeDto office, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                if (office == null)
-                {
-                    return Results.BadRequest("Invalid office data.");
-                }                
-                await service.SaveOrUpdateAsync(office, cancellationToken).ConfigureAwait(false);                
-                await cache.EvictByTagAsync(_OfficeTag, cancellationToken);
-                return Results.Ok(office);               
+            app.MapPost("/", async ([FromBody] OfficeDto officeDto, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {                                
+                await service.SaveOrUpdateAsync(officeDto, cancellationToken).ConfigureAwait(false);                
+                await cache.EvictByTagAsync(_officeTag, cancellationToken);
+                return Results.Ok(officeDto);               
             })
-            .WithTags(_OfficeTag);
+            .WithTags(_officeTag);
 
             app.MapGet("/", async (IOfficeService service, CancellationToken cancellationToken) =>
             {
                 var offices = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(offices);
             })
-            .WithTags(_OfficeTag)           
+            .WithTags(_officeTag)           
             .RequireAuthorization(a => a.RequireRole(RoleTypes.Administrator))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_OfficeTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
 
             app.MapGet("/filter/{name}", async (string name, IOfficeService service, CancellationToken cancellationToken) =>
             {
-                int noOfResults = 10;
-                var offices = await service.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
+                int officeNoOfResults = 10;
+                var offices = await service.FilterByName(name, officeNoOfResults, cancellationToken).ConfigureAwait(false);
                 return offices != null ? Results.Ok(offices) : Results.NoContent();
             })
-            .WithTags(_OfficeTag)          
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_OfficeTag), true);
+            .WithTags(_officeTag)          
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
             app.MapGet("/{id}", async (int id, IOfficeService service, CancellationToken cancellationToken) =>
             {
-                var Office = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-                return Office != null ? Results.Ok(Office) : Results.NotFound();
+                var office = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                return office != null ? Results.Ok(office) : Results.NotFound();
             })
-            .WithTags(_OfficeTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_OfficeTag), true);
+            .WithTags(_officeTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] OfficeDto office, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                if (office == null)
-                {
-                    return Results.BadRequest("Office data is required.");
-                }
+            {               
                 var existingOffice = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingOffice == null)
                 {
@@ -69,17 +61,17 @@ namespace IMIS.Presentation.OfficeModule
                 }
 
                 await service.SaveOrUpdateAsync(office, cancellationToken).ConfigureAwait(false);
-                await cache.EvictByTagAsync(_OfficeTag, cancellationToken);
+                await cache.EvictByTagAsync(_officeTag, cancellationToken);
                 return Results.Ok(office);
             })
-            .WithTags(_OfficeTag);
+            .WithTags(_officeTag);
             app.MapGet("/page", async (int page, int pageSize, IOfficeService service, CancellationToken cancellationToken) =>
             {
                 var paginatedOffice = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return paginatedOffice;
             })
-            .WithTags(_OfficeTag)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_OfficeTag), true);
+            .WithTags(_officeTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
         }
     }
 }

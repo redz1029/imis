@@ -1,9 +1,7 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.PgsKraModule;
-using IMIS.Application.PgsModule;
 using IMIS.Domain;
-using static IMIS.Application.PgsModule.PgsAuditDetailsDto;
 
 namespace IMIS.Persistence.KraModule
 {
@@ -14,50 +12,50 @@ namespace IMIS.Persistence.KraModule
         {
             _repository = repository;
         }
-        public async Task<List<KeyResultAreaDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        public async Task<List<KeyResultAreaDto>?> FilterByName(string name, int keyResultAreaNoOfResults, CancellationToken cancellationToken)
         {
-            var kra = await _repository.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
-            return kra != null && kra.Count() > 0 ? kra.Select(a => ConvOfficeToDTO(a)).ToList() : null;
+            var keyResultArea = await _repository.FilterByName(name, keyResultAreaNoOfResults, cancellationToken).ConfigureAwait(false);
+            return keyResultArea != null && keyResultArea.Count() > 0 ? keyResultArea.Select(a => ConvOfficeToDTO(a)).ToList() : null;
         }
-        private KeyResultAreaDto ConvOfficeToDTO(KeyResultArea kra)
+        private KeyResultAreaDto ConvOfficeToDTO(KeyResultArea keyResultArea)
         {
-            if (kra == null) return null;
+            if (keyResultArea == null) return null;
 
             return new KeyResultAreaDto
             {
-                Id = kra.Id,
-                Name = kra.Name,
-                Remarks = kra.Remarks
+                Id = keyResultArea.Id,
+                Name = keyResultArea.Name,
+                Remarks = keyResultArea.Remarks
             };
         }
         public async Task<DtoPageList<KeyResultAreaDto, KeyResultArea, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var kra = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (kra.TotalCount == 0)
+            var keyResultArea = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (keyResultArea.TotalCount == 0)
                 return null;
-            return DtoPageList<KeyResultAreaDto, KeyResultArea, int>.Create(kra.Items, page, pageSize, kra.TotalCount);
+            return DtoPageList<KeyResultAreaDto, KeyResultArea, int>.Create(keyResultArea.Items, page, pageSize, keyResultArea.TotalCount);
         }
 
         public async Task<KeyResultAreaDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var kradto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return kradto != null ? ConvOfficeToDTO(kradto) : null;
+            var keyResultAreaDto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return keyResultAreaDto != null ? ConvOfficeToDTO(keyResultAreaDto) : null;
         }
         public async Task<List<KeyResultAreaDto>?> GetAllAsync(CancellationToken cancellationToken)
         {          
-            var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
+            var keyResultAreaDto = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return keyResultAreaDto?.Select(o => ConvOfficeToDTO(o)).ToList();
         }            
-        public async Task<KeyResultAreaDto> SaveOrUpdateAsync(KeyResultAreaDto KraDto, CancellationToken cancellationToken)
+        public async Task<KeyResultAreaDto> SaveOrUpdateAsync(KeyResultAreaDto keyResultAreaDto, CancellationToken cancellationToken)
         {
-            if (KraDto == null) throw new ArgumentNullException(nameof(KraDto));
-            var pgsEntity = KraDto.ToEntity();
-            var createdKra = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
+            if (keyResultAreaDto == null) throw new ArgumentNullException(nameof(keyResultAreaDto));
+            var keyResultAreaEntity = keyResultAreaDto.ToEntity();
+            var createdKeyResultArea = await _repository.SaveOrUpdateAsync(keyResultAreaEntity, cancellationToken).ConfigureAwait(false);
             return new KeyResultAreaDto
             {
-                Id = createdKra.Id,
-                Name = createdKra.Name,
-                Remarks = createdKra.Remarks
+                Id = createdKeyResultArea.Id,
+                Name = createdKeyResultArea.Name,
+                Remarks = createdKeyResultArea.Remarks
             };
         }     
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)where TEntity : Entity<TId>

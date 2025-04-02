@@ -8,7 +8,7 @@ namespace IMIS.Application.PgsKraModule
     {
         Task<EntityPageList<KeyResultArea, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<IEnumerable<KeyResultArea>> GetAll(CancellationToken cancellationToken);
-        new  Task<KeyResultArea> SaveOrUpdateAsync(KeyResultArea kra, CancellationToken cancellationToken);
+        new  Task<KeyResultArea> SaveOrUpdateAsync(KeyResultArea keyResultArea, CancellationToken cancellationToken);
         Task<IEnumerable<KeyResultArea>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
        
 

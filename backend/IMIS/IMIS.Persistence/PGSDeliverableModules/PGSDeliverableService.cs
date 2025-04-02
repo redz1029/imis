@@ -2,7 +2,6 @@
 using Base.Primitives;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
-using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.PGSModules
@@ -20,45 +19,45 @@ namespace IMIS.Persistence.PGSModules
 
         public async Task<DtoPageList<PGSDeliverableDto, PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var PgsDeliverable = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
-            if(PgsDeliverable.TotalCount == 0)
+            var pgsDeliverable = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
+            if(pgsDeliverable.TotalCount == 0)
             {
                 return null;
             }
-            return DtoPageList<PGSDeliverableDto, PgsDeliverable, long>.Create(PgsDeliverable.Items, page, pageSize, PgsDeliverable.TotalCount);
+            return DtoPageList<PGSDeliverableDto, PgsDeliverable, long>.Create(pgsDeliverable.Items, page, pageSize, pgsDeliverable.TotalCount);
         }
 
-        public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDto, CancellationToken cancellationToken)
+        public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDeliverableDto, CancellationToken cancellationToken)
         {
-            if (pgsDto == null) throw new ArgumentNullException(nameof(pgsDto));
+            if (pgsDeliverableDto == null) throw new ArgumentNullException(nameof(pgsDeliverableDto));
 
-            var pgsEntity = pgsDto.ToEntity();
+            var pgsDeliverableEntity = pgsDeliverableDto.ToEntity();
          
-            if (pgsEntity!.Kra == null || pgsEntity.Kra.Id == 0)
+            if (pgsDeliverableEntity!.Kra == null || pgsDeliverableEntity.Kra.Id == 0)
             {
                 throw new InvalidOperationException("Invalid kra ID");
             }
-            var kra = await _kraRepository.GetByIdAsync(pgsEntity!.Kra!.Id, cancellationToken).ConfigureAwait(false);
+            var keyResultArea = await _kraRepository.GetByIdAsync(pgsDeliverableEntity!.Kra!.Id, cancellationToken).ConfigureAwait(false);
 
-            if (kra == null)
+            if (keyResultArea == null)
             {
                 throw new InvalidOperationException("KRA ID not found");
             }
 
-            pgsEntity.Kra = kra;
-            var createdPgs = await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
+            pgsDeliverableEntity.Kra = keyResultArea;
+            var createdPgsDeliverable = await _repository.SaveOrUpdateAsync(pgsDeliverableEntity, cancellationToken).ConfigureAwait(false);
 
-            return ConvertToDto(createdPgs);
+            return ConvertToDto(createdPgsDeliverable);
         }
         public async Task<List<PGSDeliverableDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var pgsdeliverables = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return pgsdeliverables?.Select(o => ConvertToDto(o)).ToList();
+            var pgsDeliverables = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return pgsDeliverables?.Select(o => ConvertToDto(o)).ToList();
         }
         public async Task<PGSDeliverableDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var pgsdeliverables = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return pgsdeliverables != null ? ConvertToDto(pgsdeliverables) : null;
+            var pgsDeliverables = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return pgsDeliverables != null ? ConvertToDto(pgsDeliverables) : null;
         }
         private static PGSDeliverableDto ConvertToDto(PgsDeliverable deliverable)
         {

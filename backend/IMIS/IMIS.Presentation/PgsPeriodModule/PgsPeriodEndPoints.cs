@@ -11,59 +11,50 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
 {
     public class PgsPeriodEndPoints : CarterModule
     {
-        private const string _pgsTag = "Create PGS Period";
+        private const string _pgsPeriodTag = "Create PGS Period";
         public PgsPeriodEndPoints() : base("/PgsPeriod")
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {            
-            app.MapPost("/", async ([FromBody] PgsPeriodDto PgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                if (PgsPeriodDto == null)
-                {
-                    return Results.BadRequest("PGS data is required.");
-                }
-                var createdPgsPeriod = await service.SaveOrUpdateAsync(PgsPeriodDto, cancellationToken).ConfigureAwait(false);
+            app.MapPost("/", async ([FromBody] PgsPeriodDto pgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {                
+                var createdPgsPeriod = await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);
                 //Clear the cache for this data after updating
-                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+                await cache.EvictByTagAsync(_pgsPeriodTag, cancellationToken);
                 return Results.Created($"/PgsPeriod/{createdPgsPeriod.Id}", createdPgsPeriod);
             })
-            .WithTags(_pgsTag);
+            .WithTags(_pgsPeriodTag);
 
             app.MapGet("/", async (IPgsPeriodService service, CancellationToken cancellationToken) =>  
             {
-                var Period = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
-                return Results.Ok(Period);
+                var period = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(period);
             })
-            .WithTags(_pgsTag)   
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+            .WithTags(_pgsPeriodTag)   
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true);
         
-            app.MapPut("/{id}", async (int id, [FromBody] PgsPeriodDto PgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                if (PgsPeriodDto == null)
-                {
-                    return Results.BadRequest("PGS data is required.");
-                }
-             
+            app.MapPut("/{id}", async (int id, [FromBody] PgsPeriodDto pgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {                             
                 var existingPeriod = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingPeriod == null)
                 {
                     return Results.NotFound($"PGS Period with ID {id} not found.");
                 }
                
-                PgsPeriodDto.Id = id;
-                var updatedPgsPeriod = await service.SaveOrUpdateAsync(PgsPeriodDto, cancellationToken).ConfigureAwait(false);
+                pgsPeriodDto.Id = id;
+                var updatedPgsPeriod = await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);
               
-                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+                await cache.EvictByTagAsync(_pgsPeriodTag, cancellationToken);
                 return Results.Ok(updatedPgsPeriod);
             })
-            .WithTags(_pgsTag);         
+            .WithTags(_pgsPeriodTag);         
             app.MapGet("/page", async (int page, int pageSize, IPgsPeriodService service, CancellationToken cancellationToken) =>
             {
                 var paginatedPgsPeriod = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedPgsPeriod);
             })
-            .WithTags(_pgsTag);
+            .WithTags(_pgsPeriodTag);
                 
         }
     }

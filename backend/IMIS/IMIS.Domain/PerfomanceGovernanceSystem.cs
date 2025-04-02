@@ -2,7 +2,7 @@
 
 namespace IMIS.Domain
 {
-    public class PgsAuditDetails : Entity<long>
+    public class PerfomanceGovernanceSystem : Entity<long>
     {
         public required PgsPeriod PgsPeriod { get; set; }
         public required Office Office { get; set; }

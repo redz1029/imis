@@ -24,13 +24,9 @@ namespace IMIS.Presentation.AuditScheduleModule
                                     IOutputCacheStore cache, 
                                     CancellationToken cancellationToken) =>
             {
-                if (auditScheduleDto == null)
-                {
-                    return Results.BadRequest("Audit Schedule data is required.");
-                }
-
+                
                 //  Check for overlapping audits before saving
-                foreach (var office in auditScheduleDto.AuditableOffices!)
+                foreach (var office in auditScheduleDto.AuditSchduleDetails!)
                 {
                     var overlappingSchedule = await auditRepository
                         .GetOverlappingAuditAsync(office.OfficeId, auditScheduleDto.StartDate, auditScheduleDto.EndDate, auditScheduleDto.Id);
@@ -40,7 +36,6 @@ namespace IMIS.Presentation.AuditScheduleModule
                         return Results.BadRequest($"Office ID {office.OfficeId} is already scheduled for an audit during this period.");
                     }
                 }
-
                 //  Save the audit schedule
                 var createdAuditSchedule = await service.SaveOrUpdateAsync(auditScheduleDto, cancellationToken).ConfigureAwait(false);
 

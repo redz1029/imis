@@ -2,9 +2,7 @@
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
 using IMIS.Application.AuditorModule;
-using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.PgsKraModule;
 
 
 namespace IMIS.Persistence.TeamModule
@@ -37,12 +35,12 @@ namespace IMIS.Persistence.TeamModule
 
         public async Task<TeamDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var Team = await _teamRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return Team != null ? ConvTeamToDto(Team) : null;
+            var team = await _teamRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return team != null ? ConvTeamToDto(team) : null;
         }
-        public async Task<List<TeamDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        public async Task<List<TeamDto>?> FilterByName(string name, int teamNoOfResults, CancellationToken cancellationToken)
         {
-            var team = await _teamRepository.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
+            var team = await _teamRepository.FilterByName(name, teamNoOfResults, cancellationToken).ConfigureAwait(false);
             return team != null && team.Count() > 0 ? team.Select(a => ConvTeamToDto(a)).ToList() : null;
         }
         public async Task<List<TeamDto>?> GetAllActiveAsync(CancellationToken cancellationToken)
@@ -57,14 +55,14 @@ namespace IMIS.Persistence.TeamModule
         }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            var tDto = dto as TeamDto;
-            var team = tDto?.ToEntity();
+            var teamDto = dto as TeamDto;
+            var team = teamDto?.ToEntity();
             if (team != null)
             {
-                if (tDto?.Auditors?.Count > 0)
+                if (teamDto?.Auditors?.Count > 0)
                 {
                     List<AuditorTeams> auditorTeams = [];
-                    foreach (var auditor in tDto.Auditors)
+                    foreach (var auditor in teamDto.Auditors)
                     {
                         auditorTeams.Add(new AuditorTeams() 
                         { 
@@ -85,11 +83,11 @@ namespace IMIS.Persistence.TeamModule
             }
         }
 
-        public async Task<TeamDto> SaveOrUpdateAsync(TeamDto TeamDto, CancellationToken cancellationToken)
+        public async Task<TeamDto> SaveOrUpdateAsync(TeamDto teamDto, CancellationToken cancellationToken)
         {
-            if (TeamDto == null) throw new ArgumentNullException(nameof(TeamDto));
-            var TeamEntity = TeamDto.ToEntity();
-            var createdTeam = await _teamRepository.SaveOrUpdateAsync(TeamEntity, cancellationToken).ConfigureAwait(false);
+            if (teamDto == null) throw new ArgumentNullException(nameof(TeamDto));
+            var teamEntity = teamDto.ToEntity();
+            var createdTeam = await _teamRepository.SaveOrUpdateAsync(teamEntity, cancellationToken).ConfigureAwait(false);
             return new TeamDto
             {
                 Id = createdTeam.Id,

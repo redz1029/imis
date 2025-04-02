@@ -15,16 +15,16 @@ namespace IMIS.Persistence.KraModule
                 .Where(k => !k.IsDeleted)
                 .AsNoTracking();
           
-            var kra = await EntityPageList<KeyResultArea, int>
+            var keyResultArea = await EntityPageList<KeyResultArea, int>
              .CreateAsync(query, page, pageSize, cancellationToken)
              .ConfigureAwait(false);
-            return kra;
+            return keyResultArea;
         }   
-        public async Task<IEnumerable<KeyResultArea>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        public async Task<IEnumerable<KeyResultArea>?> FilterByName(string name, int keyResultAreaNoOfResults, CancellationToken cancellationToken)
         {
             return await _dbContext.KeyResultArea
                 .Where(a => EF.Functions.Like(a.Name, $"{name}%") && !a.IsDeleted)
-                .Take(noOfResults)
+                .Take(keyResultAreaNoOfResults)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -38,26 +38,26 @@ namespace IMIS.Persistence.KraModule
                .ConfigureAwait(false);
         }      
         // Save or Update method
-        public new async Task<KeyResultArea> SaveOrUpdateAsync(KeyResultArea kra, CancellationToken cancellationToken)
+        public new async Task<KeyResultArea> SaveOrUpdateAsync(KeyResultArea keyResultArea, CancellationToken cancellationToken)
         {
-            if (kra == null) throw new ArgumentNullException(nameof(kra));
+            if (keyResultArea == null) throw new ArgumentNullException(nameof(keyResultArea));
             // Check if the entity already exists
-            var existingKra = await _dbContext.KeyResultArea
-                .FirstOrDefaultAsync(d => d.Id == kra.Id, cancellationToken)
+            var existingKeyResultArea = await _dbContext.KeyResultArea
+                .FirstOrDefaultAsync(d => d.Id == keyResultArea.Id, cancellationToken)
                 .ConfigureAwait(false);
-            if (existingKra != null)
+            if (existingKeyResultArea != null)
             {
                 // Update existing entity
-                _dbContext.Entry(existingKra).CurrentValues.SetValues(kra);
+                _dbContext.Entry(existingKeyResultArea).CurrentValues.SetValues(keyResultArea);
             }
             else
             {
                 // Add new entity
-                await _dbContext.KeyResultArea.AddAsync(kra, cancellationToken).ConfigureAwait(false);
+                await _dbContext.KeyResultArea.AddAsync(keyResultArea, cancellationToken).ConfigureAwait(false);
             }
             // Save changes to the database
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return kra;
+            return keyResultArea;
         }        
     }
 }

@@ -10,14 +10,12 @@ namespace IMIS.Persistence.AuditScheduleModule
         public AuditScheduleDetailService(IAuditScheduleDetailRepository repository)
         {
             _repository = repository;
-        }
-
-     
-        public async Task<AuditScheduleDetailDto> SaveOrUpdateAsync(AuditScheduleDetailDto AuditDetailDto, CancellationToken cancellationToken)
+        }     
+        public async Task<AuditScheduleDetailDto> SaveOrUpdateAsync(AuditScheduleDetailDto auditScheduleDetailDto, CancellationToken cancellationToken)
         {
-            if (AuditDetailDto == null) throw new ArgumentNullException(nameof(AuditDetailDto));
-            var AuditEntity = AuditDetailDto.ToEntity();
-            var createdAuditDetailDto = await _repository.SaveOrUpdateAsync(AuditEntity, cancellationToken).ConfigureAwait(false);
+            if (auditScheduleDetailDto == null) throw new ArgumentNullException(nameof(auditScheduleDetailDto));
+            var auditEntity = auditScheduleDetailDto.ToEntity();
+            var createdAuditDetailDto = await _repository.SaveOrUpdateAsync(auditEntity, cancellationToken).ConfigureAwait(false);
             return new AuditScheduleDetailDto
             {
        

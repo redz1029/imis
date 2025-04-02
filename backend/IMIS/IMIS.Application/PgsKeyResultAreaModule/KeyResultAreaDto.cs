@@ -8,11 +8,7 @@ namespace IMIS.Application.PgsKraModule
     {
         public string Name { get; set; }
         public string? Remarks { get; set; }
-
         public KeyResultAreaDto() { }
-
-        // Entity to Dto
-        //(TDto) Activator.CreateInstance(typeof(TDto), e)
         [SetsRequiredMembers]
         public KeyResultAreaDto(KeyResultArea keyResultArea)
         {

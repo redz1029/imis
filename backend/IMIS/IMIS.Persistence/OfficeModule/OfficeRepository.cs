@@ -17,11 +17,11 @@ namespace IMIS.Persistence.OfficeModule
 
             return office;
         }
-        public async Task<IEnumerable<Office>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        public async Task<IEnumerable<Office>?> FilterByName(string name, int officeNoOfResults, CancellationToken cancellationToken)
         {
             return await _dbContext.Offices
                 .Where(a => EF.Functions.Like(a.Name, $"{name}%") && !a.IsDeleted)
-                .Take(noOfResults)
+                .Take(officeNoOfResults)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

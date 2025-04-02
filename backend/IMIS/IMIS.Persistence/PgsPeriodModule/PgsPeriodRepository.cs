@@ -16,9 +16,9 @@ namespace IMIS.Persistence.PgsPeriodModule
         {
             var query = _dbContext.PgsPeriod.Where(k => !k.IsDeleted).AsNoTracking();
 
-            var pagperiod = await EntityPageList<PgsPeriod, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+            var pagPeriod = await EntityPageList<PgsPeriod, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
             
-            return pagperiod;
+            return pagPeriod;
         }
         public async Task<IEnumerable<PgsPeriod>> GetAll(CancellationToken cancellationToken)
         {
@@ -28,26 +28,26 @@ namespace IMIS.Persistence.PgsPeriodModule
                 .ToListAsync(cancellationToken) 
                 .ConfigureAwait(false);
         }
-        public new async Task<PgsPeriod> SaveOrUpdateAsync(PgsPeriod PgsPeriod, CancellationToken cancellationToken)
+        public new async Task<PgsPeriod> SaveOrUpdateAsync(PgsPeriod pgsPeriod, CancellationToken cancellationToken)
         {
-            if (PgsPeriod == null) throw new ArgumentNullException(nameof(PgsPeriod));
+            if (pgsPeriod == null) throw new ArgumentNullException(nameof(PgsPeriod));
 
             var existingPgsPeriod = await _dbContext.PgsPeriod
-                .FirstOrDefaultAsync(d => d.Id == PgsPeriod.Id, cancellationToken)
+                .FirstOrDefaultAsync(d => d.Id == pgsPeriod.Id, cancellationToken)
                 .ConfigureAwait(false);
             if (existingPgsPeriod != null)
             {
                 // Update the existing PgsPeriod entity
-                _dbContext.Entry(existingPgsPeriod).CurrentValues.SetValues(PgsPeriod);
+                _dbContext.Entry(existingPgsPeriod).CurrentValues.SetValues(pgsPeriod);
             }
             else
             {
                 // Add the new PgsPeriod entity
-                await _dbContext.PgsPeriod.AddAsync(PgsPeriod, cancellationToken).ConfigureAwait(false);
+                await _dbContext.PgsPeriod.AddAsync(pgsPeriod, cancellationToken).ConfigureAwait(false);
             }
             // Save changes to the database
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);           
-            return PgsPeriod;
+            return pgsPeriod;
         }
     }
 }

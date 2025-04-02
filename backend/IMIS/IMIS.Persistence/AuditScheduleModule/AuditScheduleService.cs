@@ -296,14 +296,12 @@ namespace IMIS.Persistence.AuditScheduleModule
             }).ToList();
 
             await _auditScheduleRepository.AddAuditableOfficesAsync(entities, cancellationToken);
-        }
-      
-
-        public async Task<AuditScheduleDto> SaveOrUpdateAsync(AuditScheduleDto dto, CancellationToken cancellationToken)
+        }   
+        public async Task<AuditScheduleDto> SaveOrUpdateAsync(AuditScheduleDto auditScheduleDto, CancellationToken cancellationToken)
         {
-            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            if (auditScheduleDto == null) throw new ArgumentNullException(nameof(auditScheduleDto));
 
-            var entity = dto.ToEntity();
+            var entity = auditScheduleDto.ToEntity();
             var savedEntity = await _auditScheduleRepository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
 
             return new AuditScheduleDto

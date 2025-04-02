@@ -1,8 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Data.Entity;
-using System.Drawing.Printing;
 using System.Security.Claims;
-using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
 using IMIS.Persistence;
@@ -139,7 +137,7 @@ namespace IMIS.Presentation.UserModule
             var user = await userManager.FindByIdAsync(refresh.Id);
             if (user == null)
             {              
-                return Results.NotFound("User not found.");
+                return Results.NotFound("Token not found.");
             }
             var roles = await userManager.GetRolesAsync(user);
             var accessToken = TokenUtils.GenerateAccessToken(user, roles);
@@ -155,7 +153,7 @@ namespace IMIS.Presentation.UserModule
             var user = await signInManager.UserManager.FindByIdAsync(refresh.Id);
             if (user == null)
             {              
-                return Results.NotFound("User not found.");
+                return Results.NotFound("Token not found.");
             }
             await signInManager.UserManager.RemoveAuthenticationTokenAsync(user, "IMIS_API", "refresh_token");          
             return Results.Ok("Refresh token revoked successfully.");

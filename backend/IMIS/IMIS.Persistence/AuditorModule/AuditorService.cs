@@ -23,9 +23,9 @@ namespace IMIS.Persistence.AuditorModule
             return DtoPageList<AuditorDto, Auditor, int>.Create(auditor.Items, page, pageSize, auditor.TotalCount);
 
         }
-        public async Task<List<AuditorDto>?> FilteByName(string name, int noOfResults, CancellationToken cancellationToken)
+        public async Task<List<AuditorDto>?> FilteByName(string name, int auditorNoOfResults, CancellationToken cancellationToken)
         {
-            var auditors = await _auditorRepository.FilteByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
+            var auditors = await _auditorRepository.FilteByName(name, auditorNoOfResults, cancellationToken).ConfigureAwait(false);
             return auditors != null && auditors.Count() > 0 ? auditors.Select(a => new AuditorDto(a)).ToList() : null;
         }
         public async Task<List<AuditorDto>?> GetAll(CancellationToken cancellationToken)

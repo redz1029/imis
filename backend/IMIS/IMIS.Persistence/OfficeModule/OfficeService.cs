@@ -2,7 +2,6 @@
 using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
-using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.OfficeModule
@@ -10,9 +9,9 @@ namespace IMIS.Persistence.OfficeModule
     public class OfficeService(IOfficeRepository repository) : IOfficeService
     {
         private readonly IOfficeRepository _repository = repository;
-        public async Task<List<OfficeDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken)
+        public async Task<List<OfficeDto>?> FilterByName(string name, int officeNoOfResults, CancellationToken cancellationToken)
         {
-            var offices = await _repository.FilterByName(name, noOfResults, cancellationToken).ConfigureAwait(false);         
+            var offices = await _repository.FilterByName(name, officeNoOfResults, cancellationToken).ConfigureAwait(false);         
             return offices != null && offices.Count() > 0 ? offices.Select(a => ConvOfficeToDTO(a)).ToList() : null;
         }
         public async Task<DtoPageList<OfficeDto, Office, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
@@ -33,7 +32,7 @@ namespace IMIS.Persistence.OfficeModule
                 Auditors = office.AuditorOffices?.Select(a => new AuditorDto()
                 {
                     Id = a.AuditorId,
-                    Name = a.Auditor.Name,
+                    Name = a.Auditor!.Name,
                     IsActive = a.Auditor.IsActive,
                     IsOfficeHead = a.IsOfficeHead,
                 }).ToList(),
