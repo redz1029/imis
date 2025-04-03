@@ -1,78 +1,108 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/performance_governance_system/auditor/models/auditor.dart';
+import 'package:imis/performance_governance_system/office/models/office.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class AuditorPage extends StatefulWidget {
-  const AuditorPage({super.key});
+class OfficePage extends StatefulWidget {
+  const OfficePage({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _AuditorMainPageState createState() => _AuditorMainPageState();
+  _OfficePageState createState() => _OfficePageState();
 }
 
-class _AuditorMainPageState extends State<AuditorPage> {
+class _OfficePageState extends State<OfficePage> {
   // ignore: non_constant_identifier_names
-  List<Map<String, dynamic>> auditorList = [];
+  List<Map<String, dynamic>> officeList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
   final dio = Dio();
 
-  // Fetch auditors from the API
-  Future<void> fetchAuditors() async {
-    var url = ApiEndpoint().auditor;
+  Future<void> fetchOffices() async {
+    var url = ApiEndpoint().office;
 
     try {
-      var response = await dio.get(url);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
+
+      var response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
 
       if (response.statusCode == 200 && response.data is List) {
-        List<Auditor> data =
+        List<Office> data =
             (response.data as List)
-                .map((auditors) => Auditor.fromJson(auditors))
+                .map((office) => Office.fromJson(office))
                 .toList();
 
         if (mounted) {
           setState(() {
-            auditorList = data.map((auditors) => auditors.toJson()).toList();
-            filteredList = List.from(auditorList);
+            officeList = data.map((office) => office.toJson()).toList();
+            filteredList = List.from(officeList);
           });
         }
       } else {
-        print("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      print("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      print("Unexpected error: $e");
+      debugPrint("Unexpected error: $e");
     }
   }
 
-  // Add or update auditor
+  // Add or update office
 
-  Future<void> addOrUpdateAuditor(Auditor auditors) async {
-    var url = ApiEndpoint().auditor;
+  Future<void> addOrUpdateOffice(Office office) async {
+    var url = ApiEndpoint().office;
+
     try {
-      final response = await dio.post(url, data: auditors.toJson());
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
 
-      if (response.statusCode == 200) {
-        await fetchAuditors();
-        setState(() {
-          fetchAuditors();
-        });
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
+
+      final Map<String, dynamic> requestData = office.toJson();
+      final response = await dio.post(
+        url,
+        data: requestData,
+        options: Options(
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await fetchOffices();
+      } else {
+        debugPrint(
+          "Failed to add/update office. Status code: ${response.statusCode}",
+        );
       }
     } catch (e) {
-      print("Error adding/updating pgs: $e");
+      debugPrint("Error adding/updating office: $e");
     }
   }
 
   @override
   void initState() {
     super.initState();
-    // Fetch auditors when the screen is initialized
-    fetchAuditors();
+    fetchOffices();
     isSearchfocus.addListener(() {
       setState(() {});
     });
@@ -88,26 +118,24 @@ class _AuditorMainPageState extends State<AuditorPage> {
   void filterSearchResults(String query) {
     setState(() {
       filteredList =
-          auditorList
+          officeList
               .where(
-                (auditor) => auditor['name']!.toLowerCase().contains(
-                  query.toLowerCase(),
-                ),
+                (office) =>
+                    office['name']!.toLowerCase().contains(query.toLowerCase()),
               )
               .toList();
     });
   }
 
-  // Show the form to add or update auditor
+  // Show the form to add or update office
   void showFormDialog({
     String? id,
-    bool isDeleted = false,
     String? name,
     bool isActive = false,
-    bool isTeamLeader = false,
-    bool isOfficeHead = false,
+    bool isDeleted = false,
+    bool isRowversion = false,
   }) {
-    TextEditingController AuditorController = TextEditingController(text: name);
+    TextEditingController officeController = TextEditingController(text: name);
     showDialog(
       context: context,
       builder: (context) {
@@ -117,7 +145,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           title: Text(
-            id == null ? 'Add Auditor' : 'Edit Auditor',
+            id == null ? 'Add Office' : 'Edit Office',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
@@ -127,7 +155,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                 width: 350,
                 height: 65,
                 child: TextField(
-                  controller: AuditorController,
+                  controller: officeController,
                   decoration: InputDecoration(
                     labelText: 'Name',
                     border: OutlineInputBorder(),
@@ -181,15 +209,13 @@ class _AuditorMainPageState extends State<AuditorPage> {
                   },
                 );
                 if (confirmAction == true) {
-                  final auditor = Auditor(
+                  final office = Office(
                     int.tryParse(id ?? '0') ?? 0,
+                    officeController.text,
                     isDeleted,
-                    AuditorController.text,
                     isActive,
-                    isTeamLeader,
-                    isOfficeHead,
                   );
-                  addOrUpdateAuditor(auditor);
+                  addOrUpdateOffice(office);
                   Navigator.pop(context);
                 }
               },
@@ -210,7 +236,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: Text('Auditor Information'),
+        title: Text('Office Information'),
         backgroundColor: mainBgColor,
       ),
       body: Padding(
@@ -235,7 +261,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Auditor',
+                      labelText: 'Search Office',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -290,10 +316,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                         ),
                         Expanded(
                           flex: 3,
-                          child: Text(
-                            'Auditor Name',
-                            style: TextStyle(color: grey),
-                          ),
+                          child: Text('Office', style: TextStyle(color: grey)),
                         ),
                         Expanded(
                           flex: 1,
@@ -309,7 +332,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                         children:
                             filteredList
                                 .asMap()
-                                .map((index, auditor) {
+                                .map((index, office) {
                                   return MapEntry(
                                     index,
                                     Container(
@@ -350,7 +373,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                auditor['name'],
+                                                office['name'],
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -373,9 +396,9 @@ class _AuditorMainPageState extends State<AuditorPage> {
                                                     onPressed:
                                                         () => showFormDialog(
                                                           id:
-                                                              auditor['id']
+                                                              office['id']
                                                                   .toString(),
-                                                          name: auditor['name'],
+                                                          name: office['name'],
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),

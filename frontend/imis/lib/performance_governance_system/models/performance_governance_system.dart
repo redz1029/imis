@@ -1,13 +1,13 @@
-import 'package:imis/office/models/office.dart';
+import 'package:imis/performance_governance_system/office/models/office.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/performance_governance_system/models/pgs_readiness.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-part 'pgs_audit_details.g.dart';
+part 'performance_governance_system.g.dart';
 
 @JsonSerializable()
-class PgsAuditDetails {
+class PerformanceGovernanceSystem {
   int id;
 
   @JsonKey()
@@ -28,7 +28,7 @@ class PgsAuditDetails {
   bool isDeleted;
   String? rowVersion;
 
-  PgsAuditDetails(
+  PerformanceGovernanceSystem(
     this.id,
     this.pgsPeriod,
     this.office,
@@ -39,7 +39,7 @@ class PgsAuditDetails {
     this.rowVersion,
   });
 
-  factory PgsAuditDetails.fromJson(Map<String, dynamic> json) =>
-      _$PgsAuditDetailsFromJson(json);
-  Map<String, dynamic> toJson() => _$PgsAuditDetailsToJson(this);
+  factory PerformanceGovernanceSystem.fromJson(Map<String, dynamic> json) =>
+      _$PerformanceGovernanceSystemFromJson(json);
+  Map<String, dynamic> toJson() => _$PerformanceGovernanceSystemToJson(this);
 }

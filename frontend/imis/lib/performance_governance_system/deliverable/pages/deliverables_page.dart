@@ -1,15 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/office/models/office.dart';
+import 'package:imis/performance_governance_system/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
-import 'package:imis/performance_governance_system/models/pgs_audit_details.dart';
-import 'package:imis/performance_governance_system/models/pgs_audit_result.dart';
+import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/performance_governance_system/models/pgs_readiness.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/date_time_converter.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,6 +22,7 @@ class DeliverablesPage extends StatefulWidget {
 }
 
 class _DeliverablesPageState extends State<DeliverablesPage> {
+  final GlobalKey _menuKey = GlobalKey();
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> selectedByWhenControllers = {};
   Map<int, Map<String, dynamic>> selectedKRAObjects = {};
@@ -43,6 +44,9 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
 
   List<int> rows = [];
   int rowIndex = 1;
+
+  String officeDisplay = "";
+  String officeIdList = "";
 
   //For search controller
   TextEditingController searchController = TextEditingController();
@@ -78,8 +82,8 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
   final dio = Dio();
 
   //Save pgs
-  Future<void> savePGS(PgsAuditDetails audit) async {
-    var url = ApiEndpoint().pgsauditdetails;
+  Future<void> savePGS(PerformanceGovernanceSystem audit) async {
+    var url = ApiEndpoint().pgsgovernancesystem;
 
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -123,23 +127,41 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
     }
   }
 
-  //fetch
+  //fetch pgs
   Future<void> fetchPgs() async {
-    var url = ApiEndpoint().pgsauditdetails;
+    var url = ApiEndpoint().pgsgovernancesystem;
 
     try {
-      var response = await dio.get(url);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
+
+      var response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
 
       if (response.statusCode == 200 && response.data is List) {
-        List<AuditResult> data =
-            (response.data as List)
-                .map((deliverable) => AuditResult.fromJson(deliverable))
-                .toList();
+        List<Map<String, String>> formattedData =
+            (response.data as List).map((pgsJson) {
+              PerformanceGovernanceSystem pgs =
+                  PerformanceGovernanceSystem.fromJson(pgsJson);
+              return {
+                'name': pgs.office.name,
+                'Start Date': DateTimeConverter().toJson(
+                  pgs.pgsPeriod.startDate,
+                ), // Use the custom DateTime converter
+                'End Date': DateTimeConverter().toJson(pgs.pgsPeriod.endDate),
+              };
+            }).toList();
 
         if (mounted) {
           setState(() {
-            deliverableList =
-                data.map((deliverable) => deliverable.toJson()).toList();
+            deliverableList = formattedData;
             filteredList = List.from(deliverableList);
           });
         }
@@ -151,6 +173,114 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
+  }
+
+  Future<void> _loadOfficeName() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    List<String> officeNames = prefs.getStringList('officeNames') ?? [];
+    List<String> officeIds = prefs.getStringList('officeIds') ?? [];
+    String? selectedOfficeId = prefs.getString('selectedOfficeId');
+
+    String selectedOfficeName = "No Office";
+    if (selectedOfficeId != null && officeIds.contains(selectedOfficeId)) {
+      int index = officeIds.indexOf(selectedOfficeId);
+      selectedOfficeName = officeNames[index];
+    }
+
+    setState(() {
+      officeDisplay = selectedOfficeName;
+      officeIdList = selectedOfficeId ?? "No Office ID";
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadOfficeName();
+    fetchPgs();
+    isSearchFocus.addListener(() {
+      setState(() {});
+    });
+    fetchDropdownData().then((_) {
+      setState(() {});
+    });
+  }
+
+  Future<void> _selectOffice() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String> officeNames = prefs.getStringList('officeNames') ?? [];
+    List<String> officeIds = prefs.getStringList('officeIds') ?? [];
+
+    if (officeNames.isEmpty || officeIds.isEmpty) {
+      return;
+    }
+
+    String? selectedOffice = await showDialog<String>(
+      // ignore: use_build_context_synchronously
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: secondaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Container(
+            width: MediaQuery.of(context).size.width * 0.30,
+            constraints: BoxConstraints(maxHeight: 250), // 📏 Limit height
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: primaryTextColor),
+                    onPressed: () => Navigator.pop(context, null),
+                  ),
+                ),
+                Text(
+                  "Select an Office",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 10),
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: officeNames.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        color: secondaryColor,
+                        margin: EdgeInsets.symmetric(vertical: 4),
+                        child: ListTile(
+                          title: Text(
+                            officeNames[index],
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          leading: Icon(
+                            Icons.apartment,
+                            color: primaryTextColor,
+                          ),
+                          onTap: () => Navigator.pop(context, officeIds[index]),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (selectedOffice == "REMOVE_OFFICE") {
+      await prefs.remove('selectedOfficeId');
+    } else {
+      await prefs.setString('selectedOfficeId', selectedOffice!);
+    }
+
+    setState(() {});
   }
 
   //Save deliverables
@@ -249,21 +379,15 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
     return deliverablesList;
   }
 
-  PgsAuditDetails getPgsAuditDetails() {
-    return PgsAuditDetails(
+  PerformanceGovernanceSystem getPgsAuditDetails() {
+    return PerformanceGovernanceSystem(
       0,
-      PgsPeriod(
-        1,
-        false,
-        rowVersion: "",
-        DateTime.parse("2024-01-01"),
-        DateTime.parse("2024-12-31"),
-      ),
-      Office(1, "osm", true, false, rowVersion: ""),
-      getTableDeliverables(),
-      PgsReadiness(0, false, null, 2.0, 3.0, 4.0, 9.0),
+      PgsPeriod(0, false, rowVersion: "", DateTime.now(), DateTime.now()),
+      Office(0, "", false, false, rowVersion: ""),
+      [],
+      PgsReadiness(0, false, null, 0.0, 0.0, 0.0, 0.0),
       false,
-      remarks: "Audit entry for finance office",
+      remarks: "",
       rowVersion: "",
     );
   }
@@ -273,17 +397,6 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
     setState(() {
       int newRowId = DateTime.now().millisecondsSinceEpoch; // Unique ID
       rows.add(newRowId);
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    isSearchFocus.addListener(() {
-      setState(() {});
-    });
-    fetchDropdownData().then((_) {
-      setState(() {});
     });
   }
 
@@ -344,7 +457,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Period',
+                      labelText: 'Search Deliverables',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchFocus.hasFocus ? primaryColor : grey,
@@ -371,7 +484,29 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    onPressed: () => showFormDialog(),
+
+                    onPressed: () async {
+                      SharedPreferences prefs =
+                          await SharedPreferences.getInstance();
+                      String? selectedOfficeId = prefs.getString(
+                        'selectedOfficeId',
+                      );
+
+                      if (selectedOfficeId == null ||
+                          selectedOfficeId.isEmpty) {
+                        await _selectOffice();
+                        selectedOfficeId = prefs.getString('selectedOfficeId');
+
+                        if (selectedOfficeId != null &&
+                            selectedOfficeId.isNotEmpty) {
+                          await _loadOfficeName();
+                          showFormDialog();
+                        }
+                      } else {
+                        await _loadOfficeName();
+                        showFormDialog();
+                      }
+                    },
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -405,7 +540,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                           child: Padding(
                             padding: EdgeInsets.only(right: 10),
                             child: Text(
-                              'Office',
+                              'Office Name',
                               style: TextStyle(color: grey),
                             ),
                           ),
@@ -450,7 +585,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                         children:
                             filteredList
                                 .asMap()
-                                .map((index, deliverable) {
+                                .map((index, pgsgovernancesystem) {
                                   return MapEntry(
                                     index,
                                     Container(
@@ -484,13 +619,14 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                                             ),
                                           ),
                                           Expanded(
-                                            flex: 3,
+                                            flex: 1,
                                             child: Padding(
                                               padding: EdgeInsets.only(
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                deliverable['officeName'],
+                                                pgsgovernancesystem['name'],
+                                                // Display office
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -498,13 +634,14 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                                             ),
                                           ),
                                           Expanded(
-                                            flex: 3,
+                                            flex: 1,
                                             child: Padding(
                                               padding: EdgeInsets.only(
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                deliverable['startDate'],
+                                                pgsgovernancesystem['Start Date'],
+
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -512,13 +649,13 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                                             ),
                                           ),
                                           Expanded(
-                                            flex: 3,
+                                            flex: 1,
                                             child: Padding(
                                               padding: EdgeInsets.only(
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                deliverable['endDate'],
+                                                pgsgovernancesystem['End Date'],
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -535,6 +672,10 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                                                 mainAxisAlignment:
                                                     MainAxisAlignment.start,
                                                 children: [
+                                                  IconButton(
+                                                    onPressed: () => (),
+                                                    icon: Icon(Icons.edit),
+                                                  ),
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.delete,
@@ -577,7 +718,29 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
           isMinimized
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
-                onPressed: () => showFormDialog(),
+                onPressed: () async {
+                  SharedPreferences prefs =
+                      await SharedPreferences.getInstance();
+                  String? selectedOfficeId = prefs.getString(
+                    'selectedOfficeId',
+                  );
+
+                  if (selectedOfficeId == null || selectedOfficeId.isEmpty) {
+                    await _selectOffice();
+                    selectedOfficeId = prefs.getString(
+                      'selectedOfficeId',
+                    ); // Re-fetch
+
+                    if (selectedOfficeId != null &&
+                        selectedOfficeId.isNotEmpty) {
+                      await _loadOfficeName();
+                      showFormDialog();
+                    }
+                  } else {
+                    await _loadOfficeName();
+                    showFormDialog();
+                  }
+                },
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
@@ -596,110 +759,321 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
               ),
-              content: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.9,
-                height: MediaQuery.of(context).size.height * 0.8,
-                child: DefaultTabController(
-                  length: 3, // Number of tabs
-                  child: Column(
-                    children: [
-                      // Header Row
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Image.asset('assets/CRMC.png', height: 90),
-                          Text(
-                            '    COTABATO REGIONAL AND MEDICAL CENTER\n2025',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-                        ],
+              content: Stack(
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: Icon(
+                        Icons.close,
+                        color: primaryTextColor,
+                        size: 32,
                       ),
-
-                      SizedBox(height: 20),
-                      TabBar(
-                        labelColor: primaryLightColor,
-                        unselectedLabelColor: Colors.black,
-                        indicatorColor: primaryColor,
-                        labelStyle: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                        ),
-                        unselectedLabelStyle: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        tabs: [
-                          Tab(text: "Strategic Contributions"), // Tab Name 1
-                          Tab(
-                            text: "Readiness Rating-Cancer Care",
-                          ), // Tab Name 2
-                          Tab(text: "PGS Deliverables Status"), // Tab Name 3
-                        ],
-                      ),
-
-                      //First Tab Strategic Contributions
-                      Expanded(
-                        child: TabBarView(
+                      onPressed: () {
+                        clearAllSelections();
+                        Navigator.pop(context);
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(top: 30),
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.9,
+                      height: MediaQuery.of(context).size.height * 0.8,
+                      child: DefaultTabController(
+                        length: 3, // Number of tabs
+                        child: Column(
                           children: [
-                            SingleChildScrollView(
-                              child: Column(
+                            // Header Row
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Image.asset('assets/CRMC.png', height: 90),
+                                Text(
+                                  '    COTABATO REGIONAL AND MEDICAL CENTER\n2025',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 18,
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: 20),
+                            TabBar(
+                              labelColor: primaryLightColor,
+                              unselectedLabelColor: Colors.black,
+                              indicatorColor: primaryColor,
+                              labelStyle: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                              ),
+                              unselectedLabelStyle: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              tabs: [
+                                Tab(
+                                  text: "Strategic Contributions",
+                                ), // Tab Name 1
+                                Tab(
+                                  text: "Readiness Rating - $officeDisplay",
+                                ), // Tab Name 2
+                                Tab(
+                                  text: "PGS Deliverables Status",
+                                ), // Tab Name 3
+                              ],
+                            ),
+
+                            //First Tab Strategic Contributions
+                            Expanded(
+                              child: TabBarView(
                                 children: [
-                                  SizedBox(height: 20),
-                                  Table(
-                                    border: TableBorder.all(
-                                      color: const Color.fromARGB(
-                                        255,
-                                        49,
-                                        46,
-                                        46,
-                                      ),
-                                      width: 1,
+                                  SingleChildScrollView(
+                                    child: Column(
+                                      children: [
+                                        SizedBox(height: 20),
+                                        Table(
+                                          border: TableBorder.all(
+                                            color: const Color.fromARGB(
+                                              255,
+                                              49,
+                                              46,
+                                              46,
+                                            ),
+                                            width: 1,
+                                          ),
+                                          columnWidths: const {
+                                            0: FlexColumnWidth(1.5),
+                                            1: FlexColumnWidth(0.7),
+                                            2: FlexColumnWidth(0.7),
+                                            3: FlexColumnWidth(2),
+                                            4: FlexColumnWidth(1),
+                                            5: FlexColumnWidth(1),
+                                            6: FlexColumnWidth(0.7),
+                                          },
+                                          children: [
+                                            _buildMainHeaderStrategic(),
+                                            _buildTableSubHeaderStrategic(),
+                                            ...rows.map(
+                                              (rowId) =>
+                                                  _buildTableRowStrategic(
+                                                    rowId,
+                                                    '',
+                                                    '',
+                                                    setState,
+                                                    setDialogState,
+                                                  ),
+                                            ),
+                                          ],
+                                        ),
+                                        SizedBox(height: 10),
+                                        TextButton(
+                                          onPressed: () {
+                                            setDialogState(() {
+                                              _addRow();
+                                            });
+                                          },
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.add,
+                                                color: primaryColor,
+                                              ),
+                                              Text(
+                                                'Add Row',
+                                                style: TextStyle(
+                                                  color: primaryColor,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    columnWidths: const {
-                                      0: FlexColumnWidth(1.5),
-                                      1: FlexColumnWidth(0.7),
-                                      2: FlexColumnWidth(0.7),
-                                      3: FlexColumnWidth(2),
-                                      4: FlexColumnWidth(1),
-                                      5: FlexColumnWidth(1),
-                                      6: FlexColumnWidth(0.7),
-                                    },
-                                    children: [
-                                      _buildMainHeaderStrategic(),
-                                      _buildTableSubHeaderStrategic(),
-                                      ...rows.map(
-                                        (rowId) => _buildTableRowStrategic(
-                                          rowId,
-                                          '',
-                                          '',
-                                          setState,
-                                          setDialogState,
+                                  ),
+                                  //End First Tab
+
+                                  //Second Tab  Readiness Rating-Cancer Care
+                                  Scaffold(
+                                    backgroundColor: mainBgColor,
+                                    appBar: AppBar(
+                                      automaticallyImplyLeading: false,
+                                      title: Row(
+                                        children: [
+                                          Text(
+                                            'READINESS RATING - $officeDisplay',
+                                            style: TextStyle(
+                                              fontSize: 30,
+                                              fontWeight: FontWeight.normal,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      toolbarHeight: 60,
+                                      backgroundColor: primaryLightColor,
+                                    ),
+                                    body: SingleChildScrollView(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(16.0),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.stretch,
+                                          children: [
+                                            Container(
+                                              alignment: Alignment(1.0, 0.0),
+                                              padding: EdgeInsets.only(
+                                                right: 50.0,
+                                              ),
+                                              child: Text(
+                                                'SCORE',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                            SizedBox(height: 8),
+                                            // Competence Score Dropdown
+                                            buildScoreRow(
+                                              'COMPETENCE TO DELIVER',
+                                              [
+                                                'Teams lack adequate skills and training to deliver performance commitments',
+                                                'Teams are skilled but lack training to deliver performance commitments ',
+                                                'Teams are highly skilled and trained to deliver performance commitments',
+                                              ],
+                                              competenceScore,
+                                            ),
+
+                                            // Resource Availability Dropdown
+                                            buildScoreRow(
+                                              'RESOURCE AVAILABILITY',
+                                              [
+                                                'Insufficient; external resources difficult to source',
+                                                'Sufficient resources but not available; OR Insufficient but external resources can be tapped',
+                                                'Sufficient and available staff and budget',
+                                              ],
+                                              resourceScore,
+                                            ),
+
+                                            // Confidence to Deliver Dropdown
+                                            buildScoreRow(
+                                              'CONFIDENCE TO DELIVER',
+                                              [
+                                                'Low confidence because of high degree of organizational change required',
+                                                'Moderate confidence',
+                                                'High confidence despite organizational change required',
+                                              ],
+                                              confidenceScore,
+                                            ),
+
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                ValueListenableBuilder<double>(
+                                                  valueListenable:
+                                                      competenceScore,
+                                                  builder: (context, _, __) {
+                                                    return ValueListenableBuilder<
+                                                      double
+                                                    >(
+                                                      valueListenable:
+                                                          resourceScore,
+                                                      builder: (
+                                                        context,
+                                                        _,
+                                                        __,
+                                                      ) {
+                                                        return ValueListenableBuilder<
+                                                          double
+                                                        >(
+                                                          valueListenable:
+                                                              confidenceScore,
+                                                          builder: (
+                                                            context,
+                                                            _,
+                                                            __,
+                                                          ) {
+                                                            return Padding(
+                                                              padding:
+                                                                  EdgeInsets.only(
+                                                                    right: 60.0,
+                                                                  ), // Adjust right padding if needed
+                                                              child: Text(
+                                                                'TOTAL SCORE:          ${totalScore.toStringAsFixed(1)}',
+                                                                style: TextStyle(
+                                                                  fontSize: 20,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color:
+                                                                      Colors
+                                                                          .black,
+                                                                ),
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .right,
+                                                              ),
+                                                            );
+                                                          },
+                                                        );
+                                                      },
+                                                    );
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                  SizedBox(height: 10),
-                                  TextButton(
-                                    onPressed: () {
-                                      setDialogState(() {
-                                        _addRow();
-                                      });
-                                    },
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
+                                  //End Second Tab
+
+                                  // Third Tab: PGS Deliverable Status
+                                  SingleChildScrollView(
+                                    child: Column(
                                       children: [
-                                        Icon(Icons.add, color: primaryColor),
-                                        Text(
-                                          'Add Row',
-                                          style: TextStyle(
-                                            color: primaryColor,
-                                            fontWeight: FontWeight.w500,
+                                        SizedBox(height: 20),
+                                        Table(
+                                          border: TableBorder.all(
+                                            color: const Color.fromARGB(
+                                              255,
+                                              49,
+                                              46,
+                                              46,
+                                            ),
+                                            width: 1,
                                           ),
+                                          columnWidths: const {
+                                            0: FlexColumnWidth(1.5),
+                                            1: FlexColumnWidth(0.7),
+                                            2: FlexColumnWidth(0.7),
+                                            3: FlexColumnWidth(2),
+                                            4: FlexColumnWidth(1),
+                                            5: FlexColumnWidth(1),
+                                            6: FlexColumnWidth(0.7),
+                                          },
+                                          children: [
+                                            _PgsDeliverableHeader(),
+                                            _PgsBuildTableSubheader(),
+                                            ...rows.map(
+                                              (rowId) =>
+                                                  _buildTableRowStrategic(
+                                                    rowId,
+                                                    '',
+                                                    '',
+                                                    setState,
+                                                    setDialogState,
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ],
                                     ),
@@ -707,182 +1081,17 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                                 ],
                               ),
                             ),
-                            //End First Tab
-
-                            //Second Tab  Readiness Rating-Cancer Care
-                            Scaffold(
-                              backgroundColor: mainBgColor,
-                              appBar: AppBar(
-                                automaticallyImplyLeading: false,
-                                title: Row(
-                                  children: [
-                                    Text(
-                                      'READINESS RATING - CANCER CARE',
-                                      style: TextStyle(
-                                        fontSize: 30,
-                                        fontWeight: FontWeight.normal,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                toolbarHeight: 60,
-                                backgroundColor: primaryLightColor,
-                              ),
-                              body: SingleChildScrollView(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(16.0),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Container(
-                                        alignment: Alignment(1.0, 0.0),
-                                        padding: EdgeInsets.only(right: 50.0),
-                                        child: Text(
-                                          'SCORE',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                      SizedBox(height: 8),
-                                      // Competence Score Dropdown
-                                      buildScoreRow('COMPETENCE TO DELIVER', [
-                                        'Teams lack adequate skills and training to deliver performance commitments',
-                                        'Teams are skilled but lack training to deliver performance commitments ',
-                                        'Teams are highly skilled and trained to deliver performance commitments',
-                                      ], competenceScore),
-
-                                      // Resource Availability Dropdown
-                                      buildScoreRow('RESOURCE AVAILABILITY', [
-                                        'Insufficient; external resources difficult to source',
-                                        'Sufficient resources but not available; OR Insufficient but external resources can be tapped',
-                                        'Sufficient and available staff and budget',
-                                      ], resourceScore),
-
-                                      // Confidence to Deliver Dropdown
-                                      buildScoreRow('CONFIDENCE TO DELIVER', [
-                                        'Low confidence because of high degree of organizational change required',
-                                        'Moderate confidence',
-                                        'High confidence despite organizational change required',
-                                      ], confidenceScore),
-
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          ValueListenableBuilder<double>(
-                                            valueListenable: competenceScore,
-                                            builder: (context, _, __) {
-                                              return ValueListenableBuilder<
-                                                double
-                                              >(
-                                                valueListenable: resourceScore,
-                                                builder: (context, _, __) {
-                                                  return ValueListenableBuilder<
-                                                    double
-                                                  >(
-                                                    valueListenable:
-                                                        confidenceScore,
-                                                    builder: (context, _, __) {
-                                                      return Padding(
-                                                        padding: EdgeInsets.only(
-                                                          right: 60.0,
-                                                        ), // Adjust right padding if needed
-                                                        child: Text(
-                                                          'TOTAL SCORE:          ${totalScore.toStringAsFixed(1)}',
-                                                          style: TextStyle(
-                                                            fontSize: 20,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: Colors.black,
-                                                          ),
-                                                          textAlign:
-                                                              TextAlign.right,
-                                                        ),
-                                                      );
-                                                    },
-                                                  );
-                                                },
-                                              );
-                                            },
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            //End Second Tab
-
-                            // Third Tab: PGS Deliverable Status
-                            SingleChildScrollView(
-                              child: Column(
-                                children: [
-                                  SizedBox(height: 20),
-                                  Table(
-                                    border: TableBorder.all(
-                                      color: const Color.fromARGB(
-                                        255,
-                                        49,
-                                        46,
-                                        46,
-                                      ),
-                                      width: 1,
-                                    ),
-                                    columnWidths: const {
-                                      0: FlexColumnWidth(1.5),
-                                      1: FlexColumnWidth(0.7),
-                                      2: FlexColumnWidth(0.7),
-                                      3: FlexColumnWidth(2),
-                                      4: FlexColumnWidth(1),
-                                      5: FlexColumnWidth(1),
-                                      6: FlexColumnWidth(0.7),
-                                    },
-                                    children: [
-                                      _PgsDeliverableHeader(),
-                                      _PgsBuildTableSubheader(),
-                                      ...rows.map(
-                                        (rowId) => _buildTableRowStrategic(
-                                          rowId,
-                                          '',
-                                          '',
-                                          setState,
-                                          setDialogState,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
                           ],
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
               //End third tab
 
               // Action Buttons
               actions: [
-                TextButton(
-                  onPressed: () {
-                    clearAllSelections();
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
-                ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     shadowColor: Colors.transparent,
@@ -915,7 +1124,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                     );
 
                     if (confirm == true) {
-                      PgsAuditDetails audit = getPgsAuditDetails();
+                      PerformanceGovernanceSystem audit = getPgsAuditDetails();
                       await savePGS(audit);
                     }
                     Navigator.pop(context);
@@ -967,7 +1176,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
                     );
 
                     if (confirm == true) {
-                      PgsAuditDetails audit = getPgsAuditDetails();
+                      PerformanceGovernanceSystem audit = getPgsAuditDetails();
                       await savePGS(audit);
                     }
                     // ignore: use_build_context_synchronously
@@ -1093,15 +1302,22 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
   //Start Strategic Contributions
   // Strategic Contribution Main Header
   TableRow _buildMainHeaderStrategic() {
+    TextEditingController controller = TextEditingController(text: '30%');
+
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
+
       children: [
-        BuildHeaderCell(
-          text: 'Surgery',
-          color: Colors.white,
-          fontSize: 20,
-          fontStyle: FontStyle.normal,
+        GestureDetector(
+          key: _menuKey,
+          child: BuildHeaderCell(
+            text: officeDisplay,
+            color: Colors.white,
+            fontSize: 20,
+            fontStyle: FontStyle.normal,
+          ),
         ),
+
         BuildHeaderCell(text: ''),
         BuildHeaderCell(text: ''),
         BuildHeaderCell(
@@ -1110,11 +1326,33 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
           fontSize: 20,
           fontStyle: FontStyle.normal,
         ),
-        BuildHeaderCell(
-          text: '30%',
-          color: Colors.white,
-          fontSize: 20,
-          fontStyle: FontStyle.normal,
+        TextField(
+          controller: controller,
+          textAlign: TextAlign.center,
+
+          style: TextStyle(
+            color: secondaryColor,
+            fontSize: 20,
+            fontStyle: FontStyle.normal,
+          ),
+          keyboardType: TextInputType.number,
+          decoration: InputDecoration(
+            enabledBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+            focusedBorder: UnderlineInputBorder(
+              borderSide: BorderSide(color: Colors.white),
+            ),
+          ),
+
+          onChanged: (value) {
+            if (value.isNotEmpty && !value.contains('%')) {
+              controller.text = '${value.replaceAll(RegExp(r'[^0-9]'), '')}%';
+              controller.selection = TextSelection.fromPosition(
+                TextPosition(offset: controller.text.length - 1),
+              );
+            }
+          },
         ),
         BuildHeaderCell(text: ''),
         BuildHeaderCell(text: ''),
@@ -1370,11 +1608,12 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
   // End Readiness Rating-Cancer Care
 
   //PGS DELIVERABLES STATUS
+  // ignore: non_constant_identifier_names
   TableRow _PgsDeliverableHeader() {
     return TableRow(
       children: [
         BuildHeaderCell(
-          text: 'Office: OPERATING ROOM COMPLEX (CathLab)',
+          text: 'Office: $officeDisplay)',
           fontSize: 20,
           fontStyle: FontStyle.normal,
         ),
@@ -1396,6 +1635,7 @@ class _DeliverablesPageState extends State<DeliverablesPage> {
     );
   }
 
+  // ignore: non_constant_identifier_names
   TableRow _PgsBuildTableSubheader() {
     return TableRow(
       decoration: BoxDecoration(
