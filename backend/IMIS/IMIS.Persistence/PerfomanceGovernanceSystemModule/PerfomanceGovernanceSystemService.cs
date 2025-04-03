@@ -6,7 +6,6 @@ using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Domain;
-using static IMIS.Application.PgsModule.PerfomanceGovernanceSystemDto;
 
 namespace IMIS.Persistence.PgsModule
 {

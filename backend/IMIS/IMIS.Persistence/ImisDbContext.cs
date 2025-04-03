@@ -18,7 +18,7 @@ namespace IMIS.Persistence
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
         public DbSet<PgsDeliverable> Deliverable { get; set; }
         public DbSet<KeyResultArea> KeyResultArea { get; set; }
-        public DbSet<PerfomanceGovernanceSystem> PgsAuditDetails { get; set; }
+        public DbSet<PerfomanceGovernanceSystem> PerformanceGovernanceSystem { get; set; }
         public DbSet<PgsPeriod> PgsPeriod { get; set; }
         public DbSet<PgsReadinessRating> PgsReadiness { get; set; }
         public DbSet<UserOffices> UserOffices { get; set; }

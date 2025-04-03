@@ -14,7 +14,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetAll(CancellationToken cancellationToken)
     {
 
-        return await _dbContext.PgsAuditDetails
+        return await _dbContext.PerformanceGovernanceSystem
         .Where(o => !o.IsDeleted)
         .Include(pgs => pgs.PgsPeriod)
         .Include(pgs => pgs.Office)
@@ -25,7 +25,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     } 
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
-        var query = _dbContext.PgsAuditDetails.Where(k => !k.IsDeleted).AsNoTracking();
+        var query = _dbContext.PerformanceGovernanceSystem.Where(k => !k.IsDeleted).AsNoTracking();
 
         var perfomanceGovernanceSystem = await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
 
@@ -35,7 +35,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     {
         if (perfomanceGovernanceSystem == null) throw new ArgumentNullException(nameof(perfomanceGovernanceSystem));
        
-        var existingPerfomanceGovernanceSystem = await _dbContext.PgsAuditDetails
+        var existingPerfomanceGovernanceSystem = await _dbContext.PerformanceGovernanceSystem
             .FirstOrDefaultAsync(d => d.Id == perfomanceGovernanceSystem.Id, cancellationToken)
             .ConfigureAwait(false);
 
@@ -45,7 +45,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         }
         else
         {           
-            await _dbContext.PgsAuditDetails.AddAsync(perfomanceGovernanceSystem, cancellationToken).ConfigureAwait(false);
+            await _dbContext.PerformanceGovernanceSystem.AddAsync(perfomanceGovernanceSystem, cancellationToken).ConfigureAwait(false);
         }
 
         // Save changes to the database
@@ -56,11 +56,11 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     public Task<int> CountAsync(CancellationToken cancellationToken)
     {
        
-        return _dbContext.PgsAuditDetails.CountAsync(cancellationToken);
+        return _dbContext.PerformanceGovernanceSystem.CountAsync(cancellationToken);
     }
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetPagedAsync(int skip, int pageSize, CancellationToken cancellationToken)
     {
     
-        return await _dbContext.PgsAuditDetails.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
+        return await _dbContext.PerformanceGovernanceSystem.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }
