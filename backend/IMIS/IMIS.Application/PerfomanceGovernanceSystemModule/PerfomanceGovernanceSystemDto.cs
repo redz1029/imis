@@ -9,8 +9,8 @@ namespace IMIS.Application.PgsModule
 {
     public class PerfomanceGovernanceSystemDto : BaseDto<PerfomanceGovernanceSystem, long>
     {
-        public  PgsPeriodDto? PgsPeriod { get; set; }  
-        public  OfficeDto? Office { get; set; } 
+        public required PgsPeriodDto PgsPeriod { get; set; }  
+        public required OfficeDto Office { get; set; } 
         public string? Remarks { get; set; }
         public List<PGSDeliverableDto>? PgsDeliverables { get; set; }
         public PgsReadinessRatingDto? PgsReadinessRating { get; set; }

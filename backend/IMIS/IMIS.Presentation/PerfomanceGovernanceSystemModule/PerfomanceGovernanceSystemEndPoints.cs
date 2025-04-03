@@ -15,7 +15,7 @@ namespace IMIS.Presentation.PgsModuleAPI
     {
         private const string _pgsTag = "Create Performance Governance System";
 
-        public PerfomanceGovernanceSystemEndPoints() : base("/PerformanceGovernanceSystem")
+        public PerfomanceGovernanceSystemEndPoints() : base("/performanceGovernanceSystem")
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
@@ -24,7 +24,7 @@ namespace IMIS.Presentation.PgsModuleAPI
             {                
                 var createdPerformanceGovernanceSystem = await service.SaveOrUpdateAsync(performanceGovernanceSystemDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
-                return Results.Created($"/PerformanceGovernanceSystem/{createdPerformanceGovernanceSystem.Id}", createdPerformanceGovernanceSystem);
+                return Results.Created($"/performanceGovernanceSystem/{createdPerformanceGovernanceSystem.Id}", createdPerformanceGovernanceSystem);
 
             })
             .WithTags(_pgsTag);

@@ -11,7 +11,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     {
 
     }
-
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetAll(CancellationToken cancellationToken)
     {
 
@@ -19,12 +18,11 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Where(o => !o.IsDeleted)
         .Include(pgs => pgs.PgsPeriod)
         .Include(pgs => pgs.Office)
+        .Include(pgs => pgs.PgsDeliverables)
         .Include(pgs => pgs.PgsReadinessRating)
         .AsNoTracking()
         .ToListAsync(cancellationToken);
-
-
-    }
+    } 
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
         var query = _dbContext.PgsAuditDetails.Where(k => !k.IsDeleted).AsNoTracking();
