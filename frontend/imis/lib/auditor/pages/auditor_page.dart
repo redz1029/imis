@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/performance_governance_system/auditor/models/auditor.dart';
+import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/utils/api_endpoint.dart';
 
 class AuditorPage extends StatefulWidget {
@@ -190,6 +190,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                     isOfficeHead,
                   );
                   addOrUpdateAuditor(auditor);
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context);
                 }
               },
