@@ -7,7 +7,7 @@ part 'pgs_deliverables.g.dart';
 
 @JsonSerializable()
 class PgsDeliverables {
-  int? id; // ✅ Allow null for new entries
+  int id;
 
   @JsonKey()
   KeyResultArea kra;
@@ -35,6 +35,7 @@ class PgsDeliverables {
     this.byWhen,
     this.percentDeliverables,
     this.status, {
+
     this.remarks,
     this.rowVersion,
   });

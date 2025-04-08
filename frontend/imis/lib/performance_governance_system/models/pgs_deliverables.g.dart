@@ -8,7 +8,7 @@ part of 'pgs_deliverables.dart';
 
 PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
     PgsDeliverables(
-      (json['id'] as num?)?.toInt(),
+      (json['id'] as num).toInt(),
       KeyResultArea.fromJson(json['kra'] as Map<String, dynamic>),
       json['deliverableName'] as String,
       json['isDirect'] as bool,

@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
@@ -7,11 +10,11 @@ import 'package:imis/performance_governance_system/key_result_area/models/key_re
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/performance_governance_system/models/pgs_readiness.dart';
-import 'package:imis/performance_governance_system/pages/retrieve_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:intl/intl.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PerformanceGovernanceSystemPage extends StatefulWidget {
@@ -41,6 +44,7 @@ class _PerformanceGovernanceSystemPageState
   Map<int, int?> selectedKRA = {};
 
   List<Map<String, dynamic>> deliverableList = [];
+  List<Map<String, dynamic>> readinessList = [];
   List<Map<String, dynamic>> filteredList = [];
   List<Map<String, dynamic>> options = [];
   List<String> kraOptions = [];
@@ -50,17 +54,19 @@ class _PerformanceGovernanceSystemPageState
 
   String officeDisplay = "";
   String officeIdList = "";
-  String selectedOfficeId = "";
+  String? selectedOfficeId = "";
   String? selectedPeriodText;
 
   List<Map<String, dynamic>> periodList = [];
   List<Map<String, dynamic>> filteredListPeriod = [];
-  int? selectedPeriodId;
+
   int? selectedPeriod;
 
   //For search controller
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
+
+  TextEditingController percentage = TextEditingController();
 
   List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
   List<String> StatusOptions = ['PATIENT', 'RESEARCH', 'LINKAGES', 'HR'];
@@ -76,6 +82,7 @@ class _PerformanceGovernanceSystemPageState
     text: '',
   );
   TextEditingController totalScoreController = TextEditingController(text: '');
+  ValueNotifier<double> percentageScore = ValueNotifier(0.0);
 
   // Variables to store dropdown selections
   ValueNotifier<double> competenceScore = ValueNotifier(0.0);
@@ -94,6 +101,21 @@ class _PerformanceGovernanceSystemPageState
   //Save pgs
   Future<void> savePGS(PerformanceGovernanceSystem audit) async {
     var url = ApiEndpoint().performancegovernancesystem;
+    if (selectedDirect.isEmpty ||
+        selectedIndirect.isEmpty ||
+        deliverablesControllers.values.any(
+          (controller) => controller.text.trim().isEmpty,
+        ) ||
+        percentage.text.trim().isEmpty) {
+      MotionToast.error(
+        title: const Text("Missing Fields"),
+        description: const Text(
+          "Please complete all required fields before saving.",
+        ),
+        position: MotionToastPosition.top,
+      ).show(context);
+      return;
+    }
 
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -118,11 +140,8 @@ class _PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // await fetchPgs();
-        // setState(() {
-        //   fetchPgs();
-        // });
         debugPrint("✅ Pgs data saved successfully!");
+        Navigator.pop(context);
         clearAllSelections();
       } else {
         debugPrint("Failed to save Pgs data: ${response.statusCode}");
@@ -160,11 +179,15 @@ class _PerformanceGovernanceSystemPageState
             (response.data as List).map((pgsJson) {
               PerformanceGovernanceSystem pgs =
                   PerformanceGovernanceSystem.fromJson(pgsJson);
+
               return {
+                'pgsReadinessRatingId': pgs.pgsReadinessRating.id.toString(),
+
+                'id': pgs.id.toString(),
                 'name': pgs.office.name,
                 'Start Date': DateTimeConverter().toJson(
                   pgs.pgsPeriod.startDate,
-                ), // Use the custom DateTime converter
+                ),
                 'End Date': DateTimeConverter().toJson(pgs.pgsPeriod.endDate),
               };
             }).toList();
@@ -220,11 +243,11 @@ class _PerformanceGovernanceSystemPageState
 
     List<String> officeNames = prefs.getStringList('officeNames') ?? [];
     List<String> officeIds = prefs.getStringList('officeIds') ?? [];
-    selectedOfficeId = prefs.getString('selectedOfficeId')!;
+    selectedOfficeId = prefs.getString('selectedOfficeId');
 
     String selectedOfficeName = "No Office";
     if (officeIds.contains(selectedOfficeId)) {
-      int index = officeIds.indexOf(selectedOfficeId);
+      int index = officeIds.indexOf(selectedOfficeId!);
       selectedOfficeName = officeNames[index];
     }
 
@@ -272,7 +295,7 @@ class _PerformanceGovernanceSystemPageState
           ),
           child: Container(
             width: MediaQuery.of(context).size.width * 0.30,
-            constraints: BoxConstraints(maxHeight: 250), // 📏 Limit height
+            constraints: BoxConstraints(maxHeight: 250),
             padding: EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -321,8 +344,8 @@ class _PerformanceGovernanceSystemPageState
 
     if (selectedOffice == "REMOVE_OFFICE") {
       await prefs.remove('selectedOfficeId');
-    } else {
-      await prefs.setString('selectedOfficeId', selectedOffice!);
+    } else if (selectedOffice != null) {
+      await prefs.setString('selectedOfficeId', selectedOffice);
     }
 
     setState(() {});
@@ -393,7 +416,14 @@ class _PerformanceGovernanceSystemPageState
       var isDirect = selectedDirect[index] ?? false;
       var byWhen =
           DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
-      var percentDeliverables = competenceScore;
+      double percentDeliverables = 0.0;
+      try {
+        percentDeliverables =
+            double.tryParse(percentage.text) ??
+            0.0; // Default to 0.0 if invalid
+      } catch (e) {
+        print("Error parsing percentDeliverables: $e");
+      }
       var status = PgsStatus.values.firstWhere(
         (e) => e.index == (selectedStatus[index] ?? PgsStatus.notStarted.index),
         orElse: () => PgsStatus.notStarted,
@@ -413,7 +443,7 @@ class _PerformanceGovernanceSystemPageState
           deliverableText,
           isDirect,
           byWhen,
-          percentDeliverables.value,
+          percentDeliverables,
           status,
           remarks: remarks,
           rowVersion: "",
@@ -427,9 +457,15 @@ class _PerformanceGovernanceSystemPageState
   PerformanceGovernanceSystem getPgsAuditDetails() {
     return PerformanceGovernanceSystem(
       0,
-      PgsPeriod(1, false, rowVersion: "", DateTime.now(), DateTime.now()),
+      PgsPeriod(
+        selectedPeriod!,
+        false,
+        rowVersion: "",
+        DateTime.now(),
+        DateTime.now(),
+      ),
       Office(
-        int.tryParse(selectedOfficeId) ?? 0,
+        int.tryParse(selectedOfficeId!) ?? 0,
         "",
         false,
         false,
@@ -462,6 +498,7 @@ class _PerformanceGovernanceSystemPageState
   void clearAllSelections() {
     rows.clear();
     deliverablesControllers.clear();
+    percentage.clear();
     selectedDirect.clear();
     selectedIndirect.clear();
     selectedByWhen.clear();
@@ -655,6 +692,8 @@ class _PerformanceGovernanceSystemPageState
                             filteredList
                                 .asMap()
                                 .map((index, pgsgovernancesystem) {
+                                  final id = pgsgovernancesystem['id'];
+
                                   return MapEntry(
                                     index,
                                     Container(
@@ -742,9 +781,33 @@ class _PerformanceGovernanceSystemPageState
                                                     MainAxisAlignment.start,
                                                 children: [
                                                   IconButton(
-                                                    onPressed: () => (),
                                                     icon: Icon(Icons.edit),
+
+                                                    onPressed: () {
+                                                      pgsgovernancesystem['id'];
+                                                      pgsgovernancesystem['pgsReadinessRatingId'];
+                                                      print(
+                                                        pgsgovernancesystem['id'],
+                                                      );
+                                                      print(
+                                                        pgsgovernancesystem['pgsReadinessRatingId'],
+                                                      );
+
+                                                      // PerformanceGovernanceSystem
+                                                      // audit =
+                                                      //     getPgsAuditDetails();
+                                                      // print(audit);
+                                                      // ignore: collection_methods_unrelated_type
+                                                      PerformanceGovernanceSystem
+                                                      audit =
+                                                          getPgsAuditDetails();
+                                                      PgsReadiness readiness =
+                                                          audit
+                                                              .pgsReadinessRating;
+                                                      print(readiness);
+                                                    },
                                                   ),
+
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.delete,
@@ -1314,8 +1377,6 @@ class _PerformanceGovernanceSystemPageState
                       PerformanceGovernanceSystem audit = getPgsAuditDetails();
                       await savePGS(audit);
                     }
-                    // ignore: use_build_context_synchronously
-                    Navigator.pop(context);
                   },
                   child: Text(
                     'Submit',
@@ -1330,7 +1391,7 @@ class _PerformanceGovernanceSystemPageState
         );
       },
     );
-  }
+  } //end
 
   Widget _buildDatePickerCell(int index, Function setDialogState) {
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
@@ -1398,6 +1459,10 @@ class _PerformanceGovernanceSystemPageState
 
   // Kra Dropdown
   Widget _buildDropdownKraCell(int index) {
+    if (selectedKRA[index] == null && options.isNotEmpty) {
+      selectedKRA[index] = options.first['id'];
+      selectedKRAObjects[index] = options.first;
+    }
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: DropdownButtonFormField<int>(
@@ -1437,8 +1502,6 @@ class _PerformanceGovernanceSystemPageState
   //Start Strategic Contributions
   // Strategic Contribution Main Header
   TableRow _buildMainHeaderStrategic() {
-    TextEditingController controller = TextEditingController(text: '30%');
-
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
 
@@ -1461,34 +1524,38 @@ class _PerformanceGovernanceSystemPageState
           fontSize: 20,
           fontStyle: FontStyle.normal,
         ),
-        TextField(
-          controller: controller,
-          textAlign: TextAlign.center,
 
-          style: TextStyle(
-            color: secondaryColor,
-            fontSize: 20,
-            fontStyle: FontStyle.normal,
-          ),
-          keyboardType: TextInputType.number,
-          decoration: InputDecoration(
-            enabledBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
+        TableCell(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: percentage,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              style: TextStyle(
+                color: secondaryColor,
+                fontSize: 20,
+                fontStyle: FontStyle.normal,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'^\d+$')),
+              ],
+              decoration: InputDecoration(
+                hintText: '0',
+                suffixText: '%',
+                suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),
+                hintStyle: TextStyle(color: Colors.white),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
             ),
-            focusedBorder: UnderlineInputBorder(
-              borderSide: BorderSide(color: Colors.white),
-            ),
           ),
-
-          onChanged: (value) {
-            if (value.isNotEmpty && !value.contains('%')) {
-              controller.text = '${value.replaceAll(RegExp(r'[^0-9]'), '')}%';
-              controller.selection = TextSelection.fromPosition(
-                TextPosition(offset: controller.text.length - 1),
-              );
-            }
-          },
         ),
+
         BuildHeaderCell(text: ''),
         BuildHeaderCell(text: ''),
       ],
@@ -1759,10 +1826,20 @@ class _PerformanceGovernanceSystemPageState
           fontSize: 20,
           fontStyle: FontStyle.normal,
         ),
-        BuildHeaderCell(
-          text: 'Percentage',
-          fontSize: 20,
-          fontStyle: FontStyle.normal,
+        TableCell(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            // child: TextField(
+            //   controller: percentage,
+            //   decoration: InputDecoration(
+            //     hintText: '',
+            //     border: OutlineInputBorder(),
+            //     filled: true,
+            //     fillColor: Colors.white,
+            //   ),
+            //   style: TextStyle(fontSize: 20, fontStyle: FontStyle.normal),
+            // ),
+          ),
         ),
         BuildHeaderCell(text: ''),
         BuildHeaderCell(text: ''),
@@ -1816,8 +1893,7 @@ class _PerformanceGovernanceSystemPageState
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 50.0),
         child: TextField(
-          controller:
-              deliverablesControllers[index], // Gamitin ang tamang index
+          controller: deliverablesControllers[index],
           maxLines: null,
           keyboardType: TextInputType.multiline,
           decoration: InputDecoration(
@@ -1835,6 +1911,7 @@ class _PerformanceGovernanceSystemPageState
   }
 
   // Filter search results based on query
+
   void filterSearchResults(String query) {
     deliverables.then((data) {
       setState(() {
