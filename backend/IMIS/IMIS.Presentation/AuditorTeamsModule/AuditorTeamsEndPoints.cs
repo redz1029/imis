@@ -11,8 +11,8 @@ namespace IMIS.Presentation.AuditorTeamsModule
     public class AuditorTeamsEndPoints : CarterModule
     {
 
-        private const string _AuditorTeamTag = "Create AuditorTeam";
-        public AuditorTeamsEndPoints() : base("/AuditorTeam")        
+        private const string _AuditorTeamTag = "AuditorTeam";
+        public AuditorTeamsEndPoints() : base("/auditorTeam")        
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
@@ -21,7 +21,7 @@ namespace IMIS.Presentation.AuditorTeamsModule
             {               
                 var createdAuditorTeamsDto = await service.SaveOrUpdateAsync(auditorTeamsDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_AuditorTeamTag, cancellationToken);               
-                return Results.Created($"/AuditorTeams/{createdAuditorTeamsDto}", createdAuditorTeamsDto);
+                return Results.Created($"/auditorTeams/{createdAuditorTeamsDto}", createdAuditorTeamsDto);
             })
            .WithTags(_AuditorTeamTag);
 

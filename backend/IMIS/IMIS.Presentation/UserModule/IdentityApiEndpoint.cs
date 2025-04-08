@@ -18,7 +18,7 @@ namespace IMIS.Presentation.UserModule
     public static class IdentityApiEndpoint
     {
         private static readonly EmailAddressAttribute EmailValidator = new();
-        private const string IdentityGroup = "Create Users";
+        private const string IdentityGroup = "Users";
         private const string RoleGroup = "Roles";
         private const string UserRoleGroup = "User Roles";
         
@@ -35,7 +35,7 @@ namespace IMIS.Presentation.UserModule
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
-            roleGroup.MapGet("/roles", GetRoles).RequireAuthorization();
+            roleGroup.MapGet("/roles", GetRoles);//.RequireAuthorization()
             roleGroup.MapPost("/roles", CreateRole);
             roleGroup.MapPut("/roles/{roleId}", EditRole);
             roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
@@ -44,8 +44,8 @@ namespace IMIS.Presentation.UserModule
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
             userRoleGroup.MapGet("/userRoles", GetUserRoles); 
             userRoleGroup.MapPost("/userRoles", AssignUserRole);
-            userRoleGroup.MapPut("/UpdateUserRole", UpdateUserRole);
-            userRoleGroup.MapDelete("/DeleteUserRole", DeleteUserRole);
+            userRoleGroup.MapPut("/updateUserRole", UpdateUserRole);
+            userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);
 
             return authGroup;
         }
@@ -174,14 +174,15 @@ namespace IMIS.Presentation.UserModule
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
             return Results.Ok("Role created successfully.");
-        }     
-        private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
+        }       
+        private static IResult GetRoles(HttpContext httpContext, IServiceProvider sp)
         {
             var identity = (ClaimsIdentity)httpContext.User.Identity!;
             identity.AddClaim(new Claim(ClaimTypes.Role, "Administrator"));
 
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
-            var roles = await roleManager.Roles.ToListAsync();
+            var roles = roleManager.Roles.ToList();
+
             return Results.Ok(roles);
         }
         private static async Task<IResult> EditRole(RoleManager<IdentityRole> roleManager, string roleId, string newRoleName)

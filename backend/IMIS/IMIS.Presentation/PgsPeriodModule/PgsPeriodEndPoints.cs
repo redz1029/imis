@@ -11,8 +11,8 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
 {
     public class PgsPeriodEndPoints : CarterModule
     {
-        private const string _pgsPeriodTag = "Create PGS Period";
-        public PgsPeriodEndPoints() : base("/PgsPeriod")
+        private const string _pgsPeriodTag = "PGS Period";
+        public PgsPeriodEndPoints() : base("/pgsPeriod")
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
@@ -22,7 +22,7 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
                 var createdPgsPeriod = await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);
                 //Clear the cache for this data after updating
                 await cache.EvictByTagAsync(_pgsPeriodTag, cancellationToken);
-                return Results.Created($"/PgsPeriod/{createdPgsPeriod.Id}", createdPgsPeriod);
+                return Results.Created($"/pgsPeriod/{createdPgsPeriod.Id}", createdPgsPeriod);
             })
             .WithTags(_pgsPeriodTag);
 

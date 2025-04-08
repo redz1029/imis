@@ -12,8 +12,8 @@ namespace IMIS.Presentation.TeamModule
     public class TeamEndPoints : CarterModule
     {
 
-        private const string _teamTag = "Create Team";
-        public TeamEndPoints() : base("/Team")
+        private const string _teamTag = "Team";
+        public TeamEndPoints() : base("/team")
         {
 
         }
@@ -23,7 +23,7 @@ namespace IMIS.Presentation.TeamModule
             {               
                 var createdTeam = await service.SaveOrUpdateAsync(teamDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_teamTag, cancellationToken);
-                return Results.Created($"/Team/{createdTeam.Id}", createdTeam);
+                return Results.Created($"/team/{createdTeam.Id}", createdTeam);
             })
             .WithTags(_teamTag);
 

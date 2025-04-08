@@ -11,8 +11,8 @@ namespace IMIS.Presentation.UserOfficeModule
 {
     public class UserOfficeEndPoints : CarterModule
     {
-        private const string _userOffice = "Create User Office";
-        public UserOfficeEndPoints() : base("/UserOffice") { }
+        private const string _userOffice = "User Office";
+        public UserOfficeEndPoints() : base("/userOffice") { }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
