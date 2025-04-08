@@ -14,25 +14,25 @@ namespace IMIS.Persistence.PGSModules
         public async Task<EntityPageList<PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _dbContext.Deliverable.Where(k => !k.IsDeleted).AsNoTracking();
-            var pgsdeliverable = await EntityPageList<PgsDeliverable, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
-            return pgsdeliverable;
+            var pgsDeliverable = await EntityPageList<PgsDeliverable, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+            return pgsDeliverable;
         }
-        public new async Task<PgsDeliverable> SaveOrUpdateAsync(PgsDeliverable pgs, CancellationToken cancellationToken)
+        public new async Task<PgsDeliverable> SaveOrUpdateAsync(PgsDeliverable pgsDeliverable, CancellationToken cancellationToken)
         {
-            if (pgs == null) throw new ArgumentNullException(nameof(pgs));          
-            var existingPgs = await _dbContext.Deliverable
-                .FirstOrDefaultAsync(d => d.Id == pgs.Id, cancellationToken)
+            if (pgsDeliverable == null) throw new ArgumentNullException(nameof(pgsDeliverable));          
+            var existingPgsDeliverable = await _dbContext.Deliverable
+                .FirstOrDefaultAsync(d => d.Id == pgsDeliverable.Id, cancellationToken)
                 .ConfigureAwait(false);
-            if (existingPgs != null)
+            if (existingPgsDeliverable != null)
             {               
-                _dbContext.Entry(existingPgs).CurrentValues.SetValues(pgs);
+                _dbContext.Entry(existingPgsDeliverable).CurrentValues.SetValues(pgsDeliverable);
             }
             else
             {             
-                await _dbContext.Deliverable.AddAsync(pgs, cancellationToken).ConfigureAwait(false);
+                await _dbContext.Deliverable.AddAsync(pgsDeliverable, cancellationToken).ConfigureAwait(false);
             }         
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return pgs;
+            return pgsDeliverable;
         }
         async Task<List<PgsDeliverable>?> IPGSDeliverableRepository.GetAll(CancellationToken cancellationToken)
         {

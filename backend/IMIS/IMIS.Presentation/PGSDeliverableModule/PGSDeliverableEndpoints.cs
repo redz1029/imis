@@ -44,9 +44,9 @@
 //                return Results.Created("/Deliverable", createdPgsList);
 //            })
 //            .WithTags(_pgsTag)
-//            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));          
+//            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
 
-//            app.MapGet("/", async (IPGSDeliverableService service, CancellationToken cancellationToken) => 
+//            app.MapGet("/", async (IPGSDeliverableService service, CancellationToken cancellationToken) =>
 //            {
 //                var Kradto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
 //                return Results.Ok(Kradto);
