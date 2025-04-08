@@ -11,26 +11,74 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     {
 
     }
+
+    // Get Pgs, Filter by Id
+    public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        return await _dbContext.PerformanceGovernanceSystem
+        .Include(p => p.PgsPeriod) 
+        .Include(p => p.Office)  
+        .Include(p => p.PgsDeliverables)
+        .ThenInclude(d => d.Kra) 
+        .Include(p => p.PgsReadinessRating) 
+        .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+    }
+
+    // Get Pgs, Filter by Pgs Period Id
+    public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken)
+    {
+        var query = _dbContext.PerformanceGovernanceSystem
+        .Where(p => !p.IsDeleted && (pgsPeriodId == null || p.PgsPeriod.Id == pgsPeriodId))
+        .Include(pgs => pgs.PgsPeriod)
+        .Include(pgs => pgs.Office)                          
+        .Include(pgs => pgs.PgsReadinessRating);                                  
+        return await query.ToListAsync(cancellationToken);
+    }
+    // Get all Pgs
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetAll(CancellationToken cancellationToken)
     {
-
         return await _dbContext.PerformanceGovernanceSystem
         .Where(o => !o.IsDeleted)
         .Include(pgs => pgs.PgsPeriod)
-        .Include(pgs => pgs.Office)
-        .Include(pgs => pgs.PgsDeliverables)
+        .Include(pgs => pgs.Office)      
         .Include(pgs => pgs.PgsReadinessRating)
         .AsNoTracking()
         .ToListAsync(cancellationToken);
     } 
+    // Get Pgs, Filter by all Paginated
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
         var query = _dbContext.PerformanceGovernanceSystem.Where(k => !k.IsDeleted).AsNoTracking();
-
         var perfomanceGovernanceSystem = await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
-
         return perfomanceGovernanceSystem;
     }
+
+    // Get Pgs, Filter by Pgs Period Id with pagination
+    public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(
+    long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
+    {
+       
+        var query = _dbContext.PerformanceGovernanceSystem
+        .Where(k => !k.IsDeleted)
+        .Include(pgs => pgs.PgsPeriod)
+        .Include(pgs => pgs.Office)
+        .Include(pgs => pgs.PgsReadinessRating)
+        .AsNoTracking(); 
+        
+        if (pgsPeriodId.HasValue)
+        {
+            query = query.Where(p => p.PgsPeriod.Id == pgsPeriodId.Value);
+        }
+
+        // Apply pagination using EntityPageList
+        var paginatedResult = await EntityPageList<PerfomanceGovernanceSystem, long>
+        .CreateAsync(query, page, pageSize, cancellationToken)
+        .ConfigureAwait(false);
+
+        return paginatedResult;
+    }
+
+    // Save or Update Record
     public new async Task<PerfomanceGovernanceSystem> SaveOrUpdateAsync(PerfomanceGovernanceSystem perfomanceGovernanceSystem, CancellationToken cancellationToken)
     {
         if (perfomanceGovernanceSystem == null) throw new ArgumentNullException(nameof(perfomanceGovernanceSystem));
@@ -59,8 +107,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         return _dbContext.PerformanceGovernanceSystem.CountAsync(cancellationToken);
     }
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetPagedAsync(int skip, int pageSize, CancellationToken cancellationToken)
-    {
-    
+    {    
         return await _dbContext.PerformanceGovernanceSystem.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
-    }
+    }    
 }

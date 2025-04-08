@@ -8,6 +8,7 @@ namespace IMIS.Domain
         public required Office Office { get; set; }
         public string? Remarks { get; set; }
         public List<PgsDeliverable>? PgsDeliverables { get; set; }
-        public PgsReadinessRating? PgsReadinessRating { get; set; }
+        public PgsReadinessRating? PgsReadinessRating { get; set; }  
+
     }
 }
