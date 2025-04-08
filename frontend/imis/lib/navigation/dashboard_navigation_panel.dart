@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:imis/performance_governance_system/auditor/pages/auditor_page.dart';
-import 'package:imis/performance_governance_system/deliverable/pages/deliverables_page.dart';
+import 'package:imis/auditor/pages/auditor_page.dart';
+import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
 import 'package:imis/auth/pages/home_page.dart';
 import 'package:imis/performance_governance_system/key_result_area/pages/key_result_area_page.dart';
 import 'package:imis/performance_governance_system/office/pages/office_page.dart';
@@ -26,7 +26,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   final GlobalKey _menuKey = GlobalKey();
   bool _isLoading = false;
   String firstName = "User";
-  String position = "Position";
+  List<String> roles = [];
   Widget _selectedScreen = HomePage();
   int _selectedIndex = -1;
 
@@ -40,7 +40,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     setState(() {
       firstName = prefs.getString('firstName') ?? "User";
-      position = prefs.getString('position') ?? "Position";
+      roles = prefs.getStringList('roles') ?? [];
     });
   }
 
@@ -73,14 +73,17 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
               ),
               TextButton(
                 onPressed: () async {
-                  Navigator.of(context).pop();
                   SharedPreferences prefs =
                       await SharedPreferences.getInstance();
                   await prefs.clear();
-                  Navigator.of(context).pushReplacement(
+
+                  // ignore: use_build_context_synchronously
+                  Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => const LoginPage()),
+                    (route) => false,
                   );
                 },
+
                 child: const Text(
                   'Logout',
                   style: TextStyle(color: primaryColor),
@@ -262,7 +265,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
             Icons.file_copy,
             'Performance Governance System',
             1,
-            () => _setScreen(DeliverablesPage(), 1),
+            () => _setScreen(PerformanceGovernanceSystemPage(), 1),
           ),
           Theme(
             data: Theme.of(context).copyWith(dividerColor: lightGrey),
@@ -469,8 +472,9 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                                         CrossAxisAlignment.center,
                                     children: [Text("Welcome, $firstName")],
                                   ),
+
                                   Text(
-                                    position,
+                                    roles.join(', '),
                                     style: TextStyle(fontSize: 12, color: grey),
                                   ),
                                 ],
