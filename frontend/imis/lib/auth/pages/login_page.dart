@@ -28,6 +28,7 @@ class LoginPageState extends State<LoginPage> {
   bool _isPasswordVisible = false;
 
   bool _isLoggingIn = false;
+  bool _isPageLoaded = false;
 
   final dio = Dio();
 
@@ -57,7 +58,7 @@ class LoginPageState extends State<LoginPage> {
       await prefs.setStringList("officeNames", officeNames);
       await prefs.setStringList("officeIds", officeIdsAsString);
       await prefs.setStringList('roles', roles);
-
+      print(roles);
       String accessToken = responseData['accessToken'] ?? '';
       String refreshToken = responseData['refreshToken'] ?? '';
       await prefs.setString('refreshToken', refreshToken);
@@ -65,6 +66,9 @@ class LoginPageState extends State<LoginPage> {
 
       if (context.mounted) {
         if (response.statusCode == 200) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setBool('isLoggedIn', true);
+
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -97,20 +101,39 @@ class LoginPageState extends State<LoginPage> {
               position: MotionToastPosition.top,
             ).show(context);
           }
+          _isLoggingIn = false;
         }
       }
     } finally {
       if (context.mounted) {
         setState(() {
-          _isLoggingIn = false;
+          _isPageLoaded = false;
         });
       }
+    }
+  }
+
+  void _checkLoginStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+
+    if (isLoggedIn) {
+      Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
+        context,
+        MaterialPageRoute(builder: (context) => DashboardNavigationPanel()),
+      );
+    } else {
+      setState(() {
+        _isPageLoaded = true;
+      });
     }
   }
 
   @override
   void initState() {
     super.initState();
+    _checkLoginStatus();
     focusIconUsername.addListener(() {
       setState(() {});
     });
