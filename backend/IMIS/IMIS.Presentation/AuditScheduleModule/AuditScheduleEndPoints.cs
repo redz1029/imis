@@ -11,52 +11,48 @@ namespace IMIS.Presentation.AuditScheduleModule
 {
     public class AuditScheduleEndPoints : CarterModule
     {
-        private const string _AuditSchedule = "Create AuditSchedule";
-        public AuditScheduleEndPoints() : base("/AuditSchedule")
+        private const string _AuditSchedule = "AuditSchedule";
+        public AuditScheduleEndPoints() : base("/auditSchedule")
         {
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/", async ([FromBody] AuditScheduleDto auditScheduleDto, 
-                                    IAuditScheduleService service, 
-                                    IAuditScheduleRepository auditRepository, // Added repository for validation
-                                    IOutputCacheStore cache, 
-                                    CancellationToken cancellationToken) =>
-            {
-                
-                //  Check for overlapping audits before saving
-                foreach (var office in auditScheduleDto.AuditSchduleDetails!)
-                {
-                    var overlappingSchedule = await auditRepository
-                        .GetOverlappingAuditAsync(office.OfficeId, auditScheduleDto.StartDate, auditScheduleDto.EndDate, auditScheduleDto.Id);
 
-                    if (overlappingSchedule != null)
-                    {
-                        return Results.BadRequest($"Office ID {office.OfficeId} is already scheduled for an audit during this period.");
-                    }
+            app.MapPost("/", async ([FromBody] AuditScheduleDto auditScheduleDto, IAuditScheduleService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+               
+                if (auditScheduleDto.AuditSchduleDetails == null || !auditScheduleDto.AuditSchduleDetails.Any())
+                {
+                    return Results.BadRequest("No audit schedule details provided.");
                 }
-                //  Save the audit schedule
+
+                // Validate overlapping audits
+                var overlapErrors = await service.GetOverlappingAuditAsync(auditScheduleDto, cancellationToken);
+                if (overlapErrors.Count > 0)
+                {
+                    return Results.BadRequest(new { Errors = overlapErrors });
+                }
+
+                // Save audit schedule
                 var createdAuditSchedule = await service.SaveOrUpdateAsync(auditScheduleDto, cancellationToken).ConfigureAwait(false);
 
-                //  Save auditable offices if present
-                if (auditScheduleDto.AuditableOffices != null && auditScheduleDto.AuditableOffices.Count > 0)
+                // Save auditable offices if provided
+                if (auditScheduleDto.AuditableOffices?.Count > 0)
                 {
-                    List<AuditableOfficesDto> auditableOfficesList = new();
-                    foreach (var officeId in auditScheduleDto.AuditableOffices)
+                    var auditableOfficesList = auditScheduleDto.AuditableOffices.Select(officeId => new AuditableOfficesDto
                     {
-                        auditableOfficesList.Add(new AuditableOfficesDto
-                        {
-                            AuditScheduleId = createdAuditSchedule.Id,
-                            OfficeId = officeId.OfficeId,  
-                        });
-                    }
+                        AuditScheduleId = createdAuditSchedule.Id,
+                        OfficeId = officeId.OfficeId
+                    }).ToList();
+
                     await service.SaveAuditableOfficesAsync(auditableOfficesList, cancellationToken);
                 }
 
-                //  Clear cache
+                // Clear cache
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
-                return Results.Created($"/AuditSchedule/{createdAuditSchedule.Id}", createdAuditSchedule);
+
+                return Results.Created($"/auditSchedule/{createdAuditSchedule.Id}", createdAuditSchedule);
             })
             .WithTags(_AuditSchedule);
         }

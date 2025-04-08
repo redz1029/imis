@@ -6,5 +6,6 @@ namespace IMIS.Application.AuditScheduleModule
     public interface IAuditScheduleDetailRepository : IRepository<AuditScheduleDetails, int>
     {
         new Task<AuditScheduleDetails> SaveOrUpdateAsync(AuditScheduleDetails auditScheduleDetails, CancellationToken cancellationToken);
+        Task<AuditScheduleDetails?> GetOverlappingAuditAsync(int officeId, DateTime startDate, DateTime endDate, int currentAuditId);
     }
 }

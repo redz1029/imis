@@ -8,7 +8,8 @@ namespace IMIS.Application.AuditScheduleModule
         new Task<AuditSchedule> SaveOrUpdateAsync(AuditSchedule auditSchedule, CancellationToken cancellationToken);
         Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken);
         Task<IEnumerable<AuditSchedule>> GetAllActiveAsync(CancellationToken cancellationToken);
-        Task AddAuditableOfficesAsync(List<AuditableOffices> auditableOffices, CancellationToken cancellationToken);
-        Task<AuditSchedule?> GetOverlappingAuditAsync(int officeId, DateTime startDate, DateTime endDate, int currentAuditId);
+        Task AddAuditableOfficesAsync(List<AuditableOffices> auditableOffices, CancellationToken cancellationToken);       
+        Task<AuditScheduleDetails?> GetOverlappingAuditAsync(int officeId, DateTime startDateTime, DateTime endDateTime, int id);
+
     }
 }

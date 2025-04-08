@@ -1,8 +1,6 @@
 ﻿using Base.Primitives;
 using IMIS.Application.AuditableOfficesModule;
 using IMIS.Application.AuditScheduleModule;
-using IMIS.Application.PgsKraModule;
-using IMIS.Application.PgsModule;
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
 
@@ -211,6 +209,25 @@ namespace IMIS.Persistence.AuditScheduleModule
             return totalHours;
         }
 
+        // Check Overlapping for AuditScheduleDetails
+        public async Task<List<string>> GetOverlappingAuditAsync(AuditScheduleDto auditScheduleDto, CancellationToken cancellationToken)
+        {
+            List<string> overlapErrors = new();
+
+            foreach (var office in auditScheduleDto.AuditSchduleDetails!)
+            {
+                var overlappingSchedule = await _auditScheduleRepository
+                    .GetOverlappingAuditAsync(office.OfficeId, office.StartDateTime, office.EndDateTime, auditScheduleDto.Id);
+
+                if (overlappingSchedule != null)
+                {
+                    string errorMessage = $"Conflict: Office ID {office.OfficeId} has an existing audit from {overlappingSchedule.StartDateTime:yyyy-MM-dd} to {overlappingSchedule.EndDateTime:yyyy-MM-dd}.";
+                    overlapErrors.Add(errorMessage);
+                }
+            }
+            return overlapErrors;
+        }
+
         public async Task<List<AuditScheduleDto>?> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository
@@ -227,7 +244,6 @@ namespace IMIS.Persistence.AuditScheduleModule
                     IsActive = a.IsActive }
                 ).ToList();
         }
-
         public async Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository
@@ -235,15 +251,14 @@ namespace IMIS.Persistence.AuditScheduleModule
                 .ConfigureAwait(false);
 
             return auditSchedules?.Select(a =>
-                new AuditScheduleDto()
-                {
-                    Id = a.Id,
-                    AuditTitle = a.AuditTitle,
-                    StartDate = a.StartDate,
-                    EndDate = a.EndDate,
-                    IsActive = a.IsActive
-                }
-                ).ToList();
+            new AuditScheduleDto()
+            {
+                Id = a.Id,
+                AuditTitle = a.AuditTitle,
+                StartDate = a.StartDate,
+                EndDate = a.EndDate,
+                IsActive = a.IsActive
+            }).ToList();
         }
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
@@ -261,7 +276,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                         var office = new Office()
                         {
                             Id = officeDto.Id,
-                            Name = officeDto.Name,
+                            Name = officeDto.Name!,
                             IsActive = officeDto.IsActive
                         };
 
@@ -296,7 +311,8 @@ namespace IMIS.Persistence.AuditScheduleModule
             }).ToList();
 
             await _auditScheduleRepository.AddAuditableOfficesAsync(entities, cancellationToken);
-        }   
+        }
+     
         public async Task<AuditScheduleDto> SaveOrUpdateAsync(AuditScheduleDto auditScheduleDto, CancellationToken cancellationToken)
         {
             if (auditScheduleDto == null) throw new ArgumentNullException(nameof(auditScheduleDto));

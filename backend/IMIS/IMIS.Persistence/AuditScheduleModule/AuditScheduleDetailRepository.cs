@@ -7,10 +7,19 @@ namespace IMIS.Persistence.AuditScheduleModule
 {
 
     public class AuditScheduleDetailRepository(ImisDbContext dbContext) : BaseRepository<AuditScheduleDetails, int, ImisDbContext>(dbContext), IAuditScheduleDetailRepository
-    {
-      
+    {      
+        public async Task<AuditScheduleDetails?> GetOverlappingAuditAsync(int officeId, DateTime startDate, DateTime endDate, int currentAuditId)
+        {
+            return await _dbContext.AuditScheduleDetails
+                .Where(a => a.Id != currentAuditId)
+                .Where(a => a.OfficeId == officeId) 
+                .Where(a => startDate < a.EndDateTime && endDate > a.StartDateTime) 
+                .FirstOrDefaultAsync(); 
+        }
         public new async Task<AuditScheduleDetails> SaveOrUpdateAsync(AuditScheduleDetails auditScheduleDetails, CancellationToken cancellationToken)
         {
+
+
             if (auditScheduleDetails == null) throw new ArgumentNullException(nameof(auditScheduleDetails));
             // Check if the entity already exists
             var existingAuditDetails = await _dbContext.AuditScheduleDetails
