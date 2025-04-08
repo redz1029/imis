@@ -1,4 +1,4 @@
-import 'package:imis/performance_governance_system/auditor/models/auditor.dart';
+import 'package:imis/auditor/models/auditor.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'team.g.dart';

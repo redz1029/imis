@@ -12,7 +12,7 @@ class ApiEndpoint {
   late String auditor;
   late String pgsperiod;
   late String deliverables;
-  late String pgsgovernancesystem;
+  late String performancegovernancesystem;
   late String office;
   late String team;
 
@@ -24,9 +24,9 @@ class ApiEndpoint {
     auditor = '$baseUrl/auditors';
     pgsperiod = '$baseUrl/PgsPeriod';
     deliverables = '$baseUrl/Deliverable';
-    pgsgovernancesystem = '$baseUrl/PerformanceGovernanceSystem';
+    performancegovernancesystem = '$baseUrl/pgs';
     office = '$baseUrl/Office';
-    office = '$baseUrl/Team';
+    team = '$baseUrl/Team';
   }
 
   static Future<void> setBaseUrl() async {
