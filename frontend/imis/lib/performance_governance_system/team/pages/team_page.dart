@@ -1,7 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/performance_governance_system/auditor/models/auditor.dart';
 import 'package:imis/performance_governance_system/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 
@@ -70,7 +69,6 @@ class _TeamPageState extends State<TeamPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch auditors when the screen is initialized
     fetchTeam();
     isSearchfocus.addListener(() {
       setState(() {});
@@ -102,8 +100,6 @@ class _TeamPageState extends State<TeamPage> {
     bool isDeleted = false,
     String? name,
     bool isActive = false,
-    bool isTeamLeader = false,
-    bool isOfficeHead = false,
   }) {
     TextEditingController teamController = TextEditingController(text: name);
     showDialog(
@@ -187,6 +183,7 @@ class _TeamPageState extends State<TeamPage> {
                     rowVersion: '',
                   );
                   addOrUpdateTeam(team);
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context);
                 }
               },
@@ -283,7 +280,7 @@ class _TeamPageState extends State<TeamPage> {
                       children: [
                         Expanded(
                           flex: 1,
-                          child: Text('ID', style: TextStyle(color: grey)),
+                          child: Text('#', style: TextStyle(color: grey)),
                         ),
                         Expanded(
                           flex: 3,

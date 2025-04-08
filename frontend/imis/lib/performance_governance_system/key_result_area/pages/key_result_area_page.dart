@@ -189,7 +189,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                       children: [
                         Expanded(
                           flex: 1,
-                          child: Text('ID', style: TextStyle(color: grey)),
+                          child: Text('#', style: TextStyle(color: grey)),
                         ),
                         Expanded(
                           flex: 3,
@@ -336,6 +336,11 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                     ),
                                   ),
                                 ),
+                              if (currentPage < 4)
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 4),
+                                  child: Text("..."),
+                                ),
 
                               IconButton(
                                 icon: Icon(Icons.chevron_right),
@@ -348,11 +353,6 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                         }
                                         : null,
                               ),
-                              if (currentPage < 4)
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 4),
-                                  child: Text("..."),
-                                ),
                             ],
                           ),
                         ),
