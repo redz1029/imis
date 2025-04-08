@@ -11,8 +11,8 @@ namespace IMIS.Presentation.KraModuleAPI
 {
     public class KraEndPoints : CarterModule
     {
-        private const string _keyAreaResultTag = "Create Key Result Area";
-        public KraEndPoints() : base("/KeyResultArea")
+        private const string _keyAreaResultTag = "Key Result Area";
+        public KraEndPoints() : base("/keyResultArea")
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
@@ -21,7 +21,7 @@ namespace IMIS.Presentation.KraModuleAPI
             {               
                 var createdKeyResultAreaDto = await service.SaveOrUpdateAsync(keyResultAreaDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_keyAreaResultTag, cancellationToken);
-                return Results.Created($"/Kra/{createdKeyResultAreaDto.Id}", createdKeyResultAreaDto);
+                return Results.Created($"/kra/{createdKeyResultAreaDto.Id}", createdKeyResultAreaDto);
             })
             .WithTags(_keyAreaResultTag);
             app.MapGet("/", async (IKeyResultAreaService service, CancellationToken cancellationToken) =>
