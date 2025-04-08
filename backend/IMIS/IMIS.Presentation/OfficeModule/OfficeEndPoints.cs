@@ -13,7 +13,7 @@ namespace IMIS.Presentation.OfficeModule
     public class OfficeEndPoints : CarterModule
     {
         private const string _officeTag = "Office";
-        public OfficeEndPoints() : base("/Office")
+        public OfficeEndPoints() : base("/office")
         {
 
         }

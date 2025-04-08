@@ -8,7 +8,6 @@ namespace IMIS.Persistence.OfficeModule
 {
     public class OfficeRepository(ImisDbContext dbContext) : BaseRepository<Office, int, ImisDbContext>(dbContext), IOfficeRepository
     {
-
         public async Task<EntityPageList<Office, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _dbContext.Offices.Where(k => !k.IsDeleted).AsNoTracking();
