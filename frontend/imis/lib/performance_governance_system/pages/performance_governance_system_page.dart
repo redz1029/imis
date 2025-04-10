@@ -528,6 +528,7 @@ class _PerformanceGovernanceSystemPageState
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: mainBgColor,
         title: Text('Performance Governance Information'),
       ),
@@ -782,30 +783,36 @@ class _PerformanceGovernanceSystemPageState
                                                 children: [
                                                   IconButton(
                                                     icon: Icon(Icons.edit),
+                                                    onPressed:
+                                                        () => showFormDialog(
+                                                          id:
+                                                              pgsgovernancesystem['id'],
+                                                        ),
+                                                    // onPressed: () {
 
-                                                    onPressed: () {
-                                                      pgsgovernancesystem['id'];
-                                                      pgsgovernancesystem['pgsReadinessRatingId'];
-                                                      print(
-                                                        pgsgovernancesystem['id'],
-                                                      );
-                                                      print(
-                                                        pgsgovernancesystem['pgsReadinessRatingId'],
-                                                      );
-
-                                                      // PerformanceGovernanceSystem
-                                                      // audit =
-                                                      //     getPgsAuditDetails();
-                                                      // print(audit);
-                                                      // ignore: collection_methods_unrelated_type
-                                                      PerformanceGovernanceSystem
-                                                      audit =
-                                                          getPgsAuditDetails();
-                                                      PgsReadiness readiness =
-                                                          audit
-                                                              .pgsReadinessRating;
-                                                      print(readiness);
-                                                    },
+                                                    //   // pgsgovernancesystem['id'];
+                                                    //   // pgsgovernancesystem['pgsReadinessRatingId'];
+                                                    //   // print(
+                                                    //   //   pgsgovernancesystem['id'],
+                                                    //   // );
+                                                    //   // print(
+                                                    //   //   pgsgovernancesystem['pgsReadinessRatingId'],
+                                                    //   // );
+                                                    //   // PgsReadiness readiness =
+                                                    //   //     getReadinessDetails();
+                                                    //   // print(
+                                                    //   //   "Competence: ${readiness.competenceToDeliver}",
+                                                    //   // );
+                                                    //   // print(
+                                                    //   //   "Resource: ${readiness.resourceAvailability}",
+                                                    //   // );
+                                                    //   // print(
+                                                    //   //   "Confidence: ${readiness.competenceToDeliver}",
+                                                    //   // );
+                                                    //   // print(
+                                                    //   //   "Total Score: ${readiness.totalScore}",
+                                                    //   // );
+                                                    // },
                                                   ),
 
                                                   IconButton(
@@ -880,7 +887,8 @@ class _PerformanceGovernanceSystemPageState
   }
 
   //Dialog to add PGS
-  void showFormDialog() {
+
+  void showFormDialog({String? id, Office? selectedOfficeId}) {
     showDialog(
       context: context,
       builder: (context) {
@@ -926,7 +934,8 @@ class _PerformanceGovernanceSystemPageState
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Text(
-                                      '    COTABATO REGIONAL AND MEDICAL CENTER',
+                                      id == null ? 'Add KRA' : 'Edit KRA',
+                                      // '    COTABATO REGIONAL AND MEDICAL CENTER',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
