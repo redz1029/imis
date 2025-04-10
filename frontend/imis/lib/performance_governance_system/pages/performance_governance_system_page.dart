@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -54,7 +52,7 @@ class _PerformanceGovernanceSystemPageState
 
   String officeDisplay = "";
   String officeIdList = "";
-  String? selectedOfficeId = "";
+  String? selectedOffice = "";
   String? selectedPeriodText;
 
   List<Map<String, dynamic>> periodList = [];
@@ -189,6 +187,14 @@ class _PerformanceGovernanceSystemPageState
                   pgs.pgsPeriod.startDate,
                 ),
                 'End Date': DateTimeConverter().toJson(pgs.pgsPeriod.endDate),
+                'competencescore':
+                    pgs.pgsReadinessRating.competenceToDeliver.toString(),
+                'confidencescore':
+                    pgs.pgsReadinessRating.confidenceToDeliver.toString(),
+                'resourcescore':
+                    pgs.pgsReadinessRating.resourceAvailability.toString(),
+                'selectPeriod': pgs.pgsPeriod.id.toString(),
+                'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
               };
             }).toList();
 
@@ -243,17 +249,17 @@ class _PerformanceGovernanceSystemPageState
 
     List<String> officeNames = prefs.getStringList('officeNames') ?? [];
     List<String> officeIds = prefs.getStringList('officeIds') ?? [];
-    selectedOfficeId = prefs.getString('selectedOfficeId');
+    selectedOffice = prefs.getString('selectedOfficeId');
 
     String selectedOfficeName = "No Office";
-    if (officeIds.contains(selectedOfficeId)) {
-      int index = officeIds.indexOf(selectedOfficeId!);
+    if (officeIds.contains(selectedOffice)) {
+      int index = officeIds.indexOf(selectedOffice!);
       selectedOfficeName = officeNames[index];
     }
 
     setState(() {
       officeDisplay = selectedOfficeName;
-      officeIdList = selectedOfficeId ?? "No Office ID";
+      officeIdList = selectedOffice ?? "No Office ID";
     });
   }
 
@@ -418,9 +424,7 @@ class _PerformanceGovernanceSystemPageState
           DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
       double percentDeliverables = 0.0;
       try {
-        percentDeliverables =
-            double.tryParse(percentage.text) ??
-            0.0; // Default to 0.0 if invalid
+        percentDeliverables = double.tryParse(percentage.text) ?? 0.0;
       } catch (e) {
         print("Error parsing percentDeliverables: $e");
       }
@@ -465,7 +469,7 @@ class _PerformanceGovernanceSystemPageState
         DateTime.now(),
       ),
       Office(
-        int.tryParse(selectedOfficeId!) ?? 0,
+        int.tryParse(selectedOffice!) ?? 0,
         "",
         false,
         false,
@@ -598,20 +602,10 @@ class _PerformanceGovernanceSystemPageState
                             selectedOfficeId.isNotEmpty) {
                           await _loadOfficeName();
                           showFormDialog();
-                          // Navigator.of(context).push(
-                          //   MaterialPageRoute(
-                          //     builder: (context) => RetrievePeriodPage(),
-                          //   ),
-                          // );
                         }
                       } else {
                         await _loadOfficeName();
                         showFormDialog();
-                        // Navigator.of(context).push(
-                        //   MaterialPageRoute(
-                        //     builder: (context) => RetrievePeriodPage(),
-                        //   ),
-                        // );
                       }
                     },
                     child: Row(
@@ -693,8 +687,6 @@ class _PerformanceGovernanceSystemPageState
                             filteredList
                                 .asMap()
                                 .map((index, pgsgovernancesystem) {
-                                  final id = pgsgovernancesystem['id'];
-
                                   return MapEntry(
                                     index,
                                     Container(
@@ -787,32 +779,22 @@ class _PerformanceGovernanceSystemPageState
                                                         () => showFormDialog(
                                                           id:
                                                               pgsgovernancesystem['id'],
-                                                        ),
-                                                    // onPressed: () {
+                                                          officename:
+                                                              pgsgovernancesystem['name'],
+                                                          competencescore:
+                                                              pgsgovernancesystem['competencescore'],
+                                                          confidencescore:
+                                                              pgsgovernancesystem['confidencescore'],
+                                                          resourcescore:
+                                                              pgsgovernancesystem['resourcescore'],
+                                                          startDate:
+                                                              pgsgovernancesystem['Start Date'],
+                                                          endDate:
+                                                              pgsgovernancesystem['End Date'],
 
-                                                    //   // pgsgovernancesystem['id'];
-                                                    //   // pgsgovernancesystem['pgsReadinessRatingId'];
-                                                    //   // print(
-                                                    //   //   pgsgovernancesystem['id'],
-                                                    //   // );
-                                                    //   // print(
-                                                    //   //   pgsgovernancesystem['pgsReadinessRatingId'],
-                                                    //   // );
-                                                    //   // PgsReadiness readiness =
-                                                    //   //     getReadinessDetails();
-                                                    //   // print(
-                                                    //   //   "Competence: ${readiness.competenceToDeliver}",
-                                                    //   // );
-                                                    //   // print(
-                                                    //   //   "Resource: ${readiness.resourceAvailability}",
-                                                    //   // );
-                                                    //   // print(
-                                                    //   //   "Confidence: ${readiness.competenceToDeliver}",
-                                                    //   // );
-                                                    //   // print(
-                                                    //   //   "Total Score: ${readiness.totalScore}",
-                                                    //   // );
-                                                    // },
+                                                          // selectPeriod:
+                                                          //     pgsgovernancesystem['selectPeriod'],
+                                                        ),
                                                   ),
 
                                                   IconButton(
@@ -888,7 +870,16 @@ class _PerformanceGovernanceSystemPageState
 
   //Dialog to add PGS
 
-  void showFormDialog({String? id, Office? selectedOfficeId}) {
+  void showFormDialog({
+    String? id,
+    String? officename,
+    String? startDate,
+    String? endDate,
+    String? competencescore,
+    String? resourcescore,
+    String? confidencescore,
+    String? selectPeriod,
+  }) {
     showDialog(
       context: context,
       builder: (context) {
@@ -934,8 +925,10 @@ class _PerformanceGovernanceSystemPageState
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     Text(
-                                      id == null ? 'Add KRA' : 'Edit KRA',
-                                      // '    COTABATO REGIONAL AND MEDICAL CENTER',
+                                      id == null
+                                          ? 'COTABATO REGIONAL AND MEDICAL CENTER'
+                                          : 'COTABATO REGIONAL AND MEDICAL CENTER',
+
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
@@ -974,18 +967,14 @@ class _PerformanceGovernanceSystemPageState
                                                       period['id'] == newValue,
                                                   orElse:
                                                       () =>
-                                                          filteredListPeriod[0], // Default fallback
+                                                          filteredListPeriod[0],
                                                 );
 
-                                            setState(() {
+                                            setDialogState(() {
                                               selectedPeriod = newValue;
                                               selectedPeriodText =
                                                   "${selected['startDate']} - ${selected['endDate']}";
                                             });
-
-                                            print(
-                                              "After setState: selectedPeriod = $selectedPeriod, selectedPeriodText = $selectedPeriodText",
-                                            );
                                           }
                                         },
                                         items:
@@ -1026,7 +1015,8 @@ class _PerformanceGovernanceSystemPageState
                                   text: "Strategic Contributions",
                                 ), // Tab Name 1
                                 Tab(
-                                  text: "Readiness Rating - $officeDisplay",
+                                  text:
+                                      "Readiness Rating - ${officename ?? officeDisplay}",
                                 ), // Tab Name 2
                                 Tab(
                                   text: "PGS Deliverables Status",
@@ -1062,7 +1052,10 @@ class _PerformanceGovernanceSystemPageState
                                             6: FlexColumnWidth(0.7),
                                           },
                                           children: [
-                                            _buildMainHeaderStrategic(),
+                                            _buildMainHeaderStrategic(
+                                              officename:
+                                                  officename ?? officeDisplay,
+                                            ),
                                             _buildTableSubHeaderStrategic(),
                                             ...rows.map(
                                               (rowId) =>
@@ -1113,7 +1106,7 @@ class _PerformanceGovernanceSystemPageState
                                       title: Row(
                                         children: [
                                           Text(
-                                            'READINESS RATING - $officeDisplay',
+                                            'READINESS RATING - ${officename ?? officeDisplay}',
                                             style: TextStyle(
                                               fontSize: 30,
                                               fontWeight: FontWeight.normal,
@@ -1154,7 +1147,13 @@ class _PerformanceGovernanceSystemPageState
                                                 'Teams are skilled but lack training to deliver performance commitments ',
                                                 'Teams are highly skilled and trained to deliver performance commitments',
                                               ],
-                                              competenceScore,
+
+                                              ValueNotifier<double>(
+                                                double.tryParse(
+                                                      competencescore ?? '',
+                                                    ) ??
+                                                    competenceScore.value,
+                                              ),
                                             ),
 
                                             // Resource Availability Dropdown
@@ -1165,6 +1164,13 @@ class _PerformanceGovernanceSystemPageState
                                                 'Sufficient resources but not available; OR Insufficient but external resources can be tapped',
                                                 'Sufficient and available staff and budget',
                                               ],
+
+                                              // ValueNotifier<double>(
+                                              //   double.tryParse(
+                                              //         resourcescore ?? '',
+                                              //       ) ??
+                                              //       resourceScore.value,
+                                              // ),
                                               resourceScore,
                                             ),
 
@@ -1176,7 +1182,14 @@ class _PerformanceGovernanceSystemPageState
                                                 'Moderate confidence',
                                                 'High confidence despite organizational change required',
                                               ],
-                                              confidenceScore,
+
+                                              // confidenceScore,
+                                              ValueNotifier<double>(
+                                                double.tryParse(
+                                                      confidencescore ?? '',
+                                                    ) ??
+                                                    confidenceScore.value,
+                                              ),
                                             ),
 
                                             Row(
@@ -1211,9 +1224,10 @@ class _PerformanceGovernanceSystemPageState
                                                               padding:
                                                                   EdgeInsets.only(
                                                                     right: 60.0,
-                                                                  ), // Adjust right padding if needed
+                                                                  ),
                                                               child: Text(
-                                                                'TOTAL SCORE:          ${totalScore.toStringAsFixed(1)}',
+                                                                ('TOTAL SCORE:           ${totalScore.toStringAsFixed(1)}'),
+
                                                                 style: TextStyle(
                                                                   fontSize: 20,
                                                                   fontWeight:
@@ -1268,7 +1282,10 @@ class _PerformanceGovernanceSystemPageState
                                             6: FlexColumnWidth(0.7),
                                           },
                                           children: [
-                                            _PgsDeliverableHeader(),
+                                            _PgsDeliverableHeader(
+                                              officename:
+                                                  officename ?? officeDisplay,
+                                            ),
                                             _PgsBuildTableSubheader(),
                                             ...rows.map(
                                               (rowId) =>
@@ -1510,7 +1527,7 @@ class _PerformanceGovernanceSystemPageState
 
   //Start Strategic Contributions
   // Strategic Contribution Main Header
-  TableRow _buildMainHeaderStrategic() {
+  TableRow _buildMainHeaderStrategic({String? officename}) {
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
 
@@ -1518,7 +1535,7 @@ class _PerformanceGovernanceSystemPageState
         GestureDetector(
           key: _menuKey,
           child: BuildHeaderCell(
-            text: officeDisplay,
+            text: officename ?? officeDisplay,
             color: Colors.white,
             fontSize: 20,
             fontStyle: FontStyle.normal,
@@ -1641,7 +1658,7 @@ class _PerformanceGovernanceSystemPageState
         onChanged: (PgsStatus? newValue) {
           if (newValue != null) {
             setDialogState();
-            selectedStatus[index] = newValue; // ✅ Directly store as enum
+            selectedStatus[index] = newValue;
           }
         },
         isExpanded: true,
@@ -1790,7 +1807,6 @@ class _PerformanceGovernanceSystemPageState
                       return DropdownMenuItem(
                         value: index * 0.5,
                         child: Center(
-                          // Centers the text inside the dropdown
                           child: Text(
                             '${index * 0.5}',
                             textAlign: TextAlign.center,
@@ -1800,12 +1816,11 @@ class _PerformanceGovernanceSystemPageState
                     }),
                     underline: Container(),
                     isExpanded: true,
-                    alignment:
-                        Alignment.center, // Ensures dropdown aligns correctly
+                    alignment: Alignment.center,
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.normal,
-                    ), // Ensures selected value is also styled
+                    ),
                   );
                 },
               ),
@@ -1820,11 +1835,11 @@ class _PerformanceGovernanceSystemPageState
 
   //PGS DELIVERABLES STATUS
   // ignore: non_constant_identifier_names
-  TableRow _PgsDeliverableHeader() {
+  TableRow _PgsDeliverableHeader({String? officename}) {
     return TableRow(
       children: [
         BuildHeaderCell(
-          text: 'Office: $officeDisplay)',
+          text: 'Office: ${officename ?? officeDisplay}',
           fontSize: 20,
           fontStyle: FontStyle.normal,
         ),
