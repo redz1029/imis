@@ -69,11 +69,11 @@ class LoginPageState extends State<LoginPage> {
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setBool('isLoggedIn', true);
 
-          Navigator.push(
-            context,
+          Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => const DashboardNavigationPanel(),
             ),
+            (route) => false,
           );
         }
       } else {
@@ -118,10 +118,11 @@ class LoginPageState extends State<LoginPage> {
     bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
     if (isLoggedIn) {
-      Navigator.pushReplacement(
-        // ignore: use_build_context_synchronously
-        context,
-        MaterialPageRoute(builder: (context) => DashboardNavigationPanel()),
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (context) => const DashboardNavigationPanel(),
+        ),
+        (route) => false,
       );
     } else {
       setState(() {
