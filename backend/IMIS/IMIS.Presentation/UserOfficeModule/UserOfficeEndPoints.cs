@@ -1,7 +1,9 @@
 ﻿using Carter;
 using IMIS.Application.UserOfficeModule;
+using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
@@ -31,7 +33,7 @@ namespace IMIS.Presentation.UserOfficeModule
             })
             .WithTags(_userOffice)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
-
+ 
             app.MapGet("/{id}", async (int id, IUserOfficeService service, CancellationToken cancellationToken) =>
             {
                 var userOffice = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);

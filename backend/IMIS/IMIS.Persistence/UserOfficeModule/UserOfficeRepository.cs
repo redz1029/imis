@@ -2,14 +2,17 @@
 using Base.Pagination;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.UserOfficeModule
 {
     public class UserOfficeRepository : BaseRepository<UserOffices, int, ImisDbContext>, IUserOfficeRepository
     {
-        public UserOfficeRepository(ImisDbContext dbContext) : base(dbContext)
+        private readonly UserManager<User> _userManager;
+        public UserOfficeRepository(ImisDbContext dbContext, UserManager<User> userManager) : base(dbContext)
         {
+            userManager = userManager;
         }
         public async Task<EntityPageList<UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
@@ -21,13 +24,13 @@ namespace IMIS.Persistence.UserOfficeModule
         }
         public async Task<IEnumerable<UserOffices>> GetAll(CancellationToken cancellationToken)
         {
-            return await _dbContext.UserOffices
+            return await _dbContext.UserOffices            
                 .Where(o => !o.IsDeleted)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
+     
         public new async Task<UserOffices> SaveOrUpdateAsync(UserOffices userOffice, CancellationToken cancellationToken)
         {
             if (userOffice == null) throw new ArgumentNullException(nameof(userOffice));

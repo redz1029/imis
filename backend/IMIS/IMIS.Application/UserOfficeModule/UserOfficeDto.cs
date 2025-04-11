@@ -11,6 +11,15 @@ namespace IMIS.Application.UserOfficeModule
         public required int OfficeId { get; set; }       
         public required bool IsActive { get; set; }
 
+
+        // User-related fields
+        public string? FirstName { get; set; }
+        public string? MiddleName { get; set; }
+        public string? LastName { get; set; }
+        public string? Prefix { get; set; }
+        public string? Suffix { get; set; }
+        public string? Position { get; set; }
+
         public UserOfficeDto() { }
         [SetsRequiredMembers]
         public UserOfficeDto(UserOffices userOffices)
