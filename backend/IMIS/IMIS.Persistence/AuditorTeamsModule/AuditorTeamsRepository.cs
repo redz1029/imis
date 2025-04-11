@@ -13,6 +13,15 @@ namespace IMIS.Persistence.AuditorTeamsModule
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
 
+        public async Task<IEnumerable<AuditorTeams>> GetAllAsync(CancellationToken cancellationToken)
+        {
+            return await _dbContext.AuditorTeams
+                .Where(a => a.IsActive)
+                .Include(x => x.Auditor)
+                .ToListAsync(cancellationToken);
+        }
+
+
         public async Task<AuditorTeams> SaveOrUpdateAsync(AuditorTeams auditorTeam, CancellationToken cancellationToken)
         {
             if (auditorTeam == null) throw new ArgumentNullException(nameof(auditorTeam));

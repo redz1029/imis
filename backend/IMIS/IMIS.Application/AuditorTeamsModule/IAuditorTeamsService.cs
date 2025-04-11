@@ -1,8 +1,12 @@
 ﻿
+using IMIS.Application.AuditScheduleModule;
+
 namespace IMIS.Application.AuditorTeamsModule
 {
     public interface IAuditorTeamsService
     {
-        Task<AuditorTeamsDto> SaveOrUpdateAsync(AuditorTeamsDto auditorTeamsDto, CancellationToken cancellationToken);       
+        Task<List<AuditorTeamsDto>?> GetAllAsync(CancellationToken cancellationToken);
+        Task<AuditorTeamsDto> SaveOrUpdateAsync(AuditorTeamsDto auditorTeamsDto, CancellationToken cancellationToken);
+      
     }
 }

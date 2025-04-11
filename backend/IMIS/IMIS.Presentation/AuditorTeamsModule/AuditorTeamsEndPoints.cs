@@ -1,10 +1,13 @@
 ﻿using Carter;
 using IMIS.Application.AuditorTeamsModule;
+using IMIS.Application.AuditScheduleModule;
+using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IMIS.Presentation.AuditorTeamsModule
 {
@@ -24,6 +27,14 @@ namespace IMIS.Presentation.AuditorTeamsModule
                 return Results.Created($"/auditorTeams/{createdAuditorTeamsDto}", createdAuditorTeamsDto);
             })
            .WithTags(_AuditorTeamTag);
+
+            app.MapGet("/", async (IAuditorTeamsService service, CancellationToken cancellationToken) =>
+            {
+                var keyResultAreaDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(keyResultAreaDto);
+            })
+         .WithTags(_AuditorTeamTag)
+         .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true);
 
         }
     }
