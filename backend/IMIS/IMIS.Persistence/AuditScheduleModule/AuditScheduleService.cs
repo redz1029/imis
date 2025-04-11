@@ -1,6 +1,8 @@
-﻿using Base.Primitives;
+﻿using Base.Abstractions;
+using Base.Primitives;
 using IMIS.Application.AuditableOfficesModule;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Application.PgsKraModule;
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
 
@@ -259,6 +261,21 @@ namespace IMIS.Persistence.AuditScheduleModule
                 EndDate = a.EndDate,
                 IsActive = a.IsActive
             }).ToList();
+        }
+
+        public async Task<AuditScheduleDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var auditSchedules = await _auditScheduleRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);           
+            return auditSchedules is not null 
+            ? new AuditScheduleDto
+            {
+                Id = auditSchedules.Id,
+                AuditTitle = auditSchedules.AuditTitle,
+                StartDate = auditSchedules.StartDate,
+                EndDate = auditSchedules.EndDate,
+                IsActive = auditSchedules.IsActive
+            }
+            : null;
         }
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
