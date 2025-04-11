@@ -38,6 +38,7 @@ namespace IMIS.Persistence.PGSModules
         {
             return await _dbContext.Deliverable
           .Where(o => !o.IsDeleted)
+          .Include(o => o.Kra)
           .AsNoTracking()
           .ToListAsync(cancellationToken)
           .ConfigureAwait(false);
