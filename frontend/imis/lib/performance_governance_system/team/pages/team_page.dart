@@ -51,7 +51,7 @@ class _TeamPageState extends State<TeamPage> {
   // Add or update team
 
   Future<void> addOrUpdateTeam(Team team) async {
-    var url = ApiEndpoint().auditor;
+    var url = ApiEndpoint().team;
     try {
       final response = await dio.post(url, data: team.toJson());
 
