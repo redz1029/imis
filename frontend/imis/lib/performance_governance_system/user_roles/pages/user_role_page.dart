@@ -1,75 +1,109 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/performance_governance_system/team/models/team.dart';
+import 'package:imis/performance_governance_system/office/models/office.dart';
+import 'package:imis/performance_governance_system/user_roles/models/user_role.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class TeamPage extends StatefulWidget {
-  const TeamPage({super.key});
+class UserRolePage extends StatefulWidget {
+  const UserRolePage({super.key});
 
   @override
   // ignore: library_private_types_in_public_api
-  _TeamPageState createState() => _TeamPageState();
+  _UserRolePageState createState() => _UserRolePageState();
 }
 
-class _TeamPageState extends State<TeamPage> {
+class _UserRolePageState extends State<UserRolePage> {
   // ignore: non_constant_identifier_names
-  List<Map<String, dynamic>> teamList = [];
+  List<Map<String, dynamic>> userRoleList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
   final dio = Dio();
 
-  // Fetch team from the API
-  Future<void> fetchTeam() async {
-    var url = ApiEndpoint().team;
+  Future<void> fetchUserRole() async {
+    var url = ApiEndpoint().userRole;
 
     try {
-      var response = await dio.get(url);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
+
+      var response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
 
       if (response.statusCode == 200 && response.data is List) {
-        List<Team> data =
-            (response.data as List).map((team) => Team.fromJson(team)).toList();
+        List<UserWithRoles> data =
+            (response.data as List)
+                .map((userRole) => UserWithRoles.fromJson(userRole))
+                .toList();
 
         if (mounted) {
           setState(() {
-            teamList = data.map((team) => team.toJson()).toList();
-            filteredList = List.from(teamList);
+            userRoleList = data.map((userRole) => userRole.toJson()).toList();
+            filteredList = List.from(userRoleList);
           });
         }
       } else {
-        print("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      print("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      print("Unexpected error: $e");
+      debugPrint("Unexpected error: $e");
     }
   }
 
-  // Add or update team
+  // Add or update office
 
-  Future<void> addOrUpdateTeam(Team team) async {
-    var url = ApiEndpoint().team;
+  Future<void> addOrUpdateUserRole(Office office) async {
+    var url = ApiEndpoint().office;
+
     try {
-      final response = await dio.post(url, data: team.toJson());
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
 
-      if (response.statusCode == 200) {
-        await fetchTeam();
-        setState(() {
-          fetchTeam();
-        });
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
+
+      final Map<String, dynamic> requestData = office.toJson();
+      final response = await dio.post(
+        url,
+        data: requestData,
+        options: Options(
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        await fetchUserRole();
+      } else {
+        debugPrint(
+          "Failed to add/update office. Status code: ${response.statusCode}",
+        );
       }
     } catch (e) {
-      print("Error adding/updating pgs: $e");
+      debugPrint("Error adding/updating office: $e");
     }
   }
 
   @override
   void initState() {
     super.initState();
-    fetchTeam();
+    fetchUserRole();
     isSearchfocus.addListener(() {
       setState(() {});
     });
@@ -85,23 +119,21 @@ class _TeamPageState extends State<TeamPage> {
   void filterSearchResults(String query) {
     setState(() {
       filteredList =
-          teamList
+          userRoleList
               .where(
-                (team) =>
-                    team['name']!.toLowerCase().contains(query.toLowerCase()),
+                (office) =>
+                    office['name']!.toLowerCase().contains(query.toLowerCase()),
               )
               .toList();
     });
   }
 
-  // Show the form to add or update auditor
-  void showFormDialog({
-    String? id,
-    bool isDeleted = false,
-    String? name,
-    bool isActive = false,
-  }) {
-    TextEditingController teamController = TextEditingController(text: name);
+  // Show the form to add or update office
+  void showFormDialog({String? userId, String? userName, String? roles}) {
+    TextEditingController officeController = TextEditingController(
+      text: userName,
+    );
+    TextEditingController roleController = TextEditingController(text: roles);
     showDialog(
       context: context,
       builder: (context) {
@@ -111,7 +143,7 @@ class _TeamPageState extends State<TeamPage> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           title: Text(
-            id == null ? 'Add Team' : 'Edit Team',
+            userId == null ? 'Add User Role' : 'Edit User Role',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           content: Column(
@@ -121,9 +153,21 @@ class _TeamPageState extends State<TeamPage> {
                 width: 350,
                 height: 65,
                 child: TextField(
-                  controller: teamController,
+                  controller: officeController,
                   decoration: InputDecoration(
-                    labelText: 'Team Name',
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  readOnly: userId != null,
+                ),
+              ),
+              SizedBox(
+                width: 350,
+                height: 65,
+                child: TextField(
+                  controller: roleController,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
                     border: OutlineInputBorder(),
                   ),
                 ),
@@ -154,10 +198,10 @@ class _TeamPageState extends State<TeamPage> {
                   builder: (context) {
                     return AlertDialog(
                       title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
+                        userId == null ? "Confirm Save" : "Confirm Update",
                       ),
                       content: Text(
-                        id == null
+                        userId == null
                             ? "Are you sure you want to save this record?"
                             : "Are you sure you want to update this record?",
                       ),
@@ -175,20 +219,16 @@ class _TeamPageState extends State<TeamPage> {
                   },
                 );
                 if (confirmAction == true) {
-                  final team = Team(
-                    int.tryParse(id ?? '0') ?? 0,
-                    teamController.text,
-                    isActive,
-                    isDeleted,
-                    rowVersion: '',
-                  );
-                  addOrUpdateTeam(team);
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
+                  // final userRole = UserRole(
+                  //   int.tryParse(id ?? '0') ?? 0,
+                  //   officeController.text,
+                  // );
+                  // addOrUpdateUserRole(userRole);
+                  // Navigator.pop(context);
                 }
               },
               child: Text(
-                id == null ? 'Save' : 'Update',
+                userId == null ? 'Save' : 'Update',
                 style: TextStyle(color: Colors.white),
               ),
             ),
@@ -204,7 +244,7 @@ class _TeamPageState extends State<TeamPage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: Text('Team Information'),
+        title: Text('User Role Information'),
         backgroundColor: mainBgColor,
       ),
       body: Padding(
@@ -229,7 +269,7 @@ class _TeamPageState extends State<TeamPage> {
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Team',
+                      labelText: 'Search Office',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -283,9 +323,14 @@ class _TeamPageState extends State<TeamPage> {
                           child: Text('#', style: TextStyle(color: grey)),
                         ),
                         Expanded(
-                          flex: 3,
-                          child: Text('Team', style: TextStyle(color: grey)),
+                          flex: 1,
+                          child: Text('Name', style: TextStyle(color: grey)),
                         ),
+                        Expanded(
+                          flex: 2,
+                          child: Text('Role', style: TextStyle(color: grey)),
+                        ),
+
                         Expanded(
                           flex: 1,
                           child: Text('Actions', style: TextStyle(color: grey)),
@@ -300,7 +345,7 @@ class _TeamPageState extends State<TeamPage> {
                         children:
                             filteredList
                                 .asMap()
-                                .map((index, auditor) {
+                                .map((index, userRole) {
                                   return MapEntry(
                                     index,
                                     Container(
@@ -335,13 +380,33 @@ class _TeamPageState extends State<TeamPage> {
                                             ),
                                           ),
                                           Expanded(
-                                            flex: 3,
+                                            flex: 1,
                                             child: Padding(
                                               padding: EdgeInsets.only(
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                auditor['name'],
+                                                '${userRole['firstName'] ?? ''} ${userRole['lastName'] ?? ''} ${userRole['middleName'] != null && userRole['middleName'].isNotEmpty ? userRole['middleName'][0] + '.' : ''} '
+                                                    .trim(),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                userRole['roles']
+                                                    .map(
+                                                      (role) => role.roleName,
+                                                    )
+                                                    .join(', '),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -363,10 +428,19 @@ class _TeamPageState extends State<TeamPage> {
                                                     icon: Icon(Icons.edit),
                                                     onPressed:
                                                         () => showFormDialog(
-                                                          id:
-                                                              auditor['id']
+                                                          userId:
+                                                              userRole['userId']
                                                                   .toString(),
-                                                          name: auditor['name'],
+
+                                                          userName:
+                                                              '${userRole['firstName'] ?? ''} ${userRole['lastName'] ?? ''} ${userRole['middleName'] != null && userRole['middleName'].isNotEmpty ? userRole['middleName'][0] + '.' : ''} ',
+
+                                                          roles: userRole['roles']
+                                                              .map(
+                                                                (role) =>
+                                                                    role.roleName,
+                                                              )
+                                                              .join(', '),
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
+import 'package:imis/performance_governance_system/auditor_team/pages/auditor_team_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
 import 'package:imis/auth/pages/home_page.dart';
 import 'package:imis/performance_governance_system/key_result_area/pages/key_result_area_page.dart';
@@ -10,6 +11,7 @@ import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_p
 import 'package:imis/constant/constant.dart';
 import 'package:imis/auth/pages/login_page.dart';
 import 'package:imis/performance_governance_system/team/pages/team_page.dart';
+import 'package:imis/performance_governance_system/user_roles/pages/user_role_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardNavigationPanel extends StatefulWidget {
@@ -314,9 +316,23 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                       _buildListTile(
                         Icons.date_range,
                         hideIcon: true,
-                        'Office',
+                        'Auditor Team',
                         6,
-                        () => _setScreen(OfficePage(), 6),
+                        () => _setScreen(AuditorTeamPage(), 6),
+                      ),
+                      _buildListTile(
+                        Icons.date_range,
+                        hideIcon: true,
+                        'Office',
+                        7,
+                        () => _setScreen(OfficePage(), 7),
+                      ),
+                      _buildListTile(
+                        Icons.date_range,
+                        hideIcon: true,
+                        'User Role',
+                        8,
+                        () => _setScreen(UserRolePage(), 8),
                       ),
                     ],
                   ),
@@ -325,11 +341,11 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
             ),
           ),
 
-          _buildListTile(Icons.folder, 'Reports', 7, () {}),
+          _buildListTile(Icons.folder, 'Reports', 9, () {}),
           _buildListTile(
             Icons.exit_to_app,
             'Logout',
-            7,
+            9,
             () => _logout(context),
           ),
         ],
