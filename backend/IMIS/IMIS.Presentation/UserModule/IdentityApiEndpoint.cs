@@ -32,6 +32,8 @@ namespace IMIS.Presentation.UserModule
             authGroup.MapPut("/changePassword", ChangePassword<TUser>);
             authGroup.MapPost("/refresh", RefreshToken<TUser>);
             authGroup.MapDelete("/revokeRefreshToken", RevokeRefreshToken<TUser>);
+            authGroup.MapGet("/users", (HttpContext httpContext, IServiceProvider sp) => GetUsers(httpContext, sp));
+
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
@@ -50,6 +52,22 @@ namespace IMIS.Presentation.UserModule
             return authGroup;
         }
         private const string _userRegister = "User's Registration";
+        private static IResult GetUsers(HttpContext httpContext, IServiceProvider sp)
+        {
+            var userManager = sp.GetRequiredService<UserManager<User>>();
+
+            var users = userManager.Users.ToList();
+
+            // Example: Map only selected properties
+            var userList = users.Select(u => new
+            {               
+                u.Id,
+                FullName = $"{u.Prefix} {u.FirstName} {u.MiddleName} {u.LastName} {u.Suffix}".Trim()
+
+            });
+
+            return Results.Ok(userList);
+        }
         private static async Task<IResult> RegisterUser(UserRegistrationDto registration, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
@@ -174,6 +192,7 @@ namespace IMIS.Presentation.UserModule
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
             return Results.Ok("Role created successfully.");
+            
         }       
         private static IResult GetRoles(HttpContext httpContext, IServiceProvider sp)
         {
