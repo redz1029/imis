@@ -39,7 +39,7 @@ namespace IMIS.Presentation.UserModule
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
-            roleGroup.MapGet("/roles", GetRoles);//.RequireAuthorization()
+            roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles"));
             roleGroup.MapPost("/roles", CreateRole);
             roleGroup.MapPut("/roles/{roleId}", EditRole);
             roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
@@ -178,83 +178,32 @@ namespace IMIS.Presentation.UserModule
             await signInManager.UserManager.RemoveAuthenticationTokenAsync(user, "IMIS_API", "refresh_token");          
             return Results.Ok("Refresh token revoked successfully.");
         }
+
+        // Update this method to accept roleName as a simple string parameter.
         private static async Task<IResult> CreateRole([FromBody] string roleName, IServiceProvider sp)
         {
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
+
+            // Check if the role already exists
             if (await roleManager.RoleExistsAsync(roleName))
                 return Results.Conflict("Role already exists.");
 
             var role = new IdentityRole(roleName)
             {
                 ConcurrencyStamp = Guid.NewGuid().ToString()
-
             };
 
+            // Create the role
             var result = await roleManager.CreateAsync(role);
             if (!result.Succeeded)
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
-            return Results.Ok("Role created successfully.");
+            // Invalidate cache after creation
+            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+            await outputCacheStore.EvictByTagAsync("roles", default);
 
+            return Results.Ok(role);
         }
-
-        //private static async Task<IResult> CreateRole([FromBody] string roleName, IServiceProvider sp)
-        //{
-        //    var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
-
-        //    // Check if the role already exists
-        //    if (await roleManager.RoleExistsAsync(roleName))
-        //        return Results.Conflict("❗ Role already exists.");
-
-        //    // Create new IdentityRole
-        //    var role = new IdentityRole(roleName)
-        //    {
-        //        ConcurrencyStamp = Guid.NewGuid().ToString()
-        //    };
-
-        //    // Attempt to save the new role
-        //    var result = await roleManager.CreateAsync(role);
-
-        //    if (!result.Succeeded)
-        //    {
-        //        // Return validation errors if any
-        //        var errors = result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description });
-        //        return Results.ValidationProblem(errors);
-        //    }
-
-        //    return Results.Ok("✅ Role created successfully.");
-        //}
-
-
-        //private static async Task<IResult> CreateRole([FromBody] string roleName, IServiceProvider sp)
-        //{
-        //    var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
-
-        //    // Check if the role already exists
-        //    if (await roleManager.RoleExistsAsync(roleName))
-        //        return Results.Conflict("❗ Role already exists.");
-
-        //    var role = new IdentityRole(roleName)
-        //    {
-        //        ConcurrencyStamp = Guid.NewGuid().ToString()
-        //    };
-
-        //    // Create the role asynchronously and directly without unnecessary overhead
-        //    var result = await roleManager.CreateAsync(role);
-
-        //    if (!result.Succeeded)
-        //    {
-        //        // Return validation errors if any
-        //        var errors = result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description });
-        //        return Results.ValidationProblem(errors);
-        //    }
-
-        //    // Directly return the role in case you want to see it in the response
-        //    return Results.Ok(new { role.Id, role.Name });
-        //}
-
-
-
 
         private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
         {
@@ -266,71 +215,16 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok(roles);
         }
-
-        //private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
-        //{
-        //    var identity = (ClaimsIdentity)httpContext.User.Identity!;
-        //    identity.AddClaim(new Claim(ClaimTypes.Role, "Administrator"));
-
-        //    //var dbContext = sp.GetRequiredService<ImisDbContext>(); // Direct access to the DbContext
-        //    //var roles = dbContext.Roles.ToList(); // Ensure we're querying the DB directly
-
-
-
-        //    var dbContext = sp.GetRequiredService<ImisDbContext>();
-        //    var roles = await dbContext.Roles.AsNoTracking().ToListAsync(); // AsNoTracking disables caching
-
-
-        //    return Results.Ok(roles);
-        //}
-
-        //private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
-        //{
-        //    var identity = (ClaimsIdentity)httpContext.User.Identity!;
-        //    identity.AddClaim(new Claim(ClaimTypes.Role, "Administrator"));
-
-        //    // Get the ApplicationDbContext service
-        //    var dbContext = sp.GetRequiredService<ImisDbContext>();
-
-        //    // Fetch roles using AsNoTracking to avoid caching
-        //    var roles = await dbContext.Roles.AsNoTracking().ToListAsync(); // Ensure AsNoTracking is used with DbSet
-
-        //    return Results.Ok(roles);
-        //}
-
-
-        //private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
-        //private static async Task<IResult> GetRoles(IServiceProvider sp)
-        //{
-
-
-        //    var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
-
-
-        //    var userRolesList = new List<Roles>();
-        //    return Results.Ok(userRolesList);
-        //}
-
-        //private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
-        //{
-        //    var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
-
-        //    // Fetch roles from the database
-        //    var roles = roleManager.Roles
-        //        .Select(r => new { r.Id, r.Name })
-        //        .ToList();
-          
-        //    return Results.Ok(roles);
-        //}
-
-        private static async Task<IResult> EditRole(RoleManager<IdentityRole> roleManager, string roleId, string newRoleName)
+      
+        private static async Task<IResult> EditRole(RoleManager<IdentityRole> roleManager, string roleId, [FromBody] string newRoleName,
+        IServiceProvider sp)
         {
             var role = await roleManager.FindByIdAsync(roleId);
             if (role == null)
             {
                 return Results.NotFound($"Role with ID {roleId} not found.");
             }
-            
+
             if (await roleManager.RoleExistsAsync(newRoleName))
             {
                 return Results.BadRequest($"Role name '{newRoleName}' already exists.");
@@ -343,8 +237,14 @@ namespace IMIS.Presentation.UserModule
             {
                 return Results.BadRequest(result.Errors);
             }
+        
+            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+            await outputCacheStore.EvictByTagAsync("roles", default);
+
             return Results.Ok($"Role updated successfully to '{newRoleName}'.");
         }
+
+
 
         private static async Task<IResult> DeleteRole(string roleId, IServiceProvider sp)
         {
@@ -359,8 +259,6 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok("Role deleted successfully.");
         }
-
-
 
         private static async Task<IResult> GetUserRoles(IServiceProvider sp)
         {
@@ -400,7 +298,6 @@ namespace IMIS.Presentation.UserModule
             }
             return Results.Ok(userRolesList);
         }
-
      
         private static async Task<IResult> AssignUserRole([FromBody] IdentityUserRole<string> userRole, IServiceProvider sp)
         {
