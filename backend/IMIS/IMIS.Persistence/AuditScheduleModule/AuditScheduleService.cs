@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditableOfficesModule;
 using IMIS.Application.AuditScheduleModule;
@@ -319,6 +320,14 @@ namespace IMIS.Persistence.AuditScheduleModule
             }
         }
 
+        public async Task<DtoPageList<AuditScheduleDto, AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var auditSchedule = await _auditScheduleRepository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (auditSchedule.TotalCount == 0)
+                return null;
+            return DtoPageList<AuditScheduleDto, AuditSchedule, int>.Create(auditSchedule.Items, page, pageSize, auditSchedule.TotalCount);
+
+        }      
         public async Task SaveAuditableOfficesAsync(List<AuditableOfficesDto> auditableOfficesList, CancellationToken cancellationToken)
         {
             var entities = auditableOfficesList.Select(dto => new AuditableOffices

@@ -24,7 +24,7 @@ namespace IMIS.Persistence.UserOfficeModule
 
             // Find the corresponding user based on UserId
             var user = users.FirstOrDefault(u => u.Id == userOffices.UserId);
-
+         
             if (user == null)
             {               
                 return new UserOfficeDto

@@ -33,7 +33,7 @@ namespace IMIS.Presentation.OfficeModule
                 return Results.Ok(offices);
             })
             .WithTags(_officeTag)           
-            .RequireAuthorization(a => a.RequireRole(RoleTypes.Administrator))
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.Administrator))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
 
             app.MapGet("/filter/{name}", async (string name, IOfficeService service, CancellationToken cancellationToken) =>

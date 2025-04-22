@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,18 @@ namespace IMIS.Persistence.AuditScheduleModule
     public class AuditScheduleRepository(ImisDbContext dbContext)
         : BaseRepository<AuditSchedule, int, ImisDbContext>(dbContext), IAuditScheduleRepository
     {
+
+        public async Task<EntityPageList<AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var query = _dbContext.AuditSchedules
+                .Where(k => !k.IsDeleted)
+                .AsNoTracking();
+
+            var auditSchedules = await EntityPageList<AuditSchedule, int>
+             .CreateAsync(query, page, pageSize, cancellationToken)
+             .ConfigureAwait(false);
+            return auditSchedules;
+        }
         // Check Overlapping in AuditScheduleDetails
         public async Task<AuditScheduleDetails?> GetOverlappingAuditAsync(int officeId, DateTime startDateTime, DateTime endDateTime, int id)
         {

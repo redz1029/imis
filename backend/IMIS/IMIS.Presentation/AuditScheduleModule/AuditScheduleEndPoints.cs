@@ -73,6 +73,14 @@ namespace IMIS.Presentation.AuditScheduleModule
             })
            .WithTags(_AuditSchedule)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true);
+
+            app.MapGet("/page", async (int page, int pageSize, IAuditScheduleService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedAuditSchedule = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(paginatedAuditSchedule);
+            })
+           .WithTags(_AuditSchedule)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true);
         }
     }
 }
