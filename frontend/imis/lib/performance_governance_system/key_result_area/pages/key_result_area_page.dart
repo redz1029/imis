@@ -69,7 +69,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
         });
       }
     } catch (e) {
-      print("Error adding/updating KRA: $e");
+      debugPrint("Error adding/updating KRA: $e");
     }
   }
 
@@ -84,7 +84,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
         await fetchKRAs();
       }
     } catch (e) {
-      print("Error deleting KRA: $e");
+      debugPrint("Error deleting KRA: $e");
     }
   }
 
@@ -104,17 +104,6 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
-
-    int itemsPerPage = 14;
-    int totalPage = (filteredList.length / itemsPerPage).ceil();
-    int startPage = (currentPage - 1).clamp(1, totalPage - maxVisiblePages + 1);
-    int endPage = (startPage + maxVisiblePages - 1).clamp(1, totalPage);
-
-    var paginatedList =
-        filteredList
-            .skip((currentPage - 1) * itemsPerPage)
-            .take(itemsPerPage)
-            .toList();
 
     return Scaffold(
       backgroundColor: mainBgColor,
@@ -211,9 +200,9 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                   ),
                   Expanded(
                     child: ListView.builder(
-                      itemCount: paginatedList.length,
+                      itemCount: filteredList.length,
                       itemBuilder: (context, index) {
-                        var kra = paginatedList[index];
+                        var kra = filteredList[index];
                         return Container(
                           padding: EdgeInsets.symmetric(
                             vertical: 1,
@@ -229,10 +218,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                             children: [
                               Expanded(
                                 flex: 1,
-                                child: Text(
-                                  (index + 1 + (currentPage - 1) * itemsPerPage)
-                                      .toString(),
-                                ),
+                                child: Text((index + 1).toString()),
                               ),
                               Expanded(flex: 3, child: Text(kra['name'])),
                               Expanded(
@@ -271,94 +257,6 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                       },
                     ),
                   ),
-                  Container(
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    child: Row(
-                      children: [
-                        Padding(
-                          padding: EdgeInsets.only(left: 16),
-                          child: Text(
-                            'Page $currentPage out of $totalPage',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: primaryTextColor,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.chevron_left),
-                                onPressed:
-                                    currentPage > 1
-                                        ? () {
-                                          setState(() {
-                                            currentPage--;
-                                          });
-                                        }
-                                        : null,
-                              ),
-
-                              if (currentPage > 4)
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 4),
-                                  child: Text("..."),
-                                ),
-                              for (int i = startPage; i <= endPage; i++)
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 4),
-                                  child: InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        currentPage = i;
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color:
-                                            currentPage == i
-                                                ? primaryColor
-                                                : null,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        "$i",
-                                        style: TextStyle(
-                                          color:
-                                              currentPage == i
-                                                  ? Colors.white
-                                                  : Colors.black,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              if (currentPage < 4)
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 4),
-                                  child: Text("..."),
-                                ),
-
-                              IconButton(
-                                icon: Icon(Icons.chevron_right),
-                                onPressed:
-                                    currentPage < totalPage
-                                        ? () {
-                                          setState(() {
-                                            currentPage++;
-                                          });
-                                        }
-                                        : null,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -373,32 +271,6 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
-    );
-  }
-
-  Widget _buildPageButton(int page) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 4),
-      child: InkWell(
-        onTap: () {
-          setState(() {
-            currentPage = page;
-          });
-        },
-        child: Container(
-          padding: EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: currentPage == page ? primaryColor : null,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            "$page",
-            style: TextStyle(
-              color: currentPage == page ? Colors.white : Colors.black,
-            ),
-          ),
-        ),
-      ),
     );
   }
 
@@ -510,6 +382,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                   );
 
                   addOrUpdateKRA(kra);
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context);
                 }
               },

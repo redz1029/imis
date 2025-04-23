@@ -57,6 +57,7 @@ class _PerformanceGovernanceSystemPageState
 
   List<Map<String, dynamic>> periodList = [];
   List<Map<String, dynamic>> filteredListPeriod = [];
+  List<PgsDeliverables> deliverablesList = [];
 
   int? selectedPeriod;
 
@@ -67,6 +68,7 @@ class _PerformanceGovernanceSystemPageState
   TextEditingController percentage = TextEditingController();
 
   List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
+  // ignore: non_constant_identifier_names
   List<String> StatusOptions = ['PATIENT', 'RESEARCH', 'LINKAGES', 'HR'];
 
   //Start Readiness Rating-Cancer Care------------------------------------------------------------------------------------------------
@@ -110,6 +112,7 @@ class _PerformanceGovernanceSystemPageState
         description: const Text(
           "Please complete all required fields before saving.",
         ),
+        // ignore: deprecated_member_use
         position: MotionToastPosition.top,
       ).show(context);
       return;
@@ -139,6 +142,7 @@ class _PerformanceGovernanceSystemPageState
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         debugPrint("✅ Pgs data saved successfully!");
+        // ignore: use_build_context_synchronously
         Navigator.pop(context);
         clearAllSelections();
       } else {
@@ -173,7 +177,7 @@ class _PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 && response.data is List) {
-        List<Map<String, String>> formattedData =
+        List<Map<String, Object>> formattedData =
             (response.data as List).map((pgsJson) {
               PerformanceGovernanceSystem pgs =
                   PerformanceGovernanceSystem.fromJson(pgsJson);
@@ -195,6 +199,10 @@ class _PerformanceGovernanceSystemPageState
                     pgs.pgsReadinessRating.resourceAvailability.toString(),
                 'selectPeriod': pgs.pgsPeriod.id.toString(),
                 'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
+                'deliverabledIds':
+                    pgs.pgsDeliverables
+                        .map((deliverable) => deliverable.id.toString())
+                        .toList(),
               };
             }).toList();
 
@@ -214,6 +222,84 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
+  // Future<void> fetchPgsDeliverable({String? id}) async {
+  //   var url = ApiEndpoint().deliverables;
+
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     String? token = prefs.getString('accessToken');
+
+  //     if (token == null || token.isEmpty) {
+  //       debugPrint("Error: Access token is missing!");
+  //       return;
+  //     }
+
+  //     var response = await dio.get(
+  //       url,
+  //       options: Options(headers: {"Authorization": "Bearer $token"}),
+  //     );
+
+  //     if (response.statusCode == 200 && response.data is List) {
+  //       List<PgsDeliverables> data =
+  //           (response.data as List)
+  //               .map(
+  //                 (pgsdeliverables) =>
+  //                     PgsDeliverables.fromJson(pgsdeliverables),
+  //               )
+  //               .toList();
+
+  //       if (mounted) {
+  //         setState(() {
+  //           pgsDeliverables =
+  //               data
+  //                   .map((pgsdeliverables) => pgsdeliverables.toJson())
+  //                   .toList();
+  //           filteredLists = List.from(pgsDeliverables);
+  //         });
+  //       }
+  //     } else {
+  //       debugPrint("Unexpected response format: ${response.data.runtimeType}");
+  //     }
+  //   } on DioException catch (e) {
+  //     debugPrint("Dio error: ${e.response?.data ?? e.message}");
+  //   } catch (e) {
+  //     debugPrint("Unexpected error: $e");
+  //   }
+  // }
+
+  Future<PgsDeliverables?> fetchSingleDeliverable() async {
+    final url = ApiEndpoint().deliverables;
+
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return null;
+      }
+
+      final response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
+
+      if (response.statusCode == 200) {
+        return PgsDeliverables.fromJson(response.data); // Return full object
+      } else {
+        debugPrint("Failed to fetch deliverable: ${response.statusCode}");
+        return null;
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      return null;
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+      return null;
+    }
+  }
+
+  //fetch periods
   Future<void> fetchPGSPeriods() async {
     var url = ApiEndpoint().pgsperiod;
 
@@ -235,12 +321,12 @@ class _PerformanceGovernanceSystemPageState
           });
         }
       } else {
-        print("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      print("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      print("Unexpected error: $e");
+      debugPrint("Unexpected error: $e");
     }
   }
 
@@ -411,8 +497,6 @@ class _PerformanceGovernanceSystemPageState
   }
 
   List<PgsDeliverables> getTableDeliverables() {
-    List<PgsDeliverables> deliverablesList = [];
-
     deliverablesControllers.forEach((index, controller) {
       var kraData =
           selectedKRAObjects[index] ??
@@ -426,7 +510,7 @@ class _PerformanceGovernanceSystemPageState
       try {
         percentDeliverables = double.tryParse(percentage.text) ?? 0.0;
       } catch (e) {
-        print("Error parsing percentDeliverables: $e");
+        debugPrint("Error parsing percentDeliverables: $e");
       }
       var status = PgsStatus.values.firstWhere(
         (e) => e.index == (selectedStatus[index] ?? PgsStatus.notStarted.index),
@@ -775,26 +859,31 @@ class _PerformanceGovernanceSystemPageState
                                                 children: [
                                                   IconButton(
                                                     icon: Icon(Icons.edit),
-                                                    onPressed:
-                                                        () => showFormDialog(
-                                                          id:
-                                                              pgsgovernancesystem['id'],
-                                                          officename:
-                                                              pgsgovernancesystem['name'],
-                                                          competencescore:
-                                                              pgsgovernancesystem['competencescore'],
-                                                          confidencescore:
-                                                              pgsgovernancesystem['confidencescore'],
-                                                          resourcescore:
-                                                              pgsgovernancesystem['resourcescore'],
-                                                          startDate:
-                                                              pgsgovernancesystem['Start Date'],
-                                                          endDate:
-                                                              pgsgovernancesystem['End Date'],
 
-                                                          // selectPeriod:
-                                                          //     pgsgovernancesystem['selectPeriod'],
+                                                    onPressed: () async {
+                                                      showFormDialog(
+                                                        id:
+                                                            pgsgovernancesystem['id'],
+                                                        officename:
+                                                            pgsgovernancesystem['name'],
+                                                        competencescore:
+                                                            pgsgovernancesystem['competencescore'],
+                                                        confidencescore:
+                                                            pgsgovernancesystem['confidencescore'],
+                                                        resourcescore:
+                                                            pgsgovernancesystem['resourcescore'],
+                                                        startDate:
+                                                            pgsgovernancesystem['Start Date'],
+                                                        endDate:
+                                                            pgsgovernancesystem['End Date'],
+                                                        deliverabledIds: List<
+                                                          String
+                                                        >.from(
+                                                          pgsgovernancesystem['deliverabledId'] ??
+                                                              [],
                                                         ),
+                                                      );
+                                                    },
                                                   ),
 
                                                   IconButton(
@@ -879,7 +968,18 @@ class _PerformanceGovernanceSystemPageState
     String? resourcescore,
     String? confidencescore,
     String? selectPeriod,
+    List<String>? deliverabledIds,
   }) {
+    if (id == null) {
+      competenceScore.value = 0.0;
+      resourceScore.value = 0.0;
+      confidenceScore.value = 0.0;
+    } else {
+      competenceScore.value = double.tryParse(competencescore ?? '') ?? 0.0;
+      resourceScore.value = double.tryParse(resourcescore ?? '') ?? 0.0;
+      confidenceScore.value = double.tryParse(confidencescore ?? '') ?? 0.0;
+    }
+
     showDialog(
       context: context,
       builder: (context) {
@@ -956,7 +1056,7 @@ class _PerformanceGovernanceSystemPageState
                                               'Select a period',
                                         ),
                                         onChanged: (int? newValue) {
-                                          print(
+                                          debugPrint(
                                             "Dropdown selected new value: $newValue",
                                           );
 
@@ -984,7 +1084,9 @@ class _PerformanceGovernanceSystemPageState
                                               return DropdownMenuItem<int>(
                                                 value: period['id'],
                                                 child: Text(
-                                                  "${period['startDate']} - ${period['endDate']}",
+                                                  id == null
+                                                      ? "${startDate ?? period['startDate']} - ${endDate ?? period['endDate']}"
+                                                      : "${period['startDate']} - ${period['endDate']}",
                                                   overflow:
                                                       TextOverflow.ellipsis,
                                                 ),
@@ -1051,12 +1153,15 @@ class _PerformanceGovernanceSystemPageState
                                             5: FlexColumnWidth(1),
                                             6: FlexColumnWidth(0.7),
                                           },
+
                                           children: [
                                             _buildMainHeaderStrategic(
                                               officename:
                                                   officename ?? officeDisplay,
                                             ),
+
                                             _buildTableSubHeaderStrategic(),
+
                                             ...rows.map(
                                               (rowId) =>
                                                   _buildTableRowStrategic(
@@ -1148,12 +1253,7 @@ class _PerformanceGovernanceSystemPageState
                                                 'Teams are highly skilled and trained to deliver performance commitments',
                                               ],
 
-                                              ValueNotifier<double>(
-                                                double.tryParse(
-                                                      competencescore ?? '',
-                                                    ) ??
-                                                    competenceScore.value,
-                                              ),
+                                              competenceScore,
                                             ),
 
                                             // Resource Availability Dropdown
@@ -1165,12 +1265,6 @@ class _PerformanceGovernanceSystemPageState
                                                 'Sufficient and available staff and budget',
                                               ],
 
-                                              // ValueNotifier<double>(
-                                              //   double.tryParse(
-                                              //         resourcescore ?? '',
-                                              //       ) ??
-                                              //       resourceScore.value,
-                                              // ),
                                               resourceScore,
                                             ),
 
@@ -1183,13 +1277,7 @@ class _PerformanceGovernanceSystemPageState
                                                 'High confidence despite organizational change required',
                                               ],
 
-                                              // confidenceScore,
-                                              ValueNotifier<double>(
-                                                double.tryParse(
-                                                      confidencescore ?? '',
-                                                    ) ??
-                                                    confidenceScore.value,
-                                              ),
+                                              confidenceScore,
                                             ),
 
                                             Row(
@@ -1199,7 +1287,7 @@ class _PerformanceGovernanceSystemPageState
                                                 ValueListenableBuilder<double>(
                                                   valueListenable:
                                                       competenceScore,
-                                                  builder: (context, _, __) {
+                                                  builder: (context, comp, __) {
                                                     return ValueListenableBuilder<
                                                       double
                                                     >(
@@ -1207,7 +1295,8 @@ class _PerformanceGovernanceSystemPageState
                                                           resourceScore,
                                                       builder: (
                                                         context,
-                                                        _,
+                                                        res,
+                                                        // _,
                                                         __,
                                                       ) {
                                                         return ValueListenableBuilder<
@@ -1217,9 +1306,14 @@ class _PerformanceGovernanceSystemPageState
                                                               confidenceScore,
                                                           builder: (
                                                             context,
-                                                            _,
+                                                            // _,
+                                                            conf,
                                                             __,
                                                           ) {
+                                                            final totalScore =
+                                                                comp +
+                                                                res +
+                                                                conf;
                                                             return Padding(
                                                               padding:
                                                                   EdgeInsets.only(
@@ -1351,6 +1445,7 @@ class _PerformanceGovernanceSystemPageState
                       PerformanceGovernanceSystem audit = getPgsAuditDetails();
                       await savePGS(audit);
                     }
+                    // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   },
                   child: Text(
@@ -1405,7 +1500,7 @@ class _PerformanceGovernanceSystemPageState
                     }
                   },
                   child: Text(
-                    'Submit',
+                    id == null ? 'Submit' : 'Update',
                     style: TextStyle(
                       color: const Color.fromARGB(255, 255, 255, 255),
                     ),
@@ -1642,7 +1737,7 @@ class _PerformanceGovernanceSystemPageState
         ),
         _buildExpandableTextAreaCell(index),
         _buildDatePickerCell(index, setDialogState),
-        _buildDropdownCellStatus(index, () => (index)), // Save on status change
+        _buildDropdownCellStatus(index, () => (index)),
         _buildRemoveButton(index, setDialogState),
       ],
     );
@@ -1909,7 +2004,7 @@ class _PerformanceGovernanceSystemPageState
   Widget _buildExpandableTextAreaCell(int index) {
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
-      print("✅ Initialized new controller at index: $index");
+      debugPrint("✅ Initialized new controller at index: $index");
     }
 
     return Padding(
@@ -1926,7 +2021,7 @@ class _PerformanceGovernanceSystemPageState
           ),
           onChanged: (value) {
             setState(() {
-              print("Updated TextField at index $index: $value");
+              debugPrint("Updated TextField at index $index: $value");
             });
           },
         ),

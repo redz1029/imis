@@ -13,15 +13,13 @@ class TeamPage extends StatefulWidget {
 }
 
 class _TeamPageState extends State<TeamPage> {
-  // ignore: non_constant_identifier_names
-  List<Map<String, dynamic>> teamList = [];
-  List<Map<String, dynamic>> filteredList = [];
-  TextEditingController searchController = TextEditingController();
-  final FocusNode isSearchfocus = FocusNode();
+  List<Team> teamList = [];
+  List<Team> filteredList = [];
 
+  final TextEditingController searchController = TextEditingController();
+  final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
 
-  // Fetch team from the API
   Future<void> fetchTeam() async {
     var url = ApiEndpoint().team;
 
@@ -34,35 +32,30 @@ class _TeamPageState extends State<TeamPage> {
 
         if (mounted) {
           setState(() {
-            teamList = data.map((team) => team.toJson()).toList();
+            teamList = data;
             filteredList = List.from(teamList);
           });
         }
       } else {
-        print("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint(" Unexpected response: ${response.data}");
       }
-    } on DioException catch (e) {
-      print("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      print("Unexpected error: $e");
+      debugPrint(" Fetch error: $e");
     }
   }
-
-  // Add or update team
 
   Future<void> addOrUpdateTeam(Team team) async {
     var url = ApiEndpoint().team;
     try {
       final response = await dio.post(url, data: team.toJson());
 
-      if (response.statusCode == 200) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         await fetchTeam();
-        setState(() {
-          fetchTeam();
-        });
+      } else {
+        debugPrint(" Save failed: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error adding/updating pgs: $e");
+      debugPrint(" Error adding/updating team: $e");
     }
   }
 
@@ -81,20 +74,17 @@ class _TeamPageState extends State<TeamPage> {
     super.dispose();
   }
 
-  // Filter search results based on query
   void filterSearchResults(String query) {
     setState(() {
       filteredList =
           teamList
               .where(
-                (team) =>
-                    team['name']!.toLowerCase().contains(query.toLowerCase()),
+                (team) => team.name.toLowerCase().contains(query.toLowerCase()),
               )
               .toList();
     });
   }
 
-  // Show the form to add or update auditor
   void showFormDialog({
     String? id,
     bool isDeleted = false,
@@ -182,8 +172,8 @@ class _TeamPageState extends State<TeamPage> {
                     isDeleted,
                     rowVersion: '',
                   );
-                  addOrUpdateTeam(team);
-                  // ignore: use_build_context_synchronously
+
+                  await addOrUpdateTeam(team);
                   Navigator.pop(context);
                 }
               },
@@ -268,7 +258,7 @@ class _TeamPageState extends State<TeamPage> {
                   ),
               ],
             ),
-            gap,
+            SizedBox(height: 20),
             Expanded(
               child: Column(
                 children: [
@@ -276,7 +266,6 @@ class _TeamPageState extends State<TeamPage> {
                     color: secondaryColor,
                     padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         Expanded(
                           flex: 1,
@@ -298,101 +287,54 @@ class _TeamPageState extends State<TeamPage> {
                       scrollDirection: Axis.vertical,
                       child: Column(
                         children:
-                            filteredList
-                                .asMap()
-                                .map((index, auditor) {
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 16,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                        ),
-                                      ),
+                            filteredList.asMap().entries.map((entry) {
+                              int index = entry.key;
+                              Team team = entry.value;
+                              return Container(
+                                padding: EdgeInsets.symmetric(
+                                  vertical: 1,
+                                  horizontal: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    bottom: BorderSide(
+                                      color: Colors.grey.shade300,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text((index + 1).toString()),
+                                    ),
+                                    Expanded(flex: 3, child: Text(team.name)),
+                                    Expanded(
+                                      flex: 1,
                                       child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
                                         children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                (index + 1).toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
+                                          IconButton(
+                                            icon: Icon(Icons.edit),
+                                            onPressed:
+                                                () => showFormDialog(
+                                                  id: team.id.toString(),
+                                                  name: team.name,
                                                 ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
                                           ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                auditor['name'],
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                          IconButton(
+                                            icon: Icon(
+                                              Icons.delete,
+                                              color: Colors.red,
                                             ),
-                                          ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed:
-                                                        () => showFormDialog(
-                                                          id:
-                                                              auditor['id']
-                                                                  .toString(),
-                                                          name: auditor['name'],
-                                                        ),
-                                                  ),
-                                                  SizedBox(width: 1),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: Color.fromARGB(
-                                                        255,
-                                                        221,
-                                                        79,
-                                                        79,
-                                                      ),
-                                                    ),
-                                                    onPressed: () async {},
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
+                                            onPressed: () async {},
                                           ),
                                         ],
                                       ),
                                     ),
-                                  );
-                                })
-                                .values
-                                .toList(),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
                       ),
                     ),
                   ),

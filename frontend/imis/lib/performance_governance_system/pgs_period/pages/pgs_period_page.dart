@@ -41,12 +41,12 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
           });
         }
       } else {
-        print("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      print("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      print("Unexpected error: $e");
+      debugPrint("Unexpected error: $e");
     }
   }
 
@@ -61,7 +61,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
         });
       }
     } catch (e) {
-      print("Error adding/updating pgsPeriod: $e");
+      debugPrint("Error adding/updating pgsPeriod: $e");
     }
   }
 
@@ -256,6 +256,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
 
                   addOrUpdatePGSPeriod(pgs);
 
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context);
                 }
               },

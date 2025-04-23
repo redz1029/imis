@@ -58,7 +58,7 @@ class LoginPageState extends State<LoginPage> {
       await prefs.setStringList("officeNames", officeNames);
       await prefs.setStringList("officeIds", officeIdsAsString);
       await prefs.setStringList('roles', roles);
-      print(roles);
+
       String accessToken = responseData['accessToken'] ?? '';
       String refreshToken = responseData['refreshToken'] ?? '';
       await prefs.setString('refreshToken', refreshToken);
@@ -69,6 +69,7 @@ class LoginPageState extends State<LoginPage> {
           SharedPreferences prefs = await SharedPreferences.getInstance();
           await prefs.setBool('isLoggedIn', true);
 
+          // ignore: use_build_context_synchronously
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => const DashboardNavigationPanel(),
@@ -78,6 +79,7 @@ class LoginPageState extends State<LoginPage> {
         }
       } else {
         var errMsg = response.statusMessage;
+        // ignore: use_build_context_synchronously
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text("An error has occured: $errMsg")),
         );
@@ -92,12 +94,14 @@ class LoginPageState extends State<LoginPage> {
               description: const Text(
                 "Please check your username and password.",
               ),
+              // ignore: deprecated_member_use
               position: MotionToastPosition.top,
             ).show(context);
           } else {
             MotionToast.error(
               title: const Text("An error has occured!"),
               description: Text(e.response!.statusMessage!),
+              // ignore: deprecated_member_use
               position: MotionToastPosition.top,
             ).show(context);
           }
@@ -118,6 +122,7 @@ class LoginPageState extends State<LoginPage> {
     bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
 
     if (isLoggedIn) {
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (context) => const DashboardNavigationPanel(),

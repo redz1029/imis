@@ -1,11 +1,10 @@
-import 'package:imis/auditor/models/auditor.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'team.g.dart';
 
 @JsonSerializable()
 class Team {
-  int id;
+  final int id;
   String name;
   bool isActive;
   bool isDeleted;

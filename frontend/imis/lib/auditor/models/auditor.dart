@@ -3,21 +3,23 @@ part 'auditor.g.dart';
 
 @JsonSerializable()
 class Auditor {
-  int id;
+  int? id;
   bool isDeleted;
-  String name;
+  String? rowVersion;
+  String? name;
   bool isActive;
   bool isTeamLeader;
   bool isOfficeHead;
 
-  Auditor(
-    this.id,
-    this.isDeleted,
-    this.name,
-    this.isActive,
-    this.isTeamLeader,
-    this.isOfficeHead,
-  );
+  Auditor({
+    required this.id,
+    this.isDeleted = false,
+    this.rowVersion,
+    required this.name,
+    this.isActive = true,
+    this.isTeamLeader = false,
+    this.isOfficeHead = false,
+  });
 
   factory Auditor.fromJson(Map<String, dynamic> json) =>
       _$AuditorFromJson(json);

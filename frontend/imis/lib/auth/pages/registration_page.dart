@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
@@ -7,7 +6,6 @@ import 'package:imis/auth/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/validator/validator.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:motion_toast/resources/arrays.dart';
 
 class RegistrationPage extends StatefulWidget {
   const RegistrationPage({super.key});
@@ -62,6 +60,7 @@ class RegistrationPageState extends State<RegistrationPage> {
 
         MotionToast.success(
           description: const Text("Registration successful!"),
+          // ignore: deprecated_member_use
           position: MotionToastPosition.top,
         ).show(context);
 
@@ -75,6 +74,7 @@ class RegistrationPageState extends State<RegistrationPage> {
 
         MotionToast.error(
           description: Text("Error: $errorMessage"),
+          // ignore: deprecated_member_use
           position: MotionToastPosition.top,
         ).show(context);
       }
@@ -84,6 +84,7 @@ class RegistrationPageState extends State<RegistrationPage> {
 
       MotionToast.error(
         description: Text("An error occurred: ${e.message}"),
+        // ignore: deprecated_member_use
         position: MotionToastPosition.top,
       ).show(context);
     } catch (e) {
@@ -92,6 +93,7 @@ class RegistrationPageState extends State<RegistrationPage> {
 
       MotionToast.error(
         description: const Text("Something went wrong. Please try again."),
+        // ignore: deprecated_member_use
         position: MotionToastPosition.top,
       ).show(context);
     }

@@ -13,7 +13,7 @@ class AuditorPage extends StatefulWidget {
 }
 
 class _AuditorMainPageState extends State<AuditorPage> {
-  // ignore: non_constant_identifier_names
+  final _formKey = GlobalKey<FormState>();
   List<Map<String, dynamic>> auditorList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
@@ -41,12 +41,12 @@ class _AuditorMainPageState extends State<AuditorPage> {
           });
         }
       } else {
-        print("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      print("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      print("Unexpected error: $e");
+      debugPrint("Unexpected error: $e");
     }
   }
 
@@ -64,7 +64,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
         });
       }
     } catch (e) {
-      print("Error adding/updating pgs: $e");
+      debugPrint("Error adding/updating pgs: $e");
     }
   }
 
@@ -102,12 +102,13 @@ class _AuditorMainPageState extends State<AuditorPage> {
   void showFormDialog({
     String? id,
     bool isDeleted = false,
+    String rowVersion = "",
     String? name,
     bool isActive = false,
     bool isTeamLeader = false,
     bool isOfficeHead = false,
   }) {
-    TextEditingController AuditorController = TextEditingController(text: name);
+    TextEditingController auditorController = TextEditingController(text: name);
     showDialog(
       context: context,
       builder: (context) {
@@ -120,21 +121,35 @@ class _AuditorMainPageState extends State<AuditorPage> {
             id == null ? 'Add Auditor' : 'Edit Auditor',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: AuditorController,
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: auditorController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a name';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -155,43 +170,50 @@ class _AuditorMainPageState extends State<AuditorPage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
-                if (confirmAction == true) {
-                  final auditor = Auditor(
-                    int.tryParse(id ?? '0') ?? 0,
-                    isDeleted,
-                    AuditorController.text,
-                    isActive,
-                    isTeamLeader,
-                    isOfficeHead,
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text("No"),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                Navigator.pop(context, true);
+                              }
+                            },
+                            child: Text("Yes"),
+                          ),
+                        ],
+                      );
+                    },
                   );
-                  addOrUpdateAuditor(auditor);
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
+                  if (confirmAction == true) {
+                    final auditor = Auditor(
+                      id: int.tryParse(id ?? '0') ?? 0,
+                      name: auditorController.text,
+                      isDeleted: isDeleted,
+                      rowVersion: rowVersion,
+                      isActive: isActive,
+                      isTeamLeader: isTeamLeader,
+                      isOfficeHead: isOfficeHead,
+                    );
+                    addOrUpdateAuditor(auditor);
+                    // ignore: use_build_context_synchronously
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Text(
