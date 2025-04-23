@@ -1,37 +1,37 @@
+import 'package:imis/performance_governance_system/roles/models/roles.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user_role.g.dart';
 
 @JsonSerializable()
-class UserWithRoles {
-  String userId;
-  String userName;
-  String firstName;
-  String? middleName;
-  String lastName;
-  List<Role>? roles;
+class UserRoles {
+  final String userId;
+  final String roleId;
 
-  UserWithRoles({
-    required this.userId,
-    required this.userName,
-    required this.firstName,
-    this.middleName,
-    required this.lastName,
-    required this.roles,
-  });
+  UserRoles({required this.userId, required this.roleId});
 
-  factory UserWithRoles.fromJson(Map<String, dynamic> json) =>
-      _$UserWithRolesFromJson(json);
-  Map<String, dynamic> toJson() => _$UserWithRolesToJson(this);
+  factory UserRoles.fromJson(Map<String, dynamic> json) =>
+      _$UserRolesFromJson(json);
+  Map<String, dynamic> toJson() => _$UserRolesToJson(this);
 }
 
 @JsonSerializable()
-class Role {
-  String roleId;
-  String roleName;
+class UserRolesGet {
+  String userId;
+  String userName;
+  String firstName;
+  String lastName;
+  List<Roles>? roles;
 
-  Role({required this.roleId, required this.roleName});
+  UserRolesGet(
+    this.userId,
+    this.userName,
+    this.firstName,
+    this.lastName,
+    this.roles,
+  );
 
-  factory Role.fromJson(Map<String, dynamic> json) => _$RoleFromJson(json);
-  Map<String, dynamic> toJson() => _$RoleToJson(this);
+  factory UserRolesGet.fromJson(Map<String, dynamic> json) =>
+      _$UserRolesGetFromJson(json);
+  Map<String, dynamic> toJson() => _$UserRolesGetToJson(this);
 }
