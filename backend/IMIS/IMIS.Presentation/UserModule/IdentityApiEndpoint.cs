@@ -46,7 +46,7 @@ namespace IMIS.Presentation.UserModule
          
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
-            userRoleGroup.MapGet("/userRoles", GetUserRoles); 
+            userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles")); 
             userRoleGroup.MapPost("/userRoles", AssignUserRole);
             userRoleGroup.MapPut("/updateUserRole", UpdateUserRole);
             userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);
@@ -316,6 +316,10 @@ namespace IMIS.Presentation.UserModule
             if (!result.Succeeded)
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
+            // Invalidate cache after creation
+            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+            await outputCacheStore.EvictByTagAsync("roles", default);
+
             return Results.Ok("User assigned to role successfully.");
         }
         private static async Task<IResult> UpdateUserRole(string userId, string newRoleId, IServiceProvider sp)
@@ -342,6 +346,10 @@ namespace IMIS.Presentation.UserModule
             var addResult = await userManager.AddToRoleAsync(user, newRole.Name);
             if (!addResult.Succeeded)
                 return Results.ValidationProblem(addResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
+
+            // Invalidate cache after creation
+            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+            await outputCacheStore.EvictByTagAsync("roles", default);
 
             return Results.Ok($"User role updated to: {newRole.Name}");
         }
