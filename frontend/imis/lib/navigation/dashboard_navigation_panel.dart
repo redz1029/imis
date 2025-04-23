@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
+import 'package:imis/performance_governance_system/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/performance_governance_system/auditor_team/pages/auditor_team_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
 import 'package:imis/auth/pages/home_page.dart';
@@ -10,7 +11,9 @@ import 'package:imis/performance_governance_system/office/pages/office_page.dart
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/auth/pages/login_page.dart';
+import 'package:imis/performance_governance_system/roles/pages/roles_page.dart';
 import 'package:imis/performance_governance_system/team/pages/team_page.dart';
+import 'package:imis/performance_governance_system/user_office/pages/user_office_page.dart';
 import 'package:imis/performance_governance_system/user_roles/pages/user_role_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -243,7 +246,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   Widget _buildSidebar() {
     return Container(
       width: 250,
-      decoration: const BoxDecoration(color: secondaryColor),
+      color: secondaryColor,
       child: Column(
         children: [
           DrawerHeader(
@@ -257,95 +260,126 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
               ],
             ),
           ),
-          _buildListTile(
-            Icons.dashboard,
-            'Dashboard',
-            0,
-            () => _setScreen(HomePage(), 0),
-          ),
-          _buildListTile(
-            Icons.file_copy,
-            'Performance Governance System',
-            1,
-            () => _setScreen(PerformanceGovernanceSystemPage(), 1),
-          ),
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: lightGrey),
-            child: ExpansionTile(
-              leading: const Icon(Icons.settings, color: primaryTextColor),
-              title: const Text(
-                'Settings',
-                style: TextStyle(color: primaryTextColor),
-              ),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(
-                    left: 40,
-                  ), // Adjust margin here
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _buildListTile(
-                        Icons.medical_information,
-                        hideIcon: true,
-                        'Key Result Area',
-                        2,
-                        () => _setScreen(KeyResultAreaPage(), 2),
-                      ),
-                      _buildListTile(
-                        Icons.person,
-                        hideIcon: true,
-                        'Auditor',
-                        3,
-                        () => _setScreen(AuditorPage(), 3),
-                      ),
-                      _buildListTile(
-                        Icons.date_range,
-                        hideIcon: true,
-                        'PGS Period',
-                        4,
-                        () => _setScreen(PgsPeriodPage(), 4),
-                      ),
-                      _buildListTile(
-                        Icons.date_range,
-                        hideIcon: true,
-                        'Team',
-                        5,
-                        () => _setScreen(TeamPage(), 5),
-                      ),
-                      _buildListTile(
-                        Icons.date_range,
-                        hideIcon: true,
-                        'Auditor Team',
-                        6,
-                        () => _setScreen(AuditorTeamPage(), 6),
-                      ),
-                      _buildListTile(
-                        Icons.date_range,
-                        hideIcon: true,
-                        'Office',
-                        7,
-                        () => _setScreen(OfficePage(), 7),
-                      ),
-                      _buildListTile(
-                        Icons.date_range,
-                        hideIcon: true,
-                        'User Role',
-                        8,
-                        () => _setScreen(UserRolePage(), 8),
-                      ),
-                    ],
+          // This Expanded allows scrolling only in this section
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  _buildListTile(
+                    Icons.dashboard,
+                    'Dashboard',
+                    0,
+                    () => _setScreen(HomePage(), 0),
                   ),
-                ),
-              ],
+                  _buildListTile(
+                    Icons.file_copy,
+                    'Performance Governance System',
+                    1,
+                    () => _setScreen(PerformanceGovernanceSystemPage(), 1),
+                  ),
+                  Theme(
+                    data: Theme.of(context).copyWith(dividerColor: lightGrey),
+                    child: ExpansionTile(
+                      leading: const Icon(
+                        Icons.settings,
+                        color: primaryTextColor,
+                      ),
+                      title: const Text(
+                        'Settings',
+                        style: TextStyle(color: primaryTextColor),
+                      ),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 40),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildListTile(
+                                Icons.medical_information,
+                                hideIcon: true,
+                                'Key Result Area',
+                                2,
+                                () => _setScreen(KeyResultAreaPage(), 2),
+                              ),
+                              _buildListTile(
+                                Icons.person,
+                                hideIcon: true,
+                                'Auditor',
+                                3,
+                                () => _setScreen(AuditorPage(), 3),
+                              ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'PGS Period',
+                                4,
+                                () => _setScreen(PgsPeriodPage(), 4),
+                              ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'Team',
+                                5,
+                                () => _setScreen(TeamPage(), 5),
+                              ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'Auditor Team',
+                                6,
+                                () => _setScreen(AuditorTeamPage(), 6),
+                              ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'Office',
+                                7,
+                                () => _setScreen(OfficePage(), 7),
+                              ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'Role',
+                                8,
+                                () => _setScreen(RolesPage(), 8),
+                              ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'User Role',
+                                9,
+                                () => _setScreen(UserRolePage(), 9),
+                              ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'User Office',
+                                10,
+                                () => _setScreen(UserOfficePage(), 10),
+                              ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'Audit Schedules',
+                                11,
+                                () => _setScreen(AuditSchedulesPage(), 11),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  _buildListTile(Icons.folder, 'Reports', 12, () {}),
+                ],
+              ),
             ),
           ),
-
-          _buildListTile(Icons.folder, 'Reports', 9, () {}),
+          // Keep logout at the bottom
           _buildListTile(
             Icons.exit_to_app,
             'Logout',
-            9,
+            13,
             () => _logout(context),
           ),
         ],
@@ -432,12 +466,14 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
       ],
     ).then((value) {
       if (value == "Profile") {
+        // ignore: use_build_context_synchronously
         _editProfile(context);
         // } else if (value == "change_password") {
         //   Navigator.of(context).pushReplacement(
         //     MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
         //   );
       } else if (value == "logout") {
+        // ignore: use_build_context_synchronously
         _logout(context);
       }
     });

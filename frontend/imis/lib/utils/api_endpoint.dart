@@ -15,7 +15,12 @@ class ApiEndpoint {
   late String performancegovernancesystem;
   late String office;
   late String team;
-
+  late String auditorteam;
+  late String userRole;
+  late String roles;
+  late String users;
+  late String useroffice;
+  late String updateUserRole;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -27,16 +32,20 @@ class ApiEndpoint {
     performancegovernancesystem = '$baseUrl/pgs';
     office = '$baseUrl/Office';
     team = '$baseUrl/Team';
+    auditorteam = '$baseUrl/auditorTeam';
+    userRole = '$baseUrl/userRoles';
+    roles = '$baseUrl/roles';
+    users = '$baseUrl/users';
+    useroffice = '$baseUrl/userOffice';
+    updateUserRole = '$baseUrl/updateUserRole';
   }
 
   static Future<void> setBaseUrl() async {
     if (kDebugMode) {
       baseUrl = 'https://localhost:7273';
     } else if (kReleaseMode) {
-      // TODO: We will be specifying this when released.
       throw Exception("Release base Url is not specified!");
     } else {
-      // TODO: We will be specifying this when testing environment is alive.
       throw Exception("Test base Url is not specified!");
     }
   }
