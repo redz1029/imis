@@ -5,14 +5,14 @@ part 'auditor_team.g.dart';
 
 @JsonSerializable()
 class AuditorTeam {
-  int id;
+  int teamId;
 
   @JsonKey()
-  List<Auditor>? auditors;
+  List<Auditor> auditors;
 
   bool isActive;
 
-  AuditorTeam(this.id, this.auditors, this.isActive);
+  AuditorTeam(this.teamId, this.auditors, this.isActive);
 
   factory AuditorTeam.fromJson(Map<String, dynamic> json) =>
       _$AuditorTeamFromJson(json);

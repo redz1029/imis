@@ -20,7 +20,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
-  List<Map<String, dynamic>> filteredListTeam = [];
+  List<Map<String, dynamic>> filteredListTeamAuditor = [];
   List<Map<String, dynamic>> filteredListAuditor = [];
   List<Map<String, dynamic>> selectedAuditors = [];
   List<Map<String, dynamic>> teamList = [];
@@ -31,45 +31,45 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
 
   final dio = Dio();
 
-  // Future<void> fetchAuditorTeam() async {
-  //   var url = ApiEndpoint().team;
+  Future<void> fetchAuditorTeam() async {
+    var url = ApiEndpoint().auditorteam;
 
-  //   try {
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-  //     String? token = prefs.getString('accessToken');
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
 
-  //     if (token == null || token.isEmpty) {
-  //       debugPrint("Error: Access token is missing!");
-  //       return;
-  //     }
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
 
-  //     var response = await dio.get(
-  //       url,
-  //       options: Options(headers: {"Authorization": "Bearer $token"}),
-  //     );
+      var response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
 
-  //     if (response.statusCode == 200 && response.data is List) {
-  //       List<AuditorTeam> data =
-  //           (response.data as List)
-  //               .map((auditorTeam) => AuditorTeam.fromJson(auditorTeam))
-  //               .toList();
+      if (response.statusCode == 200 && response.data is List) {
+        List<AuditorTeam> data =
+            (response.data as List)
+                .map((auditorTeam) => AuditorTeam.fromJson(auditorTeam))
+                .toList();
 
-  //       if (mounted) {
-  //         setState(() {
-  //           auditorTeamList =
-  //               data.map((auditorTeam) => auditorTeam.toJson()).toList();
-  //           filteredList = List.from(auditorTeamList);
-  //         });
-  //       }
-  //     } else {
-  //       debugPrint("Unexpected response format: ${response.data.runtimeType}");
-  //     }
-  //   } on DioException catch (e) {
-  //     debugPrint("Dio error: ${e.response?.data ?? e.message}");
-  //   } catch (e) {
-  //     debugPrint("Unexpected error: $e");
-  //   }
-  // }
+        if (mounted) {
+          setState(() {
+            auditorTeamList =
+                data.map((auditorTeam) => auditorTeam.toJson()).toList();
+            filteredListTeamAuditor = List.from(auditorTeamList);
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+  }
 
   Future<void> fetchTeam() async {
     var url = ApiEndpoint().team;
@@ -90,12 +90,12 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
           });
         }
       } else {
-        print("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      print("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      print("Unexpected error: $e");
+      debugPrint("Unexpected error: $e");
     }
   }
 
@@ -114,18 +114,16 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
         if (mounted) {
           setState(() {
             auditorList = data.map((auditor) => auditor.toJson()).toList();
-            filteredListAuditor = List.from(
-              auditorList,
-            ); // Ensure filtered list is populated
+            filteredListAuditor = List.from(auditorList);
           });
         }
       } else {
-        print("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      print("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      print("Unexpected error: $e");
+      debugPrint("Unexpected error: $e");
     }
   }
 
@@ -154,7 +152,6 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // await fetchAuditorTeam();
       } else {
         debugPrint(
           "Failed to add/update office. Status code: ${response.statusCode}",
@@ -165,30 +162,28 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     }
   }
 
-  // List<Auditor> getAuditorTeamList() {
+  Future<void> deleteAuditorTeam(String kraId) async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      final response = await dio.delete(url);
 
-  //     auditorList.add(
-  //       Auditor(id, isDeleted, name, isActive, isTeamLeader, isOfficeHead),
-
-  //     );
-
-  //     return auditorList;
-
-  // }
-
-  // AuditorTeam getAuditorList(){
-  //   return AuditorTeam(0, , false);
-  // }
+      if (response.statusCode == 200) {
+        await fetchAuditorTeam();
+      }
+    } catch (e) {
+      debugPrint("Error deleting KRA: $e");
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    // fetchAuditorTeam();
     isSearchfocus.addListener(() {
       setState(() {});
     });
     fetchTeam();
     fetchAuditors();
+    fetchAuditorTeam();
   }
 
   @override
@@ -197,7 +192,17 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     super.dispose();
   }
 
-  void showFormDialog({String? id, String? name, bool isActive = false}) {
+  void showFormDialog({String? id, String? teamId, List<dynamic>? auditors}) {
+    selectTeam = teamId != null ? int.tryParse(teamId) : null;
+    if (teamId != null && auditors != null) {
+      selectedAuditors =
+          auditors
+              .map((auditor) => {'id': auditor.id, 'name': auditor.name})
+              .toList();
+    } else {
+      selectedAuditors = [];
+    }
+
     showDialog(
       context: context,
       builder: (context) {
@@ -217,7 +222,6 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                 height: 500,
                 child: SingleChildScrollView(
                   child: Column(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       // Team Dropdown
                       Padding(
@@ -253,65 +257,66 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                         ),
                       ),
 
+                      gap3,
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("List of Auditors"),
+                      ),
                       gap,
 
                       // Selected Auditors
-                      Column(
-                        children: [
-                          ...selectedAuditors.map((auditor) {
-                            return Container(
-                              margin: const EdgeInsets.symmetric(vertical: 4),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: secondaryColor,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    auditor['name'],
-                                    style: TextStyle(color: primaryTextColor),
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.close,
-                                      color: primaryTextColor,
-                                    ),
-                                    onPressed: () {
-                                      setDialogState(() {
-                                        selectedAuditors.remove(auditor);
-                                      });
-                                    },
-                                  ),
-                                ],
-                              ),
-                            );
-                          }),
-
-                          Align(
-                            alignment: Alignment.center,
-                            child: TextButton.icon(
-                              onPressed: () {
-                                showAvailableAuditorsDialog(setDialogState);
-                              },
-                              icon: Icon(Icons.add, color: primaryColor),
-                              label: Text(
-                                "Add new auditor",
-                                style: TextStyle(color: primaryColor),
-                              ),
-                            ),
+                      ...selectedAuditors.map((auditor) {
+                        return Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
                           ),
-                        ],
+                          decoration: BoxDecoration(
+                            color: secondaryColor,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                auditor['name'],
+                                style: TextStyle(color: primaryTextColor),
+                              ),
+                              IconButton(
+                                icon: Icon(
+                                  Icons.close,
+                                  color: primaryTextColor,
+                                ),
+                                onPressed: () {
+                                  setDialogState(() {
+                                    selectedAuditors.remove(auditor);
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+
+                      Align(
+                        alignment: Alignment.center,
+                        child: TextButton.icon(
+                          onPressed: () {
+                            showAvailableAuditorsDialog(setDialogState);
+                          },
+                          icon: Icon(Icons.add, color: primaryColor),
+                          label: Text(
+                            "Add new auditor",
+                            style: TextStyle(color: primaryColor),
+                          ),
+                        ),
                       ),
                     ],
                   ),
                 ),
               ),
+
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
@@ -366,7 +371,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                       final auditorTeam = AuditorTeam(
                         selectTeam ?? 0,
                         auditors,
-                        isActive,
+                        true,
                       );
 
                       await addOrUpdateAuditorTeam(auditorTeam);
@@ -386,8 +391,10 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     );
   }
 
-  // Separate Dialog for Selecting Auditors
   void showAvailableAuditorsDialog(Function setDialogState) {
+    final assignedAuditorIds =
+        auditorTeamList.map((audiorTeam) => audiorTeam['auditors']).toSet();
+
     showDialog(
       context: context,
       builder: (context) {
@@ -410,7 +417,8 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                         (auditor) =>
                             !selectedAuditors.any(
                               (sel) => sel['id'] == auditor['id'],
-                            ),
+                            ) &&
+                            !assignedAuditorIds.contains(auditor['id']),
                       )
                       .map((auditor) {
                         return ListTile(
@@ -446,16 +454,39 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
       filteredList =
           auditorTeamList
               .where(
-                (office) =>
-                    office['name']!.toLowerCase().contains(query.toLowerCase()),
+                (auditorTeam) => auditorTeam['name']!.toLowerCase().contains(
+                  query.toLowerCase(),
+                ),
               )
               .toList();
     });
   }
 
+  String getAuditorsNameById(int id, List<Map<String, dynamic>> auditorList) {
+    final auditors = auditorList.firstWhere(
+      (auditors) => auditors['id'] == id,
+      orElse: () => {'name': 'Unknown Auditors'},
+    );
+    return auditors['name'] ?? 'Unknown Auditors';
+  }
+
+  String getTeamNameById(int id, List<Map<String, dynamic>> teamList) {
+    final team = teamList.firstWhere(
+      (team) => team['id'] == id,
+      orElse: () => {'name': 'Unknown Team'},
+    );
+    return team['name'] ?? 'Unknown Team';
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
+
+    final uniqueTeams =
+        {
+          for (var item in filteredListTeamAuditor) item['teamId']: item,
+        }.values.toList();
+
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
@@ -539,7 +570,14 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                         ),
                         Expanded(
                           flex: 3,
-                          child: Text('Office', style: TextStyle(color: grey)),
+                          child: Text('Team', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Auditors',
+                            style: TextStyle(color: grey),
+                          ),
                         ),
                         Expanded(
                           flex: 1,
@@ -553,9 +591,9 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                       scrollDirection: Axis.vertical,
                       child: Column(
                         children:
-                            filteredList
+                            uniqueTeams
                                 .asMap()
-                                .map((index, office) {
+                                .map((index, audiorTeam) {
                                   return MapEntry(
                                     index,
                                     Container(
@@ -582,9 +620,6 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                               ),
                                               child: Text(
                                                 (index + 1).toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
@@ -596,49 +631,61 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                office['name'],
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
+                                                getTeamNameById(
+                                                  audiorTeam['teamId'],
+                                                  teamList,
                                                 ),
                                                 overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
                                           ),
                                           Expanded(
-                                            flex: 1,
+                                            flex: 3,
                                             child: Padding(
                                               padding: EdgeInsets.only(
                                                 right: 1,
                                               ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed:
-                                                        () => showFormDialog(
-                                                          id:
-                                                              office['id']
-                                                                  .toString(),
-                                                          name: office['name'],
-                                                        ),
+                                              // child: Text(
+                                              //   // audiorTeam['auditors'],
+                                              // ),
+                                            ),
+                                          ),
+
+                                          Expanded(
+                                            flex: 1,
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.start,
+                                              children: [
+                                                IconButton(
+                                                  icon: Icon(Icons.edit),
+                                                  onPressed: () {
+                                                    showFormDialog(
+                                                      id: audiorTeam['id'],
+                                                      teamId:
+                                                          (audiorTeam['teamId'] ??
+                                                                  '')
+                                                              .toString(),
+                                                      auditors:
+                                                          audiorTeam['auditors'],
+
+                                                      // auditors:
+                                                      //     audiorTeam['auditors'],
+                                                    );
+                                                  },
+                                                ),
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.delete,
+                                                    color: primaryColor,
                                                   ),
-                                                  SizedBox(width: 1),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: Color.fromARGB(
-                                                        255,
-                                                        221,
-                                                        79,
-                                                        79,
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        audiorTeam['id']
+                                                            .toString(),
                                                       ),
-                                                    ),
-                                                    onPressed: () async {},
-                                                  ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
@@ -665,6 +712,39 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this Auditor Team? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deleteAuditorTeam(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
