@@ -1,8 +1,7 @@
 ﻿using IMIS.Application.AuditorModule;
-using IMIS.Application.AuditorTeamsModule;
 using IMIS.Domain;
 
-namespace IMIS.Persistence.AuditorTeamsModule
+namespace IMIS.Application.AuditorTeamsModule
 {
     public class AuditorTeamsService : IAuditorTeamsService
     {
@@ -13,34 +12,30 @@ namespace IMIS.Persistence.AuditorTeamsModule
             _repository = repository;
         }
 
-        private AuditorTeamsDto ConvOfficeToDTO(AuditorTeams auditorTeams)
+        public async Task<List<AuditorTeamsDto>> GetAllAsync(CancellationToken cancellationToken)
         {
-            if (auditorTeams == null) return null;
-
-            return new AuditorTeamsDto
-            {
-                TeamId = auditorTeams.TeamId,
-                Auditors = auditorTeams.Auditor != null
-                    ? new List<AuditorDto>
+            var auditorTeams = await _repository.GetAllAsync(cancellationToken);
+         
+            var groupedAuditors = auditorTeams
+                .GroupBy(at => at.TeamId)
+                .Select(group => new AuditorTeamsDto
+                {
+                    TeamId = group.Key,
+                    Auditors = group.Select(at => new AuditorDto
                     {
-                        new AuditorDto
-                        {
-                            Id = auditorTeams.Auditor.Id,
-                            Name = auditorTeams.Auditor.Name,
-                            IsTeamLeader = auditorTeams.IsTeamLeader,
-                            IsActive = auditorTeams.Auditor.IsActive
-                        }
-                    }
-                    : new List<AuditorDto>(),
-                IsActive = auditorTeams.IsActive
-            };
-        }
-        public async Task<List<AuditorTeamsDto>?> GetAllAsync(CancellationToken cancellationToken)
-        {
-            var auditorTeamsDto = await _repository.GetAllAsync(cancellationToken).ConfigureAwait(false);
-            return auditorTeamsDto?.Select(o => ConvOfficeToDTO(o)).ToList();
-        }
+                        Id = at.Auditor!.Id,
+                        Name = at.Auditor.Name,
+                        IsTeamLeader = at.IsTeamLeader,
+                        IsActive = at.Auditor.IsActive
+                    }).ToList(),
+                    IsActive = group.FirstOrDefault()?.IsActive ?? false
+                })
+                .ToList();
 
+            return groupedAuditors;
+        }
+       
+        // Save or update an auditor team
         public async Task<AuditorTeamsDto> SaveOrUpdateAsync(AuditorTeamsDto auditorTeamsDto, CancellationToken cancellationToken)
         {
             if (auditorTeamsDto == null)
@@ -62,8 +57,8 @@ namespace IMIS.Persistence.AuditorTeamsModule
 
                 await _repository.SaveOrUpdateAsync(auditorTeam, cancellationToken);
             }
+
             return auditorTeamsDto;
         }
-
     }
 }

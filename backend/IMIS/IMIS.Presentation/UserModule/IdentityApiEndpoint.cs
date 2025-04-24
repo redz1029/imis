@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Sprache;
 
@@ -30,13 +31,14 @@ namespace IMIS.Presentation.UserModule
             // Authentication Endpoints
             var authGroup = endpoints.MapGroup("").WithTags(IdentityGroup);
             authGroup.MapPost("/register", (UserRegistrationDto registration, IServiceProvider sp) => RegisterUser(registration, sp));
+            authGroup.MapGet("/getUser", (IServiceProvider sp) => GetRegisteredUsers(sp)).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles"));
             authGroup.MapPost("/login", LoginUser<TUser>);
             authGroup.MapPut("/changePassword", ChangePassword<TUser>);
             authGroup.MapPost("/refresh", RefreshToken<TUser>);
             authGroup.MapDelete("/revokeRefreshToken", RevokeRefreshToken<TUser>);
             authGroup.MapGet("/users", (HttpContext httpContext, IServiceProvider sp) => GetUsers(httpContext, sp));
 
-
+             
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
             roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles"));
@@ -59,8 +61,7 @@ namespace IMIS.Presentation.UserModule
             var userManager = sp.GetRequiredService<UserManager<User>>();
 
             var users = userManager.Users.ToList();
-
-            // Example: Map only selected properties
+         
             var userList = users.Select(u => new
             {               
                 u.Id,
@@ -94,7 +95,29 @@ namespace IMIS.Presentation.UserModule
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
             return Results.Ok("User registered successfully.");
-        }       
+        }
+
+        private static IResult GetRegisteredUsers(IServiceProvider sp)
+        {
+            var userManager = sp.GetRequiredService<UserManager<User>>();
+            var users = userManager.Users.ToList();
+
+            var result = users.Select(u => new
+            {
+                u.Id,
+                u.UserName,
+                u.Email,
+                u.FirstName,
+                u.MiddleName,
+                u.LastName,
+                u.Prefix,
+                u.Suffix,
+                u.Position
+            });
+
+            return Results.Ok(result);
+        }
+
         private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp) where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();

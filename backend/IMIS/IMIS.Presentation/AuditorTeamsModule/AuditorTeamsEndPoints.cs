@@ -30,8 +30,8 @@ namespace IMIS.Presentation.AuditorTeamsModule
 
             app.MapGet("/", async (IAuditorTeamsService service, CancellationToken cancellationToken) =>
             {
-                var keyResultAreaDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
-                return Results.Ok(keyResultAreaDto);
+                var AuditorTeamDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(AuditorTeamDto);
             })
          .WithTags(_AuditorTeamTag)
          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true);
