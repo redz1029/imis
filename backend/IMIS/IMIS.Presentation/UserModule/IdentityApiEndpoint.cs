@@ -32,6 +32,7 @@ namespace IMIS.Presentation.UserModule
             var authGroup = endpoints.MapGroup("").WithTags(IdentityGroup);
             authGroup.MapPost("/register", (UserRegistrationDto registration, IServiceProvider sp) => RegisterUser(registration, sp));
             authGroup.MapGet("/getUser", (IServiceProvider sp) => GetRegisteredUsers(sp)).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles"));
+            authGroup.MapPut("/updateUser", async (UserRegistrationDto dto, IServiceProvider sp) => await UpdateUser(dto, sp));
             authGroup.MapPost("/login", LoginUser<TUser>);
             authGroup.MapPut("/changePassword", ChangePassword<TUser>);
             authGroup.MapPost("/refresh", RefreshToken<TUser>);
@@ -94,6 +95,9 @@ namespace IMIS.Presentation.UserModule
             if (!result.Succeeded)
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
+            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+            await outputCacheStore.EvictByTagAsync("roles", default);
+
             return Results.Ok("User registered successfully.");
         }
 
@@ -116,6 +120,59 @@ namespace IMIS.Presentation.UserModule
             });
 
             return Results.Ok(result);
+        }
+
+        private static async Task<IResult> UpdateUser(UserRegistrationDto registration, IServiceProvider sp)
+        {
+            var userManager = sp.GetRequiredService<UserManager<User>>();
+            var cache = sp.GetRequiredService<IOutputCacheStore>();
+
+            if (string.IsNullOrWhiteSpace(registration.Id))
+                return Results.BadRequest("User ID is required for update.");
+
+            var user = await userManager.FindByIdAsync(registration.Id);
+            if (user == null)
+                return Results.NotFound("User not found.");
+
+            if (!EmailValidator.IsValid(registration.Email))
+            {
+                return Results.ValidationProblem(new Dictionary<string, string[]>
+                {
+                    { "Email", new[] { "Invalid email format." } }
+                });
+            }
+
+            // Update properties
+            user.UserName = registration.Username;
+            user.Email = registration.Email;
+            user.FirstName = registration.FirstName;
+            user.MiddleName = registration.MiddleName;
+            user.LastName = registration.LastName;
+            user.Prefix = registration.Prefix;
+            user.Suffix = registration.Suffix;
+            user.Position = registration.Position;
+
+            var updateResult = await userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                return Results.ValidationProblem(updateResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
+            }
+
+            // Optional: update password only if provided
+            if (!string.IsNullOrWhiteSpace(registration.Password))
+            {
+                var token = await userManager.GeneratePasswordResetTokenAsync(user);
+                var pwResetResult = await userManager.ResetPasswordAsync(user, token, registration.Password);
+                if (!pwResetResult.Succeeded)
+                {
+                    return Results.ValidationProblem(pwResetResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
+                }
+            }
+            await cache.EvictByTagAsync(_userRegister, default);
+            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+            await outputCacheStore.EvictByTagAsync("roles", default);
+
+            return Results.Ok("User updated successfully.");
         }
 
         private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp) where TUser : User
