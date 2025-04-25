@@ -249,19 +249,31 @@ namespace IMIS.Persistence.AuditScheduleModule
         }
         public async Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var auditSchedules = await _auditScheduleRepository
-                .GetAllAsync(cancellationToken)
-                .ConfigureAwait(false);
+            var auditSchedules = await _auditScheduleRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
 
             return auditSchedules?.Select(a =>
-            new AuditScheduleDto()
-            {
-                Id = a.Id,
-                AuditTitle = a.AuditTitle,
-                StartDate = a.StartDate,
-                EndDate = a.EndDate,
-                IsActive = a.IsActive
-            }).ToList();
+                new AuditScheduleDto
+                {
+                    Id = a.Id,
+                    AuditTitle = a.AuditTitle,
+                    StartDate = a.StartDate,
+                    EndDate = a.EndDate,
+                    IsActive = a.IsActive,
+                    AuditableOffices = a.AuditableOffices?.Select(detail => new AuditableOfficesDto
+                    {
+                       AuditScheduleId = detail.AuditScheduleId,
+                       OfficeId = detail.OfficeId,
+                    }).ToList(),
+                    AuditSchduleDetails = a.AuditSchduleDetails?.Select(detail => new AuditScheduleDetailDto
+                    {
+                        Id = detail.Id,
+                        AuditScheduleId = detail.AuditScheduleId,
+                        TeamId = detail.TeamId,
+                        StartDateTime = detail.StartDateTime,
+                        EndDateTime = detail.EndDateTime,
+                        OfficeId = detail.OfficeId
+                    }).ToList()
+                }).ToList();
         }
 
         public async Task<AuditScheduleDto?> GetByIdAsync(int id, CancellationToken cancellationToken)

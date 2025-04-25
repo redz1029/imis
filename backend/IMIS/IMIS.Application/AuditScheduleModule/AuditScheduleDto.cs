@@ -24,7 +24,7 @@ namespace IMIS.Application.AuditScheduleModule
             this.AuditTitle = auditSchedule.AuditTitle;
             this.StartDate = auditSchedule.StartDate;
             this.EndDate = auditSchedule.EndDate;
-            this.IsActive = auditSchedule.IsActive;
+            this.IsActive = auditSchedule.IsActive;            
         }
         public override AuditSchedule ToEntity()
         {
@@ -34,7 +34,8 @@ namespace IMIS.Application.AuditScheduleModule
                 AuditTitle = AuditTitle, 
                 StartDate = StartDate, 
                 EndDate = EndDate, 
-                IsActive = IsActive,
+                IsActive = IsActive,      
+                AuditableOffices = AuditableOffices?.Select(d => d.ToEntity()).ToList(),
                 AuditSchduleDetails = AuditSchduleDetails?.Select(d => d.ToEntity()).ToList(),
             };
         }

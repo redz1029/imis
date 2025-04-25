@@ -56,7 +56,9 @@ namespace IMIS.Persistence.AuditScheduleModule
         public async Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.AuditSchedules
-                .Where(a => a.IsActive && !a.IsDeleted)
+                .Where(a => a.IsActive && !a.IsDeleted)                
+                .Include(a => a.AuditableOffices)
+                .Include(a => a.AuditSchduleDetails)
                 .ToListAsync(cancellationToken);
         }
 
