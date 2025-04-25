@@ -42,6 +42,7 @@ class _PerformanceGovernanceSystemPageState
   Map<int, int?> selectedKRA = {};
 
   List<Map<String, dynamic>> deliverableList = [];
+  List<Map<String, dynamic>> deliverableLists = [];
   List<Map<String, dynamic>> readinessList = [];
   List<Map<String, dynamic>> filteredList = [];
   List<Map<String, dynamic>> options = [];
@@ -51,6 +52,7 @@ class _PerformanceGovernanceSystemPageState
   int rowIndex = 1;
 
   String officeDisplay = "";
+  String percentages = "";
   String officeIdList = "";
   String? selectedOffice = "";
   String? selectedPeriodText;
@@ -99,6 +101,7 @@ class _PerformanceGovernanceSystemPageState
   final dio = Dio();
 
   //Save pgs
+
   Future<void> savePGS(PerformanceGovernanceSystem audit) async {
     var url = ApiEndpoint().performancegovernancesystem;
     if (selectedDirect.isEmpty ||
@@ -141,7 +144,7 @@ class _PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("✅ Pgs data saved successfully!");
+        fetchPgsList();
         // ignore: use_build_context_synchronously
         Navigator.pop(context);
         clearAllSelections();
@@ -159,7 +162,123 @@ class _PerformanceGovernanceSystemPageState
   }
 
   //fetch pgs
-  Future<void> fetchPgs() async {
+  Future<void> fetchPgs({required int? pgsId}) async {
+    var url = ApiEndpoint().performancegovernancesystem;
+
+    if (pgsId != null && pgsId != 0) {
+      url = "$url/$pgsId";
+    }
+
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
+
+      var response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        final pgsList = data is List ? data : [data];
+
+        List<Map<String, Object>> formattedData =
+            pgsList.map((pgsJson) {
+              PerformanceGovernanceSystem pgs =
+                  PerformanceGovernanceSystem.fromJson(pgsJson);
+
+              return {
+                'pgsReadinessRatingId': pgs.pgsReadinessRating.id.toString(),
+                'id': pgs.id.toString(),
+                'name': pgs.office.name,
+                'Start Date': DateTimeConverter().toJson(
+                  pgs.pgsPeriod.startDate,
+                ),
+                'End Date': DateTimeConverter().toJson(pgs.pgsPeriod.endDate),
+                'competencescore':
+                    pgs.pgsReadinessRating.competenceToDeliver.toString(),
+                'confidencescore':
+                    pgs.pgsReadinessRating.confidenceToDeliver.toString(),
+                'resourcescore':
+                    pgs.pgsReadinessRating.resourceAvailability.toString(),
+                'selectPeriod': pgs.pgsPeriod.id.toString(),
+                'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
+                'percentDeliverables':
+                    pgs.pgsDeliverables[0].percentDeliverables.toString(),
+              };
+            }).toList();
+
+        if (mounted) {
+          setState(() {
+            deliverableList = formattedData;
+            filteredList = List.from(deliverableList);
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+  }
+
+  Future<List<PgsDeliverables>> fetchDeliverables({String? pgsId}) async {
+    List<PgsDeliverables> deliverablesList = [];
+
+    var url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
+
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return [];
+      }
+
+      final response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        // Support both single object and list
+        final pgsDataList = data is List ? data : [data];
+
+        for (var pgsJson in pgsDataList) {
+          final deliverables =
+              (pgsJson['pgsDeliverables'] as List)
+                  .map(
+                    (deliverableJson) =>
+                        PgsDeliverables.fromJson(deliverableJson),
+                  )
+                  .toList();
+
+          deliverablesList.addAll(deliverables);
+        }
+      } else {
+        debugPrint("Failed to fetch deliverables: ${response.statusCode}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+
+    return deliverablesList;
+  }
+
+  Future<void> fetchPgsList() async {
     var url = ApiEndpoint().performancegovernancesystem;
 
     try {
@@ -199,17 +318,17 @@ class _PerformanceGovernanceSystemPageState
                     pgs.pgsReadinessRating.resourceAvailability.toString(),
                 'selectPeriod': pgs.pgsPeriod.id.toString(),
                 'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
-                'deliverabledIds':
-                    pgs.pgsDeliverables
-                        .map((deliverable) => deliverable.id.toString())
-                        .toList(),
+                // 'deliverabledIds':
+                //     pgs.pgsDeliverables
+                //         .map((deliverable) => deliverable.id.toString())
+                //         .toList(),
               };
             }).toList();
 
         if (mounted) {
           setState(() {
-            deliverableList = formattedData;
-            filteredList = List.from(deliverableList);
+            deliverableLists = formattedData;
+            filteredList = List.from(deliverableLists);
           });
         }
       } else {
@@ -267,38 +386,6 @@ class _PerformanceGovernanceSystemPageState
   //   }
   // }
 
-  Future<PgsDeliverables?> fetchSingleDeliverable() async {
-    final url = ApiEndpoint().deliverables;
-
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return null;
-      }
-
-      final response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
-
-      if (response.statusCode == 200) {
-        return PgsDeliverables.fromJson(response.data); // Return full object
-      } else {
-        debugPrint("Failed to fetch deliverable: ${response.statusCode}");
-        return null;
-      }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
-      return null;
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-      return null;
-    }
-  }
-
   //fetch periods
   Future<void> fetchPGSPeriods() async {
     var url = ApiEndpoint().pgsperiod;
@@ -353,7 +440,8 @@ class _PerformanceGovernanceSystemPageState
   void initState() {
     super.initState();
     _loadOfficeName();
-    fetchPgs();
+
+    fetchPgsList();
     fetchPGSPeriods();
     isSearchFocus.addListener(() {
       setState(() {});
@@ -542,25 +630,57 @@ class _PerformanceGovernanceSystemPageState
     return deliverablesList;
   }
 
+  // PerformanceGovernanceSystem getPgsAuditDetails() {
+  //   return PerformanceGovernanceSystem(
+  //     0,
+  //     PgsPeriod(
+  //       selectedPeriod!,
+  //       false,
+  //       rowVersion: "",
+  //       DateTime.now(),
+  //       DateTime.now(),
+  //     ),
+  //     Office(
+  //       int.tryParse(selectedOffice!) ?? 0,
+  //       "",
+  //       false,
+  //       false,
+  //       rowVersion: "",
+  //     ),
+  //     getTableDeliverables(),
+  //     PgsReadiness(
+  //       0,
+  //       false,
+  //       null,
+  //       competenceScore.value,
+  //       resourceScore.value,
+  //       confidenceScore.value,
+  //       totalScore,
+  //     ),
+  //     false,
+  //     remarks: "",
+  //     rowVersion: "",
+  //   );
+  // }
   PerformanceGovernanceSystem getPgsAuditDetails() {
     return PerformanceGovernanceSystem(
-      0,
-      PgsPeriod(
+      id: 0,
+      pgsPeriod: PgsPeriod(
         selectedPeriod!,
         false,
         rowVersion: "",
         DateTime.now(),
         DateTime.now(),
       ),
-      Office(
+      office: Office(
         int.tryParse(selectedOffice!) ?? 0,
         "",
         false,
         false,
         rowVersion: "",
       ),
-      getTableDeliverables(),
-      PgsReadiness(
+      pgsDeliverables: getTableDeliverables(),
+      pgsReadinessRating: PgsReadiness(
         0,
         false,
         null,
@@ -569,7 +689,7 @@ class _PerformanceGovernanceSystemPageState
         confidenceScore.value,
         totalScore,
       ),
-      false,
+      isDeleted: false,
       remarks: "",
       rowVersion: "",
     );
@@ -860,7 +980,40 @@ class _PerformanceGovernanceSystemPageState
                                                   IconButton(
                                                     icon: Icon(Icons.edit),
 
+                                                    // onPressed: () async {
+                                                    //   showFormDialog(
+                                                    //     id:
+                                                    //         pgsgovernancesystem['id'],
+                                                    //     officename:
+                                                    //         pgsgovernancesystem['name'],
+                                                    //     competencescore:
+                                                    //         pgsgovernancesystem['competencescore'],
+                                                    //     confidencescore:
+                                                    //         pgsgovernancesystem['confidencescore'],
+                                                    //     resourcescore:
+                                                    //         pgsgovernancesystem['resourcescore'],
+                                                    //     startDate:
+                                                    //         pgsgovernancesystem['Start Date'],
+                                                    //     endDate:
+                                                    //         pgsgovernancesystem['End Date'],
+                                                    //     deliverabledIds: List<
+                                                    //       String
+                                                    //     >.from(
+                                                    //       pgsgovernancesystem['deliverabledId'] ??
+                                                    //           [],
+                                                    //     ),
+                                                    //   );
+                                                    //   // fetchPgs(index);
+                                                    //   fetchPgs(pgsId: index);
+                                                    // },
                                                     onPressed: () async {
+                                                      List<PgsDeliverables>
+                                                      deliverables =
+                                                          await fetchDeliverables(
+                                                            pgsId:
+                                                                pgsgovernancesystem['id'],
+                                                          );
+
                                                       showFormDialog(
                                                         id:
                                                             pgsgovernancesystem['id'],
@@ -876,12 +1029,11 @@ class _PerformanceGovernanceSystemPageState
                                                             pgsgovernancesystem['Start Date'],
                                                         endDate:
                                                             pgsgovernancesystem['End Date'],
-                                                        deliverabledIds: List<
-                                                          String
-                                                        >.from(
-                                                          pgsgovernancesystem['deliverabledId'] ??
-                                                              [],
-                                                        ),
+                                                        percentDeliverables:
+                                                            pgsgovernancesystem['percentDeliverables'],
+
+                                                        deliverables:
+                                                            deliverables,
                                                       );
                                                     },
                                                   ),
@@ -968,16 +1120,65 @@ class _PerformanceGovernanceSystemPageState
     String? resourcescore,
     String? confidencescore,
     String? selectPeriod,
-    List<String>? deliverabledIds,
+    String? percentDeliverables,
+    List<dynamic>? deliverabledIds,
+    List<PgsDeliverables>? deliverables,
   }) {
     if (id == null) {
       competenceScore.value = 0.0;
       resourceScore.value = 0.0;
       confidenceScore.value = 0.0;
+      selectedPeriod = null;
+      selectedPeriodText = null;
+      rows = [0]; // Start with one row
+      deliverablesControllers.clear();
+      selectedDirect.clear();
+      selectedIndirect.clear();
+      selectedByWhen.clear();
+      selectedStatus.clear();
+      // selectedKra.clear();
     } else {
       competenceScore.value = double.tryParse(competencescore ?? '') ?? 0.0;
       resourceScore.value = double.tryParse(resourcescore ?? '') ?? 0.0;
       confidenceScore.value = double.tryParse(confidencescore ?? '') ?? 0.0;
+
+      Map<String, dynamic>? matchedPeriod;
+      try {
+        matchedPeriod = filteredListPeriod.firstWhere(
+          (period) =>
+              period['startDate'] == startDate && period['endDate'] == endDate,
+        );
+      } catch (e) {
+        matchedPeriod = null;
+      }
+
+      if (matchedPeriod != null) {
+        selectedPeriod = matchedPeriod['id'];
+        selectedPeriodText =
+            "${matchedPeriod['startDate']} - ${matchedPeriod['endDate']}";
+      } else {
+        selectedPeriod = null;
+        selectedPeriodText = null;
+      }
+
+      if (deliverables != null && deliverables.isNotEmpty) {
+        rows = List.generate(deliverables.length, (index) => index);
+
+        for (int i = 0; i < deliverables.length; i++) {
+          final item = deliverables[i];
+
+          selectedKRA[i] = item.kra?.id;
+          selectedDirect[i] = item.isDirect ?? false;
+          selectedIndirect[i] = !(item.isDirect ?? false);
+          deliverablesControllers[i] = TextEditingController(
+            text: item.deliverableName,
+          );
+          selectedByWhen[i] = item.byWhen.toIso8601String();
+          selectedStatus[i] = item.status;
+        }
+      } else {
+        rows = [0]; // fallback to one empty row
+      }
     }
 
     showDialog(
@@ -1172,6 +1373,22 @@ class _PerformanceGovernanceSystemPageState
                                                     setDialogState,
                                                   ),
                                             ),
+                                            // ...rows.asMap().entries.map((
+                                            //   entry,
+                                            // ) {
+                                            //   int index = entry.key;
+                                            //   PgsDeliverables deliverable =
+                                            //       entry.value
+                                            //           as PgsDeliverables;
+
+                                            //   return _buildTableRowStrategic(
+                                            //     index,
+                                            //     deliverable.isDirect as String,
+                                            //     deliverable.byWhen as String,
+                                            //     setState,
+                                            //     setDialogState,
+                                            //   );
+                                            // }),
                                           ],
                                         ),
                                         SizedBox(height: 10),
@@ -1622,7 +1839,11 @@ class _PerformanceGovernanceSystemPageState
 
   //Start Strategic Contributions
   // Strategic Contribution Main Header
-  TableRow _buildMainHeaderStrategic({String? officename}) {
+  TableRow _buildMainHeaderStrategic({
+    String? officename,
+    String? percentDeliverables,
+  }) {
+    print('percentDeliverables: $percentDeliverables');
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
 
@@ -1662,6 +1883,7 @@ class _PerformanceGovernanceSystemPageState
                 FilteringTextInputFormatter.allow(RegExp(r'^\d+$')),
               ],
               decoration: InputDecoration(
+                labelText: percentDeliverables ?? percentages,
                 hintText: '0',
                 suffixText: '%',
                 suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),

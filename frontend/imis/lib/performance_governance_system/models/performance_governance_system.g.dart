@@ -9,14 +9,17 @@ part of 'performance_governance_system.dart';
 PerformanceGovernanceSystem _$PerformanceGovernanceSystemFromJson(
   Map<String, dynamic> json,
 ) => PerformanceGovernanceSystem(
-  (json['id'] as num).toInt(),
-  PgsPeriod.fromJson(json['pgsPeriod'] as Map<String, dynamic>),
-  Office.fromJson(json['office'] as Map<String, dynamic>),
-  (json['pgsDeliverables'] as List<dynamic>)
-      .map((e) => PgsDeliverables.fromJson(e as Map<String, dynamic>))
-      .toList(),
-  PgsReadiness.fromJson(json['pgsReadinessRating'] as Map<String, dynamic>),
-  json['isDeleted'] as bool,
+  id: (json['id'] as num).toInt(),
+  office: Office.fromJson(json['office'] as Map<String, dynamic>),
+  pgsPeriod: PgsPeriod.fromJson(json['pgsPeriod'] as Map<String, dynamic>),
+  pgsDeliverables:
+      (json['pgsDeliverables'] as List<dynamic>)
+          .map((e) => PgsDeliverables.fromJson(e as Map<String, dynamic>))
+          .toList(),
+  pgsReadinessRating: PgsReadiness.fromJson(
+    json['pgsReadinessRating'] as Map<String, dynamic>,
+  ),
+  isDeleted: json['isDeleted'] as bool,
   remarks: json['remarks'] as String? ?? '',
   rowVersion: json['rowVersion'] as String?,
 );
