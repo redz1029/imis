@@ -68,6 +68,19 @@ class _AuditorMainPageState extends State<AuditorPage> {
     }
   }
 
+  Future<void> deleteAuditor(String kraId) async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      final response = await dio.delete(url);
+
+      if (response.statusCode == 200) {
+        await fetchAuditors();
+      }
+    } catch (e) {
+      debugPrint("Error deleting KRA: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -405,14 +418,13 @@ class _AuditorMainPageState extends State<AuditorPage> {
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.delete,
-                                                      color: Color.fromARGB(
-                                                        255,
-                                                        221,
-                                                        79,
-                                                        79,
-                                                      ),
+                                                      color: primaryColor,
                                                     ),
-                                                    onPressed: () async {},
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          auditor['id']
+                                                              .toString(),
+                                                        ),
                                                   ),
                                                 ],
                                               ),
@@ -442,6 +454,39 @@ class _AuditorMainPageState extends State<AuditorPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this Role? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deleteAuditor(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

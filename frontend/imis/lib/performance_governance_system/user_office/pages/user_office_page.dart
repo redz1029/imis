@@ -125,7 +125,13 @@ class _UserOfficePageState extends State<UserOfficePage> {
     for (var userOffice in userOfficeList) {
       final officeName = officenameList.firstWhere(
         (office) => office.id == userOffice.officeId,
-        orElse: () => Office(0, 'Unknown', true, false),
+        orElse:
+            () => Office(
+              id: 0,
+              name: 'Unknown',
+              isActive: true,
+              isDeleted: false,
+            ),
       );
 
       debugPrint(
@@ -205,7 +211,6 @@ class _UserOfficePageState extends State<UserOfficePage> {
     }
   }
 
-  // User Name ----------
   Future<void> fetchUser() async {
     var url = ApiEndpoint().users;
     try {
@@ -231,6 +236,19 @@ class _UserOfficePageState extends State<UserOfficePage> {
       }
     } catch (e) {
       debugPrint("Error fetching user: $e");
+    }
+  }
+
+  Future<void> deleteUserOffice(String kraId) async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      final response = await dio.delete(url);
+
+      if (response.statusCode == 200) {
+        await fetchUserOffice();
+      }
+    } catch (e) {
+      debugPrint("Error deleting KRA: $e");
     }
   }
 
@@ -556,7 +574,13 @@ class _UserOfficePageState extends State<UserOfficePage> {
 
                               final matchedOffice = officenameList.firstWhere(
                                 (office) => office.id == userOffice.officeId,
-                                orElse: () => Office(0, 'Unknown', true, false),
+                                orElse:
+                                    () => Office(
+                                      id: 0,
+                                      name: 'Unknown',
+                                      isActive: true,
+                                      isDeleted: false,
+                                    ),
                               );
 
                               final String officeName = matchedOffice.name;
@@ -636,11 +660,12 @@ class _UserOfficePageState extends State<UserOfficePage> {
                                           IconButton(
                                             icon: Icon(
                                               Icons.delete,
-                                              color: Colors.red,
+                                              color: primaryColor,
                                             ),
-                                            onPressed: () async {
-                                              // delete logic here
-                                            },
+                                            onPressed:
+                                                () => showDeleteDialog(
+                                                  userOffice.userId.toString(),
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -666,6 +691,39 @@ class _UserOfficePageState extends State<UserOfficePage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this User Office? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deleteUserOffice(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

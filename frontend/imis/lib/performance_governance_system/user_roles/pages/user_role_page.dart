@@ -168,52 +168,6 @@ class _UserRolePageState extends State<UserRolePage> {
     }
   }
 
-  //   Future<void> updateRole(String userId, String roleId) async {
-  //   final url = '${ApiEndpoint().roles}/$roleId';
-
-  //   try {
-  //     final response = await dio.put(
-  //       url,
-  //       data: '"$roleId"', // 👈 wrap with quotes to make it a valid JSON string
-  //       options: Options(
-  //         contentType: Headers.jsonContentType,
-  //       ),
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       debugPrint("✅ Role updated successfully: ${response.data}");
-  //       // Optionally re-fetch roles list or update UI
-  //       await fetchUserRoles();
-  //     } else {
-  //       debugPrint("❌ Update failed: ${response.statusCode} ${response.data}");
-  //     }
-  //   } catch (e) {
-  //     debugPrint("🔥 Error updating role: $e");
-  //   }
-  // }
-
-  // Future<void> updateRole(String userId, String roleId) async {
-  //   final url = '${ApiEndpoint().updateUserRole}/$userId/$roleId'; // 👈 RESTful route
-
-  //   try {
-  //     final response = await dio.put(
-  //       url,
-  //       options: Options(
-  //         contentType: Headers.jsonContentType,
-  //       ),
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       debugPrint("✅ Role updated successfully: ${response.data}");
-  //       await fetchUserRoles(); // or any UI refresh logic
-  //     } else {
-  //       debugPrint("❌ Update failed: ${response.statusCode} ${response.data}");
-  //     }
-  //   } catch (e) {
-  //     debugPrint("🔥 Error updating role: $e");
-  //   }
-  // }
-
   Future<void> updateRole(String userId, String roleId) async {
     final url =
         '${ApiEndpoint().updateUserRole}?userId=$userId&newRoleId=$roleId';
@@ -308,6 +262,19 @@ class _UserRolePageState extends State<UserRolePage> {
       }
     } catch (e) {
       debugPrint("Error fetching user: $e");
+    }
+  }
+
+  Future<void> deleteUserRole(String kraId) async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      final response = await dio.delete(url);
+
+      if (response.statusCode == 200) {
+        await fetchRole();
+      }
+    } catch (e) {
+      debugPrint("Error deleting KRA: $e");
     }
   }
 
@@ -506,6 +473,7 @@ class _UserRolePageState extends State<UserRolePage> {
 
                 if (confirmAction == true) {
                   if (_selectedUserId == null || _selectedRoleId == null) {
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
                         content: Text("User and role must both be selected."),
@@ -527,6 +495,7 @@ class _UserRolePageState extends State<UserRolePage> {
                     await updateRole(_selectedUserId!, _selectedRoleId!);
                   }
 
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context); // Close the dialog
                 }
               },
@@ -742,11 +711,12 @@ class _UserRolePageState extends State<UserRolePage> {
                                           IconButton(
                                             icon: Icon(
                                               Icons.delete,
-                                              color: Colors.red,
+                                              color: primaryColor,
                                             ),
-                                            onPressed: () async {
-                                              // Delete logic here
-                                            },
+                                            onPressed:
+                                                () => showDeleteDialog(
+                                                  userRoles.userId.toString(),
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -772,6 +742,39 @@ class _UserRolePageState extends State<UserRolePage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this User Role? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deleteUserRole(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

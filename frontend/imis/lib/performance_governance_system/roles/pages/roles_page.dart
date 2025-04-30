@@ -90,6 +90,19 @@ class _RolesPageState extends State<RolesPage> {
     }
   }
 
+  Future<void> deleteRoles(String kraId) async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      final response = await dio.delete(url);
+
+      if (response.statusCode == 200) {
+        await fetchRoles();
+      }
+    } catch (e) {
+      debugPrint("Error deleting KRA: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -207,8 +220,10 @@ class _RolesPageState extends State<RolesPage> {
                       // Update role
                       await updateRole(id, roleName);
                     }
+                    // ignore: use_build_context_synchronously
                     Navigator.pop(context); // Close dialog
                   } else {
+                    // ignore: use_build_context_synchronously
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text("Role name cannot be empty")),
                     );
@@ -402,16 +417,12 @@ class _RolesPageState extends State<RolesPage> {
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.delete,
-                                                      color: Color.fromARGB(
-                                                        255,
-                                                        221,
-                                                        79,
-                                                        79,
-                                                      ),
+                                                      color: primaryColor,
                                                     ),
-                                                    onPressed: () async {
-                                                      // Handle delete here
-                                                    },
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          role.id.toString(),
+                                                        ),
                                                   ),
                                                 ],
                                               ),
@@ -441,6 +452,39 @@ class _RolesPageState extends State<RolesPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this Role? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deleteRoles(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
