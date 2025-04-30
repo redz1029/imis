@@ -35,7 +35,8 @@ namespace IMIS.Persistence.PgsModule
             return new PerfomanceGovernanceSystemDto
             {
                 Id = perfomanceGovernanceSystem.Id,
-                Remarks = perfomanceGovernanceSystem.Remarks,                                
+                Remarks = perfomanceGovernanceSystem.Remarks,
+                PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables,
                 PgsPeriod = perfomanceGovernanceSystem.PgsPeriod != null ? new PgsPeriodDto
                 {                 
                     Id = perfomanceGovernanceSystem.PgsPeriod.Id,
@@ -59,7 +60,7 @@ namespace IMIS.Persistence.PgsModule
                 } : null,  
 
                 PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(deliverable => new PGSDeliverableDto
-                {
+                {                   
                     Id = deliverable.Id,
                     IsDirect = deliverable.IsDirect,
                     DeliverableName = deliverable.DeliverableName,
@@ -67,6 +68,7 @@ namespace IMIS.Persistence.PgsModule
                     PercentDeliverables = deliverable.PercentDeliverables,
                     Status = deliverable.Status,
                     RowVersion = deliverable.RowVersion,
+                    KraId = deliverable.KraId,
                     Kra = deliverable.Kra != null ? new KeyResultAreaDto
                     {
                         Id = deliverable.Kra.Id,
@@ -74,7 +76,7 @@ namespace IMIS.Persistence.PgsModule
                         Remarks = deliverable.Kra.Remarks
                     } : null, 
                     Remarks = deliverable.Remarks
-                }).ToList() ?? new List<PGSDeliverableDto>()  
+                }).ToList() ?? new List<PGSDeliverableDto>()                 
             };
         }
         public async Task<PerfomanceGovernanceSystemDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -103,7 +105,7 @@ namespace IMIS.Persistence.PgsModule
             return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(perfomanceGovernanceSystemDto.Items, page, pageSize, perfomanceGovernanceSystemDto.TotalCount);
         }
 
-        // Save or Update PgsAuditDetails
+      
         public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto, CancellationToken cancellationToken)
         {
             if (perfomanceGovernanceSystemDto == null) throw new ArgumentNullException(nameof(perfomanceGovernanceSystemDto));
@@ -126,6 +128,7 @@ namespace IMIS.Persistence.PgsModule
             {
                 Id = createdPerfomanceGovernanceSystem.Id,
                 Remarks = createdPerfomanceGovernanceSystem.Remarks,
+                PercentDeliverables = createdPerfomanceGovernanceSystem.PercentDeliverables,
                 PgsPeriod = new PgsPeriodDto
                 {
                     Id = createdPerfomanceGovernanceSystem.PgsPeriod.Id,
@@ -154,6 +157,7 @@ namespace IMIS.Persistence.PgsModule
                     PercentDeliverables = deliverable.PercentDeliverables,
                     Status = deliverable.Status,
                     RowVersion = deliverable.RowVersion,
+                    KraId = deliverable.KraId,
                     Kra = deliverable.Kra != null ? new KeyResultAreaDto
                     {
                         Id = deliverable.Kra.Id,

@@ -14,6 +14,7 @@ namespace IMIS.Application.PgsModule
         public string? Remarks { get; set; }
         public List<PGSDeliverableDto>? PgsDeliverables { get; set; }
         public PgsReadinessRatingDto? PgsReadinessRating { get; set; }
+        public required double PercentDeliverables { get; set; }
         public PerfomanceGovernanceSystemDto() { }
         [SetsRequiredMembers]
         public PerfomanceGovernanceSystemDto(PerfomanceGovernanceSystem perfomanceGovernanceSystem)
@@ -35,7 +36,8 @@ namespace IMIS.Application.PgsModule
                 Office = Office.ToEntity(),
                 Remarks = Remarks,
                 PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),
-                PgsReadinessRating = PgsReadinessRating!.ToEntity()
+                PgsReadinessRating = PgsReadinessRating!.ToEntity(),
+                PercentDeliverables = PercentDeliverables
             };
         }
        

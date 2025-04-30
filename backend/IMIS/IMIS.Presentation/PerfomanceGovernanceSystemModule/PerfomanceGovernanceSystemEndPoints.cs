@@ -20,14 +20,14 @@ namespace IMIS.Presentation.PgsModuleAPI
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {                
+            {
                 var createdPerformanceGovernanceSystem = await service.SaveOrUpdateAsync(performanceGovernanceSystemDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
                 return Results.Created($"/performanceGovernanceSystem/{createdPerformanceGovernanceSystem.Id}", createdPerformanceGovernanceSystem);
 
             })
-            .WithTags(_pgsTag)
-            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
+            .WithTags(_pgsTag);
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
 
             app.MapGet("/", async (IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
@@ -35,7 +35,7 @@ namespace IMIS.Presentation.PgsModuleAPI
                 return Results.Ok(performanceGovernanceSystem);
             })
            .WithTags(_pgsTag)
-           .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
+           //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
             app.MapGet("/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
@@ -44,11 +44,11 @@ namespace IMIS.Presentation.PgsModuleAPI
                 return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
             })
             .WithTags(_pgsTag)
-            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {              
+            {
                 var existingPerformanceGovernanceSystem = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingPerformanceGovernanceSystem == null)
                 {
@@ -59,8 +59,8 @@ namespace IMIS.Presentation.PgsModuleAPI
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
                 return Results.Ok(updatedexistingPgsAuditDetails);
             })
-           .WithTags(_pgsTag)
-           .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
+           .WithTags(_pgsTag);
+           //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
 
             app.MapGet("/page", async (int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
@@ -83,7 +83,7 @@ namespace IMIS.Presentation.PgsModuleAPI
                 return Results.Ok(performanceGovernanceSystem);
             })
             .WithTags(_pgsTag)
-            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
             app.MapGet("/page/pgsPeriod/{id}", async (long? pgsPeriodId, int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
@@ -98,7 +98,7 @@ namespace IMIS.Presentation.PgsModuleAPI
                 return Results.Ok(paginatedPerformanceGovernanceSystem);
             })
             .WithTags(_pgsTag)
-            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
         }
     }
