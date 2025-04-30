@@ -16,7 +16,7 @@ class RegistrationPage extends StatefulWidget {
 
 class RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
-
+  final TextEditingController idController = TextEditingController();
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController middleNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
@@ -28,6 +28,7 @@ class RegistrationPageState extends State<RegistrationPage> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
 
+  final FocusNode idFocusNode = FocusNode();
   final FocusNode focusFirstName = FocusNode();
   final FocusNode focusLastName = FocusNode();
   final FocusNode focusMiddleName = FocusNode();
@@ -559,6 +560,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                                 register(
                                   context,
                                   UserRegistration(
+                                    idController.text,
                                     userNameController.text,
                                     emailController.text,
                                     passwordController.text,
