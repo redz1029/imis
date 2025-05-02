@@ -1,10 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PgsPrintPage extends StatefulWidget {
@@ -21,11 +25,14 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
   Map<int, String> selectedByWhen = {};
   final dio = Dio();
 
+  // Define gap constants
+  final SizedBox gap3 = const SizedBox(height: 3);
+  final SizedBox gap5 = const SizedBox(height: 5);
+
   @override
   void initState() {
     super.initState();
-
-    fetchPgs(pgsId: 120187);
+    fetchPgs(pgsId: 120204);
   }
 
   Future<void> fetchPgs({required int? pgsId}) async {
@@ -64,11 +71,14 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
           for (var deliverable in deliverables) {
             formattedData.add({
               'kra': deliverable.kra.name,
+              'Start Date': DateTimeConverter().toJson(pgs.pgsPeriod.startDate),
+              'End Date': DateTimeConverter().toJson(pgs.pgsPeriod.endDate),
               'isDirect': deliverable.isDirect,
               'deliverableName': deliverable.deliverableName,
+              'selectPeriod': pgs.pgsPeriod.id.toString(),
               'status': deliverable.status,
               'byWhen': DateTimeConverter().toJson(deliverable.byWhen),
-              'percentDeliverables': deliverable.percentDeliverables.toString(),
+              'percentDeliverables': pgs.percentDeliverables.toString(),
             });
           }
         }
@@ -109,21 +119,31 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
         return 'On Hold';
       case PgsStatus.cancelled:
         return 'Cancelled';
-      default:
-        return 'Unknown Status';
     }
   }
 
   Widget _buildHeader() {
+    String pgsPeriodStartDate =
+        deliverableList.isNotEmpty
+            ? DateTimeConverter().toJson(
+              DateTime.parse(deliverableList[0]['Start Date']),
+            )
+            : '';
+    String pgsPeriodEndDate =
+        deliverableList.isNotEmpty
+            ? DateTimeConverter().toJson(
+              DateTime.parse(deliverableList[0]['End Date']),
+            )
+            : '';
+
     return Padding(
-      padding: EdgeInsets.all(15),
+      padding: const EdgeInsets.all(15),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Logo on the left side
           Image.asset('assets/CRMC.png', height: 90),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -131,13 +151,16 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
               Text(
                 'COTABATO REGIONAL AND MEDICAL CENTER',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                ),
               ),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               Text(
-                '2025',
+                '$pgsPeriodStartDate - $pgsPeriodEndDate',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 15),
+                style: const TextStyle(fontSize: 15),
               ),
             ],
           ),
@@ -149,6 +172,21 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('Performance Governance System'),
+        actions: [
+          TextButton(
+            onPressed: generatePdf,
+            child: const Row(
+              children: [
+                Icon(Icons.print, color: Colors.white),
+                SizedBox(width: 4),
+                Text('Print', style: TextStyle(color: Colors.white)),
+              ],
+            ),
+          ),
+        ],
+      ),
       backgroundColor: Colors.white,
       body: Center(
         child: SingleChildScrollView(
@@ -172,15 +210,107 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
                 dividerThickness: 0,
                 horizontalMargin: 0,
                 border: TableBorder.all(width: 0, color: Colors.transparent),
-                columns: [
-                  DataColumn(label: Container(width: 110)),
-                  DataColumn(label: Container(width: 100)),
-                  DataColumn(label: Container(width: 100)),
-                  DataColumn(label: Container()),
-                  DataColumn(label: Container(width: 185)),
-                  DataColumn(label: Container(width: 185)),
+                columns: const [
+                  DataColumn(label: SizedBox(width: 110)),
+                  DataColumn(label: SizedBox(width: 100)),
+                  DataColumn(label: SizedBox(width: 100)),
+                  DataColumn(label: SizedBox()),
+                  DataColumn(label: SizedBox(width: 185)),
+                  DataColumn(label: SizedBox(width: 185)),
                 ],
                 rows: _buildRows(),
+              ),
+              gap7,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Submitted by:',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      gap6,
+                      Column(
+                        children: [
+                          Container(
+                            width: 300,
+                            height: 1,
+                            color: primaryTextColor,
+                          ),
+
+                          const SizedBox(height: 8),
+                          const Text(
+                            'DR. HALIMA O. MOKAMAD-ROMANCAP',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+
+                          const Text(
+                            'Head Department of Surgery',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 120),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Noted by:', style: TextStyle(fontSize: 12)),
+                      gap6,
+                      Column(
+                        children: [
+                          Container(
+                            width: 300,
+                            height: 1,
+                            color: primaryTextColor,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'DR. JOHN MALIGA',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const Text(
+                            'Chief of Medical Professional Staff II',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 120),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Approved by:',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                      gap6,
+                      Column(
+                        children: [
+                          Container(
+                            width: 300,
+                            height: 1,
+                            color: primaryTextColor,
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'DR. ISHMAEL R. DIMAREN',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const Text(
+                            'Medical Center Chief II',
+                            style: TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
@@ -190,6 +320,13 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
   }
 
   Widget _buildMainHeader() {
+    String percentDeliverables =
+        deliverableList.isNotEmpty
+            ? deliverableList[0]['percentDeliverables'] ?? ''
+            : '';
+    String formattedPercent =
+        percentDeliverables.isNotEmpty ? '$percentDeliverables%' : '';
+
     return Container(
       decoration: BoxDecoration(
         color: primaryLightColor,
@@ -203,7 +340,7 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
             width: 550,
             height: 70,
           ),
-          _buildMergedHeaderCell('30%', width: 370, height: 70),
+          _buildMergedHeaderCell(formattedPercent, width: 370, height: 70),
         ],
       ),
     );
@@ -218,28 +355,22 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
             _buildDataCell(
               (deliverable['isDirect'] == true) ? 'True' : 'False',
               width: 100,
-              isHighlighted: deliverable['isDirect'] == false,
+              isHighlighted: deliverable['isDirect'] == true,
             ),
           ),
-
           DataCell(
             _buildDataCell(
               (deliverable['isDirect'] == true) ? 'True' : 'False',
               width: 100,
-              isHighlighted: deliverable['isDirect'] == true,
+              isHighlighted: deliverable['isDirect'] == false,
             ),
           ),
-
           DataCell(
             _buildDataCell(deliverable['deliverableName'] ?? '', width: 550),
           ),
           DataCell(_buildDataCell(deliverable['byWhen'] ?? '', width: 185)),
-
           DataCell(
-            _buildDataCell(
-              _getStatusText(deliverable['status']), // Get the status text
-              width: 185,
-            ),
+            _buildDataCell(_getStatusText(deliverable['status']), width: 185),
           ),
         ],
       );
@@ -250,7 +381,7 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
     return Container(
       width: width,
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 0), // 🔹 Block Border
+        border: Border.all(color: Colors.black, width: 0),
       ),
       child: Column(
         children: [
@@ -274,14 +405,14 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
     return Container(
       width: width,
       height: height,
-      padding: EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 0), // 🔹 Block Border
+        border: Border.all(color: Colors.black, width: 0),
       ),
       child: Center(
         child: Text(
           text,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
       ),
@@ -296,14 +427,14 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
     return Container(
       width: width,
       height: height,
-      padding: EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.black, width: 0), // 🔹 Block Border
+        border: Border.all(color: Colors.black, width: 0),
       ),
       child: Center(
         child: Text(
           text,
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
       ),
@@ -317,7 +448,7 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
   }) {
     return Container(
       width: width,
-      padding: EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: isHighlighted ? primaryLightColor : Colors.transparent,
         border: Border.all(color: Colors.black, width: 0.5),
@@ -334,6 +465,306 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
                     : Colors.black,
           ),
           textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Future<Uint8List> _loadLogo() async {
+    final ByteData data = await rootBundle.load('assets/CRMC.png');
+    return data.buffer.asUint8List();
+  }
+
+  Future<void> generatePdf() async {
+    final pdf = pw.Document();
+    final Uint8List logoBytes = await _loadLogo();
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4.landscape,
+        build: (pw.Context context) {
+          return pw.Column(
+            children: [
+              _buildPdfHeader(logoBytes),
+              pw.SizedBox(height: 20),
+              _buildPdfTable(),
+              _buildPdfSignatures(),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
+  }
+
+  pw.Widget _buildPdfHeader(Uint8List logoBytes) {
+    String pgsPeriodStartDate =
+        deliverableList.isNotEmpty
+            ? DateTimeConverter().toJson(
+              DateTime.parse(deliverableList[0]['Start Date']),
+            )
+            : '';
+    String pgsPeriodEndDate =
+        deliverableList.isNotEmpty
+            ? DateTimeConverter().toJson(
+              DateTime.parse(deliverableList[0]['End Date']),
+            )
+            : '';
+
+    return pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.center,
+      children: [
+        pw.Image(pw.MemoryImage(logoBytes), height: 70),
+        pw.SizedBox(width: 10),
+        pw.Column(
+          mainAxisAlignment: pw.MainAxisAlignment.center,
+          crossAxisAlignment: pw.CrossAxisAlignment.center,
+          children: [
+            pw.Text(
+              "COTABATO REGIONAL AND MEDICAL CENTER",
+              style: pw.TextStyle(fontSize: 15, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Text(
+              "$pgsPeriodStartDate - $pgsPeriodEndDate",
+              style: const pw.TextStyle(fontSize: 14),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _buildPdfTable() {
+    return pw.Table(
+      border: pw.TableBorder.all(),
+      columnWidths: {
+        0: const pw.FlexColumnWidth(1.5),
+        1: const pw.FlexColumnWidth(0.9),
+        2: const pw.FlexColumnWidth(0.9),
+        3: const pw.FlexColumnWidth(3),
+        4: const pw.FlexColumnWidth(1),
+        5: const pw.FlexColumnWidth(1),
+      },
+      children: [
+        // Main Header
+        pw.TableRow(
+          decoration: pw.BoxDecoration(color: PdfColors.redAccent100),
+          children: [
+            _buildPdfHeaderCellWithPadding(
+              'Surgery',
+              PdfColors.white,
+              fontSize: 16,
+              padding: const pw.EdgeInsets.all(15),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              '',
+              PdfColors.white,
+              padding: const pw.EdgeInsets.all(15),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              '',
+              PdfColors.white,
+              padding: const pw.EdgeInsets.all(15),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              'Strategic Contributions',
+              PdfColors.white,
+              fontSize: 16,
+              padding: const pw.EdgeInsets.all(15),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              deliverableList.isNotEmpty
+                  ? '${deliverableList[0]['percentDeliverables']}%'
+                  : '',
+              PdfColors.white,
+              fontSize: 16,
+              padding: const pw.EdgeInsets.all(15),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              '',
+              PdfColors.white,
+              padding: const pw.EdgeInsets.all(15),
+            ),
+          ],
+        ),
+
+        // Sub Header
+        pw.TableRow(
+          decoration: const pw.BoxDecoration(color: PdfColors.white),
+          children: [
+            _buildPdfHeaderCellWithPadding(
+              'KRA',
+              PdfColors.black,
+              padding: pw.EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              'DIRECT',
+              PdfColors.black,
+              padding: pw.EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              'INDIRECT',
+              PdfColors.black,
+              padding: pw.EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              'DELIVERABLES',
+              PdfColors.black,
+              padding: pw.EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              'BY WHEN',
+              PdfColors.black,
+              padding: pw.EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+            ),
+            _buildPdfHeaderCellWithPadding(
+              'STATUS',
+              PdfColors.black,
+              padding: pw.EdgeInsets.symmetric(vertical: 14, horizontal: 10),
+            ),
+          ],
+        ),
+
+        // Data Rows
+        ...deliverableList.map(
+          (deliverable) => _buildPdfDataRow(
+            deliverable['kra'] ?? '',
+            deliverable['isDirect'] == true ? 'True' : '',
+            deliverable['isDirect'] == false ? 'True' : '',
+            deliverable['deliverableName'] ?? '',
+            deliverable['byWhen'] ?? '',
+            _getStatusText(deliverable['status']),
+          ),
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _buildPdfSignatures() {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(top: 30),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
+        children: [
+          _buildPdfSignatureColumn(
+            'Submitted by:',
+            'DR. HALIMA O. MOKAMAD-ROMANCAP',
+            'Head Department of Surgery',
+          ),
+          _buildPdfSignatureColumn(
+            'Noted by:',
+            'DR. JOHN MALIGA',
+            'Chief of Medical Professional Staff II',
+          ),
+          _buildPdfSignatureColumn(
+            'Approved by:',
+            'DR. ISHMAEL R. DIMAREN',
+            'Medical Center Chief II',
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildPdfSignatureColumn(
+    String title,
+    String name,
+    String position,
+  ) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(title, style: const pw.TextStyle(fontSize: 12)),
+        pw.SizedBox(height: 3),
+        pw.Container(width: 150, height: 1, color: PdfColors.black),
+        pw.SizedBox(height: 8),
+        pw.Text(name, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+        pw.Text(position, style: const pw.TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+
+  pw.Widget _buildPdfHeaderCellWithPadding(
+    String text,
+    PdfColor color, {
+    double fontSize = 12,
+    required pw.EdgeInsets padding,
+  }) {
+    return pw.Container(
+      padding: padding,
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          color: color,
+          fontSize: fontSize,
+          fontWeight: pw.FontWeight.bold,
+        ),
+        textAlign: pw.TextAlign.center,
+      ),
+    );
+  }
+
+  // pw.TableRow _buildPdfDataRow(
+  //   String kra,
+  //   String direct,
+  //   String indirect,
+  //   String deliverables,
+  //   String byWhen,
+  //   String status,
+  // ) {
+  //   return pw.TableRow(
+  //     children: [
+  //       _buildPdfCell(kra, isBold: true),
+  //       _buildPdfCell(direct),
+  //       _buildPdfCell(indirect),
+  //       _buildPdfCell(deliverables),
+  //       _buildPdfCell(byWhen),
+  //       _buildPdfCell(status),
+  //     ],
+  //   );
+  // }
+  pw.TableRow _buildPdfDataRow(
+    String kra,
+    String direct,
+    String indirect,
+    String deliverables,
+    String byWhen,
+    String status,
+  ) {
+    return pw.TableRow(
+      decoration: pw.BoxDecoration(color: PdfColors.white),
+      children: [
+        _buildPdfCell(kra, isBold: true),
+        _buildPdfCell('', hasBackground: direct.isNotEmpty),
+        _buildPdfCell('', hasBackground: indirect.isNotEmpty),
+        _buildPdfCell(deliverables),
+        _buildPdfCell(byWhen),
+        _buildPdfCell(status),
+      ],
+    );
+  }
+
+  pw.Widget _buildPdfCell(
+    String text, {
+    bool isBold = false,
+    bool hasBackground = false,
+  }) {
+    return pw.Container(
+      padding: const pw.EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+      decoration:
+          hasBackground
+              ? pw.BoxDecoration(color: PdfColors.redAccent100)
+              : null,
+      alignment: pw.Alignment.centerLeft,
+      child: pw.Text(
+        text,
+        style: pw.TextStyle(
+          fontSize: 12,
+          fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
         ),
       ),
     );
