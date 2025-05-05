@@ -15,15 +15,21 @@ class PageList<T> {
     this.hasPreviousPage,
   );
 
-  factory PageList.fromJSON(Map<String, dynamic> json, Function fromJSONModel) {
-    List<dynamic> items = json['items'].cast<Map<String, dynamic>>();
-    return PageList(
-      List<T>.from(items.map((e) => fromJSONModel(e))),
-      json['page'],
-      json['pageSize'],
-      json['totalCount'],
-      json['hasNextPage'],
-      json['hasPreviousPage'],
+  factory PageList.fromJSON(
+    Map<String, dynamic> json,
+    T Function(Map<String, dynamic>) fromJSONModel,
+  ) {
+    final items =
+        (json['items'] as List)
+            .map((e) => fromJSONModel(e as Map<String, dynamic>))
+            .toList();
+    return PageList<T>(
+      items,
+      json['page'] as int,
+      json['pageSize'] as int,
+      json['totalCount'] as int,
+      json['hasNextPage'] as bool,
+      json['hasPreviousPage'] as bool,
     );
   }
 }

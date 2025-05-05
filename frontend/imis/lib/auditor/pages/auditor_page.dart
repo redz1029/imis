@@ -4,6 +4,8 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/utils/api_endpoint.dart';
 
+import 'package:imis/utils/pagination_util.dart';
+
 class AuditorPage extends StatefulWidget {
   const AuditorPage({super.key});
 
@@ -13,45 +15,53 @@ class AuditorPage extends StatefulWidget {
 }
 
 class _AuditorMainPageState extends State<AuditorPage> {
+  final _paginationUtils = PaginationUtil(Dio());
   final _formKey = GlobalKey<FormState>();
   List<Map<String, dynamic>> auditorList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+
   final dio = Dio();
 
-  // Fetch auditors from the API
-  Future<void> fetchAuditors() async {
-    var url = ApiEndpoint().auditor;
+  //fetchAuditors with pagination
+  Future<void> fetchAuditors({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      var response = await dio.get(url);
+      final pageList = await _paginationUtils.fetchPaginatedData<Auditor>(
+        endpoint: ApiEndpoint().auditor,
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+        fromJson: (json) => Auditor.fromJson(json),
+      );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<Auditor> data =
-            (response.data as List)
-                .map((auditors) => Auditor.fromJson(auditors))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            auditorList = data.map((auditors) => auditors.toJson()).toList();
-            filteredList = List.from(auditorList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          auditorList = pageList.items.map((a) => a.toJson()).toList();
+          filteredList = List.from(auditorList);
+        });
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
   // Add or update auditor
-
   Future<void> addOrUpdateAuditor(Auditor auditors) async {
     var url = ApiEndpoint().auditor;
     try {
@@ -68,6 +78,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
     }
   }
 
+  //delete
   Future<void> deleteAuditor(String kraId) async {
     var url = ApiEndpoint().keyresult;
     try {
@@ -84,7 +95,6 @@ class _AuditorMainPageState extends State<AuditorPage> {
   @override
   void initState() {
     super.initState();
-    // Fetch auditors when the screen is initialized
     fetchAuditors();
     isSearchfocus.addListener(() {
       setState(() {});
@@ -109,6 +119,39 @@ class _AuditorMainPageState extends State<AuditorPage> {
               )
               .toList();
     });
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this Role? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deleteAuditor(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   // Show the form to add or update auditor
@@ -346,6 +389,10 @@ class _AuditorMainPageState extends State<AuditorPage> {
                             filteredList
                                 .asMap()
                                 .map((index, auditor) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
                                   return MapEntry(
                                     index,
                                     Container(
@@ -371,7 +418,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                (index + 1).toString(),
+                                                itemNumber.toString(),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -443,6 +490,28 @@ class _AuditorMainPageState extends State<AuditorPage> {
                 ],
               ),
             ),
+            Container(
+              padding: EdgeInsets.all(10),
+              color: secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchAuditors(page: page),
+                  ),
+                  Container(width: 60), // For alignment
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -454,39 +523,6 @@ class _AuditorMainPageState extends State<AuditorPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
-    );
-  }
-
-  void showDeleteDialog(String id) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this Role? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await deleteAuditor(id);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
     );
   }
 }
