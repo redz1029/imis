@@ -152,6 +152,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        fetchAuditorTeam();
       } else {
         debugPrint(
           "Failed to add/update office. Status code: ${response.statusCode}",
@@ -218,7 +219,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               content: SizedBox(
-                width: 700,
+                width: 400,
                 height: 500,
                 child: SingleChildScrollView(
                   child: Column(
@@ -226,34 +227,44 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                       // Team Dropdown
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButtonFormField<int>(
-                            dropdownColor: mainBgColor,
-                            isExpanded: true,
-                            decoration: InputDecoration(
-                              labelText: 'Choose Team',
-                              filled: true,
-                              fillColor: secondaryColor,
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.never,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8),
+                        child: Stack(
+                          children: [
+                            DropdownButtonHideUnderline(
+                              child: DropdownButtonFormField<int>(
+                                dropdownColor: mainBgColor,
+                                isExpanded: true,
+                                decoration: InputDecoration(
+                                  labelText: 'Choose Team',
+                                  filled: true,
+                                  fillColor: secondaryColor,
+                                  floatingLabelBehavior:
+                                      FloatingLabelBehavior.never,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                value: selectTeam,
+                                items:
+                                    teamList.map((team) {
+                                      return DropdownMenuItem<int>(
+                                        value: team['id'],
+                                        child: Text(team['name']),
+                                      );
+                                    }).toList(),
+                                onChanged: (value) {
+                                  setState(() {
+                                    selectTeam = value;
+                                  });
+                                },
                               ),
                             ),
-                            value: selectTeam,
-                            items:
-                                teamList.map((team) {
-                                  return DropdownMenuItem<int>(
-                                    value: team['id'],
-                                    child: Text(team['name']),
-                                  );
-                                }).toList(),
-                            onChanged: (value) {
-                              setState(() {
-                                selectTeam = value;
-                              });
-                            },
-                          ),
+                            if (selectTeam != null)
+                              Positioned.fill(
+                                child: AbsorbPointer(
+                                  child: Container(color: Colors.transparent),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
 
@@ -393,7 +404,18 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
 
   void showAvailableAuditorsDialog(Function setDialogState) {
     final assignedAuditorIds =
-        auditorTeamList.map((audiorTeam) => audiorTeam['auditors']).toSet();
+        auditorTeamList.expand((auditorTeam) {
+          final auditors = auditorTeam['auditors'] ?? [];
+          return auditors.map((auditor) {
+            if (auditor is Map<String, dynamic>) {
+              return auditor['id'];
+            } else if (auditor is Auditor) {
+              return auditor.id;
+            } else {
+              return null;
+            }
+          }).whereType<dynamic>();
+        }).toSet();
 
     showDialog(
       context: context,
@@ -456,7 +478,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
               .where(
                 (auditorTeam) => auditorTeam['name']!.toLowerCase().contains(
                   query.toLowerCase(),
-                ),
+                ), // Filter based on the query
               )
               .toList();
     });
