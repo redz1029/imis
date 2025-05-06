@@ -214,6 +214,13 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
     TextEditingController defaultSignatoryController = TextEditingController(
       text: signatoryLabel,
     );
+    TextEditingController statusController = TextEditingController(
+      text: status,
+    );
+    TextEditingController orderLevelController = TextEditingController(
+      text: orderLevel?.toString() ?? '',
+    );
+
     _selectedUserId =
         userList.any((u) => u.id == defaultSignatoryId)
             ? defaultSignatoryId
@@ -291,6 +298,52 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     },
                   ),
                 ),
+
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: statusController,
+                    decoration: InputDecoration(
+                      labelText: 'Status',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a name';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: orderLevelController,
+                    decoration: InputDecoration(
+                      labelText: 'Order Level',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter a name';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -347,8 +400,8 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     final pgsSignatoryTemplate = PgsSignatoryTemplate(
                       int.tryParse(id ?? '0') ?? 0,
                       isDeleted,
-                      '',
-                      0,
+                      statusController.text,
+                      int.tryParse(orderLevelController.text) ?? 0,
                       _selectedUserId ?? '',
                       true,
                       rowVersion: '',
@@ -575,6 +628,10 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                                               pgsSignatory['defaultSignatoryId'],
                                                           signatoryLabel:
                                                               pgsSignatory['signatoryLabel'],
+                                                          status:
+                                                              pgsSignatory['status'],
+                                                          orderLevel:
+                                                              pgsSignatory['orderLevel'],
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),
