@@ -1,7 +1,5 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.PgsKraModule;
-using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.TeamModule

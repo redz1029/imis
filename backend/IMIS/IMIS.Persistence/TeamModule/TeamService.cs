@@ -32,7 +32,6 @@ namespace IMIS.Persistence.TeamModule
                 return null;
             return DtoPageList<TeamDto, Team, int>.Create(team.Items, page, pageSize, team.TotalCount);
         }
-
         public async Task<TeamDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var team = await _teamRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -82,7 +81,6 @@ namespace IMIS.Persistence.TeamModule
                 await _teamRepository.SaveOrUpdateAsync(team, cancellationToken).ConfigureAwait(false);
             }
         }
-
         public async Task<TeamDto> SaveOrUpdateAsync(TeamDto teamDto, CancellationToken cancellationToken)
         {
             if (teamDto == null) throw new ArgumentNullException(nameof(TeamDto));

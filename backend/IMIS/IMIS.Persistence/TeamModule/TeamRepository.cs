@@ -19,7 +19,6 @@ namespace IMIS.Persistence.TeamModule
              .ConfigureAwait(false);
             return team;
         }
-
         public async Task<IEnumerable<Team>> FilterByName(string name, int teamNoOfResults, CancellationToken cancellationToken)
         {
             return await _dbContext.Teams
@@ -45,7 +44,6 @@ namespace IMIS.Persistence.TeamModule
                  .ToListAsync(cancellationToken)
                  .ConfigureAwait(false);
         }
-
         public new async Task<Team> SaveOrUpdateAsync(Team team, CancellationToken cancellationToken)
         {
             if (team == null) throw new ArgumentNullException(nameof(team));

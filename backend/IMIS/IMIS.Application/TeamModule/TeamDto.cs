@@ -10,9 +10,7 @@ namespace IMIS.Application.TeamModule
         public required string Name { get; set; }
         public required bool IsActive { get; set; }
         public List<AuditorDto>? Auditors { get; set; }
-
-        public TeamDto() { }
-     
+        public TeamDto() { }     
         [SetsRequiredMembers]
         public TeamDto(Team team)
         {

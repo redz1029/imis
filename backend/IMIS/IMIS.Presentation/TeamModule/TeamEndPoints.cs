@@ -11,7 +11,6 @@ namespace IMIS.Presentation.TeamModule
 {
     public class TeamEndPoints : CarterModule
     {
-
         private const string _teamTag = "Team";
         public TeamEndPoints() : base("/team")
         {
@@ -51,7 +50,6 @@ namespace IMIS.Presentation.TeamModule
             })
           .WithTags(_teamTag)
           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true);
-
             app.MapPut("/{id}", async (int id, [FromBody] TeamDto teamDto, ITeamService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {               
                 var existingTeam = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -65,7 +63,6 @@ namespace IMIS.Presentation.TeamModule
                 return Results.Ok(updatedTeam);
             })
            .WithTags(_teamTag);
-
             app.MapGet("/page", async (int page, int pageSize, ITeamService service, CancellationToken cancellationToken) =>
             {
                 var paginatedTeam = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -73,10 +70,6 @@ namespace IMIS.Presentation.TeamModule
             })
            .WithTags(_teamTag)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true);
-
-
         }
-    }
-
-      
+    }      
 }
