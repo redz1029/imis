@@ -484,14 +484,6 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     });
   }
 
-  String getAuditorsNameById(int id, List<Map<String, dynamic>> auditorList) {
-    final auditors = auditorList.firstWhere(
-      (auditors) => auditors['id'] == id,
-      orElse: () => {'name': 'Unknown Auditors'},
-    );
-    return auditors['name'] ?? 'Unknown Auditors';
-  }
-
   String getTeamNameById(int id, List<Map<String, dynamic>> teamList) {
     final team = teamList.firstWhere(
       (team) => team['id'] == id,
@@ -578,149 +570,101 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
             ),
             gap,
             Expanded(
-              child: Column(
-                children: [
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text('Team', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Auditors',
-                            style: TextStyle(color: grey),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Actions', style: TextStyle(color: grey)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: Column(
-                        children:
-                            uniqueTeams
-                                .asMap()
-                                .map((index, audiorTeam) {
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 16,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade300,
+              child: GridView.count(
+                crossAxisCount: isMinimized ? 1 : 3,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 2,
+                children:
+                    uniqueTeams
+                        .asMap()
+                        .map((index, audiorTeam) {
+                          return MapEntry(
+                            index,
+                            Card(
+                              color: secondaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 3,
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Column(
+                                      children: [
+                                        Center(
+                                          child: Text(
+                                            ' ${getTeamNameById(audiorTeam['teamId'], teamList)}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 18,
+                                              color: primaryTextColor,
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                (index + 1).toString(),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                getTeamNameById(
-                                                  audiorTeam['teamId'],
-                                                  teamList,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              // child: Text(
-                                              //   // audiorTeam['auditors'],
-                                              // ),
-                                            ),
-                                          ),
-
-                                          Expanded(
-                                            flex: 1,
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              children: [
-                                                IconButton(
-                                                  icon: Icon(Icons.edit),
-                                                  onPressed: () {
-                                                    showFormDialog(
-                                                      id: audiorTeam['id'],
-                                                      teamId:
-                                                          (audiorTeam['teamId'] ??
-                                                                  '')
-                                                              .toString(),
-                                                      auditors:
-                                                          audiorTeam['auditors'],
-
-                                                      // auditors:
-                                                      //     audiorTeam['auditors'],
-                                                    );
-                                                  },
-                                                ),
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.delete,
-                                                    color: primaryColor,
-                                                  ),
-                                                  onPressed:
-                                                      () => showDeleteDialog(
-                                                        audiorTeam['id']
-                                                            .toString(),
-                                                      ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                      ],
                                     ),
-                                  );
-                                })
-                                .values
-                                .toList(),
-                      ),
-                    ),
-                  ),
-                ],
+                                    gap,
+                                    Text(
+                                      'List of Auditors',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                    gap2,
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children:
+                                          (audiorTeam['auditors']
+                                                  as List<Auditor>)
+                                              .map((a) {
+                                                return Text(
+                                                  a.name ?? '',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                  ),
+                                                );
+                                              })
+                                              .toList(),
+                                    ),
+
+                                    Spacer(),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.edit),
+                                          onPressed: () {
+                                            showFormDialog(
+                                              id: audiorTeam['id'],
+                                              teamId:
+                                                  (audiorTeam['teamId'] ?? '')
+                                                      .toString(),
+                                              auditors: audiorTeam['auditors'],
+                                            );
+                                          },
+                                        ),
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.delete,
+                                            color: primaryColor,
+                                          ),
+                                          onPressed:
+                                              () => showDeleteDialog(
+                                                audiorTeam['id'].toString(),
+                                              ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        })
+                        .values
+                        .toList(),
               ),
             ),
           ],
