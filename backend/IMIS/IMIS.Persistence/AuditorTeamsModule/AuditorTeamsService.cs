@@ -6,12 +6,10 @@ namespace IMIS.Application.AuditorTeamsModule
     public class AuditorTeamsService : IAuditorTeamsService
     {
         private readonly IAuditorTeamsRepository _repository;
-
         public AuditorTeamsService(IAuditorTeamsRepository repository)
         {
             _repository = repository;
         }
-
         public async Task<List<AuditorTeamsDto>> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditorTeams = await _repository.GetAllAsync(cancellationToken);
@@ -31,10 +29,8 @@ namespace IMIS.Application.AuditorTeamsModule
                     IsActive = group.FirstOrDefault()?.IsActive ?? false
                 })
                 .ToList();
-
             return groupedAuditors;
-        }
-       
+        }       
         // Save or update an auditor team
         public async Task<AuditorTeamsDto> SaveOrUpdateAsync(AuditorTeamsDto auditorTeamsDto, CancellationToken cancellationToken)
         {
@@ -54,10 +50,8 @@ namespace IMIS.Application.AuditorTeamsModule
                     IsTeamLeader = auditor.IsTeamLeader,
                     IsActive = auditorTeamsDto.IsActive
                 };
-
                 await _repository.SaveOrUpdateAsync(auditorTeam, cancellationToken);
             }
-
             return auditorTeamsDto;
         }
     }

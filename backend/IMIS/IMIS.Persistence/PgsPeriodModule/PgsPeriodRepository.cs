@@ -11,7 +11,6 @@ namespace IMIS.Persistence.PgsPeriodModule
         public PgsPeriodRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
-
         public async Task<EntityPageList<PgsPeriod, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _dbContext.PgsPeriod.Where(k => !k.IsDeleted).AsNoTracking();

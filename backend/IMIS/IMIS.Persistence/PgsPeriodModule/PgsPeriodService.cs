@@ -12,7 +12,6 @@ namespace IMIS.Persistence.PgsPeriodModule
         {
             _repository = repository;
         }
-
         public async Task<DtoPageList<PgsPeriodDto, PgsPeriod, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var pgsPeriod = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);

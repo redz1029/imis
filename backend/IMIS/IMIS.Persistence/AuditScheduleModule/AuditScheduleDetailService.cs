@@ -5,7 +5,6 @@ namespace IMIS.Persistence.AuditScheduleModule
 {
     public class AuditScheduleDetailService : IAuditScheduleDetailService
     {
-
         private readonly IAuditScheduleDetailRepository _repository;
         public AuditScheduleDetailService(IAuditScheduleDetailRepository repository)
         {

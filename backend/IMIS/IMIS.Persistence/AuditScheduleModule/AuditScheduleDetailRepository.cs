@@ -18,10 +18,7 @@ namespace IMIS.Persistence.AuditScheduleModule
         }
         public new async Task<AuditScheduleDetails> SaveOrUpdateAsync(AuditScheduleDetails auditScheduleDetails, CancellationToken cancellationToken)
         {
-
-
-            if (auditScheduleDetails == null) throw new ArgumentNullException(nameof(auditScheduleDetails));
-            // Check if the entity already exists
+            if (auditScheduleDetails == null) throw new ArgumentNullException(nameof(auditScheduleDetails));           
             var existingAuditDetails = await _dbContext.AuditScheduleDetails
                 .FirstOrDefaultAsync(d => d.Id == auditScheduleDetails.Id, cancellationToken)
                 .ConfigureAwait(false);
@@ -40,8 +37,4 @@ namespace IMIS.Persistence.AuditScheduleModule
             return auditScheduleDetails;
         }
     }
-
-
-
-
 }

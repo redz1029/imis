@@ -12,7 +12,6 @@ namespace IMIS.Persistence.AuditorModule
         {
             _auditorRepository = auditorRepository;
         }   
-
         public async Task<DtoPageList<AuditorDto, Auditor, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var auditor = await _auditorRepository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -21,7 +20,6 @@ namespace IMIS.Persistence.AuditorModule
                 return null;
             }
             return DtoPageList<AuditorDto, Auditor, int>.Create(auditor.Items, page, pageSize, auditor.TotalCount);
-
         }
         public async Task<List<AuditorDto>?> FilteByName(string name, int auditorNoOfResults, CancellationToken cancellationToken)
         {

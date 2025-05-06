@@ -17,7 +17,6 @@ namespace IMIS.Persistence.UserOfficeModule
             _repository = repository;
             _userManager = userManager;
         }
-
         private async Task<UserOfficeDto> ConvertToDTO(UserOffices userOffices, List<User> users, CancellationToken cancellationToken)
         {
             if (userOffices == null) return null;
@@ -49,7 +48,6 @@ namespace IMIS.Persistence.UserOfficeModule
                 Position = user.Position
             };
         }
-
         public async Task<DtoPageList<UserOfficeDto, UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var userOffice = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -57,7 +55,6 @@ namespace IMIS.Persistence.UserOfficeModule
                 return null;
             return DtoPageList<UserOfficeDto, UserOffices, int>.Create(userOffice.Items, page, pageSize, userOffice.TotalCount);
         }
-
         public async Task<UserOfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             // Fetch the user office from the repository by ID
@@ -105,10 +102,8 @@ namespace IMIS.Persistence.UserOfficeModule
 
             // Fetch all users at once (instead of per UserOffice)
             var userIds = userOffices.Select(o => o.UserId).Distinct().ToList();
-            var users = await _userManager.Users.Where(u => userIds.Contains(u.Id)).ToListAsync(cancellationToken);
-            
-            var userOfficeDtos = await Task.WhenAll(userOffices.Select(o => ConvertToDTO(o, users, cancellationToken)));
-       
+            var users = await _userManager.Users.Where(u => userIds.Contains(u.Id)).ToListAsync(cancellationToken);            
+            var userOfficeDtos = await Task.WhenAll(userOffices.Select(o => ConvertToDTO(o, users, cancellationToken)));       
             return userOfficeDtos.ToList();
         }
 

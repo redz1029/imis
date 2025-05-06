@@ -6,6 +6,5 @@ namespace IMIS.Domain
     {
         public required string Name { get; set; }     
         public required string Remarks { get; set; } 
-
     }
 }

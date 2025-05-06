@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
-using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.UserOfficeModule
@@ -9,10 +8,7 @@ namespace IMIS.Application.UserOfficeModule
     {       
         public required string UserId { get; set; }
         public required int OfficeId { get; set; }       
-        public required bool IsActive { get; set; }
-
-
-        // User-related fields
+        public required bool IsActive { get; set; }     
         public string? FirstName { get; set; }
         public string? MiddleName { get; set; }
         public string? LastName { get; set; }

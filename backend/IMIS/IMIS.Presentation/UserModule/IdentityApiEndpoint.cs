@@ -1,18 +1,14 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Data.Entity;
 using System.Security.Claims;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
 using IMIS.Persistence;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.DependencyInjection;
 using Sprache;
 
@@ -24,7 +20,7 @@ namespace IMIS.Presentation.UserModule
         private const string IdentityGroup = "Users";
         private const string RoleGroup = "Roles";
         private const string UserRoleGroup = "User Roles";
-        
+       
         public static IEndpointConventionBuilder MapCustomIdentityApi<TUser>(this IEndpointRouteBuilder endpoints)
         where TUser : User, new()
         {
@@ -38,7 +34,6 @@ namespace IMIS.Presentation.UserModule
             authGroup.MapPost("/refresh", RefreshToken<TUser>);
             authGroup.MapDelete("/revokeRefreshToken", RevokeRefreshToken<TUser>);
             authGroup.MapGet("/users", (HttpContext httpContext, IServiceProvider sp) => GetUsers(httpContext, sp));
-
              
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
@@ -121,7 +116,6 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok(result);
         }
-
         private static async Task<IResult> UpdateUser(UserRegistrationDto registration, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
@@ -174,7 +168,6 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok("User updated successfully.");
         }
-
         private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp) where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
@@ -284,7 +277,6 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok(role);
         }
-
         private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
         {
             var identity = (ClaimsIdentity)httpContext.User.Identity!;
@@ -292,10 +284,8 @@ namespace IMIS.Presentation.UserModule
 
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
             var roles = roleManager.Roles.ToList();
-
             return Results.Ok(roles);
-        }
-      
+        }      
         private static async Task<IResult> EditRole(RoleManager<IdentityRole> roleManager, string roleId, [FromBody] string newRoleName,
         IServiceProvider sp)
         {
@@ -316,16 +306,11 @@ namespace IMIS.Presentation.UserModule
             if (!result.Succeeded)
             {
                 return Results.BadRequest(result.Errors);
-            }
-        
+            }        
             var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
             await outputCacheStore.EvictByTagAsync("roles", default);
-
             return Results.Ok($"Role updated successfully to '{newRoleName}'.");
         }
-
-
-
         private static async Task<IResult> DeleteRole(string roleId, IServiceProvider sp)
         {
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
@@ -339,7 +324,6 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok("Role deleted successfully.");
         }
-
         private static async Task<IResult> GetUserRoles(IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
@@ -377,8 +361,7 @@ namespace IMIS.Presentation.UserModule
                 });
             }
             return Results.Ok(userRolesList);
-        }
-     
+        }     
         private static async Task<IResult> AssignUserRole([FromBody] IdentityUserRole<string> userRole, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();

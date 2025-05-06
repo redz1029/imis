@@ -16,7 +16,6 @@ namespace IMIS.Persistence.PGSModules
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _kraRepository = kraRepository ?? throw new ArgumentNullException(nameof(kraRepository));
         }
-
         public async Task<DtoPageList<PGSDeliverableDto, PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var pgsDeliverable = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
@@ -26,7 +25,6 @@ namespace IMIS.Persistence.PGSModules
             }
             return DtoPageList<PGSDeliverableDto, PgsDeliverable, long>.Create(pgsDeliverable.Items, page, pageSize, pgsDeliverable.TotalCount);
         }
-
         public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDeliverableDto, CancellationToken cancellationToken)
         {
             if (pgsDeliverableDto == null) throw new ArgumentNullException(nameof(pgsDeliverableDto));

@@ -21,7 +21,6 @@ namespace IMIS.Persistence.OfficeModule
                 return null;
             return DtoPageList<OfficeDto, Office, int>.Create(useroffice.Items, page, pageSize, useroffice.TotalCount);
         }
-
         private static OfficeDto ConvOfficeToDTO(Office office)
         {
             return new OfficeDto()

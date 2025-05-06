@@ -53,7 +53,6 @@ namespace IMIS.Presentation.PGSModule
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
-
             app.MapPut("/{id}", async (int id, [FromBody] PGSDeliverableDto pgsdeliverables, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (pgsdeliverables == null)
@@ -72,15 +71,10 @@ namespace IMIS.Presentation.PGSModule
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
-
-
             app.MapGet("/page", async (int page, int pageSize, IPGSDeliverableService service, CancellationToken cancellationToken) =>
             {
-
                 var paginatedPgsDeliverables = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedPgsDeliverables);
-
-
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));

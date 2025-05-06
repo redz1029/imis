@@ -49,8 +49,7 @@ namespace IMIS.Presentation.AuditorModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] AuditorDto auditor, IAuditorService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-               
+            {               
                 var existingAuditor = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingAuditor == null)
                 {

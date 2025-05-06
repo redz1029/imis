@@ -8,16 +8,11 @@ namespace IMIS.Persistence.AuditorModule
 {
     public class AuditorRepository(ImisDbContext dbContext) : BaseRepository<Auditor, int, ImisDbContext>(dbContext), IAuditorRepository
     {
-
         public async Task<EntityPageList<Auditor, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _dbContext.Auditors.Where(k => !k.IsDeleted).AsNoTracking();
-
-            var auditor = await EntityPageList<Auditor, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
-           
+            var auditor = await EntityPageList<Auditor, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);           
             return auditor;
-
-
         }
         public async Task<IEnumerable<Auditor>?> FilteByName(string name, int auditorNoOfResults, CancellationToken cancellationToken)
         {

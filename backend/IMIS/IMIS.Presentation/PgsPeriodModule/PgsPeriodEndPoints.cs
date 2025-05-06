@@ -40,8 +40,7 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
                 if (existingPeriod == null)
                 {
                     return Results.NotFound($"PGS Period with ID {id} not found.");
-                }
-               
+                }               
                 pgsPeriodDto.Id = id;
                 var updatedPgsPeriod = await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);
               
@@ -54,8 +53,7 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
                 var paginatedPgsPeriod = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedPgsPeriod);
             })
-            .WithTags(_pgsPeriodTag);
-                
+            .WithTags(_pgsPeriodTag);                
         }
     }
 }

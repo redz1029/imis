@@ -3,7 +3,6 @@ using Base.Primitives;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Domain;
 
-
 namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
 {
     public class PgsReadinessRatingService : IPgsReadinessRatingService
@@ -58,7 +57,6 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
             var entity = pgsReadinessDto.ToEntity();
             await _repository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
         }
-
         public async Task<DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var pgsReadiness = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);

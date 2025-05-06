@@ -1,7 +1,5 @@
 ﻿using Carter;
 using IMIS.Application.AuditorTeamsModule;
-using IMIS.Application.AuditScheduleModule;
-using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -35,7 +33,6 @@ namespace IMIS.Presentation.AuditorTeamsModule
             })
          .WithTags(_AuditorTeamTag)
          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true);
-
         }
     }
 }

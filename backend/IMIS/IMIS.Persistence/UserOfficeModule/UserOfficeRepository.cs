@@ -29,8 +29,7 @@ namespace IMIS.Persistence.UserOfficeModule
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-        }
-     
+        }     
         public new async Task<UserOffices> SaveOrUpdateAsync(UserOffices userOffice, CancellationToken cancellationToken)
         {
             if (userOffice == null) throw new ArgumentNullException(nameof(userOffice));
@@ -54,6 +53,5 @@ namespace IMIS.Persistence.UserOfficeModule
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return userOffice;
         }
-
     }
 }

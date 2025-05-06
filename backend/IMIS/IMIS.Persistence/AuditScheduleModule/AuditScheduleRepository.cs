@@ -9,7 +9,6 @@ namespace IMIS.Persistence.AuditScheduleModule
     public class AuditScheduleRepository(ImisDbContext dbContext)
         : BaseRepository<AuditSchedule, int, ImisDbContext>(dbContext), IAuditScheduleRepository
     {
-
         public async Task<EntityPageList<AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _dbContext.AuditSchedules
@@ -50,9 +49,7 @@ namespace IMIS.Persistence.AuditScheduleModule
             return await _dbContext.AuditSchedules
                 .Where(a => !a.IsDeleted)
                 .ToListAsync(cancellationToken);
-        }
-
-       
+        }       
         public async Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.AuditSchedules
@@ -61,8 +58,6 @@ namespace IMIS.Persistence.AuditScheduleModule
                 .Include(a => a.AuditSchduleDetails)
                 .ToListAsync(cancellationToken);
         }
-
-        // Save or Update an Audit Schedule
         public new async Task<AuditSchedule> SaveOrUpdateAsync(AuditSchedule auditSchedule, CancellationToken cancellationToken)
         {
             if (auditSchedule == null) throw new ArgumentNullException(nameof(auditSchedule));
@@ -80,7 +75,6 @@ namespace IMIS.Persistence.AuditScheduleModule
                 // Add new audit schedule
                 await _dbContext.AuditSchedules.AddAsync(auditSchedule, cancellationToken);
             }
-
             await _dbContext.SaveChangesAsync(cancellationToken);
             return auditSchedule;
         }

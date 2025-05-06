@@ -8,9 +8,7 @@ namespace IMIS.Domain
         public double ResourceAvailability { get; set; }
         public double ConfidenceToDeliver { get; set; }
         public double TotalScore => CompetenceToDeliver + ResourceAvailability + ConfidenceToDeliver;
-
         public PgsReadinessRating() { }
-
         public PgsReadinessRating(double score1, double score2, double score3)
         {
             CompetenceToDeliver = score1;

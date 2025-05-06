@@ -1,6 +1,5 @@
 ﻿using Carter;
 using IMIS.Application.OfficeModule;
-using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -51,7 +50,6 @@ namespace IMIS.Presentation.OfficeModule
             })
             .WithTags(_officeTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
-
             app.MapPut("/{id}", async (int id, [FromBody] OfficeDto office, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {               
                 var existingOffice = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -59,7 +57,6 @@ namespace IMIS.Presentation.OfficeModule
                 {
                     return Results.NotFound($"Office with ID {id} not found.");
                 }
-
                 await service.SaveOrUpdateAsync(office, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_officeTag, cancellationToken);
                 return Results.Ok(office);
