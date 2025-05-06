@@ -13,6 +13,7 @@ import 'package:imis/performance_governance_system/office/pages/office_page.dart
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/auth/pages/login_page.dart';
+import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/performance_governance_system/roles/pages/roles_page.dart';
 import 'package:imis/performance_governance_system/team/pages/team_page.dart';
 import 'package:imis/performance_governance_system/user_office/pages/user_office_page.dart';
@@ -373,13 +374,21 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                                 12,
                                 () => _setScreen(UserProfilePage(), 12),
                               ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'PGS Signatory',
+                                13,
+                                () =>
+                                    _setScreen(PgsSignatoryTemplatePage(), 13),
+                              ),
                             ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  _buildListTile(Icons.folder, 'Reports', 13, () {}),
+                  _buildListTile(Icons.folder, 'Reports', 14, () {}),
                 ],
               ),
             ),
@@ -388,7 +397,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
           _buildListTile(
             Icons.exit_to_app,
             'Logout',
-            14,
+            15,
             () => _logout(context),
           ),
         ],
