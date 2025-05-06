@@ -11,7 +11,16 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     {
 
     }
-
+    public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
+    {
+        var pgs = await _dbContext.PerformanceGovernanceSystem.Where(p => !p.IsDeleted &&
+        p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
+          .Include(p => p.PgsPeriod)
+          .Include(p => p.Office)
+          .Include(p => p.PgsReadinessRating)
+          .ToListAsync(cancellationToken).ConfigureAwait(false);
+          return pgs;
+    }
     // Get Pgs, Filter by Id
     public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
@@ -42,6 +51,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Include(pgs => pgs.PgsPeriod)
         .Include(pgs => pgs.Office)      
         .Include(pgs => pgs.PgsReadinessRating)
+        .Include(pgs => pgs.PgsSignatories)
         .AsNoTracking()
         .ToListAsync(cancellationToken);
     } 
@@ -52,12 +62,10 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         var perfomanceGovernanceSystem = await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
         return perfomanceGovernanceSystem;
     }
-
     // Get Pgs, Filter by Pgs Period Id with pagination
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(
     long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
-    {
-       
+    {       
         var query = _dbContext.PerformanceGovernanceSystem
         .Where(k => !k.IsDeleted)
         .Include(pgs => pgs.PgsPeriod)
@@ -69,15 +77,12 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         {
             query = query.Where(p => p.PgsPeriod.Id == pgsPeriodId.Value);
         }
-
         // Apply pagination using EntityPageList
         var paginatedResult = await EntityPageList<PerfomanceGovernanceSystem, long>
         .CreateAsync(query, page, pageSize, cancellationToken)
         .ConfigureAwait(false);
-
         return paginatedResult;
     }
-
     // Save or Update Record
     public new async Task<PerfomanceGovernanceSystem> SaveOrUpdateAsync(PerfomanceGovernanceSystem perfomanceGovernanceSystem, CancellationToken cancellationToken)
     {
@@ -88,6 +93,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             .Include(p => p.Office)
             .Include(p => p.PgsPeriod)
             .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories)
             .FirstOrDefaultAsync(d => d.Id == perfomanceGovernanceSystem.Id, cancellationToken)
             .ConfigureAwait(false);
 
@@ -142,11 +148,9 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     existingPerfomanceGovernanceSystem.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating;
                 }
             }
-
             //    // --- Sync PgsDeliverables ---
             if (perfomanceGovernanceSystem.PgsDeliverables != null)
             {
-
                 // Add or Update deliverables
                 foreach (var deliverable in perfomanceGovernanceSystem.PgsDeliverables)
                 {
@@ -165,6 +169,30 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     }
                 }
             }
+            ////    // --- Sync PgsSignatories ---           
+            if (perfomanceGovernanceSystem.PgsSignatories != null)
+            {
+                foreach (var signatory in perfomanceGovernanceSystem.PgsSignatories)
+                {
+                    var existingSignatory = existingPerfomanceGovernanceSystem.PgsSignatories!
+                        .FirstOrDefault(s => s.Id == signatory.Id);
+
+                    if (existingSignatory != null)
+                    {
+                        _dbContext.Entry(existingSignatory).CurrentValues.SetValues(signatory);
+                    }
+                    else
+                    {
+                        // Ensure correct foreign key
+                        signatory.PgsId = existingPerfomanceGovernanceSystem.Id;
+
+                        // Avoid tracking issues
+                        _dbContext.Entry(signatory).State = EntityState.Added;
+
+                        existingPerfomanceGovernanceSystem.PgsSignatories!.Add(signatory);
+                    }
+                }
+            }
         }
         else
         {
@@ -172,17 +200,12 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             await _dbContext.PerformanceGovernanceSystem.AddAsync(perfomanceGovernanceSystem, cancellationToken)
                 .ConfigureAwait(false);
         }
-
         // Save changes to the database
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
         return perfomanceGovernanceSystem;
     }
-
-
     public Task<int> CountAsync(CancellationToken cancellationToken)
-    {
-       
+    {       
         return _dbContext.PerformanceGovernanceSystem.CountAsync(cancellationToken);
     }
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetPagedAsync(int skip, int pageSize, CancellationToken cancellationToken)

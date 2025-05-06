@@ -28,7 +28,6 @@ namespace IMIS.Presentation.PgsModuleAPI
             })
             .WithTags(_pgsTag);
             //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
-
             app.MapGet("/", async (IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
                 var performanceGovernanceSystem = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -37,7 +36,6 @@ namespace IMIS.Presentation.PgsModuleAPI
            .WithTags(_pgsTag)
            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
             app.MapGet("/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
                 var performanceGovernanceSystem = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -46,7 +44,14 @@ namespace IMIS.Presentation.PgsModuleAPI
             .WithTags(_pgsTag)
             //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
+            app.MapGet("userId/{id}", async (string userId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            {
+                var performanceGovernanceSystem = await service.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+                return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
+            })
+           .WithTags(_pgsTag)
+           //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
             app.MapPut("/{id}", async (int id, [FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var existingPerformanceGovernanceSystem = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -60,8 +65,7 @@ namespace IMIS.Presentation.PgsModuleAPI
                 return Results.Ok(updatedexistingPgsAuditDetails);
             })
            .WithTags(_pgsTag);
-           //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
-
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
             app.MapGet("/page", async (int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
                 var paginatedPerformanceGovernanceSystem = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -70,7 +74,6 @@ namespace IMIS.Presentation.PgsModuleAPI
             .WithTags(_pgsTag)
             //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
             app.MapGet("/pgsPeriod/{id}", async (IPerfomanceGovernanceSystemService service, long? pgsPeriodId, CancellationToken cancellationToken) =>
             {
                 var performanceGovernanceSystem = await service.GetAllAsyncFilterByPgsPeriod(pgsPeriodId, cancellationToken).ConfigureAwait(false);
@@ -79,7 +82,6 @@ namespace IMIS.Presentation.PgsModuleAPI
                 {
                     return Results.NotFound("No records found for the given PgsPeriodId.");
                 }
-
                 return Results.Ok(performanceGovernanceSystem);
             })
             .WithTags(_pgsTag)

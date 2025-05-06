@@ -5,6 +5,7 @@ using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using IMIS.Application.PgsSignatoryModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.PgsModule
@@ -14,14 +15,13 @@ namespace IMIS.Persistence.PgsModule
         private readonly IPerfomanceGovernanceSystemRepository _repository;
         private readonly IOfficeRepository _officeRepository;
         private readonly IPgsPeriodRepository _pgsPeriodRepository;
-        private readonly IKeyResultAreaRepository _kraRepository;
-
+        private readonly IKeyResultAreaRepository _kraRepository;      
         public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository)
         {
             _repository = repository;
             _officeRepository = officeRepository;
             _pgsPeriodRepository = pgsPeriodRepository;
-            _kraRepository = kraRepository;
+            _kraRepository = kraRepository;           
         }
         public async Task<List<PerfomanceGovernanceSystemDto>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken)
         {
@@ -37,6 +37,7 @@ namespace IMIS.Persistence.PgsModule
                 Id = perfomanceGovernanceSystem.Id,
                 Remarks = perfomanceGovernanceSystem.Remarks,
                 PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables,
+                PgsStatus = perfomanceGovernanceSystem.PgsStatus,               
                 PgsPeriod = perfomanceGovernanceSystem.PgsPeriod != null ? new PgsPeriodDto
                 {                 
                     Id = perfomanceGovernanceSystem.PgsPeriod.Id,
@@ -76,8 +77,22 @@ namespace IMIS.Persistence.PgsModule
                         Remarks = deliverable.Kra.Remarks
                     } : null, 
                     Remarks = deliverable.Remarks
-                }).ToList() ?? new List<PGSDeliverableDto>()                 
+                }).ToList() ?? new List<PGSDeliverableDto>(),
+                 PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?.Select(s => new PgsSignatoryDto
+                 {
+                     Id = s.Id,
+                     PgsId = s.PgsId,
+                     PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
+                     SignatoryId = s.SignatoryId,
+                     DateSigned = s.DateSigned
+                 }).ToList()
             };
+        }      
+        public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
+        {
+            //throw new NotImplementedException();
+            var perfomanceGovernanceSystemDto = await _repository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+            return perfomanceGovernanceSystemDto?.Select(o => ConvPerfomanceGovernanceSystemToDTO(o)).ToList();
         }
         public async Task<PerfomanceGovernanceSystemDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
@@ -96,16 +111,13 @@ namespace IMIS.Persistence.PgsModule
                 return null;
             return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(perfomanceGovernanceSystemDto.Items, page, pageSize, perfomanceGovernanceSystemDto.TotalCount);
         }
-
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var perfomanceGovernanceSystemDto = await _repository.GetPaginatedPgsPeriodIdAsync(pgsPeriodId, page, pageSize, cancellationToken).ConfigureAwait(false);
             if (perfomanceGovernanceSystemDto.TotalCount == 0)
                 return null;
             return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(perfomanceGovernanceSystemDto.Items, page, pageSize, perfomanceGovernanceSystemDto.TotalCount);
-        }
-
-      
+        }      
         public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto, CancellationToken cancellationToken)
         {
             if (perfomanceGovernanceSystemDto == null) throw new ArgumentNullException(nameof(perfomanceGovernanceSystemDto));
@@ -129,6 +141,7 @@ namespace IMIS.Persistence.PgsModule
                 Id = createdPerfomanceGovernanceSystem.Id,
                 Remarks = createdPerfomanceGovernanceSystem.Remarks,
                 PercentDeliverables = createdPerfomanceGovernanceSystem.PercentDeliverables,
+                PgsStatus = createdPerfomanceGovernanceSystem.PgsStatus,
                 PgsPeriod = new PgsPeriodDto
                 {
                     Id = createdPerfomanceGovernanceSystem.PgsPeriod.Id,
@@ -165,6 +178,14 @@ namespace IMIS.Persistence.PgsModule
                         Remarks = deliverable.Kra.Remarks
                     } : null,
                     Remarks = deliverable.Remarks
+                }).ToList(),
+                PgsSignatories = createdPerfomanceGovernanceSystem.PgsSignatories?.Select(s => new PgsSignatoryDto
+                {
+                    Id = s.Id,
+                    PgsId = s.PgsId,
+                    PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
+                    SignatoryId = s.SignatoryId,
+                    DateSigned = s.DateSigned
                 }).ToList()
             };
         }
@@ -175,6 +196,6 @@ namespace IMIS.Persistence.PgsModule
 
             var pgsEntity = pgsDto.ToEntity();
             await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
-        }
+        }       
     }
 }
