@@ -413,8 +413,8 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
             ),
             TextButton(
               onPressed: () async {
-                Navigator.pop(context); // Close the dialog first
-                await deleteKRA(id); // Call delete function
+                Navigator.pop(context);
+                await deleteKRA(id);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,

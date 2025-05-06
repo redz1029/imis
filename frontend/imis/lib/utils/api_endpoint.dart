@@ -21,6 +21,9 @@ class ApiEndpoint {
   late String users;
   late String useroffice;
   late String updateUserRole;
+  late String getUser;
+  late String updateUser;
+  late String auditSchedule;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -38,6 +41,9 @@ class ApiEndpoint {
     users = '$baseUrl/users';
     useroffice = '$baseUrl/userOffice';
     updateUserRole = '$baseUrl/updateUserRole';
+    getUser = '$baseUrl/getUser';
+    updateUser = '$baseUrl/updateUser';
+    auditSchedule = '$baseUrl/auditSchedule';
   }
 
   static Future<void> setBaseUrl() async {

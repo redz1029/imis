@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
+import 'package:imis/auth/pages/change_password_page.dart';
+import 'package:imis/auth/pages/user_profile_page.dart';
 import 'package:imis/performance_governance_system/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/performance_governance_system/auditor_team/pages/auditor_team_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
@@ -364,13 +366,20 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                                 11,
                                 () => _setScreen(AuditSchedulesPage(), 11),
                               ),
+                              _buildListTile(
+                                Icons.date_range,
+                                hideIcon: true,
+                                'User',
+                                12,
+                                () => _setScreen(UserProfilePage(), 12),
+                              ),
                             ],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  _buildListTile(Icons.folder, 'Reports', 12, () {}),
+                  _buildListTile(Icons.folder, 'Reports', 13, () {}),
                 ],
               ),
             ),
@@ -379,7 +388,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
           _buildListTile(
             Icons.exit_to_app,
             'Logout',
-            13,
+            14,
             () => _logout(context),
           ),
         ],
@@ -468,10 +477,11 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
       if (value == "Profile") {
         // ignore: use_build_context_synchronously
         _editProfile(context);
-        // } else if (value == "change_password") {
-        //   Navigator.of(context).pushReplacement(
-        //     MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
-        //   );
+      } else if (value == "change_password") {
+        // ignore: use_build_context_synchronously
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
+        );
       } else if (value == "logout") {
         // ignore: use_build_context_synchronously
         _logout(context);

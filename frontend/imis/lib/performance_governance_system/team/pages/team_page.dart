@@ -74,6 +74,19 @@ class _TeamPageState extends State<TeamPage> {
     super.dispose();
   }
 
+  Future<void> deleteTeam(String teamId) async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      final response = await dio.delete(url);
+
+      if (response.statusCode == 200) {
+        await fetchTeam();
+      }
+    } catch (e) {
+      debugPrint("Error deleting KRA: $e");
+    }
+  }
+
   void filterSearchResults(String query) {
     setState(() {
       filteredList =
@@ -174,6 +187,7 @@ class _TeamPageState extends State<TeamPage> {
                   );
 
                   await addOrUpdateTeam(team);
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context);
                 }
               },
@@ -187,6 +201,10 @@ class _TeamPageState extends State<TeamPage> {
       },
     );
   }
+
+  String statusFilter = 'Active';
+
+  final List<String> statusOptions = ['Active', 'Inactive'];
 
   @override
   Widget build(BuildContext context) {
@@ -204,6 +222,7 @@ class _TeamPageState extends State<TeamPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Search Bar
                 SizedBox(
                   height: 30,
                   width: 300,
@@ -238,6 +257,49 @@ class _TeamPageState extends State<TeamPage> {
                     onChanged: filterSearchResults,
                   ),
                 ),
+
+                gap4,
+
+                // Status Dropdown
+                SizedBox(
+                  height: 30,
+                  width: 140,
+                  child: DropdownButtonFormField<String>(
+                    value: statusFilter,
+                    onChanged: (value) {
+                      setState(() {
+                        statusFilter = value!;
+                        filterSearchResults(searchController.text);
+                      });
+                    },
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 0,
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: lightGrey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      filled: true,
+                      fillColor: secondaryColor,
+                    ),
+                    items:
+                        statusOptions.map((String status) {
+                          return DropdownMenuItem<String>(
+                            value: status,
+                            child: Text(status),
+                          );
+                        }).toList(),
+                  ),
+                ),
+                Spacer(),
+
                 if (!isMinimized)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -324,9 +386,12 @@ class _TeamPageState extends State<TeamPage> {
                                           IconButton(
                                             icon: Icon(
                                               Icons.delete,
-                                              color: Colors.red,
+                                              color: primaryColor,
                                             ),
-                                            onPressed: () async {},
+                                            onPressed:
+                                                () => showDeleteDialog(
+                                                  team.id.toString(),
+                                                ),
                                           ),
                                         ],
                                       ),
@@ -352,6 +417,39 @@ class _TeamPageState extends State<TeamPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this Team? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deleteTeam(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

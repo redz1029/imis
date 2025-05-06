@@ -281,19 +281,24 @@ class LoginPageState extends State<LoginPage> {
                   },
                 ),
               ),
+              textInputAction: TextInputAction.done, // Handle Enter key press
+              onFieldSubmitted: (value) {
+                if (_formKey.currentState!.validate()) {
+                  login(
+                    context,
+                    UserLogin(
+                      username: _usernameController.text,
+                      password: _passwordController.text,
+                    ),
+                  );
+                }
+              },
             ),
             gap,
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 GestureDetector(
-                  // onTap: () {
-                  //   Navigator.push(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //         builder: (context) => ChangePasswordPage()),
-                  //   );
-                  // },
                   child: Text(
                     "Forgot Password?",
                     style: TextStyle(color: primaryColor, fontSize: 14),
@@ -306,10 +311,7 @@ class LoginPageState extends State<LoginPage> {
               width: double.infinity,
               child:
                   _isLoggingIn
-                      ? const Center(
-                        child:
-                            CircularProgressIndicator(), // Show spinner when loadingz`
-                      )
+                      ? const Center(child: CircularProgressIndicator())
                       : ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primaryColor,

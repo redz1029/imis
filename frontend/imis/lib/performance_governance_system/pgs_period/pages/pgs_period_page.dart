@@ -65,6 +65,19 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     }
   }
 
+  Future<void> deletePGSPeriod(String kraId) async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      final response = await dio.delete(url);
+
+      if (response.statusCode == 200) {
+        await fetchPGSPeriods();
+      }
+    } catch (e) {
+      debugPrint("Error deleting KRA: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -190,7 +203,24 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                       initialDate: DateTime.now(),
                       firstDate: DateTime(2000),
                       lastDate: DateTime(2101),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: primaryColor,
+                              onPrimary: secondaryColor,
+                            ),
+                            textButtonTheme: TextButtonThemeData(
+                              style: TextButton.styleFrom(
+                                foregroundColor: primaryColor,
+                              ),
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
                     );
+
                     if (picked != null) {
                       endDateController.text =
                           picked.toLocal().toString().split(' ')[0];
@@ -433,6 +463,17 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                                                             period['endDate'],
                                                       ),
                                                 ),
+                                                SizedBox(width: 1),
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.delete,
+                                                    color: primaryColor,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        period['id'].toString(),
+                                                      ),
+                                                ),
                                               ],
                                             ),
                                           ),
@@ -462,6 +503,39 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this PGS Period? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deletePGSPeriod(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

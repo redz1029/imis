@@ -99,6 +99,19 @@ class _OfficePageState extends State<OfficePage> {
     }
   }
 
+  Future<void> deleteOffice(String kraId) async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      final response = await dio.delete(url);
+
+      if (response.statusCode == 200) {
+        await fetchOffices();
+      }
+    } catch (e) {
+      debugPrint("Error deleting KRA: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -210,12 +223,13 @@ class _OfficePageState extends State<OfficePage> {
                 );
                 if (confirmAction == true) {
                   final office = Office(
-                    int.tryParse(id ?? '0') ?? 0,
-                    officeController.text,
-                    isDeleted,
-                    isActive,
+                    id: int.tryParse(id ?? '0') ?? 0,
+                    name: officeController.text,
+                    isDeleted: false,
+                    isActive: true,
                   );
                   addOrUpdateOffice(office);
+                  // ignore: use_build_context_synchronously
                   Navigator.pop(context);
                 }
               },
@@ -405,14 +419,13 @@ class _OfficePageState extends State<OfficePage> {
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.delete,
-                                                      color: Color.fromARGB(
-                                                        255,
-                                                        221,
-                                                        79,
-                                                        79,
-                                                      ),
+                                                      color: primaryColor,
                                                     ),
-                                                    onPressed: () async {},
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          office['id']
+                                                              .toString(),
+                                                        ),
                                                   ),
                                                 ],
                                               ),
@@ -442,6 +455,39 @@ class _OfficePageState extends State<OfficePage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this Office? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deleteOffice(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
