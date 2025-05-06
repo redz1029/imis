@@ -22,6 +22,9 @@ namespace IMIS.Persistence
         public DbSet<PgsPeriod> PgsPeriod { get; set; }
         public DbSet<PgsReadinessRating> PgsReadiness { get; set; }
         public DbSet<UserOffices> UserOffices { get; set; }
+        public DbSet<PgsSignatory> PgsSignatory { get; set; }
+        public DbSet<PgsSignatoryTemplate> PgsSignatoryTemplate { get; set; }
+
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
         {

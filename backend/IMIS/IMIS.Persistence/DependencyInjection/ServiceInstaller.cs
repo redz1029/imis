@@ -6,6 +6,7 @@ using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
+using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Persistence.AuditorModule;
@@ -17,6 +18,7 @@ using IMIS.Persistence.PgsModule;
 using IMIS.Persistence.PGSModules;
 using IMIS.Persistence.PgsPeriodModule;
 using IMIS.Persistence.PGSReadinessRatingCancerCareModule;
+using IMIS.Persistence.PgsSignatoryTemplateModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.Extensions.DependencyInjection;
@@ -54,10 +56,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IUserOfficeRepository, UserOfficeRepository>();
             services.AddScoped<IUserOfficeService, UserOfficeService>();
 
-
             services.AddScoped<IAuditScheduleRepository, AuditScheduleRepository>();
             services.AddScoped<IAuditScheduleService, AuditScheduleService>();
-
 
             services.AddScoped<IAuditScheduleDetailRepository, AuditScheduleDetailRepository>();
             services.AddScoped<IAuditScheduleDetailService, AuditScheduleDetailService>();
@@ -65,6 +65,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IAuditorTeamsRepository, AuditorTeamsRepository>();
             services.AddScoped<IAuditorTeamsService, AuditorTeamsService>();
 
+            services.AddScoped<IPgsSignatoryTemplateRepository, PgsSignatoryTemplateRepository>();
+            services.AddScoped<IPgsSignatoryTemplateService, PgsSignatoryTemplateService>();
 
             return services;
         }
