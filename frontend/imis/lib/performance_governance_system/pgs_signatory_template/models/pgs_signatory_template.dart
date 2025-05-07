@@ -15,7 +15,6 @@ class PgsSignatoryTemplate {
   PgsSignatoryTemplate(
     this.id,
     this.isDeleted,
-
     this.orderLevel,
     this.defaultSignatoryId,
     this.isActive, {
