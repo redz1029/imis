@@ -3,6 +3,7 @@ using Base.Pagination;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
+using IMIS.Persistence.Migrations;
 using Microsoft.EntityFrameworkCore;
 
 public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGovernanceSystem, long, ImisDbContext>, IPerfomanceGovernanceSystemRepository
@@ -18,6 +19,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
           .Include(p => p.PgsPeriod)
           .Include(p => p.Office)
           .Include(p => p.PgsReadinessRating)
+          .Include(p => p.PgsSignatories)
           .ToListAsync(cancellationToken).ConfigureAwait(false);
           return pgs;
     }
@@ -29,7 +31,8 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Include(p => p.Office)  
         .Include(p => p.PgsDeliverables)
         .ThenInclude(d => d.Kra)  
-        .Include(p => p.PgsReadinessRating) 
+        .Include(p => p.PgsReadinessRating)
+        .Include(p => p.PgsSignatories)
         .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
     }
 
@@ -40,7 +43,8 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Where(p => !p.IsDeleted && (pgsPeriodId == null || p.PgsPeriod.Id == pgsPeriodId))
         .Include(pgs => pgs.PgsPeriod)
         .Include(pgs => pgs.Office)                          
-        .Include(pgs => pgs.PgsReadinessRating);                                  
+        .Include(pgs => pgs.PgsReadinessRating)
+        .Include(pgs => pgs.PgsSignatories);
         return await query.ToListAsync(cancellationToken);
     }
     // Get all Pgs
@@ -71,6 +75,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Include(pgs => pgs.PgsPeriod)
         .Include(pgs => pgs.Office)
         .Include(pgs => pgs.PgsReadinessRating)
+        .Include(p => p.PgsSignatories)
         .AsNoTracking(); 
         
         if (pgsPeriodId.HasValue)
