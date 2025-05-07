@@ -32,7 +32,7 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
   @override
   void initState() {
     super.initState();
-    fetchPgs(pgsId: 120204);
+    fetchPgs(pgsId: 120206);
   }
 
   Future<void> fetchPgs({required int? pgsId}) async {
@@ -73,6 +73,7 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
               'kra': deliverable.kra.name,
               'Start Date': DateTimeConverter().toJson(pgs.pgsPeriod.startDate),
               'End Date': DateTimeConverter().toJson(pgs.pgsPeriod.endDate),
+              'officeName': pgs.office.name,
               'isDirect': deliverable.isDirect,
               'deliverableName': deliverable.deliverableName,
               'selectPeriod': pgs.pgsPeriod.id.toString(),
@@ -173,16 +174,23 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: lightGrey1,
         title: const Text('Performance Governance System'),
         actions: [
-          TextButton(
-            onPressed: generatePdf,
-            child: const Row(
-              children: [
-                Icon(Icons.print, color: Colors.white),
-                SizedBox(width: 4),
-                Text('Print', style: TextStyle(color: Colors.white)),
-              ],
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0), // adjust as needed
+            child: TextButton(
+              onPressed: generatePdf,
+              child: const Row(
+                children: [
+                  Icon(Icons.print, color: primaryTextColor),
+                  SizedBox(width: 4),
+                  Text(
+                    'Print',
+                    style: TextStyle(color: primaryTextColor, fontSize: 16),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -320,9 +328,13 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
   }
 
   Widget _buildMainHeader() {
+    String officeName =
+        deliverableList.isNotEmpty
+            ? deliverableList[0]['officeName']?.toString() ?? ''
+            : '';
     String percentDeliverables =
         deliverableList.isNotEmpty
-            ? deliverableList[0]['percentDeliverables'] ?? ''
+            ? deliverableList[0]['percentDeliverables']?.toString() ?? ''
             : '';
     String formattedPercent =
         percentDeliverables.isNotEmpty ? '$percentDeliverables%' : '';
@@ -334,7 +346,7 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
       ),
       child: Row(
         children: [
-          _buildMergedHeaderCell('Surgery', width: 310, height: 70),
+          _buildMergedHeaderCell(officeName, width: 310, height: 70),
           _buildMergedHeaderCell(
             'Strategic Contribution',
             width: 550,
@@ -487,6 +499,7 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
             children: [
               _buildPdfHeader(logoBytes),
               pw.SizedBox(height: 20),
+
               _buildPdfTable(),
               _buildPdfSignatures(),
             ],
@@ -555,7 +568,10 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
           decoration: pw.BoxDecoration(color: PdfColors.redAccent100),
           children: [
             _buildPdfHeaderCellWithPadding(
-              'Surgery',
+              deliverableList.isNotEmpty
+                  ? deliverableList[0]['officeName']?.toString() ?? ''
+                  : '',
+
               PdfColors.white,
               fontSize: 16,
               padding: const pw.EdgeInsets.all(15),
@@ -679,7 +695,7 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(title, style: const pw.TextStyle(fontSize: 12)),
-        pw.SizedBox(height: 3),
+        pw.SizedBox(height: 45),
         pw.Container(width: 150, height: 1, color: PdfColors.black),
         pw.SizedBox(height: 8),
         pw.Text(name, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
@@ -708,25 +724,6 @@ class _PgsPrintPageState extends State<PgsPrintPage> {
     );
   }
 
-  // pw.TableRow _buildPdfDataRow(
-  //   String kra,
-  //   String direct,
-  //   String indirect,
-  //   String deliverables,
-  //   String byWhen,
-  //   String status,
-  // ) {
-  //   return pw.TableRow(
-  //     children: [
-  //       _buildPdfCell(kra, isBold: true),
-  //       _buildPdfCell(direct),
-  //       _buildPdfCell(indirect),
-  //       _buildPdfCell(deliverables),
-  //       _buildPdfCell(byWhen),
-  //       _buildPdfCell(status),
-  //     ],
-  //   );
-  // }
   pw.TableRow _buildPdfDataRow(
     String kra,
     String direct,
