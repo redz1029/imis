@@ -2,6 +2,7 @@ import 'package:imis/performance_governance_system/office/models/office.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/performance_governance_system/models/pgs_readiness.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'performance_governance_system.g.dart';
@@ -62,8 +63,13 @@ class PerformanceGovernanceSystem {
   @JsonKey()
   final PgsReadiness pgsReadinessRating;
 
+  @JsonKey()
+  List<PgsSignatory>? pgsSignatories;
+
   final bool isDeleted;
   final String? rowVersion;
+  final double percentDeliverables;
+  final String? pgsStatus;
 
   // Constructor with required parameters and optional ones
   PerformanceGovernanceSystem({
@@ -72,9 +78,12 @@ class PerformanceGovernanceSystem {
     required this.pgsPeriod,
     required this.pgsDeliverables,
     required this.pgsReadinessRating,
+    required this.pgsSignatories,
     required this.isDeleted,
     this.remarks = '', // Default to empty string if not provided
     this.rowVersion,
+    required this.percentDeliverables,
+    required this.pgsStatus,
   });
 
   // From JSON factory

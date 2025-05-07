@@ -7,7 +7,7 @@ part 'pgs_deliverables.g.dart';
 
 @JsonSerializable()
 class PgsDeliverables {
-  int id;
+  int? id;
 
   @JsonKey()
   KeyResultArea kra;

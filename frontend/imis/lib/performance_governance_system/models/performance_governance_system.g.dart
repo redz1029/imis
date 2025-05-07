@@ -19,9 +19,15 @@ PerformanceGovernanceSystem _$PerformanceGovernanceSystemFromJson(
   pgsReadinessRating: PgsReadiness.fromJson(
     json['pgsReadinessRating'] as Map<String, dynamic>,
   ),
+  pgsSignatories:
+      (json['pgsSignatories'] as List<dynamic>?)
+          ?.map((e) => PgsSignatory.fromJson(e as Map<String, dynamic>))
+          .toList(),
   isDeleted: json['isDeleted'] as bool,
   remarks: json['remarks'] as String? ?? '',
   rowVersion: json['rowVersion'] as String?,
+  percentDeliverables: (json['percentDeliverables'] as num).toDouble(),
+  pgsStatus: json['pgsStatus'] as String?,
 );
 
 Map<String, dynamic> _$PerformanceGovernanceSystemToJson(
@@ -33,6 +39,9 @@ Map<String, dynamic> _$PerformanceGovernanceSystemToJson(
   'remarks': instance.remarks,
   'pgsDeliverables': instance.pgsDeliverables,
   'pgsReadinessRating': instance.pgsReadinessRating,
+  'pgsSignatories': instance.pgsSignatories,
   'isDeleted': instance.isDeleted,
   'rowVersion': instance.rowVersion,
+  'percentDeliverables': instance.percentDeliverables,
+  'pgsStatus': instance.pgsStatus,
 };
