@@ -9,12 +9,12 @@ part of 'pgs_signatory_template.dart';
 PgsSignatoryTemplate _$PgsSignatoryTemplateFromJson(
   Map<String, dynamic> json,
 ) => PgsSignatoryTemplate(
-  (json['id'] as num).toInt(),
+  (json['id'] as num?)?.toInt(),
   json['isDeleted'] as bool,
-  json['status'] as String,
   (json['orderLevel'] as num).toInt(),
   json['defaultSignatoryId'] as String,
   json['isActive'] as bool,
+  status: json['status'] as String?,
   rowVersion: json['rowVersion'] as String?,
   signatoryLabel: json['signatoryLabel'] as String?,
 );

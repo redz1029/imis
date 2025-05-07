@@ -400,7 +400,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     final pgsSignatoryTemplate = PgsSignatoryTemplate(
                       int.tryParse(id ?? '0') ?? 0,
                       isDeleted,
-                      statusController.text,
+                      status: statusController.text,
                       int.tryParse(orderLevelController.text) ?? 0,
                       _selectedUserId ?? '',
                       true,

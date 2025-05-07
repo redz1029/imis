@@ -3,9 +3,9 @@ part 'pgs_signatory_template.g.dart';
 
 @JsonSerializable()
 class PgsSignatoryTemplate {
-  int id;
+  int? id;
   bool isDeleted;
-  String status;
+  String? status;
   int orderLevel;
   String defaultSignatoryId;
   bool isActive;
@@ -15,10 +15,11 @@ class PgsSignatoryTemplate {
   PgsSignatoryTemplate(
     this.id,
     this.isDeleted,
-    this.status,
+
     this.orderLevel,
     this.defaultSignatoryId,
     this.isActive, {
+    required this.status,
     this.rowVersion,
     required this.signatoryLabel,
   });
