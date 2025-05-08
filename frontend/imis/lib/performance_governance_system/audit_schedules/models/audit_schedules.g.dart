@@ -18,7 +18,7 @@ AuditSchedules _$AuditSchedulesFromJson(Map<String, dynamic> json) =>
       (json['offices'] as List<dynamic>)
           .map((e) => Office.fromJson(e as Map<String, dynamic>))
           .toList(),
-      (json['auditableOffice'] as List<dynamic>)
+      (json['auditableOffices'] as List<dynamic>)
           .map((e) => AuditableOffice.fromJson(e as Map<String, dynamic>))
           .toList(),
       (json['auditSchduleDetails'] as List<dynamic>)
@@ -36,6 +36,6 @@ Map<String, dynamic> _$AuditSchedulesToJson(AuditSchedules instance) =>
       'endDate': const DateTimeConverter().toJson(instance.endDate),
       'isActive': instance.isActive,
       'offices': instance.offices,
-      'auditableOffice': instance.auditableOffice,
+      'auditableOffices': instance.auditableOffices,
       'auditSchduleDetails': instance.auditSchduleDetails,
     };

@@ -38,45 +38,45 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
 
   final dio = Dio();
 
-  Future<void> fetchAuditorTeam() async {
-    var url = ApiEndpoint().auditorteam;
+  // Future<void> fetchAuditorTeam() async {
+  //   var url = ApiEndpoint().auditSchedule;
 
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
+  //   try {
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+  //     String? token = prefs.getString('accessToken');
 
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
+  //     if (token == null || token.isEmpty) {
+  //       debugPrint("Error: Access token is missing!");
+  //       return;
+  //     }
 
-      var response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
+  //     var response = await dio.get(
+  //       url,
+  //       options: Options(headers: {"Authorization": "Bearer $token"}),
+  //     );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<AuditorTeam> data =
-            (response.data as List)
-                .map((auditorTeam) => AuditorTeam.fromJson(auditorTeam))
-                .toList();
+  //     if (response.statusCode == 200 && response.data is List) {
+  //       List<AuditorTeam> data =
+  //           (response.data as List)
+  //               .map((auditorTeam) => AuditorTeam.fromJson(auditorTeam))
+  //               .toList();
 
-        if (mounted) {
-          setState(() {
-            auditorTeamList =
-                data.map((auditorTeam) => auditorTeam.toJson()).toList();
-            filteredListTeamAuditor = List.from(auditorTeamList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
-      }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
+  //       if (mounted) {
+  //         setState(() {
+  //           auditorTeamList =
+  //               data.map((auditorTeam) => auditorTeam.toJson()).toList();
+  //           filteredListTeamAuditor = List.from(auditorTeamList);
+  //         });
+  //       }
+  //     } else {
+  //       debugPrint("Unexpected response format: ${response.data.runtimeType}");
+  //     }
+  //   } on DioException catch (e) {
+  //     debugPrint("Dio error: ${e.response?.data ?? e.message}");
+  //   } catch (e) {
+  //     debugPrint("Unexpected error: $e");
+  //   }
+  // }
 
   Future<void> fetchOffice() async {
     var url = ApiEndpoint().office;
@@ -252,7 +252,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     fetchOffice();
     fetchTeam();
     fetchAuditors();
-    fetchAuditorTeam();
+    // fetchAuditorTeam();
   }
 
   @override
@@ -828,11 +828,11 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                         //   ),
                         // );
                       }
-                      for (var detail in scheduleDetailsList) {
+                      for (var office in selectedOffice) {
                         auditableOfficeList.add(
                           AuditableOffice(
-                            auditScheduleId: detail.auditScheduleId,
-                            officeId: detail.officeId,
+                            auditScheduleId: 0,
+                            officeId: office['id'],
                           ),
                         );
                       }
@@ -857,102 +857,6 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                       await addOrUpdateAuditorTeam(auditschedule);
                       if (context.mounted) Navigator.pop(context);
                     }
-
-                    // if (confirmAction == true) {
-                    //   List<AuditScheduleDetails> scheduleDetailsList = [];
-
-                    //   for (var schedule in scheduleDetails) {
-                    //     scheduleDetailsList.add(
-                    //       AuditScheduleDetails(
-                    //         id: 0,
-                    //         isDeleted: false,
-                    //         rowVersion: '',
-                    //         auditScheduleId: 1,
-                    //         startDate: DateTime.parse(schedule['startDate']),
-                    //         endDate: DateTime.parse(schedule['endDate']),
-                    //         teamId: schedule['team'],
-                    //         teamName: schedule['team']?.toString() ?? '',
-                    //         officeId: schedule['office'],
-                    //         officeName: schedule['office']?.toString() ?? '',
-                    //       ),
-                    //     );
-                    //   }
-
-                    //   List<Office> officeList =
-                    //       selectedOffice
-                    //           .map((a) => Office(id: a['id'], name: a['name']))
-                    //           .toList();
-
-                    //   final auditschedule = AuditSchedules(
-                    //     0,
-                    //     false,
-                    //     "",
-                    //     auditTitleController.text,
-                    //     DateTime.parse(startDateController.text),
-                    //     DateTime.parse(endDateController.text),
-                    //     true,
-                    //     officeList,
-                    //     // uniqueAuditableOffices,
-                    //     [],
-                    //     scheduleDetailsList,
-                    //   );
-
-                    //   await addOrUpdateAuditorTeam(auditschedule);
-                    //   if (context.mounted) Navigator.pop(context);
-                    // }
-
-                    // if (confirmAction == true) {
-                    //   List<AuditScheduleDetails> scheduleDetailsList = [];
-                    //   List<Map<String, dynamic>> auditableOffices = [];
-
-                    //   for (var schedule in scheduleDetails) {
-                    //     scheduleDetailsList.add(
-                    //       AuditScheduleDetails(
-                    //         id: 0,
-                    //         isDeleted: false,
-                    //         rowVersion: '',
-                    //         auditScheduleId: 1,
-                    //         startDate: DateTime.parse(schedule['startDate']),
-                    //         endDate: DateTime.parse(schedule['endDate']),
-                    //         teamId: schedule['team'],
-                    //         teamName: schedule['team']?.toString() ?? '',
-                    //         officeId: schedule['office'],
-                    //         officeName: schedule['office']?.toString() ?? '',
-                    //       ),
-                    //     );
-                    //   }
-                    //   auditableOffices.add({
-                    //     auditScheduleId:
-                    //         0, // Fixed as 0 as per your requirement
-                    //     officeId: schedule['office'], // From schedule details
-                    //   });
-                    //   List<Office> office =
-                    //       selectedOffice
-                    //           .map((a) => Office(id: a['id'], name: a['name']))
-                    //           .toList();
-
-                    //   final auditschedule = AuditSchedules(
-                    //     1,
-                    //     false,
-                    //     'null',
-
-                    //     auditTitleController.text,
-                    //     DateTime.parse(startDateController.text),
-                    //     DateTime.parse(endDateController.text),
-                    //     true,
-                    //     office,
-                    //     auditableOffices,
-                    //     scheduleDetailsList,
-
-                    //     // scheduleDetailsList,
-                    //   );
-
-                    //   // Add or update the auditor team
-                    //   await addOrUpdateAuditorTeam(auditschedule);
-
-                    //   // Close the dialog if necessary
-                    //   if (context.mounted) Navigator.pop(context);
-                    // }
                   },
                   child: Text(
                     id == null ? 'Save' : 'Update',
@@ -1040,7 +944,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: Text('Auditor Team Information'),
+        title: Text('Audit Schedules Information'),
         backgroundColor: mainBgColor,
       ),
       body: Padding(

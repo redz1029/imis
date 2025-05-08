@@ -24,7 +24,7 @@ class AuditSchedules {
   bool isActive;
 
   List<Office> offices;
-  List<AuditableOffice> auditableOffice;
+  List<AuditableOffice> auditableOffices;
   List<AuditScheduleDetails> auditSchduleDetails;
   AuditSchedules(
     this.id,
@@ -35,7 +35,7 @@ class AuditSchedules {
     this.endDate,
     this.isActive,
     this.offices,
-    this.auditableOffice,
+    this.auditableOffices,
     this.auditSchduleDetails,
   );
 
