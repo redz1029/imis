@@ -28,7 +28,10 @@ class _TeamPageState extends State<TeamPage> {
 
       if (response.statusCode == 200 && response.data is List) {
         List<Team> data =
-            (response.data as List).map((team) => Team.fromJson(team)).toList();
+            (response.data as List)
+                .map((team) => Team.fromJson(team))
+                .where((team) => team.isDeleted == false)
+                .toList();
 
         if (mounted) {
           setState(() {
@@ -37,10 +40,10 @@ class _TeamPageState extends State<TeamPage> {
           });
         }
       } else {
-        debugPrint(" Unexpected response: ${response.data}");
+        debugPrint("Unexpected response: ${response.data}");
       }
     } catch (e) {
-      debugPrint(" Fetch error: $e");
+      debugPrint("Fetch error: $e");
     }
   }
 
@@ -59,6 +62,50 @@ class _TeamPageState extends State<TeamPage> {
     }
   }
 
+  // Future<void> deleteTeam(String teamId) async {
+  //   var url = ApiEndpoint().team;
+
+  //   try {
+  //     final response = await dio.put(url, data: {"isDeleted": true});
+
+  //     if (response.statusCode == 200) {
+  //       setState(() {
+  //         // ignore: unrelated_type_equality_checks
+  //         filteredList.removeWhere((team) => team.id == teamId);
+  //       });
+
+  //       await fetchTeam();
+  //     } else {
+  //       debugPrint("Failed to soft delete team: ${response.statusCode}");
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error soft deleting team: $e");
+  //   }
+  // }
+  Future<void> deleteTeam(String teamId) async {
+    var url = "${ApiEndpoint().team}/$teamId"; // target specific team endpoint
+
+    try {
+      final response = await dio.post(
+        url, // Using POST if that's the supported method
+        data: {"isActive": true},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          // ignore: unrelated_type_equality_checks
+          filteredList.removeWhere((team) => team.id == teamId);
+        });
+
+        await fetchTeam();
+      } else {
+        debugPrint("Failed to soft delete team: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error soft deleting team: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -72,19 +119,6 @@ class _TeamPageState extends State<TeamPage> {
   void dispose() {
     isSearchfocus.dispose();
     super.dispose();
-  }
-
-  Future<void> deleteTeam(String teamId) async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await dio.delete(url);
-
-      if (response.statusCode == 200) {
-        await fetchTeam();
-      }
-    } catch (e) {
-      debugPrint("Error deleting KRA: $e");
-    }
   }
 
   void filterSearchResults(String query) {
