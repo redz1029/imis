@@ -41,6 +41,7 @@ class LoginPageState extends State<LoginPage> {
       var response = await dio.post(url, data: json.encode(user));
 
       var responseData = response.data;
+      String id = responseData['id'] ?? '';
       String firstName = responseData['firstName'] ?? '';
       String position = responseData['position'] ?? '';
       List<String> roles = List<String>.from(responseData['roles'] ?? []);
@@ -53,6 +54,7 @@ class LoginPageState extends State<LoginPage> {
           officeIds.map((id) => id.toString()).toList();
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('id', id);
       await prefs.setString('firstName', firstName);
       await prefs.setString('position', position);
       await prefs.setStringList("officeNames", officeNames);
