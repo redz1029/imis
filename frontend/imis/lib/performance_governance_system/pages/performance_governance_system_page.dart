@@ -328,11 +328,44 @@ class _PerformanceGovernanceSystemPageState
       final userId = signatory['defaultSignatoryId'].toString();
       final user = userList.firstWhere(
         (u) => u.id.toString() == userId,
-        orElse: () => User(id: '', fullName: 'Unknown'),
+        orElse: () => User(id: '', fullName: ''),
       );
       return user.fullName;
     } catch (e) {
       return 'Unknown';
+    }
+  }
+
+  String? getSignatoryByOrderLevel(int level) {
+    try {
+      final signatory = signatoryList.firstWhere(
+        (item) => item['orderLevel'] == level,
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (signatory.isEmpty || signatory['defaultSignatoryId'] == null) {
+        return null;
+      }
+      return signatory['defaultSignatoryId'].toString();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  String? getSignatoryTitleByOrderLevel(int level) {
+    try {
+      final signatory = signatoryList.firstWhere(
+        (item) => item['orderLevel'] == level,
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (signatory.isEmpty || signatory['signatoryLabel'] == null) {
+        return null;
+      }
+
+      return signatory['signatoryLabel'].toString();
+    } catch (e) {
+      return null;
     }
   }
 
@@ -353,12 +386,20 @@ class _PerformanceGovernanceSystemPageState
             ? DropdownButton<String>(
               hint: const Text('Select name'),
               value: currentValue,
+
+              // items:
+              //     signatoryList.map((name) {
+              //       final id = name['id'].toString();
+              //       return DropdownMenuItem<String>(
+              //         value: id,
+              //         child: Text(getFullNameFromSignatoryId(id)),
+              //       );
+              //     }).toList(),
               items:
-                  signatoryList.map((name) {
-                    final id = name['id'].toString();
+                  userList.map((user) {
                     return DropdownMenuItem<String>(
-                      value: id,
-                      child: Text(getFullNameFromSignatoryId(id)),
+                      value: user.id,
+                      child: Text(user.fullName),
                     );
                   }).toList(),
               onChanged: (value) {
@@ -371,13 +412,15 @@ class _PerformanceGovernanceSystemPageState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      getFullNameFromSignatoryId(currentValue),
+                      userList.any((user) => user.id == currentValue)
+                          ? userList
+                              .firstWhere((user) => user.id == currentValue)
+                              .fullName
+                          : getFullNameFromSignatoryId(currentValue),
+
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    Text(
-                      jobTitles[currentValue] ?? '[No title]',
-                      style: const TextStyle(fontSize: 12),
-                    ),
+                    Text('[No Position]', style: const TextStyle(fontSize: 12)),
                   ],
                 ),
                 IconButton(icon: const Icon(Icons.close), onPressed: onDeleted),
@@ -740,6 +783,9 @@ class _PerformanceGovernanceSystemPageState
     fetchPgsList();
     fetchUser();
     fetchPGSPeriods();
+    _submittedByUserId = getSignatoryByOrderLevel(1);
+    _notedByUserId = getSignatoryByOrderLevel(2);
+    _approvedByUserId = getSignatoryByOrderLevel(3);
     isSearchFocus.addListener(() {
       setState(() {});
     });
@@ -813,7 +859,7 @@ class _PerformanceGovernanceSystemPageState
         id: 0,
         pgsId: 0,
         pgsSignatoryTemplateId: 1,
-        signatoryId: 'af7b586c-7ee6-490b-bd87-8f46f6a47831',
+        signatoryId: _submittedByUserId!,
       ),
       PgsSignatory(
         DateTime.now(),
@@ -821,8 +867,8 @@ class _PerformanceGovernanceSystemPageState
         "",
         id: 0,
         pgsId: 0,
-        pgsSignatoryTemplateId: 2,
-        signatoryId: 'af7b586c-7ee6-490b-bd87-8f46f6a47831',
+        pgsSignatoryTemplateId: 1,
+        signatoryId: _approvedByUserId!,
       ),
       PgsSignatory(
         DateTime.now(),
@@ -830,8 +876,8 @@ class _PerformanceGovernanceSystemPageState
         "",
         id: 0,
         pgsId: 0,
-        pgsSignatoryTemplateId: 3,
-        signatoryId: 'af7b586c-7ee6-490b-bd87-8f46f6a47831',
+        pgsSignatoryTemplateId: 1,
+        signatoryId: _notedByUserId!,
       ),
     ];
   }
@@ -969,12 +1015,6 @@ class _PerformanceGovernanceSystemPageState
     isSearchFocus.dispose();
     super.dispose();
   }
-
-  final Map<String, String> jobTitles = {
-    'DR. HALIMA O. MOKAMAD-ROMANCAP': 'Head Department of Surgery',
-    'DR. JOHN MALIGA': 'Chief of Medical Professional Staff II',
-    'DR. ISHMAEL R. DIMAREN': 'Medical Center Chief II',
-  };
 
   @override
   Widget build(BuildContext context) {
@@ -1463,6 +1503,9 @@ class _PerformanceGovernanceSystemPageState
     // final List<PgsSignatoryTemplate> orderedSignatories = List.from(
     //   signatoryList,
     // )..sort((a, b) => a.orderLevel.compareTo(b.orderLevel));
+    _submittedByUserId = getSignatoryByOrderLevel(1);
+    _notedByUserId = getSignatoryByOrderLevel(2);
+    _approvedByUserId = getSignatoryByOrderLevel(3);
 
     showDialog(
       context: context,
@@ -1963,14 +2006,15 @@ class _PerformanceGovernanceSystemPageState
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   _buildSignatoryColumn(
-                                    title: 'Submitted by:',
+                                    title:
+                                        '${getSignatoryTitleByOrderLevel(1) ?? ''}:',
                                     currentValue: _submittedByUserId,
+
                                     onChanged: (value) {
                                       setDialogState(() {
                                         _submittedByUserId = value;
                                       });
                                     },
-
                                     onDeleted: () {
                                       setDialogState(() {
                                         _submittedByUserId = null;
@@ -1978,9 +2022,9 @@ class _PerformanceGovernanceSystemPageState
                                     },
                                   ),
                                   const SizedBox(width: 120),
-
                                   _buildSignatoryColumn(
-                                    title: 'Noted by:',
+                                    title:
+                                        '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
                                     currentValue: _notedByUserId,
                                     onChanged: (value) {
                                       setDialogState(() {
@@ -1994,9 +2038,9 @@ class _PerformanceGovernanceSystemPageState
                                     },
                                   ),
                                   const SizedBox(width: 120),
-
                                   _buildSignatoryColumn(
-                                    title: 'Approved by:',
+                                    title:
+                                        '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
                                     currentValue: _approvedByUserId,
                                     onChanged: (value) {
                                       setDialogState(() {
@@ -2465,23 +2509,14 @@ class _PerformanceGovernanceSystemPageState
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: DropdownButtonFormField<PgsStatus>(
-        value:
-            selectedStatus[index] ??
-            PgsStatus.notStarted, // Display current status for this row
+        value: selectedStatus[index] ?? PgsStatus.notStarted,
         onChanged: (PgsStatus? newValue) {
           if (newValue != null) {
-            print(
-              'Selected Status for index $index: ${newValue.name}',
-            ); // Debug print
-            setDialogState(); // Trigger setState to update UI
+            setDialogState();
             setState(() {
-              selectedStatus[index] =
-                  newValue; // Update status for this row's index
+              selectedStatus[index] = newValue;
             });
-            saveStatusToDb(
-              index,
-              newValue,
-            ); // Save the selected status to the database
+            saveStatusToDb(index, newValue);
           }
         },
         isExpanded: true,
@@ -2500,16 +2535,7 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  // Function to save status to the database
-  void saveStatusToDb(int index, PgsStatus status) {
-    int statusIndex = status.index; // Get the integer value of the status
-
-    // Example: Saving the status index to a mock DB (or replace with actual API call)
-    print('Saving status for index $index: $statusIndex');
-
-    // Here you can save the statusIndex to your database
-    // For example: api.saveStatus(index, statusIndex);
-  }
+  void saveStatusToDb(int index, PgsStatus status) {}
 
   // // Check Box
   Widget _buildCheckboxCell(
