@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/pagination_util.dart';
 
 class KeyResultAreaPage extends StatefulWidget {
   const KeyResultAreaPage({super.key});
@@ -13,11 +14,14 @@ class KeyResultAreaPage extends StatefulWidget {
 }
 
 class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
+  final _paginationUtils = PaginationUtil(Dio());
   List<Map<String, dynamic>> kraList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
-  int currentPage = 1;
-  int maxVisiblePages = 4;
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -28,31 +32,34 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
   final dio = Dio();
 
   //fetch kra list
-  Future<void> fetchKRAs() async {
-    var url = ApiEndpoint().keyresult;
+  Future<void> fetchKRAs({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      var response = await dio.get(url);
+      final pageList = await _paginationUtils.fetchPaginatedData<KeyResultArea>(
+        endpoint: ApiEndpoint().keyresult,
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+        fromJson: (json) => KeyResultArea.fromJson(json),
+      );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<KeyResultArea> data =
-            (response.data as List)
-                .map((kra) => KeyResultArea.fromJson(kra))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            kraList = data.map((kra) => kra.toJson()).toList();
-            filteredList = List.from(kraList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          kraList = pageList.items.map((a) => a.toJson()).toList();
+          filteredList = List.from(kraList);
+        });
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -101,176 +108,36 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
-
-    return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: Text('Key Result Areas'),
-        backgroundColor: mainBgColor,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                SizedBox(
-                  height: 30,
-                  width: 300,
-                  child: TextField(
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: lightGrey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelText: 'Search KRA',
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
-                      prefixIcon: Icon(Icons.search, size: 20),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      filled: true,
-                      fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 5,
-                      ),
-                    ),
-                    onChanged: filterSearchResults,
-                  ),
-                ),
-                if (!isMinimized)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    onPressed: () => showFormDialog(),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 5),
-                        Text('Add New', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
-                  ),
-              ],
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this KRA? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
             ),
-            gap,
-            Expanded(
-              child: Column(
-                children: [
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'KRA Name',
-                            style: TextStyle(color: grey),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text('Remarks', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Actions', style: TextStyle(color: grey)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: filteredList.length,
-                      itemBuilder: (context, index) {
-                        var kra = filteredList[index];
-                        return Container(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 1,
-                            horizontal: 16,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: Colors.grey.shade300),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                flex: 1,
-                                child: Text((index + 1).toString()),
-                              ),
-                              Expanded(flex: 3, child: Text(kra['name'])),
-                              Expanded(
-                                flex: 3,
-                                child: Text(kra['remarks'] ?? ''),
-                              ),
-                              Expanded(
-                                flex: 1,
-                                child: Row(
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(Icons.edit),
-                                      onPressed:
-                                          () => showFormDialog(
-                                            id: kra['id'].toString(),
-                                            name: kra['name'],
-                                            remarks: kra['remarks'],
-                                          ),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
-                                      ),
-                                      onPressed:
-                                          () => showDeleteDialog(
-                                            kra['id'].toString(),
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deleteKRA(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
             ),
           ],
-        ),
-      ),
-      floatingActionButton:
-          isMinimized
-              ? FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: () => showFormDialog(),
-                child: Icon(Icons.add, color: Colors.white),
-              )
-              : null,
+        );
+      },
     );
   }
 
@@ -397,36 +264,259 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
     );
   }
 
-  void showDeleteDialog(String id) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this KRA? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await deleteKRA(id);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
+  @override
+  Widget build(BuildContext context) {
+    bool isMinimized = MediaQuery.of(context).size.width < 600;
+
+    return Scaffold(
+      backgroundColor: mainBgColor,
+      appBar: AppBar(
+        title: Text('Key Result Areas'),
+        backgroundColor: mainBgColor,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: lightGrey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      labelText: 'Search KRA',
+                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      prefixIcon: Icon(Icons.search, size: 20),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      filled: true,
+                      fillColor: secondaryColor,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 5,
+                        horizontal: 5,
+                      ),
+                    ),
+                    onChanged: filterSearchResults,
+                  ),
                 ),
+                if (!isMinimized)
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () => showFormDialog(),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.add, color: Colors.white),
+                        SizedBox(width: 5),
+                        Text('Add New', style: TextStyle(color: Colors.white)),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
+            gap,
+            Expanded(
+              child: Column(
+                children: [
+                  Container(
+                    color: secondaryColor,
+                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text('#', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text('Name', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text('Remarks', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Text('Actions', style: TextStyle(color: grey)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Column(
+                        children:
+                            filteredList
+                                .asMap()
+                                .map((index, kra) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  return MapEntry(
+                                    index,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 1,
+                                        horizontal: 16,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                itemNumber.toString(),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                kra['name'],
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                kra['remarks'],
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(Icons.edit),
+                                                    onPressed:
+                                                        () => showFormDialog(
+                                                          id:
+                                                              kra['id']
+                                                                  .toString(),
+                                                          name: kra['name'],
+                                                          remarks:
+                                                              kra['remarks'],
+                                                        ),
+                                                  ),
+                                                  SizedBox(width: 1),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.delete,
+                                                      color: primaryColor,
+                                                    ),
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          kra['id'].toString(),
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                })
+                                .values
+                                .toList(),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+            Container(
+              padding: EdgeInsets.all(10),
+              color: secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchKRAs(page: page),
+                  ),
+                  Container(width: 60), // For alignment
+                ],
+              ),
             ),
           ],
-        );
-      },
+        ),
+      ),
+      floatingActionButton:
+          isMinimized
+              ? FloatingActionButton(
+                backgroundColor: primaryColor,
+                onPressed: () => showFormDialog(),
+                child: Icon(Icons.add, color: Colors.white),
+              )
+              : null,
     );
   }
 }
