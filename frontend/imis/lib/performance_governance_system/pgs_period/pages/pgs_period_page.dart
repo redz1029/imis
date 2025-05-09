@@ -1,9 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/pagination_util.dart';
 
 class PgsPeriodPage extends StatefulWidget {
   const PgsPeriodPage({super.key});
@@ -14,39 +14,49 @@ class PgsPeriodPage extends StatefulWidget {
 }
 
 class _PgsPeriodPageState extends State<PgsPeriodPage> {
+  final _paginationUtils = PaginationUtil(Dio());
   List<Map<String, dynamic>> pgsList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+
   final dio = Dio();
 
   //fetch PGS PERIOD list
-  Future<void> fetchPGSPeriods() async {
-    var url = ApiEndpoint().pgsperiod;
+
+  Future<void> fetchPGSPeriods({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      var response = await dio.get(url);
+      final pageList = await _paginationUtils.fetchPaginatedData<PgsPeriod>(
+        endpoint: ApiEndpoint().pgsperiod,
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+        fromJson: (json) => PgsPeriod.fromJson(json),
+      );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<PgsPeriod> data =
-            (response.data as List)
-                .map((period) => PgsPeriod.fromJson(period))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            pgsList = data.map((period) => period.toJson()).toList();
-            filteredList = List.from(pgsList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          pgsList = pageList.items.map((a) => a.toJson()).toList();
+          filteredList = List.from(pgsList);
+        });
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -106,6 +116,39 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
               )
               .toList();
     });
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this PGS Period? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await deletePGSPeriod(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void showFormDialog({
@@ -414,6 +457,10 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                             filteredList
                                 .asMap()
                                 .map((index, period) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
                                   return MapEntry(
                                     index,
                                     Container(
@@ -434,47 +481,87 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Text((index + 1).toString()),
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                itemNumber.toString(),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Text(period['startDate']),
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                period['startDate'],
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Text(period['endDate']),
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                period['endDate'],
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
                                           ),
+
                                           Expanded(
                                             flex: 1,
-                                            child: Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              children: [
-                                                IconButton(
-                                                  icon: Icon(Icons.edit),
-                                                  onPressed:
-                                                      () => showFormDialog(
-                                                        id:
-                                                            period['id']
-                                                                .toString(),
-                                                        startDate:
-                                                            period['startDate'],
-                                                        endDate:
-                                                            period['endDate'],
-                                                      ),
-                                                ),
-                                                SizedBox(width: 1),
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.delete,
-                                                    color: primaryColor,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(Icons.edit),
+                                                    onPressed:
+                                                        () => showFormDialog(
+                                                          id:
+                                                              period['id']
+                                                                  .toString(),
+                                                          startDate:
+                                                              period['startDate'],
+                                                          endDate:
+                                                              period['endDate'],
+                                                        ),
                                                   ),
-                                                  onPressed:
-                                                      () => showDeleteDialog(
-                                                        period['id'].toString(),
-                                                      ),
-                                                ),
-                                              ],
+                                                  SizedBox(width: 1),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.delete,
+                                                      color: primaryColor,
+                                                    ),
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          period['id']
+                                                              .toString(),
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
                                           ),
                                         ],
@@ -487,6 +574,28 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(10),
+              color: secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchPGSPeriods(page: page),
+                  ),
+                  Container(width: 60), // For alignment
                 ],
               ),
             ),
@@ -503,39 +612,6 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
-    );
-  }
-
-  void showDeleteDialog(String id) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this PGS Period? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await deletePGSPeriod(id);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
     );
   }
 }
