@@ -59,6 +59,7 @@ class _PerformanceGovernanceSystemPageState
   List<String> kraOptions = [];
   Map<int, int?> deliverableIds = {};
   List<Map<String, dynamic>> signatoryList = [];
+  List<PgsSignatory> displaySignatoryList = [];
 
   List<int> rows = [];
   int rowIndex = 1;
@@ -412,12 +413,18 @@ class _PerformanceGovernanceSystemPageState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      userList.any((user) => user.id == currentValue)
+                      (userList.any((user) => user.id == currentValue)
                           ? userList
                               .firstWhere((user) => user.id == currentValue)
                               .fullName
-                          : getFullNameFromSignatoryId(currentValue),
+                          : getFullNameFromSignatoryId(currentValue)),
 
+                      // Text(
+                      //   userList.any((user) => user.id == currentValue)
+                      //       ? userList
+                      //           .firstWhere((user) => user.id == currentValue)
+                      //           .fullName
+                      //       : getFullNameFromSignatoryId(currentValue),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text('[No Position]', style: const TextStyle(fontSize: 12)),
@@ -479,6 +486,54 @@ class _PerformanceGovernanceSystemPageState
     }
 
     return deliverablesList;
+  }
+
+  Future<List<PgsSignatory>> fetchSignatoryList({String? pgsId}) async {
+    final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
+
+    debugPrint("Fetching deliverables for PGS ID: $pgsId");
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return [];
+      }
+
+      final response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final pgsDataList = data is List ? data : [data];
+
+        for (var pgsJson in pgsDataList) {
+          final signatories =
+              (pgsJson['pgsSignatories'] as List)
+                  .map((d) => PgsSignatory.fromJson(d))
+                  .where((d) => d.id != null)
+                  .toList();
+
+          for (var d in signatories) {
+            debugPrint("Deliverable loaded: ID=${d.id}, Name=${d.signatoryId}");
+          }
+
+          displaySignatoryList.addAll(signatories);
+        }
+      } else {
+        debugPrint("Failed to fetch deliverables: ${response.statusCode}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+
+    return displaySignatoryList;
   }
 
   Future<bool?> _confirmAction(String title, String message) async {
@@ -640,6 +695,7 @@ class _PerformanceGovernanceSystemPageState
                 'selectPeriod': pgs.pgsPeriod.id.toString(),
                 'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
                 'percentDeliverables': pgs.percentDeliverables.toString(),
+                // 'signatoryId': pgs.pgsSignatories?.first.signatoryId ?? '',
               };
             }).toList();
 
@@ -683,7 +739,7 @@ class _PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 && response.data is List) {
-        List<Map<String, Object>> formattedData =
+        List<Map<String, Object?>> formattedData =
             (response.data as List).map((pgsJson) {
               PerformanceGovernanceSystem pgs =
                   PerformanceGovernanceSystem.fromJson(pgsJson);
@@ -780,12 +836,13 @@ class _PerformanceGovernanceSystemPageState
     super.initState();
     fetchSignatory();
     _loadOfficeName();
+
     fetchPgsList();
     fetchUser();
     fetchPGSPeriods();
-    _submittedByUserId = getSignatoryByOrderLevel(1);
-    _notedByUserId = getSignatoryByOrderLevel(2);
-    _approvedByUserId = getSignatoryByOrderLevel(3);
+    // _submittedByUserId = getSignatoryByOrderLevel(1);
+    // _notedByUserId = getSignatoryByOrderLevel(2);
+    // _approvedByUserId = getSignatoryByOrderLevel(3);
     isSearchFocus.addListener(() {
       setState(() {});
     });
@@ -867,7 +924,7 @@ class _PerformanceGovernanceSystemPageState
         "",
         id: 0,
         pgsId: 0,
-        pgsSignatoryTemplateId: 1,
+        pgsSignatoryTemplateId: 2,
         signatoryId: _approvedByUserId!,
       ),
       PgsSignatory(
@@ -876,7 +933,7 @@ class _PerformanceGovernanceSystemPageState
         "",
         id: 0,
         pgsId: 0,
-        pgsSignatoryTemplateId: 1,
+        pgsSignatoryTemplateId: 3,
         signatoryId: _notedByUserId!,
       ),
     ];
@@ -1294,8 +1351,18 @@ class _PerformanceGovernanceSystemPageState
                                                             pgsId:
                                                                 pgsgovernancesystem['id'],
                                                           );
-                                                      // debugPrint('PGS ID: ${pgsgovernancesystem['id']}');
-                                                      // debugPrint('Office ID: ${pgsgovernancesystem['officeid']}');
+
+                                                      debugPrint(
+                                                        'Pgs Status: ${pgsgovernancesystem['pgsStatus']}',
+                                                      );
+
+                                                      List<PgsSignatory>
+                                                      signatory =
+                                                          await fetchSignatoryList(
+                                                            pgsId:
+                                                                pgsgovernancesystem['id'],
+                                                          );
+
                                                       debugPrint(
                                                         'Pgs Status: ${pgsgovernancesystem['pgsStatus']}',
                                                       );
@@ -1321,6 +1388,7 @@ class _PerformanceGovernanceSystemPageState
                                                             pgsgovernancesystem['percentDeliverables'],
                                                         deliverables:
                                                             deliverables,
+                                                        signatories: signatory,
                                                         pgsstatus:
                                                             pgsgovernancesystem['pgsStatus'],
                                                       );
@@ -1412,11 +1480,45 @@ class _PerformanceGovernanceSystemPageState
     String? percentDeliverables,
     List<dynamic>? deliverabledIds,
     List<PgsDeliverables>? deliverables,
+    List<PgsSignatory>? signatories,
     String? pgsstatus,
+    String? pgsId,
   }) {
     setState(() {
+      List<Map<String, dynamic>> signatories = [];
+      if (filteredList.isNotEmpty) {
+        for (final signatory in displaySignatoryList) {
+          signatories.add({
+            'pgsId': signatory.pgsId,
+            'pgsSignatoryTemplateId': signatory.signatoryId,
+          });
+        }
+      }
+      print('signatories :$signatories');
+
+      // Function to get signatory ID by order level
+      String? getSignatoryByOrderLevels(int pgsSignatoryTemplateId) {
+        final signatory = signatories.firstWhere(
+          (s) => s['pgsSignatoryTemplateId'] == pgsSignatoryTemplateId,
+          orElse: () => {},
+        );
+
+        return signatory.isEmpty ? null : signatory['pgsSignatoryTemplateId'];
+      }
+
+      if (id != null) {
+        _submittedByUserId = getSignatoryByOrderLevels(1);
+        _notedByUserId = getSignatoryByOrderLevels(2);
+        _approvedByUserId = getSignatoryByOrderLevels(3);
+      } else {
+        _submittedByUserId = getSignatoryByOrderLevel(1);
+        _notedByUserId = getSignatoryByOrderLevel(2);
+        _approvedByUserId = getSignatoryByOrderLevel(3);
+      }
+
+      // Now you can assign the signatory IDs
+
       if (id == null) {
-        // NEW RECORD - Clear everything
         competenceScore.value = 0.0;
         resourceScore.value = 0.0;
         confidenceScore.value = 0.0;
@@ -1432,7 +1534,7 @@ class _PerformanceGovernanceSystemPageState
         selectedByWhen.clear();
         selectedStatus.clear();
         deliverableIds.clear();
-        // Optional: clear internal deliverable model list if exists
+
         // deliverablesList.clear();
       } else {
         // EDIT MODE
@@ -1443,6 +1545,15 @@ class _PerformanceGovernanceSystemPageState
         if (percentDeliverables != null) {
           percentage.text = percentDeliverables;
         }
+        // if (signatoryId != null) {
+        //   _submittedByUserId = signatoryId;
+        // }
+        // if (signatoryId != null) {
+        //   _notedByUserId = signatoryId;
+        // }
+        // if (signatoryId != null) {
+        //   _approvedByUserId = signatoryId;
+        // }
 
         // Assign the correct period from startDate and endDate
         if (startDate != null && endDate != null) {
@@ -1503,9 +1614,10 @@ class _PerformanceGovernanceSystemPageState
     // final List<PgsSignatoryTemplate> orderedSignatories = List.from(
     //   signatoryList,
     // )..sort((a, b) => a.orderLevel.compareTo(b.orderLevel));
-    _submittedByUserId = getSignatoryByOrderLevel(1);
-    _notedByUserId = getSignatoryByOrderLevel(2);
-    _approvedByUserId = getSignatoryByOrderLevel(3);
+
+    // _submittedByUserId = getSignatoryByOrderLevel(1);
+    // _notedByUserId = getSignatoryByOrderLevel(2);
+    // _approvedByUserId = getSignatoryByOrderLevel(3);
 
     showDialog(
       context: context,
@@ -2069,63 +2181,6 @@ class _PerformanceGovernanceSystemPageState
               // Action Buttons
               actions: [
                 if (isDraft) ...[
-                  //   ElevatedButton(
-                  //   style: ElevatedButton.styleFrom(backgroundColor:primaryColor),
-                  //   onPressed: () async {
-                  //     bool? confirm = await showDialog(
-                  //       context: context,
-                  //       builder: (_) => AlertDialog(
-                  //         title: Text("Confirm Cancel"),
-                  //         content: Text("Are you sure you want to cancel this record?"),
-                  //         actions: [
-                  //           TextButton(onPressed: () => Navigator.pop(context, false), child: Text("No")),
-                  //           TextButton(onPressed: () => Navigator.pop(context, true), child: Text("Yes")),
-                  //         ],
-                  //       ),
-                  //     );
-
-                  //     if (confirm == true) {
-                  //       int? pgsId = int.tryParse(id ?? '');
-                  //       PerformanceGovernanceSystem audit = getPgsAuditDetails(
-                  //         id: pgsId ?? 0,
-                  //         pgsStatus: "Cancelled",
-                  //       );
-                  //       await savePGS(audit);
-                  //       Navigator.pop(context);
-
-                  //     }
-                  //   },
-                  //   child: Text('Cancelled', style: TextStyle(color: Colors.white)),
-                  // ),
-
-                  // ElevatedButton(
-                  //   style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 47, 184, 42)),
-                  //   onPressed: () async {
-                  //     bool? confirm = await showDialog(
-                  //       context: context,
-                  //       builder: (_) => AlertDialog(
-                  //         title: Text("Confirm Aprroved"),
-                  //         content: Text("Are you sure you want to aprroved this record? You won’t be able to make any changes."),
-                  //         actions: [
-                  //           TextButton(onPressed: () => Navigator.pop(context, false), child: Text("No")),
-                  //           TextButton(onPressed: () => Navigator.pop(context, true), child: Text("Yes")),
-                  //         ],
-                  //       ),
-                  //     );
-
-                  //     if (confirm == true) {
-
-                  //       int? pgsId = int.tryParse(id ?? '');
-                  //       PerformanceGovernanceSystem audit = getPgsAuditDetails(
-                  //         id: pgsId ?? 0,
-                  //         pgsStatus: "Approved",
-                  //       );
-                  //       await savePGS(audit);
-                  //       Navigator.pop(context);
-                  //     }
-                  //   },
-                  //   child: Text('Approved', style: TextStyle(color: Colors.white)),
-                  // ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 45, 57, 212),
