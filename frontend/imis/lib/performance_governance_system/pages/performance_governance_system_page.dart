@@ -337,6 +337,60 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
+  String? getSignatoryByOrderLevels({
+    required int pgsIdSignatory,
+    required int level,
+  }) {
+    try {
+      final signatory = displaySignatoryList.firstWhere(
+        (item) =>
+            item.pgsId == pgsIdSignatory && // Matches by pgsId
+            item.pgsSignatoryTemplateId == level, // Matches by level
+        orElse:
+            () => PgsSignatory(
+              DateTime.now(),
+              false,
+              '',
+              id: 0,
+              pgsId: pgsIdSignatory, // Ensure this is correct
+              pgsSignatoryTemplateId: 0,
+              signatoryId: '',
+            ),
+      );
+
+      if (signatory.signatoryId == null || signatory.signatoryId!.isEmpty) {
+        return null;
+      }
+
+      return signatory.signatoryId;
+    } catch (e) {
+      debugPrint("Error getting signatory by level: $e");
+      return null;
+    }
+  }
+
+  void setSignatoryLevels(int? dynamicSelectedId) {
+    final currentPgsId =
+        dynamicSelectedId ?? 0; // Default to 0 if dynamicSelectedId is null
+
+    if (currentPgsId != 0) {
+      _submittedByUserId = getSignatoryByOrderLevels(
+        pgsIdSignatory: currentPgsId,
+        level: 1,
+      );
+      _notedByUserId = getSignatoryByOrderLevels(
+        pgsIdSignatory: currentPgsId,
+        level: 2,
+      );
+      _approvedByUserId = getSignatoryByOrderLevels(
+        pgsIdSignatory: currentPgsId,
+        level: 3,
+      );
+    } else {
+      debugPrint("No valid selectedId provided, cannot proceed.");
+    }
+  }
+
   String? getSignatoryByOrderLevel(int level) {
     try {
       final signatory = signatoryList.firstWhere(
@@ -388,14 +442,6 @@ class _PerformanceGovernanceSystemPageState
               hint: const Text('Select name'),
               value: currentValue,
 
-              // items:
-              //     signatoryList.map((name) {
-              //       final id = name['id'].toString();
-              //       return DropdownMenuItem<String>(
-              //         value: id,
-              //         child: Text(getFullNameFromSignatoryId(id)),
-              //       );
-              //     }).toList(),
               items:
                   userList.map((user) {
                     return DropdownMenuItem<String>(
@@ -419,12 +465,6 @@ class _PerformanceGovernanceSystemPageState
                               .fullName
                           : getFullNameFromSignatoryId(currentValue)),
 
-                      // Text(
-                      //   userList.any((user) => user.id == currentValue)
-                      //       ? userList
-                      //           .firstWhere((user) => user.id == currentValue)
-                      //           .fullName
-                      //       : getFullNameFromSignatoryId(currentValue),
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text('[No Position]', style: const TextStyle(fontSize: 12)),
@@ -1363,9 +1403,22 @@ class _PerformanceGovernanceSystemPageState
                                                                 pgsgovernancesystem['id'],
                                                           );
 
-                                                      debugPrint(
-                                                        'Pgs Status: ${pgsgovernancesystem['pgsStatus']}',
-                                                      );
+                                                      int? dynamicSelectedId =
+                                                          int.tryParse(
+                                                            pgsgovernancesystem['id']
+                                                                .toString(),
+                                                          );
+
+                                                      if (dynamicSelectedId !=
+                                                          null) {
+                                                        setSignatoryLevels(
+                                                          dynamicSelectedId,
+                                                        );
+                                                      } else {
+                                                        debugPrint(
+                                                          "Error: Invalid ID format for setSignatoryLevels.",
+                                                        );
+                                                      }
 
                                                       showFormDialog(
                                                         id:
@@ -1483,41 +1536,9 @@ class _PerformanceGovernanceSystemPageState
     List<PgsSignatory>? signatories,
     String? pgsstatus,
     String? pgsId,
+    int? pgs,
   }) {
     setState(() {
-      List<Map<String, dynamic>> signatories = [];
-      if (filteredList.isNotEmpty) {
-        for (final signatory in displaySignatoryList) {
-          signatories.add({
-            'pgsId': signatory.pgsId,
-            'pgsSignatoryTemplateId': signatory.signatoryId,
-          });
-        }
-      }
-      print('signatories :$signatories');
-
-      // Function to get signatory ID by order level
-      String? getSignatoryByOrderLevels(int pgsSignatoryTemplateId) {
-        final signatory = signatories.firstWhere(
-          (s) => s['pgsSignatoryTemplateId'] == pgsSignatoryTemplateId,
-          orElse: () => {},
-        );
-
-        return signatory.isEmpty ? null : signatory['pgsSignatoryTemplateId'];
-      }
-
-      if (id != null) {
-        _submittedByUserId = getSignatoryByOrderLevels(1);
-        _notedByUserId = getSignatoryByOrderLevels(2);
-        _approvedByUserId = getSignatoryByOrderLevels(3);
-      } else {
-        _submittedByUserId = getSignatoryByOrderLevel(1);
-        _notedByUserId = getSignatoryByOrderLevel(2);
-        _approvedByUserId = getSignatoryByOrderLevel(3);
-      }
-
-      // Now you can assign the signatory IDs
-
       if (id == null) {
         competenceScore.value = 0.0;
         resourceScore.value = 0.0;
@@ -1545,15 +1566,6 @@ class _PerformanceGovernanceSystemPageState
         if (percentDeliverables != null) {
           percentage.text = percentDeliverables;
         }
-        // if (signatoryId != null) {
-        //   _submittedByUserId = signatoryId;
-        // }
-        // if (signatoryId != null) {
-        //   _notedByUserId = signatoryId;
-        // }
-        // if (signatoryId != null) {
-        //   _approvedByUserId = signatoryId;
-        // }
 
         // Assign the correct period from startDate and endDate
         if (startDate != null && endDate != null) {
@@ -1615,9 +1627,11 @@ class _PerformanceGovernanceSystemPageState
     //   signatoryList,
     // )..sort((a, b) => a.orderLevel.compareTo(b.orderLevel));
 
-    // _submittedByUserId = getSignatoryByOrderLevel(1);
-    // _notedByUserId = getSignatoryByOrderLevel(2);
-    // _approvedByUserId = getSignatoryByOrderLevel(3);
+    if (id == null) {
+      _submittedByUserId = getSignatoryByOrderLevel(1);
+      _notedByUserId = getSignatoryByOrderLevel(2);
+      _approvedByUserId = getSignatoryByOrderLevel(3);
+    }
 
     showDialog(
       context: context,
