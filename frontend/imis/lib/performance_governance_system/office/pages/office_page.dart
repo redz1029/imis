@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/office/models/office.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/pagination_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OfficePage extends StatefulWidget {
@@ -15,49 +16,48 @@ class OfficePage extends StatefulWidget {
 
 class _OfficePageState extends State<OfficePage> {
   // ignore: non_constant_identifier_names
+  final _paginationUtils = PaginationUtil(Dio());
+
   List<Map<String, dynamic>> officeList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+
   final dio = Dio();
 
-  Future<void> fetchOffices() async {
-    var url = ApiEndpoint().office;
+  Future<void> fetchOffices({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
-
-      var response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
+      final pageList = await _paginationUtils.fetchPaginatedData<Office>(
+        endpoint: ApiEndpoint().office,
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+        fromJson: (json) => Office.fromJson(json),
       );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map((office) => Office.fromJson(office))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            officeList = data.map((office) => office.toJson()).toList();
-            filteredList = List.from(officeList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          officeList = pageList.items.map((a) => a.toJson()).toList();
+          filteredList = List.from(officeList);
+        });
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -347,6 +347,10 @@ class _OfficePageState extends State<OfficePage> {
                             filteredList
                                 .asMap()
                                 .map((index, office) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
                                   return MapEntry(
                                     index,
                                     Container(
@@ -372,7 +376,7 @@ class _OfficePageState extends State<OfficePage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                (index + 1).toString(),
+                                                itemNumber.toString(),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -441,6 +445,28 @@ class _OfficePageState extends State<OfficePage> {
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(10),
+              color: secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchOffices(page: page),
+                  ),
+                  Container(width: 60), // For alignment
                 ],
               ),
             ),
