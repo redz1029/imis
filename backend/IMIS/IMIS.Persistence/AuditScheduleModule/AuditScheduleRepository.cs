@@ -49,20 +49,20 @@ namespace IMIS.Persistence.AuditScheduleModule
             return await _dbContext.AuditSchedules
                 .Where(a => !a.IsDeleted)
                 .ToListAsync(cancellationToken);
-        }       
+        }
         public async Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _dbContext.AuditSchedules
-                .Where(a => a.IsActive && !a.IsDeleted)                
+                .Where(a => a.IsActive && !a.IsDeleted)
                 .Include(a => a.AuditableOffices)
                 .Include(a => a.AuditSchduleDetails)
                 .ToListAsync(cancellationToken);
-        }
+        }       
         public new async Task<AuditSchedule> SaveOrUpdateAsync(AuditSchedule auditSchedule, CancellationToken cancellationToken)
         {
             if (auditSchedule == null) throw new ArgumentNullException(nameof(auditSchedule));
 
-            var existingAudit = await _dbContext.AuditSchedules
+            var existingAudit = await _dbContext.AuditSchedules              
                 .FirstOrDefaultAsync(d => d.Id == auditSchedule.Id, cancellationToken);
 
             if (existingAudit != null)

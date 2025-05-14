@@ -78,8 +78,8 @@ namespace ImisTest
                 .RuleFor(a => a.AuditTitle, f => f.Lorem.Text())
                 .RuleFor(a => a.StartDate, startDate)
                 .RuleFor(a => a.EndDate, endDate)
-                .RuleFor(a => a.IsActive, true)
-                .RuleFor(a => a.Offices, auditableOffices);
+                .RuleFor(a => a.IsActive, true);
+                //.RuleFor(a => a.Offices, auditableOffices);
 
             var auditSchedule = auditScheduleFaker.Generate();
             string auditTitle = auditSchedule.AuditTitle;

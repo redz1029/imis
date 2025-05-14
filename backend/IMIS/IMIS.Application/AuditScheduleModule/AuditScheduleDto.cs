@@ -11,20 +11,19 @@ namespace IMIS.Application.AuditScheduleModule
         public required string AuditTitle { get; set; }
         public required DateTime StartDate { get; set; }
         public required DateTime EndDate { get; set; }
-        public required bool IsActive { get; set; }
-        public List<OfficeDto>? Offices { get; set; }   
+        public required bool IsActive { get; set; }      
         public List<AuditableOfficesDto>? AuditableOffices { get; set; }
         public List<AuditScheduleDetailDto>? AuditSchduleDetails { get; set; }
-
-        public AuditScheduleDto() { }
+        public AuditScheduleDto() { }   
         [SetsRequiredMembers]
         public AuditScheduleDto(AuditSchedule auditSchedule)
         {
-            this.Id = auditSchedule.Id;
-            this.AuditTitle = auditSchedule.AuditTitle;
-            this.StartDate = auditSchedule.StartDate;
-            this.EndDate = auditSchedule.EndDate;
-            this.IsActive = auditSchedule.IsActive;            
+            
+            Id = auditSchedule.Id;
+            AuditTitle = auditSchedule.AuditTitle;
+            StartDate = auditSchedule.StartDate;
+            EndDate = auditSchedule.EndDate;
+            IsActive = auditSchedule.IsActive;
         }
         public override AuditSchedule ToEntity()
         {
@@ -34,7 +33,7 @@ namespace IMIS.Application.AuditScheduleModule
                 AuditTitle = AuditTitle, 
                 StartDate = StartDate, 
                 EndDate = EndDate, 
-                IsActive = IsActive,      
+                IsActive = IsActive,                                   
                 AuditableOffices = AuditableOffices?.Select(d => d.ToEntity()).ToList(),
                 AuditSchduleDetails = AuditSchduleDetails?.Select(d => d.ToEntity()).ToList(),
             };

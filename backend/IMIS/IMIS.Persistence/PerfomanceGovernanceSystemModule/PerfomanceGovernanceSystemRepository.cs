@@ -175,36 +175,61 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     }
                 }
             }
-            ////    // --- Sync PgsSignatories ---           
+                 // --- Sync PgsSignatories ---                     
             if (perfomanceGovernanceSystem.PgsSignatories != null)
             {
                 foreach (var signatory in perfomanceGovernanceSystem.PgsSignatories)
                 {
+                    // Check if the signatory already exists in the system
                     var existingSignatory = existingPerfomanceGovernanceSystem.PgsSignatories!
                         .FirstOrDefault(s => s.Id == signatory.Id);
 
                     if (existingSignatory != null)
                     {
+                        // Update existing signatory
                         _dbContext.Entry(existingSignatory).CurrentValues.SetValues(signatory);
                     }
                     else
                     {
-                        // Ensure correct foreign key
+                        // Ensure the PgsId is correct
+                        if (existingPerfomanceGovernanceSystem.Id == 0)
+                        {
+                            throw new InvalidOperationException("Invalid PerformanceGovernanceSystem ID.");
+                        }
+                     
                         signatory.PgsId = existingPerfomanceGovernanceSystem.Id;
-
-                        // Avoid tracking issues
-                        _dbContext.Entry(signatory).State = EntityState.Added;
-
+                        
+                        if (_dbContext.Entry(signatory).State == EntityState.Detached)
+                        {                           
+                            _dbContext.Entry(signatory).State = EntityState.Added;
+                        }
+                        
                         existingPerfomanceGovernanceSystem.PgsSignatories!.Add(signatory);
                     }
                 }
             }
+
+            try
+            {
+                // Save changes to the database
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateException dbEx)
+            {
+                // Handle DB update exceptions
+                throw new InvalidOperationException("An error occurred while saving changes.", dbEx);
+            }
+            catch (Exception ex)
+            {
+                // Handle any other general exceptions
+                throw new InvalidOperationException("An unexpected error occurred.", ex);
+            }
+
         }
         else
         {
             // Insert new main entity
-            await _dbContext.PerformanceGovernanceSystem.AddAsync(perfomanceGovernanceSystem, cancellationToken)
-                .ConfigureAwait(false);
+            await _dbContext.PerformanceGovernanceSystem.AddAsync(perfomanceGovernanceSystem, cancellationToken).ConfigureAwait(false);
         }
         // Save changes to the database
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

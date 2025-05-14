@@ -2,6 +2,7 @@
 using Base.Primitives;
 using IMIS.Application.AuditableOfficesModule;
 using IMIS.Application.AuditScheduleModule;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
 
@@ -244,24 +245,21 @@ namespace IMIS.Persistence.AuditScheduleModule
                     EndDate = a.EndDate, 
                     IsActive = a.IsActive }
                 ).ToList();
-        }
+        }        
         public async Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
 
             return auditSchedules?.Select(a =>
-                new AuditScheduleDto
+            {
+                var dto = new AuditScheduleDto(a)
                 {
-                    Id = a.Id,
-                    AuditTitle = a.AuditTitle,
-                    StartDate = a.StartDate,
-                    EndDate = a.EndDate,
-                    IsActive = a.IsActive,
                     AuditableOffices = a.AuditableOffices?.Select(detail => new AuditableOfficesDto
                     {
-                       AuditScheduleId = detail.AuditScheduleId,
-                       OfficeId = detail.OfficeId,
+                        AuditScheduleId = detail.AuditScheduleId,
+                        OfficeId = detail.OfficeId
                     }).ToList(),
+
                     AuditSchduleDetails = a.AuditSchduleDetails?.Select(detail => new AuditScheduleDetailDto
                     {
                         Id = detail.Id,
@@ -271,8 +269,12 @@ namespace IMIS.Persistence.AuditScheduleModule
                         EndDateTime = detail.EndDateTime,
                         OfficeId = detail.OfficeId
                     }).ToList()
-                }).ToList();
+                };
+
+                return dto;
+            }).ToList();
         }
+
 
         public async Task<AuditScheduleDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
@@ -294,31 +296,7 @@ namespace IMIS.Persistence.AuditScheduleModule
             var aDto = dto as AuditScheduleDto;
             var auditSchedule = aDto?.ToEntity();
             if (auditSchedule != null)
-            {
-                if (aDto!.Offices != null)
-                {
-                    // Assign offices
-                    List<AuditableOffices> offices = [];
-                    foreach (var officeDto in aDto!.Offices)
-                    {
-                        var office = new Office()
-                        {
-                            Id = officeDto.Id,
-                            Name = officeDto.Name!,
-                            IsActive = officeDto.IsActive
-                        };
-
-                        object value = _auditScheduleRepository.GetDbContext().Attach(office);
-                        offices.Add(new AuditableOffices()
-                        {
-                            AuditSchedule = auditSchedule,
-                            AuditScheduleId = auditSchedule.Id,
-                            Office = office,
-                            OfficeId = office.Id
-                        });
-                    }
-                    auditSchedule.AuditableOffices = offices;
-                }
+            {                
                 if (auditSchedule.Id == 0)
                 {
                     _auditScheduleRepository.Add(auditSchedule);
@@ -362,7 +340,12 @@ namespace IMIS.Persistence.AuditScheduleModule
                 AuditTitle = savedEntity.AuditTitle,
                 StartDate = savedEntity.StartDate,
                 EndDate = savedEntity.EndDate,
-                IsActive = savedEntity.IsActive,
+                IsActive = savedEntity.IsActive,               
+                AuditableOffices = savedEntity.AuditableOffices?.Select(a => new AuditableOfficesDto
+                {
+                    AuditScheduleId = a.AuditScheduleId,
+                    OfficeId = a.OfficeId
+                }).ToList(),
 
                 AuditSchduleDetails = savedEntity.AuditSchduleDetails?.Select(AuditScheduleDto => new AuditScheduleDetailDto
                 {
