@@ -4,10 +4,10 @@ part 'pgs_signatory.g.dart';
 
 @JsonSerializable()
 class PgsSignatory {
-  final int id;
-  final int? pgsId;
-  final int? pgsSignatoryTemplateId;
-  final String? signatoryId;
+  int? id;
+  int? pgsId;
+  int? pgsSignatoryTemplateId;
+  String? signatoryId;
 
   @JsonKey()
   @DateTimeConverter()
