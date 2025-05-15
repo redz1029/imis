@@ -151,4 +151,9 @@ app.MapCustomIdentityApi<User>();
 app.MapCarter();
 
 app.UseOutputCache();
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<IRoleAndPermissionSeeder>();
+    await seeder.SeedAsync();
+}
 app.Run();
