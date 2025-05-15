@@ -17,7 +17,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         var pgs = await _dbContext.PerformanceGovernanceSystem.Where(p => !p.IsDeleted &&
         p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
           .Include(p => p.PgsPeriod)
-          .Include(p => p.Office)
+          .Include(p => p.Office)          
           .Include(p => p.PgsReadinessRating)
           .Include(p => p.PgsSignatories)
           .ToListAsync(cancellationToken).ConfigureAwait(false);
