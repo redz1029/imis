@@ -1,9 +1,6 @@
 ﻿using Base.Auths.Permissions;
-using Base.Auths.Roles;
 using Carter;
-using IMIS.Application.PositionQualificationStandardModule;
 using IMIS.Application.TeamModule;
-using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +12,8 @@ namespace IMIS.Presentation.TeamModule
 {
     public class TeamEndPoints : CarterModule
     {
-        private const string _teamTag = "Team";
-        public readonly AdministratorRole _adminRole = new();
-        public readonly PgsManagerRole _hrManagerRole = new();
-        public readonly PositionQualificationStandardPermission _qualificationStandardPermission = new();
+        private const string _teamTag = "Team";     
+        public readonly TeamPermission _teamPermission = new();
         public TeamEndPoints() : base("/team")
         {
 
@@ -31,11 +26,11 @@ namespace IMIS.Presentation.TeamModule
                 await cache.EvictByTagAsync(_teamTag, cancellationToken);
                 return Results.Created($"/team/{createdTeam.Id}", createdTeam);
             })
-            .WithTags(_teamTag)
-              .RequireAuthorization(e => e.RequireClaim(
-                PermissionClaimType.Claim,
-                _qualificationStandardPermission.Add,
-                _qualificationStandardPermission.Edit));
+            .WithTags(_teamTag)          
+            .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim,
+            _teamPermission.Add,
+            _teamPermission.Edit));
 
             app.MapGet("/", async (ITeamService service, CancellationToken cancellationToken) =>
             {
