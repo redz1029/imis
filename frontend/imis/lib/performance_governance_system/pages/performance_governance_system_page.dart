@@ -147,8 +147,6 @@ class _PerformanceGovernanceSystemPageState
         debugPrint("Error: Access token is missing!");
         return;
       }
-
-      // Construct deliverables list WITHOUT IDs for new records
       List<PgsDeliverables> deliverablesList = [];
 
       for (int index in rows) {
@@ -162,6 +160,7 @@ class _PerformanceGovernanceSystemPageState
           PgsDeliverables(
             null,
             kra,
+            kraId,
             name,
             selectedDirect[index] ?? true,
             DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now(),
@@ -211,71 +210,6 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
-  // Future<void> updatePGS({
-  //   String? pgsId,
-  //   required PerformanceGovernanceSystem audit,
-  // }) async {
-  //   // final correctPgsId = audit.id.toString(); // Always use audit.id
-  //   final url = '${ApiEndpoint().performancegovernancesystem}/$pgsId';
-
-  //   try {
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-  //     String? token = prefs.getString('accessToken');
-
-  //     if (token == null || token.isEmpty) {
-  //       debugPrint("Error: Access token is missing!");
-  //       return;
-  //     }
-
-  //     // Ensure we have a valid audit id
-  //     if (audit.id == 0) {
-  //       debugPrint("Error: Invalid audit ID");
-  //       return;
-  //     }
-
-  //     final pgs = audit.toJson();
-
-  //     final response = await dio.put(
-  //       url,
-  //       data: pgs,
-  //       options: Options(
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           "Authorization": "Bearer $token",
-  //         },
-  //       ),
-  //     );
-
-  //     if (response.statusCode == 200 || response.statusCode == 201) {
-  //       debugPrint("PPPPPPPPGS data saved successfully!");
-  //       debugPrint("PGS ID: ${response.data['id']}");
-  //        print(pgs);
-
-  //       // After successful save
-  //       setState(() {
-  //         fetchPgsList();
-  //         clearAllSelections();
-  //       });
-
-  //       // Clean up shared preferences
-  //       await prefs.remove('selectedOfficeId');
-  //       await prefs.remove('selectedOfficeName');
-  //     } else {
-  //       debugPrint("Failed to save PGS data: ${response.statusCode}");
-  //       debugPrint("Response: ${response.data}");
-
-  //       if (response.statusCode == 401 || response.statusCode == 403) {
-  //         debugPrint("Token expired or invalid. Please log in again.");
-  //         // Optionally, redirect to login
-  //       }
-  //     }
-  //   } on DioException catch (e) {
-  //     debugPrint("Dio error: ${e.response?.statusCode} - ${e.response?.data ?? e.message}");
-  //   } catch (e) {
-  //     debugPrint("Unexpected error: $e");
-  //   }
-  // }
-
   Future<void> updatePGS({
     String? pgsId,
     required PerformanceGovernanceSystem audit,
@@ -291,7 +225,6 @@ class _PerformanceGovernanceSystemPageState
         return;
       }
 
-      // Ensure valid audit ID
       if (audit.id == 0) {
         debugPrint(" Error: Invalid audit ID");
         return;
@@ -313,8 +246,8 @@ class _PerformanceGovernanceSystemPageState
       if (response.statusCode == 200 || response.statusCode == 201) {
         // Refresh UI
         setState(() {
-          fetchPgsList(); // Refresh the list
-          clearAllSelections(); // Reset form state
+          fetchPgsList();
+          clearAllSelections();
         });
 
         // Clean up
@@ -545,7 +478,7 @@ class _PerformanceGovernanceSystemPageState
     List<String> officeIds = prefs.getStringList('officeIds') ?? [];
 
     if (officeNames.isEmpty || officeIds.isEmpty) {
-      return null; // Return null if no offices
+      return null;
     }
 
     String? selectedOffice = await showDialog<String>(
@@ -777,6 +710,7 @@ class _PerformanceGovernanceSystemPageState
     fetchPgsList();
     fetchUser();
     fetchPGSPeriods();
+
     isSearchFocus.addListener(() {
       setState(() {});
     });
@@ -811,41 +745,25 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
-  List<PgsDeliverables> getTableDeliverables(int pgsid) {
+  List<PgsDeliverables> getTableDeliverables() {
     List<PgsDeliverables> updatedDeliverables = [];
-    List<PgsSignatory> updatedSignatory = [];
 
     deliverablesControllers.forEach((index, controller) {
-      debugPrint('Processing deliverable at index $index');
+      final kraId = selectedKRA[index];
 
-      // Get selected KRA ID or fallback to 1
-      int selectedKraId = selectedKRA[index] ?? 1;
-      debugPrint("selectedKRA[$index]: $selectedKraId");
-
-      // Match the KRA data from the options list
       final kraData = options.firstWhere(
-        (option) => int.tryParse(option['id'].toString()) == selectedKraId,
-        orElse: () {
-          debugPrint("KRA not found for ID $selectedKraId");
-          return {'id': 1, 'name': 'Unspecified KRA', 'description': ''};
-        },
-      );
-      debugPrint("Using KRA data for index $index: $kraData");
-
-      // Build the KeyResultArea object
-      KeyResultArea kra = KeyResultArea(
-        kraData['id'] ?? 1,
-        kraData['name']?.toString() ?? 'Unspecified KRA',
-        kraData['description']?.toString() ?? '',
-        false,
+        (option) => option['id'] == kraId,
+        orElse:
+            () => {
+              'id': 1,
+              'name': 'Unknown',
+              'remarks': '',
+              'isDeleted': false,
+              'rowVersion': null,
+            },
       );
 
-      // Get and validate the deliverable text
-      final name = controller.text.trim();
-      if (name.isEmpty) {
-        debugPrint("Skipping empty deliverable at index $index");
-        return;
-      }
+      selectedKRAObjects[index] = kraData;
 
       final deliverableText =
           controller.text.isNotEmpty ? controller.text : "No Name";
@@ -853,7 +771,6 @@ class _PerformanceGovernanceSystemPageState
       final byWhen =
           DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
 
-      // Parse percentage
       double percentDeliverables = 0.0;
       try {
         percentDeliverables = double.tryParse(percentage.text) ?? 0.0;
@@ -861,7 +778,6 @@ class _PerformanceGovernanceSystemPageState
         debugPrint("Error parsing percentDeliverables: $e");
       }
 
-      // Determine the status
       final statusIndex =
           selectedStatus[index]?.index ?? PgsStatus.notStarted.index;
       final status = PgsStatus.values.firstWhere(
@@ -871,19 +787,19 @@ class _PerformanceGovernanceSystemPageState
 
       final remarks = "";
       final existingId = deliverableIds[index] ?? 0;
-      final signatoryExistingId = signatoryIds[index] ?? 0;
 
-      if (existingId > 0) {
-        debugPrint(
-          "Updating existing deliverable at index $index with ID $existingId - '$deliverableText'",
-        );
-      }
-
-      // Create and add the deliverable
       updatedDeliverables.add(
         PgsDeliverables(
           existingId,
-          kra,
+          KeyResultArea(
+            kraData['id'] as int, // this is your kraId
+            kraData['name'] as String,
+            kraData['remarks'] ?? '',
+            true,
+
+            rowVersion: kraData['rowVersion'],
+          ),
+          kraId,
           deliverableText,
           isDirect,
           byWhen,
@@ -893,174 +809,19 @@ class _PerformanceGovernanceSystemPageState
           rowVersion: '',
         ),
       );
-
-      updatedSignatory.addAll([
-        PgsSignatory(
-          DateTime.now(),
-          false,
-          "",
-          id: signatoryExistingId,
-          pgsId: pgsid,
-          pgsSignatoryTemplateId: 1,
-          signatoryId: _submittedByUserId!,
-        ),
-        PgsSignatory(
-          DateTime.now(),
-          false,
-          "",
-          id: signatoryExistingId,
-          pgsId: pgsid,
-          pgsSignatoryTemplateId: 3,
-          signatoryId: _approvedByUserId!,
-        ),
-        PgsSignatory(
-          DateTime.now(),
-          false,
-          "",
-          id: signatoryExistingId,
-          pgsId: pgsid,
-          pgsSignatoryTemplateId: 2,
-          signatoryId: _notedByUserId!,
-        ),
-      ]);
     });
 
     return updatedDeliverables;
   }
 
-  // List<PgsDeliverables> getTableDeliverables() {
-  //   List<PgsDeliverables> updatedDeliverables = [];
-
-  //   deliverablesControllers.forEach((index, controller) {
-  //     var kraData =
-  //         selectedKRAObjects[index] ??
-  //         {'id': 1, 'name': 'Unknown', 'description': ''};
-
-  //     var deliverableText =
-  //         controller.text.isNotEmpty ? controller.text : "No Name";
-  //     var isDirect = selectedDirect[index] ?? false;
-  //     var byWhen =
-  //         DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
-
-  //     double percentDeliverables = 0.0;
-  //     try {
-  //       percentDeliverables = double.tryParse(percentage.text) ?? 0.0;
-  //     } catch (e) {
-  //       debugPrint("Error parsing percentDeliverables: $e");
-  //     }
-
-  //     var statusIndex =
-  //         selectedStatus[index]?.index ?? PgsStatus.notStarted.index;
-  //     var status = PgsStatus.values.firstWhere(
-  //       (e) => e.index == statusIndex,
-  //       orElse: () => PgsStatus.notStarted,
-  //     );
-
-  //     var remarks = "";
-
-  //     // Check if there's an existing deliverable (for update)
-  //     int existingId = deliverableIds[index] ?? 0;
-
-  //     if (existingId > 0) {
-  //       debugPrint(
-  //         "Updating existing deliverable at index $index with ID $existingId - '$deliverableText'",
-  //       );
-  //     }
-
-  //     updatedDeliverables.add(
-  //       PgsDeliverables(
-  //         existingId, // ID (0 for new, >0 for update)
-  //         KeyResultArea(
-  //           kraData['id'],
-  //           kraData['name'],
-  //           remarks,
-  //           true,
-  //           rowVersion: "",
-  //         ),
-  //         deliverableText,
-  //         isDirect,
-  //         byWhen,
-  //         percentDeliverables,
-  //         status,
-  //         remarks: remarks,
-  //         rowVersion: '',
-  //       ),
-  //     );
-  //   });
-
-  //   return updatedDeliverables;
-  // }
-
-  // List<PgsDeliverables> getTableDeliverables() {
-  //   List<PgsDeliverables> updatedDeliverables = [];
-
-  //   deliverablesControllers.forEach((index, controller) {
-  //     var kraData =
-  //         selectedKRAObjects[index] ??
-  //         {'id': 1, 'name': 'Unknown', 'description': ''};
-  //     // var kraData =
-  //     //     selectedKRAObjects[index] ??
-  //     //     {'id': 1, 'name': 'Unknown', 'description': ''};
-
-  //     var deliverableText =
-  //         controller.text.isNotEmpty ? controller.text : "No Name";
-  //     var isDirect = selectedDirect[index] ?? false;
-  //     var byWhen =
-  //         DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
-
-  //     double percentDeliverables = 0.0;
-  //     try {
-  //       percentDeliverables = double.tryParse(percentage.text) ?? 0.0;
-  //     } catch (e) {
-  //       debugPrint("Error parsing percentDeliverables: $e");
-  //     }
-
-  //     var statusIndex =
-  //         selectedStatus[index]?.index ?? PgsStatus.notStarted.index;
-  //     var status = PgsStatus.values.firstWhere(
-  //       (e) => e.index == statusIndex,
-  //       orElse: () => PgsStatus.notStarted,
-  //     );
-
-  //     var remarks = "";
-
-  //     int existingId = deliverableIds[index] ?? 0;
-
-  //     if (existingId > 0) {
-  //       int kraId = kraData['id'] ?? 0;
-  //       debugPrint(
-  //         "Updating existing deliverable at index $index with ID $existingId, KRA ID $kraId - '$deliverableText'",
-  //       );
-  //     }
-
-  //     updatedDeliverables.add(
-  //       PgsDeliverables(
-  //         existingId,
-  //         KeyResultArea(
-  //           kraData['id'],
-  //           kraData['name'],
-  //           remarks,
-  //           true,
-  //           rowVersion: "",
-  //         ),
-  //         deliverableText,
-  //         isDirect,
-  //         byWhen,
-  //         percentDeliverables,
-  //         status,
-  //         remarks: remarks,
-  //         rowVersion: '',
-  //       ),
-  //     );
-  //   });
-
-  //   return updatedDeliverables;
-  // }
-
   PerformanceGovernanceSystem getPgsAuditDetails({
     required int id,
     required String pgsStatus,
-    List<PgsSignatory> existingSignatories = const [],
+    required int pgsId,
+    required int submittedId,
+    required int approvedId,
+    required int notedId,
+    // List<PgsSignatory> existingSignatories = const [],
   }) {
     double percentDeliverables = 0.0;
 
@@ -1086,7 +847,7 @@ class _PerformanceGovernanceSystemPageState
         isActive: false,
         rowVersion: "",
       ),
-      pgsDeliverables: getTableDeliverables(id),
+      pgsDeliverables: getTableDeliverables(),
       pgsReadinessRating: PgsReadiness(
         0,
         false,
@@ -1096,7 +857,7 @@ class _PerformanceGovernanceSystemPageState
         confidenceScore.value,
         totalScore,
       ),
-      pgsSignatories: _getPgsSignatory(id),
+      pgsSignatories: _getPgsSignatory(pgsId),
 
       isDeleted: false,
       remarks: "",
@@ -1105,36 +866,132 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  List<PgsSignatory> _getPgsSignatory(int? pgsid) {
-    return [
+  // List<PgsSignatory> _getPgsSignatory(
+  //   int pgsId,
+  //   // required int submittedId,
+  //   // required int approvedId,
+  //   // required int notedId,
+  // ) {
+  //   return [
+  //     PgsSignatory(
+  //       DateTime.now(),
+  //       false,
+  //       "",
+  //       id: 0,
+  //       pgsId: pgsId,
+  //       pgsSignatoryTemplateId: 1,
+  //       signatoryId: _submittedByUserId!,
+  //     ),
+  //     PgsSignatory(
+  //       DateTime.now(),
+  //       false,
+  //       "",
+  //       id: 0,
+  //       pgsId: pgsId,
+  //       pgsSignatoryTemplateId: 3,
+  //       signatoryId: _approvedByUserId!,
+  //     ),
+  //     PgsSignatory(
+  //       DateTime.now(),
+  //       false,
+  //       "",
+  //       id: 0,
+  //       pgsId: pgsId,
+  //       pgsSignatoryTemplateId: 2,
+  //       signatoryId: _notedByUserId!,
+  //     ),
+  //   ];
+  // }
+
+  // List<PgsSignatory> _getPgsSignatory(
+  //   int pgsId,
+  //   int submittedId,
+  //   int approvedId,
+  //   int notedId,
+  // ) {
+  //   return [
+  //     PgsSignatory(
+  //       DateTime.now(),
+  //       false,
+  //       "",
+  //       id: 0,
+  //       pgsId: pgsId,
+  //       pgsSignatoryTemplateId: 1,
+  //       signatoryId: _submittedByUserId!,
+  //     ),
+  //     PgsSignatory(
+  //       DateTime.now(),
+  //       false,
+  //       "",
+  //       id: 0,
+  //       pgsId: pgsId,
+  //       pgsSignatoryTemplateId: 3,
+  //       signatoryId: _approvedByUserId!,
+  //     ),
+  //     PgsSignatory(
+  //       DateTime.now(),
+  //       false,
+  //       "",
+  //       id: 0,
+  //       pgsId: pgsId,
+  //       pgsSignatoryTemplateId: 2,
+  //       signatoryId: _notedByUserId!,
+  //     ),
+  //   ];
+  // }
+
+  List<PgsSignatory> _getPgsSignatory(int pgsId) {
+    List<PgsSignatory> updatedSignatories = [];
+
+    // Make sure signatoryIds has valid existing IDs or else assign 0
+    final submittedId = signatoryIds.isNotEmpty ? signatoryIds[0] : 0;
+    final approvedId = signatoryIds.length > 1 ? signatoryIds[1] : 0;
+    final notedId = signatoryIds.length > 2 ? signatoryIds[2] : 0;
+
+    updatedSignatories.add(
       PgsSignatory(
         DateTime.now(),
         false,
         "",
-        id: 0,
-        pgsId: pgsid,
+        id: submittedId,
+        pgsId: pgsId,
         pgsSignatoryTemplateId: 1,
         signatoryId: _submittedByUserId!,
       ),
+    );
+
+    updatedSignatories.add(
       PgsSignatory(
         DateTime.now(),
         false,
         "",
-        id: 0,
-        pgsId: pgsid,
+        id: approvedId,
+        pgsId: pgsId,
         pgsSignatoryTemplateId: 3,
         signatoryId: _approvedByUserId!,
       ),
+    );
+
+    updatedSignatories.add(
       PgsSignatory(
         DateTime.now(),
         false,
         "",
-        id: 0,
-        pgsId: pgsid,
+        id: notedId,
+        pgsId: pgsId,
         pgsSignatoryTemplateId: 2,
         signatoryId: _notedByUserId!,
       ),
-    ];
+    );
+
+    // Debug output
+    for (var sign in updatedSignatories) {
+      debugPrint(
+        'Signatory: id=${sign.id}, templateId=${sign.pgsSignatoryTemplateId}, signatoryId=${sign.signatoryId}',
+      );
+    }
+
+    return updatedSignatories;
   }
 
   //Add rows-------------
@@ -1682,8 +1539,8 @@ class _PerformanceGovernanceSystemPageState
 
       final signatory = displaySignatoryList.firstWhere(
         (item) =>
-            item.pgsId == pgsIdSignatory && // Matches by pgsId
-            item.pgsSignatoryTemplateId == level, // Matches by level
+            item.pgsId == pgsIdSignatory &&
+            item.pgsSignatoryTemplateId == level,
         orElse:
             () => PgsSignatory(
               DateTime.now(),
@@ -1696,10 +1553,8 @@ class _PerformanceGovernanceSystemPageState
             ),
       );
 
-      // Log the signatory found
       debugPrint("Found signatory: ${signatory.signatoryId}");
 
-      // If the signatoryId is null or empty, return null
       if (signatory.signatoryId == null || signatory.signatoryId!.isEmpty) {
         debugPrint("No valid signatoryId found.");
         return null;
@@ -1713,11 +1568,9 @@ class _PerformanceGovernanceSystemPageState
   }
 
   void setSignatoryLevels(int? dynamicSelectedId) {
-    // Ensure selectedId is not null
     final currentPgsId = dynamicSelectedId ?? 0;
 
     if (currentPgsId != 0) {
-      // Fetch signatories and log the results
       _submittedByUserId = getSignatoryByOrderLevelEdit(
         pgsIdSignatory: currentPgsId,
         level: 1,
@@ -1757,7 +1610,6 @@ class _PerformanceGovernanceSystemPageState
     String? pgsId,
   }) {
     setState(() {
-      // Reset fields when creating a new entry
       if (id == null) {
         competenceScore.value = 0.0;
         resourceScore.value = 0.0;
@@ -1773,7 +1625,6 @@ class _PerformanceGovernanceSystemPageState
         selectedStatus.clear();
         deliverableIds.clear();
       } else {
-        // EDIT MODE - Populate the form with existing data
         competenceScore.value = double.tryParse(competencescore ?? '') ?? 0.0;
         resourceScore.value = double.tryParse(resourcescore ?? '') ?? 0.0;
         confidenceScore.value = double.tryParse(confidencescore ?? '') ?? 0.0;
@@ -1782,7 +1633,6 @@ class _PerformanceGovernanceSystemPageState
           percentage.text = percentDeliverables;
         }
 
-        // Assign the correct period from startDate and endDate
         if (startDate != null && endDate != null) {
           final selected = filteredListPeriod.firstWhere(
             (period) =>
@@ -1801,7 +1651,6 @@ class _PerformanceGovernanceSystemPageState
           }
         }
 
-        // Clear and set new data for the deliverables
         deliverablesControllers.clear();
         selectedKRA.clear();
         selectedDirect.clear();
@@ -2038,6 +1887,7 @@ class _PerformanceGovernanceSystemPageState
                                           officeDisplay = ""; // Clear Office UI
                                         });
 
+                                        // ignore: use_build_context_synchronously
                                         Navigator.pop(context); // Close dialog
 
                                         // Select a new office and refresh UI
@@ -2488,9 +2338,17 @@ class _PerformanceGovernanceSystemPageState
 
                       if (confirm == true) {
                         int? pgsId = int.tryParse(id ?? '');
+                        int? submittedId = int.tryParse(id ?? '');
+                        int? notedbyId = int.tryParse(id ?? '');
+                        int? approvedId = int.tryParse(id ?? '');
+                        int? pgsIds = int.tryParse(id ?? '');
                         PerformanceGovernanceSystem audit = getPgsAuditDetails(
                           id: pgsId ?? 0,
                           pgsStatus: "Submitted",
+                          submittedId: submittedId ?? 0,
+                          notedId: notedbyId ?? 0,
+                          approvedId: approvedId ?? 0,
+                          pgsId: pgsIds ?? 0,
                         );
                         await savePGS(audit);
 
@@ -2563,11 +2421,18 @@ class _PerformanceGovernanceSystemPageState
 
                       if (confirm == true) {
                         int? pgsId = int.tryParse(id ?? '');
-
+                        int? submittedId = int.tryParse(id ?? '');
+                        int? notedbyId = int.tryParse(id ?? '');
+                        int? approvedId = int.tryParse(id ?? '');
+                        int? pgsIds = int.tryParse(id ?? '');
                         // Generate the full PGS audit object
                         PerformanceGovernanceSystem audit = getPgsAuditDetails(
                           id: pgsId ?? 0,
                           pgsStatus: "Draft",
+                          submittedId: submittedId ?? 0,
+                          notedId: notedbyId ?? 0,
+                          approvedId: approvedId ?? 0,
+                          pgsId: pgsIds ?? 0,
                         );
 
                         try {
@@ -2583,11 +2448,13 @@ class _PerformanceGovernanceSystemPageState
                           }
 
                           Navigator.pop(
+                            // ignore: use_build_context_synchronously
                             context,
-                          ); // Close dialog or form after save/update
+                          );
                         } catch (e) {
                           debugPrint("Error saving/updating PGS: $e");
-                          // Optionally show error feedback to the user
+
+                          // ignore: use_build_context_synchronously
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Failed to save PGS: $e')),
                           );
@@ -2633,7 +2500,7 @@ class _PerformanceGovernanceSystemPageState
     if (selectedByWhen[index] == null ||
         selectedByWhenControllers[index]?.text.isEmpty == true) {
       DateTime now = DateTime.now();
-      String defaultDate = DateFormat('yyyy-MM-dd').format(now); // ISO format
+      String defaultDate = DateFormat('yyyy-MM-dd').format(now);
       selectedByWhen[index] = defaultDate;
       selectedByWhenControllers[index]?.text = DateFormat(
         'MMMM yyyy',
@@ -2643,8 +2510,7 @@ class _PerformanceGovernanceSystemPageState
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextFormField(
-        controller:
-            selectedByWhenControllers[index], // Use persistent controller
+        controller: selectedByWhenControllers[index],
         readOnly: true,
         decoration: const InputDecoration(
           border: OutlineInputBorder(),
@@ -2676,14 +2542,12 @@ class _PerformanceGovernanceSystemPageState
             },
           );
           if (pickedDate != null) {
-            String formattedDate = DateFormat(
-              'yyyy-MM-dd',
-            ).format(pickedDate); // ISO format for saving
+            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
             setDialogState(() {
               selectedByWhen[index] = formattedDate;
               selectedByWhenControllers[index]?.text = DateFormat(
                 'MMMM yyyy',
-              ).format(pickedDate); // User-friendly format
+              ).format(pickedDate);
             });
           }
         },
@@ -2691,161 +2555,11 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  // Kra Dropdown
-  // Kra Dropdown
-  // Widget _buildDropdownKraCell(int index) {
-  //   if (selectedKRA[index] == null && options.isNotEmpty) {
-  //     selectedKRA[index] = options.first['id'];
-  //     selectedKRAObjects[index] = options.first;
-  //   }
-
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child: DropdownButtonFormField<int>(
-  //       isExpanded: true,
-  //       value: selectedKRA[index],
-  //       // onChanged: (int? newValue) {
-  //       //   if (newValue == null) return; // Guard against null values
-
-  //       //   setState(() {
-  //       //     selectedKRA[index] = newValue;
-  //       //     selectedKRAObjects[index] = options.firstWhere(
-  //       //       (option) => option['id'] == newValue,
-  //       //       orElse: () => {'id': 0, 'name': 'Unknown'},
-  //       //     );
-  //       //   });
-  //       // },
-  //       onChanged: (int? newValue) {
-  //         if (newValue == null) return; // Guard against null values
-
-  //         setState(() {
-  //           selectedKRA[index] = newValue;
-  //           selectedKRAObjects[index] = options.firstWhere(
-  //             (option) => option['id'] == newValue,
-  //             orElse: () => {'id': 0, 'name': 'Unknown', 'description': ''},
-  //           );
-  //           debugPrint(
-  //             '🔄 Updated selectedKRAObjects[$index] to ${selectedKRAObjects[index]}',
-  //           );
-  //         });
-  //       },
-
-  //       decoration: const InputDecoration(
-  //         border: OutlineInputBorder(),
-  //         contentPadding: EdgeInsets.symmetric(
-  //           horizontal: 12.0,
-  //           vertical: 20.0,
-  //         ),
-  //       ),
-  //       items:
-  //           options.map<DropdownMenuItem<int>>((option) {
-  //             return DropdownMenuItem<int>(
-  //               value: option['id'],
-  //               child: Text(
-  //                 option['name'],
-  //                 softWrap: true,
-  //                 overflow:
-  //                     TextOverflow.visible, // Ensure long items are visible
-  //               ),
-  //             );
-  //           }).toList(),
-  //       selectedItemBuilder: (BuildContext context) {
-  //         return options.map<Widget>((option) {
-  //           return Container(
-  //             alignment: Alignment.centerLeft,
-  //             child: Text(
-  //               option['name'],
-  //               softWrap: true,
-  //               overflow: TextOverflow.visible, // Don't truncate selected item
-  //               style: const TextStyle(fontSize: 14),
-  //             ),
-  //           );
-  //         }).toList();
-  //       },
-  //       dropdownColor:
-  //           Colors.white, // Optional: to set the dropdown's background color
-  //       iconSize: 30.0, // Optional: to adjust the icon size
-  //       itemHeight:
-  //           50.0, // Controls the height of each dropdown item (in case you want taller items)
-  //     ),
-  //   );
-  // }
-  // Widget _buildDropdownKraCell(int index) {
-  //   // Ensure selectedKRA and selectedKRAObjects are initialized for the index
-  //   if (selectedKRA[index] == null && options.isNotEmpty) {
-  //     selectedKRA[index] = options.first['id'] as int;
-  //     selectedKRAObjects[index] = options.first;
-  //   }
-
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child: DropdownButtonFormField<int>(
-  //       isExpanded: true,
-  //       value: selectedKRA[index],
-  //       onChanged: (int? newValue) {
-  //         if (newValue == null) return;
-  //         setState(() {
-  //           selectedKRA[index] = newValue;
-  //           selectedKRAObjects[index] = options.firstWhere(
-  //             (option) => option['id'] == newValue,
-  //             orElse: () => {'id': 0, 'name': 'Unknown', 'description': ''},
-  //           );
-  //           debugPrint('🔄 selectedKRA[$index] updated to $newValue');
-  //           debugPrint(
-  //             '🔄 selectedKRAObjects[$index] updated to ${selectedKRAObjects[index]}',
-  //           );
-  //         });
-  //       },
-  //       decoration: const InputDecoration(
-  //         border: OutlineInputBorder(),
-  //         contentPadding: EdgeInsets.symmetric(
-  //           horizontal: 12.0,
-  //           vertical: 20.0,
-  //         ),
-  //       ),
-  //       items:
-  //           options.map<DropdownMenuItem<int>>((option) {
-  //             return DropdownMenuItem<int>(
-  //               value: option['id'] as int,
-  //               child: Text(
-  //                 option['name'].toString(),
-  //                 softWrap: true,
-  //                 overflow: TextOverflow.visible,
-  //               ),
-  //             );
-  //           }).toList(),
-  //       selectedItemBuilder: (BuildContext context) {
-  //         return options.map<Widget>((option) {
-  //           return Container(
-  //             alignment: Alignment.centerLeft,
-  //             child: Text(
-  //               option['name'].toString(),
-  //               softWrap: true,
-  //               overflow: TextOverflow.visible,
-  //               style: const TextStyle(fontSize: 14),
-  //             ),
-  //           );
-  //         }).toList();
-  //       },
-  //       dropdownColor: Colors.white,
-  //       iconSize: 30.0,
-  //       itemHeight: 50.0,
-  //     ),
-  //   );
-  // }
+  //kra dropdown
   Widget _buildDropdownKraCell(int index) {
-    // Fallback KRA option if none selected
-    Map<String, dynamic> defaultOption = {
-      'id': 0,
-      'name': 'Select a KRA',
-      'description': '',
-    };
-
-    // Initialize selectedKRA and selectedKRAObjects if null
-    if (selectedKRA[index] == null) {
-      final initialOption = options.isNotEmpty ? options.first : defaultOption;
-      selectedKRA[index] = initialOption['id'] as int;
-      selectedKRAObjects[index] = initialOption;
+    if (selectedKRA[index] == null && options.isNotEmpty) {
+      selectedKRA[index] = options.first['id'];
+      selectedKRAObjects[index] = options.first;
     }
 
     return Padding(
@@ -2854,17 +2568,11 @@ class _PerformanceGovernanceSystemPageState
         isExpanded: true,
         value: selectedKRA[index],
         onChanged: (int? newValue) {
-          if (newValue == null) return;
-
           setState(() {
-            selectedKRA[index] = newValue;
+            selectedKRA[index] = newValue!;
             selectedKRAObjects[index] = options.firstWhere(
               (option) => option['id'] == newValue,
-              orElse: () => defaultOption,
-            );
-            debugPrint('🔄 selectedKRA[$index] updated to $newValue');
-            debugPrint(
-              '🔄 selectedKRAObjects[$index] updated to ${selectedKRAObjects[index]}',
+              orElse: () => {'id': 0, 'name': 'Unknown'},
             );
           });
         },
@@ -2872,34 +2580,39 @@ class _PerformanceGovernanceSystemPageState
           border: OutlineInputBorder(),
           contentPadding: EdgeInsets.symmetric(
             horizontal: 12.0,
-            vertical: 16.0,
+            vertical: 20.0,
           ),
         ),
         items:
             options.map<DropdownMenuItem<int>>((option) {
               return DropdownMenuItem<int>(
-                value: option['id'] as int,
+                value: option['id'],
                 child: Text(
-                  option['name'].toString(),
-                  overflow: TextOverflow.ellipsis,
+                  option['name'],
+                  softWrap: true,
+                  overflow:
+                      TextOverflow.visible, // Ensure long items are visible
                 ),
               );
             }).toList(),
         selectedItemBuilder: (BuildContext context) {
           return options.map<Widget>((option) {
-            return Align(
+            return Container(
               alignment: Alignment.centerLeft,
               child: Text(
-                option['name'].toString(),
-                overflow: TextOverflow.ellipsis,
+                option['name'],
+                softWrap: true,
+                overflow: TextOverflow.visible, // Don't truncate selected item
                 style: const TextStyle(fontSize: 14),
               ),
             );
           }).toList();
         },
-        dropdownColor: Colors.white,
-        iconSize: 30.0,
-        itemHeight: 48.0,
+        dropdownColor:
+            Colors.white, // Optional: to set the dropdown's background color
+        iconSize: 30.0, // Optional: to adjust the icon size
+        itemHeight:
+            50.0, // Controls the height of each dropdown item (in case you want taller items)
       ),
     );
   }
