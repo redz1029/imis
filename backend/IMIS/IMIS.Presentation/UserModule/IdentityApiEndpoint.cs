@@ -168,10 +168,13 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok("User updated successfully.");
         }
-        private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp) where TUser : User
+        
+        private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp)
+        where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var userManager = signInManager.UserManager;
+            var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
             var dbContext = sp.GetRequiredService<ImisDbContext>();
 
             var user = await userManager.FindByNameAsync(login.Username);
@@ -181,30 +184,31 @@ namespace IMIS.Presentation.UserModule
             }
 
             var roles = await userManager.GetRolesAsync(user);
-           
-             var offices = dbContext.UserOffices
-             .Where(uo => uo.UserId == user.Id)
-             .Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id, (uo, o) => new { o.Id, o.Name }
-             )
-             .Distinct()
-             .ToList();
 
-            // Generate tokens
-            var accessToken = TokenUtils.GenerateAccessToken(user, roles);
+            var offices = dbContext.UserOffices
+                .Where(uo => uo.UserId == user.Id)
+                .Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id, (uo, o) => new { o.Id, o.Name })
+                .Distinct()
+                .ToList();
+
+            // Generate tokens (access token includes all role and user claims)
+            var accessToken = await TokenUtils.GenerateAccessTokenAsync(user, roles, userManager, roleManager);
             var refreshToken = TokenUtils.GenerateRefreshToken();
+
             return Results.Ok(new
             {
                 user.Id,
                 user.FirstName,
                 user.MiddleName,
                 user.LastName,
-                user.Position,              
+                user.Position,
                 roles,
                 offices,
                 accessToken,
                 refreshToken,
             });
         }
+
         private static async Task<IResult> ChangePassword<TUser>([FromBody] ChangePasswordRequest request,[FromServices] UserManager<TUser> userManager,
         HttpContext httpContext) where TUser : User
         {          
@@ -221,24 +225,40 @@ namespace IMIS.Presentation.UserModule
             }         
             return Results.Ok("Password changed successfully.");
         }
-        // Refresh Token method
-        private static async Task<IResult> RefreshToken<TUser>([FromBody] UserRefreshDto refresh,IServiceProvider sp)where TUser : User
+        // Refresh Token method       
+        private static async Task<IResult> RefreshToken<TUser>(
+        [FromBody] UserRefreshDto refresh,
+        IServiceProvider sp)
+        where TUser : User
         {
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var userManager = signInManager.UserManager;
+            var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
 
             var user = await userManager.FindByIdAsync(refresh.Id);
             if (user == null)
-            {              
+            {
                 return Results.NotFound("Token not found.");
             }
+
             var roles = await userManager.GetRolesAsync(user);
-            var accessToken = TokenUtils.GenerateAccessToken(user, roles);
+
+            // Generate new access token with claims
+            var accessToken = await TokenUtils.GenerateAccessTokenAsync(user, roles, userManager, roleManager);
             var newRefreshToken = TokenUtils.GenerateRefreshToken();
+
+            // Optionally store tokens (depends on your implementation)
             await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "access_token", accessToken);
-            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "refresh_token", newRefreshToken);            
-            return Results.Ok(new { user.Id, accessToken, refreshToken = newRefreshToken });
+            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "refresh_token", newRefreshToken);
+
+            return Results.Ok(new
+            {
+                user.Id,
+                accessToken,
+                refreshToken = newRefreshToken
+            });
         }
+
         // Revoke Refresh Token method
         private static async Task<IResult> RevokeRefreshToken<TUser>([FromBody] UserRefreshDto refresh,IServiceProvider sp)where TUser : User
         {

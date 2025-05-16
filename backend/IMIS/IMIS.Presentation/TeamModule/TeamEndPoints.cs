@@ -1,4 +1,5 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.TeamModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -11,7 +12,8 @@ namespace IMIS.Presentation.TeamModule
 {
     public class TeamEndPoints : CarterModule
     {
-        private const string _teamTag = "Team";
+        private const string _teamTag = "Team";         
+        public readonly TeamPermission _teamPermission = new();
         public TeamEndPoints() : base("/team")
         {
 
@@ -24,15 +26,18 @@ namespace IMIS.Presentation.TeamModule
                 await cache.EvictByTagAsync(_teamTag, cancellationToken);
                 return Results.Created($"/team/{createdTeam.Id}", createdTeam);
             })
-            .WithTags(_teamTag);
+            .WithTags(_teamTag)          
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim,_teamPermission.Add, _teamPermission.Edit));
 
             app.MapGet("/", async (ITeamService service, CancellationToken cancellationToken) =>
             {
                 var team = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(team);
             })
-           .WithTags(_teamTag)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true);
+           .WithTags(_teamTag)           
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
 
             app.MapGet("/filter/{name}", async (string name, ITeamService service, CancellationToken cancellationToken) =>
             {

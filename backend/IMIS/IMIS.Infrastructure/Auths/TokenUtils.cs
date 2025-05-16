@@ -14,7 +14,13 @@ namespace IMIS.Infrastructure.Auths
         public static string? Issuer { get; set; }
         public static string? Audience { get; set; }
 
-        public static string GenerateAccessToken(IdentityUser user, IList<string> roles)
+        public static async Task<string> GenerateAccessTokenAsync<TUser, TRole>(
+            TUser user,
+            IList<string> roles,
+            UserManager<TUser> userManager,
+            RoleManager<TRole> roleManager)
+            where TUser : IdentityUser
+            where TRole : IdentityRole
         {
             var claims = new List<Claim>
             {
@@ -22,13 +28,25 @@ namespace IMIS.Infrastructure.Auths
                 new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
 
-            foreach (var role in roles)
+            // Add role names and role claims
+            foreach (var roleName in roles)
             {
-                claims.Add(new(ClaimTypes.Role, role));
+                claims.Add(new Claim(ClaimTypes.Role, roleName));
+
+                var role = await roleManager.FindByNameAsync(roleName);
+                if (role != null)
+                {
+                    var roleClaims = await roleManager.GetClaimsAsync(role);
+                    claims.AddRange(roleClaims);
+                }
             }
 
+            // Add user-specific claims
+            var userClaims = await userManager.GetClaimsAsync(user);
+            claims.AddRange(userClaims);
+
             var expiration = DateTime.Now.AddMinutes(Convert.ToInt32(ExpInMinutes));
-            return GenerateToken(expiration, [.. claims]);
+            return GenerateToken(expiration, claims.ToArray());
         }
 
         private static string GenerateToken(DateTime expiration, params Claim[] claims)
@@ -45,6 +63,7 @@ namespace IMIS.Infrastructure.Auths
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
         public static string GenerateRefreshToken()
         {
             var expiration = DateTime.Now.AddDays(Convert.ToInt32(ExpInDays));

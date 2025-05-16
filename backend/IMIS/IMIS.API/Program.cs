@@ -1,4 +1,5 @@
-﻿using Carter;
+﻿using Base.Auths;
+using Carter;
 using DotNetEnv;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
@@ -11,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
+using Base.Auths.Permissions;
+
 
 var builder = WebApplication.CreateBuilder(args);
 Env.Load();
@@ -72,6 +75,13 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(RoleTypes.PgsManager, policy => policy.RequireRole(RoleTypes.PgsManager))
     .AddPolicy(RoleTypes.PgsUser, policy => policy.RequireRole(RoleTypes.PgsUser));
 
+
+builder.Services.AddScoped<IRoleAndPermissionSeeder, RoleAndPermissionSeeder>();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPermissionPolicies();
+});
+
 // Register Output Caching
 builder.Services.AddOutputCache(options =>
 {
@@ -89,6 +99,7 @@ builder.Services.AddIdentityCore<User>()
 builder.Services.AddDbContext<ImisDbContext>(options => options.UseSqlServer(sqlServerConnectionString));
 
 builder.Services.AddPersistence();
+
 
 
 builder.Services.AddEndpointsApiExplorer();
@@ -140,4 +151,9 @@ app.MapCustomIdentityApi<User>();
 app.MapCarter();
 
 app.UseOutputCache();
+using (var scope = app.Services.CreateScope())
+{
+    var seeder = scope.ServiceProvider.GetRequiredService<IRoleAndPermissionSeeder>();
+    await seeder.SeedAsync();
+}
 app.Run();

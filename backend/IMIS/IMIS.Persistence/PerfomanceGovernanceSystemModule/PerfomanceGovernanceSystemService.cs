@@ -69,7 +69,7 @@ namespace IMIS.Persistence.PgsModule
                     PercentDeliverables = deliverable.PercentDeliverables,
                     Status = deliverable.Status,
                     RowVersion = deliverable.RowVersion,
-                    KraId = deliverable.KraId,
+                    //KraId = deliverable.KraId,
                     Kra = deliverable.Kra != null ? new KeyResultAreaDto
                     {
                         Id = deliverable.Kra.Id,
@@ -170,7 +170,7 @@ namespace IMIS.Persistence.PgsModule
                     PercentDeliverables = deliverable.PercentDeliverables,
                     Status = deliverable.Status,
                     RowVersion = deliverable.RowVersion,
-                    KraId = deliverable.KraId,
+                    //KraId = deliverable.KraId,
                     Kra = deliverable.Kra != null ? new KeyResultAreaDto
                     {
                         Id = deliverable.Kra.Id,
