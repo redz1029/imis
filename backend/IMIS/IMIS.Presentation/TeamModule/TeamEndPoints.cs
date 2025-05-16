@@ -12,7 +12,7 @@ namespace IMIS.Presentation.TeamModule
 {
     public class TeamEndPoints : CarterModule
     {
-        private const string _teamTag = "Team";     
+        private const string _teamTag = "Team";         
         public readonly TeamPermission _teamPermission = new();
         public TeamEndPoints() : base("/team")
         {
