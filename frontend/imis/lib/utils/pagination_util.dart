@@ -12,6 +12,7 @@ class PaginationUtil {
     int pageSize = 15,
     String? searchQuery,
     Map<String, dynamic>? additionalParams,
+    Map<String, dynamic>? headers,
     required T Function(Map<String, dynamic>) fromJson,
   }) async {
     try {
@@ -22,6 +23,7 @@ class PaginationUtil {
             'search': searchQuery,
           ...?additionalParams,
         },
+        options: Options(headers: headers),
       );
 
       if (response.statusCode == 200) {
