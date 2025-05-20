@@ -13,6 +13,7 @@ import 'package:imis/performance_governance_system/pgs_signatory_template/models
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory_template.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -164,7 +165,7 @@ class _PerformanceGovernanceSystemPageState
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         debugPrint("Pgs data saved successfully!");
-        debugPrint("Pgs ID: ${response.data['id']}"); // Print the new PGS ID
+        debugPrint("Pgs ID: ${response.data['id']}");
 
         setState(() {
           fetchPgsList();
@@ -455,9 +456,10 @@ class _PerformanceGovernanceSystemPageState
       context: context,
       builder: (BuildContext context) {
         return Dialog(
+          backgroundColor: mainBgColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
-          ), // Rounded corners
+          ),
           child: Container(
             width: MediaQuery.of(context).size.width * 0.30,
             constraints: BoxConstraints(maxHeight: 250),
@@ -465,10 +467,18 @@ class _PerformanceGovernanceSystemPageState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: primaryTextColor),
+                    onPressed: () => Navigator.pop(context, null),
+                  ),
+                ),
                 Text(
                   "Select an Office",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
+
                 SizedBox(height: 10),
                 Expanded(
                   child: ListView.builder(
@@ -476,33 +486,19 @@ class _PerformanceGovernanceSystemPageState
                     itemCount: officeNames.length,
                     itemBuilder: (context, index) {
                       return Card(
+                        color: mainBgColor,
                         margin: EdgeInsets.symmetric(vertical: 4),
                         child: ListTile(
                           title: Text(
                             officeNames[index],
                             style: TextStyle(fontSize: 16),
                           ),
-                          leading: Icon(
-                            Icons.apartment,
-                            color: Colors.blueAccent,
-                          ),
+                          leading: Icon(Icons.apartment, color: primaryColor),
                           onTap: () => Navigator.pop(context, officeIds[index]),
                         ),
                       );
                     },
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context, null),
-                      child: Text(
-                        "Cancel",
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -617,21 +613,23 @@ class _PerformanceGovernanceSystemPageState
   }
 
   Future<void> _loadOfficeName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? officeNames = await AuthUtil.fetchOfficeNames();
+    List<String>? officeIds = await AuthUtil.fetchOfficeIds();
 
-    List<String> officeNames = prefs.getStringList('officeNames') ?? [];
-    List<String> officeIds = prefs.getStringList('officeIds') ?? [];
-    selectedOffice = prefs.getString('selectedOfficeId');
+    final prefs = await SharedPreferences.getInstance();
+    String? selectedOfficeId = prefs.getString('selectedOfficeId');
 
     String selectedOfficeName = "No Office";
-    if (officeIds.contains(selectedOffice)) {
-      int index = officeIds.indexOf(selectedOffice!);
-      selectedOfficeName = officeNames[index];
-    }
 
+    if (officeNames != null && officeIds != null && selectedOfficeId != null) {
+      int index = officeIds.indexOf(selectedOfficeId);
+      if (index != -1 && index < officeNames.length) {
+        selectedOfficeName = officeNames[index];
+      }
+    }
     setState(() {
       officeDisplay = selectedOfficeName;
-      officeIdList = selectedOffice ?? "No Office ID";
+      officeIdList = selectedOfficeId ?? "No Office ID";
     });
   }
 
@@ -1538,7 +1536,7 @@ class _PerformanceGovernanceSystemPageState
             );
             selectedStatus[i] = item.status;
             deliverableIds[i] = item.id ?? 0;
-            selectedKRA[i] = item.kra?.id;
+            selectedKRA[i] = item.kra.id;
           }
         } else {
           rows = [0];
