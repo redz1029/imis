@@ -13,12 +13,12 @@ AuditScheduleDetails _$AuditScheduleDetailsFromJson(
   isDeleted: json['isDeleted'] as bool? ?? false,
   rowVersion: json['rowVersion'] as String? ?? "",
   auditScheduleId: (json['auditScheduleId'] as num?)?.toInt() ?? 0,
-  startDate: _$JsonConverterFromJson<String, DateTime>(
-    json['startDate'],
+  startDateTime: _$JsonConverterFromJson<String, DateTime>(
+    json['startDateTime'],
     const DateTimeConverter().fromJson,
   ),
-  endDate: _$JsonConverterFromJson<String, DateTime>(
-    json['endDate'],
+  endDateTime: _$JsonConverterFromJson<String, DateTime>(
+    json['endDateTime'],
     const DateTimeConverter().fromJson,
   ),
   teamId: (json['teamId'] as num?)?.toInt() ?? 0,
@@ -34,12 +34,12 @@ Map<String, dynamic> _$AuditScheduleDetailsToJson(
   'isDeleted': instance.isDeleted,
   'rowVersion': instance.rowVersion,
   'auditScheduleId': instance.auditScheduleId,
-  'startDate': _$JsonConverterToJson<String, DateTime>(
-    instance.startDate,
+  'startDateTime': _$JsonConverterToJson<String, DateTime>(
+    instance.startDateTime,
     const DateTimeConverter().toJson,
   ),
-  'endDate': _$JsonConverterToJson<String, DateTime>(
-    instance.endDate,
+  'endDateTime': _$JsonConverterToJson<String, DateTime>(
+    instance.endDateTime,
     const DateTimeConverter().toJson,
   ),
   'teamId': instance.teamId,

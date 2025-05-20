@@ -11,11 +11,11 @@ class AuditScheduleDetails {
 
   @JsonKey()
   @DateTimeConverter()
-  DateTime? startDate;
+  DateTime? startDateTime;
 
   @JsonKey()
   @DateTimeConverter()
-  DateTime? endDate;
+  DateTime? endDateTime;
 
   int teamId;
   String? teamName;
@@ -27,8 +27,8 @@ class AuditScheduleDetails {
     this.isDeleted = false,
     this.rowVersion = "",
     this.auditScheduleId = 0,
-    required this.startDate,
-    required this.endDate,
+    required this.startDateTime,
+    required this.endDateTime,
     this.teamId = 0,
     required this.teamName,
     required this.officeId,

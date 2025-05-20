@@ -9,8 +9,6 @@ part 'audit_schedules.g.dart';
 @JsonSerializable()
 class AuditSchedules {
   int id;
-  bool isDeleted;
-  String rowVersion;
   String auditTitle;
 
   @JsonKey()
@@ -22,22 +20,29 @@ class AuditSchedules {
   DateTime endDate;
 
   bool isActive;
+  bool isDeleted;
+  String? rowVersion;
 
-  List<Office> offices;
-  List<AuditableOffice> auditableOffices;
-  List<AuditScheduleDetails> auditSchduleDetails;
-  AuditSchedules(
-    this.id,
-    this.isDeleted,
+  List<Office>? offices;
+
+  @JsonKey(defaultValue: [])
+  final List<AuditableOffice> auditableOffices;
+
+  @JsonKey(defaultValue: [])
+  final List<AuditScheduleDetails> auditSchduleDetails;
+
+  AuditSchedules({
+    required this.id,
+    required this.auditTitle,
+    required this.startDate,
+    required this.endDate,
+    required this.isActive,
+    required this.isDeleted,
     this.rowVersion,
-    this.auditTitle,
-    this.startDate,
-    this.endDate,
-    this.isActive,
     this.offices,
-    this.auditableOffices,
-    this.auditSchduleDetails,
-  );
+    required this.auditableOffices,
+    required this.auditSchduleDetails,
+  });
 
   factory AuditSchedules.fromJson(Map<String, dynamic> json) =>
       _$AuditSchedulesFromJson(json);
