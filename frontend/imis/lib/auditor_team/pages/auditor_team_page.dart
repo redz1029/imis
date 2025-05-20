@@ -1,8 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/auditor/models/auditor.dart';
-import 'package:imis/constant/constant.dart';
 import 'package:imis/auditor_team/models/auditor_team.dart';
+import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -72,10 +72,21 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
   }
 
   Future<void> fetchTeam() async {
-    var url = ApiEndpoint().team;
+    final url = ApiEndpoint().team;
 
     try {
-      var response = await dio.get(url);
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
+
+      final response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
 
       if (response.statusCode == 200 && response.data is List) {
         List<Team> data =
@@ -84,9 +95,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
         if (mounted) {
           setState(() {
             teamList = data.map((team) => team.toJson()).toList();
-            filteredList = List.from(
-              teamList,
-            ); // Ensure filtered list is populated
+            filteredList = List.from(teamList);
           });
         }
       } else {
@@ -572,9 +581,9 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
             Expanded(
               child: GridView.count(
                 crossAxisCount: isMinimized ? 1 : 3,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 2,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
+                childAspectRatio: 1.60,
                 children:
                     uniqueTeams
                         .asMap()
@@ -590,51 +599,70 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                               child: Padding(
                                 padding: const EdgeInsets.all(12.0),
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Column(
-                                      children: [
-                                        Center(
-                                          child: Text(
-                                            ' ${getTeamNameById(audiorTeam['teamId'], teamList)}',
+                                    // Team name - centered
+                                    Center(
+                                      child: Text(
+                                        getTeamNameById(
+                                          audiorTeam['teamId'],
+                                          teamList,
+                                        ),
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
+                                          color: primaryTextColor,
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 10),
+                                    // List of auditors - aligned to the left
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'List of Auditors',
                                             style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18,
-                                              color: primaryTextColor,
+                                              color: Colors.grey,
                                             ),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                    gap,
-                                    Text(
-                                      'List of Auditors',
-                                      style: TextStyle(color: Colors.grey),
-                                    ),
-                                    gap2,
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children:
-                                          (audiorTeam['auditors']
-                                                  as List<Auditor>)
-                                              .map((a) {
-                                                return Text(
-                                                  a.name ?? '',
-                                                  style: TextStyle(
-                                                    fontSize: 14,
+                                          const SizedBox(height: 6),
+                                          Expanded(
+                                            child: ListView.builder(
+                                              itemCount:
+                                                  (audiorTeam['auditors']
+                                                          as List<Auditor>)
+                                                      .length,
+                                              itemBuilder: (context, i) {
+                                                final auditor =
+                                                    (audiorTeam['auditors']
+                                                        as List<Auditor>)[i];
+                                                return Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                        bottom: 2,
+                                                      ),
+                                                  child: Text(
+                                                    auditor.name ?? '',
+                                                    style: const TextStyle(
+                                                      fontSize: 14,
+                                                    ),
                                                   ),
                                                 );
-                                              })
-                                              .toList(),
+                                              },
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-
-                                    Spacer(),
+                                    const SizedBox(height: 10),
+                                    // Bottom-right action buttons
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
                                         IconButton(
-                                          icon: Icon(Icons.edit),
+                                          icon: const Icon(Icons.edit),
                                           onPressed: () {
                                             showFormDialog(
                                               id: audiorTeam['id'],
@@ -650,10 +678,11 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                             Icons.delete,
                                             color: primaryColor,
                                           ),
-                                          onPressed:
-                                              () => showDeleteDialog(
-                                                audiorTeam['id'].toString(),
-                                              ),
+                                          onPressed: () {
+                                            showDeleteDialog(
+                                              audiorTeam['id'].toString(),
+                                            );
+                                          },
                                         ),
                                       ],
                                     ),
