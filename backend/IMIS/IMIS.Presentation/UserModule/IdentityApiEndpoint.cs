@@ -135,7 +135,6 @@ namespace IMIS.Presentation.UserModule
                     { "Email", new[] { "Invalid email format." } }
                 });
             }
-
             // Update properties
             user.UserName = registration.Username;
             user.Email = registration.Email;
@@ -168,7 +167,7 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok("User updated successfully.");
         }
-        
+   
         private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp)
         where TUser : User
         {
@@ -191,9 +190,15 @@ namespace IMIS.Presentation.UserModule
                 .Distinct()
                 .ToList();
 
-            // Generate tokens (access token includes all role and user claims)
             var accessToken = await TokenUtils.GenerateAccessTokenAsync(user, roles, userManager, roleManager);
             var refreshToken = TokenUtils.GenerateRefreshToken();
+
+            var hashedAccessToken = TokenUtils.HashToken(accessToken);
+            var hashedRefreshToken = TokenUtils.HashToken(refreshToken);
+
+            // Store hashed tokens securely
+            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "AccessTokenHash", hashedAccessToken);
+            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "RefreshTokenHash", hashedRefreshToken);
 
             return Results.Ok(new
             {
@@ -205,7 +210,7 @@ namespace IMIS.Presentation.UserModule
                 roles,
                 offices,
                 accessToken,
-                refreshToken,
+                refreshToken
             });
         }
 
@@ -225,7 +230,7 @@ namespace IMIS.Presentation.UserModule
             }         
             return Results.Ok("Password changed successfully.");
         }
-        // Refresh Token method       
+        // Refresh Token method              
         private static async Task<IResult> RefreshToken<TUser>(
         [FromBody] UserRefreshDto refresh,
         IServiceProvider sp)
@@ -238,18 +243,29 @@ namespace IMIS.Presentation.UserModule
             var user = await userManager.FindByIdAsync(refresh.Id);
             if (user == null)
             {
-                return Results.NotFound("Token not found.");
+                return Results.NotFound("User not found.");
             }
 
-            var roles = await userManager.GetRolesAsync(user);
+            var providedHashedToken = TokenUtils.HashToken(refresh.RefreshToken);
 
-            // Generate new access token with claims
+            // Retrieve the stored hashed refresh token
+            var storedHashedToken = await userManager.GetAuthenticationTokenAsync(user, "IMIS_API", "RefreshTokenHash");
+            if (string.IsNullOrEmpty(storedHashedToken) || storedHashedToken != providedHashedToken)
+            {
+                return Results.Unauthorized();
+            }
+
+            // Valid refresh token: generate new tokens
+            var roles = await userManager.GetRolesAsync(user);
             var accessToken = await TokenUtils.GenerateAccessTokenAsync(user, roles, userManager, roleManager);
             var newRefreshToken = TokenUtils.GenerateRefreshToken();
 
-            // Optionally store tokens (depends on your implementation)
-            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "access_token", accessToken);
-            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "refresh_token", newRefreshToken);
+            // Hash and store the new tokens
+            var hashedAccessToken = TokenUtils.HashToken(accessToken);
+            var hashedRefreshToken = TokenUtils.HashToken(newRefreshToken);
+
+            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "AccessTokenHash", hashedAccessToken);
+            await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "RefreshTokenHash", hashedRefreshToken);
 
             return Results.Ok(new
             {
