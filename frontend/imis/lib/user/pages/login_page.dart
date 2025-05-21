@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/navigation/dashboard_navigation_panel.dart';
@@ -6,8 +5,8 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/user/models/user_login.dart';
 import 'package:imis/user/pages/registration_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
@@ -28,7 +27,7 @@ class LoginPageState extends State<LoginPage> {
   bool _isPasswordVisible = false;
 
   bool _isLoggingIn = false;
-  bool _isPageLoaded = false;
+  bool isPageLoaded = false;
 
   final dio = Dio();
 
@@ -37,39 +36,15 @@ class LoginPageState extends State<LoginPage> {
     setState(() {
       _isLoggingIn = true;
     });
+
     try {
-      var response = await dio.post(url, data: json.encode(user));
-
-      var responseData = response.data;
-      String id = responseData['id'] ?? '';
-      String firstName = responseData['firstName'] ?? '';
-      String position = responseData['position'] ?? '';
-      List<String> roles = List<String>.from(responseData['roles'] ?? []);
-
-      List<dynamic> offices = responseData['offices'] ?? [];
-      List<int> officeIds = offices.map<int>((o) => o['id'] as int).toList();
-      List<String> officeNames =
-          offices.map((o) => o['name'].toString()).toList();
-      List<String> officeIdsAsString =
-          officeIds.map((id) => id.toString()).toList();
-
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setString('id', id);
-      await prefs.setString('firstName', firstName);
-      await prefs.setString('position', position);
-      await prefs.setStringList("officeNames", officeNames);
-      await prefs.setStringList("officeIds", officeIdsAsString);
-      await prefs.setStringList('roles', roles);
-
-      String accessToken = responseData['accessToken'] ?? '';
-      String refreshToken = responseData['refreshToken'] ?? '';
-      await prefs.setString('refreshToken', refreshToken);
-      await prefs.setString('accessToken', accessToken);
+      var response = await dio.post(url, data: user.toJson());
 
       if (context.mounted) {
         if (response.statusCode == 200) {
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('isLoggedIn', true);
+          await AuthUtil.storeUserAuth(response, dio);
+
+          await AuthUtil.setIsLoggedIn(true);
 
           // ignore: use_build_context_synchronously
           Navigator.of(context).pushAndRemoveUntil(
@@ -78,17 +53,17 @@ class LoginPageState extends State<LoginPage> {
             ),
             (route) => false,
           );
+        } else {
+          var errMsg = response.statusMessage ?? "Unknown error";
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("An error has occurred: $errMsg")),
+          );
         }
-      } else {
-        var errMsg = response.statusMessage;
-        // ignore: use_build_context_synchronously
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("An error has occured: $errMsg")),
-        );
       }
     } on DioException catch (e) {
       if (e.response != null) {
         final statusCode = e.response?.statusCode;
+
         if (context.mounted) {
           if (statusCode == 401) {
             MotionToast.error(
@@ -96,32 +71,38 @@ class LoginPageState extends State<LoginPage> {
               description: const Text(
                 "Please check your username and password.",
               ),
-              // ignore: deprecated_member_use
-              position: MotionToastPosition.top,
+              toastAlignment: Alignment.center,
             ).show(context);
           } else {
             MotionToast.error(
-              title: const Text("An error has occured!"),
-              description: Text(e.response!.statusMessage!),
-              // ignore: deprecated_member_use
-              position: MotionToastPosition.top,
+              title: const Text("An error has occurred!"),
+              description: Text(e.response!.statusMessage ?? "Unknown error"),
+              toastAlignment: Alignment.center,
             ).show(context);
           }
-          _isLoggingIn = false;
+        }
+      } else {
+        if (context.mounted) {
+          MotionToast.error(
+            title: const Text("Server is Unreachable!"),
+            description: Text(e.message ?? "Unknown error"),
+            toastAlignment: Alignment.center,
+            height: 500,
+            width: 500,
+          ).show(context);
         }
       }
     } finally {
       if (context.mounted) {
         setState(() {
-          _isPageLoaded = false;
+          _isLoggingIn = false;
         });
       }
     }
   }
 
   void _checkLoginStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
+    bool isLoggedIn = await AuthUtil.isLoggedIn();
 
     if (isLoggedIn) {
       // ignore: use_build_context_synchronously
@@ -133,7 +114,7 @@ class LoginPageState extends State<LoginPage> {
       );
     } else {
       setState(() {
-        _isPageLoaded = true;
+        isPageLoaded = true;
       });
     }
   }

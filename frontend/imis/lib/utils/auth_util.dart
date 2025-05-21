@@ -1,148 +1,114 @@
-// import 'dart:convert';
+import 'dart:convert';
+import 'package:dio/dio.dart';
+import 'package:imis/user/models/user_registration.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-// import 'package:dio/dio.dart';
-// import 'package:flutter/material.dart';
+class AuthUtil {
+  static const String userKey = "user";
+  static const String accessTokenKey = "accessToken";
+  static const String rolesKey = "roles";
+  static const String officeNamesKey = "officeNames";
+  static const String officeIdsKey = "officeIds";
+  static const String isLoggedInKey = "isLoggedIn";
 
-// class AuthUtil {
-//   static String key = "user";
+  static Future<UserRegistration> storeUserAuth(
+    Response<dynamic> response,
+    Dio dio, [
+    Options? options,
+  ]) async {
+    final SharedPreferences sharedPref = await SharedPreferences.getInstance();
 
-//   static Future<User> storeUserAuth(
-//     Response<dynamic> response,
-//     Dio dio,
-//     BuildContext context, [
-//     Options? options,
-//   ]) async {
-//     var user = User.fromJson(response.data);
+    var user = UserRegistration.fromJson(response.data);
+    String userJson = jsonEncode(user.toJson());
+    await sharedPref.setString(userKey, userJson);
 
-//     SharedPreferences sharedPref = await SharedPreferences.getInstance();
-//     var storedUserAuth = await fetchLoggedUser(sharedPref);
-//     if (storedUserAuth != null) {
-//       sharedPref.remove(key);
-//       user.employee = storedUserAuth.employee;
-//     } else {
-//       var url = ApiEndpoint().employeesById + user.crmcRecordId.toString();
-//       //  Retrieve and Set the Employee details
-//       var empRequest = await dio.get(
-//         url,
-//         options:
-//             options ??
-//             Options(headers: {"Authorization": "Bearer ${user.accessToken}"}),
-//       );
-//       if (empRequest.statusCode == 200) {
-//         var employee = Employee.fromJson(empRequest.data);
-//         user.employee = employee;
-//       }
-//     }
+    String accessToken = response.data['accessToken'] ?? '';
+    if (accessToken.isNotEmpty) {
+      await sharedPref.setString(accessTokenKey, accessToken);
+    }
 
-//     // decode the access token from payload.
-//     var jwtData = jwtDecode(user.accessToken!);
+    if (response.data['roles'] != null) {
+      String rolesJson = jsonEncode(response.data['roles']);
+      await sharedPref.setString(rolesKey, rolesJson);
+    }
+    if (response.data['offices'] != null) {
+      List<dynamic> offices = response.data['offices'];
+      List<String> officeNames =
+          offices.map((o) => o['officeNames'].toString()).toList();
+      List<String> officeIds =
+          offices.map((o) => o['officeIds'].toString()).toList();
 
-//     // extract the roles from access token.
-//     var payloadRoles =
-//         jwtData
-//             .payload['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+      await sharedPref.setStringList(officeNamesKey, officeNames);
+      await sharedPref.setStringList(officeIdsKey, officeIds);
+    }
 
-//     if (payloadRoles == null) {
-//       if (context.mounted) {
-//         MotionToast.error(
-//           title: const Text("No Role found for the User."),
-//           description: const Text("Please contact System Administrator."),
-//           position: MotionToastPosition.top,
-//         ).show(context);
-//       }
-//     }
+    await sharedPref.setBool(isLoggedInKey, true);
 
-//     List<dynamic> roles = [];
-//     if (payloadRoles is String) {
-//       roles.add(payloadRoles);
-//     } else {
-//       roles.addAll(payloadRoles);
-//     }
-//     user.roles = List<String>.from(roles);
+    return user;
+  }
 
-//     // Finally store the user details in Shared Preferences.
-//     sharedPref.setString(key, jsonEncode(user));
+  static Future<UserRegistration?> fetchRegisteredUser([
+    SharedPreferences? sharedPref,
+  ]) async {
+    sharedPref ??= await SharedPreferences.getInstance();
+    String? userJson = sharedPref.getString(userKey);
 
-//     return user;
-//   }
+    if (userJson != null) {
+      Map<String, dynamic> userData = jsonDecode(userJson);
+      return UserRegistration.fromJson(userData);
+    }
+    return null;
+  }
 
-//   static Future<User?> fetchLoggedUser([SharedPreferences? sharedPref]) async {
-//     sharedPref = sharedPref ?? await SharedPreferences.getInstance();
+  static Future<String?> fetchAccessToken([
+    SharedPreferences? sharedPref,
+  ]) async {
+    sharedPref ??= await SharedPreferences.getInstance();
+    return sharedPref.getString(accessTokenKey);
+  }
 
-//     // Retrieve the saved user details from shared preferences
-//     String? userJson = sharedPref.getString(key);
-//     if (userJson != null) {
-//       Map<String, dynamic> userData = jsonDecode(userJson);
-//       User user = User.fromJson(userData);
-//       return user;
-//     }
+  static Future<List<String>?> fetchRoles([
+    SharedPreferences? sharedPref,
+  ]) async {
+    sharedPref ??= await SharedPreferences.getInstance();
+    String? rolesJson = sharedPref.getString(rolesKey);
 
-//     return null;
-//   }
+    if (rolesJson != null) {
+      List<dynamic> rolesListDynamic = jsonDecode(rolesJson);
+      return rolesListDynamic.cast<String>();
+    }
+    return null;
+  }
 
-//   /// Handles refresh token rotation.
-//   static Future<User?> processTokenValidity(
-//     Dio dio, [
-//     BuildContext? context,
-//   ]) async {
-//     // Retrieve the current logged user from Shared Preferences
-//     var loggedUser = await fetchLoggedUser();
+  static Future<List<String>?> fetchOfficeNames([
+    SharedPreferences? sharedPref,
+  ]) async {
+    sharedPref ??= await SharedPreferences.getInstance();
+    return sharedPref.getStringList(officeNamesKey);
+  }
 
-//     if (loggedUser != null) {
-//       // Get the Access Token
-//       var accessToken = jwtDecode(loggedUser.accessToken!);
+  static Future<List<String>?> fetchOfficeIds([
+    SharedPreferences? sharedPref,
+  ]) async {
+    sharedPref ??= await SharedPreferences.getInstance();
+    return sharedPref.getStringList(officeIdsKey);
+  }
 
-//       // Check if the access token is expired
-//       bool isAccessTokenExpired = accessToken.isExpired!;
+  static Future<bool> isLoggedIn([SharedPreferences? sharedPref]) async {
+    sharedPref ??= await SharedPreferences.getInstance();
+    return sharedPref.getBool(isLoggedInKey) ?? false;
+  }
 
-//       // Return the current logged user if Access Token is not Expired.
-//       if (!isAccessTokenExpired) return loggedUser;
+  static Future<void> setIsLoggedIn(bool status) async {
+    final SharedPreferences sharedPref = await SharedPreferences.getInstance();
+    await sharedPref.setBool(isLoggedInKey, status);
+  }
 
-//       // Retrieve the refresh token for refresh token rotation handling.
-//       final refreshToken = jwtDecode(loggedUser.refreshToken!);
-
-//       // Check if the refresh token is already expired.
-//       bool isRefreshTokenExpired = refreshToken.isExpired!;
-
-//       // Handle if the refresh token is expired.
-//       if (isRefreshTokenExpired) {
-//         // Throw an exception if context is null.
-//         if (context == null) throw Exception("Refresh token expired!");
-
-//         // Show a snackbar and redirect to login page if context is not null and is mounted.
-//         if (context.mounted) {
-//           ScaffoldMessenger.of(context).showSnackBar(
-//             const SnackBar(
-//               content: Text('Token expired :( Please login again.'),
-//             ),
-//           );
-
-//           Navigator.push(
-//             context,
-//             MaterialPageRoute(builder: (context) => const LoginPage()),
-//           );
-//         }
-//       } else {
-//         var refresh = ApiEndpoint().refresh;
-
-//         // Refresh the expired access token, invalidate the current refresh token and get a new refresh token
-//         var refreshResponse = await dio.post(
-//           refresh,
-//           data: jsonEncode(loggedUser),
-//         );
-
-//         if (context!.mounted) {
-//           // Store the new tokens.
-//           loggedUser = await storeUserAuth(refreshResponse, dio, context);
-//         }
-//       }
-//     }
-
-//     return loggedUser;
-//   }
-
-//   static Future<void> logout() async {
-//     SharedPreferences shredPref = await SharedPreferences.getInstance();
-//     shredPref.remove(key);
-//   }
-// }
+  static Future<void> logout() async {
+    final SharedPreferences sharedPref = await SharedPreferences.getInstance();
+    await sharedPref.remove(userKey);
+    await sharedPref.remove(accessTokenKey);
+    await sharedPref.remove(rolesKey);
+    await sharedPref.setBool(isLoggedInKey, false);
+  }
+}

@@ -5,7 +5,7 @@ part 'office.g.dart';
 @JsonSerializable()
 class Office {
   final int id;
-  final String name;
+  String name;
   bool isActive;
   bool isDeleted;
   String? rowVersion;

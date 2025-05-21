@@ -1,11 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
-import 'package:imis/constant/constant.dart';
 import 'package:imis/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/audit_schedules/models/audit_schedules_details.dart';
 import 'package:imis/audit_schedules/models/auditable_office.dart';
-import 'package:imis/auditor_team/models/auditor_team.dart';
+
+import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -20,17 +19,18 @@ class AuditSchedulesPage extends StatefulWidget {
 }
 
 class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
-  List<Map<String, dynamic>> auditorTeamList = [];
+  List<Map<String, dynamic>> auditScheduleList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
-  List<Map<String, dynamic>> filteredListTeamAuditor = [];
+  List<Map<String, dynamic>> filteredListAuditSchedule = [];
   List<Map<String, dynamic>> filteredListAuditor = [];
   List<Map<String, dynamic>> selectedOffice = [];
   List<Map<String, dynamic>> officeList = [];
   List<Map<String, dynamic>> teamList = [];
   List<Map<String, dynamic>> filteredListTeam = [];
   List<Map<String, dynamic>> auditorList = [];
+  List<Map<String, dynamic>> auditscheduleDetails = [];
 
   int? selectTeam;
   int? selectAuditor;
@@ -38,7 +38,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
 
   final dio = Dio();
 
-  Future<void> fetchAuditorTeam() async {
+  Future<void> fetchAuditSchedule() async {
     var url = ApiEndpoint().auditSchedule;
 
     try {
@@ -56,16 +56,16 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
       );
 
       if (response.statusCode == 200 && response.data is List) {
-        List<AuditorTeam> data =
+        List<AuditSchedules> data =
             (response.data as List)
-                .map((auditorTeam) => AuditorTeam.fromJson(auditorTeam))
+                .map((auditShedule) => AuditSchedules.fromJson(auditShedule))
                 .toList();
 
         if (mounted) {
           setState(() {
-            auditorTeamList =
+            auditScheduleList =
                 data.map((auditorTeam) => auditorTeam.toJson()).toList();
-            filteredListTeamAuditor = List.from(auditorTeamList);
+            filteredListAuditSchedule = List.from(auditScheduleList);
           });
         }
       } else {
@@ -112,7 +112,18 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     var url = ApiEndpoint().team;
 
     try {
-      var response = await dio.get(url);
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
+
+      final response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
 
       if (response.statusCode == 200 && response.data is List) {
         List<Team> data =
@@ -162,42 +173,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     }
   }
 
-  // Future<void> addOrUpdateAuditorTeam(AuditSchedules auditSchedule) async {
-  //   var url = ApiEndpoint().auditSchedule;
-
-  //   try {
-  //     SharedPreferences prefs = await SharedPreferences.getInstance();
-  //     String? token = prefs.getString('accessToken');
-
-  //     if (token == null || token.isEmpty) {
-  //       debugPrint("Error: Access token is missing!");
-  //       return;
-  //     }
-
-  //     final Map<String, dynamic> requestData = auditSchedule.toJson();
-  //     final response = await dio.post(
-  //       url,
-  //       data: requestData,
-  //       options: Options(
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           "Authorization": "Bearer $token",
-  //         },
-  //       ),
-  //     );
-
-  //     if (response.statusCode == 200 || response.statusCode == 201) {
-  //       // await fetchAuditorTeam();
-  //     } else {
-  //       debugPrint(
-  //         "Failed to add/update office. Status code: ${response.statusCode}",
-  //       );
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error adding/updating auditschedule: $e");
-  //   }
-  // }
-  Future<void> addOrUpdateAuditorTeam(AuditSchedules auditSchedule) async {
+  Future<void> addOrUpdateAuditSchedule(AuditSchedules auditSchedule) async {
     var url = ApiEndpoint().auditSchedule;
 
     try {
@@ -210,8 +186,6 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
       }
 
       final Map<String, dynamic> requestData = auditSchedule.toJson();
-      debugPrint("Sending data: ${requestData.toString()}"); // Add this line
-
       final response = await dio.post(
         url,
         data: requestData,
@@ -224,12 +198,13 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // Success handling
+        fetchAuditSchedule();
+        selectedOffice.clear();
       } else {
         debugPrint(
           "Failed to add/update office. Status code: ${response.statusCode}",
         );
-        debugPrint("Response data: ${response.data}"); // Add this line
+        debugPrint("Response data: ${response.data}");
       }
     } catch (e) {
       if (e is DioException) {
@@ -245,14 +220,14 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
   @override
   void initState() {
     super.initState();
-    fetchAuditorTeam();
+
     isSearchfocus.addListener(() {
       setState(() {});
     });
     fetchOffice();
     fetchTeam();
     fetchAuditors();
-    // fetchAuditorTeam();
+    fetchAuditSchedule();
   }
 
   @override
@@ -261,14 +236,23 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     super.dispose();
   }
 
+  String getOfficeNameById(int id) {
+    return officeList.firstWhere(
+      (o) => o['id'] == id,
+      orElse: () => {'name': 'Unknown'},
+    )['name'];
+  }
+
   void showFormDialog({
-    String? id,
-    String? teamId,
+    int? id,
+    String? auditTitle,
     String? startDate,
     String? endDate,
     bool isActive = false,
-    String? auditTitle,
+    List<AuditableOffice>? auditableOffices,
+    List<AuditScheduleDetails>? auditSchduleDetails,
   }) {
+    // Title and audit date fields
     TextEditingController auditTitleController = TextEditingController(
       text: auditTitle,
     );
@@ -279,9 +263,42 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
       text: endDate,
     );
 
+    // Schedule list
     List<Map<String, dynamic>> scheduleDetails = [];
-    List<Map<String, dynamic>> auditableOffice = [];
 
+    // Controllers for multiple schedule dates
+    List<TextEditingController> startDateControllers = [];
+    List<TextEditingController> endDateControllers = [];
+
+    // Populate selected offices
+    if (auditableOffices != null && auditableOffices.isNotEmpty) {
+      selectedOffice.clear();
+      for (final office in auditableOffices) {
+        selectedOffice.add({
+          'id': office.officeId,
+          'name': getOfficeNameById(office.officeId!),
+        });
+      }
+    }
+
+    if (auditSchduleDetails != null && auditSchduleDetails.isNotEmpty) {
+      for (final detail in auditSchduleDetails) {
+        final startDateText =
+            detail.startDateTime?.toLocal().toString().split(' ')[0] ?? '';
+        final endDateText =
+            detail.endDateTime?.toLocal().toString().split(' ')[0] ?? '';
+
+        scheduleDetails.add({
+          'team': detail.teamId,
+          'office': detail.officeId,
+          'startDateTime': startDateText,
+          'endDateTime': endDateText,
+        });
+
+        startDateControllers.add(TextEditingController(text: startDateText));
+        endDateControllers.add(TextEditingController(text: endDateText));
+      }
+    }
     showDialog(
       context: context,
       builder: (context) {
@@ -389,9 +406,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                           },
                         ),
                       ),
-
                       gap2,
-
                       // End Date
                       SizedBox(
                         width: double.infinity,
@@ -493,263 +508,267 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                       ),
                       gap5,
                       Column(
-                        children:
-                            scheduleDetails.map((schedule) {
-                              int index = scheduleDetails.indexOf(schedule);
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            children:
+                                scheduleDetails.asMap().entries.map((entry) {
+                                  int index = entry.key;
+                                  var schedule = entry.value;
+
+                                  // Ensure controllers exist
+                                  if (startDateControllers.length <= index) {
+                                    startDateControllers.add(
+                                      TextEditingController(),
+                                    );
+                                  }
+                                  if (endDateControllers.length <= index) {
+                                    endDateControllers.add(
+                                      TextEditingController(),
+                                    );
+                                  }
+
+                                  return Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Text(
-                                        'Audit Schedule Details ${index + 1}',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: primaryTextColor,
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text(
+                                            'Audit Schedule Details ${index + 1}',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: primaryTextColor,
+                                            ),
+                                          ),
+                                          TextButton(
+                                            onPressed: () {
+                                              setDialogState(() {
+                                                scheduleDetails.removeAt(index);
+                                                startDateControllers.removeAt(
+                                                  index,
+                                                );
+                                                endDateControllers.removeAt(
+                                                  index,
+                                                );
+                                              });
+                                            },
+                                            child: Icon(
+                                              Icons.delete,
+                                              size: 24,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      gap,
+
+                                      // Team Dropdown
+                                      DropdownButtonHideUnderline(
+                                        child: DropdownButtonFormField<int>(
+                                          dropdownColor: mainBgColor,
+                                          isExpanded: true,
+                                          decoration: InputDecoration(
+                                            labelText: 'Choose Team',
+                                            filled: true,
+                                            fillColor: secondaryColor,
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.never,
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          value: schedule['team'],
+                                          items:
+                                              teamList.map((team) {
+                                                return DropdownMenuItem<int>(
+                                                  value: team['id'],
+                                                  child: Text(team['name']),
+                                                );
+                                              }).toList(),
+                                          onChanged: (value) {
+                                            setDialogState(() {
+                                              schedule['team'] = value;
+                                            });
+                                          },
                                         ),
                                       ),
-                                      TextButton(
-                                        onPressed: () {
-                                          setDialogState(() {
-                                            scheduleDetails.removeAt(index);
-                                          });
-                                        },
-                                        child: Icon(
-                                          Icons.delete,
-                                          size: 24,
-                                          color: Colors.grey.shade600,
+                                      gap,
+
+                                      // Office Dropdown
+                                      DropdownButtonHideUnderline(
+                                        child: DropdownButtonFormField<int>(
+                                          dropdownColor: mainBgColor,
+                                          isExpanded: true,
+                                          decoration: InputDecoration(
+                                            labelText: 'Choose Office',
+                                            filled: true,
+                                            fillColor: secondaryColor,
+                                            floatingLabelBehavior:
+                                                FloatingLabelBehavior.never,
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          value: schedule['office'],
+                                          items:
+                                              officeList.map((office) {
+                                                return DropdownMenuItem<int>(
+                                                  value: office['id'],
+                                                  child: Text(office['name']),
+                                                );
+                                              }).toList(),
+                                          onChanged: (value) {
+                                            setDialogState(() {
+                                              schedule['office'] = value;
+                                            });
+                                          },
                                         ),
                                       ),
+                                      gap,
+
+                                      // Start Date Input
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 60,
+                                        child: TextField(
+                                          controller:
+                                              startDateControllers[index],
+                                          readOnly: true,
+                                          decoration: InputDecoration(
+                                            labelText: 'Start Date',
+                                            suffixIcon: Icon(
+                                              Icons.calendar_month,
+                                              color: Colors.grey,
+                                            ),
+                                            floatingLabelStyle: TextStyle(
+                                              color: primaryColor,
+                                            ),
+                                            border: OutlineInputBorder(),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: primaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                          onTap: () async {
+                                            DateTime? picked =
+                                                await showDatePicker(
+                                                  context: context,
+                                                  initialDate: DateTime.now(),
+                                                  firstDate: DateTime(2000),
+                                                  lastDate: DateTime(2101),
+                                                );
+                                            if (picked != null) {
+                                              setDialogState(() {
+                                                String formattedDate =
+                                                    picked
+                                                        .toLocal()
+                                                        .toString()
+                                                        .split(' ')[0];
+                                                startDateControllers[index]
+                                                    .text = formattedDate;
+                                                scheduleDetails[index]['startDateTime'] =
+                                                    formattedDate;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+
+                                      gap,
+
+                                      // End Date Input
+                                      SizedBox(
+                                        width: double.infinity,
+                                        height: 60,
+                                        child: TextField(
+                                          controller: endDateControllers[index],
+                                          readOnly: true,
+                                          decoration: InputDecoration(
+                                            labelText: 'End Date',
+                                            suffixIcon: Icon(
+                                              Icons.calendar_month,
+                                              color: Colors.grey,
+                                            ),
+                                            floatingLabelStyle: TextStyle(
+                                              color: primaryColor,
+                                            ),
+                                            border: OutlineInputBorder(),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: primaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                          onTap: () async {
+                                            DateTime? picked =
+                                                await showDatePicker(
+                                                  context: context,
+                                                  initialDate: DateTime.now(),
+                                                  firstDate: DateTime(2000),
+                                                  lastDate: DateTime(2101),
+                                                );
+                                            if (picked != null) {
+                                              setDialogState(() {
+                                                String formattedDate =
+                                                    picked
+                                                        .toLocal()
+                                                        .toString()
+                                                        .split(' ')[0];
+                                                endDateControllers[index].text =
+                                                    formattedDate;
+                                                scheduleDetails[index]['endDateTime'] =
+                                                    formattedDate;
+                                              });
+                                            }
+                                          },
+                                        ),
+                                      ),
+
+                                      gap2,
+                                      Divider(
+                                        color: lightGrey,
+                                        thickness: 1.0,
+                                        height: 20,
+                                      ),
+                                      gap2,
                                     ],
-                                  ),
-                                  gap,
-                                  // Dropdown for Team
-                                  DropdownButtonHideUnderline(
-                                    child: DropdownButtonFormField<int>(
-                                      dropdownColor: mainBgColor,
-                                      isExpanded: true,
-                                      decoration: InputDecoration(
-                                        labelText: 'Choose Team',
-                                        filled: true,
-                                        fillColor: secondaryColor,
-                                        floatingLabelBehavior:
-                                            FloatingLabelBehavior.never,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                      value: selectTeam,
-                                      items:
-                                          teamList.map((team) {
-                                            return DropdownMenuItem<int>(
-                                              value: team['id'],
-                                              child: Text(team['name']),
-                                            );
-                                          }).toList(),
-                                      onChanged: (value) {
-                                        setDialogState(() {
-                                          schedule['team'] = value;
-                                        });
-                                      },
-                                    ),
-                                  ),
-
-                                  gap,
-                                  // Dropdown for Team
-                                  DropdownButtonHideUnderline(
-                                    child: DropdownButtonFormField<int>(
-                                      dropdownColor: mainBgColor,
-                                      isExpanded: true,
-                                      decoration: InputDecoration(
-                                        labelText: 'Choose Office',
-                                        filled: true,
-                                        fillColor: secondaryColor,
-                                        floatingLabelBehavior:
-                                            FloatingLabelBehavior.never,
-                                        border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                        ),
-                                      ),
-                                      value: schedule['office'],
-                                      items:
-                                          officeList.map((office) {
-                                            return DropdownMenuItem<int>(
-                                              value: office['id'],
-                                              child: Text(office['name']),
-                                            );
-                                          }).toList(),
-                                      onChanged: (value) {
-                                        setDialogState(() {
-                                          schedule['office'] = value;
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  gap,
-                                  // End Date for this schedule
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 60,
-                                    child: TextField(
-                                      controller: TextEditingController(
-                                        text: schedule['startDate'],
-                                      ),
-                                      decoration: InputDecoration(
-                                        labelText: 'Start Date',
-                                        suffixIcon: Icon(
-                                          Icons.calendar_month,
-                                          color: Colors.grey,
-                                        ),
-                                        floatingLabelStyle: TextStyle(
-                                          color: primaryColor,
-                                        ),
-                                        border: OutlineInputBorder(),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: primaryColor,
-                                          ),
-                                        ),
-                                      ),
-                                      readOnly: true,
-                                      onTap: () async {
-                                        DateTime? picked = await showDatePicker(
-                                          context: context,
-                                          initialDate: DateTime.now(),
-                                          firstDate: DateTime(2000),
-                                          lastDate: DateTime(2101),
-                                          builder: (context, child) {
-                                            return Theme(
-                                              data: Theme.of(context).copyWith(
-                                                colorScheme: ColorScheme.light(
-                                                  primary: primaryColor,
-                                                  onPrimary: secondaryColor,
-                                                ),
-                                                textButtonTheme:
-                                                    TextButtonThemeData(
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                            foregroundColor:
-                                                                primaryColor,
-                                                          ),
-                                                    ),
-                                              ),
-                                              child: child!,
-                                            );
-                                          },
-                                        );
-                                        if (picked != null) {
-                                          setDialogState(() {
-                                            schedule['startDate'] =
-                                                picked
-                                                    .toLocal()
-                                                    .toString()
-                                                    .split(' ')[0];
-                                          });
-                                        }
-                                      },
-                                    ),
-                                  ),
-
-                                  SizedBox(
-                                    width: double.infinity,
-                                    height: 60,
-                                    child: TextField(
-                                      controller: TextEditingController(
-                                        text: schedule['endDate'],
-                                      ),
-                                      decoration: InputDecoration(
-                                        labelText: 'End Date',
-                                        suffixIcon: Icon(
-                                          Icons.calendar_month,
-                                          color: Colors.grey,
-                                        ),
-                                        floatingLabelStyle: TextStyle(
-                                          color: primaryColor,
-                                        ),
-                                        border: OutlineInputBorder(),
-                                        focusedBorder: OutlineInputBorder(
-                                          borderSide: BorderSide(
-                                            color: primaryColor,
-                                          ),
-                                        ),
-                                      ),
-                                      readOnly: true,
-                                      onTap: () async {
-                                        DateTime? picked = await showDatePicker(
-                                          context: context,
-                                          initialDate: DateTime.now(),
-                                          firstDate: DateTime(2000),
-                                          lastDate: DateTime(2101),
-                                          builder: (context, child) {
-                                            return Theme(
-                                              data: Theme.of(context).copyWith(
-                                                colorScheme: ColorScheme.light(
-                                                  primary: primaryColor,
-                                                  onPrimary: secondaryColor,
-                                                ),
-                                                textButtonTheme:
-                                                    TextButtonThemeData(
-                                                      style:
-                                                          TextButton.styleFrom(
-                                                            foregroundColor:
-                                                                primaryColor,
-                                                          ),
-                                                    ),
-                                              ),
-                                              child: child!,
-                                            );
-                                          },
-                                        );
-                                        if (picked != null) {
-                                          setDialogState(() {
-                                            schedule['endDate'] =
-                                                picked
-                                                    .toLocal()
-                                                    .toString()
-                                                    .split(' ')[0];
-                                          });
-                                        }
-                                      },
-                                    ),
-                                  ),
-                                  gap2,
-                                  Divider(
-                                    color: lightGrey,
-                                    thickness: 1.0,
-                                    height: 20,
-                                  ),
-                                  gap2,
-                                ],
-                              );
-                            }).toList(),
-                      ),
-
-                      Align(
-                        alignment: Alignment.center,
-                        child: TextButton.icon(
-                          onPressed: () {
-                            setDialogState(() {
-                              scheduleDetails.add({
-                                'team': null,
-                                'office': null,
-                                'startDate': null,
-                                'endDate': null,
-                              });
-                            });
-                          },
-                          icon: Icon(Icons.add, color: primaryColor),
-                          label: Text(
-                            "Add schedule",
-                            style: TextStyle(color: primaryColor),
+                                  );
+                                }).toList(),
                           ),
-                        ),
+
+                          Align(
+                            alignment: Alignment.center,
+                            child: TextButton.icon(
+                              onPressed: () {
+                                setDialogState(() {
+                                  scheduleDetails.add({
+                                    'team': null,
+                                    'office': null,
+                                    'startDateTime': null,
+                                    'endDateTime': null,
+                                  });
+                                  startDateControllers.add(
+                                    TextEditingController(),
+                                  );
+                                  endDateControllers.add(
+                                    TextEditingController(),
+                                  );
+                                });
+                              },
+                              icon: Icon(Icons.add, color: primaryColor),
+                              label: Text(
+                                "Add schedule",
+                                style: TextStyle(color: primaryColor),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
 
                       // Add Button
@@ -759,7 +778,10 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () {
+                    selectedOffice.clear();
+                    Navigator.pop(context);
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: secondaryBgButton,
                     shape: RoundedRectangleBorder(
@@ -768,6 +790,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                   ),
                   child: Text('Cancel', style: TextStyle(color: primaryColor)),
                 ),
+
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
@@ -806,28 +829,50 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                       List<AuditableOffice> auditableOfficeList = [];
 
                       for (var schedule in scheduleDetails) {
+                        String? start = schedule['startDateTime'];
+                        String? end = schedule['endDateTime'];
+
+                        DateTime? parsedStart;
+                        DateTime? parsedEnd;
+
+                        try {
+                          parsedStart =
+                              start != null && start.isNotEmpty
+                                  ? DateTime.parse(start)
+                                  : null;
+                        } catch (_) {
+                          parsedStart = null;
+                        }
+
+                        try {
+                          parsedEnd =
+                              end != null && end.isNotEmpty
+                                  ? DateTime.parse(end)
+                                  : null;
+                        } catch (_) {
+                          parsedEnd = null;
+                        }
+
+                        if (parsedStart == null || parsedEnd == null) {
+                          continue;
+                        }
+
                         scheduleDetailsList.add(
                           AuditScheduleDetails(
                             id: 0,
                             isDeleted: false,
                             rowVersion: '',
                             auditScheduleId: 0,
-                            startDate: DateTime.parse(schedule['startDate']),
-                            endDate: DateTime.parse(schedule['endDate']),
+                            startDateTime: parsedStart,
+                            endDateTime: parsedEnd,
                             teamId: schedule['team'],
                             teamName: schedule['team']?.toString() ?? '',
                             officeId: schedule['office'],
                             officeName: schedule['office']?.toString() ?? '',
                           ),
                         );
-
-                        // auditableOfficeList.add(
-                        //   AuditableOffice(
-                        //     auditScheduleId: 0,
-                        //     officeId: schedule['office'],
-                        //   ),
-                        // );
                       }
+
                       for (var office in selectedOffice) {
                         auditableOfficeList.add(
                           AuditableOffice(
@@ -842,19 +887,19 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                               .toList();
 
                       final auditschedule = AuditSchedules(
-                        0,
-                        false,
-                        "",
-                        auditTitleController.text,
-                        DateTime.parse(startDateController.text),
-                        DateTime.parse(endDateController.text),
-                        true,
-                        officeList,
-                        auditableOfficeList, // <-- correct type now
-                        scheduleDetailsList,
+                        id: 0,
+                        isDeleted: false,
+                        rowVersion: '',
+                        auditTitle: auditTitleController.text,
+                        startDate: DateTime.parse(startDateController.text),
+                        endDate: DateTime.parse(endDateController.text),
+                        isActive: true,
+                        offices: officeList,
+                        auditableOffices: auditableOfficeList,
+                        auditSchduleDetails: scheduleDetailsList,
                       );
 
-                      await addOrUpdateAuditorTeam(auditschedule);
+                      await addOrUpdateAuditSchedule(auditschedule);
                       if (context.mounted) Navigator.pop(context);
                     }
                   },
@@ -871,7 +916,6 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     );
   }
 
-  // Separate Dialog for Selecting Auditors
   void showAvailableAuditorsDialog(Function setDialogState) {
     showDialog(
       context: context,
@@ -929,7 +973,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
   void filterSearchResults(String query) {
     setState(() {
       filteredList =
-          auditorTeamList
+          auditScheduleList
               .where(
                 (office) =>
                     office['name']!.toLowerCase().contains(query.toLowerCase()),
@@ -941,6 +985,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
@@ -954,6 +999,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Search Field
                 SizedBox(
                   height: 30,
                   width: 300,
@@ -969,7 +1015,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Office',
+                      labelText: 'Search Audit Schedule',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -988,6 +1034,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                     onChanged: filterSearchResults,
                   ),
                 ),
+                // Add New Button
                 if (!isMinimized)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -1009,9 +1056,11 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
               ],
             ),
             gap,
+            // List of Audit Schedules
             Expanded(
               child: Column(
                 children: [
+                  // Table Header
                   Container(
                     color: secondaryColor,
                     padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
@@ -1024,7 +1073,10 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                         ),
                         Expanded(
                           flex: 3,
-                          child: Text('Team', style: TextStyle(color: grey)),
+                          child: Text(
+                            'Audit Schedule',
+                            style: TextStyle(color: grey),
+                          ),
                         ),
                         Expanded(
                           flex: 1,
@@ -1033,14 +1085,15 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                       ],
                     ),
                   ),
+                  // Audit Schedule List
                   Expanded(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.vertical,
                       child: Column(
                         children:
-                            filteredListTeamAuditor
+                            filteredListAuditSchedule
                                 .asMap()
-                                .map((index, audiorTeam) {
+                                .map((index, auditSchedule) {
                                   return MapEntry(
                                     index,
                                     Container(
@@ -1081,7 +1134,8 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                (audiorTeam['teamId'] ?? '')
+                                                (auditSchedule['auditTitle'] ??
+                                                        '')
                                                     .toString(),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
@@ -1102,18 +1156,25 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                                 children: [
                                                   IconButton(
                                                     icon: Icon(Icons.edit),
-
                                                     onPressed: () {
                                                       showFormDialog(
-                                                        id: audiorTeam['id'],
-                                                        teamId:
-                                                            (audiorTeam['teamId'] ??
-                                                                    '')
-                                                                .toString(),
+                                                        id: auditSchedule['id'],
+                                                        auditTitle:
+                                                            auditSchedule['auditTitle'],
+                                                        startDate:
+                                                            auditSchedule['startDate'],
+                                                        endDate:
+                                                            auditSchedule['endDate'],
+                                                        auditableOffices:
+                                                            auditSchedule['auditableOffices'],
+                                                        auditSchduleDetails:
+                                                            auditSchedule['auditSchduleDetails'],
                                                       );
                                                     },
                                                   ),
+
                                                   SizedBox(width: 1),
+                                                  // Delete Button
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.delete,
@@ -1124,7 +1185,52 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                                         79,
                                                       ),
                                                     ),
-                                                    onPressed: () async {},
+                                                    onPressed: () async {
+                                                      final confirmed = await showDialog<
+                                                        bool
+                                                      >(
+                                                        context: context,
+                                                        builder:
+                                                            (
+                                                              ctx,
+                                                            ) => AlertDialog(
+                                                              title: Text(
+                                                                'Confirm Deletion',
+                                                              ),
+                                                              content: Text(
+                                                                'Are you sure you want to delete this audit schedule?',
+                                                              ),
+                                                              actions: [
+                                                                TextButton(
+                                                                  onPressed:
+                                                                      () => Navigator.pop(
+                                                                        ctx,
+                                                                        false,
+                                                                      ),
+                                                                  child: Text(
+                                                                    'Cancel',
+                                                                  ),
+                                                                ),
+                                                                ElevatedButton(
+                                                                  onPressed:
+                                                                      () =>
+                                                                          Navigator.pop(
+                                                                            ctx,
+                                                                            true,
+                                                                          ),
+                                                                  child: Text(
+                                                                    'Delete',
+                                                                  ),
+                                                                ),
+                                                              ],
+                                                            ),
+                                                      );
+
+                                                      if (confirmed == true) {
+                                                        // await deleteAuditSchedule(auditSchedule['id']); // Implement the delete logic
+                                                        // fetchAuditSchedules(); // Refresh the list after deletion
+                                                      }
+                                                    },
                                                   ),
                                                 ],
                                               ),

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/pagination_util.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class TeamPage extends StatefulWidget {
   const TeamPage({super.key});
@@ -13,37 +15,55 @@ class TeamPage extends StatefulWidget {
 }
 
 class _TeamPageState extends State<TeamPage> {
+  final _paginationUtils = PaginationUtil(Dio());
   List<Team> teamList = [];
   List<Team> filteredList = [];
 
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
+
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+
   final dio = Dio();
 
-  Future<void> fetchTeam() async {
-    var url = ApiEndpoint().team;
+  Future<void> fetchTeam({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      var response = await dio.get(url);
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? token = prefs.getString('accessToken');
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return;
+      }
+      final pageList = await _paginationUtils.fetchPaginatedData<Team>(
+        endpoint: ApiEndpoint().team,
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+        fromJson: (json) => Team.fromJson(json),
+        headers: {"Authorization": "Bearer $token"},
+      );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<Team> data =
-            (response.data as List)
-                .map((team) => Team.fromJson(team))
-                .where((team) => team.isDeleted == false)
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            teamList = data;
-            filteredList = List.from(teamList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response: ${response.data}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          teamList = pageList.items;
+          filteredList = List.from(teamList);
+        });
       }
     } catch (e) {
-      debugPrint("Fetch error: $e");
+      debugPrint("Error fetching team: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -62,34 +82,11 @@ class _TeamPageState extends State<TeamPage> {
     }
   }
 
-  // Future<void> deleteTeam(String teamId) async {
-  //   var url = ApiEndpoint().team;
-
-  //   try {
-  //     final response = await dio.put(url, data: {"isDeleted": true});
-
-  //     if (response.statusCode == 200) {
-  //       setState(() {
-  //         // ignore: unrelated_type_equality_checks
-  //         filteredList.removeWhere((team) => team.id == teamId);
-  //       });
-
-  //       await fetchTeam();
-  //     } else {
-  //       debugPrint("Failed to soft delete team: ${response.statusCode}");
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error soft deleting team: $e");
-  //   }
-  // }
   Future<void> deleteTeam(String teamId) async {
-    var url = "${ApiEndpoint().team}/$teamId"; // target specific team endpoint
+    var url = ApiEndpoint().team;
 
     try {
-      final response = await dio.post(
-        url, // Using POST if that's the supported method
-        data: {"isActive": true},
-      );
+      final response = await dio.put(url, data: {"isDeleted": true});
 
       if (response.statusCode == 200) {
         setState(() {
@@ -383,60 +380,128 @@ class _TeamPageState extends State<TeamPage> {
                       scrollDirection: Axis.vertical,
                       child: Column(
                         children:
-                            filteredList.asMap().entries.map((entry) {
-                              int index = entry.key;
-                              Team team = entry.value;
-                              return Container(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 1,
-                                  horizontal: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: Colors.grey.shade300,
-                                    ),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text((index + 1).toString()),
-                                    ),
-                                    Expanded(flex: 3, child: Text(team.name)),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Row(
-                                        children: [
-                                          IconButton(
-                                            icon: Icon(Icons.edit),
-                                            onPressed:
-                                                () => showFormDialog(
-                                                  id: team.id.toString(),
-                                                  name: team.name,
-                                                ),
+                            filteredList
+                                .asMap()
+                                .map((index, team) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  return MapEntry(
+                                    index,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 1,
+                                        horizontal: 16,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade300,
                                           ),
-                                          IconButton(
-                                            icon: Icon(
-                                              Icons.delete,
-                                              color: primaryColor,
-                                            ),
-                                            onPressed:
-                                                () => showDeleteDialog(
-                                                  team.id.toString(),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                itemNumber.toString(),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
                                                 ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                team.name, // Access role name directly
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(Icons.edit),
+                                                    onPressed: () {
+                                                      // Debug print
+                                                      showFormDialog(
+                                                        id: team.id.toString(),
+                                                        name: team.name,
+                                                      );
+                                                    },
+                                                  ),
+                                                  SizedBox(width: 1),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.delete,
+                                                      color: primaryColor,
+                                                    ),
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          team.id.toString(),
+                                                        ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
+                                  );
+                                })
+                                .values
+                                .toList(),
                       ),
                     ),
                   ),
+                ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(10),
+              color: secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchTeam(page: page),
+                  ),
+                  Container(width: 60), // For alignment
                 ],
               ),
             ),

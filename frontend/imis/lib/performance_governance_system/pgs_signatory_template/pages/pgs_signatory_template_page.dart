@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:imis/auth/models/user.dart';
+import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory_template.dart';
 import 'package:imis/utils/api_endpoint.dart';

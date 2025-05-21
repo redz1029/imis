@@ -10,6 +10,7 @@ PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
     PgsDeliverables(
       (json['id'] as num?)?.toInt(),
       KeyResultArea.fromJson(json['kra'] as Map<String, dynamic>),
+      (json['kraId'] as num?)?.toInt(),
       json['deliverableName'] as String,
       json['isDirect'] as bool,
       const DateTimeConverter().fromJson(json['byWhen'] as String),
@@ -22,6 +23,7 @@ PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$PgsDeliverablesToJson(PgsDeliverables instance) =>
     <String, dynamic>{
       'id': instance.id,
+      'kraId': instance.kraId,
       'kra': instance.kra,
       'isDirect': instance.isDirect,
       'deliverableName': instance.deliverableName,

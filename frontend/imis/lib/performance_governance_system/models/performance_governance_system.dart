@@ -1,4 +1,4 @@
-import 'package:imis/performance_governance_system/office/models/office.dart';
+import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/performance_governance_system/models/pgs_readiness.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -58,20 +58,19 @@ class PerformanceGovernanceSystem {
   final String? remarks;
 
   @JsonKey()
-  final List<PgsDeliverables> pgsDeliverables;
+  List<PgsDeliverables> pgsDeliverables;
 
   @JsonKey()
   final PgsReadiness pgsReadinessRating;
 
   @JsonKey()
-  List<PgsSignatory>? pgsSignatories;
+  final List<PgsSignatory>? pgsSignatories;
 
   final bool isDeleted;
   final String? rowVersion;
   final double percentDeliverables;
   final String? pgsStatus;
 
-  // Constructor with required parameters and optional ones
   PerformanceGovernanceSystem({
     required this.id,
     required this.office,
@@ -80,16 +79,14 @@ class PerformanceGovernanceSystem {
     required this.pgsReadinessRating,
     required this.pgsSignatories,
     required this.isDeleted,
-    this.remarks = '', // Default to empty string if not provided
+    this.remarks,
     this.rowVersion,
     required this.percentDeliverables,
     required this.pgsStatus,
   });
 
-  // From JSON factory
   factory PerformanceGovernanceSystem.fromJson(Map<String, dynamic> json) =>
       _$PerformanceGovernanceSystemFromJson(json);
 
-  // To JSON method
   Map<String, dynamic> toJson() => _$PerformanceGovernanceSystemToJson(this);
 }

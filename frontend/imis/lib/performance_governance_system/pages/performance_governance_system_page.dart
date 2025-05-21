@@ -1,9 +1,8 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:imis/auth/models/user.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/performance_governance_system/office/models/office.dart';
+import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/models/performance_governance_system.dart';
@@ -12,7 +11,9 @@ import 'package:imis/performance_governance_system/models/pgs_readiness.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory_template.dart';
+import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -36,7 +37,6 @@ class _PerformanceGovernanceSystemPageState
   Map<int, TextEditingController> selectedByWhenControllers = {};
   Map<int, Map<String, dynamic>> selectedKRAObjects = {};
   late Future<List<Map<String, dynamic>>> deliverables;
-  List<PgsSignatory> signatories = [];
   Map<int, PgsStatus> selectedStatus = {};
   Map<int, String> selectedValues = {};
   Map<int, String> selectedByWhen = {};
@@ -49,6 +49,7 @@ class _PerformanceGovernanceSystemPageState
   String userId = "";
   List<User> userList = [];
   List<User> filteredListUser = [];
+  List<PgsSignatory> displaySignatoryList = [];
 
   List<Map<String, dynamic>> deliverableList = [];
   List<Map<String, dynamic>> deliverableLists = [];
@@ -56,18 +57,22 @@ class _PerformanceGovernanceSystemPageState
   List<Map<String, dynamic>> filteredList = [];
   List<Map<String, dynamic>> filteredListSignatory = [];
   List<Map<String, dynamic>> options = [];
-  List<String> kraOptions = [];
+
+  List<Map<String, dynamic>> kraOptions = [];
   Map<int, int?> deliverableIds = {};
   List<Map<String, dynamic>> signatoryList = [];
-  List<PgsSignatory> displaySignatoryList = [];
+  Map<int, int?> signatoryIds = {};
 
   List<int> rows = [];
   int rowIndex = 1;
-  // String? _selectedUserId;
 
   String? _submittedByUserId;
   String? _notedByUserId;
   String? _approvedByUserId;
+
+  int? submittedRecordId = 0;
+  int? notedRecordId = 0;
+  int? aprroveRecordId = 0;
 
   String officeDisplay = "";
   String officeIdList = "";
@@ -117,7 +122,6 @@ class _PerformanceGovernanceSystemPageState
   final dio = Dio();
 
   //Save pgs
-
   Future<void> savePGS(PerformanceGovernanceSystem audit) async {
     var url = ApiEndpoint().performancegovernancesystem;
 
@@ -147,33 +151,7 @@ class _PerformanceGovernanceSystemPageState
         return;
       }
 
-      List<PgsDeliverables> deliverablesList = [];
-
-      for (int index in rows) {
-        final name = deliverablesControllers[index]?.text.trim() ?? '';
-        if (name.isEmpty) continue;
-
-        int kraId = selectedKRA[index] ?? 0;
-
-        KeyResultArea kra = KeyResultArea(kraId, 'KRA Name', 'Remarks', false);
-        deliverablesList.add(
-          PgsDeliverables(
-            null,
-            kra,
-            name,
-            selectedDirect[index] ?? true,
-            DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now(),
-            double.tryParse(percentage.text) ?? 0.0,
-            selectedStatus[index] ?? PgsStatus.notStarted,
-          ),
-        );
-      }
-
-      deliverablesList;
-      double.tryParse(percentage.text) ?? 0.0;
-
       final requestData = audit.toJson();
-
       final response = await dio.post(
         url,
         data: requestData,
@@ -186,13 +164,16 @@ class _PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint("Pgs data saved successfully!");
+        debugPrint("Pgs ID: ${response.data['id']}");
+
         setState(() {
           fetchPgsList();
           clearAllSelections();
         });
 
-        await prefs.remove('selectedOfficeId');
-        await prefs.remove('selectedOfficeName');
+        // await prefs.remove('selectedOfficeId');
+        // await prefs.remove('selectedOfficeName');
       } else {
         debugPrint("Failed to save Pgs data: ${response.statusCode}");
         debugPrint("Response: ${response.data}");
@@ -207,54 +188,59 @@ class _PerformanceGovernanceSystemPageState
   }
 
   Future<void> updatePGS({
-    required String pgsId,
+    String? pgsId,
     required PerformanceGovernanceSystem audit,
   }) async {
     final url = '${ApiEndpoint().performancegovernancesystem}/$pgsId';
+
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('accessToken');
 
-      final Map<String, dynamic> requestData = audit.toJson();
-      debugPrint("Sending Request Data: $requestData");
+      if (token == null || token.isEmpty) {
+        debugPrint("? Error: Access token is missing!");
+        return;
+      }
+
+      final pgs = audit.toJson();
 
       final response = await dio.put(
         url,
-        data: requestData,
+        data: pgs,
         options: Options(
-          contentType: Headers.jsonContentType,
-          headers: {"Authorization": "Bearer $token"},
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer $token",
+          },
         ),
       );
 
-      if (response.statusCode == 200 ||
-          response.statusCode == 201 ||
-          response.statusCode == 204) {
-        debugPrint("Successfully updated PGS: ${response.data}");
-        fetchPgsList();
-        clearAllSelections();
-      } else {}
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint("? PGS data updated successfully!");
+        debugPrint("Updated PGS ID: ${response.data['id']}");
+        debugPrint("Payload sent: $pgs");
+
+        // Refresh UI
+        setState(() {
+          fetchPgsList();
+          clearAllSelections();
+        });
+      } else {
+        debugPrint("Failed to update PGS: ${response.statusCode}");
+        debugPrint("Response: ${response.data}");
+
+        if (response.statusCode == 401 || response.statusCode == 403) {
+          debugPrint(
+            "Token expired or invalid. Consider redirecting to login.",
+          );
+        }
+      }
     } on DioException catch (e) {
       debugPrint(
-        " Dio error: ${e.response?.statusCode} - ${e.response?.data ?? e.message}",
+        "?? DioException: ${e.response?.statusCode} - ${e.response?.data ?? e.message}",
       );
-      MotionToast.error(
-        title: const Text("Network Error"),
-        description: Text("Error: ${e.response?.statusCode} - ${e.message}"),
-        // ignore: deprecated_member_use
-        position: MotionToastPosition.top,
-        // ignore: use_build_context_synchronously
-      ).show(context);
     } catch (e) {
-      // Unexpected error
-      debugPrint("Unexpected error: $e");
-      MotionToast.error(
-        title: const Text("Unexpected Error"),
-        description: Text("An unexpected error occurred: $e"),
-        // ignore: deprecated_member_use
-        position: MotionToastPosition.top,
-        // ignore: use_build_context_synchronously
-      ).show(context);
+      debugPrint("?? Unexpected error: $e");
     }
   }
 
@@ -286,6 +272,8 @@ class _PerformanceGovernanceSystemPageState
       debugPrint("Unexpected error: $e");
     }
   }
+
+  //-----------------End Signatories---------------------------------------------------------
 
   Future<void> fetchUser() async {
     var url = ApiEndpoint().users;
@@ -329,98 +317,11 @@ class _PerformanceGovernanceSystemPageState
       final userId = signatory['defaultSignatoryId'].toString();
       final user = userList.firstWhere(
         (u) => u.id.toString() == userId,
-        orElse: () => User(id: '', fullName: ''),
+        orElse: () => User(id: '', fullName: 'Unknown'),
       );
       return user.fullName;
     } catch (e) {
       return 'Unknown';
-    }
-  }
-
-  String? getSignatoryByOrderLevels({
-    required int pgsIdSignatory,
-    required int level,
-  }) {
-    try {
-      final signatory = displaySignatoryList.firstWhere(
-        (item) =>
-            item.pgsId == pgsIdSignatory && // Matches by pgsId
-            item.pgsSignatoryTemplateId == level, // Matches by level
-        orElse:
-            () => PgsSignatory(
-              DateTime.now(),
-              false,
-              '',
-              id: 0,
-              pgsId: pgsIdSignatory, // Ensure this is correct
-              pgsSignatoryTemplateId: 0,
-              signatoryId: '',
-            ),
-      );
-
-      if (signatory.signatoryId == null || signatory.signatoryId!.isEmpty) {
-        return null;
-      }
-
-      return signatory.signatoryId;
-    } catch (e) {
-      debugPrint("Error getting signatory by level: $e");
-      return null;
-    }
-  }
-
-  void setSignatoryLevels(int? dynamicSelectedId) {
-    final currentPgsId =
-        dynamicSelectedId ?? 0; // Default to 0 if dynamicSelectedId is null
-
-    if (currentPgsId != 0) {
-      _submittedByUserId = getSignatoryByOrderLevels(
-        pgsIdSignatory: currentPgsId,
-        level: 1,
-      );
-      _notedByUserId = getSignatoryByOrderLevels(
-        pgsIdSignatory: currentPgsId,
-        level: 2,
-      );
-      _approvedByUserId = getSignatoryByOrderLevels(
-        pgsIdSignatory: currentPgsId,
-        level: 3,
-      );
-    } else {
-      debugPrint("No valid selectedId provided, cannot proceed.");
-    }
-  }
-
-  String? getSignatoryByOrderLevel(int level) {
-    try {
-      final signatory = signatoryList.firstWhere(
-        (item) => item['orderLevel'] == level,
-        orElse: () => <String, dynamic>{},
-      );
-
-      if (signatory.isEmpty || signatory['defaultSignatoryId'] == null) {
-        return null;
-      }
-      return signatory['defaultSignatoryId'].toString();
-    } catch (e) {
-      return null;
-    }
-  }
-
-  String? getSignatoryTitleByOrderLevel(int level) {
-    try {
-      final signatory = signatoryList.firstWhere(
-        (item) => item['orderLevel'] == level,
-        orElse: () => <String, dynamic>{},
-      );
-
-      if (signatory.isEmpty || signatory['signatoryLabel'] == null) {
-        return null;
-      }
-
-      return signatory['signatoryLabel'].toString();
-    } catch (e) {
-      return null;
     }
   }
 
@@ -441,7 +342,6 @@ class _PerformanceGovernanceSystemPageState
             ? DropdownButton<String>(
               hint: const Text('Select name'),
               value: currentValue,
-
               items:
                   userList.map((user) {
                     return DropdownMenuItem<String>(
@@ -464,7 +364,6 @@ class _PerformanceGovernanceSystemPageState
                               .firstWhere((user) => user.id == currentValue)
                               .fullName
                           : getFullNameFromSignatoryId(currentValue)),
-
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text('[No Position]', style: const TextStyle(fontSize: 12)),
@@ -508,12 +407,6 @@ class _PerformanceGovernanceSystemPageState
                   .where((d) => d.id != null)
                   .toList();
 
-          for (var d in deliverables) {
-            debugPrint(
-              "Deliverable loaded: ID=${d.id}, Name=${d.deliverableName}",
-            );
-          }
-
           deliverablesList.addAll(deliverables);
         }
       } else {
@@ -526,54 +419,6 @@ class _PerformanceGovernanceSystemPageState
     }
 
     return deliverablesList;
-  }
-
-  Future<List<PgsSignatory>> fetchSignatoryList({String? pgsId}) async {
-    final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
-
-    debugPrint("Fetching deliverables for PGS ID: $pgsId");
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return [];
-      }
-
-      final response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        final pgsDataList = data is List ? data : [data];
-
-        for (var pgsJson in pgsDataList) {
-          final signatories =
-              (pgsJson['pgsSignatories'] as List)
-                  .map((d) => PgsSignatory.fromJson(d))
-                  .where((d) => d.id != null)
-                  .toList();
-
-          for (var d in signatories) {
-            debugPrint("Deliverable loaded: ID=${d.id}, Name=${d.signatoryId}");
-          }
-
-          displaySignatoryList.addAll(signatories);
-        }
-      } else {
-        debugPrint("Failed to fetch deliverables: ${response.statusCode}");
-      }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-
-    return displaySignatoryList;
   }
 
   Future<bool?> _confirmAction(String title, String message) async {
@@ -611,9 +456,10 @@ class _PerformanceGovernanceSystemPageState
       context: context,
       builder: (BuildContext context) {
         return Dialog(
+          backgroundColor: mainBgColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
-          ), // Rounded corners
+          ),
           child: Container(
             width: MediaQuery.of(context).size.width * 0.30,
             constraints: BoxConstraints(maxHeight: 250),
@@ -621,10 +467,18 @@ class _PerformanceGovernanceSystemPageState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                Align(
+                  alignment: Alignment.topRight,
+                  child: IconButton(
+                    icon: Icon(Icons.close, color: primaryTextColor),
+                    onPressed: () => Navigator.pop(context, null),
+                  ),
+                ),
                 Text(
                   "Select an Office",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
+
                 SizedBox(height: 10),
                 Expanded(
                   child: ListView.builder(
@@ -632,41 +486,19 @@ class _PerformanceGovernanceSystemPageState
                     itemCount: officeNames.length,
                     itemBuilder: (context, index) {
                       return Card(
+                        color: mainBgColor,
                         margin: EdgeInsets.symmetric(vertical: 4),
                         child: ListTile(
                           title: Text(
                             officeNames[index],
                             style: TextStyle(fontSize: 16),
                           ),
-                          leading: Icon(
-                            Icons.apartment,
-                            color: Colors.blueAccent,
-                          ),
-                          onTap:
-                              () => Navigator.pop(
-                                context,
-                                officeIds[index],
-                              ), // Return office ID
+                          leading: Icon(Icons.apartment, color: primaryColor),
+                          onTap: () => Navigator.pop(context, officeIds[index]),
                         ),
                       );
                     },
                   ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    TextButton(
-                      onPressed:
-                          () => Navigator.pop(
-                            context,
-                            null,
-                          ), // Return null if canceled
-                      child: Text(
-                        "Cancel",
-                        style: TextStyle(color: Colors.red),
-                      ),
-                    ),
-                  ],
                 ),
               ],
             ),
@@ -677,81 +509,11 @@ class _PerformanceGovernanceSystemPageState
 
     if (selectedOffice == null || selectedOffice == "REMOVE_OFFICE") {
       await prefs.remove('selectedOfficeId');
-
       return null;
     } else {
       await prefs.setString('selectedOfficeId', selectedOffice);
 
       return selectedOffice;
-    }
-  }
-
-  //fetch pgs
-  Future<void> fetchPgs({required int? pgsId}) async {
-    var url = ApiEndpoint().performancegovernancesystem;
-
-    if (pgsId != null && pgsId != 0) {
-      url = "$url/$pgsId";
-    }
-
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
-
-      var response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-
-        final pgsList = data is List ? data : [data];
-
-        List<Map<String, Object>> formattedData =
-            pgsList.map((pgsJson) {
-              PerformanceGovernanceSystem pgs =
-                  PerformanceGovernanceSystem.fromJson(pgsJson);
-
-              return {
-                'pgsReadinessRatingId': pgs.pgsReadinessRating.id.toString(),
-                'id': pgs.id.toString(),
-                'name': pgs.office.name,
-                'Start Date': DateTimeConverter().toJson(
-                  pgs.pgsPeriod.startDate,
-                ),
-                'End Date': DateTimeConverter().toJson(pgs.pgsPeriod.endDate),
-                'competencescore':
-                    pgs.pgsReadinessRating.competenceToDeliver.toString(),
-                'confidencescore':
-                    pgs.pgsReadinessRating.confidenceToDeliver.toString(),
-                'resourcescore':
-                    pgs.pgsReadinessRating.resourceAvailability.toString(),
-                'selectPeriod': pgs.pgsPeriod.id.toString(),
-                'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
-                'percentDeliverables': pgs.percentDeliverables.toString(),
-                // 'signatoryId': pgs.pgsSignatories?.first.signatoryId ?? '',
-              };
-            }).toList();
-
-        if (mounted) {
-          setState(() {
-            deliverableList = formattedData;
-            filteredList = List.from(deliverableList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
-      }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
     }
   }
 
@@ -779,7 +541,7 @@ class _PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 && response.data is List) {
-        List<Map<String, Object?>> formattedData =
+        List<Map<String, Object>> formattedData =
             (response.data as List).map((pgsJson) {
               PerformanceGovernanceSystem pgs =
                   PerformanceGovernanceSystem.fromJson(pgsJson);
@@ -837,9 +599,7 @@ class _PerformanceGovernanceSystemPageState
         if (mounted) {
           setState(() {
             periodList = data.map((period) => period.toJson()).toList();
-            filteredListPeriod = List.from(
-              periodList,
-            ); // Ensure filtered list is populated
+            filteredListPeriod = List.from(periodList);
           });
         }
       } else {
@@ -853,21 +613,23 @@ class _PerformanceGovernanceSystemPageState
   }
 
   Future<void> _loadOfficeName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    List<String>? officeNames = await AuthUtil.fetchOfficeNames();
+    List<String>? officeIds = await AuthUtil.fetchOfficeIds();
 
-    List<String> officeNames = prefs.getStringList('officeNames') ?? [];
-    List<String> officeIds = prefs.getStringList('officeIds') ?? [];
-    selectedOffice = prefs.getString('selectedOfficeId');
+    final prefs = await SharedPreferences.getInstance();
+    String? selectedOfficeId = prefs.getString('selectedOfficeId');
 
     String selectedOfficeName = "No Office";
-    if (officeIds.contains(selectedOffice)) {
-      int index = officeIds.indexOf(selectedOffice!);
-      selectedOfficeName = officeNames[index];
-    }
 
+    if (officeNames != null && officeIds != null && selectedOfficeId != null) {
+      int index = officeIds.indexOf(selectedOfficeId);
+      if (index != -1 && index < officeNames.length) {
+        selectedOfficeName = officeNames[index];
+      }
+    }
     setState(() {
       officeDisplay = selectedOfficeName;
-      officeIdList = selectedOffice ?? "No Office ID";
+      officeIdList = selectedOfficeId ?? "No Office ID";
     });
   }
 
@@ -876,13 +638,9 @@ class _PerformanceGovernanceSystemPageState
     super.initState();
     fetchSignatory();
     _loadOfficeName();
-
     fetchPgsList();
     fetchUser();
     fetchPGSPeriods();
-    // _submittedByUserId = getSignatoryByOrderLevel(1);
-    // _notedByUserId = getSignatoryByOrderLevel(2);
-    // _approvedByUserId = getSignatoryByOrderLevel(3);
     isSearchFocus.addListener(() {
       setState(() {});
     });
@@ -947,91 +705,10 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
-  List<PgsSignatory> _getPgsSignatory() {
-    return [
-      PgsSignatory(
-        DateTime.now(),
-        false,
-        "",
-        id: 0,
-        pgsId: 0,
-        pgsSignatoryTemplateId: 1,
-        signatoryId: _submittedByUserId!,
-      ),
-      PgsSignatory(
-        DateTime.now(),
-        false,
-        "",
-        id: 0,
-        pgsId: 0,
-        pgsSignatoryTemplateId: 2,
-        signatoryId: _approvedByUserId!,
-      ),
-      PgsSignatory(
-        DateTime.now(),
-        false,
-        "",
-        id: 0,
-        pgsId: 0,
-        pgsSignatoryTemplateId: 3,
-        signatoryId: _notedByUserId!,
-      ),
-    ];
-  }
-
-  List<PgsDeliverables> getTableDeliverables() {
-    deliverablesControllers.forEach((index, controller) {
-      var kraData =
-          selectedKRAObjects[index] ??
-          {'id': 1, 'name': 'Unknown', 'description': ''};
-      var deliverableText =
-          controller.text.isNotEmpty ? controller.text : "No Name";
-      var isDirect = selectedDirect[index] ?? false;
-      var byWhen =
-          DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
-      double percentDeliverables = 0.0;
-      try {
-        percentDeliverables = double.tryParse(percentage.text) ?? 0.0;
-      } catch (e) {
-        debugPrint("Error parsing percentDeliverables: $e");
-      }
-      var statusIndex =
-          selectedStatus[index]?.index ?? PgsStatus.notStarted.index;
-      debugPrint('Status Index for index $index: $statusIndex');
-
-      var status = PgsStatus.values.firstWhere(
-        (e) => e.index == statusIndex,
-        orElse: () => PgsStatus.notStarted,
-      );
-      var remarks = "";
-
-      deliverablesList.add(
-        PgsDeliverables(
-          0,
-          KeyResultArea(
-            kraData['id'],
-            kraData['name'],
-            remarks,
-            true,
-            rowVersion: "",
-          ),
-          deliverableText,
-          isDirect,
-          byWhen,
-          percentDeliverables,
-          status,
-          remarks: remarks,
-          rowVersion: "",
-        ),
-      );
-    });
-
-    return deliverablesList;
-  }
-
   PerformanceGovernanceSystem getPgsAuditDetails({
     required int id,
     required String pgsStatus,
+    List<PgsSignatory> existingSignatories = const [],
   }) {
     double percentDeliverables = 0.0;
 
@@ -1053,9 +730,8 @@ class _PerformanceGovernanceSystemPageState
       ),
       office: Office(
         id: int.tryParse(selectedOffice!) ?? 0,
-        name: "",
+        name: "Office Name",
         isActive: false,
-        isDeleted: false,
         rowVersion: "",
       ),
       pgsDeliverables: getTableDeliverables(),
@@ -1068,8 +744,7 @@ class _PerformanceGovernanceSystemPageState
         confidenceScore.value,
         totalScore,
       ),
-
-      pgsSignatories: _getPgsSignatory(),
+      pgsSignatories: _getPgsSignatory(id), //updatedSignatories
       isDeleted: false,
       remarks: "",
       rowVersion: "",
@@ -1077,10 +752,110 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
+  List<PgsDeliverables> getTableDeliverables() {
+    List<PgsDeliverables> updatedDeliverables = [];
+
+    deliverablesControllers.forEach((index, controller) {
+      final kraId = selectedKRA[index];
+
+      final kraData = options.firstWhere(
+        (option) => option['id'] == kraId,
+        orElse:
+            () => {
+              'id': 1,
+              'name': 'Unknown',
+              'remarks': '',
+              'isDeleted': false,
+              'rowVersion': null,
+            },
+      );
+      selectedKRAObjects[index] = kraData;
+
+      final deliverableText =
+          controller.text.isNotEmpty ? controller.text : "No Name";
+      final isDirect = selectedDirect[index] ?? false;
+      final byWhen =
+          DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
+
+      double percentDeliverables = 0.0;
+      try {
+        percentDeliverables = double.tryParse(percentage.text) ?? 0.0;
+      } catch (e) {
+        debugPrint("Error parsing percentDeliverables: $e");
+      }
+
+      final statusIndex =
+          selectedStatus[index]?.index ?? PgsStatus.notStarted.index;
+      final status = PgsStatus.values.firstWhere(
+        (e) => e.index == statusIndex,
+        orElse: () => PgsStatus.notStarted,
+      );
+
+      final remarks = "";
+      final existingId = deliverableIds[index] ?? 0;
+
+      updatedDeliverables.add(
+        PgsDeliverables(
+          existingId,
+          KeyResultArea(
+            kraData['id'] as int,
+            kraData['name'] as String,
+            kraData['remarks'] ?? '',
+            true,
+
+            rowVersion: kraData['rowVersion'],
+          ),
+          kraId,
+          deliverableText,
+          isDirect,
+          byWhen,
+          percentDeliverables,
+          status,
+          remarks: remarks,
+          rowVersion: '',
+        ),
+      );
+    });
+
+    return updatedDeliverables;
+  }
+
+  List<PgsSignatory> _getPgsSignatory(int pgsId) {
+    return [
+      PgsSignatory(
+        DateTime.now(),
+        false,
+        "",
+        id: submittedRecordId ?? 0,
+        pgsId: pgsId,
+        pgsSignatoryTemplateId: 1,
+        signatoryId: _submittedByUserId?.toString() ?? '',
+      ),
+      PgsSignatory(
+        DateTime.now(),
+        false,
+        "",
+        id: notedRecordId ?? 0,
+        pgsId: pgsId,
+        pgsSignatoryTemplateId: 2,
+        signatoryId: _notedByUserId?.toString() ?? '',
+      ),
+      PgsSignatory(
+        DateTime.now(),
+        false,
+        "",
+        id: aprroveRecordId ?? 0,
+        pgsId: pgsId,
+        pgsSignatoryTemplateId: 3,
+        signatoryId: _approvedByUserId?.toString() ?? '',
+      ),
+    ];
+  }
+
   //Add rows-------------
   void _addRow() {
     setState(() {
-      int newRowId = DateTime.now().millisecondsSinceEpoch; // Unique ID
+      int newRowId = DateTime.now().millisecondsSinceEpoch;
       rows.add(newRowId);
     });
   }
@@ -1182,7 +957,6 @@ class _PerformanceGovernanceSystemPageState
                           selectedOfficeId.isEmpty) {
                         await _selectOffice();
                         selectedOfficeId = prefs.getString('selectedOfficeId');
-
                         if (selectedOfficeId != null &&
                             selectedOfficeId.isNotEmpty) {
                           await _loadOfficeName();
@@ -1215,17 +989,18 @@ class _PerformanceGovernanceSystemPageState
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        Expanded(
-                          flex: 1,
+                        SizedBox(
+                          width: 60,
                           child: Padding(
-                            padding: EdgeInsets.only(right: 10),
+                            padding: const EdgeInsets.only(right: 10),
                             child: Text('#', style: TextStyle(color: grey)),
                           ),
                         ),
-                        Expanded(
-                          flex: 1,
+
+                        SizedBox(
+                          width: 300,
                           child: Padding(
-                            padding: EdgeInsets.only(right: 10),
+                            padding: const EdgeInsets.only(right: 10),
                             child: Text(
                               'Office Name',
                               style: TextStyle(color: grey),
@@ -1301,35 +1076,27 @@ class _PerformanceGovernanceSystemPageState
                                         mainAxisAlignment:
                                             MainAxisAlignment.start,
                                         children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                (index + 1).toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
+                                          SizedBox(
+                                            width: 60,
+                                            child: Text(
+                                              (index + 1).toString(),
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.normal,
                                               ),
                                             ),
                                           ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                pgsgovernancesystem['name'],
-                                                // Display office
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
+
+                                          SizedBox(
+                                            width: 300,
+                                            child: Text(
+                                              pgsgovernancesystem['name'],
+                                              // Display office
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.normal,
                                               ),
                                             ),
                                           ),
+
                                           Expanded(
                                             flex: 1,
                                             child: Padding(
@@ -1498,7 +1265,7 @@ class _PerformanceGovernanceSystemPageState
                   );
 
                   if (selectedOfficeId == null || selectedOfficeId.isEmpty) {
-                    clearAllSelections(); // Reset form when no office is selected
+                    clearAllSelections();
 
                     await _selectOffice();
                     selectedOfficeId = prefs.getString('selectedOfficeId');
@@ -1509,7 +1276,6 @@ class _PerformanceGovernanceSystemPageState
                       showFormDialog(pgsstatus: null);
                     }
                   } else {
-                    // If office is already selected, no need to reset the form unnecessarily
                     await _loadOfficeName();
                     showFormDialog(pgsstatus: null);
                   }
@@ -1520,10 +1286,168 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
+  String? getSignatoryByOrderLevelDefault(int level) {
+    try {
+      final signatory = signatoryList.firstWhere(
+        (item) => item['orderLevel'] == level,
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (signatory.isEmpty || signatory['defaultSignatoryId'] == null) {
+        return null;
+      }
+      return signatory['defaultSignatoryId'].toString();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  String? getSignatoryTitleByOrderLevel(int level) {
+    try {
+      final signatory = signatoryList.firstWhere(
+        (item) => item['orderLevel'] == level,
+        orElse: () => <String, dynamic>{},
+      );
+
+      if (signatory.isEmpty || signatory['signatoryLabel'] == null) {
+        return null;
+      }
+
+      return signatory['signatoryLabel'].toString();
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<List<PgsSignatory>> fetchSignatoryList({required String pgsId}) async {
+    final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
+
+    debugPrint("Fetching signatories for PGS ID: $pgsId");
+
+    displaySignatoryList.clear(); // Clear before adding new
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
+
+      if (token == null || token.isEmpty) {
+        debugPrint("Error: Access token is missing!");
+        return [];
+      }
+
+      final response = await dio.get(
+        url,
+        options: Options(headers: {"Authorization": "Bearer $token"}),
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        final pgsDataList = data is List ? data : [data];
+
+        for (var pgsJson in pgsDataList) {
+          final signatoriesJson = pgsJson['pgsSignatories'];
+          if (signatoriesJson is List) {
+            final signatories =
+                signatoriesJson.map((d) => PgsSignatory.fromJson(d)).toList();
+
+            for (var d in signatories) {
+              debugPrint(
+                "Signatory loaded: ID=${d.id}, SignatoryId=${d.signatoryId}",
+              );
+            }
+
+            displaySignatoryList.addAll(signatories);
+          } else {
+            debugPrint("No valid 'pgsSignatories' list found in response.");
+          }
+        }
+      } else {
+        debugPrint("Failed to fetch signatories: ${response.statusCode}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+
+    return displaySignatoryList;
+  }
+
+  String? getSignatoryByOrderLevelEdit({
+    required int pgsIdSignatory,
+    required int level,
+  }) {
+    try {
+      debugPrint(
+        "Getting signatory for PGS ID: $pgsIdSignatory, Level: $level",
+      );
+
+      final signatory = displaySignatoryList.firstWhere(
+        (item) =>
+            item.pgsId == pgsIdSignatory && // Matches by pgsId
+            item.pgsSignatoryTemplateId == level, // Matches by level
+        orElse:
+            () => PgsSignatory(
+              DateTime.now(),
+              false,
+              '',
+              id: 0,
+              pgsId: pgsIdSignatory,
+              pgsSignatoryTemplateId: 0,
+              signatoryId: '',
+            ),
+      );
+
+      if (signatory.signatoryId == null || signatory.signatoryId!.isEmpty) {
+        debugPrint("No valid signatoryId found.");
+        return null;
+      }
+    } catch (e) {
+      debugPrint("Error getting signatory by level: $e");
+      return null;
+    }
+    return null;
+  }
+
+  int? selectedPgsId;
+
+  void setSignatoryLevels(int? dynamicSelectedId) {
+    final currentPgsId = dynamicSelectedId ?? 0;
+
+    if (currentPgsId != 0) {
+      _submittedByUserId = getSignatoryByOrderLevelEdit(
+        pgsIdSignatory: currentPgsId,
+        level: 1,
+      );
+      _notedByUserId = getSignatoryByOrderLevelEdit(
+        pgsIdSignatory: currentPgsId,
+        level: 2,
+      );
+      _approvedByUserId = getSignatoryByOrderLevelEdit(
+        pgsIdSignatory: currentPgsId,
+        level: 3,
+      );
+    } else {
+      debugPrint("No valid selectedId provided, cannot proceed.");
+      _submittedByUserId = null;
+      _notedByUserId = null;
+      _approvedByUserId = null;
+    }
+  }
+
+  void onPgsIdChanged(int? newPgsId) {
+    setState(() {
+      selectedPgsId = newPgsId;
+
+      setSignatoryLevels(selectedPgsId);
+    });
+  }
+
   void showFormDialog({
     String? id,
     String? officename,
-    double? officenameid,
+    int? officenameid,
     String? startDate,
     String? endDate,
     String? competencescore,
@@ -1536,7 +1460,6 @@ class _PerformanceGovernanceSystemPageState
     List<PgsSignatory>? signatories,
     String? pgsstatus,
     String? pgsId,
-    int? pgs,
   }) {
     setState(() {
       if (id == null) {
@@ -1547,18 +1470,20 @@ class _PerformanceGovernanceSystemPageState
         selectedPeriodText = null;
         percentage.clear();
 
-        // rows = [0]; // At least one row
         deliverablesControllers.clear();
         selectedKRA.clear();
+        selectedKRAObjects.clear();
         selectedDirect.clear();
         selectedIndirect.clear();
         selectedByWhen.clear();
+        selectedByWhenControllers.clear();
         selectedStatus.clear();
         deliverableIds.clear();
 
-        // deliverablesList.clear();
+        _submittedByUserId = getSignatoryByOrderLevelDefault(1);
+        _notedByUserId = getSignatoryByOrderLevelDefault(2);
+        _approvedByUserId = getSignatoryByOrderLevelDefault(3);
       } else {
-        // EDIT MODE
         competenceScore.value = double.tryParse(competencescore ?? '') ?? 0.0;
         resourceScore.value = double.tryParse(resourcescore ?? '') ?? 0.0;
         confidenceScore.value = double.tryParse(confidencescore ?? '') ?? 0.0;
@@ -1567,7 +1492,6 @@ class _PerformanceGovernanceSystemPageState
           percentage.text = percentDeliverables;
         }
 
-        // Assign the correct period from startDate and endDate
         if (startDate != null && endDate != null) {
           final selected = filteredListPeriod.firstWhere(
             (period) =>
@@ -1586,12 +1510,13 @@ class _PerformanceGovernanceSystemPageState
           }
         }
 
-        // Clear current fields
         deliverablesControllers.clear();
         selectedKRA.clear();
+        selectedKRAObjects.clear();
         selectedDirect.clear();
         selectedIndirect.clear();
         selectedByWhen.clear();
+        selectedByWhenControllers.clear();
         selectedStatus.clear();
         deliverableIds.clear();
 
@@ -1603,7 +1528,6 @@ class _PerformanceGovernanceSystemPageState
             deliverablesControllers[i] = TextEditingController(
               text: item.deliverableName,
             );
-            selectedKRA[i] = item.kra.id;
             selectedDirect[i] = item.isDirect;
             selectedIndirect[i] = !item.isDirect;
             selectedByWhen[i] = DateFormat('yyyy-MM-dd').format(item.byWhen);
@@ -1612,26 +1536,66 @@ class _PerformanceGovernanceSystemPageState
             );
             selectedStatus[i] = item.status;
             deliverableIds[i] = item.id ?? 0;
+            selectedKRA[i] = item.kra.id;
           }
         } else {
           rows = [0];
         }
+
+        final submittedSignatory = signatories?.firstWhere(
+          (signatory) => signatory.pgsSignatoryTemplateId == 1,
+          orElse:
+              () => PgsSignatory(
+                id: 0,
+                pgsId: 0,
+                pgsSignatoryTemplateId: 1,
+                signatoryId: '0',
+                DateTime.now(),
+                false,
+                "",
+              ),
+        );
+        submittedRecordId = submittedSignatory?.id ?? 0;
+        _submittedByUserId = submittedSignatory?.signatoryId ?? '0';
+
+        final notedSignatory = signatories?.firstWhere(
+          (signatory) => signatory.pgsSignatoryTemplateId == 2,
+          orElse:
+              () => PgsSignatory(
+                id: 0,
+                pgsId: 0,
+                pgsSignatoryTemplateId: 2,
+                signatoryId: '0',
+                DateTime.now(),
+                false,
+                "",
+              ),
+        );
+        notedRecordId = notedSignatory?.id ?? 0;
+        _notedByUserId = notedSignatory?.signatoryId ?? '0';
+
+        final approveSignatory = signatories?.firstWhere(
+          (signatory) => signatory.pgsSignatoryTemplateId == 3,
+          orElse:
+              () => PgsSignatory(
+                id: 0,
+                pgsId: 0,
+                pgsSignatoryTemplateId: 3,
+                signatoryId: '0',
+                DateTime.now(),
+                false,
+                "",
+              ),
+        );
+        aprroveRecordId = approveSignatory?.id ?? 0;
+        _approvedByUserId = approveSignatory?.signatoryId ?? '0';
       }
     });
-    //  bool isDraft = pgsstatus == 'Draft';
-    bool isDraft = pgsstatus == null || pgsstatus == 'Draft';
-    bool isSubmitted = pgsstatus == 'Submitted';
-    bool isApproved = pgsstatus == 'Approved';
-    bool isCancelled = pgsstatus == 'Cancelled';
-    // final List<PgsSignatoryTemplate> orderedSignatories = List.from(
-    //   signatoryList,
-    // )..sort((a, b) => a.orderLevel.compareTo(b.orderLevel));
 
-    if (id == null) {
-      _submittedByUserId = getSignatoryByOrderLevel(1);
-      _notedByUserId = getSignatoryByOrderLevel(2);
-      _approvedByUserId = getSignatoryByOrderLevel(3);
-    }
+    bool isDraft = pgsstatus == null || pgsstatus == 'Draft';
+    bool isSubmitted = pgsstatus == null || pgsstatus == 'Submitted';
+    bool isApproved = pgsstatus == null || pgsstatus == 'Approved';
+    bool isCancelled = pgsstatus == null || pgsstatus == 'Cancelled';
 
     showDialog(
       context: context,
@@ -1749,7 +1713,6 @@ class _PerformanceGovernanceSystemPageState
                               ],
                             ),
 
-                            // Confirm Dratf Button
                             if (isDraft) ...[
                               Row(
                                 mainAxisAlignment:
@@ -1772,18 +1735,18 @@ class _PerformanceGovernanceSystemPageState
                                         );
 
                                         setDialogState(() {
-                                          officeDisplay = ""; // Clear Office UI
+                                          officeDisplay = "";
                                         });
 
-                                        Navigator.pop(context); // Close dialog
+                                        // ignore: use_build_context_synchronously
+                                        Navigator.pop(context);
 
-                                        // Select a new office and refresh UI
                                         String? newOfficeId =
                                             await _selectOffice();
                                         if (newOfficeId != null &&
                                             newOfficeId.isNotEmpty) {
-                                          await _loadOfficeName(); // Refresh UI immediately
-                                          showFormDialog(); // Re-open dialog after refreshing
+                                          await _loadOfficeName();
+                                          showFormDialog();
                                         }
                                       }
                                     },
@@ -2045,7 +2008,7 @@ class _PerformanceGovernanceSystemPageState
                                                                     right: 60.0,
                                                                   ),
                                                               child: Text(
-                                                                ('TOTAL SCORE:           ${totalScore.toStringAsFixed(1)}'),
+                                                                ('TOTAL SCORE:${totalScore.toStringAsFixed(1)}'),
 
                                                                 style: TextStyle(
                                                                   fontSize: 20,
@@ -2127,59 +2090,60 @@ class _PerformanceGovernanceSystemPageState
 
                             Padding(
                               padding: const EdgeInsets.all(8),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _buildSignatoryColumn(
-                                    title:
-                                        '${getSignatoryTitleByOrderLevel(1) ?? ''}:',
-                                    currentValue: _submittedByUserId,
-
-                                    onChanged: (value) {
-                                      setDialogState(() {
-                                        _submittedByUserId = value;
-                                      });
-                                    },
-                                    onDeleted: () {
-                                      setDialogState(() {
-                                        _submittedByUserId = null;
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(width: 120),
-                                  _buildSignatoryColumn(
-                                    title:
-                                        '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
-                                    currentValue: _notedByUserId,
-                                    onChanged: (value) {
-                                      setDialogState(() {
-                                        _notedByUserId = value;
-                                      });
-                                    },
-                                    onDeleted: () {
-                                      setDialogState(() {
-                                        _notedByUserId = null;
-                                      });
-                                    },
-                                  ),
-                                  const SizedBox(width: 120),
-                                  _buildSignatoryColumn(
-                                    title:
-                                        '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
-                                    currentValue: _approvedByUserId,
-                                    onChanged: (value) {
-                                      setDialogState(() {
-                                        _approvedByUserId = value;
-                                      });
-                                    },
-                                    onDeleted: () {
-                                      setDialogState(() {
-                                        _approvedByUserId = null;
-                                      });
-                                    },
-                                  ),
-                                ],
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _buildSignatoryColumn(
+                                      title:
+                                          '${getSignatoryTitleByOrderLevel(1) ?? ''}:',
+                                      currentValue: _submittedByUserId,
+                                      onChanged: (value) {
+                                        setDialogState(() {
+                                          _submittedByUserId = value;
+                                        });
+                                      },
+                                      onDeleted: () {
+                                        setDialogState(() {
+                                          _submittedByUserId = null;
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(width: 40),
+                                    _buildSignatoryColumn(
+                                      title:
+                                          '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
+                                      currentValue: _notedByUserId,
+                                      onChanged: (value) {
+                                        setDialogState(() {
+                                          _notedByUserId = value;
+                                        });
+                                      },
+                                      onDeleted: () {
+                                        setDialogState(() {
+                                          _notedByUserId = null;
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(width: 40),
+                                    _buildSignatoryColumn(
+                                      title:
+                                          '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
+                                      currentValue: _approvedByUserId,
+                                      onChanged: (value) {
+                                        setDialogState(() {
+                                          _approvedByUserId = value;
+                                        });
+                                      },
+                                      onDeleted: () {
+                                        setDialogState(() {
+                                          _approvedByUserId = null;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -2195,51 +2159,6 @@ class _PerformanceGovernanceSystemPageState
               // Action Buttons
               actions: [
                 if (isDraft) ...[
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 45, 57, 212),
-                    ),
-                    onPressed: () async {
-                      bool? confirm = await showDialog(
-                        context: context,
-                        builder:
-                            (_) => AlertDialog(
-                              title: Text("Confirm Submit"),
-                              content: Text(
-                                "Are you sure you want to submit this record? You won’t be able to make any changes.",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed:
-                                      () => Navigator.pop(context, false),
-                                  child: Text("No"),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: Text("Yes"),
-                                ),
-                              ],
-                            ),
-                      );
-
-                      if (confirm == true) {
-                        int? pgsId = int.tryParse(id ?? '');
-                        PerformanceGovernanceSystem audit = getPgsAuditDetails(
-                          id: pgsId ?? 0,
-                          pgsStatus: "Submitted",
-                        );
-                        await savePGS(audit);
-
-                        // ignore: use_build_context_synchronously
-                        Navigator.pop(context);
-                      }
-                    },
-                    child: Text(
-                      'Submit',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -2273,22 +2192,37 @@ class _PerformanceGovernanceSystemPageState
 
                       if (confirm == true) {
                         int? pgsId = int.tryParse(id ?? '');
+
+                        // Generate the full PGS audit object
                         PerformanceGovernanceSystem audit = getPgsAuditDetails(
                           id: pgsId ?? 0,
                           pgsStatus: "Draft",
                         );
 
-                        if (pgsId == null || pgsId == 0) {
-                          await savePGS(audit);
-                        } else {
-                          await updatePGS(
-                            pgsId: pgsId.toString(),
-                            audit: audit,
+                        try {
+                          if (pgsId == null) {
+                            debugPrint("Saving new PGS...");
+                            await savePGS(audit);
+                          } else {
+                            debugPrint("Updating PGS with ID: $pgsId...");
+
+                            await updatePGS(
+                              pgsId: pgsId.toString(),
+                              audit: audit,
+                            );
+                          }
+
+                          Navigator.pop(
+                            // ignore: use_build_context_synchronously
+                            context,
+                          ); // Close dialog or form after save/update
+                        } catch (e) {
+                          debugPrint("Error saving/updating PGS: $e");
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to save PGS: $e')),
                           );
                         }
-
-                        // ignore: use_build_context_synchronously
-                        Navigator.pop(context);
                       }
                     },
                     child: Text(
@@ -2297,25 +2231,6 @@ class _PerformanceGovernanceSystemPageState
                     ),
                   ),
                 ],
-
-                if (isSubmitted) ...[],
-
-                if (isApproved) ...[
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                    ),
-                    onPressed: () async {
-                      Navigator.pop(context);
-                    },
-                    child: Text(
-                      id == null ? 'Print' : 'Print',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-
-                if (isCancelled) ...[],
               ],
             );
           },
@@ -2340,8 +2255,7 @@ class _PerformanceGovernanceSystemPageState
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: TextFormField(
-        controller:
-            selectedByWhenControllers[index], // Use persistent controller
+        controller: selectedByWhenControllers[index],
         readOnly: true,
         decoration: const InputDecoration(
           border: OutlineInputBorder(),
@@ -2373,14 +2287,12 @@ class _PerformanceGovernanceSystemPageState
             },
           );
           if (pickedDate != null) {
-            String formattedDate = DateFormat(
-              'yyyy-MM-dd',
-            ).format(pickedDate); // ISO format for saving
+            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
             setDialogState(() {
               selectedByWhen[index] = formattedDate;
               selectedByWhenControllers[index]?.text = DateFormat(
                 'MMMM yyyy',
-              ).format(pickedDate); // User-friendly format
+              ).format(pickedDate);
             });
           }
         },
@@ -2388,12 +2300,13 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  // Kra Dropdown
-
   Widget _buildDropdownKraCell(int index) {
-    if (selectedKRA[index] == null && options.isNotEmpty) {
+    if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
+      debugPrint(
+        "Initialized selectedKRA for index $index with ID ${selectedKRA[index]}",
+      );
     }
 
     return Padding(
@@ -2402,12 +2315,20 @@ class _PerformanceGovernanceSystemPageState
         isExpanded: true,
         value: selectedKRA[index],
         onChanged: (int? newValue) {
+          if (newValue == null) return;
           setState(() {
-            selectedKRA[index] = newValue!;
+            selectedKRA[index] = newValue;
             selectedKRAObjects[index] = options.firstWhere(
               (option) => option['id'] == newValue,
-              orElse: () => {'id': 0, 'name': 'Unknown'},
+              orElse:
+                  () => {
+                    'id': 1,
+                    'name': 'Unknown',
+                    'description': '',
+                    'rowVersion': '',
+                  },
             );
+            debugPrint("KRA changed for index $index ? KRAID: $newValue");
           });
         },
         decoration: const InputDecoration(
@@ -2448,9 +2369,10 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  //Start Strategic Contributions
-  // Strategic Contribution Main Header
-  TableRow _buildMainHeaderStrategic({String? officename}) {
+  TableRow _buildMainHeaderStrategic({
+    String? officename,
+    String? percentDeliverables,
+  }) {
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
 
@@ -2486,12 +2408,15 @@ class _PerformanceGovernanceSystemPageState
                 fontSize: 20,
                 fontStyle: FontStyle.normal,
               ),
+
               inputFormatters: [
-                FilteringTextInputFormatter.allow(
-                  RegExp(r'^\d+$'),
-                ), // Only allow numbers
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(2),
+                _RangeInputFormatter(1, 40),
               ],
+
               decoration: InputDecoration(
+                labelText: percentDeliverables,
                 hintText: '0',
                 suffixText: '%',
                 suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),
@@ -2573,7 +2498,6 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  // Dropdown field that allows changing PgsStatus for each row
   Widget _buildDropdownCellStatus(int index, VoidCallback setDialogState) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -2604,7 +2528,11 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  void saveStatusToDb(int index, PgsStatus status) {}
+  void saveStatusToDb(int index, PgsStatus status) {
+    int statusIndex = status.index;
+
+    debugPrint('Saving status for index $index: $statusIndex');
+  }
 
   // // Check Box
   Widget _buildCheckboxCell(
@@ -2719,10 +2647,8 @@ class _PerformanceGovernanceSystemPageState
               decoration: BoxDecoration(
                 border: Border.all(
                   color: const Color.fromARGB(255, 245, 243, 243),
-                ), // Optional: Adds a border
-                borderRadius: BorderRadius.circular(
-                  1,
-                ), // Optional: Rounds the corners
+                ),
+                borderRadius: BorderRadius.circular(1),
               ),
               child: ValueListenableBuilder<double>(
                 valueListenable: selectedValue,
@@ -2824,7 +2750,7 @@ class _PerformanceGovernanceSystemPageState
   Widget _buildExpandableTextAreaCell(int index) {
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
-      debugPrint("✅ Initialized new controller at index: $index");
+      debugPrint("? Initialized new controller at index: $index");
     }
 
     return Padding(
@@ -2864,5 +2790,38 @@ class _PerformanceGovernanceSystemPageState
                 .toList();
       });
     });
+  }
+}
+
+// Capitalize first letter of each word
+extension StringExtension on String {
+  String capitalize() {
+    return split(' ')
+        .map(
+          (word) =>
+              word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '',
+        )
+        .join(' ');
+  }
+}
+
+class _RangeInputFormatter extends TextInputFormatter {
+  final int min;
+  final int max;
+
+  _RangeInputFormatter(this.min, this.max);
+
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    if (newValue.text.isEmpty) return newValue;
+
+    final int? value = int.tryParse(newValue.text);
+    if (value == null || value < min || value > max) {
+      return oldValue;
+    }
+    return newValue;
   }
 }

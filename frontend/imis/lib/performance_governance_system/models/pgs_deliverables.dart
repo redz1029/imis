@@ -8,6 +8,7 @@ part 'pgs_deliverables.g.dart';
 @JsonSerializable()
 class PgsDeliverables {
   int? id;
+  int? kraId;
 
   @JsonKey()
   KeyResultArea kra;
@@ -30,6 +31,7 @@ class PgsDeliverables {
   PgsDeliverables(
     this.id,
     this.kra,
+    this.kraId,
     this.deliverableName,
     this.isDirect,
     this.byWhen,
