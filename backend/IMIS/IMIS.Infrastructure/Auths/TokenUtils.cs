@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace IMIS.Infrastructure.Auths
@@ -52,7 +53,7 @@ namespace IMIS.Infrastructure.Auths
         private static string GenerateToken(DateTime expiration, params Claim[] claims)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256); 
 
             var token = new JwtSecurityToken(
                 issuer: Issuer,
@@ -68,6 +69,15 @@ namespace IMIS.Infrastructure.Auths
         {
             var expiration = DateTime.Now.AddDays(Convert.ToInt32(ExpInDays));
             return GenerateToken(expiration, new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()));
+        }
+
+        public static string HashToken(string token)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(token));
+                return Convert.ToBase64String(bytes);
+            }
         }
     }
 }
