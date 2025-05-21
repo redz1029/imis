@@ -1,4 +1,5 @@
 ﻿using IMIS.Application.AuditorModule;
+using IMIS.Application.PgsModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.AuditorTeamsModule
@@ -10,6 +11,7 @@ namespace IMIS.Application.AuditorTeamsModule
         {
             _repository = repository;
         }
+     
         public async Task<List<AuditorTeamsDto>> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditorTeams = await _repository.GetAllAsync(cancellationToken);
@@ -30,7 +32,29 @@ namespace IMIS.Application.AuditorTeamsModule
                 })
                 .ToList();
             return groupedAuditors;
-        }       
+        }
+
+        public async Task<List<AuditorTeamsDto>> GetAllAsyncFilterByTeamId(long? teamId, CancellationToken cancellationToken)
+        {
+            var systems = await _repository.GetAllAsyncFilterByTeamId(teamId, cancellationToken).ConfigureAwait(false);
+            var groupedAuditors = systems
+               .GroupBy(at => at.TeamId)
+               .Select(group => new AuditorTeamsDto
+               {
+                   TeamId = group.Key,
+                   Auditors = group.Select(at => new AuditorDto
+                   {
+                       Id = at.Auditor!.Id,
+                       Name = at.Auditor.Name,
+                       IsTeamLeader = at.IsTeamLeader,
+                       IsActive = at.Auditor.IsActive
+                   }).ToList(),
+                   IsActive = group.FirstOrDefault()?.IsActive ?? false
+               })
+               .ToList();
+            return groupedAuditors;
+            //return systems.Select(ConvPerfomanceGovernanceSystemToDTO).ToList();
+        }
         // Save or update an auditor team
         public async Task<AuditorTeamsDto> SaveOrUpdateAsync(AuditorTeamsDto auditorTeamsDto, CancellationToken cancellationToken)
         {

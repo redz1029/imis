@@ -31,8 +31,21 @@ namespace IMIS.Presentation.AuditorTeamsModule
                 var AuditorTeamDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(AuditorTeamDto);
             })
-         .WithTags(_AuditorTeamTag)
-         .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true);
+            .WithTags(_AuditorTeamTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true);
+
+            app.MapGet("/teamid/{id}", async (IAuditorTeamsService service, long? teamId, CancellationToken cancellationToken) =>
+            {
+                var team = await service.GetAllAsyncFilterByTeamId(teamId, cancellationToken).ConfigureAwait(false);
+
+                if (team == null || !team.Any())
+                {
+                    return Results.NotFound("No records found for the given teamId.");
+                }
+                return Results.Ok(team);
+            })
+           .WithTags(_AuditorTeamTag)        
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true);            
         }
     }
 }
