@@ -17,7 +17,7 @@ class OfficePage extends StatefulWidget {
 class _OfficePageState extends State<OfficePage> {
   // ignore: non_constant_identifier_names
   final _paginationUtils = PaginationUtil(Dio());
-
+  final _formKey = GlobalKey<FormState>();
   List<Map<String, dynamic>> officeList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
@@ -108,7 +108,7 @@ class _OfficePageState extends State<OfficePage> {
         await fetchOffices();
       }
     } catch (e) {
-      debugPrint("Error deleting KRA: $e");
+      debugPrint("Error deleting Office: $e");
     }
   }
 
@@ -161,21 +161,35 @@ class _OfficePageState extends State<OfficePage> {
             id == null ? 'Add Office' : 'Edit Office',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: officeController,
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    border: OutlineInputBorder(),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: officeController,
+                    decoration: InputDecoration(
+                      labelText: 'Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -196,41 +210,47 @@ class _OfficePageState extends State<OfficePage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
-                if (confirmAction == true) {
-                  final office = Office(
-                    id: int.tryParse(id ?? '0') ?? 0,
-                    name: officeController.text,
-                    isDeleted: false,
-                    isActive: true,
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text("No"),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                Navigator.pop(context, true);
+                              }
+                            },
+                            child: Text("Yes"),
+                          ),
+                        ],
+                      );
+                    },
                   );
-                  addOrUpdateOffice(office);
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
+                  if (confirmAction == true) {
+                    final office = Office(
+                      id: int.tryParse(id ?? '0') ?? 0,
+                      name: officeController.text,
+                      isDeleted: false,
+                      isActive: true,
+                    );
+                    addOrUpdateOffice(office);
+                    // ignore: use_build_context_synchronously
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Text(

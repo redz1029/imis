@@ -74,7 +74,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
         });
       }
     } catch (e) {
-      debugPrint("Error adding/updating pgs: $e");
+      debugPrint("Error adding/updating Auditor: $e");
     }
   }
 
@@ -88,7 +88,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
         await fetchAuditors();
       }
     } catch (e) {
-      debugPrint("Error deleting KRA: $e");
+      debugPrint("Error deleting Auditor: $e");
     }
   }
 
@@ -198,7 +198,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a name';
+                        return 'Please fill out this field';
                       }
                       return null;
                     },

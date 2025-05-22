@@ -14,6 +14,7 @@ class KeyResultAreaPage extends StatefulWidget {
 }
 
 class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
+  final _formKey = GlobalKey<FormState>();
   final _paginationUtils = PaginationUtil(Dio());
   List<Map<String, dynamic>> kraList = [];
   List<Map<String, dynamic>> filteredList = [];
@@ -159,42 +160,58 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
             id == null ? 'Add KRA' : 'Edit KRA',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Name',
-                    focusColor: primaryColor,
-                    floatingLabelStyle: TextStyle(color: primaryColor),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: primaryColor),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      labelText: 'KRA Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: remarksController,
-                  decoration: InputDecoration(
-                    focusColor: primaryColor,
-                    labelText: 'Remarks',
-                    floatingLabelStyle: TextStyle(color: primaryColor),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: primaryColor),
+                gap2,
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: remarksController,
+                    decoration: InputDecoration(
+                      labelText: 'Remarks',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -215,42 +232,48 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
-                if (confirmAction == true) {
-                  final kra = KeyResultArea(
-                    int.tryParse(id ?? '0') ?? 0,
-                    nameController.text,
-                    remarksController.text,
-                    false,
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text("No"),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                Navigator.pop(context, true);
+                              }
+                            },
+                            child: Text("Yes"),
+                          ),
+                        ],
+                      );
+                    },
                   );
+                  if (confirmAction == true) {
+                    final kra = KeyResultArea(
+                      int.tryParse(id ?? '0') ?? 0,
+                      nameController.text,
+                      remarksController.text,
+                      false,
+                    );
 
-                  addOrUpdateKRA(kra);
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
+                    addOrUpdateKRA(kra);
+                    // ignore: use_build_context_synchronously
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Text(

@@ -15,6 +15,7 @@ class PgsPeriodPage extends StatefulWidget {
 
 class _PgsPeriodPageState extends State<PgsPeriodPage> {
   final _paginationUtils = PaginationUtil(Dio());
+  final _formKey = GlobalKey<FormState>();
   List<Map<String, dynamic>> pgsList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
@@ -27,8 +28,16 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
 
   final dio = Dio();
 
-  //fetch PGS PERIOD list
+  @override
+  void initState() {
+    super.initState();
+    fetchPGSPeriods();
+    isSearchfocus.addListener(() {
+      setState(() {});
+    });
+  }
 
+  //fetch PGS PERIOD list
   Future<void> fetchPGSPeriods({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
@@ -64,7 +73,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     var url = ApiEndpoint().pgsperiod;
     try {
       final response = await dio.post(url, data: period.toJson());
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         await fetchPGSPeriods();
         setState(() {
           fetchPGSPeriods();
@@ -86,15 +95,6 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     } catch (e) {
       debugPrint("Error deleting KRA: $e");
     }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchPGSPeriods();
-    isSearchfocus.addListener(() {
-      setState(() {});
-    });
   }
 
   @override
@@ -177,101 +177,117 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
             id == null ? 'Add PGS Period' : 'Edit PGS Period',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 350,
-                height: 60,
-                child: TextField(
-                  controller: startDateController,
-                  decoration: InputDecoration(
-                    focusColor: primaryColor,
-                    labelText: 'Start Date',
-                    floatingLabelStyle: TextStyle(color: primaryColor),
-                    border: OutlineInputBorder(),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: primaryColor),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 350,
+                  height: 60,
+                  child: TextFormField(
+                    controller: startDateController,
+                    decoration: InputDecoration(
+                      focusColor: primaryColor,
+                      labelText: 'Start Date',
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
-                  ),
-                  readOnly: true,
-                  onTap: () async {
-                    DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2101),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: primaryColor,
-                              onPrimary: secondaryColor,
-                            ),
-                            textButtonTheme: TextButtonThemeData(
-                              style: TextButton.styleFrom(
-                                foregroundColor: primaryColor,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: ColorScheme.light(
+                                primary: primaryColor,
+                                onPrimary: secondaryColor,
+                              ),
+                              textButtonTheme: TextButtonThemeData(
+                                style: TextButton.styleFrom(
+                                  foregroundColor: primaryColor,
+                                ),
                               ),
                             ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (picked != null) {
-                      startDateController.text =
-                          picked.toLocal().toString().split(' ')[0];
-                    }
-                  },
+                            child: child!,
+                          );
+                        },
+                      );
+                      if (picked != null) {
+                        startDateController.text =
+                            picked.toLocal().toString().split(' ')[0];
+                      }
+                    },
+                  ),
                 ),
-              ),
-              SizedBox(height: 8),
-              SizedBox(
-                width: 350,
-                height: 60,
-                child: TextField(
-                  controller: endDateController,
-                  decoration: InputDecoration(
-                    labelText: 'End Date',
-                    floatingLabelStyle: TextStyle(color: primaryColor),
-                    border: OutlineInputBorder(),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: primaryColor),
+                gap2,
+                SizedBox(
+                  width: 350,
+                  height: 60,
+                  child: TextFormField(
+                    controller: endDateController,
+                    decoration: InputDecoration(
+                      focusColor: primaryColor,
+                      labelText: 'End Date',
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
-                  ),
-                  readOnly: true,
-                  onTap: () async {
-                    DateTime? picked = await showDatePicker(
-                      context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2101),
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: primaryColor,
-                              onPrimary: secondaryColor,
-                            ),
-                            textButtonTheme: TextButtonThemeData(
-                              style: TextButton.styleFrom(
-                                foregroundColor: primaryColor,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
+                    readOnly: true,
+                    onTap: () async {
+                      DateTime? picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2101),
+                        builder: (context, child) {
+                          return Theme(
+                            data: Theme.of(context).copyWith(
+                              colorScheme: ColorScheme.light(
+                                primary: primaryColor,
+                                onPrimary: secondaryColor,
+                              ),
+                              textButtonTheme: TextButtonThemeData(
+                                style: TextButton.styleFrom(
+                                  foregroundColor: primaryColor,
+                                ),
                               ),
                             ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
+                            child: child!,
+                          );
+                        },
+                      );
 
-                    if (picked != null) {
-                      endDateController.text =
-                          picked.toLocal().toString().split(' ')[0];
-                    }
-                  },
+                      if (picked != null) {
+                        endDateController.text =
+                            picked.toLocal().toString().split(' ')[0];
+                      }
+                    },
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -292,45 +308,50 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  // Confirm action dialog
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
-
-                if (confirmAction == true) {
-                  final pgs = PgsPeriod(
-                    0,
-                    false,
-                    DateTime.parse(startDateController.text),
-                    DateTime.parse(endDateController.text),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text("No"),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                Navigator.pop(context, true);
+                              }
+                            },
+                            child: Text("Yes"),
+                          ),
+                        ],
+                      );
+                    },
                   );
 
-                  addOrUpdatePGSPeriod(pgs);
+                  if (confirmAction == true) {
+                    final pgs = PgsPeriod(
+                      0,
+                      false,
+                      DateTime.parse(startDateController.text),
+                      DateTime.parse(endDateController.text),
+                    );
 
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
+                    addOrUpdatePGSPeriod(pgs);
+
+                    // ignore: use_build_context_synchronously
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Text(

@@ -16,6 +16,8 @@ class RolesPage extends StatefulWidget {
 class _RolesPageState extends State<RolesPage> {
   final _paginationUtils = PaginationUtil(Dio());
 
+  final _formKey = GlobalKey<FormState>();
+
   List<Roles> rolesList = [];
   List<Roles> filteredList = [];
   TextEditingController searchController = TextEditingController();
@@ -159,21 +161,35 @@ class _RolesPageState extends State<RolesPage> {
             id == null ? 'Add Role' : 'Edit Role',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: roleController,
-                  decoration: InputDecoration(
-                    labelText: 'Role Name',
-                    border: OutlineInputBorder(),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: roleController,
+                    decoration: InputDecoration(
+                      labelText: 'Role Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -194,50 +210,51 @@ class _RolesPageState extends State<RolesPage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text("No"),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                Navigator.pop(context, true);
+                              }
+                            },
+                            child: Text("Yes"),
+                          ),
+                        ],
+                      );
+                    },
+                  );
 
-                if (confirmAction == true) {
-                  final roleName = roleController.text.trim();
+                  if (confirmAction == true) {
+                    final roleName = roleController.text.trim();
 
-                  if (roleName.isNotEmpty) {
-                    if (id == null) {
-                      // Add role
-                      await addRole(roleName);
-                    } else {
-                      // Update role
-                      await updateRole(id, roleName);
+                    if (roleName.isNotEmpty) {
+                      if (id == null) {
+                        // Add role
+                        await addRole(roleName);
+                      } else {
+                        // Update role
+                        await updateRole(id, roleName);
+                      }
+                      // ignore: use_build_context_synchronously
+                      Navigator.pop(context); // Close dialog
                     }
-                    // ignore: use_build_context_synchronously
-                    Navigator.pop(context); // Close dialog
-                  } else {
-                    // ignore: use_build_context_synchronously
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text("Role name cannot be empty")),
-                    );
                   }
                 }
               },
