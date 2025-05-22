@@ -445,6 +445,7 @@ class _PerformanceGovernanceSystemPageState
     String? selectedOffice = await showDialog<String>(
       // ignore: use_build_context_synchronously
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
           backgroundColor: mainBgColor,
@@ -1632,6 +1633,7 @@ class _PerformanceGovernanceSystemPageState
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {

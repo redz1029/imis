@@ -167,6 +167,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,

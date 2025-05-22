@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class TeamPage extends StatefulWidget {
   const TeamPage({super.key});
@@ -35,12 +35,13 @@ class _TeamPageState extends State<TeamPage> {
     setState(() => _isLoading = true);
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
+      String? token = await AuthUtil.fetchAccessToken();
+
       if (token == null || token.isEmpty) {
         debugPrint("Error: Access token is missing!");
         return;
       }
+
       final pageList = await _paginationUtils.fetchPaginatedData<Team>(
         endpoint: ApiEndpoint().team,
         page: page,
@@ -138,6 +139,7 @@ class _TeamPageState extends State<TeamPage> {
     TextEditingController teamController = TextEditingController(text: name);
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,
@@ -185,6 +187,8 @@ class _TeamPageState extends State<TeamPage> {
               onPressed: () async {
                 bool? confirmAction = await showDialog<bool>(
                   context: context,
+                  barrierDismissible:
+                      false, // Also prevent dismiss on confirm dialog
                   builder: (context) {
                     return AlertDialog(
                       title: Text(

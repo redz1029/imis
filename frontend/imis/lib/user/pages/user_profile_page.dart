@@ -196,6 +196,7 @@ class _UserProfileState extends State<UserProfilePage> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,

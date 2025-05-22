@@ -150,6 +150,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,

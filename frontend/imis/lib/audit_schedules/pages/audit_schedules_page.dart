@@ -301,6 +301,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     }
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {

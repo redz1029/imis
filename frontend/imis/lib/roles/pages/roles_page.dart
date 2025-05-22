@@ -151,6 +151,7 @@ class _RolesPageState extends State<RolesPage> {
     TextEditingController roleController = TextEditingController(text: name);
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,

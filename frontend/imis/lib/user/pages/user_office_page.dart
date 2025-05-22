@@ -313,6 +313,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,

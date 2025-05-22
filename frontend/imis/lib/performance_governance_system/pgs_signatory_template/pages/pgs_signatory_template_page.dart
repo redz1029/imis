@@ -227,6 +227,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
             : null;
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,
