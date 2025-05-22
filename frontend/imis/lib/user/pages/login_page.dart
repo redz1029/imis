@@ -87,8 +87,6 @@ class LoginPageState extends State<LoginPage> {
             title: const Text("Server is Unreachable!"),
             description: Text(e.message ?? "Unknown error"),
             toastAlignment: Alignment.center,
-            height: 500,
-            width: 500,
           ).show(context);
         }
       }

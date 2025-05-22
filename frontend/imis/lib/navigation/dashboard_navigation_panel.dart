@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
+import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
@@ -18,7 +19,7 @@ import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:imis/utils/auth_util.dart';
 
 class DashboardNavigationPanel extends StatefulWidget {
   const DashboardNavigationPanel({super.key});
@@ -45,11 +46,15 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   }
 
   Future<void> _loadUserName() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    setState(() {
-      firstName = prefs.getString('firstName') ?? "User";
-      roles = prefs.getStringList('roles') ?? [];
-    });
+    UserRegistration? user = await AuthUtil.fetchRegisteredUser();
+    List<String>? roleList = await AuthUtil.fetchRoles();
+
+    if (user != null) {
+      setState(() {
+        firstName = user.firstName ?? "User";
+        roles = roleList ?? [];
+      });
+    }
   }
 
   void _setScreen(Widget screen, int index) {
@@ -81,9 +86,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
               ),
               TextButton(
                 onPressed: () async {
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  await prefs.clear();
+                  await AuthUtil.logout();
 
                   // ignore: use_build_context_synchronously
                   Navigator.of(context).pushAndRemoveUntil(
