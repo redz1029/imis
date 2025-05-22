@@ -12,6 +12,7 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory_template.dart';
 import 'package:imis/user/models/user.dart';
+import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
@@ -125,23 +126,6 @@ class _PerformanceGovernanceSystemPageState
   Future<void> savePGS(PerformanceGovernanceSystem audit) async {
     var url = ApiEndpoint().performancegovernancesystem;
 
-    if (selectedDirect.isEmpty ||
-        selectedIndirect.isEmpty ||
-        deliverablesControllers.values.any(
-          (controller) => controller.text.trim().isEmpty,
-        ) ||
-        percentage.text.trim().isEmpty) {
-      MotionToast.error(
-        title: const Text("Missing Fields"),
-        description: const Text(
-          "Please complete all required fields before saving.",
-        ),
-        // ignore: deprecated_member_use
-        position: MotionToastPosition.top,
-      ).show(context);
-      return;
-    }
-
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('accessToken');
@@ -172,8 +156,8 @@ class _PerformanceGovernanceSystemPageState
           clearAllSelections();
         });
 
-        // await prefs.remove('selectedOfficeId');
-        // await prefs.remove('selectedOfficeName');
+        await prefs.remove('selectedOfficeId');
+        await prefs.remove('selectedOfficeName');
       } else {
         debugPrint("Failed to save Pgs data: ${response.statusCode}");
         debugPrint("Response: ${response.data}");
@@ -225,6 +209,8 @@ class _PerformanceGovernanceSystemPageState
           fetchPgsList();
           clearAllSelections();
         });
+        await prefs.remove('selectedOfficeId');
+        await prefs.remove('selectedOfficeName');
       } else {
         debugPrint("Failed to update PGS: ${response.statusCode}");
         debugPrint("Response: ${response.data}");
@@ -443,13 +429,18 @@ class _PerformanceGovernanceSystemPageState
   }
 
   Future<String?> _selectOffice() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    List<String> officeNames = prefs.getStringList('officeNames') ?? [];
-    List<String> officeIds = prefs.getStringList('officeIds') ?? [];
+    final officeName = await AuthUtil.fetchOfficeNames();
+    final officeId = await AuthUtil.fetchOfficeIds();
 
-    if (officeNames.isEmpty || officeIds.isEmpty) {
+    if (officeName == null ||
+        officeId == null ||
+        officeName.isEmpty ||
+        officeId.isEmpty) {
       return null;
     }
+
+    List<String> officeNames = officeName;
+    List<String> officeIds = officeId;
 
     String? selectedOffice = await showDialog<String>(
       // ignore: use_build_context_synchronously
@@ -471,14 +462,19 @@ class _PerformanceGovernanceSystemPageState
                   alignment: Alignment.topRight,
                   child: IconButton(
                     icon: Icon(Icons.close, color: primaryTextColor),
-                    onPressed: () => Navigator.pop(context, null),
+                    onPressed: () async {
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.remove('selectedOfficeId');
+                      await prefs.remove('selectedOfficeName');
+                      // ignore: use_build_context_synchronously
+                      Navigator.pop(context, null);
+                    },
                   ),
                 ),
                 Text(
                   "Select an Office",
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-
                 SizedBox(height: 10),
                 Expanded(
                   child: ListView.builder(
@@ -507,28 +503,36 @@ class _PerformanceGovernanceSystemPageState
       },
     );
 
-    if (selectedOffice == null || selectedOffice == "REMOVE_OFFICE") {
-      await prefs.remove('selectedOfficeId');
+    // ignore: unrelated_type_equality_checks
+    if (selectedOffice == null || selectedOffice == -1) {
+      await AuthUtil.removeSelectedOfficeId();
+      debugPrint('Selected office ID removed.');
       return null;
     } else {
-      await prefs.setString('selectedOfficeId', selectedOffice);
+      await AuthUtil.saveSelectedOfficeId(selectedOffice);
 
       return selectedOffice;
     }
   }
 
   Future<void> fetchPgsList() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    // Use AuthUtil to fetch the user
+    UserRegistration? user = await AuthUtil.fetchRegisteredUser();
+
+    if (user == null) {
+      debugPrint("Error: No user found in shared preferences.");
+      return;
+    }
+
     setState(() {
-      userId = prefs.getString('id') ?? "UserId";
+      userId = user.id ?? "UserId";
     });
 
     final url =
         "${ApiEndpoint().performancegovernancesystemUserId}/userId/$userId?userId=$userId";
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
+      String? token = await AuthUtil.fetchAccessToken();
 
       if (token == null || token.isEmpty) {
         debugPrint("Error: Access token is missing!");
@@ -612,24 +616,43 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
+  // Future<void> _loadOfficeName() async {
+  //   List<String>? officeNames = await AuthUtil.fetchOfficeNames();
+  //   List<String>? officeIds = await AuthUtil.fetchOfficeIds();
+
+  //   final prefs = await SharedPreferences.getInstance();
+  //   String? selectedOfficeId = prefs.getString('selectedOfficeId');
+
+  //   String selectedOfficeName = "No Office";
+
+  //   if (officeNames != null && officeIds != null && selectedOfficeId != null) {
+  //     int index = officeIds.indexOf(selectedOfficeId);
+  //     if (index != -1 && index < officeNames.length) {
+  //       selectedOfficeName = officeNames[index];
+  //     }
+  //   }
+  //   setState(() {
+  //     officeDisplay = selectedOfficeName;
+  //     officeIdList = selectedOfficeId ?? "No Office ID";
+  //   });
+  // }
   Future<void> _loadOfficeName() async {
     List<String>? officeNames = await AuthUtil.fetchOfficeNames();
     List<String>? officeIds = await AuthUtil.fetchOfficeIds();
-
-    final prefs = await SharedPreferences.getInstance();
-    String? selectedOfficeId = prefs.getString('selectedOfficeId');
+    selectedOffice = await AuthUtil.fetchSelectedOfficeId();
 
     String selectedOfficeName = "No Office";
 
-    if (officeNames != null && officeIds != null && selectedOfficeId != null) {
-      int index = officeIds.indexOf(selectedOfficeId);
+    if (officeNames != null && officeIds != null && selectedOffice != null) {
+      int index = officeIds.indexOf(selectedOffice!);
       if (index != -1 && index < officeNames.length) {
         selectedOfficeName = officeNames[index];
       }
     }
+
     setState(() {
       officeDisplay = selectedOfficeName;
-      officeIdList = selectedOfficeId ?? "No Office ID";
+      officeIdList = selectedOffice ?? "No Office ID";
     });
   }
 
@@ -947,27 +970,27 @@ class _PerformanceGovernanceSystemPageState
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
+
                     onPressed: () async {
-                      SharedPreferences prefs =
-                          await SharedPreferences.getInstance();
-                      String? selectedOfficeId = prefs.getString(
-                        'selectedOfficeId',
-                      );
-                      if (selectedOfficeId == null ||
-                          selectedOfficeId.isEmpty) {
+                      selectedOffice = await AuthUtil.fetchSelectedOfficeId();
+
+                      if (selectedOffice == null || selectedOffice!.isEmpty) {
                         await _selectOffice();
-                        selectedOfficeId = prefs.getString('selectedOfficeId');
-                        if (selectedOfficeId != null &&
-                            selectedOfficeId.isNotEmpty) {
+
+                        selectedOffice = await AuthUtil.fetchSelectedOfficeId();
+
+                        if (selectedOffice != null &&
+                            selectedOffice!.isNotEmpty) {
                           await _loadOfficeName();
+
                           showFormDialog();
-                        }
+                        } else {}
                       } else {
                         await _loadOfficeName();
                         showFormDialog();
-                        // fetchSignatory();
                       }
                     },
+
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -1187,6 +1210,17 @@ class _PerformanceGovernanceSystemPageState
                                                         );
                                                       }
 
+                                                      await AuthUtil.saveSelectedOfficeId(
+                                                        pgsgovernancesystem['officeid']
+                                                            .toString(),
+                                                      );
+
+                                                      selectedOffice =
+                                                          await AuthUtil.fetchSelectedOfficeId();
+                                                      print(
+                                                        'Selected Office ID: $selectedOffice',
+                                                      );
+
                                                       showFormDialog(
                                                         id:
                                                             pgsgovernancesystem['id'],
@@ -1258,26 +1292,21 @@ class _PerformanceGovernanceSystemPageState
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () async {
-                  SharedPreferences prefs =
-                      await SharedPreferences.getInstance();
-                  String? selectedOfficeId = prefs.getString(
-                    'selectedOfficeId',
-                  );
+                  selectedOffice = await AuthUtil.fetchSelectedOfficeId();
 
-                  if (selectedOfficeId == null || selectedOfficeId.isEmpty) {
-                    clearAllSelections();
-
+                  if (selectedOffice == null || selectedOffice!.isEmpty) {
                     await _selectOffice();
-                    selectedOfficeId = prefs.getString('selectedOfficeId');
 
-                    if (selectedOfficeId != null &&
-                        selectedOfficeId.isNotEmpty) {
+                    selectedOffice = await AuthUtil.fetchSelectedOfficeId();
+
+                    if (selectedOffice != null && selectedOffice!.isNotEmpty) {
                       await _loadOfficeName();
-                      showFormDialog(pgsstatus: null);
-                    }
+
+                      showFormDialog();
+                    } else {}
                   } else {
                     await _loadOfficeName();
-                    showFormDialog(pgsstatus: null);
+                    showFormDialog();
                   }
                 },
                 child: Icon(Icons.add, color: Colors.white),
@@ -1385,8 +1414,8 @@ class _PerformanceGovernanceSystemPageState
 
       final signatory = displaySignatoryList.firstWhere(
         (item) =>
-            item.pgsId == pgsIdSignatory && // Matches by pgsId
-            item.pgsSignatoryTemplateId == level, // Matches by level
+            item.pgsId == pgsIdSignatory &&
+            item.pgsSignatoryTemplateId == level,
         orElse:
             () => PgsSignatory(
               DateTime.now(),
@@ -1479,6 +1508,10 @@ class _PerformanceGovernanceSystemPageState
         selectedByWhenControllers.clear();
         selectedStatus.clear();
         deliverableIds.clear();
+
+        submittedRecordId = 0;
+        notedRecordId = 0;
+        aprroveRecordId = 0;
 
         _submittedByUserId = getSignatoryByOrderLevelDefault(1);
         _notedByUserId = getSignatoryByOrderLevelDefault(2);
@@ -2191,6 +2224,26 @@ class _PerformanceGovernanceSystemPageState
                       );
 
                       if (confirm == true) {
+                        if (selectedPeriod == null ||
+                            selectedDirect.isEmpty ||
+                            selectedIndirect.isEmpty ||
+                            deliverablesControllers.values.any(
+                              (controller) => controller.text.trim().isEmpty,
+                            ) ||
+                            percentage.text.trim().isEmpty) {
+                          MotionToast.error(
+                            title: const Text("Missing Fields"),
+                            description: Text(
+                              selectedPeriod == null
+                                  ? "Please complete all required fields before saving."
+                                  : "Please complete all required fields before saving.",
+                            ),
+                            // ignore: deprecated_member_use
+                            position: MotionToastPosition.top,
+                            // ignore: use_build_context_synchronously
+                          ).show(context);
+                          return;
+                        }
                         int? pgsId = int.tryParse(id ?? '');
 
                         // Generate the full PGS audit object
@@ -2203,6 +2256,8 @@ class _PerformanceGovernanceSystemPageState
                           if (pgsId == null) {
                             debugPrint("Saving new PGS...");
                             await savePGS(audit);
+                            // ignore: use_build_context_synchronously
+                            Navigator.pop(context);
                           } else {
                             debugPrint("Updating PGS with ID: $pgsId...");
 
@@ -2210,12 +2265,8 @@ class _PerformanceGovernanceSystemPageState
                               pgsId: pgsId.toString(),
                               audit: audit,
                             );
+                            Navigator.pop(context);
                           }
-
-                          Navigator.pop(
-                            // ignore: use_build_context_synchronously
-                            context,
-                          ); // Close dialog or form after save/update
                         } catch (e) {
                           debugPrint("Error saving/updating PGS: $e");
                           // ignore: use_build_context_synchronously

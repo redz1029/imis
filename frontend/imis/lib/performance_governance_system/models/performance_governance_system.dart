@@ -52,7 +52,7 @@ class PerformanceGovernanceSystem {
   final Office office;
 
   @JsonKey()
-  final PgsPeriod pgsPeriod;
+  PgsPeriod pgsPeriod;
 
   @JsonKey(defaultValue: '')
   final String? remarks;
