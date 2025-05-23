@@ -8,6 +8,9 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
+
+import 'package:imis/utils/pagination_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuditSchedulesPage extends StatefulWidget {
@@ -36,45 +39,55 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
   int? selectAuditor;
   String? selectTeamText;
 
+  final _paginationUtils = PaginationUtil(Dio());
+
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+
   final dio = Dio();
 
-  Future<void> fetchAuditSchedule() async {
-    var url = ApiEndpoint().auditSchedule;
+  Future<void> fetchAuditSchedule({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
+      String? token = await AuthUtil.fetchAccessToken();
 
       if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
+        debugPrint("Access token is missing");
         return;
       }
 
-      var response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
+      final pageList = await _paginationUtils
+          .fetchPaginatedData<AuditSchedules>(
+            endpoint: ApiEndpoint().auditSchedule,
+            page: page,
+            pageSize: _pageSize,
+            searchQuery: searchQuery,
+            headers: {
+              "Authorization": "Bearer $token",
+              "Content-Type": "application/json",
+            },
+            fromJson: (json) => AuditSchedules.fromJson(json),
+          );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<AuditSchedules> data =
-            (response.data as List)
-                .map((auditShedule) => AuditSchedules.fromJson(auditShedule))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            auditScheduleList =
-                data.map((auditorTeam) => auditorTeam.toJson()).toList();
-            filteredListAuditSchedule = List.from(auditScheduleList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          auditScheduleList = pageList.items.map((a) => a.toJson()).toList();
+          filteredListAuditSchedule = List.from(auditScheduleList);
+        });
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Error in fetchAuditSchedule: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -784,7 +797,6 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                     Navigator.pop(context);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: secondaryBgButton,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -815,11 +827,17 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
-                              child: Text("No"),
+                              child: Text(
+                                "No",
+                                style: TextStyle(color: primaryColor),
+                              ),
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: Text("Yes"),
+                              child: Text(
+                                "Yes",
+                                style: TextStyle(color: primaryColor),
+                              ),
                             ),
                           ],
                         );
@@ -920,6 +938,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
   void showAvailableAuditorsDialog(Function setDialogState) {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,
@@ -1095,6 +1114,10 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                             filteredListAuditSchedule
                                 .asMap()
                                 .map((index, auditSchedule) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
                                   return MapEntry(
                                     index,
                                     Container(
@@ -1120,7 +1143,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                (index + 1).toString(),
+                                                itemNumber.toString(),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -1245,6 +1268,29 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                 .values
                                 .toList(),
                       ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    color: secondaryColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        PaginationInfo(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                        ),
+                        PaginationControls(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                          isLoading: _isLoading,
+                          onPageChanged:
+                              (page) => fetchAuditSchedule(page: page),
+                        ),
+                        Container(width: 60),
+                      ],
                     ),
                   ),
                 ],

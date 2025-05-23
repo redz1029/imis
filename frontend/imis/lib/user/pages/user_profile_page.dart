@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/pagination_util.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -43,6 +44,13 @@ class _UserProfileState extends State<UserProfilePage> {
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
 
+  final _paginationUtils = PaginationUtil(Dio());
+
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+
   //Job Position Dropdown
   String? selectedPosition;
   final List<String> jobPositions = [
@@ -53,38 +61,35 @@ class _UserProfileState extends State<UserProfilePage> {
     'Secretary',
   ];
 
-  Future<void> fetchUserProfile() async {
-    var url = ApiEndpoint().getUser;
+  Future<void> fetchUserProfile({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      debugPrint("Fetching user profile from: $url");
+      final pageList = await _paginationUtils
+          .fetchPaginatedData<UserRegistration>(
+            endpoint: ApiEndpoint().getUser,
+            page: page,
+            pageSize: _pageSize,
+            searchQuery: searchQuery,
+            fromJson: (json) => UserRegistration.fromJson(json),
+          );
 
-      var response = await dio.get(url);
-
-      debugPrint("Raw response: ${response.data}");
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<UserRegistration> data =
-            (response.data as List)
-                .map((team) => UserRegistration.fromJson(team))
-                .toList();
-
-        debugPrint("Parsed user data: ${data.map((e) => e.userName).toList()}");
-
-        if (mounted) {
-          setState(() {
-            userProfileList = data;
-            filteredList = List.from(userProfileList);
-          });
-          debugPrint("State updated with ${userProfileList.length} users.");
-        }
-      } else {
-        debugPrint(
-          "Unexpected response format or status code: ${response.statusCode}, data: ${response.data}",
-        );
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          userProfileList = pageList.items;
+          filteredList = List.from(userProfileList);
+        });
       }
     } catch (e) {
-      debugPrint("Fetch error: $e");
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -366,7 +371,6 @@ class _UserProfileState extends State<UserProfilePage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -396,11 +400,17 @@ class _UserProfileState extends State<UserProfilePage> {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                          child: Text(
+                            "No",
+                            style: TextStyle(color: primaryColor),
+                          ),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                          child: Text(
+                            "Yes",
+                            style: TextStyle(color: primaryColor),
+                          ),
                         ),
                       ],
                     );
@@ -466,6 +476,7 @@ class _UserProfileState extends State<UserProfilePage> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,
@@ -605,7 +616,6 @@ class _UserProfileState extends State<UserProfilePage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -803,76 +813,97 @@ class _UserProfileState extends State<UserProfilePage> {
                       scrollDirection: Axis.vertical,
                       child: Column(
                         children:
-                            filteredList.asMap().entries.map((entry) {
-                              int index = entry.key;
-                              UserRegistration userProfile = entry.value;
-                              return Container(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 1,
-                                  horizontal: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: Colors.grey.shade300,
-                                    ),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text((index + 1).toString()),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text(userProfile.firstName ?? ''),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text(userProfile.middleName ?? ''),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text(userProfile.lastName ?? ''),
-                                    ),
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text(userProfile.position ?? ''),
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.key, color: Colors.blue),
-                                      onPressed: () {
-                                        showFormDialogChangePassword(
-                                          id: userProfile.id,
-                                          userName: userProfile.userName,
-                                          email: userProfile.email,
-                                          password: userProfile.password,
-                                          firstName: userProfile.firstName,
-                                          middleName: userProfile.middleName,
-                                          lastName: userProfile.lastName,
-                                          prefix: userProfile.prefix,
-                                          suffix: userProfile.suffix,
-                                          position: userProfile.position,
-                                          fullName:
-                                              '${userProfile.firstName} ${userProfile.middleName} ${userProfile.lastName}'
-                                                  .trim()
-                                                  .replaceAll(
-                                                    RegExp(' +'),
-                                                    ' ',
-                                                  ),
-                                        );
-                                      },
-                                    ),
-                                    Expanded(
-                                      flex: 1,
+                            filteredList
+                                .asMap()
+                                .map((index, userProfile) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+
+                                  return MapEntry(
+                                    index,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 1,
+                                        horizontal: 16,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                        ),
+                                      ),
                                       child: Row(
                                         children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                itemNumber.toString(),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                userProfile.firstName ?? '',
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                userProfile.middleName ?? '',
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                userProfile.lastName ?? '',
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                userProfile.position ?? '',
+                                              ),
+                                            ),
+                                          ),
                                           IconButton(
-                                            icon: Icon(Icons.edit),
+                                            icon: Icon(
+                                              Icons.key,
+                                              color: Colors.blue,
+                                            ),
                                             onPressed: () {
-                                              showFormDialog(
-                                                id: userProfile.id,
+                                              showFormDialogChangePassword(
+                                                id: userProfile.id.toString(),
                                                 userName: userProfile.userName,
                                                 email: userProfile.email,
                                                 password: userProfile.password,
@@ -884,24 +915,88 @@ class _UserProfileState extends State<UserProfilePage> {
                                                 prefix: userProfile.prefix,
                                                 suffix: userProfile.suffix,
                                                 position: userProfile.position,
+                                                fullName:
+                                                    '${userProfile.firstName} ${userProfile.middleName} ${userProfile.lastName}'
+                                                        .trim()
+                                                        .replaceAll(
+                                                          RegExp(' +'),
+                                                          ' ',
+                                                        ),
                                               );
                                             },
                                           ),
-                                          IconButton(
-                                            icon: Icon(
-                                              Icons.delete,
-                                              color: Colors.red,
+                                          Expanded(
+                                            flex: 1,
+                                            child: Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: Icon(Icons.edit),
+                                                  onPressed: () {
+                                                    showFormDialog(
+                                                      id:
+                                                          userProfile.id
+                                                              .toString(),
+                                                      userName:
+                                                          userProfile.userName,
+                                                      email: userProfile.email,
+                                                      password:
+                                                          userProfile.password,
+                                                      firstName:
+                                                          userProfile.firstName,
+                                                      middleName:
+                                                          userProfile
+                                                              .middleName,
+                                                      lastName:
+                                                          userProfile.lastName,
+                                                      prefix:
+                                                          userProfile.prefix,
+                                                      suffix:
+                                                          userProfile.suffix,
+                                                      position:
+                                                          userProfile.position,
+                                                    );
+                                                  },
+                                                ),
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.delete,
+                                                    color: Colors.red,
+                                                  ),
+                                                  onPressed: () async {},
+                                                ),
+                                              ],
                                             ),
-                                            onPressed: () async {},
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
+                                  );
+                                })
+                                .values
+                                .toList(),
                       ),
+                    ),
+                  ),
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    color: secondaryColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        PaginationInfo(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                        ),
+                        PaginationControls(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                          isLoading: _isLoading,
+                          onPageChanged: (page) => fetchUserProfile(page: page),
+                        ),
+                        Container(width: 60), // For alignment
+                      ],
                     ),
                   ),
                 ],
