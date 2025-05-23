@@ -151,6 +151,7 @@ class _OfficePageState extends State<OfficePage> {
     TextEditingController officeController = TextEditingController(text: name);
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,
@@ -195,7 +196,6 @@ class _OfficePageState extends State<OfficePage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),

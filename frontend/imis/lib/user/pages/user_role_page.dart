@@ -476,6 +476,7 @@ class _UserRolePageState extends State<UserRolePage> {
 
     showDialog(
       context: context,
+
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
@@ -566,11 +567,17 @@ class _UserRolePageState extends State<UserRolePage> {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                          child: Text(
+                            "No",
+                            style: TextStyle(color: primaryColor),
+                          ),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                          child: Text(
+                            "Yes",
+                            style: TextStyle(color: primaryColor),
+                          ),
                         ),
                       ],
                     );

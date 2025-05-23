@@ -5,6 +5,8 @@ import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/pagination_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuditorTeamPage extends StatefulWidget {
@@ -29,45 +31,54 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
   int? selectAuditor;
   String? selectTeamText;
 
+  final _paginationUtils = PaginationUtil(Dio());
+
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+
   final dio = Dio();
 
-  Future<void> fetchAuditorTeam() async {
-    var url = ApiEndpoint().auditorteam;
+  Future<void> fetchAuditorTeam({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
+      String? token = await AuthUtil.fetchAccessToken();
 
       if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
+        debugPrint("Access token is missing");
         return;
       }
 
-      var response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
+      final pageList = await _paginationUtils.fetchPaginatedData<AuditorTeam>(
+        endpoint: ApiEndpoint().auditorteam,
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        fromJson: (json) => AuditorTeam.fromJson(json),
       );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<AuditorTeam> data =
-            (response.data as List)
-                .map((auditorTeam) => AuditorTeam.fromJson(auditorTeam))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            auditorTeamList =
-                data.map((auditorTeam) => auditorTeam.toJson()).toList();
-            filteredListTeamAuditor = List.from(auditorTeamList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          auditorTeamList = pageList.items.map((a) => a.toJson()).toList();
+          filteredListTeamAuditor = List.from(auditorTeamList);
+        });
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Error in fetchAuditSchedule: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -215,6 +226,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
@@ -341,7 +353,6 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: secondaryBgButton,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),
@@ -371,11 +382,17 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                           actions: [
                             TextButton(
                               onPressed: () => Navigator.pop(context, false),
-                              child: Text("No"),
+                              child: Text(
+                                "No",
+                                style: TextStyle(color: primaryColor),
+                              ),
                             ),
                             TextButton(
                               onPressed: () => Navigator.pop(context, true),
-                              child: Text("Yes"),
+                              child: Text(
+                                "Yes",
+                                style: TextStyle(color: primaryColor),
+                              ),
                             ),
                           ],
                         );
@@ -588,6 +605,8 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                     uniqueTeams
                         .asMap()
                         .map((index, audiorTeam) {
+                          // int itemNumber =
+                          //     ((_currentPage - 1) * _pageSize) + index + 1;
                           return MapEntry(
                             index,
                             Card(
@@ -694,6 +713,28 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                         })
                         .values
                         .toList(),
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(10),
+              color: secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchAuditorTeam(page: page),
+                  ),
+                  Container(width: 60),
+                ],
               ),
             ),
           ],

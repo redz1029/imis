@@ -196,7 +196,6 @@ class _RolesPageState extends State<RolesPage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -418,7 +417,7 @@ class _RolesPageState extends State<RolesPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                role.name, // Access role name directly
+                                                role.name,
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
@@ -33,25 +34,35 @@ class DashboardNavigationPanel extends StatefulWidget {
 class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _menuKey = GlobalKey();
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
   bool _isLoading = false;
   String firstName = "User";
+  String middleName = "middleName";
+  String lastName = "lastName";
+  String email = "email";
   List<String> roles = [];
   Widget _selectedScreen = HomePage();
   int _selectedIndex = -1;
+  final dio = Dio();
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
+    AuthUtil.setupDioInterceptors(dio, navigatorKey);
   }
 
   Future<void> _loadUserName() async {
-    UserRegistration? user = await AuthUtil.fetchRegisteredUser();
+    UserRegistration? user = await AuthUtil.fetchLoggedUser();
     List<String>? roleList = await AuthUtil.fetchRoles();
 
     if (user != null) {
       setState(() {
         firstName = user.firstName ?? "User";
+        middleName = user.middleName ?? "middleName";
+        lastName = user.lastName ?? "lastName";
+        email = user.email ?? "email";
         roles = roleList ?? [];
       });
     }
@@ -120,6 +131,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
 
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setState) {
@@ -185,6 +197,24 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                   gap2,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
+                    children: [Text('Full name')],
+                  ),
+                  gap2,
+                  SizedBox(
+                    width: 350,
+                    height: 60,
+                    child: TextField(
+                      decoration: InputDecoration(
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        focusColor: primaryColor,
+                        labelText: 'Full name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  gap2,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [Text('Email')],
                   ),
                   gap2,
@@ -195,25 +225,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                       decoration: InputDecoration(
                         floatingLabelBehavior: FloatingLabelBehavior.never,
                         focusColor: primaryColor,
-                        labelText: 'Email',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  gap2,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    children: [Text('Password')],
-                  ),
-                  gap2,
-                  SizedBox(
-                    width: 350,
-                    height: 60,
-                    child: TextField(
-                      decoration: InputDecoration(
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        focusColor: primaryColor,
-                        labelText: 'Password',
+                        labelText: "'Email",
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -224,7 +236,6 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: secondaryBgButton,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),

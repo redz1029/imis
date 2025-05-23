@@ -352,7 +352,6 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),

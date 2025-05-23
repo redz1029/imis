@@ -16,6 +16,7 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/utils/pagination_util.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -87,6 +88,12 @@ class _PerformanceGovernanceSystemPageState
 
   int? selectedPeriod;
 
+  final _paginationUtils = PaginationUtil(Dio());
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+
   //For search controller
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
@@ -112,6 +119,7 @@ class _PerformanceGovernanceSystemPageState
   ValueNotifier<double> competenceScore = ValueNotifier(0.0);
   ValueNotifier<double> resourceScore = ValueNotifier(0.0);
   ValueNotifier<double> confidenceScore = ValueNotifier(0.0);
+  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   double get totalScore =>
       competenceScore.value + resourceScore.value + confidenceScore.value;
@@ -127,6 +135,7 @@ class _PerformanceGovernanceSystemPageState
     var url = ApiEndpoint().performancegovernancesystem;
 
     try {
+      AuthUtil.setupDioInterceptors(dio, navigatorKey);
       SharedPreferences prefs = await SharedPreferences.getInstance();
       String? token = prefs.getString('accessToken');
 
@@ -173,7 +182,7 @@ class _PerformanceGovernanceSystemPageState
 
   Future<void> updatePGS({
     String? pgsId,
-    required PerformanceGovernanceSystem audit,
+    required PerformanceGovernanceSystem updatePgs,
   }) async {
     final url = '${ApiEndpoint().performancegovernancesystem}/$pgsId';
 
@@ -186,7 +195,7 @@ class _PerformanceGovernanceSystemPageState
         return;
       }
 
-      final pgs = audit.toJson();
+      final pgs = updatePgs.toJson();
 
       final response = await dio.put(
         url,
@@ -518,7 +527,7 @@ class _PerformanceGovernanceSystemPageState
 
   Future<void> fetchPgsList() async {
     // Use AuthUtil to fetch the user
-    UserRegistration? user = await AuthUtil.fetchRegisteredUser();
+    UserRegistration? user = await AuthUtil.fetchLoggedUser();
 
     if (user == null) {
       debugPrint("Error: No user found in shared preferences.");
@@ -1082,6 +1091,10 @@ class _PerformanceGovernanceSystemPageState
                             filteredList
                                 .asMap()
                                 .map((index, pgsgovernancesystem) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
                                   return MapEntry(
                                     index,
                                     Container(
@@ -1103,7 +1116,7 @@ class _PerformanceGovernanceSystemPageState
                                           SizedBox(
                                             width: 60,
                                             child: Text(
-                                              (index + 1).toString(),
+                                              itemNumber.toString(),
                                               style: TextStyle(
                                                 fontWeight: FontWeight.normal,
                                               ),
@@ -2249,7 +2262,7 @@ class _PerformanceGovernanceSystemPageState
                         int? pgsId = int.tryParse(id ?? '');
 
                         // Generate the full PGS audit object
-                        PerformanceGovernanceSystem audit = getPgsAuditDetails(
+                        PerformanceGovernanceSystem pgs = getPgsAuditDetails(
                           id: pgsId ?? 0,
                           pgsStatus: "Draft",
                         );
@@ -2257,7 +2270,7 @@ class _PerformanceGovernanceSystemPageState
                         try {
                           if (pgsId == null) {
                             debugPrint("Saving new PGS...");
-                            await savePGS(audit);
+                            await savePGS(pgs);
                             // ignore: use_build_context_synchronously
                             Navigator.pop(context);
                           } else {
@@ -2265,8 +2278,9 @@ class _PerformanceGovernanceSystemPageState
 
                             await updatePGS(
                               pgsId: pgsId.toString(),
-                              audit: audit,
+                              updatePgs: pgs,
                             );
+                            // ignore: use_build_context_synchronously
                             Navigator.pop(context);
                           }
                         } catch (e) {

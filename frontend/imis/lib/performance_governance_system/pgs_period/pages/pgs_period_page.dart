@@ -294,7 +294,6 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -325,7 +324,10 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text("No"),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
@@ -333,7 +335,10 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                                 Navigator.pop(context, true);
                               }
                             },
-                            child: Text("Yes"),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                         ],
                       );

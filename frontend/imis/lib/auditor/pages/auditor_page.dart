@@ -167,6 +167,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
     TextEditingController auditorController = TextEditingController(text: name);
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           backgroundColor: mainBgColor,
@@ -211,7 +212,6 @@ class _AuditorMainPageState extends State<AuditorPage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -242,7 +242,10 @@ class _AuditorMainPageState extends State<AuditorPage> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text("No"),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
@@ -250,7 +253,10 @@ class _AuditorMainPageState extends State<AuditorPage> {
                                 Navigator.pop(context, true);
                               }
                             },
-                            child: Text("Yes"),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                         ],
                       );

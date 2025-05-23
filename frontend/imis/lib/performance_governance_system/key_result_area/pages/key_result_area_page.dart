@@ -218,7 +218,6 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -249,7 +248,10 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text("No"),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
@@ -257,7 +259,10 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                 Navigator.pop(context, true);
                               }
                             },
-                            child: Text("Yes"),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                         ],
                       );
