@@ -445,6 +445,14 @@ class _PerformanceGovernanceSystemPageState
         officeId == null ||
         officeName.isEmpty ||
         officeId.isEmpty) {
+      MotionToast.error(
+        title: const Text("Office Not Found"),
+        description: const Text(
+          "The selected office ID does not match any known office. Please contact the Administrator.",
+        ),
+        toastDuration: Duration(seconds: 10),
+        toastAlignment: Alignment.topCenter,
+      ).show(context);
       return null;
     }
 
@@ -525,23 +533,23 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
-  Future<void> fetchPgsList() async {
-    // Use AuthUtil to fetch the user
-    UserRegistration? user = await AuthUtil.fetchLoggedUser();
+  Future<void> fetchPgsList({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
 
-    if (user == null) {
-      debugPrint("Error: No user found in shared preferences.");
-      return;
-    }
-
-    setState(() {
-      userId = user.id ?? "UserId";
-    });
-
-    final url =
-        "${ApiEndpoint().performancegovernancesystemUserId}/userId/$userId?userId=$userId";
+    setState(() => _isLoading = true);
 
     try {
+      UserRegistration? user = await AuthUtil.fetchLoggedUser();
+
+      if (user == null) {
+        debugPrint("Error: No user found in shared preferences.");
+        return;
+      }
+
+      setState(() {
+        userId = user.id ?? "UserId";
+      });
+
       String? token = await AuthUtil.fetchAccessToken();
 
       if (token == null || token.isEmpty) {
@@ -549,51 +557,60 @@ class _PerformanceGovernanceSystemPageState
         return;
       }
 
-      var response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
+      final pageList = await _paginationUtils.fetchPaginatedData<
+        PerformanceGovernanceSystem
+      >(
+        endpoint:
+            "${ApiEndpoint().performancegovernancesystemUserId}/userId/$userId?userId=$userId",
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
+        fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
       );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<Map<String, Object>> formattedData =
-            (response.data as List).map((pgsJson) {
-              PerformanceGovernanceSystem pgs =
-                  PerformanceGovernanceSystem.fromJson(pgsJson);
-              return {
-                'pgsReadinessRatingId': pgs.pgsReadinessRating.id.toString(),
-                'id': pgs.id.toString(),
-                'name': pgs.office.name,
-                'pgsStatus': pgs.pgsStatus.toString(),
-                'Start Date': DateTimeConverter().toJson(
-                  pgs.pgsPeriod.startDate,
-                ),
-                'officeid': pgs.office.id,
-                'End Date': DateTimeConverter().toJson(pgs.pgsPeriod.endDate),
-                'competencescore':
-                    pgs.pgsReadinessRating.competenceToDeliver.toString(),
-                'confidencescore':
-                    pgs.pgsReadinessRating.confidenceToDeliver.toString(),
-                'resourcescore':
-                    pgs.pgsReadinessRating.resourceAvailability.toString(),
-                'selectPeriod': pgs.pgsPeriod.id.toString(),
-                'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
-                'percentDeliverables': pgs.percentDeliverables.toString(),
-              };
-            }).toList();
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          deliverableLists =
+              pageList.items.map((pgs) {
+                return {
+                  'pgsReadinessRatingId': pgs.pgsReadinessRating.id.toString(),
+                  'id': pgs.id.toString(),
+                  'name': pgs.office.name,
+                  'pgsStatus': pgs.pgsStatus.toString(),
+                  'Start Date': DateTimeConverter().toJson(
+                    pgs.pgsPeriod.startDate,
+                  ),
+                  'officeid': pgs.office.id,
+                  'End Date': DateTimeConverter().toJson(pgs.pgsPeriod.endDate),
+                  'competencescore':
+                      pgs.pgsReadinessRating.competenceToDeliver.toString(),
+                  'confidencescore':
+                      pgs.pgsReadinessRating.confidenceToDeliver.toString(),
+                  'resourcescore':
+                      pgs.pgsReadinessRating.resourceAvailability.toString(),
+                  'selectPeriod': pgs.pgsPeriod.id.toString(),
+                  'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
+                  'percentDeliverables': pgs.percentDeliverables.toString(),
+                };
+              }).toList();
 
-        if (mounted) {
-          setState(() {
-            deliverableLists = formattedData;
-            filteredList = List.from(deliverableLists);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+          filteredList = List.from(deliverableLists);
+        });
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.response?.data ?? e.message}");
     } catch (e) {
       debugPrint("Unexpected error: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -626,26 +643,6 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
-  // Future<void> _loadOfficeName() async {
-  //   List<String>? officeNames = await AuthUtil.fetchOfficeNames();
-  //   List<String>? officeIds = await AuthUtil.fetchOfficeIds();
-
-  //   final prefs = await SharedPreferences.getInstance();
-  //   String? selectedOfficeId = prefs.getString('selectedOfficeId');
-
-  //   String selectedOfficeName = "No Office";
-
-  //   if (officeNames != null && officeIds != null && selectedOfficeId != null) {
-  //     int index = officeIds.indexOf(selectedOfficeId);
-  //     if (index != -1 && index < officeNames.length) {
-  //       selectedOfficeName = officeNames[index];
-  //     }
-  //   }
-  //   setState(() {
-  //     officeDisplay = selectedOfficeName;
-  //     officeIdList = selectedOfficeId ?? "No Office ID";
-  //   });
-  // }
   Future<void> _loadOfficeName() async {
     List<String>? officeNames = await AuthUtil.fetchOfficeNames();
     List<String>? officeIds = await AuthUtil.fetchOfficeIds();
@@ -1295,6 +1292,28 @@ class _PerformanceGovernanceSystemPageState
                       ),
                     ),
                   ),
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    color: secondaryColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        PaginationInfo(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                        ),
+                        PaginationControls(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                          isLoading: _isLoading,
+                          onPageChanged: (page) => fetchPgsList(page: page),
+                        ),
+                        Container(width: 60),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1487,7 +1506,7 @@ class _PerformanceGovernanceSystemPageState
     });
   }
 
-  void showFormDialog({
+  Future showFormDialog({
     String? id,
     String? officename,
     int? officenameid,
@@ -1644,7 +1663,7 @@ class _PerformanceGovernanceSystemPageState
     bool isApproved = pgsstatus == null || pgsstatus == 'Approved';
     bool isCancelled = pgsstatus == null || pgsstatus == 'Cancelled';
 
-    showDialog(
+    return showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) {
