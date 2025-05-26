@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:imis/utils/page_list.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class PaginationUtil {
   final Dio dio;
@@ -16,6 +17,15 @@ class PaginationUtil {
     required T Function(Map<String, dynamic>) fromJson,
   }) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('accessToken');
+
+      final combinedHeaders = {
+        "Authorization": "Bearer $token",
+        "Content-Type": "application/json",
+        ...?headers,
+      };
+
       final response = await dio.get(
         endpoint,
         queryParameters: {
@@ -23,7 +33,7 @@ class PaginationUtil {
             'search': searchQuery,
           ...?additionalParams,
         },
-        options: Options(headers: headers),
+        options: Options(headers: combinedHeaders),
       );
 
       if (response.statusCode == 200) {

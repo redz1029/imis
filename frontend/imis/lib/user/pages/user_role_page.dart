@@ -36,183 +36,64 @@ class _UserRolePageState extends State<UserRolePage> {
   String? roleName;
   String? userName;
 
-  final int _currentPage = 1;
-  final int _pageSize = 15;
-  final int _totalCount = 0;
-  final bool _isLoading = false;
+  int _currentPage = 1;
+  final int _pageSize = 25;
+  int _totalCount = 0;
+
+  bool _isLoading = false;
 
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
 
-  // Future<void> fetchUserRoles({int page = 1, String? searchQuery}) async {
-  //   if (_isLoading) return;
+  Future<void> fetchUserRoles({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
 
-  //   setState(() => _isLoading = true);
-
-  //   try {
-  //     // Fetch paginated response
-  //     final pageList = await _paginationUtils.fetchPaginatedData<UserRoles>(
-  //       endpoint: ApiEndpoint().userRole,
-  //       page: page,
-  //       pageSize: _pageSize,
-  //       searchQuery: searchQuery,
-  //       fromJson: (json) => UserRoles.fromJson(json),
-  //     );
-
-  //     List<UserRoles> data = [];
-
-  //     for (var user in pageList.items) {
-  //       String userId = user['userId'];
-
-  //       if (user['roles'] != null && user['roles'] is List) {
-  //         for (var role in user['roles']) {
-  //           data.add(UserRoles(userId: userId, roleId: role['roleId']));
-  //         }
-  //       }
-  //     }
-
-  //     if (mounted) {
-  //       setState(() {
-  //         _currentPage = pageList.page;
-  //         _totalCount = pageList.totalCount;
-  //         userRoleList = data;
-  //         filteredList = List.from(userRoleList);
-  //       });
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error fetching paginated roles: $e");
-  //   } finally {
-  //     if (mounted) {
-  //       setState(() => _isLoading = false);
-  //     }
-  //   }
-  // }
-
-  // Future<void> fetchUserRoles({int page = 1, String? searchQuery}) async {
-  //   if (_isLoading) return;
-
-  //   setState(() => _isLoading = true);
-
-  //   try {
-  //     // Fetch paginated response
-  //     final pageList = await _paginationUtils.fetchPaginatedData<dynamic>(
-  //       endpoint: ApiEndpoint().userRole,
-  //       page: page,
-  //       pageSize: _pageSize,
-  //       searchQuery: searchQuery,
-  //       fromJson: (json) => json, // Keep raw JSON
-  //     );
-
-  //     List<UserRoles> data = []; // List to store processed UserRoles
-
-  //     // Manually processing the data
-  //     for (var user in pageList.items) {
-  //       final userId = user['userId'];
-
-  //       if (user['roles'] != null && user['roles'] is List) {
-  //         for (var role in user['roles']) {
-  //           data.add(UserRoles(userId: userId, roleId: role['roleId']));
-  //         }
-  //       }
-  //     }
-
-  //     if (mounted) {
-  //       setState(() {
-  //         _currentPage = pageList.page;
-  //         _totalCount = pageList.totalCount;
-
-  //         userRoleList = data;
-  //         filteredList = List.from(userRoleList); // Create a copy for filtering
-  //       });
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error fetching paginated roles: $e");
-  //   } finally {
-  //     if (mounted) {
-  //       setState(() => _isLoading = false);
-  //     }
-  //   }
-  // }
-
-  // Future<void> fetchUserRoles({int page = 1, String? searchQuery}) async {
-  //   if (_isLoading) return;
-
-  //   setState(() => _isLoading = true);
-
-  //   try {
-  //     final pageList = await _paginationUtils
-  //         .fetchPaginatedData<Map<String, dynamic>>(
-  //           endpoint: ApiEndpoint().userRole,
-  //           page: page,
-  //           pageSize: _pageSize,
-  //           searchQuery: searchQuery,
-  //           fromJson: (json) => json,
-  //         );
-
-  //     for (var user in pageList.items) {
-  //       final userId = user['userId'];
-
-  //       if (user['roles'] != null && user['roles'] is List) {
-  //         for (var role in user['roles']) {
-  //           data.add(UserRoles(userId: userId, roleId: role['roleId']));
-  //         }
-  //       }
-  //     }
-
-  //     if (mounted) {
-  //       setState(() {
-  //         _currentPage = pageList.page;
-  //         _totalCount = pageList.totalCount;
-  //         // Store the raw items as Map objects
-  //         userRoleList =
-  //             pageList.items.map((item) => UserRoles.fromJson(item)).toList();
-  //         filteredList = List.from(userRoleList);
-  //       });
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error fetching paginated roles: $e");
-  //   } finally {
-  //     if (mounted) {
-  //       setState(() => _isLoading = false);
-  //     }
-  //   }
-  // }
-
-  Future<void> fetchUserRoles() async {
-    var url = ApiEndpoint().userRole;
+    setState(() => _isLoading = true);
 
     try {
-      var response = await dio.get(url);
-      debugPrint("Raw response data: ${response.data}");
+      final pageList = await _paginationUtils
+          .fetchPaginatedData<Map<String, dynamic>>(
+            endpoint: ApiEndpoint().userRole,
+            page: page,
+            pageSize: _pageSize,
+            searchQuery: searchQuery,
+            fromJson: (json) => json,
+          );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<UserRoles> data = [];
+      List<UserRoles> data = parseUserRolesFromJson(pageList.items);
 
-        for (var user in response.data) {
-          String userId = user['userId'];
-
-          // Check if user has roles
-          if (user['roles'] != null && user['roles'] is List) {
-            for (var role in user['roles']) {
-              data.add(UserRoles(userId: userId, roleId: role['roleId']));
-            }
-          }
-        }
-
-        debugPrint("Total UserRoles: ${data.length}");
-        if (mounted) {
-          setState(() {
-            userRoleList = data;
-            filteredList = List.from(userRoleList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response: ${response.data}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          userRoleList = data;
+          filteredList = List.from(userRoleList);
+        });
       }
     } catch (e) {
       debugPrint("Fetch error: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
+  }
+
+  List<UserRoles> parseUserRolesFromJson(List<dynamic> rawData) {
+    List<UserRoles> data = [];
+
+    for (var user in rawData) {
+      String userId = user['userId'];
+
+      if (user['roles'] != null && user['roles'] is List) {
+        for (var role in user['roles']) {
+          data.add(UserRoles(userId: userId, roleId: role['roleId']));
+        }
+      }
+    }
+
+    return data;
   }
 
   Future<void> fetchRoleList() async {
@@ -655,7 +536,7 @@ class _UserRolePageState extends State<UserRolePage> {
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search User Name and Role',
+                      labelText: 'Search User Role',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -902,142 +783,28 @@ class _UserRolePageState extends State<UserRolePage> {
                       ),
                     ),
                   ),
-                  // Container(
-                  //   padding: EdgeInsets.all(10),
-                  //   color: secondaryColor,
-                  //   child: Row(
-                  //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  //     children: [
-                  //       PaginationInfo(
-                  //         currentPage: _currentPage,
-                  //         totalItems: _totalCount,
-                  //         itemsPerPage: _pageSize,
-                  //       ),
-                  //       PaginationControls(
-                  //         currentPage: _currentPage,
-                  //         totalItems: _totalCount,
-                  //         itemsPerPage: _pageSize,
-                  //         isLoading: _isLoading,
-                  //         onPageChanged: (page) => fetchUserRoles(page: page),
-                  //       ),
-                  //       Container(width: 60), // For alignment
-                  //     ],
-                  //   ),
-                  // ),
-
-                  // Expanded(
-                  //   child: SingleChildScrollView(
-                  //     scrollDirection: Axis.vertical,
-                  //     child: Column(
-                  //       children:
-                  //           filteredList.asMap().entries.map((entry) {
-                  //             int index = entry.key;
-                  //             UserRoles userRoles = entry.value;
-
-                  //             // Get the matching role by roleId
-                  //             final matchedRole = rolenameList.firstWhere(
-                  //               (roles) => roles.id == userRoles.roleId,
-                  //               orElse:
-                  //                   () => Roles('unknown', 'Unknown', '', ''),
-                  //             );
-                  //             final String roleName = matchedRole.name;
-
-                  //             // Get the matching user by userId
-                  //             final matchUserName = userList.firstWhere(
-                  //               (user) => user.id == userRoles.userId,
-                  //               orElse:
-                  //                   () => User(
-                  //                     id: 'unknown',
-                  //                     fullName: 'Unknown',
-                  //                   ),
-                  //             );
-                  //             final String userName = matchUserName.fullName;
-
-                  //             return Container(
-                  //               padding: EdgeInsets.symmetric(
-                  //                 vertical: 1,
-                  //                 horizontal: 16,
-                  //               ),
-                  //               decoration: BoxDecoration(
-                  //                 border: Border(
-                  //                   bottom: BorderSide(
-                  //                     color: Colors.grey.shade300,
-                  //                   ),
-                  //                 ),
-                  //               ),
-                  //               child: Row(
-                  //                 children: [
-                  //                   Expanded(
-                  //                     flex: 1,
-                  //                     child: Text((index + 1).toString()),
-                  //                   ),
-                  //                   Expanded(flex: 3, child: Text(userName)),
-                  //                   Expanded(flex: 2, child: Text(roleName)),
-                  //                   Expanded(
-                  //                     flex: 1,
-                  //                     child: Row(
-                  //                       children: [
-                  //                         IconButton(
-                  //                           icon: Icon(Icons.edit),
-                  //                           onPressed: () {
-                  //                             final selectedUser = userList
-                  //                                 .firstWhere(
-                  //                                   (user) =>
-                  //                                       user.id ==
-                  //                                       userRoles.userId,
-                  //                                   orElse:
-                  //                                       () => User(
-                  //                                         id: 'unknown',
-                  //                                         fullName: 'Unknown',
-                  //                                       ),
-                  //                                 );
-
-                  //                             final selectedRoleId =
-                  //                                 userRoles.roleId;
-                  //                             final selectedUserId =
-                  //                                 userRoles.userId;
-
-                  //                             debugPrint(
-                  //                               "Editing User: ${selectedUser.fullName} (ID: ${selectedUser.id})",
-                  //                             );
-                  //                             debugPrint(
-                  //                               "Role ID: $selectedRoleId",
-                  //                             );
-                  //                             debugPrint(
-                  //                               "User ID: $selectedUserId",
-                  //                             );
-
-                  //                             showFormDialog(
-                  //                               id:
-                  //                                   userRoles
-                  //                                       .userId, // ✅ add this line
-                  //                               selectedUserId:
-                  //                                   userRoles.userId,
-                  //                               selectedOfficeId:
-                  //                                   userRoles.roleId,
-                  //                             );
-                  //                           },
-                  //                         ),
-                  //                         IconButton(
-                  //                           icon: Icon(
-                  //                             Icons.delete,
-                  //                             color: primaryColor,
-                  //                           ),
-                  //                           onPressed:
-                  //                               () => showDeleteDialog(
-                  //                                 userRoles.userId.toString(),
-                  //                               ),
-                  //                         ),
-                  //                       ],
-                  //                     ),
-                  //                   ),
-                  //                 ],
-                  //               ),
-                  //             );
-                  //           }).toList(),
-                  //     ),
-                  //   ),
-                  // ),
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    color: secondaryColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        PaginationInfo(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                        ),
+                        PaginationControls(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                          isLoading: _isLoading,
+                          onPageChanged: (page) => fetchUserRoles(page: page),
+                        ),
+                        Container(width: 60), // For alignment
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),

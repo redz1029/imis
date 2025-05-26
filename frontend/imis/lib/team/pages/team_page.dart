@@ -29,6 +29,45 @@ class _TeamPageState extends State<TeamPage> {
 
   final dio = Dio();
 
+  // Future<void> fetchTeam({int page = 1, String? searchQuery}) async {
+  //   if (_isLoading) return;
+
+  //   setState(() => _isLoading = true);
+
+  //   try {
+  //     String? token = await AuthUtil.fetchAccessToken();
+
+  //     if (token == null || token.isEmpty) {
+  //       debugPrint("Error: Access token is missing!");
+  //       return;
+  //     }
+
+  //     final pageList = await _paginationUtils.fetchPaginatedData<Team>(
+  //       endpoint: ApiEndpoint().team,
+  //       page: page,
+  //       pageSize: _pageSize,
+  //       searchQuery: searchQuery,
+  //       fromJson: (json) => Team.fromJson(json),
+  //       headers: {"Authorization": "Bearer $token"},
+  //     );
+
+  //     if (mounted) {
+  //       setState(() {
+  //         _currentPage = pageList.page;
+  //         _totalCount = pageList.totalCount;
+  //         teamList = pageList.items;
+  //         filteredList = List.from(teamList);
+  //       });
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error fetching team: $e");
+  //   } finally {
+  //     if (mounted) {
+  //       setState(() => _isLoading = false);
+  //     }
+  //   }
+  // }
+
   Future<void> fetchTeam({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
@@ -38,7 +77,7 @@ class _TeamPageState extends State<TeamPage> {
       String? token = await AuthUtil.fetchAccessToken();
 
       if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
+        debugPrint("Access token is missing");
         return;
       }
 
@@ -48,7 +87,10 @@ class _TeamPageState extends State<TeamPage> {
         pageSize: _pageSize,
         searchQuery: searchQuery,
         fromJson: (json) => Team.fromJson(json),
-        headers: {"Authorization": "Bearer $token"},
+        headers: {
+          "Authorization": "Bearer $token",
+          "Content-Type": "application/json",
+        },
       );
 
       if (mounted) {
@@ -60,7 +102,7 @@ class _TeamPageState extends State<TeamPage> {
         });
       }
     } catch (e) {
-      debugPrint("Error fetching team: $e");
+      debugPrint("Error in fetchTeam: $e");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -170,7 +212,6 @@ class _TeamPageState extends State<TeamPage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -300,6 +341,7 @@ class _TeamPageState extends State<TeamPage> {
                   height: 30,
                   width: 140,
                   child: DropdownButtonFormField<String>(
+                    dropdownColor: mainBgColor,
                     value: statusFilter,
                     onChanged: (value) {
                       setState(() {

@@ -5,6 +5,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user_office.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/pagination_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class UserOfficePage extends StatefulWidget {
@@ -30,35 +31,44 @@ class _UserOfficePageState extends State<UserOfficePage> {
   String? officeName;
   String? userName;
 
+  final _paginationUtils = PaginationUtil(Dio());
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
 
-  Future<void> fetchUserOffice() async {
-    var url = ApiEndpoint().useroffice;
+  Future<void> fetchUserOffice({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
 
     try {
-      var response = await dio.get(url);
-      debugPrint(" Raw response data: ${response.data}");
+      final pageList = await _paginationUtils.fetchPaginatedData<UserOffice>(
+        endpoint: ApiEndpoint().useroffice,
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+        fromJson: (json) => UserOffice.fromJson(json),
+      );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<UserOffice> data =
-            (response.data as List)
-                .map((useroffice) => UserOffice.fromJson(useroffice))
-                .toList();
-
-        debugPrint("Total fetched items: ${data.length}");
-        if (mounted) {
-          setState(() {
-            userOfficeList = data;
-            filteredList = List.from(userOfficeList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response: ${response.data}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          userOfficeList = pageList.items.toList();
+          filteredList = List.from(userOfficeList);
+        });
       }
     } catch (e) {
-      debugPrint("Fetch error: $e");
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -569,113 +579,178 @@ class _UserOfficePageState extends State<UserOfficePage> {
                       scrollDirection: Axis.vertical,
                       child: Column(
                         children:
-                            filteredList.asMap().entries.map((entry) {
-                              int index = entry.key;
-                              UserOffice userOffice = entry.value;
+                            filteredList
+                                .asMap()
+                                .map((index, userOffice) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
 
-                              final matchedOffice = officenameList.firstWhere(
-                                (office) => office.id == userOffice.officeId,
-                                orElse:
-                                    () => Office(
-                                      id: 0,
-                                      name: 'Unknown',
-                                      isActive: true,
-                                      isDeleted: false,
-                                    ),
-                              );
+                                  final matchedOffice = officenameList
+                                      .firstWhere(
+                                        (office) =>
+                                            office.id == userOffice.officeId,
+                                        orElse:
+                                            () => Office(
+                                              id: 0,
+                                              name: 'Unknown',
+                                              isActive: true,
+                                              isDeleted: false,
+                                            ),
+                                      );
+                                  final officeName = matchedOffice.name;
 
-                              final String officeName = matchedOffice.name;
+                                  final matchUserName = userList.firstWhere(
+                                    (user) => user.id == userOffice.userId,
+                                    orElse:
+                                        () => User(
+                                          id: 'unknown',
+                                          fullName: 'Unknown',
+                                        ),
+                                  );
+                                  final userName = matchUserName.fullName;
 
-                              final matchUserName = userList.firstWhere(
-                                (user) => user.id == userOffice.userId,
-                                orElse:
-                                    () => User(
-                                      id: 'unknown',
-                                      fullName: 'Unknown',
-                                    ),
-                              );
-
-                              final String userName = matchUserName.fullName;
-
-                              return Container(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 1,
-                                  horizontal: 16,
-                                ),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    bottom: BorderSide(
-                                      color: Colors.grey.shade300,
-                                    ),
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 1,
-                                      child: Text((index + 1).toString()),
-                                    ),
-                                    Expanded(flex: 3, child: Text(userName)),
-                                    Expanded(flex: 2, child: Text(officeName)),
-                                    Expanded(
-                                      flex: 1,
+                                  return MapEntry(
+                                    index,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 1,
+                                        horizontal: 16,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                        ),
+                                      ),
                                       child: Row(
                                         children: [
-                                          IconButton(
-                                            icon: Icon(Icons.edit),
-                                            onPressed: () {
-                                              // Find the selected user
-                                              final selectedUser = userList
-                                                  .firstWhere(
-                                                    (user) =>
-                                                        user.id ==
-                                                        userOffice.userId,
-                                                    orElse:
-                                                        () => User(
-                                                          id: 'unknown',
-                                                          fullName: 'Unknown',
-                                                        ),
-                                                  );
-
-                                              final selectedOfficeId =
-                                                  userOffice.officeId
-                                                      .toString();
-
-                                              debugPrint(
-                                                "Editing User: ${selectedUser.fullName} (ID: ${selectedUser.id})",
-                                              );
-                                              debugPrint(
-                                                " Office ID: $selectedOfficeId",
-                                              );
-
-                                              showFormDialog(
-                                                id: userOffice.id.toString(),
-                                                selectedUserId:
-                                                    userOffice.userId,
-                                                selectedOfficeId:
-                                                    userOffice.officeId
-                                                        .toString(),
-                                              );
-                                            },
-                                          ),
-                                          IconButton(
-                                            icon: Icon(
-                                              Icons.delete,
-                                              color: primaryColor,
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                itemNumber.toString(),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
                                             ),
-                                            onPressed:
-                                                () => showDeleteDialog(
-                                                  userOffice.userId.toString(),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                userName,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                officeName,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: Icon(Icons.edit),
+                                                  onPressed: () {
+                                                    final selectedUser =
+                                                        userList.firstWhere(
+                                                          (user) =>
+                                                              user.id ==
+                                                              userOffice.userId,
+                                                          orElse:
+                                                              () => User(
+                                                                id: 'unknown',
+                                                                fullName:
+                                                                    'Unknown',
+                                                              ),
+                                                        );
+                                                    final selectedOfficeId =
+                                                        userOffice.officeId
+                                                            .toString();
+
+                                                    debugPrint(
+                                                      "Editing User: ${selectedUser.fullName} (ID: ${selectedUser.id})",
+                                                    );
+                                                    debugPrint(
+                                                      " Office ID: $selectedOfficeId",
+                                                    );
+
+                                                    showFormDialog(
+                                                      id:
+                                                          userOffice.id
+                                                              .toString(),
+                                                      selectedUserId:
+                                                          userOffice.userId,
+                                                      selectedOfficeId:
+                                                          userOffice.officeId
+                                                              .toString(),
+                                                    );
+                                                  },
                                                 ),
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.delete,
+                                                    color: primaryColor,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        userOffice.userId
+                                                            .toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ],
-                                ),
-                              );
-                            }).toList(),
+                                  );
+                                })
+                                .values
+                                .toList(),
                       ),
+                    ),
+                  ),
+
+                  // Pagination Section
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    color: secondaryColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        PaginationInfo(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                        ),
+                        PaginationControls(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                          isLoading: _isLoading,
+                          onPageChanged: (page) => fetchUserOffice(page: page),
+                        ),
+                        Container(width: 60), // For alignment
+                      ],
                     ),
                   ),
                 ],
