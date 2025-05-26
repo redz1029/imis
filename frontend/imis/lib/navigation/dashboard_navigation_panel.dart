@@ -21,6 +21,7 @@ import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class DashboardNavigationPanel extends StatefulWidget {
   const DashboardNavigationPanel({super.key});
@@ -65,6 +66,17 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
         email = user.email ?? "email";
         roles = roleList ?? [];
       });
+      if (roleList == null || roleList.isEmpty) {
+        MotionToast.error(
+          title: const Text("No Role Assigned"),
+          description: const Text(
+            "This user has no role assigned. Please contact the Administrator.",
+          ),
+          toastDuration: Duration(seconds: 10),
+          toastAlignment: Alignment.topCenter,
+          // ignore: use_build_context_synchronously
+        ).show(context);
+      }
     }
   }
 
