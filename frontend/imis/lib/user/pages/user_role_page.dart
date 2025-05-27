@@ -37,8 +37,8 @@ class _UserRolePageState extends State<UserRolePage> {
   String? userName;
 
   int _currentPage = 1;
-  final int _pageSize = 25;
-  int _totalCount = 0;
+  final int _pageSize = 15;
+  final int _totalCount = 0;
 
   bool _isLoading = false;
 
@@ -46,54 +46,58 @@ class _UserRolePageState extends State<UserRolePage> {
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
 
-  Future<void> fetchUserRoles({int page = 1, String? searchQuery}) async {
+  Future<void> fetchUserRoles({int page = 1}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils
-          .fetchPaginatedData<Map<String, dynamic>>(
-            endpoint: ApiEndpoint().userRole,
-            page: page,
-            pageSize: _pageSize,
-            searchQuery: searchQuery,
-            fromJson: (json) => json,
-          );
+      final int usersPerFetch = 50;
+      final response = await dio.get(
+        '${ApiEndpoint().userRole}?page=1&pageSize=$usersPerFetch',
+      );
 
-      List<UserRoles> data = parseUserRolesFromJson(pageList.items);
+      if (response.statusCode == 200 && response.data is List) {
+        List<UserRoles> allRoles = [];
 
-      if (mounted) {
-        setState(() {
-          _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
-          userRoleList = data;
-          filteredList = List.from(userRoleList);
-        });
+        for (var userJson in response.data) {
+          String userId = userJson['userId'];
+          if (userJson['roles'] != null && userJson['roles'] is List) {
+            for (var role in userJson['roles']) {
+              allRoles.add(UserRoles(userId: userId, roleId: role['roleId']));
+            }
+          }
+        }
+
+        int start = (page - 1) * _pageSize;
+        int end = start + _pageSize;
+        if (start >= _totalCount) {
+          setState(() {
+            userRoleList = [];
+            filteredList = [];
+            _currentPage = page;
+          });
+          return;
+        }
+        if (end > _totalCount) end = _totalCount;
+
+        List<UserRoles> pageRoles = allRoles.sublist(start, end);
+
+        if (mounted) {
+          setState(() {
+            userRoleList = pageRoles;
+            filteredList = List.from(userRoleList);
+            _currentPage = page;
+          });
+        }
+      } else {
+        debugPrint("Unexpected response: ${response.data}");
       }
     } catch (e) {
       debugPrint("Fetch error: $e");
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
-  }
-
-  List<UserRoles> parseUserRolesFromJson(List<dynamic> rawData) {
-    List<UserRoles> data = [];
-
-    for (var user in rawData) {
-      String userId = user['userId'];
-
-      if (user['roles'] != null && user['roles'] is List) {
-        for (var role in user['roles']) {
-          data.add(UserRoles(userId: userId, roleId: role['roleId']));
-        }
-      }
-    }
-
-    return data;
   }
 
   Future<void> fetchRoleList() async {
