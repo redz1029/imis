@@ -6,8 +6,8 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
 {
     public class PgsSignatoryTemplateDto : BaseDto<PgsSignatoryTemplate, int>
     {
-        public required string Status { get; set; }
-        public required string SignatoryLabel { get; set; }
+        public string? Status { get; set; }
+        public string? SignatoryLabel { get; set; }
         public int OrderLevel { get; set; }
         public string? DefaultSignatoryId { get; set; }
         public bool IsActive { get; set; }
@@ -27,8 +27,8 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
             return new PgsSignatoryTemplate()
             {
                 Id = Id,
-                Status = Status,
-                SignatoryLabel = SignatoryLabel,
+                Status = Status!,
+                SignatoryLabel = SignatoryLabel!,
                 OrderLevel = OrderLevel,
                 DefaultSignatoryId = DefaultSignatoryId,       
                 IsActive = IsActive
