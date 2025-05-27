@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
+import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
@@ -38,10 +39,11 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   bool _isLoading = false;
-  String firstName = "User";
+  String firstName = "firstName";
   String middleName = "middleName";
   String lastName = "lastName";
   String email = "email";
+  String username = "userName";
   List<String> roles = [];
   Widget _selectedScreen = HomePage();
   int _selectedIndex = -1;
@@ -51,6 +53,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   void initState() {
     super.initState();
     _loadUserName();
+
     AuthUtil.setupDioInterceptors(dio, navigatorKey);
   }
 
@@ -60,11 +63,19 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
 
     if (user != null) {
       setState(() {
-        firstName = user.firstName ?? "User";
+        firstName = user.firstName ?? "firstName";
         middleName = user.middleName ?? "middleName";
         lastName = user.lastName ?? "lastName";
-        email = user.email ?? "email";
+
         roles = roleList ?? [];
+        email = user.email ?? "email";
+        username = user.userName ?? "username";
+
+        // print("user.firstName: ${user.firstName}");
+        // print("user.middleName: ${user.middleName}");
+        // print("user.lastName: ${user.lastName}");
+        // print("user.email: ${user.email}");
+        // print("user.userName: ${user.userName}");
       });
       if (roleList == null || roleList.isEmpty) {
         MotionToast.error(
@@ -128,6 +139,151 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     );
   }
 
+  void _viewProfile(BuildContext context) async {
+    File? image;
+    final picker = ImagePicker();
+
+    Future<void> pickImage(Function setState) async {
+      final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          image = File(pickedFile.path);
+        });
+      }
+    }
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: mainBgColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+
+              title: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      icon: Icon(Icons.close),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      padding: EdgeInsets.zero,
+                      constraints: BoxConstraints(),
+                    ),
+                  ),
+                  SizedBox(height: 4, width: 400),
+                  Text(
+                    'My Profile',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ],
+              ),
+
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    children: [
+                      // Profile Picture
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundColor: grey,
+                        backgroundImage:
+                            image != null
+                                ? FileImage(image!) as ImageProvider
+                                : AssetImage('assets/profile1.jpg'),
+                      ),
+
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: GestureDetector(
+                          onTap: () async {
+                            await pickImage(setState);
+                          },
+                          child: CircleAvatar(
+                            radius: 16,
+                            backgroundColor: Colors.white,
+                            child: Icon(
+                              Icons.edit,
+                              color: Color.fromARGB(209, 116, 116, 116),
+                              size: 18,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  gap,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$firstName $middleName $lastName',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  gap2,
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        username != "username" ? username : "No username found",
+                      ),
+                    ],
+                  ),
+
+                  gap2,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [Text(email)],
+                  ),
+                  gap,
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () {
+                      _editProfile(context);
+                    },
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.edit, color: Colors.white),
+                        SizedBox(width: 5),
+                        Text(
+                          'Edit Profile',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _editProfile(BuildContext context) async {
     File? image;
     final picker = ImagePicker();
@@ -141,6 +297,13 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
       }
     }
 
+    TextEditingController fullnameController = TextEditingController(
+      text: '$firstName $middleName $lastName',
+    );
+    TextEditingController usernameController = TextEditingController(
+      text: username,
+    );
+    TextEditingController emailController = TextEditingController(text: email);
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -165,7 +328,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                         backgroundImage:
                             image != null
                                 ? FileImage(image!) as ImageProvider
-                                : AssetImage('lib/assets/profile1.jpg'),
+                                : AssetImage('assets/profile1.jpg'),
                       ),
 
                       Positioned(
@@ -191,24 +354,6 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                   gap2,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
-                    children: [Text('Username')],
-                  ),
-                  gap2,
-                  SizedBox(
-                    width: 350,
-                    height: 60,
-                    child: TextField(
-                      decoration: InputDecoration(
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        focusColor: primaryColor,
-                        labelText: 'Username',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
-                  gap2,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.start,
                     children: [Text('Full name')],
                   ),
                   gap2,
@@ -216,10 +361,30 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     width: 350,
                     height: 60,
                     child: TextField(
+                      controller: fullnameController,
                       decoration: InputDecoration(
                         floatingLabelBehavior: FloatingLabelBehavior.never,
                         focusColor: primaryColor,
                         labelText: 'Full name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  gap2,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [Text('Username')],
+                  ),
+                  gap2,
+                  SizedBox(
+                    width: 350,
+                    height: 60,
+                    child: TextField(
+                      controller: usernameController,
+                      decoration: InputDecoration(
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        focusColor: primaryColor,
+                        labelText: 'Username',
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -234,10 +399,11 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     width: 350,
                     height: 60,
                     child: TextField(
+                      controller: emailController,
                       decoration: InputDecoration(
                         floatingLabelBehavior: FloatingLabelBehavior.never,
                         focusColor: primaryColor,
-                        labelText: "'Email",
+                        labelText: "Email",
                         border: OutlineInputBorder(),
                       ),
                     ),
@@ -261,6 +427,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
+
                   onPressed: () {},
                   child: Text('Save', style: TextStyle(color: secondaryColor)),
                 ),
@@ -289,7 +456,6 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
               ],
             ),
           ),
-          // This Expanded allows scrolling only in this section
           Expanded(
             child: SingleChildScrollView(
               child: Column(
@@ -414,7 +580,12 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                       ],
                     ),
                   ),
-                  _buildListTile(Icons.folder, 'Reports', 14, () {}),
+                  _buildListTile(
+                    Icons.folder,
+                    'Reports',
+                    14,
+                    () => _setScreen(PgsReportPage(), 14),
+                  ),
                 ],
               ),
             ),
@@ -445,7 +616,6 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
             hideIcon
                 ? null
                 : Icon(
-                  // Conditionally hide icon
                   icon,
                   color:
                       _selectedIndex == index ? primaryColor : primaryTextColor,
@@ -453,7 +623,6 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
         title: Text(
           title,
           style: TextStyle(
-            // fontWeight: FontWeight.w600,
             color: _selectedIndex == index ? primaryColor : primaryTextColor,
           ),
         ),
@@ -511,7 +680,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     ).then((value) {
       if (value == "Profile") {
         // ignore: use_build_context_synchronously
-        _editProfile(context);
+        _viewProfile(context);
       } else if (value == "change_password") {
         // ignore: use_build_context_synchronously
         Navigator.of(context).pushReplacement(
