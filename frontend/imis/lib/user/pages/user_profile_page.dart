@@ -14,6 +14,7 @@ class UserProfilePage extends StatefulWidget {
 }
 
 class _UserProfileState extends State<UserProfilePage> {
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController middleNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
@@ -371,6 +372,7 @@ class _UserProfileState extends State<UserProfilePage> {
             TextButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
+                backgroundColor: secondaryBgButton,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -400,17 +402,11 @@ class _UserProfileState extends State<UserProfilePage> {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: Text(
-                            "No",
-                            style: TextStyle(color: primaryColor),
-                          ),
+                          child: Text("No"),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
-                          child: Text(
-                            "Yes",
-                            style: TextStyle(color: primaryColor),
-                          ),
+                          child: Text("Yes"),
                         ),
                       ],
                     );
@@ -487,130 +483,171 @@ class _UserProfileState extends State<UserProfilePage> {
             id == null ? 'Add User' : 'Edit User',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: userNameController,
-                  decoration: InputDecoration(
-                    labelText: 'User Name',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: emailController,
-                  decoration: InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ),
-              if (id == null) // Only show when adding a new user
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
                 SizedBox(
                   width: 350,
                   height: 65,
-                  child: TextField(
-                    controller: passwordController,
+                  child: TextFormField(
+                    controller: userNameController,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: 'User Name',
                       border: OutlineInputBorder(),
                     ),
-                    obscureText: true,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: firstNameController,
-                  decoration: InputDecoration(
-                    labelText: 'FirstName',
-                    border: OutlineInputBorder(),
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: emailController,
+                    decoration: InputDecoration(
+                      labelText: 'Email',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: middleNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Middle Name',
-                    border: OutlineInputBorder(),
+                if (id == null) // Only show when adding a new user
+                  SizedBox(
+                    width: 350,
+                    height: 65,
+                    child: TextFormField(
+                      controller: passwordController,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please fill out this field';
+                        }
+                        return null;
+                      },
+                      obscureText: true,
+                    ),
+                  ),
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: firstNameController,
+                    decoration: InputDecoration(
+                      labelText: 'FirstName',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: lastNameController,
-                  decoration: InputDecoration(
-                    labelText: 'Last Name',
-                    border: OutlineInputBorder(),
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: middleNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Middle Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: prefixController,
-                  decoration: InputDecoration(
-                    labelText: 'Prefix',
-                    border: OutlineInputBorder(),
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: lastNameController,
+                    decoration: InputDecoration(
+                      labelText: 'Last Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: suffixController,
-                  decoration: InputDecoration(
-                    labelText: 'Suffix',
-                    border: OutlineInputBorder(),
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: prefixController,
+                    decoration: InputDecoration(
+                      labelText: 'Prefix',
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ),
-              ),
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: suffixController,
+                    decoration: InputDecoration(
+                      labelText: 'Suffix',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
 
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Position',
-                  border: const OutlineInputBorder(),
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: 'Position',
+                    border: const OutlineInputBorder(),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
+                    floatingLabelStyle: const TextStyle(color: primaryColor),
                   ),
-                  floatingLabelStyle: const TextStyle(color: primaryColor),
+                  value: selectedPosition,
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      selectedPosition = newValue;
+                    });
+                  },
+                  items:
+                      jobPositions.map<DropdownMenuItem<String>>((
+                        String value,
+                      ) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Text(value),
+                        );
+                      }).toList(),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a position';
+                    }
+                    return null;
+                  },
                 ),
-                value: selectedPosition,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedPosition = newValue;
-                  });
-                },
-                items:
-                    jobPositions.map<DropdownMenuItem<String>>((String value) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a position';
-                  }
-                  return null;
-                },
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -630,53 +667,61 @@ class _UserProfileState extends State<UserProfilePage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
-
-                if (confirmAction == true) {
-                  final userProfile = UserRegistration(
-                    id,
-                    userNameController.text,
-                    emailController.text,
-                    passwordController.text,
-                    firstNameController.text,
-                    middleNameController.text,
-                    lastNameController.text,
-                    prefixController.text,
-                    suffixController.text,
-                    selectedPosition ?? '',
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   );
 
-                  if (id == null) {
-                    await addOrUpdateUserProfile(userProfile);
-                  } else {
-                    await updateUserProfile(userProfile);
+                  if (confirmAction == true) {
+                    final userProfile = UserRegistration(
+                      id,
+                      userNameController.text,
+                      emailController.text,
+                      passwordController.text,
+                      firstNameController.text,
+                      middleNameController.text,
+                      lastNameController.text,
+                      prefixController.text,
+                      suffixController.text,
+                      selectedPosition ?? '',
+                    );
+
+                    if (id == null) {
+                      await addOrUpdateUserProfile(userProfile);
+                    } else {
+                      await updateUserProfile(userProfile);
+                    }
+                    // ignore: use_build_context_synchronously
+                    Navigator.pop(context);
                   }
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
                 }
               },
               child: Text(

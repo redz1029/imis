@@ -17,6 +17,7 @@ class UserOfficePage extends StatefulWidget {
 }
 
 class _UserOfficePageState extends State<UserOfficePage> {
+  final _formKey = GlobalKey<FormState>();
   List<UserOffice> userOfficeList = [];
   List<UserOffice> filteredList = [];
   List<Office> officenameList = [];
@@ -236,7 +237,6 @@ class _UserOfficePageState extends State<UserOfficePage> {
             userList = data;
             filteredListUser = List.from(userList);
 
-            // Auto-select first user
             if (filteredListUser.isNotEmpty) {
               _selectedUserId = filteredListUser[0].id;
               debugPrint("Auto-selected user: $_selectedUserId");
@@ -331,58 +331,75 @@ class _UserOfficePageState extends State<UserOfficePage> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           title: Text(id == null ? 'Add User Office' : 'Edit User Office'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 350,
-                child: DropdownButtonFormField<String>(
-                  value:
-                      filteredListUser.any((user) => user.id == _selectedUserId)
-                          ? _selectedUserId
-                          : null,
-                  decoration: InputDecoration(
-                    labelText: 'User Name',
-                    border: OutlineInputBorder(),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 350,
+                  child: DropdownButtonFormField<String>(
+                    value:
+                        filteredListUser.any(
+                              (user) => user.id == _selectedUserId,
+                            )
+                            ? _selectedUserId
+                            : null,
+                    decoration: InputDecoration(
+                      labelText: 'User Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    items:
+                        filteredListUser.map((user) {
+                          return DropdownMenuItem<String>(
+                            value: user.id,
+                            child: Text(user.fullName),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedUserId = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a user';
+                      }
+                      return null;
+                    },
                   ),
-                  items:
-                      filteredListUser.map((user) {
-                        return DropdownMenuItem<String>(
-                          value: user.id,
-                          child: Text(user.fullName),
-                        );
-                      }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedUserId = value;
-                    });
-                  },
                 ),
-              ),
-              SizedBox(height: 15),
-              SizedBox(
-                width: 350,
-                child: DropdownButtonFormField<String>(
-                  value: _selectedOfficeId,
-                  decoration: InputDecoration(
-                    labelText: 'Office',
-                    border: OutlineInputBorder(),
+                SizedBox(height: 15),
+                SizedBox(
+                  width: 350,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedOfficeId,
+                    decoration: InputDecoration(
+                      labelText: 'Office',
+                      border: OutlineInputBorder(),
+                    ),
+                    items:
+                        filteredListOffice.map((officeData) {
+                          return DropdownMenuItem<String>(
+                            value: officeData['id'].toString(),
+                            child: Text(officeData['name']),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedOfficeId = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select an office';
+                      }
+                      return null;
+                    },
                   ),
-                  items:
-                      filteredListOffice.map((officeData) {
-                        return DropdownMenuItem<String>(
-                          value: officeData['id'].toString(),
-                          child: Text(officeData['name']),
-                        );
-                      }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedOfficeId = value;
-                    });
-                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -397,68 +414,73 @@ class _UserOfficePageState extends State<UserOfficePage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
-
-                if (confirmAction == true) {
-                  final isDuplicate = userOfficeList.any(
-                    (u) =>
-                        u.userId == _selectedUserId &&
-                        u.officeId == int.tryParse(_selectedOfficeId ?? '0') &&
-                        u.id != int.tryParse(id ?? '0'),
-                  ); // make sure it's not the same record
-
-                  if (isDuplicate) {
-                    // ignore: use_build_context_synchronously
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('User already assigned to this office.'),
-                      ),
-                    );
-                    return;
-                  }
-
-                  final user = UserOffice(
-                    id: int.tryParse(id ?? '0') ?? 0,
-                    isDeleted: isDeleted,
-                    rowVersion: '',
-                    userId: _selectedUserId ?? '',
-                    officeId: int.tryParse(_selectedOfficeId ?? '0') ?? 0,
-                    isActive: isActive,
-                    firstName: firstNameController.text,
-                    middleName: middleNameController.text,
-                    lastName: lastNameController.text,
-                    prefix: prefixController.text,
-                    suffix: suffixController.text,
-                    position: positionController.text,
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text("No"),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text("Yes"),
+                          ),
+                        ],
+                      );
+                    },
                   );
 
-                  await addOrUpdateUserOffice(user);
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
+                  if (confirmAction == true) {
+                    final isDuplicate = userOfficeList.any(
+                      (u) =>
+                          u.userId == _selectedUserId &&
+                          u.officeId ==
+                              int.tryParse(_selectedOfficeId ?? '0') &&
+                          u.id != int.tryParse(id ?? '0'),
+                    ); // make sure it's not the same record
+
+                    if (isDuplicate) {
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'User already assigned to this office.',
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    final user = UserOffice(
+                      id: int.tryParse(id ?? '0') ?? 0,
+                      isDeleted: isDeleted,
+                      rowVersion: '',
+                      userId: _selectedUserId ?? '',
+                      officeId: int.tryParse(_selectedOfficeId ?? '0') ?? 0,
+                      isActive: isActive,
+                      firstName: firstNameController.text,
+                      middleName: middleNameController.text,
+                      lastName: lastNameController.text,
+                      prefix: prefixController.text,
+                      suffix: suffixController.text,
+                      position: positionController.text,
+                    );
+
+                    await addOrUpdateUserOffice(user);
+                    // ignore: use_build_context_synchronously
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Text(
@@ -558,14 +580,11 @@ class _UserOfficePageState extends State<UserOfficePage> {
                         ),
                         Expanded(
                           flex: 3,
-                          child: Text('User ID', style: TextStyle(color: grey)),
+                          child: Text('Name', style: TextStyle(color: grey)),
                         ),
                         Expanded(
                           flex: 2,
-                          child: Text(
-                            'Office ID',
-                            style: TextStyle(color: grey),
-                          ),
+                          child: Text('Office', style: TextStyle(color: grey)),
                         ),
                         Expanded(
                           flex: 1,

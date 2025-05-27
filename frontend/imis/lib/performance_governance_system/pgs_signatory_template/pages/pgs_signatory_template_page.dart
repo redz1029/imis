@@ -268,6 +268,12 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                         _selectedUserId = value;
                       });
                     },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a user';
+                      }
+                      return null;
+                    },
                   ),
                 ),
                 if (_selectedUserId != null)
@@ -293,7 +299,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a name';
+                        return 'Please fill out this field';
                       }
                       return null;
                     },
@@ -316,7 +322,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a name';
+                        return 'Please fill out this field';
                       }
                       return null;
                     },
@@ -339,7 +345,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please enter a name';
+                        return 'Please fill out this field';
                       }
                       return null;
                     },

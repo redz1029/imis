@@ -199,7 +199,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please fill out this field';
+                        return 'Please select a date';
                       }
                       return null;
                     },
@@ -251,7 +251,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please fill out this field';
+                        return 'Please select a date';
                       }
                       return null;
                     },

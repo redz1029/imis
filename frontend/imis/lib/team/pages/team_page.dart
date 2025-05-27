@@ -16,6 +16,7 @@ class TeamPage extends StatefulWidget {
 
 class _TeamPageState extends State<TeamPage> {
   final _paginationUtils = PaginationUtil(Dio());
+  final _formKey = GlobalKey<FormState>();
   List<Team> teamList = [];
   List<Team> filteredList = [];
 
@@ -192,21 +193,35 @@ class _TeamPageState extends State<TeamPage> {
             id == null ? 'Add Team' : 'Edit Team',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: teamController,
-                  decoration: InputDecoration(
-                    labelText: 'Team Name',
-                    border: OutlineInputBorder(),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: teamController,
+                    decoration: InputDecoration(
+                      labelText: 'Team Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -226,45 +241,51 @@ class _TeamPageState extends State<TeamPage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  barrierDismissible:
-                      false, // Also prevent dismiss on confirm dialog
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
-                if (confirmAction == true) {
-                  final team = Team(
-                    int.tryParse(id ?? '0') ?? 0,
-                    teamController.text,
-                    isActive,
-                    isDeleted,
-                    rowVersion: '',
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   );
+                  if (confirmAction == true) {
+                    final team = Team(
+                      int.tryParse(id ?? '0') ?? 0,
+                      teamController.text,
+                      isActive,
+                      isDeleted,
+                      rowVersion: '',
+                    );
 
-                  await addOrUpdateTeam(team);
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
+                    await addOrUpdateTeam(team);
+                    // ignore: use_build_context_synchronously
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Text(
