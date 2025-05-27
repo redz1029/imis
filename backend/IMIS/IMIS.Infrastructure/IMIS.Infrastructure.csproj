@@ -8,9 +8,13 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
+    <PackageReference Include="FastReport.OpenSource" Version="2025.2.0" />
+    <PackageReference Include="FastReport.OpenSource.Export.PdfSimple" Version="2025.2.0" />
+    <PackageReference Include="FastReport.OpenSource.Web" Version="2025.2.0" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Features" Version="5.0.17" />
     <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="9.0.1" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.1" />
+    <PackageReference Include="Microsoft.VisualStudio.Validation" Version="17.8.8" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.2.0" />
     <PackageReference Include="Swashbuckle.AspNetCore.Filters" Version="8.0.2" />
   </ItemGroup>
