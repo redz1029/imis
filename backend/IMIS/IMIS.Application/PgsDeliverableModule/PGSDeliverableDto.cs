@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
 using IMIS.Application.PgsKraModule;
+using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsModule
@@ -14,8 +15,7 @@ namespace IMIS.Application.PgsModule
         public required DateTime ByWhen { get; set; }
         public required double PercentDeliverables { get; set; }
         public required PgsStatus Status { get; set; }
-        public string? Remarks { get; set; }
-
+        public string? Remarks { get; set; }          
         public PGSDeliverableDto() {}
 
         [SetsRequiredMembers]
@@ -29,6 +29,11 @@ namespace IMIS.Application.PgsModule
             this.PercentDeliverables = pgsDeliverable.PercentDeliverables;
             this.Status = pgsDeliverable.Status;
             this.Remarks = pgsDeliverable.Remarks;
+           
+            if (pgsDeliverable.Kra != null)
+            {
+                this.Kra = new KeyResultAreaDto(pgsDeliverable.Kra);
+            }
         }
 
         public override PgsDeliverable ToEntity()
