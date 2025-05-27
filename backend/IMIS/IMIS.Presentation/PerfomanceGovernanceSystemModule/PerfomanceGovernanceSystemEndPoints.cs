@@ -1,6 +1,9 @@
 ﻿using Carter;
+using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
+using IMIS.Application.TeamModule;
 using IMIS.Infrastructure.Auths;
+using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -19,6 +22,7 @@ namespace IMIS.Presentation.PgsModuleAPI
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
+            
             app.MapPost("/", async ([FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var createdPerformanceGovernanceSystem = await service.SaveOrUpdateAsync(performanceGovernanceSystemDto, cancellationToken).ConfigureAwait(false);
@@ -66,6 +70,23 @@ namespace IMIS.Presentation.PgsModuleAPI
             })
            .WithTags(_pgsTag);
             //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
+            app.MapGet("/list-report/pdf/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            {
+                var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                var file = await ReportUtil.GeneratePdfReport<ReportPerfomanceGovernanceSystemDto>(
+                    "PerfomanceGovernanceSystem",
+                    new List<ReportPerfomanceGovernanceSystemDto> { performanceGovernanceSystem! },
+                    "PerfomanceGovernanceSystem",
+                    cancellationToken
+                ).ConfigureAwait(false);
+                return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                //var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                //return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
+            })
+            .WithTags(_pgsTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+            
             app.MapGet("/page", async (int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
                 var paginatedPerformanceGovernanceSystem = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -96,7 +117,6 @@ namespace IMIS.Presentation.PgsModuleAPI
                 {
                     return Results.NotFound("No records found for the given PgsPeriodId.");
                 }
-
                 return Results.Ok(paginatedPerformanceGovernanceSystem);
             })
             .WithTags(_pgsTag)
