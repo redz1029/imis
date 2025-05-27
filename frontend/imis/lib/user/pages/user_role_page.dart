@@ -5,7 +5,6 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_role.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/pagination_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart'; // For firstWhereOrNull
@@ -19,7 +18,7 @@ class UserRolePage extends StatefulWidget {
 }
 
 class _UserRolePageState extends State<UserRolePage> {
-  final _paginationUtils = PaginationUtil(Dio());
+  final _formKey = GlobalKey<FormState>();
   List<UserRoles> userRoleList = [];
   List<UserRoles> filteredList = [];
   List<Map<String, dynamic>> filteredListUsersRole = [];
@@ -38,7 +37,7 @@ class _UserRolePageState extends State<UserRolePage> {
 
   int _currentPage = 1;
   final int _pageSize = 15;
-  final int _totalCount = 0;
+  int _totalCount = 0;
 
   bool _isLoading = false;
 
@@ -69,9 +68,12 @@ class _UserRolePageState extends State<UserRolePage> {
           }
         }
 
+        _totalCount = allRoles.length;
+
         int start = (page - 1) * _pageSize;
         int end = start + _pageSize;
         if (start >= _totalCount) {
+          // No more data
           setState(() {
             userRoleList = [];
             filteredList = [];
@@ -140,7 +142,7 @@ class _UserRolePageState extends State<UserRolePage> {
         printUserNameWithUserName();
       }
     } catch (e) {
-      debugPrint("🔥 FetchUserList Error: $e");
+      debugPrint("etchUserList Error: $e");
     }
   }
 
@@ -370,59 +372,75 @@ class _UserRolePageState extends State<UserRolePage> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           title: Text(id == null ? 'Add User Role' : 'Edit User Role'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(
-                width: 350,
-                child: DropdownButtonFormField<String>(
-                  value:
-                      filteredListUser.any((user) => user.id == _selectedUserId)
-                          ? _selectedUserId
-                          : null,
-                  decoration: InputDecoration(
-                    labelText: 'User Name',
-                    border: OutlineInputBorder(),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 350,
+                  child: DropdownButtonFormField<String>(
+                    value:
+                        filteredListUser.any(
+                              (user) => user.id == _selectedUserId,
+                            )
+                            ? _selectedUserId
+                            : null,
+                    decoration: InputDecoration(
+                      labelText: 'User Name',
+                      border: OutlineInputBorder(),
+                    ),
+                    items:
+                        filteredListUser.map((user) {
+                          return DropdownMenuItem<String>(
+                            value: user.id,
+                            child: Text(user.fullName),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedUserId = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a user';
+                      }
+                      return null;
+                    },
                   ),
-                  items:
-                      filteredListUser.map((user) {
-                        return DropdownMenuItem<String>(
-                          value: user.id,
-                          child: Text(user.fullName),
-                        );
-                      }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedUserId = value;
-                    });
-                    debugPrint('Selected User ID: $_selectedUserId');
-                  },
                 ),
-              ),
-              SizedBox(height: 15),
-              SizedBox(
-                width: 350,
-                child: DropdownButtonFormField<String>(
-                  value: _selectedRoleId,
-                  decoration: InputDecoration(
-                    labelText: 'Role',
-                    border: OutlineInputBorder(),
+                SizedBox(height: 15),
+                SizedBox(
+                  width: 350,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedRoleId,
+                    decoration: InputDecoration(
+                      labelText: 'Role',
+                      border: OutlineInputBorder(),
+                    ),
+                    items:
+                        filteredListRole.map((roleData) {
+                          return DropdownMenuItem<String>(
+                            value: roleData['id'].toString(),
+                            child: Text(roleData['name']),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedRoleId = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a role';
+                      }
+                      return null;
+                    },
                   ),
-                  items:
-                      filteredListRole.map((roleData) {
-                        return DropdownMenuItem<String>(
-                          value: roleData['id'].toString(),
-                          child: Text(roleData['name']),
-                        );
-                      }).toList(),
-                  onChanged: (value) {
-                    setState(() {
-                      _selectedRoleId = value;
-                    });
-                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -437,64 +455,66 @@ class _UserRolePageState extends State<UserRolePage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text(
-                            "No",
-                            style: TextStyle(color: primaryColor),
-                          ),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text(
-                            "Yes",
-                            style: TextStyle(color: primaryColor),
-                          ),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
 
-                if (confirmAction == true) {
-                  if (_selectedUserId == null || _selectedRoleId == null) {
+                  if (confirmAction == true) {
+                    if (_selectedUserId == null || _selectedRoleId == null) {
+                      // ignore: use_build_context_synchronously
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("User and role must both be selected."),
+                        ),
+                      );
+                      return;
+                    }
+
+                    if (id == null) {
+                      // Add new role assignment
+                      final newUserRole = UserRoles(
+                        userId: _selectedUserId!,
+                        roleId: _selectedRoleId!,
+                      );
+
+                      await addorUpdateUserRoles(newUserRole);
+                    } else {
+                      // Update existing role
+                      await updateRole(_selectedUserId!, _selectedRoleId!);
+                    }
+
                     // ignore: use_build_context_synchronously
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text("User and role must both be selected."),
-                      ),
-                    );
-                    return;
+                    Navigator.pop(context); // Close the dialog
                   }
-
-                  if (id == null) {
-                    // Add new role assignment
-                    final newUserRole = UserRoles(
-                      userId: _selectedUserId!,
-                      roleId: _selectedRoleId!,
-                    );
-
-                    await addorUpdateUserRoles(newUserRole);
-                  } else {
-                    // Update existing role
-                    await updateRole(_selectedUserId!, _selectedRoleId!);
-                  }
-
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context); // Close the dialog
                 }
               },
               child: Text(
