@@ -452,6 +452,7 @@ class _PerformanceGovernanceSystemPageState
         ),
         toastDuration: Duration(seconds: 10),
         toastAlignment: Alignment.topCenter,
+        // ignore: use_build_context_synchronously
       ).show(context);
       return null;
     }
@@ -1228,9 +1229,6 @@ class _PerformanceGovernanceSystemPageState
 
                                                       selectedOffice =
                                                           await AuthUtil.fetchSelectedOfficeId();
-                                                      print(
-                                                        'Selected Office ID: $selectedOffice',
-                                                      );
 
                                                       showFormDialog(
                                                         id:
@@ -2229,6 +2227,9 @@ class _PerformanceGovernanceSystemPageState
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
                     onPressed: () async {
                       bool? confirm = await showDialog<bool>(
