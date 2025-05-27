@@ -1,12 +1,17 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
+using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryModule;
+using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PgsModule
 {
@@ -15,13 +20,15 @@ namespace IMIS.Persistence.PgsModule
         private readonly IPerfomanceGovernanceSystemRepository _repository;
         private readonly IOfficeRepository _officeRepository;
         private readonly IPgsPeriodRepository _pgsPeriodRepository;
-        private readonly IKeyResultAreaRepository _kraRepository;      
-        public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository)
+        private readonly IKeyResultAreaRepository _kraRepository;
+        private readonly UserManager<User> _userManager;
+        public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository, UserManager<User> userManager)
         {
             _repository = repository;
             _officeRepository = officeRepository;
             _pgsPeriodRepository = pgsPeriodRepository;
-            _kraRepository = kraRepository;           
+            _kraRepository = kraRepository;
+            _userManager = userManager;
         }
         public async Task<List<PerfomanceGovernanceSystemDto>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken)
         {
@@ -84,10 +91,85 @@ namespace IMIS.Persistence.PgsModule
                      PgsId = s.PgsId,
                      PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
                      SignatoryId = s.SignatoryId,
-                     DateSigned = s.DateSigned
+                     DateSigned = s.DateSigned,                    
                  }).ToList()
             };
-        }      
+        }
+
+            private ReportPerfomanceGovernanceSystemDto ConvReportPerfomanceGovernanceSystemToDTO(PerfomanceGovernanceSystem perfomanceGovernanceSystem, List<User> users)
+            {
+                if (perfomanceGovernanceSystem == null) return null;
+
+                return new ReportPerfomanceGovernanceSystemDto
+                {
+                    Id = perfomanceGovernanceSystem.Id,
+                    Remarks = perfomanceGovernanceSystem.Remarks,
+                    PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables,           
+                    PgsPeriod = perfomanceGovernanceSystem.PgsPeriod != null ? new PgsPeriodDto
+                    {
+                        Id = perfomanceGovernanceSystem.PgsPeriod.Id,
+                        StartDate = perfomanceGovernanceSystem.PgsPeriod.StartDate,
+                        EndDate = perfomanceGovernanceSystem.PgsPeriod.EndDate
+                    } : null,
+
+                    Office = perfomanceGovernanceSystem.Office != null ? new OfficeDto
+                    {
+                        Id = perfomanceGovernanceSystem.Office.Id,
+                        Name = perfomanceGovernanceSystem.Office.Name,
+                        IsActive = perfomanceGovernanceSystem.Office.IsActive
+                    } : null,          
+                    PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(deliverable => new ReportPGSDeliverableDto
+                    {
+                        Id = deliverable.Id,
+                        IsDirect = deliverable.IsDirect,
+                        DeliverableName = deliverable.DeliverableName,
+                        ByWhen = deliverable.ByWhen,
+                        PercentDeliverables = deliverable.PercentDeliverables,
+                        Status = deliverable.Status,
+                        RowVersion = deliverable.RowVersion,
+                        KraId = deliverable.KraId,
+                        Kra = deliverable.Kra != null ? new KeyResultAreaDto
+                        {
+                            Id = deliverable.Kra.Id,
+                            Name = deliverable.Kra.Name,
+                            Remarks = deliverable.Kra.Remarks
+                        } : null,
+                        Remarks = deliverable.Remarks
+                    }).ToList() ?? new List<ReportPGSDeliverableDto>(),                
+                    PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?.Select(s =>
+                    {
+                        var user = users.FirstOrDefault(u => u.Id == s.SignatoryId); 
+
+                        return new ReportPgsSignatoryDto
+                        {
+                            Id = s.Id,
+                            PgsId = s.PgsId,
+                            PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
+                            SignatoryId = s.SignatoryId,
+                            DateSigned = s.DateSigned,
+                            PgsSignatoryTemplate = s.PgsSignatoryTemplate != null
+                                ? new PgsSignatoryTemplateDto
+                                {
+                                    Id = s.PgsSignatoryTemplate.Id,
+                                    SignatoryLabel = s.PgsSignatoryTemplate.SignatoryLabel,
+                                }
+                                : null,
+                                User = user != null
+                                ? new User
+                                {
+                                    Id = user.Id,
+                                    FirstName = user.FirstName,
+                                    MiddleName = user.MiddleName,
+                                    LastName = user.LastName,
+                                    Prefix = user.Prefix,
+                                    Suffix = user.Suffix,
+                                    Position = user.Position,                              
+                                }
+                                : null
+                        };
+                    }).ToList()
+                };
+            }
         public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
             //throw new NotImplementedException();
@@ -99,6 +181,23 @@ namespace IMIS.Persistence.PgsModule
             var perfomanceGovernanceSystemDto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return perfomanceGovernanceSystemDto != null ? ConvPerfomanceGovernanceSystemToDTO(perfomanceGovernanceSystemDto) : null;
         }       
+        public async Task<ReportPerfomanceGovernanceSystemDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var perfomanceGovernanceSystem = await _repository.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+            if (perfomanceGovernanceSystem == null) return null;          
+            var signatoryIds = perfomanceGovernanceSystem.PgsSignatories?
+                .Select(s => s.SignatoryId)
+                .Distinct()
+                .ToList() ?? new List<string>();
+
+            // Fetch user details
+            var users = await _userManager.Users
+             .Where(u => signatoryIds.Contains(u.Id))
+             .ToListAsync(cancellationToken); 
+
+            return ConvReportPerfomanceGovernanceSystemToDTO(perfomanceGovernanceSystem, users);
+        }
         public async Task<List<PerfomanceGovernanceSystemDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var perfomanceGovernanceSystemDto = await _repository.GetAll(cancellationToken).ConfigureAwait(false);

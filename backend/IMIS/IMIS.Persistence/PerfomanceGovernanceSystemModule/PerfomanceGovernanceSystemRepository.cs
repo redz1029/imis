@@ -3,7 +3,6 @@ using Base.Pagination;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
-using IMIS.Persistence.Migrations;
 using Microsoft.EntityFrameworkCore;
 
 public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGovernanceSystem, long, ImisDbContext>, IPerfomanceGovernanceSystemRepository
@@ -27,15 +26,27 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         return await _dbContext.PerformanceGovernanceSystem
-        .Include(p => p.PgsPeriod) 
-        .Include(p => p.Office)  
+        .Include(p => p.PgsPeriod)
+        .Include(p => p.Office)
         .Include(p => p.PgsDeliverables)
-        .ThenInclude(d => d.Kra)  
+        .ThenInclude(d => d.Kra)
         .Include(p => p.PgsReadinessRating)
         .Include(p => p.PgsSignatories)
+         .ThenInclude(d => d.PgsSignatoryTemplate)
         .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
     }
-
+    //Get Pgs Report: Filter by Id
+    public async Task<PerfomanceGovernanceSystem?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
+    {
+        return await _dbContext.PerformanceGovernanceSystem
+        .Include(p => p.PgsPeriod)
+        .Include(p => p.Office)
+        .Include(p => p.PgsDeliverables)
+        .ThenInclude(d => d.Kra)    
+        .Include(p => p.PgsSignatories)
+         .ThenInclude(d => d.PgsSignatoryTemplate)
+        .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+    }
     // Get Pgs, Filter by Pgs Period Id
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken)
     {
@@ -58,7 +69,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Include(pgs => pgs.PgsSignatories)
         .AsNoTracking()
         .ToListAsync(cancellationToken);
-
     } 
     // Get Pgs, Filter by all Paginated
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
