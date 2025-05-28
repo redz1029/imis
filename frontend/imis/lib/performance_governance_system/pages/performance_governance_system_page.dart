@@ -1,6 +1,11 @@
+import 'dart:io';
+// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
+import 'dart:html' as html;
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
@@ -19,6 +24,8 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PerformanceGovernanceSystemPage extends StatefulWidget {
@@ -2223,6 +2230,49 @@ class _PerformanceGovernanceSystemPageState
 
               // Action Buttons
               actions: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shadowColor: Colors.transparent,
+                    elevation: 0,
+                    backgroundColor: secondaryBgButton,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (id == null) return;
+                    final pgsId = int.tryParse(id) ?? 0;
+
+                    final api = ApiEndpoint();
+                    final pdfUrl = '${api.generatePdf}/$pgsId';
+
+                    if (kIsWeb) {
+                      html.window.open(pdfUrl, "_blank");
+                    } else {
+                      final url = Uri.parse(pdfUrl);
+                      final response = await http.get(url);
+
+                      if (response.statusCode == 200) {
+                        final directory =
+                            await getApplicationDocumentsDirectory();
+                        final filePath =
+                            "${directory.path}/PGS_Report_$pgsId.pdf";
+                        final file = File(filePath);
+
+                        await file.writeAsBytes(response.bodyBytes);
+
+                        await OpenFile.open(file.path);
+                      } else {
+                        // ignore: use_build_context_synchronously
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to download PDF')),
+                        );
+                      }
+                    }
+                  },
+
+                  child: Text('Print', style: TextStyle(color: primaryColor)),
+                ),
                 if (isDraft) ...[
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -2281,7 +2331,6 @@ class _PerformanceGovernanceSystemPageState
                         }
                         int? pgsId = int.tryParse(id ?? '');
 
-                        // Generate the full PGS audit object
                         PerformanceGovernanceSystem pgs = getPgsAuditDetails(
                           id: pgsId ?? 0,
                           pgsStatus: "Draft",

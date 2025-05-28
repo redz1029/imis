@@ -26,6 +26,7 @@ class ApiEndpoint {
   late String auditSchedule;
   late String signatoryTemplate;
   late String performancegovernancesystemUserId;
+  late String generatePdf;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -49,6 +50,7 @@ class ApiEndpoint {
     auditSchedule = '$baseUrl/auditSchedule';
     signatoryTemplate = '$baseUrl/pgsSignatoryTemplate';
     performancegovernancesystemUserId = '$baseUrl/pgs';
+    generatePdf = '$baseUrl/pgs/list-report/pdf';
   }
 
   static Future<void> setBaseUrl() async {
