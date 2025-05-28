@@ -35,6 +35,7 @@ namespace IMIS.Infrastructure.Reports
 
         private static async Task<byte[]> ExportPdf(Report report, CancellationToken cancellationToken)
         {
+            //report.SetParameterValue("IsDirect", );
             report.Prepare();
             using (MemoryStream ms = new())
             {
