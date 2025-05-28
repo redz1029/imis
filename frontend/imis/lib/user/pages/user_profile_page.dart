@@ -62,6 +62,9 @@ class _UserProfileState extends State<UserProfilePage> {
     'Secretary',
   ];
 
+  String? selectPrefix;
+  final List<String> prefixes = ['Dr.', 'Atty.', 'Mr.', 'Ms.'];
+
   Future<void> fetchUserProfile({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
@@ -245,6 +248,21 @@ class _UserProfileState extends State<UserProfilePage> {
                 ),
               ),
 
+              Visibility(
+                visible: false,
+                child: SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextField(
+                    controller: prefixController,
+                    decoration: InputDecoration(
+                      labelText: 'Prefix',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+              ),
+
               SizedBox(
                 width: 350,
                 height: 55,
@@ -297,21 +315,6 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: lastNameController,
                     decoration: InputDecoration(
                       labelText: 'Last Name',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ),
-
-              Visibility(
-                visible: false,
-                child: SizedBox(
-                  width: 350,
-                  height: 65,
-                  child: TextField(
-                    controller: prefixController,
-                    decoration: InputDecoration(
-                      labelText: 'Prefix',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -541,13 +544,42 @@ class _UserProfileState extends State<UserProfilePage> {
                       obscureText: true,
                     ),
                   ),
+
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: DropdownButtonFormField<String>(
+                    value:
+                        prefixController.text.isNotEmpty
+                            ? prefixController.text
+                            : null,
+                    onChanged: (value) {
+                      prefixController.text = value ?? '';
+                    },
+                    items: [
+                      DropdownMenuItem(value: '', child: Text('')),
+                      ...['Mr.', 'Ms.', 'Mrs.', 'Dr.', 'Prof.'].map(
+                        (prefix) => DropdownMenuItem(
+                          value: prefix,
+                          child: Text(prefix),
+                        ),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: 'Prefix',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+
+                gap,
                 SizedBox(
                   width: 350,
                   height: 65,
                   child: TextFormField(
                     controller: firstNameController,
                     decoration: InputDecoration(
-                      labelText: 'FirstName',
+                      labelText: 'First Name',
                       border: OutlineInputBorder(),
                     ),
                     validator: (value) {
@@ -592,17 +624,7 @@ class _UserProfileState extends State<UserProfilePage> {
                     },
                   ),
                 ),
-                SizedBox(
-                  width: 350,
-                  height: 65,
-                  child: TextFormField(
-                    controller: prefixController,
-                    decoration: InputDecoration(
-                      labelText: 'Prefix',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
+
                 SizedBox(
                   width: 350,
                   height: 65,

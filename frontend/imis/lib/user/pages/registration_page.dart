@@ -256,31 +256,31 @@ class RegistrationPageState extends State<RegistrationPage> {
             ),
             gap,
             if (_currentStep == 0) ...[
-              TextFormField(
-                style: TextStyle(fontSize: 14),
-                controller: lastNameController,
-                focusNode: focusLastName,
-                onTap: () {
-                  FocusScope.of(context).requestFocus(focusLastName);
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter some text";
-                  }
-                  return null;
-                },
-                decoration: InputDecoration(
-                  labelText: 'Last name',
-                  labelStyle: const TextStyle(color: grey, fontSize: 14),
-
-                  border: const OutlineInputBorder(),
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
+              SizedBox(
+                width: 350,
+                height: 65,
+                child: DropdownButtonFormField<String>(
+                  value:
+                      prefixController.text.isNotEmpty
+                          ? prefixController.text
+                          : null,
+                  onChanged: (value) {
+                    prefixController.text = value ?? '';
+                  },
+                  items: [
+                    DropdownMenuItem(value: '', child: Text('')),
+                    ...['Mr.', 'Ms.', 'Mrs.', 'Dr.', 'Prof.'].map(
+                      (prefix) =>
+                          DropdownMenuItem(value: prefix, child: Text(prefix)),
+                    ),
+                  ],
+                  decoration: InputDecoration(
+                    labelText: 'Prefix',
+                    border: OutlineInputBorder(),
                   ),
-                  floatingLabelStyle: const TextStyle(color: primaryColor),
                 ),
               ),
-              gap,
+
               TextFormField(
                 style: TextStyle(fontSize: 14),
                 controller: firstNameController,
@@ -333,10 +333,10 @@ class RegistrationPageState extends State<RegistrationPage> {
               gap,
               TextFormField(
                 style: TextStyle(fontSize: 14),
-                controller: prefixController,
-                focusNode: focusPrefix,
+                controller: lastNameController,
+                focusNode: focusLastName,
                 onTap: () {
-                  FocusScope.of(context).requestFocus(focusPrefix);
+                  FocusScope.of(context).requestFocus(focusLastName);
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -345,7 +345,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                   return null;
                 },
                 decoration: InputDecoration(
-                  labelText: 'Prefix',
+                  labelText: 'Last name',
                   labelStyle: const TextStyle(color: grey, fontSize: 14),
 
                   border: const OutlineInputBorder(),
