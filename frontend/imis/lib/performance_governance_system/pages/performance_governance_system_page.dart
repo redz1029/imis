@@ -327,54 +327,121 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
+  // Widget _buildSignatoryColumn({
+  //   required String title,
+  //   required String? currentValue,
+  //   required ValueChanged<String?> onChanged,
+  //   required VoidCallback onDeleted,
+  // }) {
+  //   return Column(
+  //     crossAxisAlignment: CrossAxisAlignment.start,
+  //     children: [
+  //       Text(title, style: const TextStyle(fontSize: 12)),
+  //       gap6,
+  //       Container(width: 200, height: 1, color: Colors.grey),
+  //       gap,
+  //       currentValue == null
+  //           ? DropdownButton<String>(
+  //             hint: const Text('Select name'),
+  //             value: currentValue,
+  //             items:
+  //                 userList.map((user) {
+  //                   return DropdownMenuItem<String>(
+  //                     value: user.id,
+  //                     child: Text(user.fullName),
+  //                   );
+  //                 }).toList(),
+  //             onChanged: (value) {
+  //               onChanged(value);
+  //             },
+  //           )
+  //           : Row(
+  //             children: [
+  //               Column(
+  //                 crossAxisAlignment: CrossAxisAlignment.center,
+  //                 children: [
+  //                   Text(
+  //                     (userList.any((user) => user.id == currentValue)
+  //                             ? userList
+  //                                 .firstWhere((user) => user.id == currentValue)
+  //                                 .fullName
+  //                             : getFullNameFromSignatoryId(currentValue))
+  //                         .toUpperCase(),
+  //                     style: const TextStyle(fontWeight: FontWeight.bold),
+  //                   ),
+  //                   Text('[No Position]', style: const TextStyle(fontSize: 12)),
+  //                 ],
+  //               ),
+  //               IconButton(icon: const Icon(Icons.close), onPressed: onDeleted),
+  //             ],
+  //           ),
+  //     ],
+  //   );
+  // }
   Widget _buildSignatoryColumn({
     required String title,
     required String? currentValue,
     required ValueChanged<String?> onChanged,
     required VoidCallback onDeleted,
   }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: const TextStyle(fontSize: 12)),
-        gap6,
-        Container(width: 300, height: 1, color: Colors.grey),
-        gap,
-        currentValue == null
-            ? DropdownButton<String>(
-              hint: const Text('Select name'),
-              value: currentValue,
-              items:
-                  userList.map((user) {
-                    return DropdownMenuItem<String>(
-                      value: user.id,
-                      child: Text(user.fullName),
-                    );
-                  }).toList(),
-              onChanged: (value) {
-                onChanged(value);
-              },
-            )
-            : Row(
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      (userList.any((user) => user.id == currentValue)
-                          ? userList
-                              .firstWhere((user) => user.id == currentValue)
-                              .fullName
-                          : getFullNameFromSignatoryId(currentValue)),
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text('[No Position]', style: const TextStyle(fontSize: 12)),
-                  ],
-                ),
-                IconButton(icon: const Icon(Icons.close), onPressed: onDeleted),
-              ],
-            ),
-      ],
+    return Center(
+      // Center the whole column horizontally
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start, // center children horizontally
+        children: [
+          Text(title, style: const TextStyle(fontSize: 12)),
+          gap6,
+          Container(width: 200, height: 1.8, color: Colors.grey),
+          gap,
+          currentValue == null
+              ? DropdownButton<String>(
+                hint: const Text('Select name'),
+                value: currentValue,
+                items:
+                    userList.map((user) {
+                      return DropdownMenuItem<String>(
+                        value: user.id,
+                        child: Text(user.fullName),
+                      );
+                    }).toList(),
+                onChanged: (value) {
+                  onChanged(value);
+                },
+              )
+              : Row(
+                mainAxisSize: MainAxisSize.min, // so row wraps content tightly
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Column(
+                    crossAxisAlignment:
+                        CrossAxisAlignment.center, // center text horizontally
+                    children: [
+                      Text(
+                        (userList.any((user) => user.id == currentValue)
+                                ? userList
+                                    .firstWhere(
+                                      (user) => user.id == currentValue,
+                                    )
+                                    .fullName
+                                : getFullNameFromSignatoryId(currentValue))
+                            .toUpperCase(),
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        '[No Position]',
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: onDeleted,
+                  ),
+                ],
+              ),
+        ],
+      ),
     );
   }
 
@@ -1266,6 +1333,111 @@ class _PerformanceGovernanceSystemPageState
                                                   ),
 
                                                   IconButton(
+                                                    icon: const Icon(
+                                                      Icons.preview,
+                                                    ),
+                                                    onPressed: () async {
+                                                      final previewId =
+                                                          pgsgovernancesystem['id']
+                                                              .toString();
+                                                      if (previewId.isEmpty) {
+                                                        debugPrint(
+                                                          "Preview ID is empty or null.",
+                                                        );
+                                                        return;
+                                                      }
+
+                                                      final pgsId =
+                                                          int.tryParse(
+                                                            previewId,
+                                                          );
+                                                      if (pgsId == null) {
+                                                        debugPrint(
+                                                          "Invalid preview ID: $previewId",
+                                                        );
+                                                        return;
+                                                      }
+
+                                                      final api = ApiEndpoint();
+                                                      final pdfUrl =
+                                                          '${api.generatePdf}/$pgsId';
+
+                                                      debugPrint(
+                                                        "Opening PDF: $pdfUrl",
+                                                      );
+
+                                                      try {
+                                                        if (kIsWeb) {
+                                                          html.window.open(
+                                                            pdfUrl,
+                                                            "_blank",
+                                                          );
+                                                        } else {
+                                                          final url = Uri.parse(
+                                                            pdfUrl,
+                                                          );
+                                                          final response =
+                                                              await http.get(
+                                                                url,
+                                                              );
+
+                                                          if (response
+                                                                  .statusCode ==
+                                                              200) {
+                                                            final directory =
+                                                                await getApplicationDocumentsDirectory();
+                                                            final filePath =
+                                                                "${directory.path}/PGS_Report_$pgsId.pdf";
+                                                            final file = File(
+                                                              filePath,
+                                                            );
+
+                                                            await file
+                                                                .writeAsBytes(
+                                                                  response
+                                                                      .bodyBytes,
+                                                                );
+                                                            await OpenFile.open(
+                                                              file.path,
+                                                            );
+                                                          } else {
+                                                            debugPrint(
+                                                              "Failed to download PDF. Status: ${response.statusCode}",
+                                                            );
+                                                            if (context
+                                                                .mounted) {
+                                                              ScaffoldMessenger.of(
+                                                                context,
+                                                              ).showSnackBar(
+                                                                const SnackBar(
+                                                                  content: Text(
+                                                                    'Failed to download PDF',
+                                                                  ),
+                                                                ),
+                                                              );
+                                                            }
+                                                          }
+                                                        }
+                                                      } catch (e) {
+                                                        debugPrint(
+                                                          "Error opening PDF: $e",
+                                                        );
+                                                        if (context.mounted) {
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            const SnackBar(
+                                                              content: Text(
+                                                                'Error opening PDF file',
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }
+                                                      }
+                                                    },
+                                                  ),
+
+                                                  IconButton(
                                                     icon: Icon(
                                                       Icons.delete,
                                                       color: Color.fromARGB(
@@ -1689,9 +1861,13 @@ class _PerformanceGovernanceSystemPageState
                         color: primaryTextColor,
                         size: 32,
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         clearAllSelections();
                         Navigator.pop(context);
+                        SharedPreferences prefs =
+                            await SharedPreferences.getInstance();
+                        await prefs.remove('selectedOfficeId');
+                        await prefs.remove('selectedOfficeName');
                       },
                     ),
                   ),
@@ -2182,7 +2358,7 @@ class _PerformanceGovernanceSystemPageState
                                         });
                                       },
                                     ),
-                                    const SizedBox(width: 40),
+                                    const SizedBox(width: 200),
                                     _buildSignatoryColumn(
                                       title:
                                           '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
@@ -2198,7 +2374,7 @@ class _PerformanceGovernanceSystemPageState
                                         });
                                       },
                                     ),
-                                    const SizedBox(width: 40),
+                                    const SizedBox(width: 200),
                                     _buildSignatoryColumn(
                                       title:
                                           '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
@@ -2230,53 +2406,53 @@ class _PerformanceGovernanceSystemPageState
 
               // Action Buttons
               actions: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    shadowColor: Colors.transparent,
-                    elevation: 0,
-                    backgroundColor: secondaryBgButton,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  onPressed: () async {
-                    if (id == null) return;
-                    final pgsId = int.tryParse(id) ?? 0;
+                // ElevatedButton(
+                //   style: ElevatedButton.styleFrom(
+                //     shadowColor: Colors.transparent,
+                //     elevation: 0,
+                //     backgroundColor: secondaryBgButton,
+                //     shape: RoundedRectangleBorder(
+                //       borderRadius: BorderRadius.circular(4),
+                //     ),
+                //   ),
+                //   onPressed: () async {
+                //     if (id == null) return;
+                //     final pgsId = int.tryParse(id) ?? 0;
 
-                    final api = ApiEndpoint();
-                    final pdfUrl = '${api.generatePdf}/$pgsId';
+                //     final api = ApiEndpoint();
+                //     final pdfUrl = '${api.generatePdf}/$pgsId';
 
-                    if (kIsWeb) {
-                      html.window.open(pdfUrl, "_blank");
-                    } else {
-                      final url = Uri.parse(pdfUrl);
-                      final response = await http.get(url);
+                //     if (kIsWeb) {
+                //       html.window.open(pdfUrl, "_blank");
+                //     } else {
+                //       final url = Uri.parse(pdfUrl);
+                //       final response = await http.get(url);
 
-                      if (response.statusCode == 200) {
-                        final directory =
-                            await getApplicationDocumentsDirectory();
-                        final filePath =
-                            "${directory.path}/PGS_Report_$pgsId.pdf";
-                        final file = File(filePath);
+                //       if (response.statusCode == 200) {
+                //         final directory =
+                //             await getApplicationDocumentsDirectory();
+                //         final filePath =
+                //             "${directory.path}/PGS_Report_$pgsId.pdf";
+                //         final file = File(filePath);
 
-                        await file.writeAsBytes(response.bodyBytes);
+                //         await file.writeAsBytes(response.bodyBytes);
 
-                        await OpenFile.open(file.path);
-                      } else {
-                        // ignore: use_build_context_synchronously
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to download PDF')),
-                        );
-                      }
-                    }
-                  },
+                //         await OpenFile.open(file.path);
+                //       } else {
+                //         // ignore: use_build_context_synchronously
+                //         ScaffoldMessenger.of(context).showSnackBar(
+                //           SnackBar(content: Text('Failed to download PDF')),
+                //         );
+                //       }
+                //     }
+                //   },
 
-                  child: Text('Print', style: TextStyle(color: primaryColor)),
-                ),
+                //   child: Text('Print', style: TextStyle(color: primaryColor)),
+                // ),
                 if (isDraft) ...[
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
+                      backgroundColor: const Color.fromARGB(255, 235, 172, 172),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
@@ -2298,11 +2474,17 @@ class _PerformanceGovernanceSystemPageState
                                 TextButton(
                                   onPressed:
                                       () => Navigator.pop(context, false),
-                                  child: Text("No"),
+                                  child: Text(
+                                    "No",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
                                 ),
                                 TextButton(
                                   onPressed: () => Navigator.pop(context, true),
-                                  child: Text("Yes"),
+                                  child: Text(
+                                    "Yes",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
                                 ),
                               ],
                             ),
@@ -2333,7 +2515,7 @@ class _PerformanceGovernanceSystemPageState
 
                         PerformanceGovernanceSystem pgs = getPgsAuditDetails(
                           id: pgsId ?? 0,
-                          pgsStatus: "Draft",
+                          pgsStatus: "Submit",
                         );
 
                         try {
@@ -2363,9 +2545,60 @@ class _PerformanceGovernanceSystemPageState
                     },
                     child: Text(
                       id == null ? 'Save as draft' : 'Save as draft',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(color: primaryColor),
                     ),
                   ),
+                  if (isSubmitted) ...[
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      onPressed: () async {
+                        bool? confirm = await showDialog(
+                          context: context,
+                          builder:
+                              (_) => AlertDialog(
+                                title: Text("Confirm Submit"),
+                                content: Text(
+                                  "Are you sure you want to submit this record? You won’t be able to make any changes.",
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, false),
+                                    child: Text("No"),
+                                  ),
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, true),
+                                    child: Text("Yes"),
+                                  ),
+                                ],
+                              ),
+                        );
+
+                        if (confirm == true) {
+                          int? pgsId = int.tryParse(id ?? '');
+                          PerformanceGovernanceSystem audit =
+                              getPgsAuditDetails(
+                                id: pgsId ?? 0,
+                                pgsStatus: "Submitted",
+                              );
+                          await savePGS(audit);
+
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+                        }
+                      },
+                      child: Text(
+                        'Submit',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ],
               ],
             );
