@@ -4,6 +4,7 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -46,6 +47,7 @@ class _UserProfileState extends State<UserProfilePage> {
   final dio = Dio();
 
   final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<UserRegistration> userSearchUtil;
 
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -61,9 +63,6 @@ class _UserProfileState extends State<UserProfilePage> {
     'Nurse',
     'Secretary',
   ];
-
-  String? selectPrefix;
-  final List<String> prefixes = ['Dr.', 'Atty.', 'Mr.', 'Ms.'];
 
   Future<void> fetchUserProfile({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
@@ -158,6 +157,17 @@ class _UserProfileState extends State<UserProfilePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    userSearchUtil = FilterSearchResultUtil<UserRegistration>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().getUser,
+      pageSize: _pageSize,
+      fromJson: (json) => UserRegistration.fromJson(json),
+    );
+
+    fetchUserProfile();
+    isSearchfocus.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -166,15 +176,15 @@ class _UserProfileState extends State<UserProfilePage> {
     super.dispose();
   }
 
-  void filterSearchResults(String query) {
+  Future<void> searchUsers(String query) async {
+    final results = await userSearchUtil.filter(
+      query,
+      (user, search) =>
+          (user.firstName ?? '').toLowerCase().contains(search.toLowerCase()),
+    );
+
     setState(() {
-      filteredList =
-          userProfileList
-              .where(
-                (team) =>
-                    team.lastName!.toLowerCase().contains(query.toLowerCase()),
-              )
-              .toList();
+      filteredList = results;
     });
   }
 
@@ -804,7 +814,7 @@ class _UserProfileState extends State<UserProfilePage> {
                         horizontal: 5,
                       ),
                     ),
-                    onChanged: filterSearchResults,
+                    onChanged: searchUsers,
                   ),
                 ),
                 if (!isMinimized)
