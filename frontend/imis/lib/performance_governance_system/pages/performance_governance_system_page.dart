@@ -53,6 +53,7 @@ class _PerformanceGovernanceSystemPageState
   Map<int, String> selectedStatusOptions = {};
   Map<int, bool> selectedDirect = {};
   Map<int, bool> selectedIndirect = {};
+
   Map<int, bool> tempSelectedDirect = {};
   Map<int, bool> tempSelectedIndirect = {};
   Map<int, int?> selectedKRA = {};
@@ -95,6 +96,9 @@ class _PerformanceGovernanceSystemPageState
   List<PgsDeliverables> deliverablesList = [];
 
   int? selectedPeriod;
+  // String? selectedActions;
+  Map<int, bool> selectedApproved = {};
+  Map<int, bool> selectedDisapproved = {};
 
   final _paginationUtils = PaginationUtil(Dio());
   int _currentPage = 1;
@@ -105,6 +109,7 @@ class _PerformanceGovernanceSystemPageState
   //For search controller
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
+  TextEditingController _reasonController = TextEditingController();
 
   List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
   // ignore: non_constant_identifier_names
@@ -145,7 +150,9 @@ class _PerformanceGovernanceSystemPageState
       userId = user!.id ?? "UserId";
     });
 
-    print('Loaded userId from SharedPreferences: $userId'); // ? Added print
+    debugPrint(
+      'Loaded userId from SharedPreferences: $userId',
+    ); // ? Added print
 
     if (mounted) {
       setState(() {
@@ -336,8 +343,9 @@ class _PerformanceGovernanceSystemPageState
       final userId = signatory['defaultSignatoryId'].toString();
       final user = userList.firstWhere(
         (u) => u.id.toString() == userId,
-        orElse: () => User(id: '', fullName: 'Unknown'),
+        orElse: () => User(id: '', fullName: 'Unknown', position: 'position'),
       );
+
       return user.fullName;
     } catch (e) {
       return 'Unknown';
@@ -392,7 +400,11 @@ class _PerformanceGovernanceSystemPageState
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        '[No Position]',
+                        (userList.any((user) => user.id == currentValue)
+                            ? userList
+                                .firstWhere((user) => user.id == currentValue)
+                                .position
+                            : getFullNameFromSignatoryId(currentValue)),
                         style: const TextStyle(fontSize: 12),
                       ),
                     ],
@@ -2826,6 +2838,7 @@ class _PerformanceGovernanceSystemPageState
         _buildDatePickerCell(index, setDialogState),
         // _buildDropdownCellStatus(index, () => (index)),
         _buildRemoveButton(index, setDialogState),
+        // _buildApprovedDisapproved(index, setDialogState),
       ],
     );
   }
@@ -3428,6 +3441,79 @@ class _PerformanceGovernanceSystemPageState
           selectedIndirect.remove(index);
         });
       },
+    );
+  }
+
+  //Approved & Disapproved Buttons
+  Widget _buildApprovedDisapproved(int index, Function setDialogState) {
+    bool isApproved = selectedApproved[index] ?? false;
+    bool isDisapproved = selectedDisapproved[index] ?? false;
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            Column(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.thumb_up,
+                    color: isApproved ? Colors.green : primaryTextColor,
+                  ),
+                  onPressed: () {
+                    setDialogState(() {
+                      selectedApproved[index] = true;
+                      selectedDisapproved[index] = false;
+                    });
+                  },
+                ),
+                Text("Approve", style: TextStyle(fontSize: 12)),
+              ],
+            ),
+            Column(
+              children: [
+                IconButton(
+                  icon: Icon(
+                    Icons.thumb_down,
+                    color: isDisapproved ? Colors.red : primaryTextColor,
+                  ),
+                  onPressed: () {
+                    setDialogState(() {
+                      selectedApproved[index] = false;
+                      selectedDisapproved[index] = true;
+                    });
+                  },
+                ),
+                Text("Disapprove", style: TextStyle(fontSize: 12)),
+              ],
+            ),
+          ],
+        ),
+
+        if (isDisapproved) ...[
+          SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("Reason:", style: TextStyle(fontWeight: FontWeight.bold)),
+                TextField(
+                  controller: _reasonController,
+                  decoration: InputDecoration(
+                    hintText: "Enter your reason here...",
+                    border: OutlineInputBorder(),
+                  ),
+                  maxLines: 3,
+                ),
+                gap,
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 

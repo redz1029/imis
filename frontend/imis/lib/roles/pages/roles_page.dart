@@ -116,6 +116,22 @@ class _RolesPageState extends State<RolesPage> {
     }
   }
 
+  // Future<void> deleteRoles(String roles) async {
+  //   var url = '${ApiEndpoint().keyresult}/$roles'; // Add kraId to endpoint
+  //   try {
+  //     final response = await dio.patch(
+  //       url,
+  //       data: {'isDeleted': true}, // send the updated field only
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       await fetchRoles();
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error deleting KRA: $e");
+  //   }
+  // }
+
   @override
   void initState() {
     super.initState();

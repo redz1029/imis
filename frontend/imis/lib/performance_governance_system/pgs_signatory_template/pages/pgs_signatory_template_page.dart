@@ -100,7 +100,8 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   String getUserName(String userId) {
     final user = userList.firstWhere(
       (u) => u.id == userId,
-      orElse: () => User(id: '', fullName: 'Unknown User'),
+      orElse:
+          () => User(id: '', fullName: 'Unknown User', position: 'posiiton'),
     );
     return user.fullName;
   }

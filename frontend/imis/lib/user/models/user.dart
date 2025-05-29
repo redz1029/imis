@@ -6,8 +6,9 @@ part 'user.g.dart';
 class User {
   final String id;
   final String fullName;
+  final String position;
 
-  User({required this.id, required this.fullName});
+  User({required this.id, required this.fullName, required this.position});
 
   factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   Map<String, dynamic> toJson() => _$UserToJson(this);

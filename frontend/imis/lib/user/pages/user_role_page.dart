@@ -150,7 +150,9 @@ class _UserRolePageState extends State<UserRolePage> {
     for (var userRole in userRoleList) {
       final userName = userList.firstWhere(
         (user) => user.id == userRole.userId,
-        orElse: () => User(id: 'unknown', fullName: 'Unknown'),
+        orElse:
+            () =>
+                User(id: 'unknown', fullName: 'Unknown', position: 'position'),
       );
 
       debugPrint(
@@ -662,6 +664,7 @@ class _UserRolePageState extends State<UserRolePage> {
                                         () => User(
                                           id: 'unknown',
                                           fullName: 'Unknown',
+                                          position: 'position',
                                         ),
                                   );
                                   final String userName =
@@ -754,6 +757,8 @@ class _UserRolePageState extends State<UserRolePage> {
                                                                   id: 'unknown',
                                                                   fullName:
                                                                       'Unknown',
+                                                                  position:
+                                                                      'position',
                                                                 ),
                                                           );
 

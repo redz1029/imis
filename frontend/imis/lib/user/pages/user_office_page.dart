@@ -123,7 +123,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
     for (var userOffice in userOfficeList) {
       final userName = userList.firstWhere(
         (user) => user.id == userOffice.userId,
-        orElse: () => User(id: 'unknown', fullName: 'Unknown'),
+        orElse: () => User(id: '', fullName: 'Unknown', position: 'position'),
       );
 
       debugPrint(
@@ -626,6 +626,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
                                         () => User(
                                           id: 'unknown',
                                           fullName: 'Unknown',
+                                          position: 'position',
                                         ),
                                   );
                                   final userName = matchUserName.fullName;
@@ -699,6 +700,8 @@ class _UserOfficePageState extends State<UserOfficePage> {
                                                                 id: 'unknown',
                                                                 fullName:
                                                                     'Unknown',
+                                                                position:
+                                                                    'position',
                                                               ),
                                                         );
                                                     final selectedOfficeId =
