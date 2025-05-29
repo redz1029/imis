@@ -117,7 +117,14 @@ namespace IMIS.Persistence.PgsModule
                         Id = perfomanceGovernanceSystem.Office.Id,
                         Name = perfomanceGovernanceSystem.Office.Name,
                         IsActive = perfomanceGovernanceSystem.Office.IsActive
-                    } : null,          
+                    } : null,
+                    PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto
+                    {
+                        Id = perfomanceGovernanceSystem.PgsReadinessRating.Id,
+                        CompetenceToDeliver = perfomanceGovernanceSystem.PgsReadinessRating.CompetenceToDeliver,
+                        ResourceAvailability = perfomanceGovernanceSystem.PgsReadinessRating.ResourceAvailability,
+                        ConfidenceToDeliver = perfomanceGovernanceSystem.PgsReadinessRating.ConfidenceToDeliver,
+                    } : null,
                     PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(deliverable => new ReportPGSDeliverableDto
                     {
                         Id = deliverable.Id,

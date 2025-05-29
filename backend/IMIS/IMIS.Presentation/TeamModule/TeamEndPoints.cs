@@ -20,25 +20,25 @@ namespace IMIS.Presentation.TeamModule
 
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
-        {         
+        {
             app.MapPost("/", async ([FromBody] TeamDto teamDto, ITeamService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {               
+            {
                 var createdTeam = await service.SaveOrUpdateAsync(teamDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_teamTag, cancellationToken);
                 return Results.Created($"/team/{createdTeam.Id}", createdTeam);
             })
-            .WithTags(_teamTag)          
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim,_teamPermission.Add, _teamPermission.Edit));
+            .WithTags(_teamTag);
+            //.RequireAuthorization(e => e.RequireClaim(
+            //PermissionClaimType.Claim,_teamPermission.Add, _teamPermission.Edit));
 
             app.MapGet("/", async (ITeamService service, CancellationToken cancellationToken) =>
             {
                 var team = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(team);
             })
-           .WithTags(_teamTag)           
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
+           .WithTags(_teamTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true);
+           //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
 
             app.MapGet("/filter/{name}", async (string name, ITeamService service, CancellationToken cancellationToken) =>
             {

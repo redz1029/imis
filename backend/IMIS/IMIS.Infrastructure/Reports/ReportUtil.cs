@@ -34,12 +34,11 @@ namespace IMIS.Infrastructure.Reports
         }
 
         private static async Task<byte[]> ExportPdf(Report report, CancellationToken cancellationToken)
-        {
-            //report.SetParameterValue("IsDirect", );
+        {            
             report.Prepare();
             using (MemoryStream ms = new())
             {
-                PDFSimpleExport pdf = new();
+                PDFSimpleExport pdf = new();    
                 pdf.Export(report, ms);
                 await ms.FlushAsync(cancellationToken)
                     .ConfigureAwait(false);

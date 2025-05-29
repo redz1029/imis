@@ -3,6 +3,7 @@ using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
+using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
@@ -18,7 +19,11 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
         public required OfficeDto Office { get; set; }
         public string? OfficeName => Office?.Name; 
         public string? Remarks { get; set; }   
-        public List<ReportPGSDeliverableDto>? PgsDeliverables { get; set; }      
+        public List<ReportPGSDeliverableDto>? PgsDeliverables { get; set; }
+        public PgsReadinessRatingDto? PgsReadinessRating { get; set; }
+        public double CompetenceToDeliver => PgsReadinessRating!.CompetenceToDeliver;
+        public double ResourceAvailability => PgsReadinessRating!.ResourceAvailability;
+        public double ConfidenceToDeliver => PgsReadinessRating!.ConfidenceToDeliver;     
         public required double PercentDeliverables { get; set; }     
         public List<ReportPgsSignatoryDto>? PgsSignatories { get; set; }
 
@@ -61,7 +66,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
             this.PgsPeriod = perfomanceGovernanceSystem.PgsPeriod != null ? new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod) : null;
             this.Office = perfomanceGovernanceSystem.Office != null ? new OfficeDto(perfomanceGovernanceSystem.Office) : null;          
             this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(d => new ReportPGSDeliverableDto(d)).ToList();
-           
+            this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;
             this.PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?
             .Select(s =>
             {
@@ -103,7 +108,8 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
                 PgsPeriod = PgsPeriod.ToEntity(),
                 Office = Office.ToEntity(),
                 Remarks = Remarks,
-                PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),               
+                PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),
+                PgsReadinessRating = PgsReadinessRating!.ToEntity(),
                 PercentDeliverables = PercentDeliverables,               
                 PgsSignatories = PgsSignatories?.Select(s => s.ToEntity()).ToList()
             };
