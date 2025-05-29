@@ -4,6 +4,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
 class TeamPage extends StatefulWidget {
@@ -16,6 +17,7 @@ class TeamPage extends StatefulWidget {
 
 class _TeamPageState extends State<TeamPage> {
   final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<Team> teamSearchUtil;
   final _formKey = GlobalKey<FormState>();
   List<Team> teamList = [];
   List<Team> filteredList = [];
@@ -29,45 +31,6 @@ class _TeamPageState extends State<TeamPage> {
   bool _isLoading = false;
 
   final dio = Dio();
-
-  // Future<void> fetchTeam({int page = 1, String? searchQuery}) async {
-  //   if (_isLoading) return;
-
-  //   setState(() => _isLoading = true);
-
-  //   try {
-  //     String? token = await AuthUtil.fetchAccessToken();
-
-  //     if (token == null || token.isEmpty) {
-  //       debugPrint("Error: Access token is missing!");
-  //       return;
-  //     }
-
-  //     final pageList = await _paginationUtils.fetchPaginatedData<Team>(
-  //       endpoint: ApiEndpoint().team,
-  //       page: page,
-  //       pageSize: _pageSize,
-  //       searchQuery: searchQuery,
-  //       fromJson: (json) => Team.fromJson(json),
-  //       headers: {"Authorization": "Bearer $token"},
-  //     );
-
-  //     if (mounted) {
-  //       setState(() {
-  //         _currentPage = pageList.page;
-  //         _totalCount = pageList.totalCount;
-  //         teamList = pageList.items;
-  //         filteredList = List.from(teamList);
-  //       });
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error fetching team: $e");
-  //   } finally {
-  //     if (mounted) {
-  //       setState(() => _isLoading = false);
-  //     }
-  //   }
-  // }
 
   Future<void> fetchTeam({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
@@ -151,6 +114,12 @@ class _TeamPageState extends State<TeamPage> {
   void initState() {
     super.initState();
     fetchTeam();
+    teamSearchUtil = FilterSearchResultUtil<Team>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().team,
+      pageSize: _pageSize,
+      fromJson: (json) => Team.fromJson(json),
+    );
     isSearchfocus.addListener(() {
       setState(() {});
     });
@@ -162,14 +131,15 @@ class _TeamPageState extends State<TeamPage> {
     super.dispose();
   }
 
-  void filterSearchResults(String query) {
+  Future<void> filterSearchResults(String query) async {
+    final results = await teamSearchUtil.filter(
+      query,
+      (team, search) =>
+          (team.name).toLowerCase().contains(search.toLowerCase()),
+    );
+
     setState(() {
-      filteredList =
-          teamList
-              .where(
-                (team) => team.name.toLowerCase().contains(query.toLowerCase()),
-              )
-              .toList();
+      filteredList = results;
     });
   }
 

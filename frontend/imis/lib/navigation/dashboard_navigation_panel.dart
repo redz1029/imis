@@ -6,6 +6,7 @@ import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
+import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
@@ -563,7 +564,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                                 hideIcon: true,
                                 'User Office',
                                 12,
-                                () => _setScreen(UserRolePage(), 12),
+                                () => _setScreen(UserOfficePage(), 12),
                               ),
                               _buildListTile(
                                 Icons.person,

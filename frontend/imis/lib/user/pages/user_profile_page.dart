@@ -176,7 +176,7 @@ class _UserProfileState extends State<UserProfilePage> {
     super.dispose();
   }
 
-  Future<void> searchUsers(String query) async {
+  Future<void> filterSearchResults(String query) async {
     final results = await userSearchUtil.filter(
       query,
       (user, search) =>
@@ -814,7 +814,7 @@ class _UserProfileState extends State<UserProfilePage> {
                         horizontal: 5,
                       ),
                     ),
-                    onChanged: searchUsers,
+                    onChanged: filterSearchResults,
                   ),
                 ),
                 if (!isMinimized)

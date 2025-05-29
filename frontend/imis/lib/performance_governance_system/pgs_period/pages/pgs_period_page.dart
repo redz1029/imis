@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
 class PgsPeriodPage extends StatefulWidget {
@@ -15,9 +17,12 @@ class PgsPeriodPage extends StatefulWidget {
 
 class _PgsPeriodPageState extends State<PgsPeriodPage> {
   final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<PgsPeriod> pgsPeriodSearchUtil;
   final _formKey = GlobalKey<FormState>();
-  List<Map<String, dynamic>> pgsList = [];
-  List<Map<String, dynamic>> filteredList = [];
+  // List<Map<String, dynamic>> pgsPeriodList = [];
+  // List<Map<String, dynamic>> filteredList = [];
+  List<PgsPeriod> pgsPeriodList = [];
+  List<PgsPeriod> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
@@ -32,6 +37,13 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
   void initState() {
     super.initState();
     fetchPGSPeriods();
+    pgsPeriodSearchUtil = FilterSearchResultUtil<PgsPeriod>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().performancegovernancesystem,
+      pageSize: _pageSize,
+      fromJson: (json) => PgsPeriod.fromJson(json),
+    );
+
     isSearchfocus.addListener(() {
       setState(() {});
     });
@@ -56,8 +68,8 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          pgsList = pageList.items.map((a) => a.toJson()).toList();
-          filteredList = List.from(pgsList);
+          pgsPeriodList = pageList.items;
+          filteredList = List.from(pgsPeriodList);
         });
       }
     } catch (e) {
@@ -103,18 +115,44 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     super.dispose();
   }
 
-  void filterSearchResults(String query) {
+  // Future<void> filterSearchResults(String query) async {
+  //   final results = await pgsPeriodSearchUtil.filter(
+  //     query,
+  //     (pgsperiod, search) =>
+  //         pgsperiod.startDate.toString().toLowerCase().contains(
+  //           search.toLowerCase(),
+  //         ) ||
+  //         pgsperiod.endDate.toString().toLowerCase().contains(
+  //           search.toLowerCase(),
+  //         ),
+  //   );
+
+  //   setState(() {
+  //     filteredList = results;
+  //   });
+  // }
+  Future<void> filterSearchResults(String query) async {
+    final searchStr = (query ?? '').trim();
+
+    final results = await pgsPeriodSearchUtil.filter(searchStr, (
+      pgsperiod,
+      search,
+    ) {
+      final searchText = search ?? '';
+      final start =
+          pgsperiod.startDate != null
+              ? DateTimeConverter.dateFormat.format(pgsperiod.startDate)
+              : '';
+      final end =
+          pgsperiod.endDate != null
+              ? DateTimeConverter.dateFormat.format(pgsperiod.endDate!)
+              : '';
+
+      return start.contains(searchText) || end.contains(searchText);
+    });
+
     setState(() {
-      filteredList =
-          pgsList
-              .where(
-                (pgs) =>
-                    pgs['startDate']!.toLowerCase().contains(
-                      query.toLowerCase(),
-                    ) ||
-                    pgs['endDate']!.toLowerCase().contains(query.toLowerCase()),
-              )
-              .toList();
+      filteredList = results;
     });
   }
 
@@ -528,7 +566,9 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                period['startDate'],
+                                                DateTimeConverter().toJson(
+                                                  period.startDate,
+                                                ),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -543,7 +583,10 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                period['endDate'],
+                                                DateTimeConverter().toJson(
+                                                  period.endDate,
+                                                ),
+
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -567,12 +610,20 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                                                     onPressed:
                                                         () => showFormDialog(
                                                           id:
-                                                              period['id']
+                                                              period.id
                                                                   .toString(),
                                                           startDate:
-                                                              period['startDate'],
+                                                              DateTimeConverter()
+                                                                  .toJson(
+                                                                    period
+                                                                        .startDate,
+                                                                  ),
                                                           endDate:
-                                                              period['endDate'],
+                                                              DateTimeConverter()
+                                                                  .toJson(
+                                                                    period
+                                                                        .endDate,
+                                                                  ),
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),
@@ -583,8 +634,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                                                     ),
                                                     onPressed:
                                                         () => showDeleteDialog(
-                                                          period['id']
-                                                              .toString(),
+                                                          period.id.toString(),
                                                         ),
                                                   ),
                                                 ],

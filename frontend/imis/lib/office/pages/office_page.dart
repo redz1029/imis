@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -17,9 +18,12 @@ class OfficePage extends StatefulWidget {
 class _OfficePageState extends State<OfficePage> {
   // ignore: non_constant_identifier_names
   final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<Office> officeSearchUtil;
   final _formKey = GlobalKey<FormState>();
-  List<Map<String, dynamic>> officeList = [];
-  List<Map<String, dynamic>> filteredList = [];
+  // List<Map<String, dynamic>> officeList = [];
+  // List<Map<String, dynamic>> filteredList = [];
+  List<Office> officeList = [];
+  List<Office> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
@@ -48,7 +52,7 @@ class _OfficePageState extends State<OfficePage> {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          officeList = pageList.items.map((a) => a.toJson()).toList();
+          officeList = pageList.items;
           filteredList = List.from(officeList);
         });
       }
@@ -116,6 +120,12 @@ class _OfficePageState extends State<OfficePage> {
   void initState() {
     super.initState();
     fetchOffices();
+    officeSearchUtil = FilterSearchResultUtil<Office>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().office,
+      pageSize: _pageSize,
+      fromJson: (json) => Office.fromJson(json),
+    );
     isSearchfocus.addListener(() {
       setState(() {});
     });
@@ -127,16 +137,15 @@ class _OfficePageState extends State<OfficePage> {
     super.dispose();
   }
 
-  // Filter search results based on query
-  void filterSearchResults(String query) {
+  Future<void> filterSearchResults(String query) async {
+    final results = await officeSearchUtil.filter(
+      query,
+      (office, search) =>
+          (office.name).toLowerCase().contains(search.toLowerCase()),
+    );
+
     setState(() {
-      filteredList =
-          officeList
-              .where(
-                (office) =>
-                    office['name']!.toLowerCase().contains(query.toLowerCase()),
-              )
-              .toList();
+      filteredList = results;
     });
   }
 
@@ -226,7 +235,10 @@ class _OfficePageState extends State<OfficePage> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text("No"),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
@@ -234,7 +246,10 @@ class _OfficePageState extends State<OfficePage> {
                                 Navigator.pop(context, true);
                               }
                             },
-                            child: Text("Yes"),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                         ],
                       );
@@ -411,7 +426,7 @@ class _OfficePageState extends State<OfficePage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                office['name'],
+                                                office.name,
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -434,9 +449,9 @@ class _OfficePageState extends State<OfficePage> {
                                                     onPressed:
                                                         () => showFormDialog(
                                                           id:
-                                                              office['id']
+                                                              office.id
                                                                   .toString(),
-                                                          name: office['name'],
+                                                          name: office.name,
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),
@@ -447,8 +462,7 @@ class _OfficePageState extends State<OfficePage> {
                                                     ),
                                                     onPressed:
                                                         () => showDeleteDialog(
-                                                          office['id']
-                                                              .toString(),
+                                                          office.id.toString(),
                                                         ),
                                                   ),
                                                 ],

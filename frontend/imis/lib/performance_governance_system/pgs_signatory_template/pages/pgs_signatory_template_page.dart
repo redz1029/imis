@@ -4,6 +4,7 @@ import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory_template.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 
 import 'package:imis/utils/pagination_util.dart';
 
@@ -18,9 +19,10 @@ class PgsSignatoryTemplatePage extends StatefulWidget {
 
 class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<PgsSignatoryTemplate> signatorySearchUtil;
   final _formKey = GlobalKey<FormState>();
-  List<Map<String, dynamic>> signatoryList = [];
-  List<Map<String, dynamic>> filteredList = [];
+  List<PgsSignatoryTemplate> signatoryList = [];
+  List<PgsSignatoryTemplate> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
   List<Map<String, dynamic>> labelList = [];
@@ -56,7 +58,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          signatoryList = pageList.items.map((a) => a.toJson()).toList();
+          signatoryList = pageList.items;
           filteredList = List.from(signatoryList);
         });
       }
@@ -143,6 +145,12 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
     super.initState();
     fetchSignatory();
     fetchUser();
+    signatorySearchUtil = FilterSearchResultUtil<PgsSignatoryTemplate>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().signatoryTemplate,
+      pageSize: _pageSize,
+      fromJson: (json) => PgsSignatoryTemplate.fromJson(json),
+    );
     isSearchfocus.addListener(() {
       setState(() {});
     });
@@ -155,16 +163,16 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   }
 
   // Filter search results based on query
-  void filterSearchResults(String query) {
+  Future<void> filterSearchResults(String query) async {
+    final results = await signatorySearchUtil.filter(
+      query,
+      (signatory, search) => (signatory.signatoryLabel ?? '')
+          .toLowerCase()
+          .contains(search.toLowerCase()),
+    );
+
     setState(() {
-      filteredList =
-          signatoryList
-              .where(
-                (auditor) => auditor['name']!.toLowerCase().contains(
-                  query.toLowerCase(),
-                ),
-              )
-              .toList();
+      filteredList = results;
     });
   }
 
@@ -589,8 +597,8 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                               ),
                                               child: Text(
                                                 getUserName(
-                                                  pgsSignatory['defaultSignatoryId'] ??
-                                                      '',
+                                                  pgsSignatory
+                                                      .defaultSignatoryId,
                                                 ),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
@@ -606,7 +614,8 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                pgsSignatory['signatoryLabel'],
+                                                pgsSignatory.signatoryLabel
+                                                    .toString(),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -629,16 +638,20 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                                     onPressed:
                                                         () => showFormDialog(
                                                           id:
-                                                              pgsSignatory['id']
+                                                              pgsSignatory.id
                                                                   .toString(),
                                                           defaultSignatoryId:
-                                                              pgsSignatory['defaultSignatoryId'],
+                                                              pgsSignatory
+                                                                  .defaultSignatoryId,
                                                           signatoryLabel:
-                                                              pgsSignatory['signatoryLabel'],
+                                                              pgsSignatory
+                                                                  .signatoryLabel,
                                                           status:
-                                                              pgsSignatory['status'],
+                                                              pgsSignatory
+                                                                  .status,
                                                           orderLevel:
-                                                              pgsSignatory['orderLevel'],
+                                                              pgsSignatory
+                                                                  .orderLevel,
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),
@@ -649,7 +662,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                                     ),
                                                     onPressed:
                                                         () => showDeleteDialog(
-                                                          pgsSignatory['id']
+                                                          pgsSignatory.id
                                                               .toString(),
                                                         ),
                                                   ),

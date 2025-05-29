@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 
 import 'package:imis/utils/pagination_util.dart';
 
@@ -16,9 +17,11 @@ class AuditorPage extends StatefulWidget {
 
 class _AuditorMainPageState extends State<AuditorPage> {
   final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<Auditor> auditorSearchUtil;
   final _formKey = GlobalKey<FormState>();
-  List<Map<String, dynamic>> auditorList = [];
-  List<Map<String, dynamic>> filteredList = [];
+
+  List<Auditor> auditorList = [];
+  List<Auditor> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
@@ -48,7 +51,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          auditorList = pageList.items.map((a) => a.toJson()).toList();
+          auditorList = pageList.items;
           filteredList = List.from(auditorList);
         });
       }
@@ -96,6 +99,12 @@ class _AuditorMainPageState extends State<AuditorPage> {
   void initState() {
     super.initState();
     fetchAuditors();
+    auditorSearchUtil = FilterSearchResultUtil<Auditor>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().auditor,
+      pageSize: _pageSize,
+      fromJson: (json) => Auditor.fromJson(json),
+    );
     isSearchfocus.addListener(() {
       setState(() {});
     });
@@ -108,16 +117,27 @@ class _AuditorMainPageState extends State<AuditorPage> {
   }
 
   // Filter search results based on query
-  void filterSearchResults(String query) {
+  // void filterSearchResults(String query) {
+  //   setState(() {
+  //     filteredList =
+  //         auditorList
+  //             .where(
+  //               (auditor) => auditor['name']!.toLowerCase().contains(
+  //                 query.toLowerCase(),
+  //               ),
+  //             )
+  //             .toList();
+  //   });
+  // }
+  Future<void> filterSearchResults(String query) async {
+    final results = await auditorSearchUtil.filter(
+      query,
+      (auditor, search) =>
+          (auditor.name ?? '').toLowerCase().contains(search.toLowerCase()),
+    );
+
     setState(() {
-      filteredList =
-          auditorList
-              .where(
-                (auditor) => auditor['name']!.toLowerCase().contains(
-                  query.toLowerCase(),
-                ),
-              )
-              .toList();
+      filteredList = results;
     });
   }
 
@@ -439,7 +459,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                auditor['name'],
+                                                auditor.name ?? '',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -462,9 +482,11 @@ class _AuditorMainPageState extends State<AuditorPage> {
                                                     onPressed:
                                                         () => showFormDialog(
                                                           id:
-                                                              auditor['id']
+                                                              auditor.id
                                                                   .toString(),
-                                                          name: auditor['name'],
+                                                          name:
+                                                              auditor.name ??
+                                                              '',
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),
@@ -475,8 +497,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                                                     ),
                                                     onPressed:
                                                         () => showDeleteDialog(
-                                                          auditor['id']
-                                                              .toString(),
+                                                          auditor.id.toString(),
                                                         ),
                                                   ),
                                                 ],

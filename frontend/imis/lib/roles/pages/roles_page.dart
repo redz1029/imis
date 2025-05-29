@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
 class RolesPage extends StatefulWidget {
@@ -15,6 +16,7 @@ class RolesPage extends StatefulWidget {
 
 class _RolesPageState extends State<RolesPage> {
   final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<Roles> roleSearchUtil;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -116,26 +118,17 @@ class _RolesPageState extends State<RolesPage> {
     }
   }
 
-  // Future<void> deleteRoles(String roles) async {
-  //   var url = '${ApiEndpoint().keyresult}/$roles'; // Add kraId to endpoint
-  //   try {
-  //     final response = await dio.patch(
-  //       url,
-  //       data: {'isDeleted': true}, // send the updated field only
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       await fetchRoles();
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error deleting KRA: $e");
-  //   }
-  // }
-
   @override
   void initState() {
     super.initState();
     fetchRoles();
+    roleSearchUtil = FilterSearchResultUtil<Roles>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().roles,
+      pageSize: _pageSize,
+      fromJson: (json) => Roles.fromJson(json),
+    );
+
     isSearchfocus.addListener(() {
       setState(() {});
     });
@@ -147,14 +140,15 @@ class _RolesPageState extends State<RolesPage> {
     super.dispose();
   }
 
-  void filterSearchResults(String query) {
+  Future<void> filterSearchResults(String query) async {
+    final results = await roleSearchUtil.filter(
+      query,
+      (user, search) =>
+          (user.name).toLowerCase().contains(search.toLowerCase()),
+    );
+
     setState(() {
-      filteredList =
-          rolesList
-              .where(
-                (role) => role.name.toLowerCase().contains(query.toLowerCase()),
-              )
-              .toList();
+      filteredList = results;
     });
   }
 

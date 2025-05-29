@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 //REUSABLE CODE//
 
 //Colors
-const primaryColor = Color.fromRGBO(192, 74, 74, 1);
+const primaryColor = Color.fromRGBO(192, 80, 77, 1);
 const secondaryBgButton = Color.fromRGBO(192, 74, 74, 0.226);
 const primaryLightColor = Color.fromRGBO(192, 74, 74, 0.644);
 const secondaryColor = Color.fromRGBO(253, 252, 250, 1);

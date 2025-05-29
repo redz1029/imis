@@ -29,11 +29,11 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _loadUserName();
-    fetchDeliverables(pgsId: '250210').then((deliverables) {
-      setState(() {
-        _deliverablesList = deliverables;
-      });
-    });
+    // fetchDeliverables(pgsId: '250210').then((deliverables) {
+    //   setState(() {
+    //     _deliverablesList = deliverables;
+    //   });
+    // });
   }
 
   final dio = Dio();
@@ -132,19 +132,20 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           Expanded(
                             child: _buildDashboardBox(
+                              "Submitted",
+                              Colors.purple,
+                              "25",
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildDashboardBox(
                               "Disapproved",
                               Colors.red,
                               "10",
                             ),
                           ),
                           SizedBox(width: 10),
-                          Expanded(
-                            child: _buildDashboardBox(
-                              "Processing",
-                              Colors.purple,
-                              "25",
-                            ),
-                          ),
+
                           SizedBox(width: 10),
                           Expanded(
                             child: _buildDashboardBox(
@@ -157,8 +158,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                       SizedBox(height: 20),
                       _buildPerformanceIndicators(),
-                      SizedBox(height: 20),
-                      _buildTeam(),
+                      // SizedBox(height: 20),
+                      // _buildTeam(),
                     ],
                   ),
                 ),

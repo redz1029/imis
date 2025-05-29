@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
 class KeyResultAreaPage extends StatefulWidget {
@@ -16,8 +17,9 @@ class KeyResultAreaPage extends StatefulWidget {
 class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
   final _formKey = GlobalKey<FormState>();
   final _paginationUtils = PaginationUtil(Dio());
-  List<Map<String, dynamic>> kraList = [];
-  List<Map<String, dynamic>> filteredList = [];
+  late FilterSearchResultUtil<KeyResultArea> kraSearchUtil;
+  List<KeyResultArea> kraList = [];
+  List<KeyResultArea> filteredList = [];
   TextEditingController searchController = TextEditingController();
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -28,6 +30,12 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
   void initState() {
     super.initState();
     fetchKRAs();
+    kraSearchUtil = FilterSearchResultUtil<KeyResultArea>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().keyresult,
+      pageSize: _pageSize,
+      fromJson: (json) => KeyResultArea.fromJson(json),
+    );
   }
 
   final dio = Dio();
@@ -51,7 +59,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          kraList = pageList.items.map((a) => a.toJson()).toList();
+          kraList = pageList.items;
           filteredList = List.from(kraList);
         });
       }
@@ -96,16 +104,31 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
     }
   }
 
+  // Future<void> deleteKRA(String kraId) async {
+  //   var url = '${ApiEndpoint().keyresult}/$kraId'; // Add kraId to endpoint
+  //   try {
+  //     final response = await dio.patch(
+  //       url,
+  //       data: {'isDeleted': true}, // send the updated field only
+  //     );
+
+  //     if (response.statusCode == 200) {
+  //       await fetchKRAs();
+  //     }
+  //   } catch (e) {
+  //     debugPrint("Error deleting KRA: $e");
+  //   }
+  // }
+
   //filtered result
-  void filterSearchResults(String query) {
+  Future<void> filterSearchResults(String query) async {
+    final results = await kraSearchUtil.filter(
+      query,
+      (kra, search) => (kra.name).toLowerCase().contains(search.toLowerCase()),
+    );
+
     setState(() {
-      filteredList =
-          kraList
-              .where(
-                (kra) =>
-                    kra['name']!.toLowerCase().contains(query.toLowerCase()),
-              )
-              .toList();
+      filteredList = results;
     });
   }
 
@@ -439,7 +462,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                kra['name'],
+                                                kra.name,
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -454,7 +477,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                kra['remarks'],
+                                                kra.remarks,
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -477,12 +500,9 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                                     icon: Icon(Icons.edit),
                                                     onPressed:
                                                         () => showFormDialog(
-                                                          id:
-                                                              kra['id']
-                                                                  .toString(),
-                                                          name: kra['name'],
-                                                          remarks:
-                                                              kra['remarks'],
+                                                          id: kra.id.toString(),
+                                                          name: kra.name,
+                                                          remarks: kra.remarks,
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),
@@ -493,7 +513,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                                     ),
                                                     onPressed:
                                                         () => showDeleteDialog(
-                                                          kra['id'].toString(),
+                                                          kra.id.toString(),
                                                         ),
                                                   ),
                                                 ],

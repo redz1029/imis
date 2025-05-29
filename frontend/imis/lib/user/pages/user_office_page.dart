@@ -5,6 +5,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user_office.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -33,6 +34,8 @@ class _UserOfficePageState extends State<UserOfficePage> {
   String? userName;
 
   final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<UserOffice> userOfficeSearchUtil;
+
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
@@ -281,6 +284,17 @@ class _UserOfficePageState extends State<UserOfficePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    userOfficeSearchUtil = FilterSearchResultUtil<UserOffice>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().useroffice,
+      pageSize: _pageSize,
+      fromJson: (json) => UserOffice.fromJson(json),
+    );
+
+    fetchUserOffice();
+    isSearchfocus.addListener(() {
+      setState(() {});
+    });
   }
 
   @override
@@ -289,16 +303,15 @@ class _UserOfficePageState extends State<UserOfficePage> {
     super.dispose();
   }
 
-  void filterSearchResults(String query) {
+  Future<void> filterSearchResults(String query) async {
+    final results = await userOfficeSearchUtil.filter(
+      query,
+      (useroffice, search) =>
+          (useroffice.firstName).toLowerCase().contains(search.toLowerCase()),
+    );
+
     setState(() {
-      filteredList =
-          userOfficeList
-              .where(
-                (useroffice) => useroffice.userId.toLowerCase().contains(
-                  query.toLowerCase(),
-                ),
-              )
-              .toList();
+      filteredList = results;
     });
   }
 
