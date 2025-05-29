@@ -61,7 +61,9 @@ namespace IMIS.Presentation.UserModule
             var userList = users.Select(u => new
             {               
                 u.Id,
-                FullName = $"{u.Prefix} {u.FirstName} {u.MiddleName} {u.LastName} {u.Suffix}".Trim()
+                FullName = $"{u.Prefix} {u.FirstName} {u.MiddleName} {u.LastName} {u.Suffix}".Trim(),
+                Position = u.Position,
+                
 
             });
 
