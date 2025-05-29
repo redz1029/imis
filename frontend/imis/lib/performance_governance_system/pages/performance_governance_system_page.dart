@@ -46,6 +46,7 @@ class _PerformanceGovernanceSystemPageState
   Map<int, TextEditingController> selectedByWhenControllers = {};
   Map<int, Map<String, dynamic>> selectedKRAObjects = {};
   late Future<List<Map<String, dynamic>>> deliverables;
+  Map<int, TextEditingController> remarksControllers = {};
   Map<int, PgsStatus> selectedStatus = {};
   Map<int, String> selectedValues = {};
   Map<int, String> selectedByWhen = {};
@@ -136,6 +137,22 @@ class _PerformanceGovernanceSystemPageState
   }
 
   final dio = Dio();
+
+  Future<void> _loadCurrentUserId() async {
+    UserRegistration? user = await AuthUtil.fetchLoggedUser();
+
+    setState(() {
+      userId = user!.id ?? "UserId";
+    });
+
+    print('Loaded userId from SharedPreferences: $userId'); // ? Added print
+
+    if (mounted) {
+      setState(() {
+        _submittedByUserId = userId;
+      });
+    }
+  }
 
   //Save pgs
   Future<void> savePGS(PerformanceGovernanceSystem audit) async {
@@ -327,57 +344,6 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
-  // Widget _buildSignatoryColumn({
-  //   required String title,
-  //   required String? currentValue,
-  //   required ValueChanged<String?> onChanged,
-  //   required VoidCallback onDeleted,
-  // }) {
-  //   return Column(
-  //     crossAxisAlignment: CrossAxisAlignment.start,
-  //     children: [
-  //       Text(title, style: const TextStyle(fontSize: 12)),
-  //       gap6,
-  //       Container(width: 200, height: 1, color: Colors.grey),
-  //       gap,
-  //       currentValue == null
-  //           ? DropdownButton<String>(
-  //             hint: const Text('Select name'),
-  //             value: currentValue,
-  //             items:
-  //                 userList.map((user) {
-  //                   return DropdownMenuItem<String>(
-  //                     value: user.id,
-  //                     child: Text(user.fullName),
-  //                   );
-  //                 }).toList(),
-  //             onChanged: (value) {
-  //               onChanged(value);
-  //             },
-  //           )
-  //           : Row(
-  //             children: [
-  //               Column(
-  //                 crossAxisAlignment: CrossAxisAlignment.center,
-  //                 children: [
-  //                   Text(
-  //                     (userList.any((user) => user.id == currentValue)
-  //                             ? userList
-  //                                 .firstWhere((user) => user.id == currentValue)
-  //                                 .fullName
-  //                             : getFullNameFromSignatoryId(currentValue))
-  //                         .toUpperCase(),
-  //                     style: const TextStyle(fontWeight: FontWeight.bold),
-  //                   ),
-  //                   Text('[No Position]', style: const TextStyle(fontSize: 12)),
-  //                 ],
-  //               ),
-  //               IconButton(icon: const Icon(Icons.close), onPressed: onDeleted),
-  //             ],
-  //           ),
-  //     ],
-  //   );
-  // }
   Widget _buildSignatoryColumn({
     required String title,
     required String? currentValue,
@@ -385,10 +351,8 @@ class _PerformanceGovernanceSystemPageState
     required VoidCallback onDeleted,
   }) {
     return Center(
-      // Center the whole column horizontally
       child: Column(
-        crossAxisAlignment:
-            CrossAxisAlignment.start, // center children horizontally
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: const TextStyle(fontSize: 12)),
           gap6,
@@ -410,12 +374,11 @@ class _PerformanceGovernanceSystemPageState
                 },
               )
               : Row(
-                mainAxisSize: MainAxisSize.min, // so row wraps content tightly
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Column(
-                    crossAxisAlignment:
-                        CrossAxisAlignment.center, // center text horizontally
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Text(
                         (userList.any((user) => user.id == currentValue)
@@ -743,6 +706,7 @@ class _PerformanceGovernanceSystemPageState
     super.initState();
     fetchSignatory();
     _loadOfficeName();
+    _loadCurrentUserId();
     fetchPgsList();
     fetchUser();
     fetchPGSPeriods();
@@ -1723,7 +1687,8 @@ class _PerformanceGovernanceSystemPageState
         notedRecordId = 0;
         aprroveRecordId = 0;
 
-        _submittedByUserId = getSignatoryByOrderLevelDefault(1);
+        // _submittedByUserId = getSignatoryByOrderLevelDefault(1);
+        _submittedByUserId = userId;
         _notedByUserId = getSignatoryByOrderLevelDefault(2);
         _approvedByUserId = getSignatoryByOrderLevelDefault(3);
       } else {
@@ -1961,68 +1926,68 @@ class _PerformanceGovernanceSystemPageState
                               ],
                             ),
 
-                            if (isDraft) ...[
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  ElevatedButton.icon(
-                                    onPressed: () async {
-                                      bool?
-                                      confirmCancel = await _confirmAction(
-                                        "Confirm Cancel",
-                                        "Are you sure you want to cancel the selected office?",
-                                      );
+                            // if (isDraft) ...[
+                            //   Row(
+                            //     mainAxisAlignment:
+                            //         MainAxisAlignment.spaceBetween,
+                            //     children: [
+                            //       ElevatedButton.icon(
+                            //         onPressed: () async {
+                            //           bool?
+                            //           confirmCancel = await _confirmAction(
+                            //             "Confirm Cancel",
+                            //             "Are you sure you want to cancel the selected office?",
+                            //           );
 
-                                      if (confirmCancel == true) {
-                                        SharedPreferences prefs =
-                                            await SharedPreferences.getInstance();
-                                        await prefs.remove('selectedOfficeId');
-                                        await prefs.remove(
-                                          'selectedOfficeName',
-                                        );
+                            //           if (confirmCancel == true) {
+                            //             SharedPreferences prefs =
+                            //                 await SharedPreferences.getInstance();
+                            //             await prefs.remove('selectedOfficeId');
+                            //             await prefs.remove(
+                            //               'selectedOfficeName',
+                            //             );
 
-                                        setDialogState(() {
-                                          officeDisplay = "";
-                                        });
+                            //             setDialogState(() {
+                            //               officeDisplay = "";
+                            //             });
 
-                                        // ignore: use_build_context_synchronously
-                                        Navigator.pop(context);
+                            //             // ignore: use_build_context_synchronously
+                            //             Navigator.pop(context);
 
-                                        String? newOfficeId =
-                                            await _selectOffice();
-                                        if (newOfficeId != null &&
-                                            newOfficeId.isNotEmpty) {
-                                          await _loadOfficeName();
-                                          showFormDialog();
-                                        }
-                                      }
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: const Color.fromARGB(
-                                        255,
-                                        233,
-                                        135,
-                                        135,
-                                      ),
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                    ),
-                                    icon: Icon(
-                                      Icons.cancel,
-                                      color: Colors.white,
-                                      size: 18,
-                                    ),
-                                    label: Text(
-                                      "Cancel Office",
-                                      style: TextStyle(color: Colors.white),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                            //             String? newOfficeId =
+                            //                 await _selectOffice();
+                            //             if (newOfficeId != null &&
+                            //                 newOfficeId.isNotEmpty) {
+                            //               await _loadOfficeName();
+                            //               showFormDialog();
+                            //             }
+                            //           }
+                            //         },
+                            //         style: ElevatedButton.styleFrom(
+                            //           backgroundColor: const Color.fromARGB(
+                            //             255,
+                            //             233,
+                            //             135,
+                            //             135,
+                            //           ),
+                            //           padding: EdgeInsets.symmetric(
+                            //             horizontal: 12,
+                            //             vertical: 8,
+                            //           ),
+                            //         ),
+                            //         icon: Icon(
+                            //           Icons.cancel,
+                            //           color: Colors.white,
+                            //           size: 18,
+                            //         ),
+                            //         label: Text(
+                            //           "Cancel Office",
+                            //           style: TextStyle(color: Colors.white),
+                            //         ),
+                            //       ),
+                            //     ],
+                            //   ),
+                            // ],
                             // Confirm Submitted Button
                             if (isSubmitted) ...[],
                             if (isApproved) ...[],
@@ -2079,8 +2044,8 @@ class _PerformanceGovernanceSystemPageState
                                             2: FlexColumnWidth(0.7),
                                             3: FlexColumnWidth(2),
                                             4: FlexColumnWidth(1),
-                                            5: FlexColumnWidth(1),
-                                            6: FlexColumnWidth(0.7),
+                                            // 5: FlexColumnWidth(1),
+                                            5: FlexColumnWidth(0.7),
                                           },
 
                                           children: [
@@ -2129,8 +2094,8 @@ class _PerformanceGovernanceSystemPageState
                                             ),
                                           ),
                                         ],
-                                        if (isSubmitted) ...[],
 
+                                        if (isSubmitted) ...[],
                                         if (isApproved) ...[],
 
                                         if (isCancelled) ...[],
@@ -2285,6 +2250,7 @@ class _PerformanceGovernanceSystemPageState
                                       ),
                                     ),
                                   ),
+
                                   //End Second Tab
 
                                   // Third Tab: PGS Deliverable Status
@@ -2303,13 +2269,13 @@ class _PerformanceGovernanceSystemPageState
                                             width: 1,
                                           ),
                                           columnWidths: const {
-                                            0: FlexColumnWidth(1.5),
-                                            1: FlexColumnWidth(0.7),
-                                            2: FlexColumnWidth(0.7),
-                                            3: FlexColumnWidth(2),
-                                            4: FlexColumnWidth(1),
-                                            5: FlexColumnWidth(1),
-                                            6: FlexColumnWidth(0.7),
+                                            0: FlexColumnWidth(1),
+                                            1: FlexColumnWidth(0.4),
+                                            2: FlexColumnWidth(0.5),
+                                            3: FlexColumnWidth(1.90),
+                                            4: FlexColumnWidth(0.7),
+                                            5: FlexColumnWidth(0.6),
+                                            6: FlexColumnWidth(1.30),
                                           },
                                           children: [
                                             _PgsDeliverableHeader(
@@ -2319,7 +2285,7 @@ class _PerformanceGovernanceSystemPageState
                                             _PgsBuildTableSubheader(),
                                             ...rows.map(
                                               (rowId) =>
-                                                  _buildTableRowStrategic(
+                                                  _buildTableRowStrategicPGSDeliverableStatus(
                                                     rowId,
                                                     '',
                                                     '',
@@ -2343,6 +2309,7 @@ class _PerformanceGovernanceSystemPageState
                                 child: Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
+                                    // Text('$firstName $middleName $lastName'),
                                     _buildSignatoryColumn(
                                       title:
                                           '${getSignatoryTitleByOrderLevel(1) ?? ''}:',
@@ -2515,7 +2482,7 @@ class _PerformanceGovernanceSystemPageState
 
                         PerformanceGovernanceSystem pgs = getPgsAuditDetails(
                           id: pgsId ?? 0,
-                          pgsStatus: "Submit",
+                          pgsStatus: "Draft",
                         );
 
                         try {
@@ -2548,57 +2515,53 @@ class _PerformanceGovernanceSystemPageState
                       style: TextStyle(color: primaryColor),
                     ),
                   ),
-                  if (isSubmitted) ...[
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                      ),
-                      onPressed: () async {
-                        bool? confirm = await showDialog(
-                          context: context,
-                          builder:
-                              (_) => AlertDialog(
-                                title: Text("Confirm Submit"),
-                                content: Text(
-                                  "Are you sure you want to submit this record? You won’t be able to make any changes.",
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed:
-                                        () => Navigator.pop(context, false),
-                                    child: Text("No"),
-                                  ),
-                                  TextButton(
-                                    onPressed:
-                                        () => Navigator.pop(context, true),
-                                    child: Text("Yes"),
-                                  ),
-                                ],
-                              ),
-                        );
-
-                        if (confirm == true) {
-                          int? pgsId = int.tryParse(id ?? '');
-                          PerformanceGovernanceSystem audit =
-                              getPgsAuditDetails(
-                                id: pgsId ?? 0,
-                                pgsStatus: "Submitted",
-                              );
-                          await savePGS(audit);
-
-                          // ignore: use_build_context_synchronously
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: Text(
-                        'Submit',
-                        style: TextStyle(color: Colors.white),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                  ],
+                    onPressed: () async {
+                      bool? confirm = await showDialog(
+                        context: context,
+                        builder:
+                            (_) => AlertDialog(
+                              title: Text("Confirm Submit"),
+                              content: Text(
+                                "Are you sure you want to submit this record? You won’t be able to make any changes.",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.pop(context, false),
+                                  child: Text("No"),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: Text("Yes"),
+                                ),
+                              ],
+                            ),
+                      );
+
+                      if (confirm == true) {
+                        int? pgsId = int.tryParse(id ?? '');
+                        PerformanceGovernanceSystem audit = getPgsAuditDetails(
+                          id: pgsId ?? 0,
+                          pgsStatus: "Submitted",
+                        );
+                        await savePGS(audit);
+
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text(
+                      'Submit',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
                 ],
               ],
             );
@@ -2801,7 +2764,7 @@ class _PerformanceGovernanceSystemPageState
           ),
         ),
 
-        BuildHeaderCell(text: ''),
+        // BuildHeaderCell(text: ''),
         BuildHeaderCell(text: ''),
       ],
     );
@@ -2819,7 +2782,7 @@ class _PerformanceGovernanceSystemPageState
         BuildHeaderCell(text: 'INDIRECT'),
         BuildHeaderCell(text: 'DELIVERABLES'),
         BuildHeaderCell(text: 'BY WHEN'),
-        BuildHeaderCell(text: 'STATUS'),
+        // BuildHeaderCell(text: 'STATUS'),
         BuildHeaderCell(text: 'ACTION'),
       ],
     );
@@ -2861,41 +2824,41 @@ class _PerformanceGovernanceSystemPageState
         ),
         _buildExpandableTextAreaCell(index),
         _buildDatePickerCell(index, setDialogState),
-        _buildDropdownCellStatus(index, () => (index)),
+        // _buildDropdownCellStatus(index, () => (index)),
         _buildRemoveButton(index, setDialogState),
       ],
     );
   }
 
-  Widget _buildDropdownCellStatus(int index, VoidCallback setDialogState) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: DropdownButtonFormField<PgsStatus>(
-        value: selectedStatus[index] ?? PgsStatus.notStarted,
-        onChanged: (PgsStatus? newValue) {
-          if (newValue != null) {
-            setDialogState();
-            setState(() {
-              selectedStatus[index] = newValue;
-            });
-            saveStatusToDb(index, newValue);
-          }
-        },
-        isExpanded: true,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.all(8.0),
-        ),
-        items:
-            PgsStatus.values.map((PgsStatus value) {
-              return DropdownMenuItem<PgsStatus>(
-                value: value,
-                child: Text(value.name, style: const TextStyle(fontSize: 14)),
-              );
-            }).toList(),
-      ),
-    );
-  }
+  // Widget _buildDropdownCellStatus(int index, VoidCallback setDialogState) {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: DropdownButtonFormField<PgsStatus>(
+  //       value: selectedStatus[index] ?? PgsStatus.notStarted,
+  //       onChanged: (PgsStatus? newValue) {
+  //         if (newValue != null) {
+  //           setDialogState();
+  //           setState(() {
+  //             selectedStatus[index] = newValue;
+  //           });
+  //           saveStatusToDb(index, newValue);
+  //         }
+  //       },
+  //       isExpanded: true,
+  //       decoration: const InputDecoration(
+  //         border: OutlineInputBorder(),
+  //         contentPadding: EdgeInsets.all(8.0),
+  //       ),
+  //       items:
+  //           PgsStatus.values.map((PgsStatus value) {
+  //             return DropdownMenuItem<PgsStatus>(
+  //               value: value,
+  //               child: Text(value.name, style: const TextStyle(fontSize: 14)),
+  //             );
+  //           }).toList(),
+  //     ),
+  //   );
+  // }
 
   void saveStatusToDb(int index, PgsStatus status) {
     int statusIndex = status.index;
@@ -3059,22 +3022,63 @@ class _PerformanceGovernanceSystemPageState
 
   //PGS DELIVERABLES STATUS
   // ignore: non_constant_identifier_names
-  TableRow _PgsDeliverableHeader({String? officename}) {
+  TableRow _PgsDeliverableHeader({
+    String? officename,
+    String? percentDeliverables,
+  }) {
     return TableRow(
       children: [
         BuildHeaderCell(
           text: 'Office: ${officename ?? officeDisplay}',
-          fontSize: 20,
+          fontSize: 15,
           fontStyle: FontStyle.normal,
         ),
         BuildHeaderCell(text: ''),
         BuildHeaderCell(text: ''),
         BuildHeaderCell(
           text: 'STRATEGIC CONTRIBUTIONS',
-          fontSize: 20,
+          fontSize: 15,
           fontStyle: FontStyle.normal,
         ),
-        TableCell(child: Padding(padding: const EdgeInsets.all(8.0))),
+        // TableCell(child: Padding(padding: const EdgeInsets.all(8.0))),
+        // BuildHeaderCell(text: 'Percent:'),
+        TableCell(
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: percentage,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              style: TextStyle(
+                color: const Color.fromARGB(255, 10, 7, 1),
+                fontSize: 20,
+                fontStyle: FontStyle.normal,
+              ),
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(2),
+                _RangeInputFormatter(1, 40),
+              ],
+
+              decoration: InputDecoration(
+                labelText: percentDeliverables,
+                hintText: '0',
+                suffixText: '%',
+                suffixStyle: TextStyle(
+                  color: const Color.fromARGB(255, 15, 11, 1),
+                  fontSize: 20,
+                ),
+                hintStyle: TextStyle(color: Colors.white),
+                enabledBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ),
         BuildHeaderCell(text: ''),
         BuildHeaderCell(text: ''),
       ],
@@ -3084,20 +3088,331 @@ class _PerformanceGovernanceSystemPageState
   // ignore: non_constant_identifier_names
   TableRow _PgsBuildTableSubheader() {
     return TableRow(
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 255, 254, 254),
+      decoration: const BoxDecoration(
+        color: Color.fromARGB(255, 255, 254, 254),
       ),
       children: [
-        BuildHeaderCell(text: 'KRA'),
-        BuildHeaderCell(text: 'DIRECT'),
-        BuildHeaderCell(text: 'INDIRECT'),
-        BuildHeaderCell(text: 'DELIVERABLES'),
-        BuildHeaderCell(text: 'WHEN'),
-        BuildHeaderCell(text: 'STATUS'),
-        BuildHeaderCell(text: 'REMARKS'),
+        _buildSizedHeaderCell('KRA', width: 100),
+        _buildSizedHeaderCell('DIRECT', width: 70),
+        _buildSizedHeaderCell('INDIRECT', width: 80),
+        _buildSizedHeaderCell('DELIVERABLES', width: 200),
+        _buildSizedHeaderCell('WHEN', width: 90),
+        _buildSizedHeaderCell('STATUS', width: 100),
+        _buildSizedHeaderCell('REMARKS', width: 120),
       ],
     );
-  } //END PGS DELIVERABLES STATUS
+  }
+
+  Widget _buildSizedHeaderCell(String text, {double width = 10}) {
+    return TableCell(
+      verticalAlignment: TableCellVerticalAlignment.middle,
+      child: SizedBox(
+        width: width,
+        child: BuildHeaderCell(
+          text: text,
+          fontSize: 13,
+          fontStyle: FontStyle.normal,
+        ),
+      ),
+    );
+  }
+
+  //END PGS DELIVERABLES STATUS
+
+  // start-----------------------PGS Deliverable Status---------------------
+
+  TableRow _buildTableRowStrategicPGSDeliverableStatus(
+    int index,
+    String direct,
+    String indirect,
+    Function setState,
+    Function setDialogState,
+  ) {
+    deliverablesControllers.putIfAbsent(index, () => TextEditingController());
+    selectedDirect.putIfAbsent(index, () => false);
+    selectedIndirect.putIfAbsent(index, () => false);
+    selectedByWhen.putIfAbsent(index, () => '');
+
+    // Define alternating row colors
+    Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
+
+    return TableRow(
+      decoration: BoxDecoration(color: rowColor),
+      children: [
+        _buildDropdownKraCellPGSDeliverableStatus(index),
+        _buildCheckboxCell(
+          index,
+          selectedDirect,
+          selectedIndirect,
+          setDialogState,
+          isDirect: true,
+        ),
+        _buildCheckboxCell(
+          index,
+          selectedIndirect,
+          selectedDirect,
+          setDialogState,
+          isDirect: false,
+        ),
+        _buildExpandableTextAreaCellPGSDeliverable(index),
+        _buildDatePickerCellPgsDeliverableStatus(index, setDialogState),
+        _buildDropdownCellStatusPgsDeliverableStatus(index, () => (index)),
+        _buildExpandableTextAreaRemarksCell(index),
+      ],
+    );
+  }
+  // end-----------------------PGS Deliverable Status---------------------
+
+  //Start------------Pgs Deliverables Remark ----------------------------------------------
+  Widget _buildExpandableTextAreaRemarksCell(int index) {
+    if (!remarksControllers.containsKey(index)) {
+      remarksControllers[index] = TextEditingController();
+      debugPrint("? Initialized new controller at index: $index");
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: 50.0),
+        child: TextField(
+          controller: remarksControllers[index],
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+          style: const TextStyle(
+            fontSize: 13.0, // ?? Set your desired font size here
+          ),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.all(8.0),
+          ),
+          onChanged: (value) {
+            setState(() {
+              debugPrint("Updated TextField at index $index: $value");
+            });
+          },
+        ),
+      ),
+    );
+  }
+  //End------------Pgs Deliverables Status----------------------------------------------
+
+  ////------------------Kra for Pgs Delieverable Status--------------------
+  Widget _buildDropdownKraCellPGSDeliverableStatus(int index) {
+    // Initialize if not set
+    if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
+      selectedKRA[index] = options.first['id'];
+      selectedKRAObjects[index] = options.first;
+      debugPrint(
+        "Initialized selectedKRA for index $index with ID ${selectedKRA[index]}",
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: DropdownButtonFormField<int>(
+        isExpanded: true,
+        value: selectedKRA[index],
+        onChanged: (int? newValue) {
+          if (newValue == null) return;
+          setState(() {
+            selectedKRA[index] = newValue;
+            selectedKRAObjects[index] = options.firstWhere(
+              (option) => option['id'] == newValue,
+              orElse:
+                  () => {
+                    'id': 1,
+                    'name': 'Unknown',
+                    'description': '',
+                    'rowVersion': '',
+                  },
+            );
+            debugPrint("KRA changed for index $index ? KRAID: $newValue");
+          });
+        },
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(
+            horizontal: 12.0,
+            vertical: 10.0,
+          ),
+        ),
+        items:
+            options.map<DropdownMenuItem<int>>((option) {
+              return DropdownMenuItem<int>(
+                value: option['id'],
+                child: Text(
+                  option['name'],
+                  softWrap: true,
+                  overflow: TextOverflow.visible,
+                ),
+              );
+            }).toList(),
+        selectedItemBuilder: (BuildContext context) {
+          return options.map<Widget>((option) {
+            return Container(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                option['name'],
+                softWrap: true,
+                overflow: TextOverflow.visible,
+                style: const TextStyle(fontSize: 12),
+              ),
+            );
+          }).toList();
+        },
+        dropdownColor: Colors.white,
+        iconSize: 30.0,
+        itemHeight: 50.0,
+      ),
+    );
+  }
+
+  //Start---------------------Pgs Deliverable datepicker status---------------------------------------
+  Widget _buildDatePickerCellPgsDeliverableStatus(
+    int index,
+    Function setDialogState,
+  ) {
+    selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
+
+    if (selectedByWhen[index] == null ||
+        selectedByWhenControllers[index]?.text.isEmpty == true) {
+      DateTime now = DateTime.now();
+      String defaultDate = DateFormat('yyyy-MM-dd').format(now); // ISO format
+      selectedByWhen[index] = defaultDate;
+      selectedByWhenControllers[index]?.text = DateFormat(
+        'MMMM yyyy',
+      ).format(now);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: TextFormField(
+        controller: selectedByWhenControllers[index],
+        readOnly: true,
+        style: TextStyle(fontSize: 13.50),
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: primaryColor),
+          ),
+          contentPadding: EdgeInsets.all(8.0),
+          suffixIcon: Icon(Icons.calendar_today),
+        ),
+        onTap: () async {
+          DateTime? pickedDate = await showDatePicker(
+            context: context,
+            initialDate: DateTime.now(),
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2100),
+            builder: (context, child) {
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: ColorScheme.light(
+                    primary: primaryColor,
+                    onPrimary: secondaryColor,
+                  ),
+                  textButtonTheme: TextButtonThemeData(
+                    style: TextButton.styleFrom(foregroundColor: primaryColor),
+                  ),
+                ),
+                child: child!,
+              );
+            },
+          );
+          if (pickedDate != null) {
+            String formattedDate = DateFormat(
+              'yyyy-MM-dd',
+            ).format(pickedDate); // ISO format for saving
+            setDialogState(() {
+              selectedByWhen[index] = formattedDate;
+              selectedByWhenControllers[index]?.text = DateFormat(
+                'MMMM yyyy',
+              ).format(pickedDate); // User-friendly format
+            });
+          }
+        },
+      ),
+    );
+  }
+  //End---------------------Pgs Deliverable Status---------------------------------------
+
+  // Start-----------------------PGS Deliverable Status---------------------
+  // Dropdown field that allows changing PgsStatus for each row
+  Widget _buildDropdownCellStatusPgsDeliverableStatus(
+    int index,
+    VoidCallback setDialogState,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: DropdownButtonFormField<PgsStatus>(
+        value:
+            selectedStatus[index] ??
+            PgsStatus.notStarted, // Display current status for this row
+        onChanged: (PgsStatus? newValue) {
+          if (newValue != null) {
+            debugPrint(
+              'Selected Status for index $index: ${newValue.name}',
+            ); // Debug print
+            setDialogState(); // Trigger setState to update UI
+            setState(() {
+              selectedStatus[index] =
+                  newValue; // Update status for this row's index
+            });
+            saveStatusToDb(
+              index,
+              newValue,
+            ); // Save the selected status to the database
+          }
+        },
+        isExpanded: true,
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.all(8.0),
+        ),
+        items:
+            PgsStatus.values.map((PgsStatus value) {
+              return DropdownMenuItem<PgsStatus>(
+                value: value,
+                child: Text(value.name, style: const TextStyle(fontSize: 13)),
+              );
+            }).toList(),
+      ),
+    );
+  }
+  // End-----------------------PGS Deliverable Status---------------------
+
+  //Start------------Pgs Deliverables Status----------------------------------------------
+  Widget _buildExpandableTextAreaCellPGSDeliverable(int index) {
+    if (!deliverablesControllers.containsKey(index)) {
+      deliverablesControllers[index] = TextEditingController();
+      debugPrint("? Initialized new controller at index: $index");
+    }
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: 50.0),
+        child: TextField(
+          controller: deliverablesControllers[index],
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+          style: TextStyle(
+            fontSize: 14.0, // ?? Set your desired font size here
+          ),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.all(8.0),
+          ),
+          onChanged: (value) {
+            setState(() {
+              debugPrint("Updated TextField at index $index: $value");
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  //End------------Pgs Deliverables Status----------------------------------------------
 
   // Removed Rows
   Widget _buildRemoveButton(int index, Function setDialogState) {
