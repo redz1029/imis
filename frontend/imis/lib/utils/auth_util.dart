@@ -1,11 +1,9 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthUtil {
@@ -17,6 +15,7 @@ class AuthUtil {
   static const String isLoggedInKey = "isLoggedIn";
   static const String accessTokenKey = "accessToken";
   static const String refreshTokenKey = "refreshToken";
+  static const String pgsKey = "pgs";
 
   static Future<UserRegistration> storeUserAuth(
     Response<dynamic> response,
@@ -163,8 +162,8 @@ class AuthUtil {
             // Show alert dialog using navigatorKey.currentState?.context
             BuildContext? context = navigatorKey.currentState?.overlay?.context;
             if (context != null) {
-              // Show dialog and wait for user to press OK
               await showDialog(
+                // ignore: use_build_context_synchronously
                 context: context,
                 barrierDismissible: false,
                 builder:
