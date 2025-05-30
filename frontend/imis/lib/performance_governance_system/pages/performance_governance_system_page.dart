@@ -47,6 +47,7 @@ class _PerformanceGovernanceSystemPageState
   Map<int, Map<String, dynamic>> selectedKRAObjects = {};
   late Future<List<Map<String, dynamic>>> deliverables;
   Map<int, TextEditingController> remarksControllers = {};
+  Map<int, TextEditingController> percentageControllers = {};
   Map<int, PgsStatus> selectedStatus = {};
   Map<int, String> selectedValues = {};
   Map<int, String> selectedByWhen = {};
@@ -109,7 +110,7 @@ class _PerformanceGovernanceSystemPageState
   //For search controller
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
-  TextEditingController _reasonController = TextEditingController();
+  TextEditingController reasonController = TextEditingController();
 
   List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
   // ignore: non_constant_identifier_names
@@ -969,6 +970,39 @@ class _PerformanceGovernanceSystemPageState
     super.dispose();
   }
 
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this PGS? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                // await deleteTeam(id);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
@@ -1423,13 +1457,11 @@ class _PerformanceGovernanceSystemPageState
                                                         79,
                                                       ),
                                                     ),
-                                                    onPressed: () async {
-                                                      setState(() {
-                                                        filteredList.removeAt(
-                                                          index,
-                                                        );
-                                                      });
-                                                    },
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          pgsgovernancesystem['id']
+                                                              .toString(),
+                                                        ),
                                                   ),
                                                 ],
                                               ),
@@ -2288,6 +2320,7 @@ class _PerformanceGovernanceSystemPageState
                                             4: FlexColumnWidth(0.7),
                                             5: FlexColumnWidth(0.6),
                                             6: FlexColumnWidth(1.30),
+                                            7: FlexColumnWidth(0.5),
                                           },
                                           children: [
                                             _PgsDeliverableHeader(
@@ -3094,6 +3127,7 @@ class _PerformanceGovernanceSystemPageState
         ),
         BuildHeaderCell(text: ''),
         BuildHeaderCell(text: ''),
+        BuildHeaderCell(text: ''),
       ],
     );
   }
@@ -3112,6 +3146,7 @@ class _PerformanceGovernanceSystemPageState
         _buildSizedHeaderCell('WHEN', width: 90),
         _buildSizedHeaderCell('STATUS', width: 100),
         _buildSizedHeaderCell('REMARKS', width: 120),
+        _buildSizedHeaderCell('Percentage', width: 100),
       ],
     );
   }
@@ -3171,6 +3206,7 @@ class _PerformanceGovernanceSystemPageState
         _buildDatePickerCellPgsDeliverableStatus(index, setDialogState),
         _buildDropdownCellStatusPgsDeliverableStatus(index, () => (index)),
         _buildExpandableTextAreaRemarksCell(index),
+        _buildExpandableTextAreaPercentageCell(index),
       ],
     );
   }
@@ -3196,6 +3232,45 @@ class _PerformanceGovernanceSystemPageState
           ),
           decoration: InputDecoration(
             border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.all(8.0),
+          ),
+          onChanged: (value) {
+            setState(() {
+              debugPrint("Updated TextField at index $index: $value");
+            });
+          },
+        ),
+      ),
+    );
+  }
+  //End------------Pgs Deliverables Remarks----------------------------------------------
+
+  //Start------------Pgs Deliverables Remark ----------------------------------------------
+  Widget _buildExpandableTextAreaPercentageCell(int index) {
+    if (!percentageControllers.containsKey(index)) {
+      percentageControllers[index] = TextEditingController();
+      debugPrint("? Initialized new controller at index: $index");
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: 50.0),
+        child: TextField(
+          controller: percentageControllers[index],
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+          style: const TextStyle(
+            fontSize: 13.0, // ?? Set your desired font size here
+          ),
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(3),
+          ],
+
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            suffixText: '%',
             contentPadding: EdgeInsets.all(8.0),
           ),
           onChanged: (value) {
@@ -3501,7 +3576,7 @@ class _PerformanceGovernanceSystemPageState
               children: [
                 Text("Reason:", style: TextStyle(fontWeight: FontWeight.bold)),
                 TextField(
-                  controller: _reasonController,
+                  controller: reasonController,
                   decoration: InputDecoration(
                     hintText: "Enter your reason here...",
                     border: OutlineInputBorder(),
