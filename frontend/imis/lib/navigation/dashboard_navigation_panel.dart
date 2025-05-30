@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
+import 'package:imis/history/pages/history_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
@@ -57,6 +58,33 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     AuthUtil.setupDioInterceptors(dio, navigatorKey);
   }
 
+  // Future<void> _loadUserName() async {
+  //   UserRegistration? user = await AuthUtil.fetchLoggedUser();
+  //   List<String>? roleList = await AuthUtil.fetchRoles();
+
+  //   if (user != null) {
+  //     setState(() {
+  //       firstName = user.firstName ?? "firstName";
+  //       middleName = user.middleName ?? "middleName";
+  //       lastName = user.lastName ?? "lastName";
+
+  //       roles = roleList ?? [];
+  //       email = user.email ?? "email";
+  //       username = user.userName ?? "username";
+  //     });
+  //     if (roleList == null || roleList.isEmpty) {
+  //       MotionToast.error(
+  //         title: const Text("No Role Assigned"),
+  //         description: const Text(
+  //           "This user has no role assigned. Please contact the Administrator.",
+  //         ),
+  //         toastDuration: Duration(seconds: 10),
+  //         toastAlignment: Alignment.topCenter,
+  //         // ignore: use_build_context_synchronously
+  //       ).show(context);
+  //     }
+  //   }
+  // }
   Future<void> _loadUserName() async {
     UserRegistration? user = await AuthUtil.fetchLoggedUser();
     List<String>? roleList = await AuthUtil.fetchRoles();
@@ -66,17 +94,12 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
         firstName = user.firstName ?? "firstName";
         middleName = user.middleName ?? "middleName";
         lastName = user.lastName ?? "lastName";
-
+        email = user.email ?? "No email found"; // Make sure this is being set
+        username =
+            user.userName ?? "No username found"; // Make sure this is being set
         roles = roleList ?? [];
-        email = user.email ?? "email";
-        username = user.userName ?? "username";
-
-        // print("user.firstName: ${user.firstName}");
-        // print("user.middleName: ${user.middleName}");
-        // print("user.lastName: ${user.lastName}");
-        // print("user.email: ${user.email}");
-        // print("user.userName: ${user.userName}");
       });
+
       if (roleList == null || roleList.isEmpty) {
         MotionToast.error(
           title: const Text("No Role Assigned"),
@@ -242,7 +265,8 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        username != "username" ? username : "No username found",
+                        // username != "username" ? username : "No username found",
+                        username,
                       ),
                     ],
                   ),
@@ -467,11 +491,18 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     () => _setScreen(HomePage(), 0),
                   ),
                   _buildListTile(
+                    Icons.history,
+                    'History',
+                    16,
+                    () => _setScreen(HistoryPage(), 16),
+                  ),
+                  _buildListTile(
                     Icons.file_copy,
                     'Performance Governance System',
                     1,
                     () => _setScreen(PerformanceGovernanceSystemPage(), 1),
                   ),
+
                   Theme(
                     data: Theme.of(context).copyWith(dividerColor: lightGrey),
                     child: ExpansionTile(

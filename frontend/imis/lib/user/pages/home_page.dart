@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
@@ -103,7 +104,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: mainBgColor,
-      appBar: AppBar(title: Text("Dashboard"), backgroundColor: mainBgColor),
+
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -112,62 +113,132 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  flex: 3,
+                  flex: 2,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(
+                        "Analytical Overview",
+                        style: TextStyle(fontSize: 20),
+                      ),
+                      gap,
                       Padding(
-                        padding: const EdgeInsets.only(bottom: 8.0),
-                        child: Text(
-                          office.join(', '),
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: primaryTextColor,
-                          ),
+                        padding: const EdgeInsets.only(bottom: 4.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                office.join(', '),
+                                style: TextStyle(fontSize: 14, color: grey),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(width: 16), // space from the edge
+                            PopupMenuButton<String>(
+                              color: mainBgColor,
+                              onSelected: (String value) {
+                                // Handle selection here
+                              },
+                              itemBuilder:
+                                  (BuildContext context) =>
+                                      <PopupMenuEntry<String>>[
+                                        const PopupMenuItem<String>(
+                                          value: 'Option 1',
+                                          child: Text('Option 1'),
+                                        ),
+                                        const PopupMenuItem<String>(
+                                          value: 'Option 2',
+                                          child: Text('Option 2'),
+                                        ),
+                                      ],
+                              offset: Offset(
+                                0,
+                                30,
+                              ), // Adjust dropdown position if needed
+                              child: Container(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: mainBgColor,
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.filter_list,
+                                      size: 16,
+                                      color: grey,
+                                    ),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      "Filter by",
+                                      style: TextStyle(fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+
                       gap,
                       Row(
                         children: [
                           Expanded(
                             child: _buildDashboardBox(
-                              "Submitted",
+                              "Total Users",
+                              Colors.blue,
+                              "25",
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildDashboardBox(
+                              "Total Auditors",
+                              Colors.green,
+                              "25",
+                            ),
+                          ),
+                          Expanded(
+                            child: _buildDashboardBox(
+                              "Total Team",
                               Colors.purple,
                               "25",
                             ),
                           ),
                           Expanded(
                             child: _buildDashboardBox(
-                              "Disapproved",
-                              Colors.red,
-                              "10",
-                            ),
-                          ),
-                          SizedBox(width: 10),
-
-                          SizedBox(width: 10),
-                          Expanded(
-                            child: _buildDashboardBox(
-                              "Approved",
-                              Colors.green,
-                              "40",
+                              "Total Office",
+                              const Color.fromARGB(255, 194, 106, 47),
+                              "25",
                             ),
                           ),
                         ],
                       ),
                       SizedBox(height: 20),
                       _buildPerformanceIndicators(),
-                      // SizedBox(height: 20),
-                      // _buildTeam(),
+                      SizedBox(height: 20),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: SizedBox(
+                          width: 500,
+                          child: _buildStatusWidget(),
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 SizedBox(width: 20),
 
-                // Right side (calendar and total users card)
                 Column(
                   children: [
+                    SizedBox(height: 40),
                     Card(
                       elevation: 4,
                       shape: RoundedRectangleBorder(
@@ -252,36 +323,6 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     SizedBox(height: 10),
-                    Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      clipBehavior: Clip.antiAlias,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                "75",
-                                style: TextStyle(
-                                  fontSize: 36,
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryColor,
-                                ),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                "Total of Users",
-                                style: TextStyle(fontSize: 14),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ],
@@ -372,44 +413,63 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildTeam() {
+  Widget _buildStatusWidget() {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Container(
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: mainBgColor, // Dark background for sleek design
+          color: mainBgColor,
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Column(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Text(
-            //   "Deliverables",
-            //   style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-            // ),
-            // Divider(color: lightGrey),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Auditor Team",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 16),
-                _buildAgeBar(" Team 1", 0.23, Colors.pink, "21K", "23%"),
-                _buildAgeBar("Team 2", 0.60, Colors.blue, "64K", "60%"),
-                _buildAgeBar("Team 3", 0.16, Colors.green, "18K", "16%"),
-                _buildAgeBar("Team 4", 0.08, Colors.purple, "5K", "8%"),
-              ],
+            // Status list
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Status",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(height: 16),
+                  _buildStatus(
+                    "Approved",
+                    0.23,
+                    const Color.fromARGB(255, 78, 151, 79),
+                    "21K",
+                    "23%",
+                  ),
+                  _buildStatus(
+                    "Disapproved",
+                    0.60,
+                    const Color.fromARGB(255, 165, 88, 82),
+                    "64K",
+                    "60%",
+                  ),
+                  _buildStatus(
+                    "In Progress",
+                    0.16,
+                    const Color.fromARGB(255, 199, 165, 11),
+                    "18K",
+                    "16%",
+                  ),
+                ],
+              ),
             ),
+            SizedBox(width: 16),
+            // Chart
+            _buildPieChart(),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildAgeBar(
+  Widget _buildStatus(
     String label,
     double percentage,
     Color color,
@@ -431,6 +491,54 @@ class _HomePageState extends State<HomePage> {
           SizedBox(width: 10),
           Text(percentText, style: TextStyle(color: Colors.grey)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildPieChart() {
+    return SizedBox(
+      width: 150,
+      height: 150,
+      child: PieChart(
+        PieChartData(
+          centerSpaceRadius: 35,
+          sectionsSpace: 3,
+          sections: [
+            PieChartSectionData(
+              color: const Color.fromARGB(255, 78, 151, 79),
+              value: 23,
+              title: '23%',
+              radius: 40,
+              titleStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            PieChartSectionData(
+              color: const Color.fromARGB(255, 170, 77, 72),
+              value: 60,
+              title: '60%',
+              radius: 40,
+              titleStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            PieChartSectionData(
+              color: const Color.fromARGB(255, 199, 165, 11),
+              value: 16,
+              title: '16%',
+              radius: 40,
+              titleStyle: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
