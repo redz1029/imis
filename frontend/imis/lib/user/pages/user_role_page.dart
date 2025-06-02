@@ -5,6 +5,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_role.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart'; // For firstWhereOrNull
@@ -38,7 +39,7 @@ class _UserRolePageState extends State<UserRolePage> {
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
-
+  late FilterSearchResultUtil<UserRoles> userRoleSearchUtil;
   bool _isLoading = false;
 
   final TextEditingController searchController = TextEditingController();
@@ -313,6 +314,7 @@ class _UserRolePageState extends State<UserRolePage> {
     printUserOfficeWithOfficeName();
     fetchUserList();
     printUserNameWithUserName();
+
     if (filteredListRole.isNotEmpty) {
       _selectedRoleId = filteredListRole[0]['id'].toString();
     }
@@ -330,6 +332,30 @@ class _UserRolePageState extends State<UserRolePage> {
     super.dispose();
   }
 
+  // void filterSearchResults(String query) {
+  //   final lowerQuery = query.toLowerCase();
+
+  //   setState(() {
+  //     filteredList =
+  //         userRoleList.where((userRole) {
+  //           final user = userList.firstWhereOrNull(
+  //             (u) => u.id == userRole.userId,
+  //           );
+
+  //           final role = rolenameList.firstWhereOrNull(
+  //             (r) => r.id == userRole.roleId,
+  //           );
+  //           if (user == null || role == null) return false;
+
+  //           final userFullName = user.fullName.toLowerCase();
+  //           final roleName = role.name.toLowerCase();
+
+  //           return userFullName.contains(lowerQuery) ||
+  //               roleName.contains(lowerQuery);
+  //         }).toList();
+  //   });
+  // }
+
   void filterSearchResults(String query) {
     final lowerQuery = query.toLowerCase();
 
@@ -339,10 +365,10 @@ class _UserRolePageState extends State<UserRolePage> {
             final user = userList.firstWhereOrNull(
               (u) => u.id == userRole.userId,
             );
-
             final role = rolenameList.firstWhereOrNull(
               (r) => r.id == userRole.roleId,
             );
+
             if (user == null || role == null) return false;
 
             final userFullName = user.fullName.toLowerCase();

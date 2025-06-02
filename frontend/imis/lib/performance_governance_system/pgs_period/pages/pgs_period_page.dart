@@ -132,20 +132,22 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
   //   });
   // }
   Future<void> filterSearchResults(String query) async {
-    final searchStr = (query ?? '').trim();
+    final searchStr = (query).trim();
 
     final results = await pgsPeriodSearchUtil.filter(searchStr, (
       pgsperiod,
       search,
     ) {
-      final searchText = search ?? '';
+      final searchText = search;
       final start =
+          // ignore: unnecessary_null_comparison
           pgsperiod.startDate != null
               ? DateTimeConverter.dateFormat.format(pgsperiod.startDate)
               : '';
       final end =
+          // ignore: unnecessary_null_comparison
           pgsperiod.endDate != null
-              ? DateTimeConverter.dateFormat.format(pgsperiod.endDate!)
+              ? DateTimeConverter.dateFormat.format(pgsperiod.endDate)
               : '';
 
       return start.contains(searchText) || end.contains(searchText);
