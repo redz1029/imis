@@ -57,6 +57,7 @@ namespace IMIS.Persistence.PgsPeriodModule
                 {                   
                     existingPeriod.StartDate = pgsPeriodDto.StartDate;
                     existingPeriod.EndDate = pgsPeriodDto.EndDate;
+                    existingPeriod.Remarks = pgsPeriodDto.Remarks;
 
                     // Update the existing entity
                     pgsPeriodEntity = existingPeriod;
