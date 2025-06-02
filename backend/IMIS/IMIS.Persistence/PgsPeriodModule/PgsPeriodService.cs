@@ -29,7 +29,8 @@ namespace IMIS.Persistence.PgsPeriodModule
             {
                 Id = period.Id,
                 StartDate = period.StartDate,
-                EndDate = period.EndDate
+                EndDate = period.EndDate,
+                Remarks = period.Remarks,
             };
         }
         public async Task<PgsPeriodDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -76,7 +77,8 @@ namespace IMIS.Persistence.PgsPeriodModule
             {
                 Id = savedPgsPeriod.Id,
                 StartDate = savedPgsPeriod.StartDate,
-                EndDate = savedPgsPeriod.EndDate
+                EndDate = savedPgsPeriod.EndDate,
+                Remarks = savedPgsPeriod.Remarks,
             };
         }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> pgsPeriodDto, CancellationToken cancellationToken) where TEntity : Entity<TId>
