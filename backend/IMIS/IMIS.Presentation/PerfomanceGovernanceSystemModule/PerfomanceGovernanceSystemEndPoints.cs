@@ -1,8 +1,6 @@
 ﻿using Carter;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
-using IMIS.Application.TeamModule;
-using IMIS.Infrastructure.Auths;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -86,7 +84,31 @@ namespace IMIS.Presentation.PgsModuleAPI
             })
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-            
+
+            app.MapGet("/list-report/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            {
+                // Get single report data by id
+                var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
+                //Wrap in enumerable for the report -or empty if null
+                var data = performanceGovernanceSystem != null
+                    ? new[] { performanceGovernanceSystem }
+                    : Enumerable.Empty<ReportPerfomanceGovernanceSystemDto>();
+
+                // Generate the web report (dataSourceName should match your report's datasource name)
+                var webReport = await ReportUtil.GenerateWebReport<ReportPerfomanceGovernanceSystemDto>(
+                    "PerfomanceGovernanceSystem",
+                    data,
+                    "PerfomanceGovernanceSystem"
+                ).ConfigureAwait(false);
+
+                // Return HTML content of the report
+                return Results.Content(webReport.ToString(), "text/html", statusCode: 200);
+               
+            })
+            .WithTags(_pgsTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
             app.MapGet("/page", async (int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
                 var paginatedPerformanceGovernanceSystem = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);

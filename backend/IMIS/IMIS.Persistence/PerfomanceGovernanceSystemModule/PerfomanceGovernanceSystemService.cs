@@ -109,7 +109,8 @@ namespace IMIS.Persistence.PgsModule
                     {
                         Id = perfomanceGovernanceSystem.PgsPeriod.Id,
                         StartDate = perfomanceGovernanceSystem.PgsPeriod.StartDate,
-                        EndDate = perfomanceGovernanceSystem.PgsPeriod.EndDate
+                        EndDate = perfomanceGovernanceSystem.PgsPeriod.EndDate,
+                        Remarks = perfomanceGovernanceSystem.PgsPeriod.Remarks
                     } : null,
 
                     Office = perfomanceGovernanceSystem.Office != null ? new OfficeDto

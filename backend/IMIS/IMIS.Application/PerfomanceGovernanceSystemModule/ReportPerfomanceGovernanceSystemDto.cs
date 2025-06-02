@@ -14,17 +14,18 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
     public class ReportPerfomanceGovernanceSystemDto : BaseDto<PerfomanceGovernanceSystem, long>
     {
         public required PgsPeriodDto PgsPeriod { get; set; }
-        public DateOnly StartDate => PgsPeriod.StartDate; 
-        public DateOnly EndDate => PgsPeriod.EndDate; 
+        public DateOnly StartDate => PgsPeriod.StartDate;
+        public DateOnly EndDate => PgsPeriod.EndDate;
+        public string? PgsPeriodRemarks => PgsPeriod?.Remarks;
         public required OfficeDto Office { get; set; }
-        public string? OfficeName => Office?.Name; 
-        public string? Remarks { get; set; }   
+        public string? OfficeName => Office?.Name;
+        public string? Remarks { get; set; }
         public List<ReportPGSDeliverableDto>? PgsDeliverables { get; set; }
         public PgsReadinessRatingDto? PgsReadinessRating { get; set; }
         public double CompetenceToDeliver => PgsReadinessRating!.CompetenceToDeliver;
         public double ResourceAvailability => PgsReadinessRating!.ResourceAvailability;
-        public double ConfidenceToDeliver => PgsReadinessRating!.ConfidenceToDeliver;     
-        public required double PercentDeliverables { get; set; }     
+        public double ConfidenceToDeliver => PgsReadinessRating!.ConfidenceToDeliver;
+        public required double PercentDeliverables { get; set; }
         public List<ReportPgsSignatoryDto>? PgsSignatories { get; set; }
 
         public string? PgsSignatoryLabel1 =>
@@ -44,7 +45,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
 
         public string? PgsSignatoryId1 =>
             PgsSignatories != null && PgsSignatories.Count >= 1 && PgsSignatories[0].User != null // -- Map Signatories: User FirstName, MiddleName, LastName
-            ? PgsSignatories[0].User!.FirstName +' '+ PgsSignatories[0].User!.MiddleName +' '+ PgsSignatories[0].User!.LastName
+            ? PgsSignatories[0].User!.FirstName + ' ' + PgsSignatories[0].User!.MiddleName + ' ' + PgsSignatories[0].User!.LastName
             : null;
 
         public string? PgsSignatoryId2 =>
@@ -64,13 +65,13 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
             this.Id = perfomanceGovernanceSystem.Id;
             this.Remarks = perfomanceGovernanceSystem.Remarks;
             this.PgsPeriod = perfomanceGovernanceSystem.PgsPeriod != null ? new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod) : null;
-            this.Office = perfomanceGovernanceSystem.Office != null ? new OfficeDto(perfomanceGovernanceSystem.Office) : null;          
+            this.Office = perfomanceGovernanceSystem.Office != null ? new OfficeDto(perfomanceGovernanceSystem.Office) : null;
             this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(d => new ReportPGSDeliverableDto(d)).ToList();
             this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;
             this.PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?
             .Select(s =>
             {
-                var user = users.FirstOrDefault(u => u.Id == s.SignatoryId); 
+                var user = users.FirstOrDefault(u => u.Id == s.SignatoryId);
                 return new ReportPgsSignatoryDto
                 {
                     Id = s.Id,
@@ -85,7 +86,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
                             SignatoryLabel = s.PgsSignatoryTemplate.SignatoryLabel,
                         }
                         : null,
-                        User = user != null
+                    User = user != null
                         ? new User
                         {
                             Id = user.Id,
@@ -94,7 +95,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
                             LastName = user.LastName,
                             Prefix = user.Prefix,
                             Suffix = user.Suffix,
-                            Position = user.Position,                            
+                            Position = user.Position,
                         }
                         : null
                 };
@@ -110,9 +111,10 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
                 Remarks = Remarks,
                 PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),
                 PgsReadinessRating = PgsReadinessRating!.ToEntity(),
-                PercentDeliverables = PercentDeliverables,               
+                PercentDeliverables = PercentDeliverables,
                 PgsSignatories = PgsSignatories?.Select(s => s.ToEntity()).ToList()
             };
         }
     }
 }
+

@@ -34,11 +34,11 @@ namespace IMIS.Infrastructure.Reports
         }
 
         private static async Task<byte[]> ExportPdf(Report report, CancellationToken cancellationToken)
-        {            
+        {
             report.Prepare();
             using (MemoryStream ms = new())
             {
-                PDFSimpleExport pdf = new();    
+                PDFSimpleExport pdf = new();
                 pdf.Export(report, ms);
                 await ms.FlushAsync(cancellationToken)
                     .ConfigureAwait(false);
@@ -48,17 +48,25 @@ namespace IMIS.Infrastructure.Reports
         }
 
         public static async Task<HtmlString> GenerateWebReport<T>(string reportName, IEnumerable<T>? data = null, string? dataSouceName = null)
-        {
+        {           
+            var reportDefinition = LoadReport(reportName);
+
+            if (reportDefinition == null)
+                throw new InvalidOperationException("Failed to load report definition.");
+
             WebReport report = new()
             {
-                Report = LoadReport(reportName),
+                Report = reportDefinition,
                 Mode = WebReportMode.Preview,
             };
 
             if (data != null)
-                report.Report.RegisterData(data, dataSouceName);
+            {
+                report.Report.RegisterData(data, dataSouceName ?? typeof(T).Name);
+            }
 
             return await report.Render().ConfigureAwait(false);
         }
     }
 }
+
