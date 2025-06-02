@@ -57,11 +57,9 @@ class _UserProfileState extends State<UserProfilePage> {
   //Job Position Dropdown
   String? selectedPosition;
   final List<String> jobPositions = [
-    'Admin',
-    'Head Admin',
-    'Super Admin',
-    'Nurse',
-    'Secretary',
+    'Head, Department of Surgery',
+    'Chief of Medical Professional Staff II',
+    'Medical Center Chief II',
   ];
 
   Future<void> fetchUserProfile({int page = 1, String? searchQuery}) async {

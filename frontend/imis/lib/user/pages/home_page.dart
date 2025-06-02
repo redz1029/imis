@@ -1,8 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
+import 'package:imis/team/models/team.dart';
+import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
@@ -23,21 +27,161 @@ class _HomePageState extends State<HomePage> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   List<PgsDeliverables> _deliverablesList = [];
+
+  List<User> userList = [];
+  List<User> filteredListUser = [];
+  int totalUsers = 0;
+
   List<String> office = [];
 
+  List<Office> officeList = [];
+  List<Office> filteredListOffice = [];
+  int totalOffices = 0;
+
+  List<Team> teamList = [];
+  List<Team> filteredListTeam = [];
+  int totalTeam = 0;
+
+  List<Auditor> auditorList = [];
+  List<Auditor> filteredListAuditor = [];
+  int totalAuditor = 0;
+
   final int maxDeliverables = 100;
+
+  final dio = Dio();
+
+  //fetch Users
+  Future<void> fetchUser() async {
+    var url = ApiEndpoint().users;
+    try {
+      final response = await dio.get(url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<User> data =
+            (response.data as List)
+                .map(
+                  (userJson) => User.fromJson(userJson as Map<String, dynamic>),
+                )
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            userList = data;
+            filteredListUser = List.from(userList);
+            totalUsers = userList.length;
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format");
+      }
+    } catch (e) {
+      debugPrint("Error fetching user: $e");
+    }
+  }
+
+  //fetch office
+  Future<void> fecthOffice() async {
+    var url = ApiEndpoint().office;
+    try {
+      final response = await dio.get(url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<Office> data =
+            (response.data as List)
+                .map(
+                  (userJson) =>
+                      Office.fromJson(userJson as Map<String, dynamic>),
+                )
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            officeList = data;
+            filteredListOffice = List.from(officeList);
+            totalOffices = officeList.length;
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format");
+      }
+    } catch (e) {
+      debugPrint("Error fetching user: $e");
+    }
+  }
+
+  //team
+  Future<void> fetchTeam() async {
+    var url = ApiEndpoint().team;
+    try {
+      final response = await dio.get(url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<Team> data =
+            (response.data as List)
+                .map(
+                  (userJson) => Team.fromJson(userJson as Map<String, dynamic>),
+                )
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            teamList = data;
+            filteredListTeam = List.from(teamList);
+            totalTeam = teamList.length;
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format");
+      }
+    } catch (e) {
+      debugPrint("Error fetching user: $e");
+    }
+  }
+
+  //Auditors
+  Future<void> fetchAuditors() async {
+    var url = ApiEndpoint().auditor;
+    try {
+      final response = await dio.get(url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<Auditor> data =
+            (response.data as List)
+                .map(
+                  (userJson) =>
+                      Auditor.fromJson(userJson as Map<String, dynamic>),
+                )
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            auditorList = data;
+            filteredListAuditor = List.from(auditorList);
+            totalAuditor = auditorList.length;
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format");
+      }
+    } catch (e) {
+      debugPrint("Error fetching user: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _loadUserName();
+    fetchUser();
+    fecthOffice();
+    fetchTeam();
+    fetchAuditors();
     // fetchDeliverables(pgsId: '250210').then((deliverables) {
     //   setState(() {
     //     _deliverablesList = deliverables;
     //   });
     // });
   }
-
-  final dio = Dio();
 
   Future<void> _loadUserName() async {
     UserRegistration? user = await AuthUtil.fetchLoggedUser();
@@ -195,28 +339,28 @@ class _HomePageState extends State<HomePage> {
                             child: _buildDashboardBox(
                               "Total Users",
                               Colors.blue,
-                              "25",
+                              totalUsers.toString(),
                             ),
                           ),
                           Expanded(
                             child: _buildDashboardBox(
                               "Total Auditors",
                               Colors.green,
-                              "25",
+                              totalAuditor.toString(),
                             ),
                           ),
                           Expanded(
                             child: _buildDashboardBox(
-                              "Total Team",
+                              "Total Teams",
                               Colors.purple,
-                              "25",
+                              totalTeam.toString(),
                             ),
                           ),
                           Expanded(
                             child: _buildDashboardBox(
-                              "Total Office",
+                              "Total Offices",
                               const Color.fromARGB(255, 194, 106, 47),
-                              "25",
+                              totalOffices.toString(),
                             ),
                           ),
                         ],
