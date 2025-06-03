@@ -7,6 +7,8 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
+import '../../../utils/http_util.dart';
+
 class PgsPeriodPage extends StatefulWidget {
   const PgsPeriodPage({super.key});
 
@@ -82,7 +84,11 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
   Future<void> addOrUpdatePGSPeriod(PgsPeriod period) async {
     var url = ApiEndpoint().pgsperiod;
     try {
-      final response = await dio.post(url, data: period.toJson());
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: period.toJson(),
+      );
       if (response.statusCode == 201) {
         await fetchPGSPeriods();
         setState(() {
@@ -97,7 +103,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
   Future<void> deletePGSPeriod(String kraId) async {
     var url = ApiEndpoint().pgsperiod;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchPGSPeriods();

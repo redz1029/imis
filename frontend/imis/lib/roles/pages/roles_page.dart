@@ -6,6 +6,8 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
+import '../../utils/http_util.dart';
+
 class RolesPage extends StatefulWidget {
   const RolesPage({super.key});
 
@@ -67,10 +69,10 @@ class _RolesPageState extends State<RolesPage> {
     final url = '${ApiEndpoint().roles}/$roleId';
 
     try {
-      final response = await dio.put(
+      final response = await AuthenticatedRequest.put(
+        dio,
         url,
         data: '"$newRoleName"',
-        options: Options(contentType: Headers.jsonContentType),
       );
 
       if (response.statusCode == 200) {
@@ -87,12 +89,10 @@ class _RolesPageState extends State<RolesPage> {
   Future<void> addRole(String roleName) async {
     var url = ApiEndpoint().roles;
     try {
-      final response = await dio.post(
+      final response = await AuthenticatedRequest.post(
+        dio,
         url,
         data: '"$roleName"',
-        options: Options(
-          headers: {Headers.contentTypeHeader: Headers.jsonContentType},
-        ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -108,7 +108,7 @@ class _RolesPageState extends State<RolesPage> {
   Future<void> deleteRoles(String kraId) async {
     var url = ApiEndpoint().keyresult;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchRoles();

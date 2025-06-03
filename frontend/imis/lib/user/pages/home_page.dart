@@ -26,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<PgsDeliverables> _deliverablesList = [];
+  final List<PgsDeliverables> _deliverablesList = [];
 
   List<User> userList = [];
   List<User> filteredListUser = [];

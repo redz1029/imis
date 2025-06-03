@@ -6,6 +6,8 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
+import '../../../utils/http_util.dart';
+
 class KeyResultAreaPage extends StatefulWidget {
   const KeyResultAreaPage({super.key});
 
@@ -76,7 +78,11 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
   Future<void> addOrUpdateKRA(KeyResultArea kra) async {
     var url = ApiEndpoint().keyresult;
     try {
-      final response = await dio.post(url, data: kra.toJson());
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: kra.toJson(),
+      );
 
       if (response.statusCode == 201) {
         await fetchKRAs();
@@ -94,7 +100,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
   Future<void> deleteKRA(String kraId) async {
     var url = ApiEndpoint().keyresult;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchKRAs();
@@ -226,12 +232,12 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please fill out this field';
-                      }
-                      return null;
-                    },
+                    // validator: (value) {
+                    //   if (value == null || value.trim().isEmpty) {
+                    //     return 'Please fill out this field';
+                    //   }
+                    //   return null;
+                    // },
                   ),
                 ),
               ],

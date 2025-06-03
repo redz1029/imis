@@ -28,6 +28,8 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../utils/http_util.dart';
+
 class PerformanceGovernanceSystemPage extends StatefulWidget {
   const PerformanceGovernanceSystemPage({super.key});
 
@@ -167,25 +169,13 @@ class _PerformanceGovernanceSystemPageState
     var url = ApiEndpoint().performancegovernancesystem;
 
     try {
-      AuthUtil.setupDioInterceptors(dio, navigatorKey);
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
 
       final requestData = audit.toJson();
-      final response = await dio.post(
+      final response = await AuthenticatedRequest.post(
+        dio,
         url,
         data: requestData,
-        options: Options(
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
-          },
-        ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -275,7 +265,7 @@ class _PerformanceGovernanceSystemPageState
     var url = ApiEndpoint().signatoryTemplate;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<PgsSignatoryTemplate> data =
@@ -305,7 +295,7 @@ class _PerformanceGovernanceSystemPageState
   Future<void> fetchUser() async {
     var url = ApiEndpoint().users;
     try {
-      final response = await dio.get(url);
+      final response = await AuthenticatedRequest.get(dio, url);
       if (response.statusCode == 200 && response.data is List) {
         List<User> data =
             (response.data as List)
@@ -428,18 +418,7 @@ class _PerformanceGovernanceSystemPageState
     debugPrint("Fetching deliverables for PGS ID: $pgsId");
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return [];
-      }
-
-      final response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -616,10 +595,6 @@ class _PerformanceGovernanceSystemPageState
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-        },
         fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
       );
 

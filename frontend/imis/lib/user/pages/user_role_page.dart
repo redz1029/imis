@@ -8,7 +8,8 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
-import 'package:collection/collection.dart'; // For firstWhereOrNull
+import 'package:collection/collection.dart';
+import '../../utils/http_util.dart';
 
 class UserRolePage extends StatefulWidget {
   const UserRolePage({super.key});
@@ -53,7 +54,8 @@ class _UserRolePageState extends State<UserRolePage> {
 
     try {
       final int usersPerFetch = 50;
-      final response = await dio.get(
+      final response = await AuthenticatedRequest.get(
+        dio,
         '${ApiEndpoint().userRole}?page=1&pageSize=$usersPerFetch',
       );
 
@@ -107,7 +109,7 @@ class _UserRolePageState extends State<UserRolePage> {
     var url = ApiEndpoint().roles;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
       debugPrint("Raw Office response: ${response.data}");
 
       if (response.statusCode == 200 && response.data is List) {
@@ -128,7 +130,7 @@ class _UserRolePageState extends State<UserRolePage> {
     var url = ApiEndpoint().users;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
       debugPrint("Raw User response: ${response.data}");
 
       if (response.statusCode == 200 && response.data is List) {
@@ -183,7 +185,11 @@ class _UserRolePageState extends State<UserRolePage> {
     final url = ApiEndpoint().userRole;
 
     try {
-      final response = await dio.post(url, data: userRole.toJson());
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: userRole.toJson(),
+      );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         debugPrint("Save successful");
@@ -201,10 +207,7 @@ class _UserRolePageState extends State<UserRolePage> {
         '${ApiEndpoint().updateUserRole}?userId=$userId&newRoleId=$roleId';
 
     try {
-      final response = await dio.put(
-        url,
-        options: Options(contentType: Headers.jsonContentType),
-      );
+      final response = await AuthenticatedRequest.put(dio, url);
 
       if (response.statusCode == 200) {
         debugPrint("Role updated successfully: ${response.data}");
@@ -230,10 +233,7 @@ class _UserRolePageState extends State<UserRolePage> {
         return;
       }
 
-      final response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Roles> data =
@@ -267,7 +267,7 @@ class _UserRolePageState extends State<UserRolePage> {
   Future<void> fetchUser() async {
     var url = ApiEndpoint().users;
     try {
-      final response = await dio.get(url);
+      final response = await AuthenticatedRequest.get(dio, url);
       if (response.statusCode == 200 && response.data is List) {
         List<User> data =
             (response.data as List)
@@ -294,7 +294,7 @@ class _UserRolePageState extends State<UserRolePage> {
   Future<void> deleteUserRole(String kraId) async {
     var url = ApiEndpoint().keyresult;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchRole();

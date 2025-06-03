@@ -4,8 +4,8 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
+import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class OfficePage extends StatefulWidget {
   const OfficePage({super.key});
@@ -71,24 +71,11 @@ class _OfficePageState extends State<OfficePage> {
     var url = ApiEndpoint().office;
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
-
       final Map<String, dynamic> requestData = office.toJson();
-      final response = await dio.post(
+      final response = await AuthenticatedRequest.post(
+        dio,
         url,
         data: requestData,
-        options: Options(
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
-          },
-        ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -106,7 +93,7 @@ class _OfficePageState extends State<OfficePage> {
   Future<void> deleteOffice(String kraId) async {
     var url = ApiEndpoint().keyresult;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchOffices();

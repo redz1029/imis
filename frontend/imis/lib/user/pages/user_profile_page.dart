@@ -6,6 +6,8 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 
+import '../../utils/http_util.dart';
+
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
 
@@ -97,7 +99,11 @@ class _UserProfileState extends State<UserProfilePage> {
   Future<void> addOrUpdateUserProfile(UserRegistration userProfile) async {
     var url = ApiEndpoint().register;
     try {
-      final response = await dio.post(url, data: userProfile.toJson());
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: userProfile.toJson(),
+      );
       debugPrint("Sent data: ${userProfile.toJson()}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -124,7 +130,11 @@ class _UserProfileState extends State<UserProfilePage> {
   Future<void> updateUserProfile(UserRegistration userProfile) async {
     var url = ApiEndpoint().updateUser;
     try {
-      final response = await dio.put(url, data: userProfile.toJson());
+      final response = await AuthenticatedRequest.put(
+        dio,
+        url,
+        data: userProfile.toJson(),
+      );
       debugPrint("Sent data: ${userProfile.toJson()}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {

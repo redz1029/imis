@@ -1,11 +1,14 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/auth_util.dart';
+
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+
+import '../../utils/http_util.dart';
 
 class TeamPage extends StatefulWidget {
   const TeamPage({super.key});
@@ -30,7 +33,7 @@ class _TeamPageState extends State<TeamPage> {
   int _totalCount = 0;
   bool _isLoading = false;
 
-  final dio = Dio();
+  final Dio dio = Dio();
 
   Future<void> fetchTeam({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
@@ -38,23 +41,12 @@ class _TeamPageState extends State<TeamPage> {
     setState(() => _isLoading = true);
 
     try {
-      String? token = await AuthUtil.fetchAccessToken();
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Access token is missing");
-        return;
-      }
-
       final pageList = await _paginationUtils.fetchPaginatedData<Team>(
         endpoint: ApiEndpoint().team,
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
         fromJson: (json) => Team.fromJson(json),
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-        },
       );
 
       if (mounted) {
@@ -77,7 +69,11 @@ class _TeamPageState extends State<TeamPage> {
   Future<void> addOrUpdateTeam(Team team) async {
     var url = ApiEndpoint().team;
     try {
-      final response = await dio.post(url, data: team.toJson());
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: team.toJson(),
+      );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         await fetchTeam();
@@ -93,7 +89,11 @@ class _TeamPageState extends State<TeamPage> {
     var url = ApiEndpoint().team;
 
     try {
-      final response = await dio.put(url, data: {"isDeleted": true});
+      final response = await AuthenticatedRequest.put(
+        dio,
+        url,
+        data: {"isDeleted": true},
+      );
 
       if (response.statusCode == 200) {
         setState(() {
