@@ -1,6 +1,8 @@
-import 'package:dio/dio.dart';
 import 'package:imis/utils/page_list.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:dio/dio.dart';
+
+import 'http_util.dart';
 
 class PaginationUtil {
   final Dio dio;
@@ -13,27 +15,22 @@ class PaginationUtil {
     int pageSize = 15,
     String? searchQuery,
     Map<String, dynamic>? additionalParams,
-    Map<String, dynamic>? headers,
+
     required T Function(Map<String, dynamic>) fromJson,
   }) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('accessToken');
-
-      final combinedHeaders = {
-        "Authorization": "Bearer $token",
-        "Content-Type": "application/json",
-        ...?headers,
+      final queryParams = {
+        'page': page,
+        'pageSize': pageSize,
+        if (searchQuery != null && searchQuery.isNotEmpty)
+          'search': searchQuery,
+        ...?additionalParams,
       };
 
-      final response = await dio.get(
+      final response = await AuthenticatedRequest.get(
+        dio,
         endpoint,
-        queryParameters: {
-          if (searchQuery != null && searchQuery.isNotEmpty)
-            'search': searchQuery,
-          ...?additionalParams,
-        },
-        options: Options(headers: combinedHeaders),
+        queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {
@@ -41,8 +38,7 @@ class PaginationUtil {
         int totalCount = allItems.length;
 
         int startIndex = (page - 1) * pageSize;
-        int endIndex = startIndex + pageSize;
-        if (endIndex > totalCount) endIndex = totalCount;
+        int endIndex = (startIndex + pageSize).clamp(0, totalCount);
 
         List<dynamic> pageItems = allItems.sublist(startIndex, endIndex);
 
