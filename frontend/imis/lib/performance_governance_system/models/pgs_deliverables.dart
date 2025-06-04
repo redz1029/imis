@@ -15,6 +15,7 @@ class PgsDeliverables {
 
   bool isDirect;
   String deliverableName;
+  String kraDescription;
 
   @JsonKey()
   @DateTimeConverter()
@@ -33,6 +34,7 @@ class PgsDeliverables {
     this.kra,
     this.kraId,
     this.deliverableName,
+    this.kraDescription,
     this.isDirect,
     this.byWhen,
     this.percentDeliverables,

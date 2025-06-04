@@ -27,7 +27,6 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../utils/http_util.dart';
 
 class PerformanceGovernanceSystemPage extends StatefulWidget {
@@ -50,7 +49,6 @@ class _PerformanceGovernanceSystemPageState
   late Future<List<Map<String, dynamic>>> deliverables;
   Map<int, TextEditingController> remarksControllers = {};
   Map<int, TextEditingController> percentageControllers = {};
-  Map<int, bool> userSelectedKRA = {};
 
   Map<int, PgsStatus> selectedStatus = {};
   Map<int, String> selectedValues = {};
@@ -116,6 +114,7 @@ class _PerformanceGovernanceSystemPageState
   final FocusNode isSearchFocus = FocusNode();
   TextEditingController reasonController = TextEditingController();
   Map<int, TextEditingController> kraDescriptionController = {};
+
   List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
   // ignore: non_constant_identifier_names
   List<String> StatusOptions = ['PATIENT', 'RESEARCH', 'LINKAGES', 'HR'];
@@ -156,9 +155,7 @@ class _PerformanceGovernanceSystemPageState
       userId = user!.id ?? "UserId";
     });
 
-    debugPrint(
-      'Loaded userId from SharedPreferences: $userId',
-    ); // ? Added print
+    debugPrint('Loaded userId from SharedPreferences: $userId');
 
     if (mounted) {
       setState(() {
@@ -626,6 +623,7 @@ class _PerformanceGovernanceSystemPageState
                   'selectPeriod': pgs.pgsPeriod.id.toString(),
                   'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
                   'percentDeliverables': pgs.percentDeliverables.toString(),
+                  'remarks': pgs.remarks,
                 };
               }).toList();
 
@@ -834,6 +832,8 @@ class _PerformanceGovernanceSystemPageState
 
       final deliverableText =
           controller.text.isNotEmpty ? controller.text : "No Name";
+      final kraDescriptionText = kraDescriptionController[index]?.text ?? '';
+
       final isDirect = selectedDirect[index] ?? false;
       final byWhen =
           DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
@@ -868,6 +868,7 @@ class _PerformanceGovernanceSystemPageState
           ),
           kraId,
           deliverableText,
+          kraDescriptionText,
           isDirect,
           byWhen,
           percentDeliverables,
@@ -1317,6 +1318,8 @@ class _PerformanceGovernanceSystemPageState
                                                         signatories: signatory,
                                                         pgsstatus:
                                                             pgsgovernancesystem['pgsStatus'],
+                                                        remarks:
+                                                            pgsgovernancesystem['remarks'],
                                                       );
                                                     },
                                                   ),
@@ -1686,6 +1689,7 @@ class _PerformanceGovernanceSystemPageState
     List<PgsSignatory>? signatories,
     String? pgsstatus,
     String? pgsId,
+    String? remarks,
   }) {
     setState(() {
       if (id == null) {
@@ -1768,6 +1772,10 @@ class _PerformanceGovernanceSystemPageState
             selectedStatus[i] = item.status;
             deliverableIds[i] = item.id ?? 0;
             selectedKRA[i] = item.kra.id;
+            remarksControllers[i] = TextEditingController(text: item.remarks);
+            kraDescriptionController[i] = TextEditingController(
+              text: item.kraDescription,
+            );
           }
         } else {
           rows = [0];
@@ -2662,6 +2670,10 @@ class _PerformanceGovernanceSystemPageState
       selectedKRAObjects[index] = options.first;
     }
 
+    if (!kraDescriptionController.containsKey(index)) {
+      kraDescriptionController[index] = TextEditingController();
+    }
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -2674,7 +2686,6 @@ class _PerformanceGovernanceSystemPageState
               if (newValue == null) return;
               setState(() {
                 selectedKRA[index] = newValue;
-                userSelectedKRA[index] = true;
 
                 selectedKRAObjects[index] = options.firstWhere(
                   (option) => option['id'] == newValue,
