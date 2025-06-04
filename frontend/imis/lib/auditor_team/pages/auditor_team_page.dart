@@ -5,7 +5,7 @@ import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -46,22 +46,11 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     setState(() => _isLoading = true);
 
     try {
-      String? token = await AuthUtil.fetchAccessToken();
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Access token is missing");
-        return;
-      }
-
       final pageList = await _paginationUtils.fetchPaginatedData<AuditorTeam>(
         endpoint: ApiEndpoint().auditorteam,
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-        },
         fromJson: (json) => AuditorTeam.fromJson(json),
       );
 
@@ -94,10 +83,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
         return;
       }
 
-      final response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Team> data =
@@ -123,7 +109,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     var url = ApiEndpoint().auditor;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Auditor> data =
@@ -151,24 +137,11 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     var url = ApiEndpoint().auditorteam;
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
-
       final Map<String, dynamic> requestData = auditorTeam.toJson();
-      final response = await dio.post(
+      final response = await AuthenticatedRequest.post(
+        dio,
         url,
         data: requestData,
-        options: Options(
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
-          },
-        ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -186,7 +159,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
   Future<void> deleteAuditorTeam(String kraId) async {
     var url = ApiEndpoint().keyresult;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchAuditorTeam();

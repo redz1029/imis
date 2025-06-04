@@ -8,6 +8,8 @@ import 'package:imis/utils/filter_search_result_util.dart';
 
 import 'package:imis/utils/pagination_util.dart';
 
+import '../../../utils/http_util.dart';
+
 class PgsSignatoryTemplatePage extends StatefulWidget {
   const PgsSignatoryTemplatePage({super.key});
 
@@ -74,7 +76,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   Future<void> fetchUser() async {
     var url = ApiEndpoint().users;
     try {
-      final response = await dio.get(url);
+      final response = await AuthenticatedRequest.get(dio, url);
       if (response.statusCode == 200 && response.data is List) {
         List<User> data =
             (response.data as List)
@@ -113,7 +115,11 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   ) async {
     var url = ApiEndpoint().signatoryTemplate;
     try {
-      final response = await dio.post(url, data: pgsSignatoryTemplate.toJson());
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: pgsSignatoryTemplate.toJson(),
+      );
 
       if (response.statusCode == 200) {
         await fetchSignatory();
@@ -130,7 +136,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   Future<void> deleteAuditor(String kraId) async {
     var url = ApiEndpoint().signatoryTemplate;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchSignatory();

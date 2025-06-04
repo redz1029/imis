@@ -7,6 +7,8 @@ import 'package:imis/utils/filter_search_result_util.dart';
 
 import 'package:imis/utils/pagination_util.dart';
 
+import '../../utils/http_util.dart';
+
 class AuditorPage extends StatefulWidget {
   const AuditorPage({super.key});
 
@@ -68,7 +70,11 @@ class _AuditorMainPageState extends State<AuditorPage> {
   Future<void> addOrUpdateAuditor(Auditor auditors) async {
     var url = ApiEndpoint().auditor;
     try {
-      final response = await dio.post(url, data: auditors.toJson());
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: auditors.toJson(),
+      );
 
       if (response.statusCode == 200) {
         await fetchAuditors();
@@ -85,7 +91,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
   Future<void> deleteAuditor(String kraId) async {
     var url = ApiEndpoint().keyresult;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchAuditors();
@@ -116,19 +122,6 @@ class _AuditorMainPageState extends State<AuditorPage> {
     super.dispose();
   }
 
-  // Filter search results based on query
-  // void filterSearchResults(String query) {
-  //   setState(() {
-  //     filteredList =
-  //         auditorList
-  //             .where(
-  //               (auditor) => auditor['name']!.toLowerCase().contains(
-  //                 query.toLowerCase(),
-  //               ),
-  //             )
-  //             .toList();
-  //   });
-  // }
   Future<void> filterSearchResults(String query) async {
     final results = await auditorSearchUtil.filter(
       query,

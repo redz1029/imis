@@ -171,11 +171,9 @@ class RegistrationPageState extends State<RegistrationPage> {
   //Job Position Dropdown
   String? selectedPosition;
   final List<String> jobPositions = [
-    'Admin',
-    'Head Admin',
-    'Super Admin',
-    'Nurse',
-    'Secretary',
+    'Head, Department of Surgery',
+    'Chief of Medical Professional Staff II',
+    'Medical Center Chief II',
   ];
   //end
 
@@ -527,6 +525,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                     selectedPosition = newValue;
                   });
                 },
+                style: const TextStyle(fontSize: 14, color: Colors.black),
                 items:
                     jobPositions.map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(

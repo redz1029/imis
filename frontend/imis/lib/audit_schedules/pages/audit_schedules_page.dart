@@ -9,9 +9,8 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-
 import 'package:imis/utils/pagination_util.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/http_util.dart';
 
 class AuditSchedulesPage extends StatefulWidget {
   const AuditSchedulesPage({super.key});
@@ -67,10 +66,10 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
             page: page,
             pageSize: _pageSize,
             searchQuery: searchQuery,
-            headers: {
-              "Authorization": "Bearer $token",
-              "Content-Type": "application/json",
-            },
+            // headers: {
+            //   "Authorization": "Bearer $token",
+            //   "Content-Type": "application/json",
+            // },
             fromJson: (json) => AuditSchedules.fromJson(json),
           );
 
@@ -125,18 +124,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     var url = ApiEndpoint().team;
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
-
-      final response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Team> data =
@@ -162,7 +150,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     var url = ApiEndpoint().office;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Office> data =
@@ -190,24 +178,11 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     var url = ApiEndpoint().auditSchedule;
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
-
       final Map<String, dynamic> requestData = auditSchedule.toJson();
-      final response = await dio.post(
+      final response = await AuthenticatedRequest.post(
+        dio,
         url,
         data: requestData,
-        options: Options(
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
-          },
-        ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -221,9 +196,6 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
       }
     } catch (e) {
       if (e is DioException) {
-        debugPrint("Dio error:");
-        debugPrint("  Status code: ${e.response?.statusCode}");
-        debugPrint("  Response data: ${e.response?.data}");
         debugPrint("  Error message: ${e.message}");
       }
       debugPrint("Error adding/updating auditschedule: $e");

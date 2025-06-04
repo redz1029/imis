@@ -28,6 +28,8 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../utils/http_util.dart';
+
 class PerformanceGovernanceSystemPage extends StatefulWidget {
   const PerformanceGovernanceSystemPage({super.key});
 
@@ -48,6 +50,8 @@ class _PerformanceGovernanceSystemPageState
   late Future<List<Map<String, dynamic>>> deliverables;
   Map<int, TextEditingController> remarksControllers = {};
   Map<int, TextEditingController> percentageControllers = {};
+  Map<int, bool> userSelectedKRA = {};
+
   Map<int, PgsStatus> selectedStatus = {};
   Map<int, String> selectedValues = {};
   Map<int, String> selectedByWhen = {};
@@ -111,7 +115,7 @@ class _PerformanceGovernanceSystemPageState
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
   TextEditingController reasonController = TextEditingController();
-
+  Map<int, TextEditingController> kraDescriptionController = {};
   List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
   // ignore: non_constant_identifier_names
   List<String> StatusOptions = ['PATIENT', 'RESEARCH', 'LINKAGES', 'HR'];
@@ -126,6 +130,7 @@ class _PerformanceGovernanceSystemPageState
   TextEditingController confidenceScoreController = TextEditingController(
     text: '',
   );
+
   TextEditingController totalScoreController = TextEditingController(text: '');
   ValueNotifier<double> percentageScore = ValueNotifier(0.0);
 
@@ -167,25 +172,13 @@ class _PerformanceGovernanceSystemPageState
     var url = ApiEndpoint().performancegovernancesystem;
 
     try {
-      AuthUtil.setupDioInterceptors(dio, navigatorKey);
       SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
 
       final requestData = audit.toJson();
-      final response = await dio.post(
+      final response = await AuthenticatedRequest.post(
+        dio,
         url,
         data: requestData,
-        options: Options(
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
-          },
-        ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -275,7 +268,7 @@ class _PerformanceGovernanceSystemPageState
     var url = ApiEndpoint().signatoryTemplate;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<PgsSignatoryTemplate> data =
@@ -305,7 +298,7 @@ class _PerformanceGovernanceSystemPageState
   Future<void> fetchUser() async {
     var url = ApiEndpoint().users;
     try {
-      final response = await dio.get(url);
+      final response = await AuthenticatedRequest.get(dio, url);
       if (response.statusCode == 200 && response.data is List) {
         List<User> data =
             (response.data as List)
@@ -428,18 +421,7 @@ class _PerformanceGovernanceSystemPageState
     debugPrint("Fetching deliverables for PGS ID: $pgsId");
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return [];
-      }
-
-      final response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200) {
         final data = response.data;
@@ -616,10 +598,6 @@ class _PerformanceGovernanceSystemPageState
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-        },
         fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
       );
 
@@ -809,6 +787,7 @@ class _PerformanceGovernanceSystemPageState
         rowVersion: "",
         DateTime.now(),
         DateTime.now(),
+        '',
       ),
       office: Office(
         id: int.tryParse(selectedOffice!) ?? 0,
@@ -2681,67 +2660,84 @@ class _PerformanceGovernanceSystemPageState
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
-      debugPrint(
-        "Initialized selectedKRA for index $index with ID ${selectedKRA[index]}",
-      );
     }
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: DropdownButtonFormField<int>(
-        isExpanded: true,
-        value: selectedKRA[index],
-        onChanged: (int? newValue) {
-          if (newValue == null) return;
-          setState(() {
-            selectedKRA[index] = newValue;
-            selectedKRAObjects[index] = options.firstWhere(
-              (option) => option['id'] == newValue,
-              orElse:
-                  () => {
-                    'id': 1,
-                    'name': 'Unknown',
-                    'description': '',
-                    'rowVersion': '',
-                  },
-            );
-            debugPrint("KRA changed for index $index ? KRAID: $newValue");
-          });
-        },
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 12.0,
-            vertical: 20.0,
-          ),
-        ),
-        items:
-            options.map<DropdownMenuItem<int>>((option) {
-              return DropdownMenuItem<int>(
-                value: option['id'],
-                child: Text(
-                  option['name'],
-                  softWrap: true,
-                  overflow: TextOverflow.visible,
-                ),
-              );
-            }).toList(),
-        selectedItemBuilder: (BuildContext context) {
-          return options.map<Widget>((option) {
-            return Container(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                option['name'],
-                softWrap: true,
-                overflow: TextOverflow.visible,
-                style: const TextStyle(fontSize: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DropdownButtonFormField<int>(
+            isExpanded: true,
+            value: selectedKRA[index],
+            onChanged: (int? newValue) {
+              if (newValue == null) return;
+              setState(() {
+                selectedKRA[index] = newValue;
+                userSelectedKRA[index] = true;
+
+                selectedKRAObjects[index] = options.firstWhere(
+                  (option) => option['id'] == newValue,
+                  orElse:
+                      () => {
+                        'id': 1,
+                        'name': 'Unknown',
+                        'description': '',
+                        'rowVersion': '',
+                      },
+                );
+                debugPrint("KRA changed for index $index ? KRAID: $newValue");
+              });
+            },
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 20.0,
               ),
-            );
-          }).toList();
-        },
-        dropdownColor: Colors.white,
-        iconSize: 30.0,
-        itemHeight: 50.0,
+            ),
+            items:
+                options.map<DropdownMenuItem<int>>((option) {
+                  return DropdownMenuItem<int>(
+                    value: option['id'],
+                    child: Text(option['name']),
+                  );
+                }).toList(),
+            selectedItemBuilder: (BuildContext context) {
+              return options.map<Widget>((option) {
+                return Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    option['name'],
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                );
+              }).toList();
+            },
+            dropdownColor: Colors.white,
+            iconSize: 30.0,
+            itemHeight: 50.0,
+          ),
+
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              "KRA Description",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          gap2,
+          TextField(
+            controller: kraDescriptionController[index],
+            decoration: const InputDecoration(
+              hintText: "Enter your description here...",
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 3,
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }

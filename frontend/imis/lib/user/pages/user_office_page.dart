@@ -7,7 +7,7 @@ import 'package:imis/user/models/user_office.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../../utils/http_util.dart';
 
 class UserOfficePage extends StatefulWidget {
   const UserOfficePage({super.key});
@@ -80,7 +80,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
     var url = ApiEndpoint().office;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
       debugPrint(" Raw Office response: ${response.data}");
 
       if (response.statusCode == 200 && response.data is List) {
@@ -103,7 +103,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
     var url = ApiEndpoint().users;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
       debugPrint("Raw User response: ${response.data}");
 
       if (response.statusCode == 200 && response.data is List) {
@@ -137,7 +137,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
 
   void printUserOfficeWithOfficeName() {
     for (var userOffice in userOfficeList) {
-      final officeName = officenameList.firstWhere(
+      officenameList.firstWhere(
         (office) => office.id == userOffice.officeId,
         orElse:
             () => Office(
@@ -146,10 +146,6 @@ class _UserOfficePageState extends State<UserOfficePage> {
               isActive: true,
               isDeleted: false,
             ),
-      );
-
-      debugPrint(
-        "userId: ${userOffice.userId}, officeId: ${userOffice.officeId}, officeName: ${officeName.name}",
       );
     }
   }
@@ -182,18 +178,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
     var url = ApiEndpoint().office;
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
-
-      final response = await dio.get(
-        url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Office> data =
@@ -228,7 +213,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
   Future<void> fetchUser() async {
     var url = ApiEndpoint().users;
     try {
-      final response = await dio.get(url);
+      final response = await AuthenticatedRequest.get(dio, url);
       if (response.statusCode == 200 && response.data is List) {
         List<User> data =
             (response.data as List)
@@ -255,7 +240,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
   Future<void> deleteUserOffice(String kraId) async {
     var url = ApiEndpoint().keyresult;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchUserOffice();

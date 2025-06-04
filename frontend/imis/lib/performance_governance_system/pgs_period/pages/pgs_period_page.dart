@@ -7,6 +7,8 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
+import '../../../utils/http_util.dart';
+
 class PgsPeriodPage extends StatefulWidget {
   const PgsPeriodPage({super.key});
 
@@ -19,8 +21,6 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<PgsPeriod> pgsPeriodSearchUtil;
   final _formKey = GlobalKey<FormState>();
-  // List<Map<String, dynamic>> pgsPeriodList = [];
-  // List<Map<String, dynamic>> filteredList = [];
   List<PgsPeriod> pgsPeriodList = [];
   List<PgsPeriod> filteredList = [];
   TextEditingController searchController = TextEditingController();
@@ -84,7 +84,11 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
   Future<void> addOrUpdatePGSPeriod(PgsPeriod period) async {
     var url = ApiEndpoint().pgsperiod;
     try {
-      final response = await dio.post(url, data: period.toJson());
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: period.toJson(),
+      );
       if (response.statusCode == 201) {
         await fetchPGSPeriods();
         setState(() {
@@ -97,9 +101,9 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
   }
 
   Future<void> deletePGSPeriod(String kraId) async {
-    var url = ApiEndpoint().keyresult;
+    var url = ApiEndpoint().pgsperiod;
     try {
-      final response = await dio.delete(url);
+      final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchPGSPeriods();
@@ -196,6 +200,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     bool? isDeleted,
     String? startDate,
     String? endDate,
+    String? remarkrs,
     String? rowVersion,
   }) {
     TextEditingController startDateController = TextEditingController(
@@ -203,6 +208,9 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     );
     TextEditingController endDateController = TextEditingController(
       text: endDate,
+    );
+    TextEditingController remarksController = TextEditingController(
+      text: remarkrs,
     );
 
     showDialog(
@@ -327,6 +335,29 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                     },
                   ),
                 ),
+
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: remarksController,
+                    decoration: InputDecoration(
+                      labelText: 'Remarks',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please fill out this field';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
               ],
             ),
           ),
@@ -387,12 +418,12 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
 
                   if (confirmAction == true) {
                     final pgs = PgsPeriod(
-                      0,
+                      int.tryParse(id ?? '0') ?? 0,
                       false,
                       DateTime.parse(startDateController.text),
                       DateTime.parse(endDateController.text),
+                      remarksController.text,
                     );
-
                     addOrUpdatePGSPeriod(pgs);
 
                     // ignore: use_build_context_synchronously
@@ -510,6 +541,10 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                           ),
                         ),
                         Expanded(
+                          flex: 3,
+                          child: Text('Remarks', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
                           flex: 1,
                           child: Text('Actions', style: TextStyle(color: grey)),
                         ),
@@ -596,6 +631,22 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                                               ),
                                             ),
                                           ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                period.remarks.toString(),
+
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
 
                                           Expanded(
                                             flex: 1,
@@ -626,6 +677,9 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                                                                     period
                                                                         .endDate,
                                                                   ),
+                                                          remarkrs:
+                                                              period.remarks
+                                                                  .toString(),
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),

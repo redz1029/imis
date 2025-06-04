@@ -18,12 +18,15 @@ class PgsPeriod {
   DateTime endDate;
 
   String? rowVersion;
+  String? remarks;
 
   PgsPeriod(
     this.id,
     this.isDeleted,
     this.startDate,
-    this.endDate, {
+
+    this.endDate,
+    this.remarks, {
     this.rowVersion,
   });
 

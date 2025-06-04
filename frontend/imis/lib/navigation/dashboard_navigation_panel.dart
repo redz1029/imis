@@ -54,8 +54,6 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   void initState() {
     super.initState();
     _loadUserName();
-
-    AuthUtil.setupDioInterceptors(dio, navigatorKey);
   }
 
   // Future<void> _loadUserName() async {
