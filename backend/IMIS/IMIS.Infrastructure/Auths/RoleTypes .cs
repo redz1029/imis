@@ -5,5 +5,6 @@
             public const string Administrator = "Administrator";
             public const string PgsManager = "PGS Manager";
             public const string PgsUser = "PGS User";
+            public const string PgsAuditor = "PGS Auditor";
         }
     }

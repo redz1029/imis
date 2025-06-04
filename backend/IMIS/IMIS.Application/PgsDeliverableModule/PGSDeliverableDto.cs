@@ -8,8 +8,9 @@ namespace IMIS.Application.PgsModule
 {
     public class PGSDeliverableDto : BaseDto<PgsDeliverable, long>
     {
-        public int? KraId { get; set; }
+        public int? KraId { get; set; } 
         public KeyResultAreaDto? Kra { get; set; }
+        public string? KraDescription { get; set; }
         public required bool IsDirect { get; set; }
         public required string DeliverableName { get; set; }
         public required DateTime ByWhen { get; set; }
@@ -23,6 +24,7 @@ namespace IMIS.Application.PgsModule
         {
             this.Id = pgsDeliverable.Id;
             this.KraId = pgsDeliverable.KraId;
+            this.KraDescription = pgsDeliverable.KraDescription;
             this.IsDirect = pgsDeliverable.IsDirect;
             this.DeliverableName = pgsDeliverable.DeliverableName;
             this.ByWhen = pgsDeliverable.ByWhen;
@@ -47,6 +49,7 @@ namespace IMIS.Application.PgsModule
                 PercentDeliverables = PercentDeliverables,
                 Status = Status,
                 KraId = KraId,
+                KraDescription = KraDescription,
                 Kra = Kra?.ToEntity(),
                 Remarks = Remarks
             };

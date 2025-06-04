@@ -5,7 +5,8 @@ namespace IMIS.Domain
     public class PgsDeliverable : Entity<long>
     {
         public int? KraId { get; set; }
-        public  KeyResultArea? Kra { get; set; } 
+        public  KeyResultArea? Kra { get; set; }
+        public string? KraDescription { get; set; }
         public required bool IsDirect { get; set; }       
         public required string DeliverableName { get; set; } 
         public required DateTime ByWhen { get; set; }  

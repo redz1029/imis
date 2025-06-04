@@ -69,7 +69,7 @@ namespace IMIS.Persistence.PGSModules
                 Status = deliverable.Status,
                 RowVersion = deliverable.RowVersion ?? Array.Empty<byte>(),
                 Remarks = deliverable.Remarks ?? string.Empty,
-                //KraId = deliverable.KraId,
+                KraDescription = deliverable.KraDescription ?? string.Empty,
                 
                 Kra = deliverable.Kra != null ? new KeyResultAreaDto
                 {

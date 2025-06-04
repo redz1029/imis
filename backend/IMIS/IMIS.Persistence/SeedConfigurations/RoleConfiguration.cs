@@ -20,16 +20,24 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                 {
                     Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
                     Name = RoleTypes.PgsManager,
-                    NormalizedName = "LDNA MANAGER",
+                    NormalizedName = "PGS MANAGER",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
+                   
                 },
                 new IdentityRole
                 {
                     Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                     Name = RoleTypes.PgsUser,
-                    NormalizedName = "LDNA USER",
+                    NormalizedName = "PGS USER",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
-                }            
+                },
+                 new IdentityRole
+                 {
+                     Id = "af7b586c7ee6490bbd878f46f6a47831",
+                     Name = RoleTypes.PgsAuditor,
+                     NormalizedName = "PGS AUDITOR",
+                     ConcurrencyStamp = Guid.NewGuid().ToString(),
+                 }
         );
     }
 }
