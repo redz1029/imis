@@ -14,7 +14,7 @@ namespace IMIS.Presentation.PGSModule
     public class PGSDeliverableEndpoints : CarterModule
     {
         private const string _pgsTag = "PGS Deliverable";
-        public PGSDeliverableEndpoints() : base("/Deliverable")
+        public PGSDeliverableEndpoints() : base("/deliverables")
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
