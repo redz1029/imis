@@ -1,4 +1,5 @@
 ﻿using Base.Pagination;
+using Base.Utilities;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsDeliverableModule
@@ -28,7 +29,7 @@ namespace IMIS.Application.PgsDeliverableModule
                         KraDescription = e.KraDescription,
                         Office = e.PerfomanceGovernanceSystem.Office.Name,
                         Score = e.PgsDeliverableScoreHistory?.OrderByDescending(s => s.Date).FirstOrDefault()?.Score ?? 0,
-                        Status = e.Status.ToString()
+                        Status = e.Status.GetDescription()
                     }
                 ).ToList();
             return new PgsDeliverableMonitorPageList(items, page, pageSize, totalCount);
