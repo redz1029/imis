@@ -1,6 +1,5 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
-using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsDeliverableModule;
@@ -12,7 +11,6 @@ using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,22 +32,6 @@ namespace IMIS.Persistence.PgsModule
             _kraRepository = kraRepository;
             _userManager = userManager;
             
-        }
-     
-        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetPaginatedFilteredDeliverablesAsync(
-         PgsDeliverableMonitoringDto filter,
-         CancellationToken cancellationToken)
-        {
-            var result = await _repository.GetPaginatedFilteredDeliverablesAsync(filter, cancellationToken).ConfigureAwait(false);
-
-            var pagedList = DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(
-                result.Items,
-                filter.Page,
-                filter.PageSize,
-                result.TotalCount
-            );
-      
-            return pagedList;
         }
 
         public async Task<List<PerfomanceGovernanceSystemDto>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken)

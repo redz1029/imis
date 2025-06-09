@@ -1,10 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Base.Primitives;
+﻿using Base.Primitives;
 using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
-using IMIS.Application.PgsSignatoryModule;
-using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
+using System.Diagnostics.CodeAnalysis;
 
 namespace IMIS.Application.PgsModule
 {

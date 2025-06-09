@@ -1,6 +1,7 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PgsDeliverableModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsModule
@@ -15,6 +16,5 @@ namespace IMIS.Application.PgsModule
         Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken);
         Task<List<PerfomanceGovernanceSystemDto>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken);               
         public Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken);      
-        Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetPaginatedFilteredDeliverablesAsync(PgsDeliverableMonitoringDto filter, CancellationToken cancellationToken);
     }
 }

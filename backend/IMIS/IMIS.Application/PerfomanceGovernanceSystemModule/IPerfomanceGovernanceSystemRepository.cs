@@ -14,22 +14,5 @@ namespace IMIS.Application.PgsModule
         Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         new Task<PerfomanceGovernanceSystem> SaveOrUpdateAsync(PerfomanceGovernanceSystem perfomanceGovernanceSystem, CancellationToken cancellationToken);
         Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken);
-        //Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedFilteredAsync(
-        //    long? pgsDeliverableId,
-        //    long? pgsPeriodId,
-        //    int? departmentId,
-        //    int? kraId,
-        //    int? kraObjectiveId,
-        //    bool? isDirect,
-        //    string? deliverable,
-        //    double? score,
-        //    string? status,
-        //    int page,
-        //    int pageSize,
-        //    CancellationToken cancellationToken);
-        Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedFilteredDeliverablesAsync(
-         PgsDeliverableMonitoringDto filter,
-         CancellationToken cancellationToken);
-
     }
 }

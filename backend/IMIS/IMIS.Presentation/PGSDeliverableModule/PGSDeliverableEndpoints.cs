@@ -1,4 +1,5 @@
 ﻿using Carter;
+using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsModule;
 using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
@@ -12,7 +13,7 @@ namespace IMIS.Presentation.PGSModule
 {
     public class PGSDeliverableEndpoints : CarterModule
     {
-        private const string _pgsTag = "Create PGS Deliverable";
+        private const string _pgsTag = "PGS Deliverable";
         public PGSDeliverableEndpoints() : base("/Deliverable")
         {
         }
@@ -78,6 +79,13 @@ namespace IMIS.Presentation.PGSModule
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
+
+            app.MapPost("/filter", async ([FromBody]PgsDeliverableMonitorFilter filter, IPGSDeliverableService service, CancellationToken cancellationToken) =>
+            {
+                var filteredPgsDeliverables = await service.GetFilteredAsync(filter, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(filteredPgsDeliverables);
+            })
+            .WithTags(_pgsTag);
         }
     }
 }

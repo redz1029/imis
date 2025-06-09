@@ -1,5 +1,6 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
+using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
@@ -87,6 +88,13 @@ namespace IMIS.Persistence.PGSModules
 
             var pgsEntity = pgsDto.ToEntity();
             await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
+        {
+            var filteredDeliverables = await _repository.GetFilteredAsync(filter, cancellationToken).ConfigureAwait(false);
+            return PgsDeliverableMonitorPageList
+                .Create(filteredDeliverables.Items, filter.Page, filter.PageSize, filteredDeliverables.TotalCount);
         }
     }
 }

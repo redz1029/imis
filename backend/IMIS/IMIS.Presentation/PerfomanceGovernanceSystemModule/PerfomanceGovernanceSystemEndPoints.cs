@@ -2,7 +2,6 @@
 using Carter;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
-using IMIS.Application.TeamModule;
 using IMIS.Infrastructure.Auths;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
@@ -139,21 +138,6 @@ namespace IMIS.Presentation.PgsModuleAPI
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true)
             .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator, RoleTypes.PgsUser, RoleTypes.PgsManager)
             .RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.View));
-       
-            app.MapPost("/page/filter", async (
-            [FromBody] PgsDeliverableMonitoringDto filter, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
-            {
-                var paginatedResult = await service.GetPaginatedFilteredDeliverablesAsync(filter, cancellationToken).ConfigureAwait(false);
-
-                if (paginatedResult == null || !paginatedResult.Items.Any())
-                {
-                    return Results.NotFound("No records found matching the filter criteria.");
-                }
-
-                return Results.Ok(paginatedResult);
-            })
-        .WithTags(_pgsTag)
-        .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
         }
     }
 }

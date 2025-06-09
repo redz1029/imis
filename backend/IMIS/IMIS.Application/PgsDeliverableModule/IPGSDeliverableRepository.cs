@@ -1,7 +1,7 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.PgsDeliverableModule;
 using IMIS.Domain;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace IMIS.Application.PgsModule
 {
@@ -10,6 +10,7 @@ namespace IMIS.Application.PgsModule
         Task<EntityPageList<PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken); 
         Task<List<PgsDeliverable>?> GetAll(CancellationToken cancellationToken);
         new Task<PgsDeliverable> SaveOrUpdateAsync(PgsDeliverable pgsDeliverable, CancellationToken cancellationToken);
+        Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken);
     }
 }
 
