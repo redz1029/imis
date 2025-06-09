@@ -1,5 +1,7 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.PgsPeriodModule;
+using IMIS.Application.TeamModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +14,7 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
     public class PgsPeriodEndPoints : CarterModule
     {
         private const string _pgsPeriodTag = "PGS Period";
+        public readonly PgsPeriodPermission _pgsPeriodPermission = new();
         public PgsPeriodEndPoints() : base("/pgsPeriod")
         {
         }
@@ -24,7 +27,9 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
                 await cache.EvictByTagAsync(_pgsPeriodTag, cancellationToken);
                 return Results.Created($"/pgsPeriod/{createdPgsPeriod.Id}", createdPgsPeriod);
             })
-            .WithTags(_pgsPeriodTag);
+            .WithTags(_pgsPeriodTag)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _pgsPeriodPermission.Add, _pgsPeriodPermission.Add)); ;
 
             app.MapGet("/", async (IPgsPeriodService service, CancellationToken cancellationToken) =>  
             {
@@ -32,8 +37,9 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
                 return Results.Ok(period);
             })
             .WithTags(_pgsPeriodTag)   
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true);
-        
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.View));
+
             app.MapPut("/{id}", async (int id, [FromBody] PgsPeriodDto pgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {                             
                 var existingPeriod = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);

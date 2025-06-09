@@ -1,4 +1,6 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
+using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Application.PgsKraModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +14,7 @@ namespace IMIS.Presentation.KraModuleAPI
     public class KraEndPoints : CarterModule
     {
         private const string _keyAreaResultTag = "Key Result Area";
+        public readonly KeyResultAreaPermission _keyResultAreaPermission = new();
         public KraEndPoints() : base("/keyResultArea")
         {
         }
@@ -23,14 +26,19 @@ namespace IMIS.Presentation.KraModuleAPI
                 await cache.EvictByTagAsync(_keyAreaResultTag, cancellationToken);
                 return Results.Created($"/kra/{createdKeyResultAreaDto.Id}", createdKeyResultAreaDto);
             })
-            .WithTags(_keyAreaResultTag);
+            .WithTags(_keyAreaResultTag)
+            .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _keyResultAreaPermission.Add, _keyResultAreaPermission.Add));
+
             app.MapGet("/", async (IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 var keyResultAreaDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(keyResultAreaDto);
             })
             .WithTags(_keyAreaResultTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
+
             app.MapGet("/filter/{name}", async (string name, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 int kraNoOfResults = 10;
