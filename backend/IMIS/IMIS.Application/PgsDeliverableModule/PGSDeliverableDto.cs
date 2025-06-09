@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
+using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
+using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
 
@@ -16,7 +18,8 @@ namespace IMIS.Application.PgsModule
         public required DateTime ByWhen { get; set; }
         public required double PercentDeliverables { get; set; }
         public required PgsStatus Status { get; set; }
-        public string? Remarks { get; set; }          
+        public string? Remarks { get; set; }
+        public List<PgsDeliverableScoreHistoryDto>? PgsDeliverableScoreHistory { get; set; }
         public PGSDeliverableDto() {}
 
         [SetsRequiredMembers]
@@ -36,6 +39,14 @@ namespace IMIS.Application.PgsModule
             {
                 this.Kra = new KeyResultAreaDto(pgsDeliverable.Kra);
             }
+        
+            this.PgsDeliverableScoreHistory = pgsDeliverable.PgsDeliverableScoreHistory?.Select(s => new PgsDeliverableScoreHistoryDto
+            {
+                Id = s.Id,
+                PgsDeliverableId = s.PgsDeliverableId,
+                Date = s.Date,
+                Score = s.Score,              
+            }).ToList();
         }
 
         public override PgsDeliverable ToEntity()
@@ -51,6 +62,7 @@ namespace IMIS.Application.PgsModule
                 KraId = KraId,
                 KraDescription = KraDescription,
                 Kra = Kra?.ToEntity(),
+                PgsDeliverableScoreHistory = PgsDeliverableScoreHistory?.Select(d => d.ToEntity()).ToList(),
                 Remarks = Remarks
             };
         }
