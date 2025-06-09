@@ -80,7 +80,7 @@ namespace IMIS.Presentation.PGSModule
             .WithTags(_pgsTag)
             .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
 
-            app.MapPost("/filter", async ([FromBody]PgsDeliverableMonitorFilter filter, IPGSDeliverableService service, CancellationToken cancellationToken) =>
+            app.MapGet("/filter", async ([AsParameters] PgsDeliverableMonitorFilter filter, IPGSDeliverableService service, CancellationToken cancellationToken) =>
             {
                 var filteredPgsDeliverables = await service.GetFilteredAsync(filter, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(filteredPgsDeliverables);
