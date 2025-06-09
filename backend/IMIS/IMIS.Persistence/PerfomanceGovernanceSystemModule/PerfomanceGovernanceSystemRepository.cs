@@ -1,9 +1,11 @@
-﻿using Base.Abstractions;
+﻿using System.Linq.Expressions;
+using Base.Abstractions;
 using Base.Pagination;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
+
 
 public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGovernanceSystem, long, ImisDbContext>, IPerfomanceGovernanceSystemRepository
 {
@@ -11,6 +13,116 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     {
 
     }
+
+    public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedFilteredDeliverablesAsync(
+    PgsDeliverableMonitoringDto filter,
+    CancellationToken cancellationToken)
+    {
+        var baseQuery = _dbContext.Set<PerfomanceGovernanceSystem>()
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+            .Include(p => p.PgsDeliverables)
+                .ThenInclude(d => d.Kra)
+            .AsQueryable();
+
+        if (filter.PgsPeriodId is > 0)
+        {
+            baseQuery = baseQuery.Where(p => p.PgsPeriod.Id == filter.PgsPeriodId);
+        }
+
+        if (filter.Department is > 0)
+        {
+            baseQuery = baseQuery.Where(p => p.Office.Id == filter.Department);
+        }
+
+        if (filter.Kra is > 0)
+        {
+            baseQuery = baseQuery.Where(p => p.PgsDeliverables!.Any(d => d.KraId == filter.Kra));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.KraDescription) && filter.KraDescription != "string")
+        {
+            baseQuery = baseQuery.Where(p => p.PgsDeliverables!.Any(d => d.KraDescription != null && d.KraDescription.Contains(filter.KraDescription)));
+        }
+
+        if (filter.IsDirect is not null)
+        {
+            baseQuery = baseQuery.Where(p => p.PgsDeliverables!.Any(d => d.IsDirect == filter.IsDirect));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filter.Deliverable) && filter.Deliverable != "string")
+        {
+            baseQuery = baseQuery.Where(p => p.PgsDeliverables!.Any(d => d.DeliverableName.Contains(filter.Deliverable)));
+        }
+
+        if (filter.Score is > 0)
+        {
+            baseQuery = baseQuery.Where(p => p.PgsDeliverables!.Any(d => d.PercentDeliverables == filter.Score));
+        }
+
+        var statusFilter = new List<int>();
+        if (!string.IsNullOrWhiteSpace(filter.DeliverableStatus) && filter.DeliverableStatus != "string")
+        {
+            statusFilter = filter.DeliverableStatus
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => int.TryParse(s, out var val) ? val : (int?)null)
+                .Where(s => s.HasValue)
+                .Select(s => s.Value)
+                .ToList();
+        }
+
+        // Paging setup
+        var page = filter.Page <= 0 ? 1 : filter.Page;
+        var pageSize = filter.PageSize <= 0 ? 10 : filter.PageSize;
+       
+        var query = baseQuery.Select(p => new PerfomanceGovernanceSystem
+        {
+            Id = p.Id,
+            PgsPeriod = p.PgsPeriod,
+            Office = p.Office,
+            Remarks = p.Remarks,
+            PgsStatus = p.PgsStatus,
+            PgsReadinessRating = p.PgsReadinessRating,
+            PercentDeliverables = p.PercentDeliverables,
+            PgsSignatories = p.PgsSignatories,
+            IsDeleted = p.IsDeleted,
+            RowVersion = p.RowVersion,
+
+           
+            PgsDeliverables = p.PgsDeliverables!
+            .Where(d =>
+                (filter.Kra == null || filter.Kra == 0 || d.KraId == filter.Kra) &&
+                (string.IsNullOrWhiteSpace(filter.KraDescription) || filter.KraDescription == "string" || d.KraDescription!.Contains(filter.KraDescription)) &&
+                (filter.IsDirect == null     || d.IsDirect == filter.IsDirect) &&
+                (string.IsNullOrWhiteSpace(filter.Deliverable) || filter.Deliverable == "string" || d.DeliverableName.Contains(filter.Deliverable)) &&
+                (filter.Score == null || filter.Score == 0 || d.PercentDeliverables == filter.Score) &&
+                (statusFilter.Count == 0 || statusFilter.Contains((int)d.Status))
+            
+            )
+            .Select(d => new PgsDeliverable
+            {
+                Id = d.Id,
+                KraId = d.KraId,
+                Kra = d.Kra,
+                KraDescription = d.KraDescription,
+                IsDirect = d.IsDirect,
+                DeliverableName = d.DeliverableName,
+                ByWhen = d.ByWhen,
+                PercentDeliverables = d.PercentDeliverables,
+                Status = d.Status,
+                Remarks = d.Remarks,
+                PgsDeliverableScoreHistory = d.PgsDeliverableScoreHistory,
+                IsDeleted = d.IsDeleted,
+                RowVersion = d.RowVersion
+            })
+            .ToList()
+
+        });
+
+        return await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(
+            query, page, pageSize, cancellationToken);
+    }
+
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
     {
         var pgs = await _dbContext.PerformanceGovernanceSystem.Where(p => !p.IsDeleted &&
@@ -165,10 +277,10 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     existingPerfomanceGovernanceSystem.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating;
                 }
             }
-            //    // --- Sync PgsDeliverables ---
+              // --- Sync PgsDeliverables ---
+        
             if (perfomanceGovernanceSystem.PgsDeliverables != null)
             {
-                // Add or Update deliverables
                 foreach (var deliverable in perfomanceGovernanceSystem.PgsDeliverables)
                 {
                     var existingDeliverable = existingPerfomanceGovernanceSystem.PgsDeliverables!
@@ -178,15 +290,27 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     {
                         // Update existing deliverable
                         _dbContext.Entry(existingDeliverable).CurrentValues.SetValues(deliverable);
+
+                        // Always save a new history record on update
+                        var history = new PgsDeliverableScoreHistory
+                        {
+                            Id = 0,
+                            PgsDeliverableId = existingDeliverable.Id,
+                            Date = DateTime.UtcNow,
+                            Score = deliverable.PercentDeliverables
+                        };
+                        _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);
                     }
                     else
                     {
                         // New deliverable - Add to existing parent
                         existingPerfomanceGovernanceSystem.PgsDeliverables!.Add(deliverable);
+
                     }
                 }
             }
-                 // --- Sync PgsSignatories ---                     
+
+            // --- Sync PgsSignatories ---                     
             if (perfomanceGovernanceSystem.PgsSignatories != null)
             {
                 foreach (var signatory in perfomanceGovernanceSystem.PgsSignatories)

@@ -1,11 +1,9 @@
-﻿using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryModule;
-using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsModule
