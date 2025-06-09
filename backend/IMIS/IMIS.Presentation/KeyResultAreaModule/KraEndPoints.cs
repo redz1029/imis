@@ -2,6 +2,7 @@
 using Carter;
 using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Application.PgsKraModule;
+using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,8 +28,8 @@ namespace IMIS.Presentation.KraModuleAPI
                 return Results.Created($"/kra/{createdKeyResultAreaDto.Id}", createdKeyResultAreaDto);
             })
             .WithTags(_keyAreaResultTag)
-            .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _keyResultAreaPermission.Add, _keyResultAreaPermission.Add));
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.Add));
 
             app.MapGet("/", async (IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
@@ -37,7 +38,8 @@ namespace IMIS.Presentation.KraModuleAPI
             })
             .WithTags(_keyAreaResultTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
 
             app.MapGet("/filter/{name}", async (string name, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
@@ -46,14 +48,20 @@ namespace IMIS.Presentation.KraModuleAPI
                 return keyResultArea != null ? Results.Ok(keyResultArea) : Results.NoContent();
             })
             .WithTags(_keyAreaResultTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View)); 
+
             app.MapGet("/{id}", async (int id, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 var keyResultArea = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 return keyResultArea != null ? Results.Ok(keyResultArea) : Results.NotFound();
             })
             .WithTags(_keyAreaResultTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View)); 
+
             app.MapPut("/{id}", async (int id, [FromBody] KeyResultAreaDto keyResultAreaDto, IKeyResultAreaService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {               
                 var existingKeyResultArea = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -66,14 +74,19 @@ namespace IMIS.Presentation.KraModuleAPI
                 await cache.EvictByTagAsync(_keyAreaResultTag, cancellationToken);
                 return Results.Ok(updatedKeyResultArea);
             })
-            .WithTags(_keyAreaResultTag);
+            .WithTags(_keyAreaResultTag)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.Add)); 
+
             app.MapGet("/page", async (int page, int pageSize, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
                 var paginatedKeyResultArea = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedKeyResultArea);
             })
             .WithTags(_keyAreaResultTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
         }
     }
 }

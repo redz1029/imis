@@ -1,5 +1,7 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.TeamModule;
+using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,11 +27,9 @@ namespace IMIS.Presentation.TeamModule
                 await cache.EvictByTagAsync(_teamTag, cancellationToken);
                 return Results.Created($"/team/{createdTeam.Id}", createdTeam);
             })
-            .WithTags(_teamTag);
-            //.RequireAuthorization(policy =>
-            //    policy.RequireRole(RoleTypes.Administrator, RoleTypes.PgsManager, RoleTypes.PgsUser)
-            //          .RequireClaim(PermissionClaimType.Claim, _teamPermission.Add));
-
+            .WithTags(_teamTag)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _teamPermission.Add));
 
             app.MapGet("/", async (ITeamService service, CancellationToken cancellationToken) =>
             {
@@ -37,10 +37,9 @@ namespace IMIS.Presentation.TeamModule
                 return Results.Ok(team);
             })
             .WithTags(_teamTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true);
-            //.RequireAuthorization(policy =>
-            //    policy.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
-
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
 
             app.MapGet("/filter/{name}", async (string name, ITeamService service, CancellationToken cancellationToken) =>
             {
@@ -49,9 +48,9 @@ namespace IMIS.Presentation.TeamModule
                 return team != null ? Results.Ok(team) : Results.NoContent();
             })
             .WithTags(_teamTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true);
-            //.RequireAuthorization(policy =>
-            //    policy.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
 
 
             app.MapGet("/{id}", async (int id, ITeamService service, CancellationToken cancellationToken) =>
@@ -60,10 +59,9 @@ namespace IMIS.Presentation.TeamModule
                 return team != null ? Results.Ok(team) : Results.NotFound();
             })
             .WithTags(_teamTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true);
-            //.RequireAuthorization(policy =>
-            //    policy.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
-
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] TeamDto teamDto, ITeamService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -77,11 +75,9 @@ namespace IMIS.Presentation.TeamModule
                 await cache.EvictByTagAsync(_teamTag, cancellationToken);
                 return Results.Ok(updatedTeam);
             })
-            .WithTags(_teamTag);
-            //.RequireAuthorization(policy =>
-            //    policy.RequireRole(RoleTypes.Administrator, RoleTypes.PgsManager, RoleTypes.PgsUser)
-            //          .RequireClaim(PermissionClaimType.Claim, _teamPermission.Edit));
-
+            .WithTags(_teamTag)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _teamPermission.Add));
 
             app.MapGet("/page", async (int page, int pageSize, ITeamService service, CancellationToken cancellationToken) =>
             {
@@ -89,9 +85,9 @@ namespace IMIS.Presentation.TeamModule
                 return Results.Ok(paginatedTeam);
             })
             .WithTags(_teamTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true);
-            //.RequireAuthorization(policy =>
-            //    policy.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
+            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            .RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
         }
     }
 }
