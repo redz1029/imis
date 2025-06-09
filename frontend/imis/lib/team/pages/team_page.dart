@@ -7,6 +7,8 @@ import 'package:imis/utils/api_endpoint.dart';
 
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/permission_service.dart';
+import 'package:imis/widgets/permission_widget.dart';
 
 import '../../utils/http_util.dart';
 
@@ -123,6 +125,7 @@ class _TeamPageState extends State<TeamPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    PermissionService().loadPermissions(['ViewTeam', 'EditTeam', 'DeleteTeam']);
   }
 
   @override
@@ -389,135 +392,155 @@ class _TeamPageState extends State<TeamPage> {
               ],
             ),
             SizedBox(height: 20),
-            Expanded(
-              child: Column(
-                children: [
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text('Team', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Actions', style: TextStyle(color: grey)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: Column(
-                        children:
-                            filteredList
-                                .asMap()
-                                .map((index, team) {
-                                  int itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 16,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                itemNumber.toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                team.name, // Access role name directly
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed: () {
-                                                      // Debug print
-                                                      showFormDialog(
-                                                        id: team.id.toString(),
-                                                        name: team.name,
-                                                      );
-                                                    },
-                                                  ),
-                                                  SizedBox(width: 1),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: primaryColor,
-                                                    ),
-                                                    onPressed:
-                                                        () => showDeleteDialog(
-                                                          team.id.toString(),
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                })
-                                .values
-                                .toList(),
+            PermissionWidget(
+              permission: 'ViewTeam',
+              child: Expanded(
+                child: Column(
+                  children: [
+                    Container(
+                      color: secondaryColor,
+                      padding: EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 10,
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            flex: 1,
+                            child: Text('#', style: TextStyle(color: grey)),
+                          ),
+                          Expanded(
+                            flex: 3,
+                            child: Text('Team', style: TextStyle(color: grey)),
+                          ),
+                          Expanded(
+                            flex: 1,
+                            child: Text(
+                              'Actions',
+                              style: TextStyle(color: grey),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                ],
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.vertical,
+                        child: Column(
+                          children:
+                              filteredList
+                                  .asMap()
+                                  .map((index, team) {
+                                    int itemNumber =
+                                        ((_currentPage - 1) * _pageSize) +
+                                        index +
+                                        1;
+                                    return MapEntry(
+                                      index,
+                                      Container(
+                                        padding: EdgeInsets.symmetric(
+                                          vertical: 1,
+                                          horizontal: 16,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            bottom: BorderSide(
+                                              color: Colors.grey.shade300,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              flex: 1,
+                                              child: Padding(
+                                                padding: EdgeInsets.only(
+                                                  right: 1,
+                                                ),
+                                                child: Text(
+                                                  itemNumber.toString(),
+                                                  style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 3,
+                                              child: Padding(
+                                                padding: EdgeInsets.only(
+                                                  right: 1,
+                                                ),
+                                                child: Text(
+                                                  team.name, // Access role name directly
+                                                  style: TextStyle(
+                                                    fontWeight:
+                                                        FontWeight.normal,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 1,
+                                              child: Padding(
+                                                padding: EdgeInsets.only(
+                                                  right: 1,
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  children: [
+                                                    PermissionWidget(
+                                                      permission: 'EditTeam',
+                                                      child: IconButton(
+                                                        icon: Icon(Icons.edit),
+                                                        onPressed: () {
+                                                          // Debug print
+                                                          showFormDialog(
+                                                            id:
+                                                                team.id
+                                                                    .toString(),
+                                                            name: team.name,
+                                                          );
+                                                        },
+                                                      ),
+                                                    ),
+                                                    SizedBox(width: 1),
+                                                    IconButton(
+                                                      icon: Icon(
+                                                        Icons.delete,
+                                                        color: primaryColor,
+                                                      ),
+                                                      onPressed:
+                                                          () =>
+                                                              showDeleteDialog(
+                                                                team.id
+                                                                    .toString(),
+                                                              ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  })
+                                  .values
+                                  .toList(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             Container(
