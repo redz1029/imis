@@ -13,6 +13,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Base.Auths.Permissions;
+using Base.Auths.Roles;
+using IMIS.Infrastructure.Auths.Roles;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -71,9 +73,9 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorizationBuilder()
-    .AddPolicy(RoleTypes.Administrator, policy => policy.RequireRole(RoleTypes.Administrator))
-    .AddPolicy(RoleTypes.PgsManager, policy => policy.RequireRole(RoleTypes.PgsManager))
-    .AddPolicy(RoleTypes.PgsUser, policy => policy.RequireRole(RoleTypes.PgsUser));
+    .AddPolicy(new AdministratorRole().Name, policy => policy.RequireRole(new AdministratorRole().Name))
+    .AddPolicy(new PgsManagerRole().Name, policy => policy.RequireRole(new PgsManagerRole().Name))
+    .AddPolicy(new StandardUserRole().Name, policy => policy.RequireRole(new StandardUserRole().Name));
 
 
 builder.Services.AddScoped<IRoleAndPermissionSeeder, RoleAndPermissionSeeder>();
