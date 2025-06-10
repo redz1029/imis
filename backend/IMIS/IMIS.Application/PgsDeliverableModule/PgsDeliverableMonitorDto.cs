@@ -12,6 +12,8 @@
         public required double Score { get; set; }
         public required string Status { get; set; }
         public string? Remarks { get; set; }
+        public DateTime ByWhen { get; set; }
+
 
         public PgsDeliverableMonitorDto() { }
     }
