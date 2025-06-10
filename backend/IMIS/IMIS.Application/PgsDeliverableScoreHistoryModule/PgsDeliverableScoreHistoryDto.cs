@@ -9,18 +9,6 @@ namespace IMIS.Application.PgsDeliverableScoreHistoryModule
         public DateTime Date { get; set; }
         public double Score { get; set; }
 
-        //public override PgsDeliverableScoreHistory ToEntity() //override
-        //{
-        //    return new PgsDeliverableScoreHistory()
-        //    {          
-        //        Id = Id,
-        //        PgsDeliverableId = PgsDeliverableId,
-        //        Date = Date,
-        //        Score = Score
-        //    };
-        //}
-        //
-
         public PgsDeliverableScoreHistoryDto() { }
 
         public PgsDeliverableScoreHistoryDto(PgsDeliverableScoreHistory entity)
