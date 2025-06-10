@@ -1,7 +1,6 @@
 ﻿using Carter;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsModule;
-using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -44,16 +43,16 @@ namespace IMIS.Presentation.PGSModule
                 Console.WriteLine(JsonSerializer.Serialize(createdPgsList, new JsonSerializerOptions { WriteIndented = true }));
                 return Results.Created("/Deliverable", createdPgsList);
             })
-            .WithTags(_pgsTag)
-            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
+            .WithTags(_pgsTag);
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
 
             app.MapGet("/", async (IPGSDeliverableService service, CancellationToken cancellationToken) =>
             {
                 var Kradto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(Kradto);
             })
-            .WithTags(_pgsTag)
-            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
+            .WithTags(_pgsTag);
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
             app.MapPut("/{id}", async (int id, [FromBody] PGSDeliverableDto pgsdeliverables, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (pgsdeliverables == null)
@@ -70,15 +69,15 @@ namespace IMIS.Presentation.PGSModule
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
                 return Results.Ok(updatedPgsDeliverables);
             })
-            .WithTags(_pgsTag)
-            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
+            .WithTags(_pgsTag);
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
             app.MapGet("/page", async (int page, int pageSize, IPGSDeliverableService service, CancellationToken cancellationToken) =>
             {
                 var paginatedPgsDeliverables = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedPgsDeliverables);
             })
-            .WithTags(_pgsTag)
-            .RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
+            .WithTags(_pgsTag);
+            //.RequireAuthorization(a => a.RequireRole(RoleTypes.PgsManager));
 
             app.MapGet("/filter", async ([AsParameters] PgsDeliverableMonitorFilter filter, IPGSDeliverableService service, CancellationToken cancellationToken) =>
             {

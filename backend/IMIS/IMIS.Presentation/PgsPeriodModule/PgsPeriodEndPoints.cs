@@ -19,52 +19,52 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
-        {            
+        {
             app.MapPost("/", async ([FromBody] PgsPeriodDto pgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {                
-                var createdPgsPeriod = await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);             
+            {
+                var createdPgsPeriod = await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_pgsPeriodTag, cancellationToken);
                 return Results.Created($"/pgsPeriod/{createdPgsPeriod.Id}", createdPgsPeriod);
             })
-            .WithTags(_pgsPeriodTag)        
-            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
-            .RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.Add));
+            .WithTags(_pgsPeriodTag);
+            //.RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            //.RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.Add));
 
-            app.MapGet("/", async (IPgsPeriodService service, CancellationToken cancellationToken) =>  
+            app.MapGet("/", async (IPgsPeriodService service, CancellationToken cancellationToken) =>
             {
                 var period = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(period);
             })
-            .WithTags(_pgsPeriodTag)   
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true)
-            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
-            .RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.View));
+            .WithTags(_pgsPeriodTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true);
+            //.RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            //.RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] PgsPeriodDto pgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {                             
+            {
                 var existingPeriod = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingPeriod == null)
                 {
                     return Results.NotFound($"PGS Period with ID {id} not found.");
-                }               
+                }
                 pgsPeriodDto.Id = id;
                 var updatedPgsPeriod = await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);
-              
+
                 await cache.EvictByTagAsync(_pgsPeriodTag, cancellationToken);
                 return Results.Ok(updatedPgsPeriod);
             })
-            .WithTags(_pgsPeriodTag)
-            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
-            .RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.Add)); ;         
+            .WithTags(_pgsPeriodTag);
+            //.RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            //.RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.Add)); ;         
             app.MapGet("/page", async (int page, int pageSize, IPgsPeriodService service, CancellationToken cancellationToken) =>
             {
                 var paginatedPgsPeriod = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedPgsPeriod);
             })
             .WithTags(_pgsPeriodTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true)
-            .RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
-            .RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.View)); ;                
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true);
+            //.RequireAuthorization(policy => policy.RequireRole(RoleTypes.Administrator)
+            //.RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.View)); ;                
         }
     }
 }
