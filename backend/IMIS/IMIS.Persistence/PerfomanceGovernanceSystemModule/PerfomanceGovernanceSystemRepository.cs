@@ -29,6 +29,8 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Include(p => p.Office)
         .Include(p => p.PgsDeliverables)
         .ThenInclude(d => d.Kra)
+        .Include(p => p.PgsDeliverables)
+        .ThenInclude(d => d.PgsDeliverableScoreHistory)
         .Include(p => p.PgsReadinessRating)
         .Include(p => p.PgsSignatories)
          .ThenInclude(d => d.PgsSignatoryTemplate)
@@ -164,8 +166,8 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     existingPerfomanceGovernanceSystem.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating;
                 }
             }
-              // --- Sync PgsDeliverables ---
-        
+            // --- Sync PgsDeliverables ---
+         
             if (perfomanceGovernanceSystem.PgsDeliverables != null)
             {
                 foreach (var deliverable in perfomanceGovernanceSystem.PgsDeliverables)
@@ -175,10 +177,10 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 
                     if (existingDeliverable != null)
                     {
-                        // Update existing deliverable
                         _dbContext.Entry(existingDeliverable).CurrentValues.SetValues(deliverable);
 
-                        // Always save a new history record on update
+                        existingDeliverable.PerfomanceGovernanceSystemId = existingPerfomanceGovernanceSystem.Id;
+
                         var history = new PgsDeliverableScoreHistory
                         {
                             Id = 0,
@@ -187,12 +189,12 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                             Score = deliverable.PercentDeliverables
                         };
                         _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);
+
                     }
                     else
                     {
-                        // New deliverable - Add to existing parent
-                        existingPerfomanceGovernanceSystem.PgsDeliverables!.Add(deliverable);
-
+                        deliverable.PerfomanceGovernanceSystemId = existingPerfomanceGovernanceSystem.Id;
+                        _dbContext.Entry(deliverable).State = EntityState.Added;
                     }
                 }
             }

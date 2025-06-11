@@ -20,13 +20,13 @@ namespace IMIS.Persistence.PGSModules
                 .Include(d => d.Kra)
                 .Where(d => !d.IsDeleted);
 
-            if(filter.PgsPeriodId.HasValue)
+            if (filter.PgsPeriodId.HasValue)
                 query = query.Where(d => d.PerfomanceGovernanceSystem!.PgsPeriod.Id == filter.PgsPeriodId.Value);
 
-            if(filter.OfficeId.HasValue)
+            if (filter.OfficeId.HasValue)
                 query = query.Where(d => d.PerfomanceGovernanceSystem!.Office.Id == filter.OfficeId.Value);
 
-            if(filter.IsDirect.HasValue)
+            if (filter.IsDirect.HasValue)
                 query = query.Where(d => d.IsDirect == filter.IsDirect.Value);
 
             if(filter.ScoreRangeFrom.HasValue)
