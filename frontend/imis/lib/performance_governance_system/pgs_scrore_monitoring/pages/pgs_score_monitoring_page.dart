@@ -146,6 +146,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 'byWhen': formattedByWhen,
                 'status': item['status'],
                 'remarks': item['remarks'],
+                'score': item['score'],
               };
             }).toList();
 
@@ -230,10 +231,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
             officeList = data.map((office) => office.toJson()).toList();
             filteredListOffice = List.from(officeList);
 
-            if (_selectedOfficeId == null && filteredListOffice.isNotEmpty) {
-              _selectedOfficeId = filteredListOffice[0]['id'].toString();
-            }
-
             debugPrint("Auto-selected office: $_selectedOfficeId");
           });
         }
@@ -253,16 +250,44 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     debugPrint('Saving status for index $index: $statusIndex');
   }
 
+  PgsStatus dynamicToPgsStatus(dynamic value) {
+    if (value == null) return PgsStatus.notStarted;
+
+    // Handle integer index
+    if (value is int) {
+      if (value >= 0 && value < PgsStatus.values.length) {
+        return PgsStatus.values[value];
+      }
+    }
+
+    if (value is String) {
+      try {
+        return PgsStatus.values.firstWhere(
+          (status) => status.name == value,
+          orElse: () => PgsStatus.notStarted,
+        );
+      } catch (e) {
+        debugPrint("Failed to parse status string: $value");
+      }
+    }
+
+    return PgsStatus.notStarted;
+  }
+
   Widget _buildStatusCell(int index, VoidCallback setDialogState) {
+    if (!selectedStatus.containsKey(index)) {
+      final rawStatus = deliverableList[index]['status'];
+      final parsedStatus = dynamicToPgsStatus(rawStatus);
+
+      selectedStatus[index] = parsedStatus;
+    }
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: DropdownButtonFormField<PgsStatus>(
-        value: selectedStatus[index] ?? PgsStatus.notStarted,
+        value: selectedStatus[index],
         onChanged: (PgsStatus? newValue) {
           if (newValue != null) {
-            debugPrint(
-              'Selected Status for index $index: ${newValue.name}',
-            ); // Debug print
             setDialogState();
             setState(() {
               selectedStatus[index] = newValue;
@@ -288,7 +313,9 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
   Widget _buildRemarkCell(int index) {
     if (!remarkControllers.containsKey(index)) {
-      remarkControllers[index] = TextEditingController();
+      final remarks = deliverableList[index]['remarks'];
+
+      remarkControllers[index] = TextEditingController(text: remarks);
     }
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -315,8 +342,13 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
   Widget _buildScoringCell(int index) {
     if (!percentageControllers.containsKey(index)) {
-      percentageControllers[index] = TextEditingController();
-      percentageValues[index] = 0;
+      final score = deliverableList[index]['score'];
+      final initialScore = (score is int && score <= 100) ? score : 0;
+
+      percentageControllers[index] = TextEditingController(
+        text: initialScore.toString(),
+      );
+      percentageValues[index] = initialScore;
 
       percentageControllers[index]!.addListener(() {
         final text = percentageControllers[index]!.text;
@@ -401,175 +433,276 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   horizontal: 16.0,
                   vertical: 8.0,
                 ),
+
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
-                      child: PopupMenuButton<int>(
-                        color: mainBgColor,
-                        offset: const Offset(0, 30),
-                        onSelected: (int value) {
-                          final selected = filteredListPeriod.firstWhere(
-                            (period) => period['id'] == value,
-                            orElse: () => {},
-                          );
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Filter by Period',
+                            style: TextStyle(fontSize: 12, color: grey),
+                          ),
+                          gap2,
+                          PopupMenuButton<String>(
+                            color: mainBgColor,
+                            offset: const Offset(0, 30),
+                            onSelected: (String value) {
+                              setState(() {
+                                selectedPeriod =
+                                    value.isEmpty ? null : int.tryParse(value);
+                                if (selectedPeriod == null) {
+                                  selectedPeriodText = 'All Period';
+                                } else {
+                                  final selected = filteredListPeriod
+                                      .firstWhere(
+                                        (period) =>
+                                            period['id'] == selectedPeriod,
+                                        orElse:
+                                            () => {
+                                              'startDate': '',
+                                              'endDate': '',
+                                            },
+                                      );
+                                  selectedPeriodText =
+                                      "${selected['startDate']} - ${selected['endDate']}";
+                                }
+                                fetchFilteredPgsList();
+                              });
+                            },
+                            itemBuilder: (BuildContext context) {
+                              final updatedPeriodList = [
+                                {'id': '', 'name': 'All Period'},
+                                ...filteredListPeriod.map(
+                                  (period) => {
+                                    'id': period['id'].toString(),
+                                    'name':
+                                        "${period['startDate']} - ${period['endDate']}",
+                                  },
+                                ),
+                              ];
 
-                          setState(() {
-                            selectedPeriod = value;
-                            selectedPeriodText =
-                                "${selected['startDate']} - ${selected['endDate']}";
-                            fetchFilteredPgsList();
-                          });
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return filteredListPeriod.map<PopupMenuItem<int>>((
-                            period,
-                          ) {
-                            return PopupMenuItem<int>(
-                              value: period['id'],
-                              child: Text(
-                                "${period['startDate']} - ${period['endDate']}",
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
-                          }).toList();
-                        },
-                        child: FilterButton(
-                          label:
-                              selectedPeriod == null
-                                  ? 'Filter by period'
-                                  : selectedPeriodText ?? 'Period',
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: PopupMenuButton<String>(
-                        color: mainBgColor,
-                        offset: const Offset(0, 30),
-                        onSelected: (String value) {
-                          setState(() {
-                            _selectedOfficeId = value;
-                            fetchFilteredPgsList();
-                          });
-                        },
-
-                        itemBuilder: (BuildContext context) {
-                          return filteredListOffice.map<PopupMenuItem<String>>((
-                            officeData,
-                          ) {
-                            return PopupMenuItem<String>(
-                              value: officeData['id'].toString(),
-                              child: Text(officeData['name']),
-                            );
-                          }).toList();
-                        },
-                        child: FilterButton(
-                          label:
-                              _selectedOfficeId == null
-                                  ? 'Office Name'
-                                  : filteredListOffice.firstWhere(
-                                    (office) =>
-                                        office['id'].toString() ==
-                                        _selectedOfficeId,
-                                    orElse: () => {'name': 'Office'},
-                                  )['name'],
-                        ),
-                      ),
-                    ),
-
-                    // Filter by KRA
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: PopupMenuButton<int>(
-                        color: mainBgColor,
-                        offset: const Offset(0, 30),
-                        onSelected: (int value) {
-                          setState(() {
-                            selectedKra = value;
-                            fetchFilteredPgsList();
-                          });
-                        },
-
-                        itemBuilder: (BuildContext context) {
-                          return kraListOptions.map<PopupMenuItem<int>>((kra) {
-                            return PopupMenuItem<int>(
-                              value: kra['id'],
-                              child: Text(kra['name']),
-                            );
-                          }).toList();
-                        },
-                        child: FilterButton(
-                          label:
-                              selectedKra == null
-                                  ? 'Filter by KRA'
-                                  : kraListOptions.firstWhere(
-                                    (kra) => kra['id'] == selectedKra,
-                                    orElse: () => {'name': 'Filter by period'},
-                                  )['name'],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: PopupMenuButton<bool>(
-                        color: mainBgColor,
-                        offset: const Offset(0, 30),
-                        onSelected: (bool value) {
-                          setState(() {
-                            isDirect = value;
-                            fetchFilteredPgsList(); // Replace with your desired function
-                          });
-                        },
-                        itemBuilder: (BuildContext context) {
-                          return [
-                            PopupMenuItem<bool>(
-                              value: true,
-                              child: Text('Direct'),
+                              return updatedPeriodList
+                                  .map<PopupMenuItem<String>>((period) {
+                                    return PopupMenuItem<String>(
+                                      value: period['id'],
+                                      child: Text(period['name']!),
+                                    );
+                                  })
+                                  .toList();
+                            },
+                            child: FilterButton(
+                              label:
+                                  selectedPeriod == null
+                                      ? 'All Period'
+                                      : selectedPeriodText ?? 'Period',
                             ),
-                            PopupMenuItem<bool>(
-                              value: false,
-                              child: Text('Indirect'),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Filter by Office',
+                            style: TextStyle(fontSize: 12, color: grey),
+                          ),
+                          gap2,
+                          PopupMenuButton<String>(
+                            color: mainBgColor,
+                            offset: const Offset(0, 30),
+                            onSelected: (String value) {
+                              setState(() {
+                                _selectedOfficeId =
+                                    value.isEmpty ? null : value;
+                                fetchFilteredPgsList();
+                              });
+                            },
+                            itemBuilder: (BuildContext context) {
+                              final updatedOfficeList = [
+                                {'id': '', 'name': 'All Offices'},
+                                ...filteredListOffice,
+                              ];
+
+                              return updatedOfficeList
+                                  .map<PopupMenuItem<String>>((office) {
+                                    return PopupMenuItem<String>(
+                                      value: office['id'].toString(),
+                                      child: Text(office['name']),
+                                    );
+                                  })
+                                  .toList();
+                            },
+                            child: FilterButton(
+                              label:
+                                  _selectedOfficeId == null
+                                      ? 'All Offices'
+                                      : filteredListOffice.firstWhere(
+                                        (office) =>
+                                            office['id'].toString() ==
+                                            _selectedOfficeId,
+                                        orElse: () => {'name': 'Office'},
+                                      )['name'],
                             ),
-                          ];
-                        },
-                        child: FilterButton(
-                          label:
-                              isDirect == null
-                                  ? 'Filter by Type'
-                                  : isDirect!
-                                  ? 'Direct'
-                                  : 'Indirect',
-                        ),
+                          ),
+                        ],
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
-                      child: GestureDetector(
-                        key: _menuScoreRangeKey,
-                        onTap: () => _showScoreRangeMenu(context),
-                        child: FilterButton(
-                          label:
-                              (scoreRangeFromController.text.isEmpty ||
-                                      scoreRangeToController.text.isEmpty)
-                                  ? 'Filter by Score Range'
-                                  : 'From ${scoreRangeFromController.text} to ${scoreRangeToController.text}',
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Filter by KRA',
+                            style: TextStyle(fontSize: 12, color: grey),
+                          ),
+                          gap2,
+                          PopupMenuButton<int>(
+                            color: mainBgColor,
+                            offset: const Offset(0, 30),
+                            onSelected: (int value) {
+                              setState(() {
+                                selectedKra = (value == -1) ? null : value;
+                                fetchFilteredPgsList();
+                              });
+                            },
+                            itemBuilder: (BuildContext context) {
+                              final updatedKraList = [
+                                {'id': -1, 'name': 'All KRA'},
+                                ...kraListOptions,
+                              ];
+
+                              return updatedKraList.map<PopupMenuItem<int>>((
+                                kra,
+                              ) {
+                                return PopupMenuItem<int>(
+                                  value: kra['id'] as int,
+                                  child: Text(kra['name']),
+                                );
+                              }).toList();
+                            },
+                            child: FilterButton(
+                              label:
+                                  selectedKra == null
+                                      ? 'All KRA'
+                                      : kraListOptions.firstWhere(
+                                        (kra) => kra['id'] == selectedKra,
+                                        orElse: () => {'name': 'Unknown'},
+                                      )['name'],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Filter by Type',
+                            style: TextStyle(fontSize: 12, color: grey),
+                          ),
+                          gap2,
+                          PopupMenuButton<String>(
+                            color: mainBgColor,
+                            offset: const Offset(0, 30),
+                            onSelected: (String value) {
+                              setState(() {
+                                if (value.isEmpty) {
+                                  isDirect = null;
+                                } else if (value == 'true') {
+                                  isDirect = true;
+                                } else {
+                                  isDirect = false;
+                                }
+                                fetchFilteredPgsList();
+                              });
+                            },
+                            itemBuilder: (BuildContext context) {
+                              return [
+                                PopupMenuItem<String>(
+                                  value: '',
+                                  child: Text('All Types'),
+                                ),
+                                PopupMenuItem<String>(
+                                  value: 'true',
+                                  child: Text('Direct'),
+                                ),
+                                PopupMenuItem<String>(
+                                  value: 'false',
+                                  child: Text('Indirect'),
+                                ),
+                              ];
+                            },
+                            child: FilterButton(
+                              label:
+                                  isDirect == null
+                                      ? 'All Types'
+                                      : isDirect!
+                                      ? 'Direct'
+                                      : 'Indirect',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Filter by Score',
+                            style: TextStyle(fontSize: 12, color: grey),
+                          ),
+                          gap2,
+                          GestureDetector(
+                            key: _menuScoreRangeKey,
+                            onTap: () => _showScoreRangeMenu(context),
+                            child: FilterButton(
+                              label:
+                                  (scoreRangeFromController.text.isEmpty ||
+                                          scoreRangeToController.text.isEmpty)
+                                      ? 'Filter by Score Range'
+                                      : 'From ${scoreRangeFromController.text} to ${scoreRangeToController.text}',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
-                      child: GestureDetector(
-                        key: _menuPageKey,
-                        onTap: () => _showPageSizeMenu(context),
-                        child: FilterButton(
-                          label:
-                              (pageController.text.isEmpty ||
-                                      pageSizeController.text.isEmpty)
-                                  ? 'Filter by Page'
-                                  : 'From ${pageController.text} to ${pageSizeController.text}',
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Filter by Page',
+                            style: TextStyle(fontSize: 12, color: grey),
+                          ),
+                          gap2,
+                          GestureDetector(
+                            key: _menuPageKey,
+                            onTap: () => _showPageSizeMenu(context),
+                            child: FilterButton(
+                              label:
+                                  (pageController.text.isEmpty ||
+                                          pageSizeController.text.isEmpty)
+                                      ? 'Filter by Page'
+                                      : 'From ${pageController.text} to ${pageSizeController.text}',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -603,9 +736,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                             8: FlexColumnWidth(2),
                           },
                           children: [
-                            // Main Header Row
-
-                            // Sub Header Row
                             TableRow(
                               children: [
                                 _buildTableHeaderCell('PERIOD'),
@@ -658,6 +788,27 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       ),
                     ),
                   ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {},
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      child: Text(
+                        'Save',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -767,11 +918,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Filter by Page',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              gap2,
               TextField(
                 controller: pageController,
                 keyboardType: TextInputType.number,
