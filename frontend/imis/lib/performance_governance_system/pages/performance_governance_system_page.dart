@@ -65,7 +65,6 @@ class _PerformanceGovernanceSystemPageState
   List<User> filteredListUser = [];
   List<PgsSignatory> displaySignatoryList = [];
 
-  List<Map<String, dynamic>> deliverableList = [];
   List<Map<String, dynamic>> deliverableLists = [];
   List<Map<String, dynamic>> readinessList = [];
   List<Map<String, dynamic>> filteredList = [];
@@ -92,13 +91,14 @@ class _PerformanceGovernanceSystemPageState
   String officeIdList = "";
   String? selectedOffice = "";
   String? selectedPeriodText;
-  TextEditingController percentage = TextEditingController();
+  TextEditingController percentageDeliverables = TextEditingController();
 
   List<Map<String, dynamic>> periodList = [];
   List<Map<String, dynamic>> filteredListPeriod = [];
   List<PgsDeliverables> deliverablesList = [];
 
   int? selectedPeriod;
+  int? selectedKra;
   // String? selectedActions;
   Map<int, bool> selectedApproved = {};
   Map<int, bool> selectedDisapproved = {};
@@ -108,6 +108,8 @@ class _PerformanceGovernanceSystemPageState
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
+
+  List<Map<String, dynamic>> filteredListOffice = [];
 
   //For search controller
   TextEditingController searchController = TextEditingController();
@@ -149,7 +151,7 @@ class _PerformanceGovernanceSystemPageState
   final dio = Dio();
 
   Future<void> _loadCurrentUserId() async {
-    UserRegistration? user = await AuthUtil.fetchLoggedUser();
+    UserRegistration? user = await AuthUtil.processTokenValidity(dio);
 
     setState(() {
       userId = user!.id ?? "UserId";
@@ -260,6 +262,8 @@ class _PerformanceGovernanceSystemPageState
       debugPrint("?? Unexpected error: $e");
     }
   }
+
+  //filter by Fetching
 
   Future<void> fetchSignatory() async {
     var url = ApiEndpoint().signatoryTemplate;
@@ -646,7 +650,7 @@ class _PerformanceGovernanceSystemPageState
     var url = ApiEndpoint().pgsperiod;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<PgsPeriod> data =
@@ -699,6 +703,7 @@ class _PerformanceGovernanceSystemPageState
     fetchPgsList();
     fetchUser();
     fetchPGSPeriods();
+
     isSearchFocus.addListener(() {
       setState(() {});
     });
@@ -717,7 +722,7 @@ class _PerformanceGovernanceSystemPageState
     List<PgsDeliverables> deliverablesList = getTableDeliverables();
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<PgsDeliverables> data =
@@ -744,7 +749,7 @@ class _PerformanceGovernanceSystemPageState
   Future<void> fetchDropdownData() async {
     var url = ApiEndpoint().keyresult;
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200) {
         List<dynamic> data = response.data;
@@ -771,7 +776,7 @@ class _PerformanceGovernanceSystemPageState
     double percentDeliverables = 0.0;
 
     try {
-      percentDeliverables = double.tryParse(percentage.text) ?? 0.0;
+      percentDeliverables = double.tryParse(percentageDeliverables.text) ?? 0.0;
     } catch (e) {
       debugPrint("Error parsing percentDeliverables: $e");
     }
@@ -803,7 +808,7 @@ class _PerformanceGovernanceSystemPageState
         confidenceScore.value,
         totalScore,
       ),
-      pgsSignatories: _getPgsSignatory(id), //updatedSignatories
+      pgsSignatories: _getPgsSignatory(id),
       isDeleted: false,
       remarks: "",
       rowVersion: "",
@@ -838,12 +843,8 @@ class _PerformanceGovernanceSystemPageState
       final byWhen =
           DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
 
-      double percentDeliverables = 0.0;
-      try {
-        percentDeliverables = double.tryParse(percentage.text) ?? 0.0;
-      } catch (e) {
-        debugPrint("Error parsing percentDeliverables: $e");
-      }
+      final percentperDeliverables =
+          double.tryParse(percentageControllers[index]!.text) ?? 0.0;
 
       final statusIndex =
           selectedStatus[index]?.index ?? PgsStatus.notStarted.index;
@@ -871,7 +872,7 @@ class _PerformanceGovernanceSystemPageState
           kraDescriptionText,
           isDirect,
           byWhen,
-          percentDeliverables,
+          percentperDeliverables,
           status,
           remarks: remarks,
           rowVersion: '',
@@ -925,7 +926,7 @@ class _PerformanceGovernanceSystemPageState
   void clearAllSelections() {
     rows.clear();
     deliverablesControllers.clear();
-    percentage.clear();
+    percentageDeliverables.clear();
     selectedDirect.clear();
     selectedIndirect.clear();
     selectedByWhen.clear();
@@ -986,6 +987,7 @@ class _PerformanceGovernanceSystemPageState
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
@@ -1257,10 +1259,6 @@ class _PerformanceGovernanceSystemPageState
                                                             pgsId:
                                                                 pgsgovernancesystem['id'],
                                                           );
-
-                                                      debugPrint(
-                                                        'Pgs Status: ${pgsgovernancesystem['pgsStatus']}',
-                                                      );
 
                                                       List<PgsSignatory>
                                                       signatory =
@@ -1698,7 +1696,7 @@ class _PerformanceGovernanceSystemPageState
         confidenceScore.value = 0.0;
         selectedPeriod = null;
         selectedPeriodText = null;
-        percentage.clear();
+        percentageDeliverables.clear();
 
         deliverablesControllers.clear();
         selectedKRA.clear();
@@ -1724,7 +1722,7 @@ class _PerformanceGovernanceSystemPageState
         confidenceScore.value = double.tryParse(confidencescore ?? '') ?? 0.0;
 
         if (percentDeliverables != null) {
-          percentage.text = percentDeliverables;
+          percentageDeliverables.text = percentDeliverables;
         }
 
         if (startDate != null && endDate != null) {
@@ -1773,6 +1771,10 @@ class _PerformanceGovernanceSystemPageState
             deliverableIds[i] = item.id ?? 0;
             selectedKRA[i] = item.kra.id;
             remarksControllers[i] = TextEditingController(text: item.remarks);
+            percentageControllers[i] = TextEditingController(
+              text: item.percentDeliverables.toString(),
+            );
+
             kraDescriptionController[i] = TextEditingController(
               text: item.kraDescription,
             );
@@ -2334,65 +2336,65 @@ class _PerformanceGovernanceSystemPageState
                               ),
                             ),
 
-                            Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Text('$firstName $middleName $lastName'),
-                                    _buildSignatoryColumn(
-                                      title:
-                                          '${getSignatoryTitleByOrderLevel(1) ?? ''}:',
-                                      currentValue: _submittedByUserId,
-                                      onChanged: (value) {
-                                        setDialogState(() {
-                                          _submittedByUserId = value;
-                                        });
-                                      },
-                                      onDeleted: () {
-                                        setDialogState(() {
-                                          _submittedByUserId = null;
-                                        });
-                                      },
-                                    ),
-                                    const SizedBox(width: 200),
-                                    _buildSignatoryColumn(
-                                      title:
-                                          '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
-                                      currentValue: _notedByUserId,
-                                      onChanged: (value) {
-                                        setDialogState(() {
-                                          _notedByUserId = value;
-                                        });
-                                      },
-                                      onDeleted: () {
-                                        setDialogState(() {
-                                          _notedByUserId = null;
-                                        });
-                                      },
-                                    ),
-                                    const SizedBox(width: 200),
-                                    _buildSignatoryColumn(
-                                      title:
-                                          '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
-                                      currentValue: _approvedByUserId,
-                                      onChanged: (value) {
-                                        setDialogState(() {
-                                          _approvedByUserId = value;
-                                        });
-                                      },
-                                      onDeleted: () {
-                                        setDialogState(() {
-                                          _approvedByUserId = null;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                            // Padding(
+                            //   padding: const EdgeInsets.all(8),
+                            //   child: SingleChildScrollView(
+                            //     scrollDirection: Axis.horizontal,
+                            //     child: Row(
+                            //       crossAxisAlignment: CrossAxisAlignment.start,
+                            //       children: [
+                            //         // Text('$firstName $middleName $lastName'),
+                            //         _buildSignatoryColumn(
+                            //           title:
+                            //               '${getSignatoryTitleByOrderLevel(1) ?? ''}:',
+                            //           currentValue: _submittedByUserId,
+                            //           onChanged: (value) {
+                            //             setDialogState(() {
+                            //               _submittedByUserId = value;
+                            //             });
+                            //           },
+                            //           onDeleted: () {
+                            //             setDialogState(() {
+                            //               _submittedByUserId = null;
+                            //             });
+                            //           },
+                            //         ),
+                            //         const SizedBox(width: 200),
+                            //         _buildSignatoryColumn(
+                            //           title:
+                            //               '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
+                            //           currentValue: _notedByUserId,
+                            //           onChanged: (value) {
+                            //             setDialogState(() {
+                            //               _notedByUserId = value;
+                            //             });
+                            //           },
+                            //           onDeleted: () {
+                            //             setDialogState(() {
+                            //               _notedByUserId = null;
+                            //             });
+                            //           },
+                            //         ),
+                            //         const SizedBox(width: 200),
+                            //         _buildSignatoryColumn(
+                            //           title:
+                            //               '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
+                            //           currentValue: _approvedByUserId,
+                            //           onChanged: (value) {
+                            //             setDialogState(() {
+                            //               _approvedByUserId = value;
+                            //             });
+                            //           },
+                            //           onDeleted: () {
+                            //             setDialogState(() {
+                            //               _approvedByUserId = null;
+                            //             });
+                            //           },
+                            //         ),
+                            //       ],
+                            //     ),
+                            //   ),
+                            // ),
                           ],
                         ),
                       ),
@@ -2496,7 +2498,7 @@ class _PerformanceGovernanceSystemPageState
                             deliverablesControllers.values.any(
                               (controller) => controller.text.trim().isEmpty,
                             ) ||
-                            percentage.text.trim().isEmpty) {
+                            percentageDeliverables.text.trim().isEmpty) {
                           MotionToast.error(
                             title: const Text("Missing Fields"),
                             description: Text(
@@ -2784,7 +2786,7 @@ class _PerformanceGovernanceSystemPageState
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
-              controller: percentage,
+              controller: percentageDeliverables,
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
               style: TextStyle(
@@ -3099,7 +3101,7 @@ class _PerformanceGovernanceSystemPageState
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
-              controller: percentage,
+              controller: percentageDeliverables,
               textAlign: TextAlign.center,
               keyboardType: TextInputType.number,
               style: TextStyle(
@@ -3153,7 +3155,7 @@ class _PerformanceGovernanceSystemPageState
         _buildSizedHeaderCell('WHEN', width: 90),
         _buildSizedHeaderCell('STATUS', width: 100),
         _buildSizedHeaderCell('REMARKS', width: 120),
-        _buildSizedHeaderCell('Percentage', width: 100),
+        _buildSizedHeaderCell('SCORING', width: 100),
       ],
     );
   }

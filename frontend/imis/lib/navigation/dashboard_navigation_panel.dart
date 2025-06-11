@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/history/pages/history_page.dart';
+import 'package:imis/performance_governance_system/pgs_scrore_monitoring/pages/pgs_score_monitoring_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
@@ -36,6 +37,8 @@ class DashboardNavigationPanel extends StatefulWidget {
 
 class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final GlobalKey<ScaffoldMessengerState> snackbarKey =
+      GlobalKey<ScaffoldMessengerState>();
   final GlobalKey _menuKey = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -92,9 +95,8 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
         firstName = user.firstName ?? "firstName";
         middleName = user.middleName ?? "middleName";
         lastName = user.lastName ?? "lastName";
-        email = user.email ?? "No email found"; // Make sure this is being set
-        username =
-            user.userName ?? "No username found"; // Make sure this is being set
+        email = user.email ?? "No email found";
+        username = user.userName ?? "No username found";
         roles = roleList ?? [];
       });
 
@@ -500,7 +502,12 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     1,
                     () => _setScreen(PerformanceGovernanceSystemPage(), 1),
                   ),
-
+                  _buildListTile(
+                    Icons.credit_score,
+                    'PGS Score Monitoring',
+                    18,
+                    () => _setScreen(PgsScoreMonitoringPage(), 18),
+                  ),
                   Theme(
                     data: Theme.of(context).copyWith(dividerColor: lightGrey),
                     child: ExpansionTile(
@@ -553,6 +560,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                                 6,
                                 () => _setScreen(OfficePage(), 6),
                               ),
+
                               _buildListTile(
                                 Icons.date_range,
                                 hideIcon: true,
@@ -668,7 +676,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
       color: secondaryColor,
       context: context,
       position: RelativeRect.fromLTRB(
-        offset.dx, // X position
+        offset.dx,
         offset.dy + renderBox.size.height,
         offset.dx + renderBox.size.width,
         offset.dy + renderBox.size.height + 50,
@@ -731,7 +739,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
           key: _scaffoldKey,
           body: Row(
             children: [
-              if (isWideScreen) _buildSidebar(), // Sidebar stays separate
+              if (isWideScreen) _buildSidebar(),
               Expanded(
                 child: Scaffold(
                   appBar: AppBar(
