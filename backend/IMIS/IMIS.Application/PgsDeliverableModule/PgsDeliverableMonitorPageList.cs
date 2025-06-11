@@ -30,7 +30,8 @@ namespace IMIS.Application.PgsDeliverableModule
                         Office = e.PerfomanceGovernanceSystem.Office.Name,
                         Score = e.PgsDeliverableScoreHistory?.OrderByDescending(s => s.Date).FirstOrDefault()?.Score ?? 0,
                         Status = e.Status.GetDescription(),
-                        Remarks = e.Remarks
+                        Remarks = e.Remarks,
+                        ByWhen = e.ByWhen
                     }
                 ).ToList();
             return new PgsDeliverableMonitorPageList(items, page, pageSize, totalCount);
