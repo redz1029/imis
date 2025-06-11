@@ -1,0 +1,901 @@
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:imis/constant/constant.dart';
+import 'package:imis/office/models/office.dart';
+import 'package:imis/performance_governance_system/enum/pgs_status.dart';
+import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
+import 'package:imis/widgets/filter_button_widget.dart';
+import 'package:intl/intl.dart';
+import '../../../utils/http_util.dart';
+import '../models/pgs_filter.dart';
+
+class PgsScoreMonitoringPage extends StatefulWidget {
+  const PgsScoreMonitoringPage({super.key});
+
+  @override
+  // ignore: library_private_types_in_public_api
+  _PgsScoreMonitoringPageState createState() => _PgsScoreMonitoringPageState();
+}
+
+class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
+  final GlobalKey _menuScoreRangeKey = GlobalKey();
+  final GlobalKey _menuPageKey = GlobalKey();
+  Map<int, TextEditingController> remarkControllers = {};
+
+  List<Map<String, dynamic>> deliverableList = [];
+  List<Map<String, dynamic>> filteredList = [];
+  Map<int, String> selectedByWhen = {};
+
+  Map<int, TextEditingController> percentageControllers = {};
+  Map<int, int> percentageValues = {};
+
+  List<Map<String, dynamic>> kraListOptions = [];
+  Map<int, int?> selectedKRA = {};
+  int? selectedKra;
+
+  List<Map<String, dynamic>> officeList = [];
+  List<Map<String, dynamic>> filteredListOffice = [];
+  String? _selectedOfficeId;
+
+  List<Map<String, dynamic>> periodList = [];
+  List<Map<String, dynamic>> filteredListPeriod = [];
+  int? selectedPeriod;
+  String? selectedPeriodText;
+
+  Map<int, PgsStatus> selectedStatus = {};
+
+  TextEditingController scoreRangeToController = TextEditingController();
+  TextEditingController scoreRangeFromController = TextEditingController();
+
+  TextEditingController pageController = TextEditingController();
+  TextEditingController pageSizeController = TextEditingController();
+
+  bool? isDirect;
+  bool _isLoading = false;
+
+  final dio = Dio();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchFilteredPgsList();
+    fetchOffice();
+    fetchDropdownData();
+    fetchPGSPeriods();
+  }
+
+  Future<void> fetchFilteredPgsList() async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final user = await AuthUtil.fetchLoggedUser();
+      final token = await AuthUtil.fetchAccessToken();
+
+      if (user == null || token == null || token.isEmpty) {
+        debugPrint("Missing user or token.");
+        return;
+      }
+
+      int? scoreFrom =
+          scoreRangeFromController.text.isNotEmpty
+              ? int.tryParse(scoreRangeFromController.text)
+              : null;
+      int? scoreTo =
+          scoreRangeToController.text.isNotEmpty
+              ? int.tryParse(scoreRangeToController.text)
+              : null;
+
+      int? page =
+          pageController.text.isNotEmpty
+              ? int.tryParse(pageController.text)
+              : null;
+      int? pageSize =
+          pageSizeController.text.isNotEmpty
+              ? int.tryParse(pageSizeController.text)
+              : null;
+
+      final filter = PgsFilter(
+        selectedPeriod,
+        int.tryParse(_selectedOfficeId ?? ''),
+        selectedKra,
+        isDirect,
+        scoreFrom,
+        scoreTo,
+        page,
+        pageSize,
+      );
+
+      final queryParams =
+          filter.toJson()..removeWhere((key, value) => value == null);
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        ApiEndpoint().filterBy,
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final items = data["items"] as List<dynamic>? ?? [];
+
+        List<Map<String, dynamic>> formattedData =
+            items.map((item) {
+              String formattedByWhen = '';
+              if (item['byWhen'] != null &&
+                  item['byWhen'].toString().isNotEmpty) {
+                try {
+                  DateTime date = DateTime.parse(item['byWhen'].toString());
+                  formattedByWhen = DateFormat('MMMM, yyyy').format(date);
+                } catch (e) {
+                  formattedByWhen = item['byWhen'].toString();
+                }
+              }
+              return {
+                'kra': item['keyResultArea'],
+                'kraDescription': item['kraDescription'],
+                'Start Date': item['pgsPeriod']?.split(" - ")?.first ?? '',
+                'End Date': item['pgsPeriod']?.split(" - ")?.last ?? '',
+                'officeName': item['office'],
+                'isDirect': item['isDirect'],
+                'deliverableName': item['deliverable'],
+                'byWhen': formattedByWhen,
+                'status': item['status'],
+                'remarks': item['remarks'],
+              };
+            }).toList();
+
+        if (mounted) {
+          setState(() {
+            deliverableList = formattedData;
+            filteredList = List.from(formattedData);
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching filtered data: $e");
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> fetchPGSPeriods() async {
+    var url = ApiEndpoint().pgsperiod;
+
+    try {
+      var response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<PgsPeriod> data =
+            (response.data as List)
+                .map((period) => PgsPeriod.fromJson(period))
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            periodList = data.map((period) => period.toJson()).toList();
+            filteredListPeriod = List.from(periodList);
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+  }
+
+  Future<void> fetchDropdownData() async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      var response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200) {
+        List<dynamic> data = response.data;
+
+        kraListOptions =
+            data.map<Map<String, dynamic>>((item) {
+              return {'id': item['id'] as int, 'name': item['name'].toString()};
+            }).toList();
+
+        debugPrint("Fetched Data: $kraListOptions");
+      } else {
+        debugPrint("Failed to load data: ${response.statusCode}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching data: $e");
+    }
+  }
+
+  Future<void> fetchOffice() async {
+    var url = ApiEndpoint().office;
+
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<Office> data =
+            (response.data as List)
+                .map((office) => Office.fromJson(office))
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            officeList = data.map((office) => office.toJson()).toList();
+            filteredListOffice = List.from(officeList);
+
+            if (_selectedOfficeId == null && filteredListOffice.isNotEmpty) {
+              _selectedOfficeId = filteredListOffice[0]['id'].toString();
+            }
+
+            debugPrint("Auto-selected office: $_selectedOfficeId");
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+  }
+
+  void saveStatusToDb(int index, PgsStatus status) {
+    int statusIndex = status.index;
+
+    debugPrint('Saving status for index $index: $statusIndex');
+  }
+
+  Widget _buildStatusCell(int index, VoidCallback setDialogState) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: DropdownButtonFormField<PgsStatus>(
+        value: selectedStatus[index] ?? PgsStatus.notStarted,
+        onChanged: (PgsStatus? newValue) {
+          if (newValue != null) {
+            debugPrint(
+              'Selected Status for index $index: ${newValue.name}',
+            ); // Debug print
+            setDialogState();
+            setState(() {
+              selectedStatus[index] = newValue;
+            });
+            saveStatusToDb(index, newValue);
+          }
+        },
+        isExpanded: true,
+        decoration: const InputDecoration(
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.all(8.0),
+        ),
+        items:
+            PgsStatus.values.map((PgsStatus value) {
+              return DropdownMenuItem<PgsStatus>(
+                value: value,
+                child: Text(value.name, style: const TextStyle(fontSize: 13)),
+              );
+            }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildRemarkCell(int index) {
+    if (!remarkControllers.containsKey(index)) {
+      remarkControllers[index] = TextEditingController();
+    }
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: 50.0),
+        child: TextField(
+          controller: remarkControllers[index],
+          maxLines: null,
+          keyboardType: TextInputType.multiline,
+          style: TextStyle(fontSize: 14.0),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.all(8.0),
+          ),
+          onChanged: (value) {
+            setState(() {
+              debugPrint("Updated TextField at index $index: $value");
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScoringCell(int index) {
+    if (!percentageControllers.containsKey(index)) {
+      percentageControllers[index] = TextEditingController();
+      percentageValues[index] = 0;
+
+      percentageControllers[index]!.addListener(() {
+        final text = percentageControllers[index]!.text;
+        final value = int.tryParse(text);
+        setState(() {
+          percentageValues[index] = (value != null && value <= 100) ? value : 0;
+        });
+      });
+    }
+
+    final int progress = percentageValues[index] ?? 0;
+    final double progressFraction = progress / 100.0;
+
+    Color progressColor;
+    if (progress < 50) {
+      progressColor = Colors.red;
+    } else if (progress < 80) {
+      progressColor = Colors.orange;
+    } else {
+      progressColor = Colors.green;
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          SizedBox(
+            width: 60,
+            height: 60,
+            child: CircularProgressIndicator(
+              value: progressFraction,
+              strokeWidth: 6,
+              backgroundColor: Colors.grey[300],
+              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+            ),
+          ),
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: Center(
+              child: TextField(
+                controller: percentageControllers[index],
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  suffixText: '%',
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  isDense: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(3),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: mainBgColor,
+        title: const Text('PGS Score Monitoring'),
+      ),
+      backgroundColor: mainBgColor,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 8.0,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: PopupMenuButton<int>(
+                        color: mainBgColor,
+                        offset: const Offset(0, 30),
+                        onSelected: (int value) {
+                          final selected = filteredListPeriod.firstWhere(
+                            (period) => period['id'] == value,
+                            orElse: () => {},
+                          );
+
+                          setState(() {
+                            selectedPeriod = value;
+                            selectedPeriodText =
+                                "${selected['startDate']} - ${selected['endDate']}";
+                            fetchFilteredPgsList();
+                          });
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return filteredListPeriod.map<PopupMenuItem<int>>((
+                            period,
+                          ) {
+                            return PopupMenuItem<int>(
+                              value: period['id'],
+                              child: Text(
+                                "${period['startDate']} - ${period['endDate']}",
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          }).toList();
+                        },
+                        child: FilterButton(
+                          label:
+                              selectedPeriod == null
+                                  ? 'Filter by period'
+                                  : selectedPeriodText ?? 'Period',
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: PopupMenuButton<String>(
+                        color: mainBgColor,
+                        offset: const Offset(0, 30),
+                        onSelected: (String value) {
+                          setState(() {
+                            _selectedOfficeId = value;
+                            fetchFilteredPgsList();
+                          });
+                        },
+
+                        itemBuilder: (BuildContext context) {
+                          return filteredListOffice.map<PopupMenuItem<String>>((
+                            officeData,
+                          ) {
+                            return PopupMenuItem<String>(
+                              value: officeData['id'].toString(),
+                              child: Text(officeData['name']),
+                            );
+                          }).toList();
+                        },
+                        child: FilterButton(
+                          label:
+                              _selectedOfficeId == null
+                                  ? 'Office Name'
+                                  : filteredListOffice.firstWhere(
+                                    (office) =>
+                                        office['id'].toString() ==
+                                        _selectedOfficeId,
+                                    orElse: () => {'name': 'Office'},
+                                  )['name'],
+                        ),
+                      ),
+                    ),
+
+                    // Filter by KRA
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: PopupMenuButton<int>(
+                        color: mainBgColor,
+                        offset: const Offset(0, 30),
+                        onSelected: (int value) {
+                          setState(() {
+                            selectedKra = value;
+                            fetchFilteredPgsList();
+                          });
+                        },
+
+                        itemBuilder: (BuildContext context) {
+                          return kraListOptions.map<PopupMenuItem<int>>((kra) {
+                            return PopupMenuItem<int>(
+                              value: kra['id'],
+                              child: Text(kra['name']),
+                            );
+                          }).toList();
+                        },
+                        child: FilterButton(
+                          label:
+                              selectedKra == null
+                                  ? 'Filter by KRA'
+                                  : kraListOptions.firstWhere(
+                                    (kra) => kra['id'] == selectedKra,
+                                    orElse: () => {'name': 'Filter by period'},
+                                  )['name'],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: PopupMenuButton<bool>(
+                        color: mainBgColor,
+                        offset: const Offset(0, 30),
+                        onSelected: (bool value) {
+                          setState(() {
+                            isDirect = value;
+                            fetchFilteredPgsList(); // Replace with your desired function
+                          });
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return [
+                            PopupMenuItem<bool>(
+                              value: true,
+                              child: Text('Direct'),
+                            ),
+                            PopupMenuItem<bool>(
+                              value: false,
+                              child: Text('Indirect'),
+                            ),
+                          ];
+                        },
+                        child: FilterButton(
+                          label:
+                              isDirect == null
+                                  ? 'Filter by Type'
+                                  : isDirect!
+                                  ? 'Direct'
+                                  : 'Indirect',
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: GestureDetector(
+                        key: _menuScoreRangeKey,
+                        onTap: () => _showScoreRangeMenu(context),
+                        child: FilterButton(
+                          label:
+                              (scoreRangeFromController.text.isEmpty ||
+                                      scoreRangeToController.text.isEmpty)
+                                  ? 'Filter by Score Range'
+                                  : 'From ${scoreRangeFromController.text} to ${scoreRangeToController.text}',
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: GestureDetector(
+                        key: _menuPageKey,
+                        onTap: () => _showPageSizeMenu(context),
+                        child: FilterButton(
+                          label:
+                              (pageController.text.isEmpty ||
+                                      pageSizeController.text.isEmpty)
+                                  ? 'Filter by Page'
+                                  : 'From ${pageController.text} to ${pageSizeController.text}',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              Expanded(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                    child: SingleChildScrollView(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Table(
+                          border: TableBorder.all(
+                            color: Colors.black,
+                            width: 1.0,
+                          ),
+                          defaultVerticalAlignment:
+                              TableCellVerticalAlignment.middle,
+                          columnWidths: const {
+                            0: FlexColumnWidth(2),
+                            1: FlexColumnWidth(2),
+                            2: FlexColumnWidth(2),
+                            3: FlexColumnWidth(1.5),
+                            4: FlexColumnWidth(4),
+                            5: FlexColumnWidth(2),
+                            6: FlexColumnWidth(2),
+                            7: FlexColumnWidth(3),
+                            8: FlexColumnWidth(2),
+                          },
+                          children: [
+                            // Main Header Row
+
+                            // Sub Header Row
+                            TableRow(
+                              children: [
+                                _buildTableHeaderCell('PERIOD'),
+                                _buildTableHeaderCell('OFFICE'),
+                                _buildTableHeaderCell('KRA'),
+                                _buildTableHeaderCell('DIRECT'),
+                                _buildTableHeaderCell('DELIVERABLES'),
+                                _buildTableHeaderCell('BY WHEN'),
+                                _buildTableHeaderCell('STATUS'),
+                                _buildTableHeaderCell('REMARKS'),
+                                _buildTableHeaderCell('SCORING'),
+                              ],
+                            ),
+
+                            ...deliverableList.asMap().entries.map((entry) {
+                              final int index = entry.key;
+                              final deliverable = entry.value;
+
+                              return TableRow(
+                                children: [
+                                  _buildTableCell(
+                                    '${deliverable['Start Date']} - ${deliverable['End Date']}',
+                                  ),
+                                  _buildTableCell(
+                                    deliverable['officeName'] ?? '',
+                                  ),
+                                  _buildKRA(
+                                    deliverable['kra'] ?? ' ',
+                                    deliverable['kraDescription'],
+                                  ),
+
+                                  _buildTableCell(
+                                    '',
+                                    isDirect: deliverable['isDirect'],
+                                  ),
+
+                                  _buildTableCell(
+                                    deliverable['deliverableName'] ?? '',
+                                  ),
+                                  _buildTableCell(deliverable['byWhen'] ?? ''),
+
+                                  _buildStatusCell(index, () => (index)),
+                                  _buildRemarkCell(index),
+                                  _buildScoringCell(index),
+                                ],
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  void _showScoreRangeMenu(BuildContext context) {
+    final RenderBox renderBox =
+        _menuScoreRangeKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+    showMenu(
+      color: secondaryColor,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy + renderBox.size.height,
+        offset.dx + renderBox.size.width,
+        offset.dy + renderBox.size.height + 200,
+      ),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Score Range',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              gap2,
+              TextField(
+                controller: scoreRangeFromController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'From',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              gap,
+              TextField(
+                controller: scoreRangeToController,
+                keyboardType: TextInputType.none,
+                decoration: const InputDecoration(
+                  labelText: 'To',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              gap,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: primaryColor),
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () {
+                      scoreRangeFromController.text;
+                      scoreRangeToController.text;
+                      fetchFilteredPgsList();
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Apply',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showPageSizeMenu(BuildContext context) {
+    final RenderBox renderBox =
+        _menuPageKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+    showMenu(
+      color: secondaryColor,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy + renderBox.size.height,
+        offset.dx + renderBox.size.width,
+        offset.dy + renderBox.size.height + 200,
+      ),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Filter by Page',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              gap2,
+              TextField(
+                controller: pageController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Page',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              gap,
+              TextField(
+                controller: pageSizeController,
+                keyboardType: TextInputType.none,
+                decoration: const InputDecoration(
+                  labelText: 'Page Size',
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              gap,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: primaryColor),
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () {
+                      pageController.text;
+                      pageSizeController.text;
+                      fetchFilteredPgsList();
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Apply',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTableHeaderCell(String text, {double fontSize = 12}) {
+    return Container(
+      color: primaryLightColor,
+      padding: const EdgeInsets.all(8),
+      child: Center(
+        child: Text(
+          text,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
+          textAlign: TextAlign.start,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableCell(String text, {bool? isDirect}) {
+    String displayText = text;
+    if (isDirect != null) {
+      displayText = isDirect ? 'Direct' : 'Indirect';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(),
+      child: Center(
+        child: Text(
+          displayText, // Use the computed text
+          style: const TextStyle(fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKRA(String textKra, String textKraDescription) {
+    String displayKra = textKra;
+    String displayDescription = textKraDescription;
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Text(
+              displayKra,
+              style: const TextStyle(fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          gap,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'KRA Description:',
+                style: TextStyle(fontSize: 10, color: grey),
+              ),
+              Text(
+                displayDescription,
+                style: const TextStyle(fontSize: 10),
+                textAlign: TextAlign.start,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
