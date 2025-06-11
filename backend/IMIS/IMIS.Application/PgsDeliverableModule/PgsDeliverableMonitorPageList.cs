@@ -28,7 +28,8 @@ namespace IMIS.Application.PgsDeliverableModule
                         KeyResultArea = e.Kra?.Name ?? string.Empty,
                         KraDescription = e.KraDescription,
                         Office = e.PerfomanceGovernanceSystem.Office.Name,
-                        Score = e.PgsDeliverableScoreHistory?.OrderByDescending(s => s.Date).FirstOrDefault()?.Score ?? 0,
+                        Score = e.PercentDeliverables,
+                        //Score = e.PgsDeliverableScoreHistory?.OrderByDescending(s => s.Date).FirstOrDefault()?.Score ?? 0,
                         Status = e.Status.GetDescription(),
                         Remarks = e.Remarks,
                         ByWhen = e.ByWhen
