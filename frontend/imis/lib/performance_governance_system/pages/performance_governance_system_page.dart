@@ -853,7 +853,7 @@ class _PerformanceGovernanceSystemPageState
         orElse: () => PgsStatus.notStarted,
       );
 
-      final remarks = "";
+      final remarks = remarksControllers[index]?.text ?? '';
       final existingId = deliverableIds[index] ?? 0;
 
       updatedDeliverables.add(
@@ -3442,23 +3442,15 @@ class _PerformanceGovernanceSystemPageState
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: DropdownButtonFormField<PgsStatus>(
-        value:
-            selectedStatus[index] ??
-            PgsStatus.notStarted, // Display current status for this row
+        value: selectedStatus[index] ?? PgsStatus.notStarted,
         onChanged: (PgsStatus? newValue) {
           if (newValue != null) {
-            debugPrint(
-              'Selected Status for index $index: ${newValue.name}',
-            ); // Debug print
-            setDialogState(); // Trigger setState to update UI
+            debugPrint('Selected Status for index $index: ${newValue.name}');
+            setDialogState();
             setState(() {
-              selectedStatus[index] =
-                  newValue; // Update status for this row's index
+              selectedStatus[index] = newValue;
             });
-            saveStatusToDb(
-              index,
-              newValue,
-            ); // Save the selected status to the database
+            saveStatusToDb(index, newValue);
           }
         },
         isExpanded: true,

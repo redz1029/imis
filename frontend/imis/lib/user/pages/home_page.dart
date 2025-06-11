@@ -176,6 +176,7 @@ class _HomePageState extends State<HomePage> {
     fecthOffice();
     fetchTeam();
     fetchAuditors();
+
     // fetchDeliverables(pgsId: '250210').then((deliverables) {
     //   setState(() {
     //     _deliverablesList = deliverables;
@@ -296,10 +297,7 @@ class _HomePageState extends State<HomePage> {
                                           child: Text('Option 2'),
                                         ),
                                       ],
-                              offset: Offset(
-                                0,
-                                30,
-                              ), // Adjust dropdown position if needed
+                              offset: Offset(0, 30),
                               child: Container(
                                 padding: EdgeInsets.symmetric(
                                   horizontal: 10,

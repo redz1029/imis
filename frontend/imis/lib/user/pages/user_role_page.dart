@@ -76,7 +76,6 @@ class _UserRolePageState extends State<UserRolePage> {
         int start = (page - 1) * _pageSize;
         int end = start + _pageSize;
         if (start >= _totalCount) {
-          // No more data
           setState(() {
             userRoleList = [];
             filteredList = [];
