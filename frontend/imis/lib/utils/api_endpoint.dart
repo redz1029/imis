@@ -27,6 +27,8 @@ class ApiEndpoint {
   late String signatoryTemplate;
   late String performancegovernancesystemUserId;
   late String generatePdf;
+  late String refresh;
+  late String filterBy;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -51,6 +53,8 @@ class ApiEndpoint {
     signatoryTemplate = '$baseUrl/pgsSignatoryTemplate';
     performancegovernancesystemUserId = '$baseUrl/pgs';
     generatePdf = '$baseUrl/pgs/list-report/pdf';
+    refresh = '$baseUrl/refresh';
+    filterBy = '$baseUrl/deliverables/filter';
   }
 
   static Future<void> setBaseUrl() async {
