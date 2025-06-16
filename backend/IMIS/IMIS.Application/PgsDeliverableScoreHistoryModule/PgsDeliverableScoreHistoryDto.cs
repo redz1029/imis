@@ -1,4 +1,5 @@
-﻿using Base.Primitives;
+﻿using System.Diagnostics.CodeAnalysis;
+using Base.Primitives;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsDeliverableScoreHistoryModule
@@ -11,6 +12,7 @@ namespace IMIS.Application.PgsDeliverableScoreHistoryModule
 
         public PgsDeliverableScoreHistoryDto() { }
 
+       
         public PgsDeliverableScoreHistoryDto(PgsDeliverableScoreHistory entity)
         {
             Id = entity.Id;

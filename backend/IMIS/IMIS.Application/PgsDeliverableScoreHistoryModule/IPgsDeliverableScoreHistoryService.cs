@@ -9,5 +9,6 @@ namespace IMIS.Application.PgsDeliverableScoreHistoryModule
     {
         Task<PgsDeliverableScoreHistoryDto> SaveOrUpdateAsync(PgsDeliverableScoreHistoryDto pgsDeliverableScoreHistoryDto, CancellationToken cancellationToken);
         Task<List<PgsDeliverableScoreHistoryDto>?> GetAllAsync(CancellationToken cancellationToken);
+        Task<List<PgsDeliverableScoreHistoryGroupDto>> GetGroupedScoreHistoryAsync();
     }
 }
