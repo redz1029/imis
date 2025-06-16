@@ -123,6 +123,11 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
         final data = response.data;
         final items = data["items"] as List<dynamic>? ?? [];
 
+        remarkControllers.clear();
+        percentageControllers.clear();
+        percentageValues.clear();
+        selectedStatus.clear();
+
         List<Map<String, dynamic>> formattedData =
             items.map((item) {
               String formattedByWhen = '';
@@ -136,6 +141,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 }
               }
               return {
+                'pgsDeliverableId': item['pgsDeliverableId'],
                 'kra': item['keyResultArea'],
                 'kraDescription': item['kraDescription'],
                 'Start Date': item['pgsPeriod']?.split(" - ")?.first ?? '',
@@ -161,6 +167,81 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       debugPrint("Error fetching filtered data: $e");
     } finally {
       if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  List<Map<String, dynamic>> _prepareSaveData() {
+    return deliverableList.asMap().entries.map((entry) {
+      final int index = entry.key;
+      final deliverable = entry.value;
+
+      final score = percentageValues[index] ?? deliverable['score'] ?? 0;
+      final status = selectedStatus[index]?.name ?? deliverable['status'] ?? '';
+      final remarks =
+          remarkControllers[index]?.text ?? deliverable['remarks'] ?? '';
+
+      DateTime? byWhenDate;
+      String formattedByWhen = '';
+
+      try {
+        if (deliverable['byWhen'] != null &&
+            deliverable['byWhen'].toString().isNotEmpty) {
+          if (deliverable['byWhen'] is String) {
+            byWhenDate = DateTime.tryParse(deliverable['byWhen']);
+          }
+
+          byWhenDate ??= DateFormat('MMMM, yyyy').parse(deliverable['byWhen']);
+
+          formattedByWhen = byWhenDate.toIso8601String();
+        }
+      } catch (e) {
+        debugPrint("Error parsing byWhen date: $e");
+      }
+
+      return {
+        'pgsDeliverableId': deliverable['pgsDeliverableId'] ?? 0,
+        'pgsPeriod':
+            '${deliverable['Start Date']} - ${deliverable['End Date']}',
+        'office': deliverable['officeName'] ?? '',
+        'keyResultArea': deliverable['kra'] ?? '',
+        'kraDescription': deliverable['kraDescription'] ?? '',
+        'isDirect': deliverable['isDirect'] ?? false,
+        'deliverable': deliverable['deliverableName'] ?? '',
+        'score': score,
+        'status': status,
+        'remarks': remarks,
+        'byWhen': formattedByWhen,
+      };
+    }).toList();
+  }
+
+  Future<void> saveData() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final token = await AuthUtil.fetchAccessToken();
+      if (token == null || token.isEmpty) {
+        debugPrint("Missing token.");
+        return;
+      }
+
+      final dataToSave = _prepareSaveData();
+
+      final response = await AuthenticatedRequest.put(
+        dio,
+        ApiEndpoint().pgsScoreMonitoring,
+        data: {'items': dataToSave},
+      );
+
+      if (response.statusCode == 200) {
+        debugPrint("Save sucessfully");
+      } else {
+        debugPrint('Error saving data: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint("Error saving data: $e");
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 
@@ -790,13 +871,50 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   ),
                 ),
               ),
+
               Padding(
                 padding: const EdgeInsets.all(32.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     ElevatedButton(
-                      onPressed: () {},
+                      onPressed: () async {
+                        bool? confirmAction = await showDialog<bool>(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: Text("Confirm Save"),
+                              content: Text(
+                                "Are you sure you want to save this record?",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.pop(context, false),
+                                  child: Text(
+                                    "No",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    {
+                                      Navigator.pop(context, true);
+                                    }
+                                  },
+                                  child: Text(
+                                    "Yes",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        if (confirmAction == true) {
+                          saveData();
+                        }
+                      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         shape: RoundedRectangleBorder(
