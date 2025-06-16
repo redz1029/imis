@@ -11,6 +11,15 @@ namespace IMIS.Persistence.PgsDeliverableScoreHistoryModule
         {
         }
 
+        public async Task<IEnumerable<PgsDeliverableScoreHistory>> GetAll(CancellationToken cancellationToken)
+        {
+            return await _dbContext.PgsDeliverableScoreHistories
+                .Where(o => !o.IsDeleted)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         public new async Task<PgsDeliverableScoreHistory> SaveOrUpdateAsync(PgsDeliverableScoreHistory pgsDeliverableScoreHistory, CancellationToken cancellationToken)
         {
             if (pgsDeliverableScoreHistory == null) throw new ArgumentNullException(nameof(pgsDeliverableScoreHistory));

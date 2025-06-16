@@ -1,5 +1,4 @@
-﻿
-using Base.Primitives;
+﻿using Base.Primitives;
 
 namespace IMIS.Domain
 {

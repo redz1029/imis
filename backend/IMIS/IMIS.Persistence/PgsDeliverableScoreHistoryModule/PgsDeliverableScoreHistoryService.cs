@@ -17,7 +17,26 @@ namespace IMIS.Persistence.PgsDeliverableScoreHistoryModule
         public PgsDeliverableScoreHistoryService(IPgsDeliverableScoreHistoryRepository repository)
         {
             _repository = repository;
-        }   
+        }
+
+        private PgsDeliverableScoreHistoryDto ConvPgsDeliverableScoreHistoryToDTO(PgsDeliverableScoreHistory pgsDeliverableScoreHistory)
+        {
+            if (pgsDeliverableScoreHistory == null) return null;
+
+            return new PgsDeliverableScoreHistoryDto
+            {
+                Id = pgsDeliverableScoreHistory.Id,
+                PgsDeliverableId = pgsDeliverableScoreHistory.PgsDeliverableId,
+                Date = pgsDeliverableScoreHistory.Date,
+                Score = pgsDeliverableScoreHistory.Score,
+            };
+        }
+
+        public async Task<List<PgsDeliverableScoreHistoryDto>?> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var pgsDeliverableScoreHistory = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return pgsDeliverableScoreHistory?.Select(o => ConvPgsDeliverableScoreHistoryToDTO(o)).ToList();          
+        }
         public async Task<PgsDeliverableScoreHistoryDto> SaveOrUpdateAsync(PgsDeliverableScoreHistoryDto pgsDeliverableScoreHistoryDto, CancellationToken cancellationToken)
         {
             if (pgsDeliverableScoreHistoryDto == null) throw new ArgumentNullException(nameof(pgsDeliverableScoreHistoryDto));
