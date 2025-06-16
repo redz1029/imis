@@ -3,7 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
-import 'package:imis/history/pages/history_page.dart';
+import 'package:imis/history/pages/pgs_deliverable_history_page.dart';
 import 'package:imis/performance_governance_system/pgs_scrore_monitoring/pages/pgs_score_monitoring_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
@@ -23,7 +23,11 @@ import 'package:imis/performance_governance_system/pgs_signatory_template/pages/
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
+import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
+import 'package:imis/widgets/permission_widget.dart';
+
 import 'package:motion_toast/motion_toast.dart';
 
 class DashboardNavigationPanel extends StatefulWidget {
@@ -59,38 +63,15 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     _loadUserName();
   }
 
-  // Future<void> _loadUserName() async {
-  //   UserRegistration? user = await AuthUtil.fetchLoggedUser();
-  //   List<String>? roleList = await AuthUtil.fetchRoles();
-
-  //   if (user != null) {
-  //     setState(() {
-  //       firstName = user.firstName ?? "firstName";
-  //       middleName = user.middleName ?? "middleName";
-  //       lastName = user.lastName ?? "lastName";
-
-  //       roles = roleList ?? [];
-  //       email = user.email ?? "email";
-  //       username = user.userName ?? "username";
-  //     });
-  //     if (roleList == null || roleList.isEmpty) {
-  //       MotionToast.error(
-  //         title: const Text("No Role Assigned"),
-  //         description: const Text(
-  //           "This user has no role assigned. Please contact the Administrator.",
-  //         ),
-  //         toastDuration: Duration(seconds: 10),
-  //         toastAlignment: Alignment.topCenter,
-  //         // ignore: use_build_context_synchronously
-  //       ).show(context);
-  //     }
-  //   }
-  // }
   Future<void> _loadUserName() async {
     UserRegistration? user = await AuthUtil.fetchLoggedUser();
     List<String>? roleList = await AuthUtil.fetchRoles();
 
     if (user != null) {
+      final permissions = RolePermissions.getPermissionsForRoles(
+        roleList ?? [],
+      );
+      PermissionService().loadPermissions(permissions);
       setState(() {
         firstName = user.firstName ?? "firstName";
         middleName = user.middleName ?? "middleName";
@@ -494,7 +475,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     Icons.history,
                     'History',
                     16,
-                    () => _setScreen(HistoryPage(), 16),
+                    () => _setScreen(PgsDeliverableHistoryPage(), 16),
                   ),
                   _buildListTile(
                     Icons.file_copy,
@@ -508,112 +489,119 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     18,
                     () => _setScreen(PgsScoreMonitoringPage(), 18),
                   ),
-                  Theme(
-                    data: Theme.of(context).copyWith(dividerColor: lightGrey),
-                    child: ExpansionTile(
-                      leading: const Icon(
-                        Icons.settings,
-                        color: primaryTextColor,
-                      ),
-                      title: const Text(
-                        'Settings',
-                        style: TextStyle(color: primaryTextColor),
-                      ),
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(left: 40),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'Audit Schedules',
-                                2,
-                                () => _setScreen(AuditSchedulesPage(), 2),
-                              ),
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'Auditor',
-                                3,
-                                () => _setScreen(AuditorPage(), 3),
-                              ),
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'Auditor Team',
-                                4,
-                                () => _setScreen(AuditorTeamPage(), 4),
-                              ),
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'Key Result Area',
-                                5,
-                                () => _setScreen(KeyResultAreaPage(), 5),
-                              ),
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'Office',
-                                6,
-                                () => _setScreen(OfficePage(), 6),
-                              ),
 
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'PGS Signatory',
-                                7,
-                                () => _setScreen(PgsSignatoryTemplatePage(), 7),
-                              ),
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'Pgs Period',
-                                8,
-                                () => _setScreen(PgsPeriodPage(), 8),
-                              ),
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'Role',
-                                9,
-                                () => _setScreen(RolesPage(), 9),
-                              ),
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'Team',
-                                10,
-                                () => _setScreen(TeamPage(), 10),
-                              ),
-                              _buildListTile(
-                                Icons.medical_information,
-                                hideIcon: true,
-                                'User',
-                                11,
-                                () => _setScreen(UserProfilePage(), 11),
-                              ),
-                              _buildListTile(
-                                Icons.date_range,
-                                hideIcon: true,
-                                'User Office',
-                                12,
-                                () => _setScreen(UserOfficePage(), 12),
-                              ),
-                              _buildListTile(
-                                Icons.person,
-                                hideIcon: true,
-                                'User Role',
-                                13,
-                                () => _setScreen(UserRolePage(), 13),
-                              ),
-                            ],
-                          ),
+                  PermissionWidget(
+                    permission: AppPermission.viewSettings,
+                    child: Theme(
+                      data: Theme.of(context).copyWith(dividerColor: lightGrey),
+                      child: ExpansionTile(
+                        leading: const Icon(
+                          Icons.settings,
+                          color: primaryTextColor,
                         ),
-                      ],
+                        title: const Text(
+                          'Settings',
+                          style: TextStyle(color: primaryTextColor),
+                        ),
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 40),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Audit Schedules',
+                                  2,
+                                  () => _setScreen(AuditSchedulesPage(), 2),
+                                ),
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Auditor',
+                                  3,
+                                  () => _setScreen(AuditorPage(), 3),
+                                ),
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Auditor Team',
+                                  4,
+                                  () => _setScreen(AuditorTeamPage(), 4),
+                                ),
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Key Result Area',
+                                  5,
+                                  () => _setScreen(KeyResultAreaPage(), 5),
+                                ),
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Office',
+                                  6,
+                                  () => _setScreen(OfficePage(), 6),
+                                ),
+
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'PGS Signatory',
+                                  7,
+                                  () =>
+                                      _setScreen(PgsSignatoryTemplatePage(), 7),
+                                ),
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Pgs Period',
+                                  8,
+                                  () => _setScreen(PgsPeriodPage(), 8),
+                                ),
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Role',
+                                  9,
+                                  () => _setScreen(RolesPage(), 9),
+                                ),
+
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Team',
+                                  10,
+                                  () => _setScreen(TeamPage(), 10),
+                                ),
+
+                                _buildListTile(
+                                  Icons.medical_information,
+                                  hideIcon: true,
+                                  'User',
+                                  11,
+                                  () => _setScreen(UserProfilePage(), 11),
+                                ),
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'User Office',
+                                  12,
+                                  () => _setScreen(UserOfficePage(), 12),
+                                ),
+                                _buildListTile(
+                                  Icons.person,
+                                  hideIcon: true,
+                                  'User Role',
+                                  13,
+                                  () => _setScreen(UserRolePage(), 13),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                   _buildListTile(
@@ -643,7 +631,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     String title,
     int index,
     VoidCallback onTap, {
-    bool hideIcon = false, // New optional parameter
+    bool hideIcon = false,
   }) {
     return Container(
       color: _selectedIndex == index ? secondaryBgButton : Colors.transparent,
