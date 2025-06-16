@@ -4,6 +4,7 @@ using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PGSModules
 {
@@ -11,12 +12,14 @@ namespace IMIS.Persistence.PGSModules
     {
         private readonly IPGSDeliverableRepository _repository;
         private readonly IKeyResultAreaRepository _kraRepository;
+        private readonly ImisDbContext _dbContext;
 
-        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository)
+        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, ImisDbContext dbContext)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _kraRepository = kraRepository ?? throw new ArgumentNullException(nameof(kraRepository));
-        }
+            _dbContext = dbContext;
+        }      
         public async Task<DtoPageList<PGSDeliverableDto, PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var pgsDeliverable = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
@@ -96,5 +99,47 @@ namespace IMIS.Persistence.PGSModules
             return PgsDeliverableMonitorPageList
                 .Create(filteredDeliverables.Items, filter.Page, filter.PageSize, filteredDeliverables.TotalCount);
         }
+      
+        public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(PgsDeliverableMonitorPageList request, CancellationToken cancellationToken)
+        {
+            var updatedItems = new List<PgsDeliverableMonitorDto>();
+
+            foreach (var dto in request.Items)
+            {
+                var deliverable = await _repository.GetByIdAsync(dto.PgsDeliverableId, cancellationToken);
+                if (deliverable == null)
+                    continue;
+
+                bool scoreChanged = deliverable.PercentDeliverables != dto.Score;
+
+                deliverable.Remarks = dto.Remarks;
+                deliverable.PercentDeliverables = dto.Score;
+                deliverable.Status = Enum.TryParse<PgsStatus>(dto.Status, out var status) ? status : deliverable.Status;
+
+                if (scoreChanged)
+                {
+                    var history = new PgsDeliverableScoreHistory
+                    {
+                        Id = 0, 
+                        PgsDeliverableId = deliverable.Id,
+                        Date = DateTime.UtcNow,
+                        Score = dto.Score
+                    };
+                    _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);
+                }
+
+                updatedItems.Add(dto);
+            }
+
+            await _repository.SaveChangesAsync(cancellationToken);
+
+            return new PgsDeliverableMonitorPageList(
+                updatedItems,
+                request.Page,
+                request.PageSize,
+                updatedItems.Count
+            );
+        }
+
     }
 }

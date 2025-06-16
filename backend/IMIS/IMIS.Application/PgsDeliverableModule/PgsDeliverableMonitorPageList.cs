@@ -8,7 +8,7 @@ namespace IMIS.Application.PgsDeliverableModule
     {
         public List<PgsDeliverableMonitorDto> Items { get; set; }
 
-        private PgsDeliverableMonitorPageList(List<PgsDeliverableMonitorDto> items, int page, int pageSize, int totalCount)
+        public PgsDeliverableMonitorPageList(List<PgsDeliverableMonitorDto> items, int page, int pageSize, int totalCount)
         {
             Items = items;
             Page = page;
@@ -28,9 +28,8 @@ namespace IMIS.Application.PgsDeliverableModule
                         KeyResultArea = e.Kra?.Name ?? string.Empty,
                         KraDescription = e.KraDescription,
                         Office = e.PerfomanceGovernanceSystem.Office.Name,
-                        Score = e.PercentDeliverables,
-                        //Score = e.PgsDeliverableScoreHistory?.OrderByDescending(s => s.Date).FirstOrDefault()?.Score ?? 0,
-                        Status = e.Status.GetDescription(),
+                        Score = e.PercentDeliverables,                     
+                        Status = e.Status.ToString(),                      
                         Remarks = e.Remarks,
                         ByWhen = e.ByWhen
                     }

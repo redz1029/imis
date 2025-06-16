@@ -13,7 +13,8 @@ namespace IMIS.Application.PgsModule
         Task<PGSDeliverableDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<List<PGSDeliverableDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDeliverableDto, CancellationToken cancellationToken);  
-        Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken);
+        Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken);      
+        Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(PgsDeliverableMonitorPageList request, CancellationToken cancellationToken);
 
     }
 }
