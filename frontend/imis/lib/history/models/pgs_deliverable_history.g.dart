@@ -11,10 +11,10 @@ PgsDeliverableHistory _$PgsDeliverableHistoryFromJson(
 ) => PgsDeliverableHistory(
   (json['id'] as num).toInt(),
   json['isDeleted'] as bool,
-  json['rowVersion'] as String?,
   (json['pgsDeliverableId'] as num).toInt(),
   DateTime.parse(json['date'] as String),
   (json['score'] as num).toInt(),
+  rowVersion: json['rowVersion'] as String?,
 );
 
 Map<String, dynamic> _$PgsDeliverableHistoryToJson(
