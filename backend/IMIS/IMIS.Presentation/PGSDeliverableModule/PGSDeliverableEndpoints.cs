@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using System.Text.Json;
 
 namespace IMIS.Presentation.PGSModule
@@ -54,10 +55,11 @@ namespace IMIS.Presentation.PGSModule
             {
                 var Kradto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(Kradto);
-            })
+            })  
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _pgsDeliverablePermission.View));
+            PermissionClaimType.Claim, _pgsDeliverablePermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] PGSDeliverableDto pgsdeliverables, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -86,7 +88,8 @@ namespace IMIS.Presentation.PGSModule
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _pgsDeliverablePermission.View));
+            PermissionClaimType.Claim, _pgsDeliverablePermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
             app.MapGet("/filter", async ([AsParameters] PgsDeliverableMonitorFilter filter, IPGSDeliverableService service, CancellationToken cancellationToken) =>
             {
@@ -95,16 +98,23 @@ namespace IMIS.Presentation.PGSModule
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.View));
-           
-            app.MapPut("/filter/update", async ([FromBody] PgsDeliverableMonitorPageList request, IPGSDeliverableService service, CancellationToken cancellationToken) =>
+             PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
+            app.MapPut("/filter/update", async (
+            [FromBody] PgsDeliverableMonitorPageList request, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var result = await service.UpdateDeliverablesAsync(request, cancellationToken);
+                
+                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+
                 return Results.Ok(result);
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.Score, _pgsDeliverableAuditorPermission.View));
+             PermissionClaimType.Claim,
+             _pgsDeliverableAuditorPermission.Score, _pgsDeliverableAuditorPermission.View));
+          
         }
     }
 }
