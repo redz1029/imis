@@ -14,11 +14,11 @@ class PgsDeliverableHistory {
   PgsDeliverableHistory(
     this.id,
     this.isDeleted,
-    this.rowVersion,
     this.pgsDeliverableId,
     this.date,
-    this.score,
-  );
+    this.score, {
+    this.rowVersion,
+  });
 
   factory PgsDeliverableHistory.fromJson(Map<String, dynamic> json) =>
       _$PgsDeliverableHistoryFromJson(json);

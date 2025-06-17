@@ -2,9 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/history/models/pgs_deliverable_history.dart';
+import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:intl/intl.dart';
+import '../../performance_governance_system/enum/pgs_status.dart';
+import '../../performance_governance_system/key_result_area/models/key_result_area.dart';
+import '../../utils/http_util.dart';
 
 class PgsDeliverableHistoryPage extends StatefulWidget {
   const PgsDeliverableHistoryPage({super.key});
@@ -21,8 +25,11 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
   final FocusNode isSearchfocus = FocusNode();
   final List<String> statusOptions = ['Active', 'Inactive'];
   String statusFilter = 'Active';
-  List<PgsDeliverableHistory> kraList = [];
-  List<PgsDeliverableHistory> filteredList = [];
+  List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
+  List<PgsDeliverableHistoryGrouped> deliverableHistoryGroupedfilteredList = [];
+
+  List<PgsDeliverables> deliverablesList = [];
+  List<PgsDeliverables> filteredListDeliverables = [];
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
@@ -32,30 +39,34 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
   @override
   void initState() {
     super.initState();
-    fetchHistory();
+    fetchHistoryGrouped();
+    fetchdeliverables();
+    mapDeliverableIdToDeliverableName();
   }
 
-  Future<void> fetchHistory({int page = 1, String? searchQuery}) async {
+  Future<void> fetchHistoryGrouped({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
       final pageList = await _paginationUtils
-          .fetchPaginatedData<PgsDeliverableHistory>(
-            endpoint: ApiEndpoint().pgsDeliverableScoreHistory,
+          .fetchPaginatedData<PgsDeliverableHistoryGrouped>(
+            endpoint: ApiEndpoint().pgsDeliverableScoreHistoryGrouped,
             page: page,
             pageSize: _pageSize,
             searchQuery: searchQuery,
-            fromJson: (json) => PgsDeliverableHistory.fromJson(json),
+            fromJson: (json) => PgsDeliverableHistoryGrouped.fromJson(json),
           );
 
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          kraList = pageList.items;
-          filteredList = List.from(kraList);
+          deliverableHistoryGrouped = pageList.items;
+          deliverableHistoryGroupedfilteredList = List.from(
+            deliverableHistoryGrouped,
+          );
         });
       }
     } catch (e) {
@@ -64,6 +75,170 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  void showFormDialog(int pgsDeliverableId) async {
+    final groupedItem = deliverableHistoryGrouped.firstWhere(
+      (item) => item.pgsDeliverableId == pgsDeliverableId,
+      orElse: () => PgsDeliverableHistoryGrouped(pgsDeliverableId, null),
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: mainBgColor,
+          title: const Text('Score History'),
+          content: SizedBox(
+            width: 600,
+            height: 700,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (groupedItem.scoreHistory != null &&
+                      groupedItem.scoreHistory!.isNotEmpty)
+                    _buildHistoryTable(groupedItem.scoreHistory!)
+                  else
+                    const Text('No history available for this deliverable'),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close', style: TextStyle(color: primaryColor)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHistoryTable(List<PgsDeliverableHistory> items) {
+    items.sort((a, b) => b.date.compareTo(a.date));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          color: Colors.grey.shade200,
+          child: Row(
+            children: const [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'Date',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Text(
+                  'Score',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        ...items.map((item) {
+          final date = item.date;
+          final datePart = DateFormat('MMM, dd, yyyy').format(date);
+          final timePart = DateFormat('hh:mm a').format(date);
+
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 14, color: Colors.black),
+                      children: [
+                        TextSpan(text: datePart),
+                        const WidgetSpan(child: SizedBox(width: 10)),
+                        TextSpan(
+                          text: timePart,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.normal,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    item.score.toString(),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  Future<void> fetchdeliverables() async {
+    var url = ApiEndpoint().deliverables;
+
+    try {
+      var response = await AuthenticatedRequest.get(dio, url);
+      debugPrint("Raw User response: ${response.data}");
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<PgsDeliverables> data =
+            (response.data as List)
+                .map((e) => PgsDeliverables.fromJson(e))
+                .toList();
+
+        setState(() {
+          deliverablesList = data;
+        });
+
+        debugPrint("deliverable list loaded: ${data.length}");
+        mapDeliverableIdToDeliverableName();
+      }
+    } catch (e) {
+      debugPrint("fetchdeliverableList Error: $e");
+    }
+  }
+
+  void mapDeliverableIdToDeliverableName() {
+    for (var deliverables in deliverableHistoryGrouped) {
+      deliverablesList.firstWhere(
+        (deliverable) => deliverable.id == deliverables.pgsDeliverableId,
+        orElse:
+            () => PgsDeliverables(
+              0,
+              KeyResultArea(0, 'name', 'remarks', false),
+              0,
+              'deliverableName',
+              'kraDescription',
+              true,
+              DateTime.now(),
+              0,
+              PgsStatus.notStarted,
+            ),
+      );
     }
   }
 
@@ -121,7 +296,6 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                     onChanged: (value) {
                       setState(() {
                         statusFilter = value!;
-                        // filterSearchResults(searchController.text);
                       });
                     },
                     decoration: InputDecoration(
@@ -160,7 +334,6 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    // onPressed: () => showFormDialog(),
                     onPressed: () => {},
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -188,11 +361,17 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                         ),
                         Expanded(
                           flex: 3,
-                          child: Text('Date', style: TextStyle(color: grey)),
+                          child: Text(
+                            'Deliverable Name',
+                            style: TextStyle(color: grey),
+                          ),
                         ),
                         Expanded(
                           flex: 3,
-                          child: Text('Score', style: TextStyle(color: grey)),
+                          child: Text(
+                            'History Count',
+                            style: TextStyle(color: grey),
+                          ),
                         ),
                         Expanded(
                           flex: 1,
@@ -206,13 +385,38 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                       scrollDirection: Axis.vertical,
                       child: Column(
                         children:
-                            filteredList
+                            deliverableHistoryGroupedfilteredList
                                 .asMap()
                                 .map((index, history) {
                                   int itemNumber =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
+
+                                  final deliverableName = deliverablesList
+                                      .firstWhere(
+                                        (deliverable) =>
+                                            deliverable.id ==
+                                            history.pgsDeliverableId,
+                                        orElse:
+                                            () => PgsDeliverables(
+                                              0,
+                                              KeyResultArea(
+                                                0,
+                                                'name',
+                                                'remarks',
+                                                false,
+                                              ),
+                                              0,
+                                              'deliverableName',
+                                              'kraDescription',
+                                              true,
+                                              DateTime.now(),
+                                              0,
+                                              PgsStatus.notStarted,
+                                            ),
+                                      );
+                                  final name = deliverableName.deliverableName;
                                   return MapEntry(
                                     index,
                                     Container(
@@ -253,9 +457,7 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                DateTimeConverter().toJson(
-                                                  history.date,
-                                                ),
+                                                name,
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -263,6 +465,7 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                                               ),
                                             ),
                                           ),
+
                                           Expanded(
                                             flex: 3,
                                             child: Padding(
@@ -270,7 +473,9 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                history.score.toString(),
+                                                history.scoreHistory?.length
+                                                        .toString() ??
+                                                    '0',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -290,14 +495,14 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                                                 children: [
                                                   IconButton(
                                                     icon: Icon(
-                                                      Icons.delete,
-                                                      color: primaryColor,
+                                                      Icons.visibility,
                                                     ),
-                                                    onPressed: () => {},
-                                                    // showDeleteDialog(
-                                                    //   team.id
-                                                    //       .toString(),
-                                                    // ),
+                                                    onPressed: () {
+                                                      showFormDialog(
+                                                        history
+                                                            .pgsDeliverableId,
+                                                      );
+                                                    },
                                                   ),
                                                 ],
                                               ),
@@ -333,7 +538,7 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                     totalItems: _totalCount,
                     itemsPerPage: _pageSize,
                     isLoading: _isLoading,
-                    onPageChanged: (page) => fetchHistory(page: page),
+                    onPageChanged: (page) => fetchHistoryGrouped(page: page),
                   ),
                   Container(width: 60),
                 ],
@@ -346,11 +551,28 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
           isMinimized
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
-                // onPressed: () => showFormDialog(),
                 onPressed: () => {},
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+}
+
+class PgsDeliverableHistoryGrouped {
+  final int pgsDeliverableId;
+  final List<PgsDeliverableHistory>? scoreHistory;
+
+  PgsDeliverableHistoryGrouped(this.pgsDeliverableId, this.scoreHistory);
+
+  factory PgsDeliverableHistoryGrouped.fromJson(Map<String, dynamic> json) {
+    return PgsDeliverableHistoryGrouped(
+      json['pgsDeliverableId'] as int,
+      json['scoreHistory'] != null
+          ? (json['scoreHistory'] as List)
+              .map((e) => PgsDeliverableHistory.fromJson(e))
+              .toList()
+          : null,
     );
   }
 }
