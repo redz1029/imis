@@ -47,9 +47,10 @@ namespace IMIS.Presentation.PgsDeliverableScoreHistoryModule
                 var grouped = await service.GetGroupedScoreHistoryAsync().ConfigureAwait(false);
                 return Results.Ok(grouped);
             })
-            .WithTags(_pgsDeliverableScoreHistory);
-            //.RequireAuthorization(e => e.RequireClaim(
-            //    PermissionClaimType.Claim, _pgsDeliverableScoreHistoryPermission.View));
+            .WithTags(_pgsDeliverableScoreHistory)
+            .RequireAuthorization(e => e.RequireClaim(
+                PermissionClaimType.Claim, _pgsDeliverableScoreHistoryPermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsDeliverableScoreHistory), true);
         }
     }
 }
