@@ -3,9 +3,11 @@ using Base.Auths.Permissions;
 using Base.Auths.Roles;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsDeliverableModule;
+using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Application.PgsPeriodModule;
-using IMIS.Application.TeamModule;
+using IMIS.Application.PgsSignatoryTemplateModule;
+using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
@@ -29,11 +31,10 @@ namespace IMIS.Infrastructure.Auths
             await PermissionSeeder.SeedAllPermissionsForAdministrator(_roleManager);
 
             // This will specific permissions for a role
-            await PermissionSeeder.SeedPermissionForRole<StandardUserRole, IdentityRole>(_roleManager);
-            await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager, new PgsDeliverableAuditorPermission());
+            await PermissionSeeder.SeedPermissionForRole<StandardUserRole, IdentityRole>(_roleManager, new PerformanceGovernanceSystemPermission());
+            await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager, new PgsDeliverableScoreHistoryPermission(), new PgsDeliverableAuditorPermission());
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
-                new TeamPermission(), new KeyResultAreaPermission(), new PgsPeriodPermission(), new PerformanceGovernanceSystemPermission());
-
+            new KeyResultAreaPermission(), new PgsPeriodPermission(), new PerformanceGovernanceSystemPermission(), new PgsSignatoryTemplatePermission());
 
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
