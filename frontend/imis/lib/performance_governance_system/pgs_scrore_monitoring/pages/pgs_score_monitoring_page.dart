@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/history/models/pgs_deliverable_history.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -45,6 +46,9 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
   int? selectedPeriod;
   String? selectedPeriodText;
 
+  List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
+  List<PgsDeliverableHistoryGrouped> deliverableHistoryGroupedfilteredList = [];
+
   Map<int, PgsStatus> selectedStatus = {};
 
   TextEditingController scoreRangeToController = TextEditingController();
@@ -54,7 +58,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
   TextEditingController pageSizeController = TextEditingController();
 
   bool? isDirect;
-  bool _isLoading = false;
 
   final dio = Dio();
 
@@ -63,15 +66,12 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     super.initState();
     fetchFilteredPgsList();
     fetchOffice();
-    fetchDropdownData();
+    fetchKra();
     fetchPGSPeriods();
+    fetchScoreHistory();
   }
 
   Future<void> fetchFilteredPgsList() async {
-    if (_isLoading) return;
-
-    setState(() => _isLoading = true);
-
     try {
       final user = await AuthUtil.fetchLoggedUser();
       final token = await AuthUtil.fetchAccessToken();
@@ -140,6 +140,12 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   formattedByWhen = item['byWhen'].toString();
                 }
               }
+
+              final historyItem = deliverableHistoryGrouped.firstWhere(
+                (h) => h.pgsDeliverableId == item['pgsDeliverableId'],
+                orElse: () => PgsDeliverableHistoryGrouped(0, null),
+              );
+
               return {
                 'pgsDeliverableId': item['pgsDeliverableId'],
                 'kra': item['keyResultArea'],
@@ -165,8 +171,52 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       }
     } catch (e) {
       debugPrint("Error fetching filtered data: $e");
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> saveData() async {
+    var url = ApiEndpoint().pgsScoreMonitoring;
+    try {
+      final dataToSave = _prepareSaveData();
+      final response = await AuthenticatedRequest.put(
+        dio,
+        url,
+        data: {'items': dataToSave},
+      );
+
+      if (response.statusCode == 201) {
+        await fetchFilteredPgsList();
+        await fetchScoreHistory();
+        setState(() {
+          fetchFilteredPgsList();
+        });
+      }
+    } catch (e) {
+      debugPrint("Error adding/updating KRA: $e");
+    }
+  }
+
+  Future<void> fetchScoreHistory() async {
+    var url = ApiEndpoint().pgsDeliverableScoreHistoryGrouped;
+
+    try {
+      var response = await AuthenticatedRequest.get(dio, url);
+      debugPrint("Raw User response: ${response.data}");
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<PgsDeliverableHistoryGrouped> data =
+            (response.data as List)
+                .map((e) => PgsDeliverableHistoryGrouped.fromJson(e))
+                .toList();
+
+        setState(() {
+          deliverableHistoryGrouped = data;
+        });
+
+        debugPrint("deliverable list loaded: ${data.length}");
+      }
+    } catch (e) {
+      debugPrint("fetchdeliverableList Error: $e");
     }
   }
 
@@ -215,36 +265,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     }).toList();
   }
 
-  Future<void> saveData() async {
-    setState(() => _isLoading = true);
-
-    try {
-      final token = await AuthUtil.fetchAccessToken();
-      if (token == null || token.isEmpty) {
-        debugPrint("Missing token.");
-        return;
-      }
-
-      final dataToSave = _prepareSaveData();
-
-      final response = await AuthenticatedRequest.put(
-        dio,
-        ApiEndpoint().pgsScoreMonitoring,
-        data: {'items': dataToSave},
-      );
-
-      if (response.statusCode == 200) {
-        debugPrint("Save sucessfully");
-      } else {
-        debugPrint('Error saving data: ${response.statusCode}');
-      }
-    } catch (e) {
-      debugPrint("Error saving data: $e");
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
   Future<void> fetchPGSPeriods() async {
     var url = ApiEndpoint().pgsperiod;
 
@@ -273,7 +293,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     }
   }
 
-  Future<void> fetchDropdownData() async {
+  Future<void> fetchKra() async {
     var url = ApiEndpoint().keyresult;
     try {
       var response = await AuthenticatedRequest.get(dio, url);
@@ -392,6 +412,125 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     );
   }
 
+  void showFormDialog(int pgsDeliverableId) async {
+    final groupedItem = deliverableHistoryGrouped.firstWhere(
+      (item) => item.pgsDeliverableId == pgsDeliverableId,
+      orElse: () => PgsDeliverableHistoryGrouped(pgsDeliverableId, null),
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: mainBgColor,
+          title: const Text('Score History'),
+          content: SizedBox(
+            width: 600,
+            height: 700,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (groupedItem.scoreHistory != null &&
+                      groupedItem.scoreHistory!.isNotEmpty)
+                    _buildHistoryTable(groupedItem.scoreHistory!)
+                  else
+                    const Text('No history available for this deliverable'),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close', style: TextStyle(color: primaryColor)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildHistoryTable(List<PgsDeliverableHistory> items) {
+    items.sort((a, b) => b.date.compareTo(a.date));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row
+        Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          color: Colors.grey.shade200,
+          child: Row(
+            children: const [
+              Expanded(
+                flex: 2,
+                child: Text(
+                  'Date',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              Expanded(
+                flex: 1,
+                child: Text(
+                  'Score',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 4),
+
+        ...items.map((item) {
+          final date = item.date;
+          final datePart = DateFormat('MMM, dd, yyyy').format(date);
+          final timePart = DateFormat('hh:mm a').format(date);
+
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: RichText(
+                    text: TextSpan(
+                      style: const TextStyle(fontSize: 14, color: Colors.black),
+                      children: [
+                        TextSpan(text: datePart),
+                        const WidgetSpan(child: SizedBox(width: 10)),
+                        TextSpan(
+                          text: timePart,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.normal,
+                            color: Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Text(
+                    item.score.toString(),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
   Widget _buildRemarkCell(int index) {
     if (!remarkControllers.containsKey(index)) {
       final remarks = deliverableList[index]['remarks'];
@@ -454,41 +593,71 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Stack(
-        alignment: Alignment.center,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 60,
-            height: 60,
-            child: CircularProgressIndicator(
-              value: progressFraction,
-              strokeWidth: 6,
-              backgroundColor: Colors.grey[300],
-              valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-            ),
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                width: 60,
+                height: 60,
+                child: CircularProgressIndicator(
+                  value: progressFraction,
+                  strokeWidth: 6,
+                  backgroundColor: Colors.grey[300],
+                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                ),
+              ),
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: Center(
+                  child: TextField(
+                    controller: percentageControllers[index],
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      suffixText: '%',
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.zero,
+                      isDense: true,
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(3),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: Center(
-              child: TextField(
-                controller: percentageControllers[index],
+          gap,
+          Center(
+            child: TextButton(
+              onPressed: () {
+                final pgsDeliverableId =
+                    deliverableList[index]['pgsDeliverableId'];
+                if (pgsDeliverableId != null) {
+                  showFormDialog(pgsDeliverableId);
+                  setState(() {
+                    fetchScoreHistory();
+                    fetchFilteredPgsList();
+                  });
+                }
+              },
+              child: Text(
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                'View Score History',
+                style: TextStyle(
+                  fontSize: 10,
+                  color: primaryLightColor,
+                  fontWeight: FontWeight.w600,
                 ),
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  suffixText: '%',
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.zero,
-                  isDense: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(3),
-                ],
               ),
             ),
           ),
@@ -912,7 +1081,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                           },
                         );
                         if (confirmAction == true) {
-                          saveData();
+                          await saveData();
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -1160,6 +1329,24 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class PgsDeliverableHistoryGrouped {
+  final int pgsDeliverableId;
+  final List<PgsDeliverableHistory>? scoreHistory;
+
+  PgsDeliverableHistoryGrouped(this.pgsDeliverableId, this.scoreHistory);
+
+  factory PgsDeliverableHistoryGrouped.fromJson(Map<String, dynamic> json) {
+    return PgsDeliverableHistoryGrouped(
+      json['pgsDeliverableId'] as int,
+      json['scoreHistory'] != null
+          ? (json['scoreHistory'] as List)
+              .map((e) => PgsDeliverableHistory.fromJson(e))
+              .toList()
+          : null,
     );
   }
 }
