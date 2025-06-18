@@ -29,6 +29,9 @@ class ApiEndpoint {
   late String generatePdf;
   late String refresh;
   late String filterBy;
+  late String pgsScoreMonitoring;
+  late String pgsDeliverableScoreHistory;
+  late String pgsDeliverableScoreHistoryGrouped;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -37,7 +40,7 @@ class ApiEndpoint {
     keyresult = '$baseUrl/KeyResultArea';
     auditor = '$baseUrl/auditors';
     pgsperiod = '$baseUrl/PgsPeriod';
-    deliverables = '$baseUrl/Deliverable';
+    deliverables = '$baseUrl/deliverables';
     performancegovernancesystem = '$baseUrl/pgs';
     office = '$baseUrl/Office';
     team = '$baseUrl/Team';
@@ -55,6 +58,10 @@ class ApiEndpoint {
     generatePdf = '$baseUrl/pgs/list-report/pdf';
     refresh = '$baseUrl/refresh';
     filterBy = '$baseUrl/deliverables/filter';
+    pgsScoreMonitoring = '$baseUrl/deliverables/filter/update';
+    pgsDeliverableScoreHistory = '$baseUrl/pgsDeliverableScoreHistory';
+    pgsDeliverableScoreHistoryGrouped =
+        '$baseUrl/pgsDeliverableScoreHistory/grouped';
   }
 
   static Future<void> setBaseUrl() async {
