@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:imis/utils/permission_service.dart';
 
-import '../utils/permission_service.dart';
-
-class PermissionWidget extends StatelessWidget {
+class PermissionWidget extends StatefulWidget {
   final String permission;
   final Widget child;
 
@@ -13,9 +12,14 @@ class PermissionWidget extends StatelessWidget {
   });
 
   @override
+  State<PermissionWidget> createState() => _PermissionWidgetState();
+}
+
+class _PermissionWidgetState extends State<PermissionWidget> {
+  @override
   Widget build(BuildContext context) {
-    return PermissionService().hasPermission(permission)
-        ? child
-        : SizedBox.shrink();
+    final hasPermission = PermissionService().hasPermission(widget.permission);
+
+    return hasPermission ? widget.child : const SizedBox.shrink();
   }
 }

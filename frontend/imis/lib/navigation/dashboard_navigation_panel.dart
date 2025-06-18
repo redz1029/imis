@@ -55,6 +55,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   List<String> roles = [];
   Widget _selectedScreen = HomePage();
   int _selectedIndex = -1;
+
   final dio = Dio();
 
   @override
@@ -471,27 +472,35 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     0,
                     () => _setScreen(HomePage(), 0),
                   ),
+
+                  PermissionWidget(
+                    permission: AppPermission.viewPerformanceGovernanceSystem,
+                    child: _buildListTile(
+                      Icons.file_copy,
+                      'Performance Governance System',
+                      2,
+                      () => _setScreen(PerformanceGovernanceSystemPage(), 2),
+                    ),
+                  ),
+                  PermissionWidget(
+                    permission: AppPermission.scorePgsDeliverable,
+                    child: _buildListTile(
+                      Icons.credit_score,
+                      'PGS Score Monitoring',
+                      3,
+                      () => _setScreen(PgsScoreMonitoringPage(), 3),
+                    ),
+                  ),
+
                   _buildListTile(
                     Icons.history,
                     'History',
-                    16,
-                    () => _setScreen(PgsDeliverableHistoryPage(), 16),
-                  ),
-                  _buildListTile(
-                    Icons.file_copy,
-                    'Performance Governance System',
                     1,
-                    () => _setScreen(PerformanceGovernanceSystemPage(), 1),
-                  ),
-                  _buildListTile(
-                    Icons.credit_score,
-                    'PGS Score Monitoring',
-                    18,
-                    () => _setScreen(PgsScoreMonitoringPage(), 18),
+                    () => _setScreen(PgsDeliverableHistoryPage(), 1),
                   ),
 
                   PermissionWidget(
-                    permission: AppPermission.viewSettings,
+                    permission: AppPermission.editTeam,
                     child: Theme(
                       data: Theme.of(context).copyWith(dividerColor: lightGrey),
                       child: ExpansionTile(
@@ -503,6 +512,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                           'Settings',
                           style: TextStyle(color: primaryTextColor),
                         ),
+
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(left: 40),
@@ -513,89 +523,89 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                                   Icons.date_range,
                                   hideIcon: true,
                                   'Audit Schedules',
-                                  2,
-                                  () => _setScreen(AuditSchedulesPage(), 2),
+                                  4,
+                                  () => _setScreen(AuditSchedulesPage(), 4),
                                 ),
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
                                   'Auditor',
-                                  3,
-                                  () => _setScreen(AuditorPage(), 3),
+                                  5,
+                                  () => _setScreen(AuditorPage(), 5),
                                 ),
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
                                   'Auditor Team',
-                                  4,
-                                  () => _setScreen(AuditorTeamPage(), 4),
+                                  6,
+                                  () => _setScreen(AuditorTeamPage(), 6),
                                 ),
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
                                   'Key Result Area',
-                                  5,
-                                  () => _setScreen(KeyResultAreaPage(), 5),
+                                  7,
+                                  () => _setScreen(KeyResultAreaPage(), 7),
                                 ),
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
                                   'Office',
-                                  6,
-                                  () => _setScreen(OfficePage(), 6),
+                                  8,
+                                  () => _setScreen(OfficePage(), 8),
                                 ),
 
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
                                   'PGS Signatory',
-                                  7,
+                                  9,
                                   () =>
-                                      _setScreen(PgsSignatoryTemplatePage(), 7),
+                                      _setScreen(PgsSignatoryTemplatePage(), 9),
                                 ),
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
                                   'Pgs Period',
-                                  8,
-                                  () => _setScreen(PgsPeriodPage(), 8),
+                                  10,
+                                  () => _setScreen(PgsPeriodPage(), 10),
                                 ),
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
                                   'Role',
-                                  9,
-                                  () => _setScreen(RolesPage(), 9),
+                                  12,
+                                  () => _setScreen(RolesPage(), 12),
                                 ),
 
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
                                   'Team',
-                                  10,
-                                  () => _setScreen(TeamPage(), 10),
+                                  13,
+                                  () => _setScreen(TeamPage(), 13),
                                 ),
 
                                 _buildListTile(
                                   Icons.medical_information,
                                   hideIcon: true,
                                   'User',
-                                  11,
-                                  () => _setScreen(UserProfilePage(), 11),
+                                  14,
+                                  () => _setScreen(UserProfilePage(), 14),
                                 ),
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
                                   'User Office',
-                                  12,
-                                  () => _setScreen(UserOfficePage(), 12),
+                                  15,
+                                  () => _setScreen(UserOfficePage(), 15),
                                 ),
                                 _buildListTile(
                                   Icons.person,
                                   hideIcon: true,
                                   'User Role',
-                                  13,
-                                  () => _setScreen(UserRolePage(), 13),
+                                  16,
+                                  () => _setScreen(UserRolePage(), 16),
                                 ),
                               ],
                             ),
@@ -604,11 +614,12 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                       ),
                     ),
                   ),
+
                   _buildListTile(
                     Icons.folder,
                     'Reports',
-                    14,
-                    () => _setScreen(PgsReportPage(), 14),
+                    17,
+                    () => _setScreen(PgsReportPage(), 17),
                   ),
                 ],
               ),
@@ -618,7 +629,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
           _buildListTile(
             Icons.exit_to_app,
             'Logout',
-            15,
+            18,
             () => _logout(context),
           ),
         ],
