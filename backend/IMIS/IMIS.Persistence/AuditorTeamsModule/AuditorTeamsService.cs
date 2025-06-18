@@ -1,5 +1,4 @@
 ﻿using IMIS.Application.AuditorModule;
-using IMIS.Application.PgsModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.AuditorTeamsModule
