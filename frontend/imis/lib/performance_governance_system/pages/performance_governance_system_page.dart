@@ -22,6 +22,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/range_input_formatter.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
@@ -82,10 +83,12 @@ class _PerformanceGovernanceSystemPageState
   String? _submittedByUserId;
   String? _notedByUserId;
   String? _approvedByUserId;
+  String? _reviewedByUserId;
 
   int? submittedRecordId = 0;
   int? notedRecordId = 0;
   int? aprroveRecordId = 0;
+  int? reviewedRecordId = 0;
 
   String officeDisplay = "";
   String officeIdList = "";
@@ -913,6 +916,16 @@ class _PerformanceGovernanceSystemPageState
         pgsSignatoryTemplateId: 3,
         signatoryId: _approvedByUserId?.toString() ?? '',
       ),
+
+      PgsSignatory(
+        DateTime.now(),
+        false,
+        "",
+        id: reviewedRecordId ?? 0, // Existing ID for Approved
+        pgsId: pgsId,
+        pgsSignatoryTemplateId: 4,
+        signatoryId: _reviewedByUserId?.toString() ?? '',
+      ),
     ];
   }
 
@@ -1656,6 +1669,11 @@ class _PerformanceGovernanceSystemPageState
         pgsIdSignatory: currentPgsId,
         level: 3,
       );
+      _reviewedByUserId = getSignatoryByOrderLevelEdit(
+        pgsIdSignatory: currentPgsId,
+        level: 4,
+      );
+      _reviewedByUserId = null;
     } else {
       debugPrint("No valid selectedId provided, cannot proceed.");
       _submittedByUserId = null;
@@ -1714,9 +1732,11 @@ class _PerformanceGovernanceSystemPageState
         aprroveRecordId = 0;
 
         // _submittedByUserId = getSignatoryByOrderLevelDefault(1);
+
         _submittedByUserId = userId;
         _notedByUserId = getSignatoryByOrderLevelDefault(2);
         _approvedByUserId = getSignatoryByOrderLevelDefault(3);
+        _reviewedByUserId = getSignatoryByOrderLevelDefault(4);
       } else {
         competenceScore.value = double.tryParse(competencescore ?? '') ?? 0.0;
         resourceScore.value = double.tryParse(resourcescore ?? '') ?? 0.0;
@@ -1831,6 +1851,25 @@ class _PerformanceGovernanceSystemPageState
         );
         aprroveRecordId = approveSignatory?.id ?? 0;
         _approvedByUserId = approveSignatory?.signatoryId ?? '0';
+
+        final reviewedSignatory = signatories?.firstWhere(
+          (signatory) => signatory.pgsSignatoryTemplateId == 4,
+          orElse:
+              () => PgsSignatory(
+                id: 0,
+                pgsId: 0,
+                pgsSignatoryTemplateId: 4,
+                signatoryId: '0',
+                DateTime.now(),
+                false,
+                "",
+              ),
+        );
+        reviewedRecordId = reviewedSignatory?.id ?? 0;
+        _reviewedByUserId = reviewedSignatory?.signatoryId ?? '0';
+        debugPrint(
+          '? reviewed Record ID: $reviewedRecordId | Signatory ID: $_reviewedByUserId',
+        );
       }
     });
 
@@ -2337,65 +2376,82 @@ class _PerformanceGovernanceSystemPageState
                               ),
                             ),
 
-                            // Padding(
-                            //   padding: const EdgeInsets.all(8),
-                            //   child: SingleChildScrollView(
-                            //     scrollDirection: Axis.horizontal,
-                            //     child: Row(
-                            //       crossAxisAlignment: CrossAxisAlignment.start,
-                            //       children: [
-                            //         // Text('$firstName $middleName $lastName'),
-                            //         _buildSignatoryColumn(
-                            //           title:
-                            //               '${getSignatoryTitleByOrderLevel(1) ?? ''}:',
-                            //           currentValue: _submittedByUserId,
-                            //           onChanged: (value) {
-                            //             setDialogState(() {
-                            //               _submittedByUserId = value;
-                            //             });
-                            //           },
-                            //           onDeleted: () {
-                            //             setDialogState(() {
-                            //               _submittedByUserId = null;
-                            //             });
-                            //           },
-                            //         ),
-                            //         const SizedBox(width: 200),
-                            //         _buildSignatoryColumn(
-                            //           title:
-                            //               '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
-                            //           currentValue: _notedByUserId,
-                            //           onChanged: (value) {
-                            //             setDialogState(() {
-                            //               _notedByUserId = value;
-                            //             });
-                            //           },
-                            //           onDeleted: () {
-                            //             setDialogState(() {
-                            //               _notedByUserId = null;
-                            //             });
-                            //           },
-                            //         ),
-                            //         const SizedBox(width: 200),
-                            //         _buildSignatoryColumn(
-                            //           title:
-                            //               '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
-                            //           currentValue: _approvedByUserId,
-                            //           onChanged: (value) {
-                            //             setDialogState(() {
-                            //               _approvedByUserId = value;
-                            //             });
-                            //           },
-                            //           onDeleted: () {
-                            //             setDialogState(() {
-                            //               _approvedByUserId = null;
-                            //             });
-                            //           },
-                            //         ),
-                            //       ],
-                            //     ),
-                            //   ),
-                            // ),
+                            Padding(
+                              padding: const EdgeInsets.all(8),
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Text('$firstName $middleName $lastName'),
+                                    _buildSignatoryColumn(
+                                      title:
+                                          '${getSignatoryTitleByOrderLevel(1) ?? ''}:',
+                                      currentValue: _submittedByUserId,
+                                      onChanged: (value) {
+                                        setDialogState(() {
+                                          _submittedByUserId = value;
+                                        });
+                                      },
+                                      onDeleted: () {
+                                        setDialogState(() {
+                                          _submittedByUserId = null;
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(width: 200),
+                                    _buildSignatoryColumn(
+                                      title:
+                                          '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
+                                      currentValue: _notedByUserId,
+                                      onChanged: (value) {
+                                        setDialogState(() {
+                                          _notedByUserId = value;
+                                        });
+                                      },
+                                      onDeleted: () {
+                                        setDialogState(() {
+                                          _notedByUserId = null;
+                                        });
+                                      },
+                                    ),
+
+                                    const SizedBox(width: 40),
+                                    _buildSignatoryColumn(
+                                      title:
+                                          '${getSignatoryTitleByOrderLevel(4) ?? ''}:',
+                                      currentValue: _reviewedByUserId,
+                                      onChanged: (value) {
+                                        setDialogState(() {
+                                          _reviewedByUserId = value;
+                                        });
+                                      },
+                                      onDeleted: () {
+                                        setDialogState(() {
+                                          _reviewedByUserId = null;
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(width: 200),
+                                    _buildSignatoryColumn(
+                                      title:
+                                          '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
+                                      currentValue: _approvedByUserId,
+                                      onChanged: (value) {
+                                        setDialogState(() {
+                                          _approvedByUserId = value;
+                                        });
+                                      },
+                                      onDeleted: () {
+                                        setDialogState(() {
+                                          _approvedByUserId = null;
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -2799,7 +2855,7 @@ class _PerformanceGovernanceSystemPageState
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(2),
-                _RangeInputFormatter(1, 40),
+                RangeInputFormatter(1, 40),
               ],
 
               decoration: InputDecoration(
@@ -3113,7 +3169,7 @@ class _PerformanceGovernanceSystemPageState
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
                 LengthLimitingTextInputFormatter(2),
-                _RangeInputFormatter(1, 40),
+                RangeInputFormatter(1, 40),
               ],
 
               decoration: InputDecoration(
@@ -3672,26 +3728,5 @@ extension StringExtension on String {
               word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '',
         )
         .join(' ');
-  }
-}
-
-class _RangeInputFormatter extends TextInputFormatter {
-  final int min;
-  final int max;
-
-  _RangeInputFormatter(this.min, this.max);
-
-  @override
-  TextEditingValue formatEditUpdate(
-    TextEditingValue oldValue,
-    TextEditingValue newValue,
-  ) {
-    if (newValue.text.isEmpty) return newValue;
-
-    final int? value = int.tryParse(newValue.text);
-    if (value == null || value < min || value > max) {
-      return oldValue;
-    }
-    return newValue;
   }
 }

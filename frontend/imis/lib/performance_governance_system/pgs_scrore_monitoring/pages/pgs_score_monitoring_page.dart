@@ -8,8 +8,10 @@ import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/range_input_formatter.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:motion_toast/motion_toast.dart';
 import '../../../utils/http_util.dart';
 import '../models/pgs_filter.dart';
 
@@ -184,8 +186,17 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
         data: {'items': dataToSave},
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200 || response.statusCode == 201) {
         await fetchFilteredPgsList();
+        if (mounted) {
+          MotionToast.success(
+            title: const Text("Success"),
+            description: const Text("Data saved successfully!"),
+
+            // ignore: deprecated_member_use
+            position: MotionToastPosition.top,
+          ).show(context);
+        }
         await fetchScoreHistory();
         setState(() {
           fetchFilteredPgsList();
@@ -519,7 +530,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 Expanded(
                   flex: 1,
                   child: Text(
-                    item.score.toString(),
+                    '${item.score}%',
                     style: const TextStyle(fontSize: 14),
                   ),
                 ),
@@ -630,6 +641,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
                       LengthLimitingTextInputFormatter(3),
+                      RangeInputFormatter(1, 100),
                     ],
                   ),
                 ),
