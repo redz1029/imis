@@ -122,7 +122,7 @@ namespace IMIS.Persistence.PGSModules
                     {
                         Id = 0, 
                         PgsDeliverableId = deliverable.Id,
-                        Date = DateTime.UtcNow,
+                        Date = DateTime.Now,
                         Score = dto.Score
                     };
                     _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);

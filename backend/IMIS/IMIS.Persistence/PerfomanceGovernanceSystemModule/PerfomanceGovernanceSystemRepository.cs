@@ -189,7 +189,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                             {
                                 Id = 0,
                                 PgsDeliverableId = existingDeliverable.Id,
-                                Date = DateTime.UtcNow,
+                                Date = DateTime.Now,
                                 Score = deliverable.PercentDeliverables
                             };
                             _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);
