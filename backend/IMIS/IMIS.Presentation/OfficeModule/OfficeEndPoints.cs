@@ -1,4 +1,5 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.OfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,8 @@ namespace IMIS.Presentation.OfficeModule
     public class OfficeEndPoints : CarterModule
     {
         private const string _officeTag = "Office";
+
+        public readonly OfficePermission _officePermission = new();
         public OfficeEndPoints() : base("/office")
         {
 
@@ -24,15 +27,17 @@ namespace IMIS.Presentation.OfficeModule
                 await cache.EvictByTagAsync(_officeTag, cancellationToken);
                 return Results.Ok(officeDto);               
             })
-            .WithTags(_officeTag);
+            .WithTags(_officeTag)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _officePermission.Add));
 
             app.MapGet("/", async (IOfficeService service, CancellationToken cancellationToken) =>
             {
                 var offices = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(offices);
             })
-            .WithTags(_officeTag)           
-            //.RequireAuthorization(a => a.RequireRole(RoleTypes.Administrator))
+            .WithTags(_officeTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
 
             app.MapGet("/filter/{name}", async (string name, IOfficeService service, CancellationToken cancellationToken) =>
@@ -49,6 +54,7 @@ namespace IMIS.Presentation.OfficeModule
                 return office != null ? Results.Ok(office) : Results.NotFound();
             })
             .WithTags(_officeTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
             app.MapPut("/{id}", async (int id, [FromBody] OfficeDto office, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {               
@@ -61,14 +67,16 @@ namespace IMIS.Presentation.OfficeModule
                 await cache.EvictByTagAsync(_officeTag, cancellationToken);
                 return Results.Ok(office);
             })
-            .WithTags(_officeTag);
+            .WithTags(_officeTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.Edit));
             app.MapGet("/page", async (int page, int pageSize, IOfficeService service, CancellationToken cancellationToken) =>
             {
                 var paginatedOffice = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return paginatedOffice;
             })
             .WithTags(_officeTag)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View));
         }
     }
 }
