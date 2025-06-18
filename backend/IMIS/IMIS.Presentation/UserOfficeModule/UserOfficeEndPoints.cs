@@ -1,4 +1,5 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.UserOfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -12,6 +13,7 @@ namespace IMIS.Presentation.UserOfficeModule
     public class UserOfficeEndPoints : CarterModule
     {
         private const string _userOffice = "User Office";
+        public readonly UserOfficePermission _userOfficePermission = new();
         public UserOfficeEndPoints() : base("/userOffice") { }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
@@ -22,7 +24,9 @@ namespace IMIS.Presentation.UserOfficeModule
                 await cache.EvictByTagAsync(_userOffice, cancellationToken);               
                 return Results.Ok("Record has been successfully saved.");
             })
-            .WithTags(_userOffice);
+            .WithTags(_userOffice)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _userOfficePermission.Add));
 
             app.MapGet("/", async (IUserOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -30,6 +34,8 @@ namespace IMIS.Presentation.UserOfficeModule
                 return Results.Ok(userOffice);
             })
             .WithTags(_userOffice)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _userOfficePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
  
             app.MapGet("/{id}", async (int id, IUserOfficeService service, CancellationToken cancellationToken) =>
@@ -37,8 +43,10 @@ namespace IMIS.Presentation.UserOfficeModule
                 var userOffice = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 return userOffice != null ? Results.Ok(userOffice) : Results.NotFound();
             })
-           .WithTags(_userOffice)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
+            .WithTags(_userOffice)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _userOfficePermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] UserOfficeDto useroffice, IUserOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -56,7 +64,9 @@ namespace IMIS.Presentation.UserOfficeModule
                 await cache.EvictByTagAsync(_userOffice, cancellationToken);
                 return Results.Ok(updatedUserOffice);
             })
-           .WithTags(_userOffice);
+            .WithTags(_userOffice)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _userOfficePermission.Edit));
 
             app.MapGet("/page", async (int page, int pageSize, IUserOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -64,8 +74,10 @@ namespace IMIS.Presentation.UserOfficeModule
                 return paginatedUserOffice;
 
             })
-           .WithTags(_userOffice)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
+            .WithTags(_userOffice)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true)
+            .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _userOfficePermission.View));
         }
     }
 }
