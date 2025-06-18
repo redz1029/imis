@@ -53,7 +53,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditSchedules", (string)null);
+                    b.ToTable("AuditSchedules");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
@@ -95,7 +95,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("AuditScheduleDetails", (string)null);
+                    b.ToTable("AuditScheduleDetails");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -110,7 +110,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("AuditableOffices", (string)null);
+                    b.ToTable("AuditableOffices");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Auditor", b =>
@@ -138,7 +138,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Auditors", (string)null);
+                    b.ToTable("Auditors");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditorOffices", b =>
@@ -156,7 +156,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("AuditorOffices", (string)null);
+                    b.ToTable("AuditorOffices");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditorTeams", b =>
@@ -177,7 +177,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("AuditorTeams", (string)null);
+                    b.ToTable("AuditorTeams");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KeyResultArea", b =>
@@ -206,7 +206,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KeyResultArea", (string)null);
+                    b.ToTable("KeyResultArea");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Office", b =>
@@ -234,7 +234,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Offices", (string)null);
+                    b.ToTable("Offices");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PerfomanceGovernanceSystem", b =>
@@ -279,7 +279,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsReadinessRatingId");
 
-                    b.ToTable("PerformanceGovernanceSystem", (string)null);
+                    b.ToTable("PerformanceGovernanceSystem");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
@@ -312,7 +312,7 @@ namespace IMIS.Persistence.Migrations
                     b.Property<double>("PercentDeliverables")
                         .HasColumnType("float");
 
-                    b.Property<long?>("PerfomanceGovernanceSystemId")
+                    b.Property<long>("PerfomanceGovernanceSystemId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("Remarks")
@@ -332,7 +332,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PerfomanceGovernanceSystemId");
 
-                    b.ToTable("Deliverable", (string)null);
+                    b.ToTable("Deliverable");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverableScoreHistory", b =>
@@ -362,7 +362,9 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsDeliverableScoreHistories", (string)null);
+                    b.HasIndex("PgsDeliverableId");
+
+                    b.ToTable("PgsDeliverableScoreHistories");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsPeriod", b =>
@@ -392,7 +394,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsPeriod", (string)null);
+                    b.ToTable("PgsPeriod");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsReadinessRating", b =>
@@ -422,7 +424,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsReadiness", (string)null);
+                    b.ToTable("PgsReadiness");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsSignatory", b =>
@@ -462,7 +464,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SignatoryId");
 
-                    b.ToTable("PgsSignatory", (string)null);
+                    b.ToTable("PgsSignatory");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsSignatoryTemplate", b =>
@@ -502,7 +504,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("DefaultSignatoryId");
 
-                    b.ToTable("PgsSignatoryTemplate", (string)null);
+                    b.ToTable("PgsSignatoryTemplate");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Team", b =>
@@ -530,7 +532,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams", (string)null);
+                    b.ToTable("Teams");
                 });
 
             modelBuilder.Entity("IMIS.Domain.UserOffices", b =>
@@ -563,7 +565,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("UserOffices", (string)null);
+                    b.ToTable("UserOffices");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -596,29 +598,29 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
-                            ConcurrencyStamp = "d7b2d9a2-08f7-484b-ac0d-36637201c554",
+                            ConcurrencyStamp = "685475b4-fdd1-48fc-bf49-fa181a2adb77",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                            ConcurrencyStamp = "ec8f8a84-a795-45c6-a1bd-6cff08fa20f7",
-                            Name = "PGS Manager",
+                            ConcurrencyStamp = "51919e93-df6f-4aad-99a4-6a8672820304",
+                            Name = "Pgs Manager",
                             NormalizedName = "PGS MANAGER"
                         },
                         new
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            ConcurrencyStamp = "28b33b57-61e1-40c5-9f0c-5d92b2398ae8",
-                            Name = "PGS User",
+                            ConcurrencyStamp = "bad61a58-6c8f-41f7-aa49-b9012821c7d2",
+                            Name = "Standard User",
                             NormalizedName = "PGS USER"
                         },
                         new
                         {
                             Id = "af7b586c7ee6490bbd878f46f6a47831",
-                            ConcurrencyStamp = "efb1eb4d-50de-47d0-809c-7021e47a88bf",
-                            Name = "PGS Auditor",
+                            ConcurrencyStamp = "da227e00-a9ed-47a0-b571-13e0fee8e48c",
+                            Name = "Pgs Auditor",
                             NormalizedName = "PGS AUDITOR"
                         });
                 });
@@ -726,15 +728,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "83a8b182-091f-4ff6-9389-8ce6342e7ff6",
+                            ConcurrencyStamp = "9f82a041-fb27-48a6-970e-864cfc6377c6",
                             Email = "marcrejohncastillano@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
                             NormalizedUserName = "REDZ1029",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMXFHETAyY7ByX8DdAbAs1y301gQ16gsGtwePNEvcD8ZeqiHkldLHxNqFXSZtlVrgw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEp162zmjS73e/h9NL17FkrIzXlavN9oMIo+pSoRvrcU64+vBpB29x6fFF1R2b9PXQ==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "82143406-df97-45e0-ac5a-6bd15fe46898",
+                            SecurityStamp = "d198a53c-31af-465a-8f70-2f0e97197e94",
                             TwoFactorEnabled = false,
                             UserName = "redz1029"
                         },
@@ -742,15 +744,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "36832034-d17a-4e73-b3e9-91030b4f5546",
+                            ConcurrencyStamp = "051689ce-1bd2-47be-af5d-656fe567bb57",
                             Email = "alondealexa2021@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ALONDEALEXA2021@GMAIL.COM",
                             NormalizedUserName = "ALYXX1988",
-                            PasswordHash = "AQAAAAIAAYagAAAAEM7jH/LmP61RxEqnhLtFl/Ok7jzzG3lM47uiHivGbngXWFSqJgYwfMKS+5Oe0vz4BQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK3S7JhNRv8BnahBIKTIoMEHkp06XnCTgZpEjFqxsyLgGqfq+B1vS8MATLOAcGE2Pw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b5b7bc8d-5915-4ed5-a2bc-ff7b3364a1e0",
+                            SecurityStamp = "1de9d232-48d7-4600-93f2-e56465101c2a",
                             TwoFactorEnabled = false,
                             UserName = "alyxx1988"
                         },
@@ -758,15 +760,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "043e70fb-3b14-496f-8d06-f84957926121",
+                            ConcurrencyStamp = "f73bfd4a-ef68-4b31-b6ad-28184d9b84c9",
                             Email = "CrossVampireNe0@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "CROSSVAMPIRENE0@GMAIL.COM",
                             NormalizedUserName = "DARKWIZWIZ",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGkZ7eWUmOkwmlzZ/vDKCrG8LrkTmtTsApuT6LZgehBVipasTqklErJhBwVSivJDgA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMsFT+a7yakj5oyac/Cu6LE3N8IIvaUPg5HUjXG+X28FLtrwObu9F0RS3VjYTkG8wg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ce720b9f-eed2-45c9-9f06-39a51b5b3474",
+                            SecurityStamp = "a437b9f0-225f-41a7-85b3-95afd70706d4",
                             TwoFactorEnabled = false,
                             UserName = "darkwizwiz"
                         });
@@ -1012,11 +1014,24 @@ namespace IMIS.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("KraId");
 
-                    b.HasOne("IMIS.Domain.PerfomanceGovernanceSystem", null)
+                    b.HasOne("IMIS.Domain.PerfomanceGovernanceSystem", "PerfomanceGovernanceSystem")
                         .WithMany("PgsDeliverables")
-                        .HasForeignKey("PerfomanceGovernanceSystemId");
+                        .HasForeignKey("PerfomanceGovernanceSystemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Kra");
+
+                    b.Navigation("PerfomanceGovernanceSystem");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.PgsDeliverableScoreHistory", b =>
+                {
+                    b.HasOne("IMIS.Domain.PgsDeliverable", null)
+                        .WithMany("PgsDeliverableScoreHistory")
+                        .HasForeignKey("PgsDeliverableId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsSignatory", b =>
@@ -1143,6 +1158,11 @@ namespace IMIS.Persistence.Migrations
                     b.Navigation("PgsDeliverables");
 
                     b.Navigation("PgsSignatories");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
+                {
+                    b.Navigation("PgsDeliverableScoreHistory");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Team", b =>
