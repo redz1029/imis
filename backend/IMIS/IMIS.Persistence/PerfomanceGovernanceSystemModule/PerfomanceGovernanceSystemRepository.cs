@@ -167,7 +167,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 }
             }
             // --- Sync PgsDeliverables ---
-         
+        
             if (perfomanceGovernanceSystem.PgsDeliverables != null)
             {
                 foreach (var deliverable in perfomanceGovernanceSystem.PgsDeliverables)
@@ -177,19 +177,23 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 
                     if (existingDeliverable != null)
                     {
-                        _dbContext.Entry(existingDeliverable).CurrentValues.SetValues(deliverable);
+                        // Check if the score has changed before creating history
+                        bool scoreChanged = existingDeliverable.PercentDeliverables != deliverable.PercentDeliverables;
 
+                        _dbContext.Entry(existingDeliverable).CurrentValues.SetValues(deliverable);
                         existingDeliverable.PerfomanceGovernanceSystemId = existingPerfomanceGovernanceSystem.Id;
 
-                        var history = new PgsDeliverableScoreHistory
+                        if (scoreChanged)
                         {
-                            Id = 0,
-                            PgsDeliverableId = existingDeliverable.Id,
-                            Date = DateTime.UtcNow,
-                            Score = deliverable.PercentDeliverables
-                        };
-                        _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);
-
+                            var history = new PgsDeliverableScoreHistory
+                            {
+                                Id = 0,
+                                PgsDeliverableId = existingDeliverable.Id,
+                                Date = DateTime.UtcNow,
+                                Score = deliverable.PercentDeliverables
+                            };
+                            _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);
+                        }
                     }
                     else
                     {
