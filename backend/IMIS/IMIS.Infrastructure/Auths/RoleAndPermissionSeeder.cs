@@ -1,6 +1,7 @@
 ﻿using Base.Auths;
 using Base.Auths.Permissions;
 using Base.Auths.Roles;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsDeliverableScoreHistoryModule;
@@ -32,7 +33,8 @@ namespace IMIS.Infrastructure.Auths
 
             // This will specific permissions for a role
             await PermissionSeeder.SeedPermissionForRole<StandardUserRole, IdentityRole>(_roleManager, new PerformanceGovernanceSystemPermission());
-            await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager, new PgsDeliverableScoreHistoryPermission(), new PgsDeliverableAuditorPermission());
+            await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager, new PgsDeliverableScoreHistoryPermission(), new PgsDeliverableAuditorPermission(),
+            new KeyResultAreaPermission(), new PgsPeriodPermission(), new OfficePermission());
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
             new KeyResultAreaPermission(), new PgsPeriodPermission(), new PerformanceGovernanceSystemPermission(), new PgsSignatoryTemplatePermission());
 
