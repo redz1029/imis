@@ -104,10 +104,8 @@ namespace IMIS.Presentation.PGSModule
             app.MapPut("/filter/update", async (
             [FromBody] PgsDeliverableMonitorPageList request, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                var result = await service.UpdateDeliverablesAsync(request, cancellationToken);
-                
+                var result = await service.UpdateDeliverablesAsync(request, cancellationToken);                
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
-
                 return Results.Ok(result);
             })
             .WithTags(_pgsTag)

@@ -1,5 +1,7 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.PgsSignatoryTemplateModule;
+using IMIS.Application.UserOfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +14,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
     public class PgsSignatoryTemplateEndPoints : CarterModule
     {
         private const string _PgsSignatoryTemplate = "PGS Signatory Template";
+        public readonly PgsSignatoryTemplatePermission _pgsSignatoryTemplatePermission = new();
         public PgsSignatoryTemplateEndPoints() : base("/pgsSignatoryTemplate")
         {
 
@@ -24,7 +27,9 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                 await cache.EvictByTagAsync(_PgsSignatoryTemplate, cancellationToken);
                 return Results.Ok("Record has been successfully saved.");
             })
-            .WithTags(_PgsSignatoryTemplate);
+            .WithTags(_PgsSignatoryTemplate)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Add));
 
             app.MapGet("/", async (IPgsSignatoryTemplateService service, CancellationToken cancellationToken) =>
             {
@@ -32,15 +37,20 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                 return Results.Ok(pgsSignatoryTemplate);
             })
             .WithTags(_PgsSignatoryTemplate)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
 
             app.MapGet("/{id}", async (int id, IPgsSignatoryTemplateService service, CancellationToken cancellationToken) =>
             {
                 var pgsSignatoryTemplate = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 return pgsSignatoryTemplate != null ? Results.Ok(pgsSignatoryTemplate) : Results.NotFound();
             })
-           .WithTags(_PgsSignatoryTemplate)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true);
+            .WithTags(_PgsSignatoryTemplate)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
+
             app.MapPut("/{id}", async (int id, [FromBody] PgsSignatoryTemplateDto pgsSignatoryTemplateDto, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var existingpgsSignatoryTemplate = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -52,14 +62,19 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                 await cache.EvictByTagAsync(_PgsSignatoryTemplate, cancellationToken);
                 return Results.Ok(updatedSignatoryTemplate);
             })
-           .WithTags(_PgsSignatoryTemplate);
+           .WithTags(_PgsSignatoryTemplate)
+           .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Edit));
+            ;
             app.MapGet("/page", async (int page, int pageSize, IPgsSignatoryTemplateService service, CancellationToken cancellationToken) =>
             {
                 var paginatedSignatoryTemplate = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedSignatoryTemplate);
             })
            .WithTags(_PgsSignatoryTemplate)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true);
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
+           .RequireAuthorization(e => e.RequireClaim(
+           PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
         }
     }
 }

@@ -26,29 +26,7 @@ namespace IMIS.Persistence.PgsPeriodModule
                 .AsNoTracking()           
                 .ToListAsync(cancellationToken) 
                 .ConfigureAwait(false);
-        }
-        //public new async Task<PgsPeriod> SaveOrUpdateAsync(PgsPeriod pgsPeriod, CancellationToken cancellationToken)
-        //{
-        //    if (pgsPeriod == null) throw new ArgumentNullException(nameof(PgsPeriod));
-
-        //    var existingPgsPeriod = await _dbContext.PgsPeriod
-        //        .FirstOrDefaultAsync(d => d.Id == pgsPeriod.Id, cancellationToken)
-        //        .ConfigureAwait(false);
-        //    if (existingPgsPeriod != null)
-        //    {
-        //        // Update the existing PgsPeriod entity
-        //        _dbContext.Entry(existingPgsPeriod).CurrentValues.SetValues(pgsPeriod);
-        //    }
-        //    else
-        //    {
-        //        // Add the new PgsPeriod entity
-        //        await _dbContext.PgsPeriod.AddAsync(pgsPeriod, cancellationToken).ConfigureAwait(false);
-        //    }
-        //    // Save changes to the database
-        //    await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);           
-        //    return pgsPeriod;
-        //}
-
+        }      
         public new async Task<PgsPeriod> SaveOrUpdateAsync(PgsPeriod pgsPeriod, CancellationToken cancellationToken)
         {
             if (pgsPeriod == null) throw new ArgumentNullException(nameof(pgsPeriod));
@@ -61,7 +39,7 @@ namespace IMIS.Persistence.PgsPeriodModule
 
                 if (existing != null)
                 {
-                    _dbContext.PgsPeriod.Update(pgsPeriod); // Will use RowVersion in concurrency check
+                    _dbContext.PgsPeriod.Update(pgsPeriod); 
                 }
                 else
                 {

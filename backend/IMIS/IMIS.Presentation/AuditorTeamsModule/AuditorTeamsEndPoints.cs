@@ -1,5 +1,7 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.AuditorTeamsModule;
+using IMIS.Application.AuditScheduleModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,6 +15,7 @@ namespace IMIS.Presentation.AuditorTeamsModule
     {
 
         private const string _AuditorTeamTag = "AuditorTeam";
+        public readonly AuditorTeamPermission _auditorTeamPermission = new();
         public AuditorTeamsEndPoints() : base("/auditorTeam")        
         {
         }
@@ -24,7 +27,9 @@ namespace IMIS.Presentation.AuditorTeamsModule
                 await cache.EvictByTagAsync(_AuditorTeamTag, cancellationToken);               
                 return Results.Created($"/auditorTeams/{createdAuditorTeamsDto}", createdAuditorTeamsDto);
             })
-           .WithTags(_AuditorTeamTag);
+           .WithTags(_AuditorTeamTag)
+           .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _auditorTeamPermission.Add));
 
             app.MapGet("/", async (IAuditorTeamsService service, CancellationToken cancellationToken) =>
             {
@@ -32,7 +37,9 @@ namespace IMIS.Presentation.AuditorTeamsModule
                 return Results.Ok(AuditorTeamDto);
             })
             .WithTags(_AuditorTeamTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
+            .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _auditorTeamPermission.View));
 
             app.MapGet("/teamid/{id}", async (IAuditorTeamsService service, long? teamId, CancellationToken cancellationToken) =>
             {
@@ -45,7 +52,9 @@ namespace IMIS.Presentation.AuditorTeamsModule
                 return Results.Ok(team);
             })
            .WithTags(_AuditorTeamTag)        
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true);            
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
+           .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _auditorTeamPermission.View));
         }
     }
 }
