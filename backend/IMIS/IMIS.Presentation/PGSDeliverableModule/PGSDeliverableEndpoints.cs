@@ -100,19 +100,27 @@ namespace IMIS.Presentation.PGSModule
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
+           
             app.MapPut("/filter/update", async (
-            [FromBody] PgsDeliverableMonitorPageList request, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            [FromBody] PgsDeliverableMonitorPageList request,
+            IPGSDeliverableService service,
+            IOutputCacheStore cache,
+            CancellationToken cancellationToken) =>
             {
-                var result = await service.UpdateDeliverablesAsync(request, cancellationToken);                
+                var result = await service.UpdateDeliverablesAsync(request, cache, cancellationToken);
+
+                // Also evict deliverable monitor cache if needed
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+
                 return Results.Ok(result);
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim,
-             _pgsDeliverableAuditorPermission.Score, _pgsDeliverableAuditorPermission.View));
-          
+            PermissionClaimType.Claim,
+            _pgsDeliverableAuditorPermission.Score,
+            _pgsDeliverableAuditorPermission.View));
+
+
         }
     }
 }

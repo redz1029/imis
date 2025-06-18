@@ -41,7 +41,7 @@ namespace IMIS.Presentation.PgsDeliverableScoreHistoryModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsDeliverableScoreHistory), true)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _pgsDeliverableScoreHistoryPermission.View));
-            
+
             app.MapGet("/grouped", async (IPgsDeliverableScoreHistoryService service, CancellationToken cancellationToken) =>
             {
                 var grouped = await service.GetGroupedScoreHistoryAsync().ConfigureAwait(false);
@@ -50,7 +50,8 @@ namespace IMIS.Presentation.PgsDeliverableScoreHistoryModule
             .WithTags(_pgsDeliverableScoreHistory)
             .RequireAuthorization(e => e.RequireClaim(
                 PermissionClaimType.Claim, _pgsDeliverableScoreHistoryPermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsDeliverableScoreHistory), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsDeliverableScoreHistory));
+
         }
     }
 }

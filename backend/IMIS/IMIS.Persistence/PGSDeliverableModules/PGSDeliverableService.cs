@@ -1,9 +1,11 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.PgsDeliverableModule;
+using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PGSModules
@@ -13,6 +15,7 @@ namespace IMIS.Persistence.PGSModules
         private readonly IPGSDeliverableRepository _repository;
         private readonly IKeyResultAreaRepository _kraRepository;
         private readonly ImisDbContext _dbContext;
+        private const string PgsDeliverableScoreHistoryTag = "PgsDeliverableScoreHistory";
 
         public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, ImisDbContext dbContext)
         {
@@ -99,10 +102,14 @@ namespace IMIS.Persistence.PGSModules
             return PgsDeliverableMonitorPageList
                 .Create(filteredDeliverables.Items, filter.Page, filter.PageSize, filteredDeliverables.TotalCount);
         }
-      
-        public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(PgsDeliverableMonitorPageList request, CancellationToken cancellationToken)
+
+        public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(
+        PgsDeliverableMonitorPageList request,
+        IOutputCacheStore cache,
+        CancellationToken cancellationToken)
         {
             var updatedItems = new List<PgsDeliverableMonitorDto>();
+            bool anyScoreChanged = false;
 
             foreach (var dto in request.Items)
             {
@@ -114,24 +121,34 @@ namespace IMIS.Persistence.PGSModules
 
                 deliverable.Remarks = dto.Remarks;
                 deliverable.PercentDeliverables = dto.Score;
-                deliverable.Status = Enum.TryParse<PgsStatus>(dto.Status, out var status) ? status : deliverable.Status;
+                deliverable.Status = Enum.TryParse<PgsStatus>(dto.Status, out var status)
+                    ? status
+                    : deliverable.Status;
 
                 if (scoreChanged)
                 {
                     var history = new PgsDeliverableScoreHistory
                     {
-                        Id = 0, 
+                        Id = 0,
                         PgsDeliverableId = deliverable.Id,
                         Date = DateTime.Now,
                         Score = dto.Score
                     };
+
                     _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);
+                    anyScoreChanged = true;
                 }
 
                 updatedItems.Add(dto);
             }
 
             await _repository.SaveChangesAsync(cancellationToken);
+
+            // Evict the score history cache if any scores changed
+            if (anyScoreChanged)
+            {
+                await cache.EvictByTagAsync(PgsDeliverableScoreHistoryTag, cancellationToken);
+            }
 
             return new PgsDeliverableMonitorPageList(
                 updatedItems,
