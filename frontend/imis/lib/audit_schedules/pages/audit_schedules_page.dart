@@ -8,7 +8,6 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import '../../utils/http_util.dart';
 
@@ -53,23 +52,12 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     setState(() => _isLoading = true);
 
     try {
-      String? token = await AuthUtil.fetchAccessToken();
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Access token is missing");
-        return;
-      }
-
       final pageList = await _paginationUtils
           .fetchPaginatedData<AuditSchedules>(
             endpoint: ApiEndpoint().auditSchedule,
             page: page,
             pageSize: _pageSize,
             searchQuery: searchQuery,
-            // headers: {
-            //   "Authorization": "Bearer $token",
-            //   "Content-Type": "application/json",
-            // },
             fromJson: (json) => AuditSchedules.fromJson(json),
           );
 
@@ -94,7 +82,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     var url = ApiEndpoint().office;
 
     try {
-      var response = await dio.get(url);
+      var response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Office> data =
@@ -146,34 +134,6 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     }
   }
 
-  Future<void> fetchAuditors() async {
-    var url = ApiEndpoint().office;
-
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map((auditor) => Office.fromJson(auditor))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            auditorList = data.map((auditor) => auditor.toJson()).toList();
-            filteredListAuditor = List.from(auditorList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
-      }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
-
   Future<void> addOrUpdateAuditSchedule(AuditSchedules auditSchedule) async {
     var url = ApiEndpoint().auditSchedule;
 
@@ -211,7 +171,6 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     });
     fetchOffice();
     fetchTeam();
-    fetchAuditors();
     fetchAuditSchedule();
   }
 
@@ -251,11 +210,9 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     // Schedule list
     List<Map<String, dynamic>> scheduleDetails = [];
 
-    // Controllers for multiple schedule dates
     List<TextEditingController> startDateControllers = [];
     List<TextEditingController> endDateControllers = [];
 
-    // Populate selected offices
     if (auditableOffices != null && auditableOffices.isNotEmpty) {
       selectedOffice.clear();
       for (final office in auditableOffices) {

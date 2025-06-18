@@ -10,6 +10,7 @@ import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/http_util.dart';
 
 import 'package:table_calendar/table_calendar.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -54,7 +55,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchUser() async {
     var url = ApiEndpoint().users;
     try {
-      final response = await dio.get(url);
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<User> data =
@@ -83,7 +84,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fecthOffice() async {
     var url = ApiEndpoint().office;
     try {
-      final response = await dio.get(url);
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Office> data =
@@ -113,7 +114,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchTeam() async {
     var url = ApiEndpoint().team;
     try {
-      final response = await dio.get(url);
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Team> data =
@@ -142,7 +143,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> fetchAuditors() async {
     var url = ApiEndpoint().auditor;
     try {
-      final response = await dio.get(url);
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
         List<Auditor> data =
@@ -209,9 +210,10 @@ class _HomePageState extends State<HomePage> {
         return deliverablesList;
       }
 
-      final response = await dio.get(
+      final response = await AuthenticatedRequest.get(
+        dio,
         url,
-        options: Options(headers: {"Authorization": "Bearer $token"}),
+        // options: Options(headers: {"Authorization": "Bearer $token"}),
       );
 
       if (response.statusCode == 200) {

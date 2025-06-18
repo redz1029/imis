@@ -561,7 +561,7 @@ class _TeamPageState extends State<TeamPage> {
                     isLoading: _isLoading,
                     onPageChanged: (page) => fetchTeam(page: page),
                   ),
-                  Container(width: 60), // For alignment
+                  Container(width: 60),
                 ],
               ),
             ),
