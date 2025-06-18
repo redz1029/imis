@@ -1,5 +1,7 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.AuditorModule;
+using IMIS.Application.AuditorTeamsModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +14,7 @@ namespace IMIS.Presentation.AuditorModule
     public class AuditorEndpoint : CarterModule
     {
         private const string _auditorTag = "Auditor";
+        public readonly AuditorPermission _auditorPermission = new();
         public AuditorEndpoint() : base("/auditors")
         {
 
@@ -24,14 +27,20 @@ namespace IMIS.Presentation.AuditorModule
                 await cache.EvictByTagAsync(_auditorTag, cancellationToken);
                 return Results.Ok(auditor);
             })
-            .WithTags(_auditorTag);
+            .WithTags(_auditorTag)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _auditorPermission.Add));
+
             app.MapGet("/", async (IAuditorService service, CancellationToken cancellationToken) =>
             {
                 var auditors = await service.GetAll(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(auditors);
             })
             .WithTags(_auditorTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _auditorPermission.View));
+
             app.MapGet("/filter/{name}", async (string name, IAuditorService service, CancellationToken cancellationToken) =>
             {
                 int noOfResults = 10;
@@ -46,7 +55,9 @@ namespace IMIS.Presentation.AuditorModule
                 return auditor != null ? Results.Ok(auditor) : Results.NotFound();
             })
             .WithTags(_auditorTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _auditorPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] AuditorDto auditor, IAuditorService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {               
@@ -59,14 +70,18 @@ namespace IMIS.Presentation.AuditorModule
                 await cache.EvictByTagAsync(_auditorTag, cancellationToken);
                 return Results.Ok(auditor);
             })
-           .WithTags(_auditorTag);            
+           .WithTags(_auditorTag)
+           .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _auditorPermission.Edit));          
             app.MapGet("/page", async (int page, int pageSize, IAuditorService service, CancellationToken cancellationToken) =>
             {
                 var paginatedAuditor = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(paginatedAuditor);
             })
           .WithTags(_auditorTag)
-          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true)
+          .RequireAuthorization(e => e.RequireClaim(
+           PermissionClaimType.Claim, _auditorPermission.View)); ;
         }
     }
 }
