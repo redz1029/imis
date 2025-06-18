@@ -874,6 +874,7 @@ class _PerformanceGovernanceSystemPageState
           byWhen,
           percentperDeliverables,
           status,
+
           remarks: remarks,
           rowVersion: '',
         ),
@@ -3243,6 +3244,7 @@ class _PerformanceGovernanceSystemPageState
             border: OutlineInputBorder(),
             contentPadding: EdgeInsets.all(8.0),
           ),
+          enabled: false,
           onChanged: (value) {
             setState(() {
               debugPrint("Updated TextField at index $index: $value");
@@ -3282,6 +3284,7 @@ class _PerformanceGovernanceSystemPageState
             suffixText: '%',
             contentPadding: EdgeInsets.all(8.0),
           ),
+          enabled: false,
           onChanged: (value) {
             setState(() {
               debugPrint("Updated TextField at index $index: $value");
@@ -3295,71 +3298,90 @@ class _PerformanceGovernanceSystemPageState
 
   ////------------------Kra for Pgs Delieverable Status--------------------
   Widget _buildDropdownKraCellPGSDeliverableStatus(int index) {
-    // Initialize if not set
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
-      debugPrint(
-        "Initialized selectedKRA for index $index with ID ${selectedKRA[index]}",
-      );
+    }
+
+    if (!kraDescriptionController.containsKey(index)) {
+      kraDescriptionController[index] = TextEditingController();
     }
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: DropdownButtonFormField<int>(
-        isExpanded: true,
-        value: selectedKRA[index],
-        onChanged: (int? newValue) {
-          if (newValue == null) return;
-          setState(() {
-            selectedKRA[index] = newValue;
-            selectedKRAObjects[index] = options.firstWhere(
-              (option) => option['id'] == newValue,
-              orElse:
-                  () => {
-                    'id': 1,
-                    'name': 'Unknown',
-                    'description': '',
-                    'rowVersion': '',
-                  },
-            );
-            debugPrint("KRA changed for index $index ? KRAID: $newValue");
-          });
-        },
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(
-            horizontal: 12.0,
-            vertical: 10.0,
-          ),
-        ),
-        items:
-            options.map<DropdownMenuItem<int>>((option) {
-              return DropdownMenuItem<int>(
-                value: option['id'],
-                child: Text(
-                  option['name'],
-                  softWrap: true,
-                  overflow: TextOverflow.visible,
-                ),
-              );
-            }).toList(),
-        selectedItemBuilder: (BuildContext context) {
-          return options.map<Widget>((option) {
-            return Container(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                option['name'],
-                softWrap: true,
-                overflow: TextOverflow.visible,
-                style: const TextStyle(fontSize: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          DropdownButtonFormField<int>(
+            isExpanded: true,
+            value: selectedKRA[index],
+            onChanged: (int? newValue) {
+              if (newValue == null) return;
+              setState(() {
+                selectedKRA[index] = newValue;
+
+                selectedKRAObjects[index] = options.firstWhere(
+                  (option) => option['id'] == newValue,
+                  orElse:
+                      () => {
+                        'id': 1,
+                        'name': 'Unknown',
+                        'description': '',
+                        'rowVersion': '',
+                      },
+                );
+                debugPrint("KRA changed for index $index ? KRAID: $newValue");
+              });
+            },
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 12.0,
+                vertical: 20.0,
               ),
-            );
-          }).toList();
-        },
-        dropdownColor: Colors.white,
-        iconSize: 30.0,
-        itemHeight: 50.0,
+            ),
+            items:
+                options.map<DropdownMenuItem<int>>((option) {
+                  return DropdownMenuItem<int>(
+                    value: option['id'],
+                    child: Text(option['name']),
+                  );
+                }).toList(),
+            selectedItemBuilder: (BuildContext context) {
+              return options.map<Widget>((option) {
+                return Container(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    option['name'],
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                );
+              }).toList();
+            },
+            dropdownColor: Colors.white,
+            iconSize: 30.0,
+            itemHeight: 50.0,
+          ),
+
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              "KRA Description",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          gap2,
+          TextField(
+            controller: kraDescriptionController[index],
+            decoration: const InputDecoration(
+              hintText: "Enter your description here...",
+              border: OutlineInputBorder(),
+            ),
+            maxLines: 3,
+          ),
+          const SizedBox(height: 16),
+        ],
       ),
     );
   }
@@ -3443,21 +3465,23 @@ class _PerformanceGovernanceSystemPageState
       padding: const EdgeInsets.all(8.0),
       child: DropdownButtonFormField<PgsStatus>(
         value: selectedStatus[index] ?? PgsStatus.notStarted,
-        onChanged: (PgsStatus? newValue) {
-          if (newValue != null) {
-            debugPrint('Selected Status for index $index: ${newValue.name}');
-            setDialogState();
-            setState(() {
-              selectedStatus[index] = newValue;
-            });
-            saveStatusToDb(index, newValue);
-          }
-        },
+        onChanged: null,
+        // onChanged: (PgsStatus? newValue) {
+        //   if (newValue != null) {
+        //     debugPrint('Selected Status for index $index: ${newValue.name}');
+        //     setDialogState();
+        //     setState(() {
+        //       selectedStatus[index] = newValue;
+        //     });
+        //     saveStatusToDb(index, newValue);
+        //   }
+        // },
         isExpanded: true,
         decoration: const InputDecoration(
           border: OutlineInputBorder(),
           contentPadding: EdgeInsets.all(8.0),
         ),
+
         items:
             PgsStatus.values.map((PgsStatus value) {
               return DropdownMenuItem<PgsStatus>(

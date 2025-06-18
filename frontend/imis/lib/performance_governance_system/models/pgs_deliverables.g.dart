@@ -17,6 +17,13 @@ PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
       const DateTimeConverter().fromJson(json['byWhen'] as String),
       (json['percentDeliverables'] as num).toDouble(),
       PgsDeliverables._statusFromJson((json['status'] as num).toInt()),
+      pgsDeliverableHistory:
+          (json['pgsDeliverableHistory'] as List<dynamic>?)
+              ?.map(
+                (e) =>
+                    PgsDeliverableHistory.fromJson(e as Map<String, dynamic>),
+              )
+              .toList(),
       remarks: json['remarks'] as String?,
       rowVersion: json['rowVersion'] as String?,
     );
@@ -34,4 +41,5 @@ Map<String, dynamic> _$PgsDeliverablesToJson(PgsDeliverables instance) =>
       'status': PgsDeliverables._statusToJson(instance.status),
       'remarks': instance.remarks,
       'rowVersion': instance.rowVersion,
+      'pgsDeliverableHistory': instance.pgsDeliverableHistory,
     };
