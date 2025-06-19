@@ -134,6 +134,34 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     }
   }
 
+  Future<void> fetchAuditors() async {
+    var url = ApiEndpoint().office;
+
+    try {
+      var response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<Office> data =
+            (response.data as List)
+                .map((auditor) => Office.fromJson(auditor))
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            auditorList = data.map((auditor) => auditor.toJson()).toList();
+            filteredListAuditor = List.from(auditorList);
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+  }
+
   Future<void> addOrUpdateAuditSchedule(AuditSchedules auditSchedule) async {
     var url = ApiEndpoint().auditSchedule;
 
@@ -171,6 +199,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     });
     fetchOffice();
     fetchTeam();
+    fetchAuditors();
     fetchAuditSchedule();
   }
 
@@ -210,9 +239,11 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     // Schedule list
     List<Map<String, dynamic>> scheduleDetails = [];
 
+    // Controllers for multiple schedule dates
     List<TextEditingController> startDateControllers = [];
     List<TextEditingController> endDateControllers = [];
 
+    // Populate selected offices
     if (auditableOffices != null && auditableOffices.isNotEmpty) {
       selectedOffice.clear();
       for (final office in auditableOffices) {
