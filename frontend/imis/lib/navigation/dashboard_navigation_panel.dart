@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
-import 'package:imis/history/pages/pgs_deliverable_history_page.dart';
 import 'package:imis/performance_governance_system/pgs_scrore_monitoring/pages/pgs_score_monitoring_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
@@ -62,6 +61,11 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   void initState() {
     super.initState();
     _loadUserName();
+    AuthUtil.fetchRoles().then((roles) {
+      if (roles != null) {
+        PermissionService().loadPermissions(roles);
+      }
+    });
   }
 
   Future<void> _loadUserName() async {
@@ -72,6 +76,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
       final permissions = RolePermissions.getPermissionsForRoles(
         roleList ?? [],
       );
+      debugPrint('Calculated permissions: $permissions');
       PermissionService().loadPermissions(permissions);
       setState(() {
         firstName = user.firstName ?? "firstName";
@@ -447,6 +452,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
 
   Widget _buildSidebar() {
     return Container(
+      key: const ValueKey('sidebar_container'),
       width: 250,
       color: secondaryColor,
       child: Column(
@@ -482,8 +488,9 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                       () => _setScreen(PerformanceGovernanceSystemPage(), 2),
                     ),
                   ),
+
                   PermissionWidget(
-                    permission: AppPermission.scorePgsDeliverable,
+                    permission: AppPermission.viewPgsDeliverableMonitor,
                     child: _buildListTile(
                       Icons.credit_score,
                       'PGS Score Monitoring',
@@ -492,13 +499,12 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     ),
                   ),
 
-                  _buildListTile(
-                    Icons.history,
-                    'History',
-                    1,
-                    () => _setScreen(PgsDeliverableHistoryPage(), 1),
-                  ),
-
+                  // _buildListTile(
+                  //   Icons.history,
+                  //   'History',
+                  //   1,
+                  //   () => _setScreen(PgsDeliverableHistoryPage(), 1),
+                  // ),
                   PermissionWidget(
                     permission: AppPermission.editTeam,
                     child: Theme(

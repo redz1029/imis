@@ -6,19 +6,29 @@ class PermissionService {
 
   PermissionService._internal();
 
-  Set<String> _permissions = {};
+  final ValueNotifier<Set<String>> _permissions = ValueNotifier<Set<String>>(
+    {},
+  );
+
   bool _initialized = false;
 
   void loadPermissions(List<String> permissions) {
-    _permissions = Set.unmodifiable(permissions);
+    debugPrint('Loading permissions: $permissions');
+    _permissions.value = Set.unmodifiable(permissions);
     _initialized = true;
   }
 
   bool hasPermission(String permission) {
     if (!_initialized) {
-      debugPrint('PermissionService not initialized yet!');
-      return false; // or true if you want fail-open behavior
+      debugPrint(
+        'PermissionService not initialized yet! Checking for: $permission',
+      );
+      return false;
     }
-    return _permissions.contains(permission);
+    final hasPerm = _permissions.value.contains(permission);
+    debugPrint('Checking permission $permission: $hasPerm');
+    return hasPerm;
   }
+
+  ValueNotifier<Set<String>> get permissionsNotifier => _permissions;
 }
