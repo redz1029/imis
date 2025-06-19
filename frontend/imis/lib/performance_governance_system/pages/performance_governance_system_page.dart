@@ -1944,54 +1944,58 @@ class _PerformanceGovernanceSystemPageState
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 8,
                                       ),
-                                      child: DropdownButton<int>(
-                                        dropdownColor: mainBgColor,
-                                        value: selectedPeriod,
-                                        isExpanded: true,
-                                        underline: Container(),
-                                        icon: Icon(Icons.arrow_drop_down),
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.black,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        hint: Text(
-                                          selectedPeriodText ??
-                                              'Select a period',
-                                        ),
-                                        onChanged: (int? newValue) {
-                                          if (newValue != null) {
-                                            final selected = filteredListPeriod
-                                                .firstWhere(
-                                                  (period) =>
-                                                      period['id'] == newValue,
-                                                  orElse: () => {},
-                                                );
+                                      child: Tooltip(
+                                        message: 'Select period',
+                                        child: DropdownButton<int>(
+                                          dropdownColor: mainBgColor,
+                                          value: selectedPeriod,
+                                          isExpanded: true,
+                                          underline: Container(),
+                                          icon: Icon(Icons.arrow_drop_down),
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          hint: Text(
+                                            selectedPeriodText ??
+                                                'Select a period',
+                                          ),
+                                          onChanged: (int? newValue) {
+                                            if (newValue != null) {
+                                              final selected =
+                                                  filteredListPeriod.firstWhere(
+                                                    (period) =>
+                                                        period['id'] ==
+                                                        newValue,
+                                                    orElse: () => {},
+                                                  );
 
-                                            setDialogState(() {
-                                              selectedPeriod = newValue;
-                                              selectedPeriodText =
-                                                  "${selected['startDate']} - ${selected['endDate']}";
-                                            });
+                                              setDialogState(() {
+                                                selectedPeriod = newValue;
+                                                selectedPeriodText =
+                                                    "${selected['startDate']} - ${selected['endDate']}";
+                                              });
 
-                                            debugPrint(
-                                              "Dropdown selected new value: $newValue",
-                                            );
-                                          }
-                                        },
-                                        items:
-                                            filteredListPeriod.map<
-                                              DropdownMenuItem<int>
-                                            >((period) {
-                                              return DropdownMenuItem<int>(
-                                                value: period['id'],
-                                                child: Text(
-                                                  "${period['startDate']} - ${period['endDate']}",
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
+                                              debugPrint(
+                                                "Dropdown selected new value: $newValue",
                                               );
-                                            }).toList(),
+                                            }
+                                          },
+                                          items:
+                                              filteredListPeriod.map<
+                                                DropdownMenuItem<int>
+                                              >((period) {
+                                                return DropdownMenuItem<int>(
+                                                  value: period['id'],
+                                                  child: Text(
+                                                    "${period['startDate']} - ${period['endDate']}",
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                );
+                                              }).toList(),
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -2399,7 +2403,7 @@ class _PerformanceGovernanceSystemPageState
                                         });
                                       },
                                     ),
-                                    const SizedBox(width: 200),
+                                    const SizedBox(width: 100),
                                     _buildSignatoryColumn(
                                       title:
                                           '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
@@ -2416,7 +2420,7 @@ class _PerformanceGovernanceSystemPageState
                                       },
                                     ),
 
-                                    const SizedBox(width: 40),
+                                    const SizedBox(width: 100),
                                     _buildSignatoryColumn(
                                       title:
                                           '${getSignatoryTitleByOrderLevel(4) ?? ''}:',
@@ -2432,7 +2436,7 @@ class _PerformanceGovernanceSystemPageState
                                         });
                                       },
                                     ),
-                                    const SizedBox(width: 200),
+                                    const SizedBox(width: 100),
                                     _buildSignatoryColumn(
                                       title:
                                           '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
@@ -2677,48 +2681,56 @@ class _PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: TextFormField(
-        controller: selectedByWhenControllers[index],
-        readOnly: true,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: primaryColor),
+      child: Tooltip(
+        message:
+            'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
+        child: TextFormField(
+          controller: selectedByWhenControllers[index],
+          readOnly: true,
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: primaryColor),
+            ),
+            contentPadding: EdgeInsets.all(8.0),
+            suffixIcon: Icon(Icons.calendar_today),
           ),
-          contentPadding: EdgeInsets.all(8.0),
-          suffixIcon: Icon(Icons.calendar_today),
-        ),
-        onTap: () async {
-          DateTime? pickedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-            builder: (context, child) {
-              return Theme(
-                data: Theme.of(context).copyWith(
-                  colorScheme: ColorScheme.light(
-                    primary: primaryColor,
-                    onPrimary: secondaryColor,
+          onTap: () async {
+            DateTime? pickedDate = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.light(
+                      primary: primaryColor,
+                      onPrimary: secondaryColor,
+                    ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: primaryColor,
+                      ),
+                    ),
                   ),
-                  textButtonTheme: TextButtonThemeData(
-                    style: TextButton.styleFrom(foregroundColor: primaryColor),
-                  ),
-                ),
-                child: child!,
-              );
-            },
-          );
-          if (pickedDate != null) {
-            String formattedDate = DateFormat('yyyy-MM-dd').format(pickedDate);
-            setDialogState(() {
-              selectedByWhen[index] = formattedDate;
-              selectedByWhenControllers[index]?.text = DateFormat(
-                'MMMM yyyy',
+                  child: child!,
+                );
+              },
+            );
+            if (pickedDate != null) {
+              String formattedDate = DateFormat(
+                'yyyy-MM-dd',
               ).format(pickedDate);
-            });
-          }
-        },
+              setDialogState(() {
+                selectedByWhen[index] = formattedDate;
+                selectedByWhenControllers[index]?.text = DateFormat(
+                  'MMMM yyyy',
+                ).format(pickedDate);
+              });
+            }
+          },
+        ),
       ),
     );
   }
@@ -2738,55 +2750,59 @@ class _PerformanceGovernanceSystemPageState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DropdownButtonFormField<int>(
-            isExpanded: true,
-            value: selectedKRA[index],
-            onChanged: (int? newValue) {
-              if (newValue == null) return;
-              setState(() {
-                selectedKRA[index] = newValue;
+          Tooltip(
+            message:
+                'Key Result Areas define the core outcomes expected from this position. Please select the most applicable one.',
+            child: DropdownButtonFormField<int>(
+              isExpanded: true,
+              value: selectedKRA[index],
+              onChanged: (int? newValue) {
+                if (newValue == null) return;
+                setState(() {
+                  selectedKRA[index] = newValue;
 
-                selectedKRAObjects[index] = options.firstWhere(
-                  (option) => option['id'] == newValue,
-                  orElse:
-                      () => {
-                        'id': 1,
-                        'name': 'Unknown',
-                        'description': '',
-                        'rowVersion': '',
-                      },
-                );
-                debugPrint("KRA changed for index $index ? KRAID: $newValue");
-              });
-            },
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 20.0,
-              ),
-            ),
-            items:
-                options.map<DropdownMenuItem<int>>((option) {
-                  return DropdownMenuItem<int>(
-                    value: option['id'],
-                    child: Text(option['name']),
+                  selectedKRAObjects[index] = options.firstWhere(
+                    (option) => option['id'] == newValue,
+                    orElse:
+                        () => {
+                          'id': 1,
+                          'name': 'Unknown',
+                          'description': '',
+                          'rowVersion': '',
+                        },
                   );
-                }).toList(),
-            selectedItemBuilder: (BuildContext context) {
-              return options.map<Widget>((option) {
-                return Container(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    option['name'],
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                );
-              }).toList();
-            },
-            dropdownColor: Colors.white,
-            iconSize: 30.0,
-            itemHeight: 50.0,
+                  debugPrint("KRA changed for index $index ? KRAID: $newValue");
+                });
+              },
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 20.0,
+                ),
+              ),
+              items:
+                  options.map<DropdownMenuItem<int>>((option) {
+                    return DropdownMenuItem<int>(
+                      value: option['id'],
+                      child: Text(option['name']),
+                    );
+                  }).toList(),
+              selectedItemBuilder: (BuildContext context) {
+                return options.map<Widget>((option) {
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      option['name'],
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  );
+                }).toList();
+              },
+              dropdownColor: Colors.white,
+              iconSize: 30.0,
+              itemHeight: 50.0,
+            ),
           ),
 
           const SizedBox(height: 16),
@@ -2798,13 +2814,17 @@ class _PerformanceGovernanceSystemPageState
             ),
           ),
           gap2,
-          TextField(
-            controller: kraDescriptionController[index],
-            decoration: const InputDecoration(
-              hintText: "Enter your description here...",
-              border: OutlineInputBorder(),
+          Tooltip(
+            message:
+                'Enter a short description of what this KRA focuses on achieving',
+            child: TextField(
+              controller: kraDescriptionController[index],
+              decoration: const InputDecoration(
+                hintText: "Enter your description here...",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
             ),
-            maxLines: 3,
           ),
           const SizedBox(height: 16),
         ],
@@ -2842,33 +2862,37 @@ class _PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: percentageDeliverables,
-              textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              style: TextStyle(
-                color: secondaryColor,
-                fontSize: 20,
-                fontStyle: FontStyle.normal,
-              ),
-
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(2),
-                RangeInputFormatter(1, 40),
-              ],
-
-              decoration: InputDecoration(
-                labelText: percentDeliverables,
-                hintText: '0',
-                suffixText: '%',
-                suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),
-                hintStyle: TextStyle(color: Colors.white),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+            child: Tooltip(
+              message:
+                  'This percentage is used during performance reviews to determine how each output affects your overall results.',
+              child: TextField(
+                controller: percentageDeliverables,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                style: TextStyle(
+                  color: secondaryColor,
+                  fontSize: 20,
+                  fontStyle: FontStyle.normal,
                 ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(2),
+                  RangeInputFormatter(1, 40),
+                ],
+
+                decoration: InputDecoration(
+                  labelText: percentDeliverables,
+                  hintText: '0',
+                  suffixText: '%',
+                  suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),
+                  hintStyle: TextStyle(color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
                 ),
               ),
             ),
@@ -3157,35 +3181,39 @@ class _PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: percentageDeliverables,
-              textAlign: TextAlign.center,
-              keyboardType: TextInputType.number,
-              style: TextStyle(
-                color: const Color.fromARGB(255, 10, 7, 1),
-                fontSize: 20,
-                fontStyle: FontStyle.normal,
-              ),
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(2),
-                RangeInputFormatter(1, 40),
-              ],
-
-              decoration: InputDecoration(
-                labelText: percentDeliverables,
-                hintText: '0',
-                suffixText: '%',
-                suffixStyle: TextStyle(
-                  color: const Color.fromARGB(255, 15, 11, 1),
+            child: Tooltip(
+              message:
+                  'This percentage is used during performance reviews to determine how each output affects your overall results.',
+              child: TextField(
+                controller: percentageDeliverables,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                style: TextStyle(
+                  color: const Color.fromARGB(255, 10, 7, 1),
                   fontSize: 20,
+                  fontStyle: FontStyle.normal,
                 ),
-                hintStyle: TextStyle(color: Colors.white),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderSide: BorderSide(color: Colors.white),
+                inputFormatters: [
+                  FilteringTextInputFormatter.digitsOnly,
+                  LengthLimitingTextInputFormatter(2),
+                  RangeInputFormatter(1, 40),
+                ],
+
+                decoration: InputDecoration(
+                  labelText: percentDeliverables,
+                  hintText: '0',
+                  suffixText: '%',
+                  suffixStyle: TextStyle(
+                    color: const Color.fromARGB(255, 15, 11, 1),
+                    fontSize: 20,
+                  ),
+                  hintStyle: TextStyle(color: Colors.white),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: Colors.white),
+                  ),
                 ),
               ),
             ),
@@ -3368,55 +3396,59 @@ class _PerformanceGovernanceSystemPageState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DropdownButtonFormField<int>(
-            isExpanded: true,
-            value: selectedKRA[index],
-            onChanged: (int? newValue) {
-              if (newValue == null) return;
-              setState(() {
-                selectedKRA[index] = newValue;
+          Tooltip(
+            message:
+                'Key Result Areas define the core outcomes expected from this position. Please select the most applicable one.',
+            child: DropdownButtonFormField<int>(
+              isExpanded: true,
+              value: selectedKRA[index],
+              onChanged: (int? newValue) {
+                if (newValue == null) return;
+                setState(() {
+                  selectedKRA[index] = newValue;
 
-                selectedKRAObjects[index] = options.firstWhere(
-                  (option) => option['id'] == newValue,
-                  orElse:
-                      () => {
-                        'id': 1,
-                        'name': 'Unknown',
-                        'description': '',
-                        'rowVersion': '',
-                      },
-                );
-                debugPrint("KRA changed for index $index ? KRAID: $newValue");
-              });
-            },
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 20.0,
-              ),
-            ),
-            items:
-                options.map<DropdownMenuItem<int>>((option) {
-                  return DropdownMenuItem<int>(
-                    value: option['id'],
-                    child: Text(option['name']),
+                  selectedKRAObjects[index] = options.firstWhere(
+                    (option) => option['id'] == newValue,
+                    orElse:
+                        () => {
+                          'id': 1,
+                          'name': 'Unknown',
+                          'description': '',
+                          'rowVersion': '',
+                        },
                   );
-                }).toList(),
-            selectedItemBuilder: (BuildContext context) {
-              return options.map<Widget>((option) {
-                return Container(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    option['name'],
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                );
-              }).toList();
-            },
-            dropdownColor: Colors.white,
-            iconSize: 30.0,
-            itemHeight: 50.0,
+                  debugPrint("KRA changed for index $index ? KRAID: $newValue");
+                });
+              },
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 20.0,
+                ),
+              ),
+              items:
+                  options.map<DropdownMenuItem<int>>((option) {
+                    return DropdownMenuItem<int>(
+                      value: option['id'],
+                      child: Text(option['name']),
+                    );
+                  }).toList(),
+              selectedItemBuilder: (BuildContext context) {
+                return options.map<Widget>((option) {
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      option['name'],
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  );
+                }).toList();
+              },
+              dropdownColor: Colors.white,
+              iconSize: 30.0,
+              itemHeight: 50.0,
+            ),
           ),
 
           const SizedBox(height: 16),
@@ -3428,13 +3460,17 @@ class _PerformanceGovernanceSystemPageState
             ),
           ),
           gap2,
-          TextField(
-            controller: kraDescriptionController[index],
-            decoration: const InputDecoration(
-              hintText: "Enter your description here...",
-              border: OutlineInputBorder(),
+          Tooltip(
+            message:
+                'Enter a short description of what this KRA focuses on achieving',
+            child: TextField(
+              controller: kraDescriptionController[index],
+              decoration: const InputDecoration(
+                hintText: "Enter your description here...",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
             ),
-            maxLines: 3,
           ),
           const SizedBox(height: 16),
         ],
@@ -3461,51 +3497,57 @@ class _PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: TextFormField(
-        controller: selectedByWhenControllers[index],
-        readOnly: true,
-        style: TextStyle(fontSize: 13.50),
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: primaryColor),
+      child: Tooltip(
+        message:
+            'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
+        child: TextFormField(
+          controller: selectedByWhenControllers[index],
+          readOnly: true,
+          style: TextStyle(fontSize: 13.50),
+          decoration: const InputDecoration(
+            border: OutlineInputBorder(),
+            focusedBorder: OutlineInputBorder(
+              borderSide: BorderSide(color: primaryColor),
+            ),
+            contentPadding: EdgeInsets.all(8.0),
+            suffixIcon: Icon(Icons.calendar_today),
           ),
-          contentPadding: EdgeInsets.all(8.0),
-          suffixIcon: Icon(Icons.calendar_today),
+          onTap: () async {
+            DateTime? pickedDate = await showDatePicker(
+              context: context,
+              initialDate: DateTime.now(),
+              firstDate: DateTime(2000),
+              lastDate: DateTime(2100),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.light(
+                      primary: primaryColor,
+                      onPrimary: secondaryColor,
+                    ),
+                    textButtonTheme: TextButtonThemeData(
+                      style: TextButton.styleFrom(
+                        foregroundColor: primaryColor,
+                      ),
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+            if (pickedDate != null) {
+              String formattedDate = DateFormat(
+                'yyyy-MM-dd',
+              ).format(pickedDate); // ISO format for saving
+              setDialogState(() {
+                selectedByWhen[index] = formattedDate;
+                selectedByWhenControllers[index]?.text = DateFormat(
+                  'MMMM yyyy',
+                ).format(pickedDate); // User-friendly format
+              });
+            }
+          },
         ),
-        onTap: () async {
-          DateTime? pickedDate = await showDatePicker(
-            context: context,
-            initialDate: DateTime.now(),
-            firstDate: DateTime(2000),
-            lastDate: DateTime(2100),
-            builder: (context, child) {
-              return Theme(
-                data: Theme.of(context).copyWith(
-                  colorScheme: ColorScheme.light(
-                    primary: primaryColor,
-                    onPrimary: secondaryColor,
-                  ),
-                  textButtonTheme: TextButtonThemeData(
-                    style: TextButton.styleFrom(foregroundColor: primaryColor),
-                  ),
-                ),
-                child: child!,
-              );
-            },
-          );
-          if (pickedDate != null) {
-            String formattedDate = DateFormat(
-              'yyyy-MM-dd',
-            ).format(pickedDate); // ISO format for saving
-            setDialogState(() {
-              selectedByWhen[index] = formattedDate;
-              selectedByWhenControllers[index]?.text = DateFormat(
-                'MMMM yyyy',
-              ).format(pickedDate); // User-friendly format
-            });
-          }
-        },
       ),
     );
   }
@@ -3560,22 +3602,26 @@ class _PerformanceGovernanceSystemPageState
       padding: const EdgeInsets.all(8.0),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 50.0),
-        child: TextField(
-          controller: deliverablesControllers[index],
-          maxLines: null,
-          keyboardType: TextInputType.multiline,
-          style: TextStyle(
-            fontSize: 14.0, // ?? Set your desired font size here
+        child: Tooltip(
+          message:
+              'Specify the tangible results or outcomes tied to this responsibility.',
+          child: TextField(
+            controller: deliverablesControllers[index],
+            maxLines: null,
+            keyboardType: TextInputType.multiline,
+            style: TextStyle(
+              fontSize: 14.0, // ?? Set your desired font size here
+            ),
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.all(8.0),
+            ),
+            onChanged: (value) {
+              setState(() {
+                debugPrint("Updated TextField at index $index: $value");
+              });
+            },
           ),
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.all(8.0),
-          ),
-          onChanged: (value) {
-            setState(() {
-              debugPrint("Updated TextField at index $index: $value");
-            });
-          },
         ),
       ),
     );
@@ -3683,19 +3729,23 @@ class _PerformanceGovernanceSystemPageState
       padding: const EdgeInsets.all(8.0),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 50.0),
-        child: TextField(
-          controller: deliverablesControllers[index],
-          maxLines: null,
-          keyboardType: TextInputType.multiline,
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.all(8.0),
+        child: Tooltip(
+          message:
+              'Specify the tangible results or outcomes tied to this responsibility.',
+          child: TextField(
+            controller: deliverablesControllers[index],
+            maxLines: null,
+            keyboardType: TextInputType.multiline,
+            decoration: InputDecoration(
+              border: OutlineInputBorder(),
+              contentPadding: EdgeInsets.all(8.0),
+            ),
+            onChanged: (value) {
+              setState(() {
+                debugPrint("Updated TextField at index $index: $value");
+              });
+            },
           ),
-          onChanged: (value) {
-            setState(() {
-              debugPrint("Updated TextField at index $index: $value");
-            });
-          },
         ),
       ),
     );
