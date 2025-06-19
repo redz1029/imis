@@ -405,7 +405,7 @@ class _UserRolePageState extends State<UserRolePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   child: DropdownButtonFormField<String>(
                     value:
                         filteredListUser.any(
@@ -439,7 +439,7 @@ class _UserRolePageState extends State<UserRolePage> {
                 ),
                 SizedBox(height: 15),
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   child: DropdownButtonFormField<String>(
                     value: _selectedRoleId,
                     decoration: InputDecoration(

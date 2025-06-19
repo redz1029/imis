@@ -335,7 +335,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   child: DropdownButtonFormField<String>(
                     value:
                         filteredListUser.any(
@@ -369,7 +369,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
                 ),
                 SizedBox(height: 15),
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   child: DropdownButtonFormField<String>(
                     value: _selectedOfficeId,
                     decoration: InputDecoration(

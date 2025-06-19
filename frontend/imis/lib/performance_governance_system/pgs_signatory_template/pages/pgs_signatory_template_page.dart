@@ -259,7 +259,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   child: DropdownButtonFormField<String>(
                     value:
                         filteredListUser.any(
@@ -269,6 +269,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                             : null,
                     decoration: InputDecoration(
                       labelText: 'User Name',
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
                     ),
                     items:
@@ -299,7 +300,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                   ),
                 gap,
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: TextFormField(
                     controller: defaultSignatoryController,
@@ -322,7 +323,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                 ),
 
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: TextFormField(
                     controller: statusController,
@@ -345,7 +346,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                 ),
 
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: TextFormField(
                     controller: orderLevelController,
