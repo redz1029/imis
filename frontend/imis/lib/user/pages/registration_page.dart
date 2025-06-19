@@ -171,9 +171,36 @@ class RegistrationPageState extends State<RegistrationPage> {
   //Job Position Dropdown
   String? selectedPosition;
   final List<String> jobPositions = [
-    'Head, Department of Surgery',
     'Chief of Medical Professional Staff II',
     'Medical Center Chief II',
+    'Head, Department of Anesthesiology',
+    'Head, Cancer Institute',
+    'Head, COVID-19 Center',
+    'Head, Dental Department',
+    'Head, NDD',
+    'Head, Delivery Room',
+    'Head, EFMD',
+    'Head, Emergency Room',
+    'Head, Finance Service',
+    'Head, HIMD',
+    'Head, Human Resource Mngt. Department',
+    'Head, IHOMP',
+    'Head, Department of Internal Medicine',
+    'Nurse VI',
+    'Head, Department of OB-GYN',
+    'Head, OPD',
+    'Head, OR (Cath. Lab)',
+    'Head, OSM',
+    'Head, PACD',
+    'Head, Department of Pathology',
+    'Head, Department of Pediatrics',
+    'Head, PETRU',
+    'Head, Pharmacy Deparment',
+    'Head, Physical Medicine and Rehabilitation Department',
+    'Head, DDTR',
+    'Head, Department of Surgery',
+    'Head, Trauma Care',
+    'Chief Administrative Officer',
   ];
   //end
 

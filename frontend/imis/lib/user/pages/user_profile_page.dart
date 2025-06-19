@@ -59,9 +59,36 @@ class _UserProfileState extends State<UserProfilePage> {
   //Job Position Dropdown
   String? selectedPosition;
   final List<String> jobPositions = [
-    'Head, Department of Surgery',
     'Chief of Medical Professional Staff II',
     'Medical Center Chief II',
+    'Head, Department of Anesthesiology',
+    'Head, Cancer Institute',
+    'Head, COVID-19 Center',
+    'Head, Dental Department',
+    'Head, NDD',
+    'Head, Delivery Room',
+    'Head, EFMD',
+    'Head, Emergency Room',
+    'Head, Finance Service',
+    'Head, HIMD',
+    'Head, Human Resource Mngt. Department',
+    'Head, IHOMP',
+    'Head, Department of Internal Medicine',
+    'Nurse VI',
+    'Head, Department of OB-GYN',
+    'Head, OPD',
+    'Head, OR (Cath. Lab)',
+    'Head, OSM',
+    'Head, PACD',
+    'Head, Department of Pathology',
+    'Head, Department of Pediatrics',
+    'Head, PETRU',
+    'Head, Pharmacy Deparment',
+    'Head, Physical Medicine and Rehabilitation Department',
+    'Head, DDTR',
+    'Head, Department of Surgery',
+    'Head, Trauma Care',
+    'Chief Administrative Officer',
   ];
 
   Future<void> fetchUserProfile({int page = 1, String? searchQuery}) async {
@@ -510,7 +537,7 @@ class _UserProfileState extends State<UserProfilePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: TextFormField(
                     controller: userNameController,
@@ -527,7 +554,7 @@ class _UserProfileState extends State<UserProfilePage> {
                   ),
                 ),
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: TextFormField(
                     controller: emailController,
@@ -545,7 +572,7 @@ class _UserProfileState extends State<UserProfilePage> {
                 ),
                 if (id == null) // Only show when adding a new user
                   SizedBox(
-                    width: 350,
+                    width: 450,
                     height: 65,
                     child: TextFormField(
                       controller: passwordController,
@@ -564,7 +591,7 @@ class _UserProfileState extends State<UserProfilePage> {
                   ),
 
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: DropdownButtonFormField<String>(
                     value:
@@ -592,7 +619,7 @@ class _UserProfileState extends State<UserProfilePage> {
 
                 gap,
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: TextFormField(
                     controller: firstNameController,
@@ -609,7 +636,7 @@ class _UserProfileState extends State<UserProfilePage> {
                   ),
                 ),
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: TextFormField(
                     controller: middleNameController,
@@ -626,7 +653,7 @@ class _UserProfileState extends State<UserProfilePage> {
                   ),
                 ),
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: TextFormField(
                     controller: lastNameController,
@@ -644,7 +671,7 @@ class _UserProfileState extends State<UserProfilePage> {
                 ),
 
                 SizedBox(
-                  width: 350,
+                  width: 450,
                   height: 65,
                   child: TextFormField(
                     controller: suffixController,
