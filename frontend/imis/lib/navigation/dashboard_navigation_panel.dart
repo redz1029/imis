@@ -25,6 +25,7 @@ import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:imis/widgets/permission_widget.dart';
 
 import 'package:motion_toast/motion_toast.dart';
@@ -66,6 +67,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
         PermissionService().loadPermissions(roles);
       }
     });
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   Future<void> _loadUserName() async {

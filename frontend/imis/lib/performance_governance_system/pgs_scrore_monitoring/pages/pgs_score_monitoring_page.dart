@@ -9,6 +9,7 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -71,6 +72,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     fetchKra();
     fetchPGSPeriods();
     fetchScoreHistory();
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   Future<void> fetchFilteredPgsList() async {

@@ -179,11 +179,6 @@ class AuthUtil {
         );
 
         if (context != null && context.mounted) {
-          // final SnackBar snackBar = const SnackBar(
-          //   content: Text('Token expired :( Please login again.'),
-          // );
-          // snackbarKey.currentState?.showSnackBar(snackBar);
-
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(builder: (_) => const LoginPage()),
             (route) => false,

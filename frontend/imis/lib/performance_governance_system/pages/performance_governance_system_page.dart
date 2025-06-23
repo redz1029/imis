@@ -23,6 +23,7 @@ import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
@@ -356,6 +357,10 @@ class _PerformanceGovernanceSystemPageState
     required ValueChanged<String?> onChanged,
     required VoidCallback onDeleted,
   }) {
+    final bool isSubmittedField = title.contains(
+      getSignatoryTitleByOrderLevel(1) ?? '',
+    );
+
     return Center(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -407,10 +412,15 @@ class _PerformanceGovernanceSystemPageState
                       ),
                     ],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: onDeleted,
-                  ),
+                  // IconButton(
+                  //   icon: const Icon(Icons.close),
+                  //   onPressed: onDeleted,
+                  // ),
+                  if (!isSubmittedField)
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: onDeleted,
+                    ),
                 ],
               ),
         ],
@@ -706,6 +716,7 @@ class _PerformanceGovernanceSystemPageState
     fetchPgsList();
     fetchUser();
     fetchPGSPeriods();
+    TokenExpirationHandler(context).checkTokenExpiration();
 
     isSearchFocus.addListener(() {
       setState(() {});
