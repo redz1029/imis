@@ -1,6 +1,7 @@
 ﻿
 
 using Base.Primitives;
+using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
 using IMIS.Application.PgsPeriodModule;
@@ -15,6 +16,20 @@ namespace IMIS.Persistence.OfficeTypeModule
         public OfficeTypeService(IOfficeTypeRepository repository)
         {
             _repository = repository;
+        }
+        private static OfficeTypeDto ConvOfficeToDTO(OfficeType officetype)
+        {
+            return new OfficeTypeDto()
+            {
+                Id = officetype.Id,
+                Name = officetype.Name,
+                IsActive = officetype.IsActive,              
+            };
+        }
+        public async Task<List<OfficeTypeDto>?> GetAllAsync(CancellationToken cancellationToken)
+        {
+            var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
         }
         public async Task<OfficeTypeDto> SaveOrUpdateAsync(OfficeTypeDto officeTypeDto, CancellationToken cancellationToken)
         {

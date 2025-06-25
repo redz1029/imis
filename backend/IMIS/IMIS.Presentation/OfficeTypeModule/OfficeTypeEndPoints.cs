@@ -1,4 +1,5 @@
-﻿using Carter;
+﻿using Base.Auths.Permissions;
+using Carter;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
 using Microsoft.AspNetCore.Builder;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace IMIS.Presentation.OfficeTypeModule
 {
@@ -28,6 +30,14 @@ namespace IMIS.Presentation.OfficeTypeModule
             .WithTags(_officeType);
             //.RequireAuthorization(e => e.RequireClaim(
             // PermissionClaimType.Claim, _officePermission.Add));
+            app.MapGet("/", async (IOfficeTypeService service, CancellationToken cancellationToken) =>
+            {
+                var officeTypeDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(officeTypeDto);
+            })
+          .WithTags(_officeType)
+          //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officeType.View))
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeType), true);
         }
     }
 
