@@ -9,19 +9,32 @@ namespace IMIS.Application.OfficeModule
     {
         public string? Name { get; set; }
         public bool IsActive { get; set; }
-        public List<AuditorDto>? Auditors { get; set; }      
+        public int OfficeTypeId { get; set; }       
+        public int? ParentOfficeId { get; set; }
+        public List<AuditorDto>? Auditors { get; set; }
 
         public OfficeDto() { }
+
         [SetsRequiredMembers]
         public OfficeDto(Office office)
         {
             this.Id = office.Id;
             this.Name = office.Name;
             this.IsActive = office.IsActive;
+            this.OfficeTypeId = office.OfficeTypeId;          
+            this.ParentOfficeId = office.ParentOfficeId;
         }
+
         public override Office ToEntity()
         {
-            return new Office() { Id = Id, Name = Name, IsActive = IsActive };
+            return new Office()
+            {
+                Id = this.Id,
+                Name = this.Name!,
+                IsActive = this.IsActive,
+                OfficeTypeId = this.OfficeTypeId,
+                ParentOfficeId = this.ParentOfficeId
+            };
         }
     }
 }

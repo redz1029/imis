@@ -20,16 +20,29 @@ namespace IMIS.Presentation.OfficeModule
 
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
-        {            
+        {
+           
             app.MapPost("/", async ([FromBody] OfficeDto officeDto, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {                                
-                await service.SaveOrUpdateAsync(officeDto, cancellationToken).ConfigureAwait(false);                
+            {
+                if (officeDto.ParentOfficeId != null && officeDto.Id == officeDto.ParentOfficeId)
+                {
+                    return Results.BadRequest("An office cannot be its own parent.");
+                }
+
+                if (await service.HasCircularReferenceAsync(officeDto.ParentOfficeId, officeDto.Id, cancellationToken))
+                {
+                    return Results.BadRequest("Circular parent relationship detected.");
+                }
+
+                await service.SaveOrUpdateAsync(officeDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_officeTag, cancellationToken);
-                return Results.Ok(officeDto);               
+                return Results.Ok(officeDto);
             })
-            .WithTags(_officeTag)
+             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _officePermission.Add));
+
+
 
             app.MapGet("/", async (IOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -57,7 +70,16 @@ namespace IMIS.Presentation.OfficeModule
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
             app.MapPut("/{id}", async (int id, [FromBody] OfficeDto office, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {               
+            {
+                // Validate: Office cannot be its own parent
+                if (office.ParentOfficeId != null && office.ParentOfficeId == id)
+                {
+                    return Results.BadRequest("An office cannot be its own parent.");
+                }
+                if (await service.HasCircularReferenceAsync(office.ParentOfficeId, office.Id, cancellationToken))
+                {
+                    return Results.BadRequest("Circular parent relationship detected.");
+                }
                 var existingOffice = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 if (existingOffice == null)
                 {
