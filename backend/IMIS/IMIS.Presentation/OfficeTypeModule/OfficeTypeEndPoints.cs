@@ -1,6 +1,5 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
-using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -14,6 +13,7 @@ namespace IMIS.Presentation.OfficeTypeModule
     public class OfficeTypeEndPoints : CarterModule
     {
         private const string _officeType = "Office Type";
+        public readonly OfficeTypePermission _officeTypePermission = new();
         public OfficeTypeEndPoints() : base("/officetype")
         {
 
@@ -27,16 +27,16 @@ namespace IMIS.Presentation.OfficeTypeModule
                 await cache.EvictByTagAsync(_officeType, cancellationToken);
                 return Results.Ok(officeTypeDto);
             })
-            .WithTags(_officeType);
-            //.RequireAuthorization(e => e.RequireClaim(
-            // PermissionClaimType.Claim, _officePermission.Add));
+            .WithTags(_officeType)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _officeTypePermission.Add));
             app.MapGet("/", async (IOfficeTypeService service, CancellationToken cancellationToken) =>
             {
                 var officeTypeDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(officeTypeDto);
             })
           .WithTags(_officeType)
-          //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officeType.View))
+          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officeTypePermission.View))
           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeType), true);
         }
     }
