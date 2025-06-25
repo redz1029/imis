@@ -3,12 +3,14 @@ using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.OfficeModule
 {
-    public class OfficeService(IOfficeRepository repository) : IOfficeService
+    public class OfficeService(IOfficeRepository repository, ImisDbContext _dbContext) : IOfficeService
     {
         private readonly IOfficeRepository _repository = repository;
+        private readonly ImisDbContext _dbContext = _dbContext;
         public async Task<List<OfficeDto>?> FilterByName(string name, int officeNoOfResults, CancellationToken cancellationToken)
         {
             var offices = await _repository.FilterByName(name, officeNoOfResults, cancellationToken).ConfigureAwait(false);         
@@ -37,6 +39,8 @@ namespace IMIS.Persistence.OfficeModule
                 }).ToList(),
             };
         }
+      
+
         public async Task<List<OfficeDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
@@ -56,7 +60,31 @@ namespace IMIS.Persistence.OfficeModule
         {
             var offices = await _repository.GetNonAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
-        }   
+        }
+     
+        public async Task<bool> HasCircularReferenceAsync(int? parentId, int childId, CancellationToken cancellationToken)
+        {
+            int depth = 0;
+            const int maxDepth = 50;
+
+            while (parentId != null)
+            {
+                if (++depth > maxDepth)
+                    return true; 
+
+                if (parentId == childId)
+                    return true;
+
+                var parent = await _dbContext.Offices.FindAsync(new object[] { parentId }, cancellationToken);
+                if (parent == null)
+                    break;
+
+                parentId = parent.ParentOfficeId;
+            }
+
+            return false;
+        }
+
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var ODto = dto as OfficeDto;
