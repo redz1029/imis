@@ -30,6 +30,8 @@ namespace IMIS.Persistence.OfficeModule
                 Id = office.Id,
                 Name = office.Name,
                 IsActive = office.IsActive,
+                OfficeTypeId = office.OfficeTypeId,
+                ParentOfficeId = office.ParentOfficeId,
                 Auditors = office.AuditorOffices?.Select(a => new AuditorDto()
                 {
                     Id = a.AuditorId,
