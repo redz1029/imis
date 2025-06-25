@@ -1,27 +1,24 @@
 import 'package:json_annotation/json_annotation.dart';
 
-part 'office.g.dart';
+part 'office_type.g.dart';
 
 @JsonSerializable()
-class Office {
+class OfficeType {
   final int id;
   String name;
   bool isActive;
   bool isDeleted;
   String? rowVersion;
-  int officeTypeId;
-  int? parentOfficeId;
 
-  Office({
+  OfficeType({
     required this.id,
     required this.name,
-    required this.officeTypeId,
-    this.parentOfficeId,
     this.isActive = true,
     this.isDeleted = false,
     this.rowVersion = "",
   });
 
-  factory Office.fromJson(Map<String, dynamic> json) => _$OfficeFromJson(json);
-  Map<String, dynamic> toJson() => _$OfficeToJson(this);
+  factory OfficeType.fromJson(Map<String, dynamic> json) =>
+      _$OfficeTypeFromJson(json);
+  Map<String, dynamic> toJson() => _$OfficeTypeToJson(this);
 }

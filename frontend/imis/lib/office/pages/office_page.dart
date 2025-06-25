@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
+import 'package:imis/office/models/office_type.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
@@ -20,12 +21,19 @@ class _OfficePageState extends State<OfficePage> {
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Office> officeSearchUtil;
   final _formKey = GlobalKey<FormState>();
-  // List<Map<String, dynamic>> officeList = [];
-  // List<Map<String, dynamic>> filteredList = [];
+
   List<Office> officeList = [];
   List<Office> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
+
+  List<Map<String, dynamic>> filteredListOfficeType = [];
+  List<Map<String, dynamic>> officeTypeList = [];
+  String? _selectedOfficeType;
+
+  List<Map<String, dynamic>> filteredListParentOffice = [];
+  List<Map<String, dynamic>> parentOfficeList = [];
+  String? _selectedParentOffice;
 
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -103,6 +111,76 @@ class _OfficePageState extends State<OfficePage> {
     }
   }
 
+  Future<void> fetchOfficeType() async {
+    var url = ApiEndpoint().officetype;
+
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<OfficeType> data =
+            (response.data as List)
+                .map((officeType) => OfficeType.fromJson(officeType))
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            officeTypeList =
+                data.map((officeType) => officeType.toJson()).toList();
+            filteredListOfficeType = List.from(officeTypeList);
+
+            if (_selectedOfficeType == null &&
+                filteredListOfficeType.isNotEmpty) {
+              _selectedOfficeType = filteredListOfficeType[0]['id'].toString();
+            }
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+  }
+
+  Future<void> fetchParentOffice() async {
+    var url = ApiEndpoint().office;
+
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<Office> data =
+            (response.data as List)
+                .map((parentOffice) => Office.fromJson(parentOffice))
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            parentOfficeList =
+                data.map((parentOffice) => parentOffice.toJson()).toList();
+
+            filteredListParentOffice = List.from(parentOfficeList);
+
+            if (_selectedParentOffice == null &&
+                filteredListParentOffice.isNotEmpty) {
+              _selectedParentOffice =
+                  filteredListParentOffice[0]['id'].toString();
+            }
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -116,6 +194,15 @@ class _OfficePageState extends State<OfficePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    fetchOfficeType();
+    if (filteredListOfficeType.isNotEmpty) {
+      _selectedOfficeType = filteredListOfficeType[0]['id'].toString();
+    }
+    fetchParentOffice();
+
+    if (filteredListParentOffice.isNotEmpty) {
+      _selectedParentOffice = filteredListParentOffice[0]['id'].toString();
+    }
   }
 
   @override
@@ -136,16 +223,41 @@ class _OfficePageState extends State<OfficePage> {
     });
   }
 
-  // Show the form to add or update office
+  String getOfficeTypeName(int id) {
+    final officeType = officeTypeList.firstWhere(
+      (type) => type['id'] == id,
+      orElse: () => {'name': 'Unknown'},
+    );
+    return officeType['name'];
+  }
+
+  String getParentOfficeName(int? id) {
+    if (id == null || id == 0) return 'None'; // Handle both null and 0 cases
+
+    final parentOffice = parentOfficeList.firstWhere(
+      (office) => office['id'] == id,
+      orElse: () => {'name': 'Unknown'},
+    );
+    return parentOffice['name'];
+  }
+
   void showFormDialog({
     String? id,
     String? name,
     bool isActive = false,
     bool isDeleted = false,
     bool isRowversion = false,
-  }) {
+    String? selectedOfficeType,
+    String? selectedParentOffice,
+  }) async {
+    await fetchParentOffice();
+
     TextEditingController officeController = TextEditingController(text: name);
+    _selectedOfficeType = selectedOfficeType;
+    _selectedParentOffice = selectedParentOffice;
+
     showDialog(
+      // ignore: use_build_context_synchronously
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -164,12 +276,12 @@ class _OfficePageState extends State<OfficePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 350,
+                  width: 480,
                   height: 65,
                   child: TextFormField(
                     controller: officeController,
                     decoration: InputDecoration(
-                      labelText: 'Name',
+                      labelText: 'Office Name',
                       focusColor: primaryColor,
                       floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
@@ -182,6 +294,59 @@ class _OfficePageState extends State<OfficePage> {
                         return 'Please fill out this field';
                       }
                       return null;
+                    },
+                  ),
+                ),
+
+                SizedBox(
+                  width: 480,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedOfficeType,
+                    decoration: InputDecoration(
+                      labelText: 'Office Type',
+                      border: OutlineInputBorder(),
+                    ),
+                    items:
+                        filteredListOfficeType.map((officeTypeData) {
+                          return DropdownMenuItem<String>(
+                            value: officeTypeData['id'].toString(),
+                            child: Text(officeTypeData['name']),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedOfficeType = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select an office';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                gap,
+
+                SizedBox(
+                  width: 480,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedParentOffice,
+                    decoration: InputDecoration(
+                      labelText: 'Parent Office',
+                      border: OutlineInputBorder(),
+                    ),
+                    items:
+                        filteredListParentOffice.map((parentOfficeData) {
+                          return DropdownMenuItem<String>(
+                            value: parentOfficeData['id'].toString(),
+                            child: Text(parentOfficeData['name']),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedParentOffice = value;
+                      });
                     },
                   ),
                 ),
@@ -246,10 +411,15 @@ class _OfficePageState extends State<OfficePage> {
                     final office = Office(
                       id: int.tryParse(id ?? '0') ?? 0,
                       name: officeController.text,
+                      officeTypeId:
+                          int.tryParse(_selectedOfficeType ?? '0') ?? 0,
+                      parentOfficeId:
+                          int.tryParse(_selectedParentOffice ?? '0') ?? 0,
                       isDeleted: false,
                       isActive: true,
                     );
                     addOrUpdateOffice(office);
+                    await fetchParentOffice();
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
@@ -324,7 +494,12 @@ class _OfficePageState extends State<OfficePage> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    onPressed: () => showFormDialog(),
+                    // onPressed: () => showFormDialog(),
+                    onPressed: () async {
+                      await fetchOffices();
+
+                      showFormDialog();
+                    },
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -353,6 +528,20 @@ class _OfficePageState extends State<OfficePage> {
                         Expanded(
                           flex: 3,
                           child: Text('Office', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Office Type',
+                            style: TextStyle(color: grey),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Parent Office',
+                            style: TextStyle(color: grey),
+                          ),
                         ),
                         Expanded(
                           flex: 1,
@@ -422,6 +611,41 @@ class _OfficePageState extends State<OfficePage> {
                                             ),
                                           ),
                                           Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                getOfficeTypeName(
+                                                  office.officeTypeId,
+                                                ),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                getParentOfficeName(
+                                                  office.parentOfficeId,
+                                                ),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+
+                                          Expanded(
                                             flex: 1,
                                             child: Padding(
                                               padding: EdgeInsets.only(
@@ -439,6 +663,14 @@ class _OfficePageState extends State<OfficePage> {
                                                               office.id
                                                                   .toString(),
                                                           name: office.name,
+                                                          selectedOfficeType:
+                                                              office
+                                                                  .officeTypeId
+                                                                  .toString(),
+                                                          selectedParentOffice:
+                                                              office
+                                                                  .parentOfficeId
+                                                                  .toString(),
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),
