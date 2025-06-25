@@ -7,6 +7,7 @@ import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuditorTeamPage extends StatefulWidget {
@@ -178,6 +179,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     fetchTeam();
     fetchAuditors();
     fetchAuditorTeam();
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override

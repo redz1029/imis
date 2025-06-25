@@ -7,6 +7,7 @@ import 'package:imis/user/models/user_office.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 import '../../utils/http_util.dart';
 
 class UserOfficePage extends StatefulWidget {
@@ -143,6 +144,8 @@ class _UserOfficePageState extends State<UserOfficePage> {
             () => Office(
               id: 0,
               name: 'Unknown',
+              officeTypeId: 0,
+              parentOfficeId: 0,
               isActive: true,
               isDeleted: false,
             ),
@@ -157,11 +160,16 @@ class _UserOfficePageState extends State<UserOfficePage> {
     try {
       final response =
           isUpdating
-              ? await dio.put(
+              ? await AuthenticatedRequest.put(
+                dio,
                 '$url/${userOffice.id}',
                 data: userOffice.toJson(),
               )
-              : await dio.post(url, data: userOffice.toJson());
+              : await AuthenticatedRequest.post(
+                dio,
+                url,
+                data: userOffice.toJson(),
+              );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         debugPrint("${isUpdating ? 'Update' : 'Save'} successful");
@@ -189,9 +197,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
         if (mounted) {
           setState(() {
             officeList = data.map((office) => office.toJson()).toList();
-            filteredListOffice = List.from(
-              officeList,
-            ); // Ensure filtered list is populated
+            filteredListOffice = List.from(officeList);
 
             if (_selectedOfficeId == null && filteredListOffice.isNotEmpty) {
               _selectedOfficeId = filteredListOffice[0]['id'].toString();
@@ -280,6 +286,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -335,7 +342,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 450,
+                  width: 480,
                   child: DropdownButtonFormField<String>(
                     value:
                         filteredListUser.any(
@@ -369,7 +376,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
                 ),
                 SizedBox(height: 15),
                 SizedBox(
-                  width: 450,
+                  width: 480,
                   child: DropdownButtonFormField<String>(
                     value: _selectedOfficeId,
                     decoration: InputDecoration(
@@ -612,6 +619,8 @@ class _UserOfficePageState extends State<UserOfficePage> {
                                             () => Office(
                                               id: 0,
                                               name: 'Unknown',
+                                              officeTypeId: 0,
+                                              parentOfficeId: 0,
                                               isActive: true,
                                               isDeleted: false,
                                             ),

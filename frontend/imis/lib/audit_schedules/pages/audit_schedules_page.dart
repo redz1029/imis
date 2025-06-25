@@ -9,6 +9,7 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 import '../../utils/http_util.dart';
 
 class AuditSchedulesPage extends StatefulWidget {
@@ -93,9 +94,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
         if (mounted) {
           setState(() {
             officeList = data.map((office) => office.toJson()).toList();
-            filteredList = List.from(
-              officeList,
-            ); // Ensure filtered list is populated
+            filteredList = List.from(officeList);
           });
         }
       } else {
@@ -201,6 +200,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
     fetchTeam();
     fetchAuditors();
     fetchAuditSchedule();
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -862,7 +862,14 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
                       }
                       List<Office> officeList =
                           selectedOffice
-                              .map((a) => Office(id: a['id'], name: a['name']))
+                              .map(
+                                (a) => Office(
+                                  id: a['id'],
+                                  name: a['name'],
+                                  officeTypeId: a['officeTypeId'],
+                                  parentOfficeId: a['parentOfficeId'],
+                                ),
+                              )
                               .toList();
 
                       final auditschedule = AuditSchedules(

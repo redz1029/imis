@@ -11,6 +11,7 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/http_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 
 import 'package:table_calendar/table_calendar.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
@@ -177,6 +178,7 @@ class _HomePageState extends State<HomePage> {
     fecthOffice();
     fetchTeam();
     fetchAuditors();
+    TokenExpirationHandler(context).checkTokenExpiration();
 
     // fetchDeliverables(pgsId: '250210').then((deliverables) {
     //   setState(() {
