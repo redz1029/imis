@@ -25,6 +25,7 @@ namespace IMIS.Persistence
         public DbSet<PgsSignatory> PgsSignatory { get; set; }
         public DbSet<PgsSignatoryTemplate> PgsSignatoryTemplate { get; set; }
         public DbSet<PgsDeliverableScoreHistory> PgsDeliverableScoreHistories { get; set; }
+        public DbSet<OfficeType> OfficeType { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
@@ -75,6 +76,14 @@ namespace IMIS.Persistence
                 .HasOne(ao => ao.Office)
                 .WithMany(o => o.AuditableOffices)
                 .HasForeignKey(ao => ao.OfficeId);
+
+            builder.Entity<OfficeType>().HasData(
+               new OfficeType { Id = 1, Name = "Service", IsActive = true },
+               new OfficeType { Id = 2, Name = "Department", IsActive = true },
+               new OfficeType { Id = 3, Name = "Unit", IsActive = true },
+               new OfficeType { Id = 4, Name = "Section", IsActive = true }
+           );
+
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
             builder.ApplyConfiguration(new UserConfiguration());
