@@ -32,6 +32,7 @@ class ApiEndpoint {
   late String pgsScoreMonitoring;
   late String pgsDeliverableScoreHistory;
   late String pgsDeliverableScoreHistoryGrouped;
+  late String officetype;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -62,6 +63,8 @@ class ApiEndpoint {
     pgsDeliverableScoreHistory = '$baseUrl/pgsDeliverableScoreHistory';
     pgsDeliverableScoreHistoryGrouped =
         '$baseUrl/pgsDeliverableScoreHistory/grouped';
+
+    officetype = '$baseUrl/officetype';
   }
 
   static Future<void> setBaseUrl() async {
