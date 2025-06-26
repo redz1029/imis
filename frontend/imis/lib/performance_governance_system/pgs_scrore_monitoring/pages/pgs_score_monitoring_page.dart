@@ -145,7 +145,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 }
               }
 
-              final historyItem = deliverableHistoryGrouped.firstWhere(
+              deliverableHistoryGrouped.firstWhere(
                 (h) => h.pgsDeliverableId == item['pgsDeliverableId'],
                 orElse: () => PgsDeliverableHistoryGrouped(0, null),
               );
@@ -437,7 +437,21 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: mainBgColor,
-          title: const Text('Score History'),
+          contentPadding: EdgeInsets.zero,
+          titlePadding: EdgeInsets.all(16),
+          title: Stack(
+            children: [
+              const Text('Score History'),
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.of(context).pop(),
+                  color: primaryTextColor,
+                ),
+              ),
+            ],
+          ),
           content: SizedBox(
             width: 600,
             height: 700,
@@ -450,17 +464,15 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       groupedItem.scoreHistory!.isNotEmpty)
                     _buildHistoryTable(groupedItem.scoreHistory!)
                   else
-                    const Text('No history available for this deliverable'),
+                    const Padding(
+                      padding: EdgeInsets.all(24.0),
+                      child: Text('No history available for this deliverable'),
+                    ),
                 ],
               ),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text('Close', style: TextStyle(color: primaryColor)),
-            ),
-          ],
+          actions: [],
         );
       },
     );
