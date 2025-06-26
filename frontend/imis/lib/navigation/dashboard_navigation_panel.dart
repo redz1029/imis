@@ -1,9 +1,11 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/performance_governance_system/pgs_scrore_monitoring/pages/pgs_score_monitoring_page.dart';
+import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_new_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
@@ -18,7 +20,6 @@ import 'package:imis/office/pages/office_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/user/pages/login_page.dart';
-import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
@@ -26,6 +27,7 @@ import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/utils/token_expiration_handler.dart';
+
 import 'package:imis/widgets/permission_widget.dart';
 
 import 'package:motion_toast/motion_toast.dart';
@@ -39,7 +41,8 @@ class DashboardNavigationPanel extends StatefulWidget {
       _DashboardNavigationPanelState();
 }
 
-class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
+class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
+    with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<ScaffoldMessengerState> snackbarKey =
       GlobalKey<ScaffoldMessengerState>();
@@ -61,6 +64,8 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   @override
   void initState() {
     super.initState();
+
+    WidgetsBinding.instance.addObserver(this);
     _loadUserName();
     AuthUtil.fetchRoles().then((roles) {
       if (roles != null) {
@@ -68,6 +73,19 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
       }
     });
     TokenExpirationHandler(context).checkTokenExpiration();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      TokenExpirationHandler(context).checkTokenExpiration();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
   }
 
   Future<void> _loadUserName() async {
@@ -568,8 +586,10 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                                   hideIcon: true,
                                   'PGS Signatory',
                                   9,
-                                  () =>
-                                      _setScreen(PgsSignatoryTemplatePage(), 9),
+                                  () => _setScreen(
+                                    (PgsSignatoryTemplateNewPage()),
+                                    9,
+                                  ),
                                 ),
                                 _buildListTile(
                                   Icons.date_range,
