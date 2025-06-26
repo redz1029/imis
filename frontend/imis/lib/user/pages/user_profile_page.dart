@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/user/models/user_registration.dart';
@@ -204,6 +206,7 @@ class _UserProfileState extends State<UserProfilePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+
     TokenExpirationHandler(context).checkTokenExpiration();
   }
 
@@ -545,7 +548,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: userNameController,
                     decoration: InputDecoration(
                       labelText: 'User Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -562,7 +570,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: emailController,
                     decoration: InputDecoration(
                       labelText: 'Email',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -580,7 +593,12 @@ class _UserProfileState extends State<UserProfilePage> {
                       controller: passwordController,
                       decoration: InputDecoration(
                         labelText: 'Password',
+                        focusColor: primaryColor,
+                        floatingLabelStyle: TextStyle(color: primaryColor),
                         border: OutlineInputBorder(),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: primaryColor),
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -627,8 +645,14 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: firstNameController,
                     decoration: InputDecoration(
                       labelText: 'First Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
+
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please fill out this field';
@@ -644,7 +668,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: middleNameController,
                     decoration: InputDecoration(
                       labelText: 'Middle Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -661,7 +690,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: lastNameController,
                     decoration: InputDecoration(
                       labelText: 'Last Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -679,7 +713,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: suffixController,
                     decoration: InputDecoration(
                       labelText: 'Suffix',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                   ),
                 ),
