@@ -8,6 +8,8 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
+import '../../utils/token_expiration_handler.dart';
+
 class OfficePage extends StatefulWidget {
   const OfficePage({super.key});
 
@@ -203,6 +205,7 @@ class _OfficePageState extends State<OfficePage> {
     if (filteredListParentOffice.isNotEmpty) {
       _selectedParentOffice = filteredListParentOffice[0]['id'].toString();
     }
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -232,7 +235,7 @@ class _OfficePageState extends State<OfficePage> {
   }
 
   String getParentOfficeName(int? id) {
-    if (id == null || id == 0) return 'None'; // Handle both null and 0 cases
+    if (id == null || id == 0) return 'None';
 
     final parentOffice = parentOfficeList.firstWhere(
       (office) => office['id'] == id,
