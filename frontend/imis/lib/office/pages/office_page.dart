@@ -164,13 +164,12 @@ class _OfficePageState extends State<OfficePage> {
             parentOfficeList =
                 data.map((parentOffice) => parentOffice.toJson()).toList();
 
-            filteredListParentOffice = List.from(parentOfficeList);
+            filteredListParentOffice = [
+              {'id': 0, 'name': 'None'},
+              ...parentOfficeList,
+            ];
 
-            if (_selectedParentOffice == null &&
-                filteredListParentOffice.isNotEmpty) {
-              _selectedParentOffice =
-                  filteredListParentOffice[0]['id'].toString();
-            }
+            _selectedParentOffice ??= '0';
           });
         }
       } else {
@@ -257,7 +256,8 @@ class _OfficePageState extends State<OfficePage> {
 
     TextEditingController officeController = TextEditingController(text: name);
     _selectedOfficeType = selectedOfficeType;
-    _selectedParentOffice = selectedParentOffice;
+    // _selectedParentOffice = selectedParentOffice;
+    _selectedParentOffice = selectedParentOffice ?? '0';
 
     showDialog(
       // ignore: use_build_context_synchronously
@@ -334,18 +334,22 @@ class _OfficePageState extends State<OfficePage> {
                 SizedBox(
                   width: 480,
                   child: DropdownButtonFormField<String>(
-                    value: _selectedParentOffice,
+                    value: _selectedParentOffice ?? '0', // Handle null case
                     decoration: InputDecoration(
                       labelText: 'Parent Office',
                       border: OutlineInputBorder(),
                     ),
-                    items:
-                        filteredListParentOffice.map((parentOfficeData) {
-                          return DropdownMenuItem<String>(
-                            value: parentOfficeData['id'].toString(),
-                            child: Text(parentOfficeData['name']),
-                          );
-                        }).toList(),
+                    items: [
+                      DropdownMenuItem<String>(value: '0', child: Text('None')),
+                      ...filteredListParentOffice
+                          .where((o) => o['id'] != 0)
+                          .map((parentOfficeData) {
+                            return DropdownMenuItem<String>(
+                              value: parentOfficeData['id'].toString(),
+                              child: Text(parentOfficeData['name']),
+                            );
+                          }),
+                    ],
                     onChanged: (value) {
                       setState(() {
                         _selectedParentOffice = value;
@@ -417,7 +421,9 @@ class _OfficePageState extends State<OfficePage> {
                       officeTypeId:
                           int.tryParse(_selectedOfficeType ?? '0') ?? 0,
                       parentOfficeId:
-                          int.tryParse(_selectedParentOffice ?? '0') ?? 0,
+                          _selectedParentOffice == '0'
+                              ? null
+                              : int.tryParse(_selectedParentOffice ?? '0'),
                       isDeleted: false,
                       isActive: true,
                     );
@@ -670,10 +676,12 @@ class _OfficePageState extends State<OfficePage> {
                                                               office
                                                                   .officeTypeId
                                                                   .toString(),
+
                                                           selectedParentOffice:
                                                               office
                                                                   .parentOfficeId
-                                                                  .toString(),
+                                                                  ?.toString() ??
+                                                              '0',
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),
