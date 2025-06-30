@@ -18,6 +18,7 @@ namespace IMIS.Application.PgsModule
         public required double PercentDeliverables { get; set; }
         public string? PgsStatus { get; set; }
         public List<PgsSignatoryDto>? PgsSignatories { get; set; }
+        public bool ForSignature { get; set; }
 
         public PerfomanceGovernanceSystemDto() { }
         [SetsRequiredMembers]
@@ -25,8 +26,8 @@ namespace IMIS.Application.PgsModule
         {
             this.Id = perfomanceGovernanceSystem.Id;
             this.Remarks = perfomanceGovernanceSystem.Remarks;
-            this.PgsPeriod = perfomanceGovernanceSystem.PgsPeriod != null ? new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod) : null;
-            this.Office = perfomanceGovernanceSystem.Office != null ? new OfficeDto(perfomanceGovernanceSystem.Office) : null;
+            this.PgsPeriod =  new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod);
+            this.Office =  new OfficeDto(perfomanceGovernanceSystem.Office);
             this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;
             this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(d => new PGSDeliverableDto(d)).ToList();           
             this.PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?.Select(s => new PgsSignatoryDto
@@ -37,7 +38,8 @@ namespace IMIS.Application.PgsModule
                     SignatoryId = s.SignatoryId,
                     DateSigned = s.DateSigned,                   
                  }).ToList();
-          
+
+            this.ForSignature = false;
         }
         public override PerfomanceGovernanceSystem ToEntity()
         {

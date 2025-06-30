@@ -22,6 +22,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                 OrderLevel = signatoryTemplate.OrderLevel,
                 DefaultSignatoryId = signatoryTemplate.DefaultSignatoryId,
                 IsActive = signatoryTemplate.IsActive,
+                OfficeId = signatoryTemplate.OfficeId 
             };
         }
         public async Task<DtoPageList<PgsSignatoryTemplateDto, PgsSignatoryTemplate, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)

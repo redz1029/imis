@@ -3,6 +3,7 @@ using Base.Pagination;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -15,26 +16,25 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         var pgs = await _dbContext.PerformanceGovernanceSystem.Where(p => !p.IsDeleted &&
         p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
           .Include(p => p.PgsPeriod)
-          .Include(p => p.Office)          
+          .Include(p => p.Office)
           .Include(p => p.PgsReadinessRating)
           .Include(p => p.PgsSignatories)
           .ToListAsync(cancellationToken).ConfigureAwait(false);
-          return pgs;
-    }
-    // Get Pgs, Filter by Id
+        return pgs;
+    }   
     public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         return await _dbContext.PerformanceGovernanceSystem
-        .Include(p => p.PgsPeriod)
-        .Include(p => p.Office)
-        .Include(p => p.PgsDeliverables)
-        .ThenInclude(d => d.Kra)
-        .Include(p => p.PgsDeliverables)
-        .ThenInclude(d => d.PgsDeliverableScoreHistory)
-        .Include(p => p.PgsReadinessRating)
-        .Include(p => p.PgsSignatories)
-         .ThenInclude(d => d.PgsSignatoryTemplate)
-        .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+            .Include(p => p.PgsDeliverables)
+                .ThenInclude(d => d.Kra)
+            .Include(p => p.PgsDeliverables)
+                .ThenInclude(d => d.PgsDeliverableScoreHistory)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories!)
+                //.ThenInclude(s => s.PgsSignatoryTemplate) // needed for OrderLevel
+            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
     }
     //Get Pgs Report: Filter by Id
     public async Task<PerfomanceGovernanceSystem?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
@@ -167,7 +167,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 }
             }
             // --- Sync PgsDeliverables ---
-        
+
             if (perfomanceGovernanceSystem.PgsDeliverables != null)
             {
                 foreach (var deliverable in perfomanceGovernanceSystem.PgsDeliverables)
@@ -178,7 +178,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     if (existingDeliverable != null)
                     {
                         // Check if the score has changed before creating history
-                        bool scoreChanged = existingDeliverable.PercentDeliverables != deliverable.PercentDeliverables;
+                         bool scoreChanged = existingDeliverable.PercentDeliverables != deliverable.PercentDeliverables;
 
                         _dbContext.Entry(existingDeliverable).CurrentValues.SetValues(deliverable);
                         existingDeliverable.PerfomanceGovernanceSystemId = existingPerfomanceGovernanceSystem.Id;
@@ -224,14 +224,14 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                         {
                             throw new InvalidOperationException("Invalid PerformanceGovernanceSystem ID.");
                         }
-                     
+
                         signatory.PgsId = existingPerfomanceGovernanceSystem.Id;
-                        
+
                         if (_dbContext.Entry(signatory).State == EntityState.Detached)
-                        {                           
+                        {
                             _dbContext.Entry(signatory).State = EntityState.Added;
                         }
-                        
+
                         existingPerfomanceGovernanceSystem.PgsSignatories!.Add(signatory);
                     }
                 }
@@ -263,6 +263,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return perfomanceGovernanceSystem;
     }
+    
     public Task<int> CountAsync(CancellationToken cancellationToken)
     {       
         return _dbContext.PerformanceGovernanceSystem.CountAsync(cancellationToken);

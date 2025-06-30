@@ -10,5 +10,7 @@ namespace IMIS.Domain
         public string? DefaultSignatoryId { get; set; }
         public User? DefaultSignatory { get; set; }
         public bool IsActive { get; set; }
+        public int OfficeId { get; set; }
+        public Office? Office { get; set; }
     }
 }

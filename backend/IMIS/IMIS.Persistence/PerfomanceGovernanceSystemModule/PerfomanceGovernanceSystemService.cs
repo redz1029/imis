@@ -11,7 +11,9 @@ using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PgsModule
@@ -23,15 +25,22 @@ namespace IMIS.Persistence.PgsModule
         private readonly IPgsPeriodRepository _pgsPeriodRepository;
         private readonly IKeyResultAreaRepository _kraRepository;
         private readonly UserManager<User> _userManager;
-     
-        public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository, UserManager<User> userManager)
+        private readonly ImisDbContext _dbContext;
+        private readonly IOutputCacheStore _cache;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IPgsSignatoryTemplateService _signatoryTemplateService;
+
+        public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository, UserManager<User> userManager, ImisDbContext dbContext, IOutputCacheStore cache, IHttpContextAccessor httpContextAccessor, IPgsSignatoryTemplateService signatoryTemplateService)
         {
             _repository = repository;
             _officeRepository = officeRepository;
             _pgsPeriodRepository = pgsPeriodRepository;
             _kraRepository = kraRepository;
             _userManager = userManager;
-            
+            _dbContext = dbContext;
+            _cache = cache;
+            _httpContextAccessor = httpContextAccessor;
+            _signatoryTemplateService = signatoryTemplateService;
         }
 
         public async Task<List<PerfomanceGovernanceSystemDto>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken)
@@ -41,27 +50,27 @@ namespace IMIS.Persistence.PgsModule
         }
         private PerfomanceGovernanceSystemDto ConvPerfomanceGovernanceSystemToDTO(PerfomanceGovernanceSystem perfomanceGovernanceSystem)
         {
-            if (perfomanceGovernanceSystem == null) return null;
+          
 
             return new PerfomanceGovernanceSystemDto
             {
                 Id = perfomanceGovernanceSystem.Id,
                 Remarks = perfomanceGovernanceSystem.Remarks,
                 PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables,
-                PgsStatus = perfomanceGovernanceSystem.PgsStatus,               
-                PgsPeriod = perfomanceGovernanceSystem.PgsPeriod != null ? new PgsPeriodDto
-                {                 
+                PgsStatus = perfomanceGovernanceSystem.PgsStatus,
+                PgsPeriod = new PgsPeriodDto
+                {
                     Id = perfomanceGovernanceSystem.PgsPeriod.Id,
                     StartDate = perfomanceGovernanceSystem.PgsPeriod.StartDate,
                     EndDate = perfomanceGovernanceSystem.PgsPeriod.EndDate
-                } : null,  
+                },
 
-                Office = perfomanceGovernanceSystem.Office != null ? new OfficeDto
+                Office = new OfficeDto
                 {
                     Id = perfomanceGovernanceSystem.Office.Id,
                     Name = perfomanceGovernanceSystem.Office.Name,
                     IsActive = perfomanceGovernanceSystem.Office.IsActive
-                } : null, 
+                },
 
                 PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto
                 {
@@ -69,10 +78,10 @@ namespace IMIS.Persistence.PgsModule
                     CompetenceToDeliver = perfomanceGovernanceSystem.PgsReadinessRating.CompetenceToDeliver,
                     ResourceAvailability = perfomanceGovernanceSystem.PgsReadinessRating.ResourceAvailability,
                     ConfidenceToDeliver = perfomanceGovernanceSystem.PgsReadinessRating.ConfidenceToDeliver,
-                } : null,  
+                } : null,
 
                 PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(deliverable => new PGSDeliverableDto
-                {                   
+                {
                     Id = deliverable.Id,
                     IsDirect = deliverable.IsDirect,
                     DeliverableName = deliverable.DeliverableName,
@@ -86,7 +95,7 @@ namespace IMIS.Persistence.PgsModule
                         Id = deliverable.Kra.Id,
                         Name = deliverable.Kra.Name,
                         Remarks = deliverable.Kra.Remarks
-                    } : null, 
+                    } : null,
                     Remarks = deliverable.Remarks,
                     PgsDeliverableScoreHistory = deliverable.PgsDeliverableScoreHistory?.Select(pgsDeliverableScoreHistoryDto => new PgsDeliverableScoreHistoryDto
                     {
@@ -97,40 +106,47 @@ namespace IMIS.Persistence.PgsModule
 
                     }).ToList()
                 }).ToList() ?? new List<PGSDeliverableDto>(),
-                 PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?.Select(s => new PgsSignatoryDto
-                 {
-                     Id = s.Id,
-                     PgsId = s.PgsId,
-                     PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
-                     SignatoryId = s.SignatoryId,
-                     DateSigned = s.DateSigned,                    
-                 }).ToList()
+                PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?.Select(s => new PgsSignatoryDto
+                {
+                    Id = s.Id,
+                    PgsId = s.PgsId,
+                    PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
+                    SignatoryId = s.SignatoryId,
+                    DateSigned = s.DateSigned,
+
+                }).ToList()
             };
         }
 
-            private ReportPerfomanceGovernanceSystemDto ConvReportPerfomanceGovernanceSystemToDTO(PerfomanceGovernanceSystem perfomanceGovernanceSystem, List<User> users)
-            {
-                if (perfomanceGovernanceSystem == null) return null;
 
+        public async Task<PerfomanceGovernanceSystemDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var pgs = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return pgs != null ? ConvPerfomanceGovernanceSystemToDTO(pgs) : null;
+        }
+
+     
+        private ReportPerfomanceGovernanceSystemDto ConvReportPerfomanceGovernanceSystemToDTO(PerfomanceGovernanceSystem perfomanceGovernanceSystem, List<User> users)
+            {             
                 return new ReportPerfomanceGovernanceSystemDto
                 {
                     Id = perfomanceGovernanceSystem.Id,
                     Remarks = perfomanceGovernanceSystem.Remarks,
                     PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables,           
-                    PgsPeriod = perfomanceGovernanceSystem.PgsPeriod != null ? new PgsPeriodDto
+                    PgsPeriod =  new PgsPeriodDto
                     {
                         Id = perfomanceGovernanceSystem.PgsPeriod.Id,
                         StartDate = perfomanceGovernanceSystem.PgsPeriod.StartDate,
                         EndDate = perfomanceGovernanceSystem.PgsPeriod.EndDate,
                         Remarks = perfomanceGovernanceSystem.PgsPeriod.Remarks
-                    } : null,
+                    },
 
-                    Office = perfomanceGovernanceSystem.Office != null ? new OfficeDto
+                    Office = new OfficeDto
                     {
                         Id = perfomanceGovernanceSystem.Office.Id,
                         Name = perfomanceGovernanceSystem.Office.Name,
                         IsActive = perfomanceGovernanceSystem.Office.IsActive
-                    } : null,
+                    },
                     PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto
                     {
                         Id = perfomanceGovernanceSystem.PgsReadinessRating.Id,
@@ -191,17 +207,149 @@ namespace IMIS.Persistence.PgsModule
                     }).ToList()
                 };
             }
-        public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
+      
+        private async Task<PerfomanceGovernanceSystemDto> ConvRecursivePerfomanceGovernanceSystemToDTO(
+            PerfomanceGovernanceSystem pgs,
+            string? currentUserId,
+            CancellationToken cancellationToken)
         {
-            //throw new NotImplementedException();
-            var perfomanceGovernanceSystemDto = await _repository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
-            return perfomanceGovernanceSystemDto?.Select(o => ConvPerfomanceGovernanceSystemToDTO(o)).ToList();
+            var dto = new PerfomanceGovernanceSystemDto
+            {
+                Id = pgs.Id,
+                Remarks = pgs.Remarks,
+                PercentDeliverables = pgs.PercentDeliverables,
+                PgsStatus = pgs.PgsStatus,
+                IsDeleted = pgs.IsDeleted,
+                RowVersion = pgs.RowVersion,
+                PgsPeriod = new PgsPeriodDto
+                {
+                    Id = pgs.PgsPeriod.Id,
+                    StartDate = pgs.PgsPeriod.StartDate,
+                    EndDate = pgs.PgsPeriod.EndDate,
+                    Remarks = pgs.PgsPeriod.Remarks,
+                    IsDeleted = pgs.PgsPeriod.IsDeleted,
+                    RowVersion = pgs.PgsPeriod.RowVersion
+                },
+                Office =  new OfficeDto
+                {
+                    Id = pgs.Office.Id,
+                    Name = pgs.Office.Name,
+                    OfficeTypeId = pgs.Office.OfficeTypeId,
+                    ParentOfficeId = pgs.Office.ParentOfficeId,
+                    IsActive = pgs.Office.IsActive,
+                    IsDeleted = pgs.Office.IsDeleted,
+                    RowVersion = pgs.Office.RowVersion
+                },
+                PgsSignatories = pgs.PgsSignatories?.Select(s => new PgsSignatoryDto
+                {
+                    Id = s.Id,
+                    PgsId = s.PgsId,
+                    PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
+                    SignatoryId = s.SignatoryId,
+                    DateSigned = s.DateSigned,
+                    IsDeleted = s.IsDeleted,
+                    RowVersion = s.RowVersion
+                }).ToList(),
+
+                PgsReadinessRating = pgs.PgsReadinessRating == null ? null : new PgsReadinessRatingDto
+                {
+                    Id = pgs.PgsReadinessRating.Id,
+                    CompetenceToDeliver = pgs.PgsReadinessRating.CompetenceToDeliver,
+                    ResourceAvailability = pgs.PgsReadinessRating.ResourceAvailability,
+                    ConfidenceToDeliver = pgs.PgsReadinessRating.ConfidenceToDeliver,
+                    TotalScore = pgs.PgsReadinessRating.TotalScore,
+                    IsDeleted = pgs.PgsReadinessRating.IsDeleted,
+                    RowVersion = pgs.PgsReadinessRating.RowVersion
+                },
+
+                PgsDeliverables = pgs.PgsDeliverables?.Select(d => new PGSDeliverableDto
+                {
+                    Id = d.Id,
+                    KraId = d.KraId,
+                    Kra = d.Kra == null ? null : new KeyResultAreaDto
+                    {
+                        Id = d.Kra.Id,
+                        Name = d.Kra.Name,
+                        Remarks = d.Kra.Remarks,
+                        IsDeleted = d.Kra.IsDeleted,
+                        RowVersion = d.Kra.RowVersion
+                    },
+                    KraDescription = d.KraDescription,
+                    DeliverableName = d.DeliverableName,
+                    ByWhen = d.ByWhen,
+                    IsDirect = d.IsDirect,
+                    PercentDeliverables = d.PercentDeliverables,
+                    Status = d.Status,
+                    Remarks = d.Remarks,
+                    PgsDeliverableScoreHistory = d.PgsDeliverableScoreHistory?.Select(h => new PgsDeliverableScoreHistoryDto
+                    {
+                        Id = h.Id,
+                        PgsDeliverableId = h.PgsDeliverableId,
+                        Date = h.Date,
+                        Score = h.Score,
+                        IsDeleted = h.IsDeleted,
+                        RowVersion = h.RowVersion
+                    }).ToList(),
+                    IsDeleted = d.IsDeleted,
+                    RowVersion = d.RowVersion
+                }).ToList()
+            };
+           
+            if (!string.IsNullOrEmpty(currentUserId))
+            {
+                dto.ForSignature = await IsUserNextSignatoryAsync(pgs, currentUserId, cancellationToken);
+            }
+
+            return dto;
         }
-        public async Task<PerfomanceGovernanceSystemDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+
+        public async Task<List<PerfomanceGovernanceSystemDto>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
-            var perfomanceGovernanceSystemDto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return perfomanceGovernanceSystemDto != null ? ConvPerfomanceGovernanceSystemToDTO(perfomanceGovernanceSystemDto) : null;
-        }       
+            var records = await _repository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+
+            var result = new List<PerfomanceGovernanceSystemDto>();
+
+            if (records == null)
+                return result;
+
+            foreach (var pgs in records)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var dto = await ConvRecursivePerfomanceGovernanceSystemToDTO(pgs, userId, cancellationToken);
+                result.Add(dto);
+            }
+
+            return result;
+        }
+
+        private async Task<bool> IsUserNextSignatoryAsync(
+        PerfomanceGovernanceSystem pgs,
+        string userId,
+        CancellationToken cancellationToken)
+        {
+            var templates = await _signatoryTemplateService.GetAllAsync(cancellationToken);
+
+            var orderedTemplates = templates!
+                .Where(t => t.OfficeId == pgs.OfficeId && t.IsActive)
+                .OrderBy(t => t.OrderLevel)
+                .ToList();
+            foreach (var template in orderedTemplates)
+            {
+                bool isAlreadySigned = pgs.PgsSignatories?.Any(s =>
+                    s.PgsSignatoryTemplateId == template.Id &&
+                    s.DateSigned != null) ?? false;
+
+                if (!isAlreadySigned)
+                {
+                 
+                    return template.DefaultSignatoryId == userId;
+                }
+            }
+
+            return false;
+        }
+
         public async Task<ReportPerfomanceGovernanceSystemDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var perfomanceGovernanceSystem = await _repository.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -237,7 +385,7 @@ namespace IMIS.Persistence.PgsModule
             if (perfomanceGovernanceSystemDto.TotalCount == 0)
                 return null;
             return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(perfomanceGovernanceSystemDto.Items, page, pageSize, perfomanceGovernanceSystemDto.TotalCount);
-        }      
+        }
         public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto, CancellationToken cancellationToken)
         {
             if (perfomanceGovernanceSystemDto == null) throw new ArgumentNullException(nameof(perfomanceGovernanceSystemDto));
@@ -257,7 +405,7 @@ namespace IMIS.Persistence.PgsModule
             // Handle Save or Update
             var createdPerfomanceGovernanceSystem = await _repository.SaveOrUpdateAsync(perfomanceGovernanceSystemEntity, cancellationToken).ConfigureAwait(false);
 
-           
+
 
             return new PerfomanceGovernanceSystemDto
             {
@@ -316,10 +464,13 @@ namespace IMIS.Persistence.PgsModule
                     PgsId = s.PgsId,
                     PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
                     SignatoryId = s.SignatoryId,
-                    DateSigned = s.DateSigned
+                    DateSigned = s.DateSigned,
+                   
                 }).ToList()
             };
         }
+
+
         // Save or Update Generic Method
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {

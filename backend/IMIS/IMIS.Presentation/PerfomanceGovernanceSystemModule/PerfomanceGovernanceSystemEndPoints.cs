@@ -1,4 +1,5 @@
-﻿using Base.Auths.Permissions;
+﻿using System.Security.Claims;
+using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
@@ -14,6 +15,7 @@ namespace IMIS.Presentation.PgsModuleAPI
 {
     public class PerfomanceGovernanceSystemEndPoints : CarterModule
     {
+        const string ScoreHistoryTag = "PgsDeliverableScoreHistory"; 
         private const string _pgsTag = "Performance Governance System";
         public readonly PerformanceGovernanceSystemPermission _performanceGovernanceSystem = new();
 
@@ -32,7 +34,7 @@ namespace IMIS.Presentation.PgsModuleAPI
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _performanceGovernanceSystem.Add));
-
+      
             app.MapGet("/", async (IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
                 var performanceGovernanceSystem = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -48,11 +50,8 @@ namespace IMIS.Presentation.PgsModuleAPI
                 var performanceGovernanceSystem = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
             })
-            .WithTags(_pgsTag)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _performanceGovernanceSystem.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
+            .WithTags(_pgsTag);
+          
             app.MapGet("userId/{id}", async (string userId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
                 var performanceGovernanceSystem = await service.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
@@ -62,7 +61,7 @@ namespace IMIS.Presentation.PgsModuleAPI
            .RequireAuthorization(e => e.RequireClaim(
             PermissionClaimType.Claim, _performanceGovernanceSystem.View))
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
+         
             app.MapPut("/{id}", async (int id, [FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var existingPerformanceGovernanceSystem = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);

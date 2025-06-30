@@ -11,6 +11,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
         public int OrderLevel { get; set; }
         public string? DefaultSignatoryId { get; set; }
         public bool IsActive { get; set; }
+        public int OfficeId { get; set; }
         public PgsSignatoryTemplateDto() { }
         [SetsRequiredMembers]
         public PgsSignatoryTemplateDto(PgsSignatoryTemplate PgsSignatoryTemplate)
@@ -21,6 +22,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
             this.OrderLevel = PgsSignatoryTemplate.OrderLevel;
             this.DefaultSignatoryId = PgsSignatoryTemplate.DefaultSignatoryId;
             this.IsActive = PgsSignatoryTemplate.IsActive;
+            this.OfficeId = PgsSignatoryTemplate.OfficeId;
         }
         public override PgsSignatoryTemplate ToEntity()
         {
@@ -31,7 +33,9 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                 SignatoryLabel = SignatoryLabel!,
                 OrderLevel = OrderLevel,
                 DefaultSignatoryId = DefaultSignatoryId,       
-                IsActive = IsActive
+                IsActive = IsActive,
+                OfficeId = OfficeId
+                
             };
         }      
     }
