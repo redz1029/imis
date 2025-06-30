@@ -6,6 +6,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 
 import '../../utils/http_util.dart';
 
@@ -114,6 +115,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -528,7 +530,7 @@ class _AuditorMainPageState extends State<AuditorPage> {
                     isLoading: _isLoading,
                     onPageChanged: (page) => fetchAuditors(page: page),
                   ),
-                  Container(width: 60), // For alignment
+                  Container(width: 60),
                 ],
               ),
             ),

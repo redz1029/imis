@@ -6,6 +6,7 @@ import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_role.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 // ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
@@ -109,7 +110,6 @@ class _UserRolePageState extends State<UserRolePage> {
 
     try {
       var response = await AuthenticatedRequest.get(dio, url);
-      debugPrint("Raw Office response: ${response.data}");
 
       if (response.statusCode == 200 && response.data is List) {
         List<Roles> data =
@@ -130,7 +130,6 @@ class _UserRolePageState extends State<UserRolePage> {
 
     try {
       var response = await AuthenticatedRequest.get(dio, url);
-      debugPrint("Raw User response: ${response.data}");
 
       if (response.statusCode == 200 && response.data is List) {
         List<User> data =
@@ -140,7 +139,6 @@ class _UserRolePageState extends State<UserRolePage> {
           userList = data;
         });
 
-        debugPrint("User list loaded: ${data.length}");
         printUserNameWithUserName();
       }
     } catch (e) {
@@ -150,15 +148,11 @@ class _UserRolePageState extends State<UserRolePage> {
 
   void printUserNameWithUserName() {
     for (var userRole in userRoleList) {
-      final userName = userList.firstWhere(
+      userList.firstWhere(
         (user) => user.id == userRole.userId,
         orElse:
             () =>
                 User(id: 'unknown', fullName: 'Unknown', position: 'position'),
-      );
-
-      debugPrint(
-        "userId: ${userRole.userId}, officeId: ${userRole.roleId}, fullName: ${userName.fullName}",
       );
     }
   }
@@ -167,15 +161,9 @@ class _UserRolePageState extends State<UserRolePage> {
     for (var userRole in userRoleList) {
       debugPrint("Checking userRole: ${userRole.roleId}");
 
-      final matchedRole = rolenameList.firstWhere(
+      rolenameList.firstWhere(
         (role) => role.id == userRole.roleId,
         orElse: () => Roles("unknown", "Unknown", "", ""),
-      );
-
-      debugPrint("Matched Role: ${matchedRole.name}");
-
-      debugPrint(
-        "userId: ${userRole.userId}, officeId: ${userRole.roleId}, roleName: ${matchedRole.name}",
       );
     }
   }
@@ -191,10 +179,9 @@ class _UserRolePageState extends State<UserRolePage> {
       );
 
       if (response.statusCode == 201 || response.statusCode == 200) {
-        debugPrint("Save successful");
         await fetchUserRoles();
       } else {
-        debugPrint("Save failed: ${response.statusCode}");
+        debugPrint("Save failed");
       }
     } catch (e) {
       debugPrint("Error: $e");
@@ -209,10 +196,9 @@ class _UserRolePageState extends State<UserRolePage> {
       final response = await AuthenticatedRequest.put(dio, url);
 
       if (response.statusCode == 200) {
-        debugPrint("Role updated successfully: ${response.data}");
         await fetchUserRoles();
       } else {
-        debugPrint(" Update failed: ${response.statusCode} ${response.data}");
+        debugPrint(" Update failed");
       }
     } catch (e) {
       debugPrint(" Error updating role: $e");
@@ -248,12 +234,10 @@ class _UserRolePageState extends State<UserRolePage> {
             if (_selectedRoleId == null && filteredListRole.isNotEmpty) {
               _selectedRoleId = filteredListRole[0]['id'].toString();
             }
-
-            debugPrint("Auto-selected office: $_selectedRoleId");
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.response?.data ?? e.message}");
@@ -280,7 +264,6 @@ class _UserRolePageState extends State<UserRolePage> {
 
             if (filteredListUser.isNotEmpty) {
               _selectedUserId = filteredListUser[0].id;
-              debugPrint("Auto-selected user: $_selectedUserId");
             }
           });
         }
@@ -323,6 +306,7 @@ class _UserRolePageState extends State<UserRolePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -855,7 +839,7 @@ class _UserRolePageState extends State<UserRolePage> {
                           isLoading: _isLoading,
                           onPageChanged: (page) => fetchUserRoles(page: page),
                         ),
-                        Container(width: 60), // For alignment
+                        Container(width: 60),
                       ],
                     ),
                   ),

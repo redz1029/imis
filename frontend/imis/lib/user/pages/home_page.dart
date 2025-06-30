@@ -11,7 +11,6 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/http_util.dart';
-
 import 'package:table_calendar/table_calendar.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -177,12 +176,6 @@ class _HomePageState extends State<HomePage> {
     fecthOffice();
     fetchTeam();
     fetchAuditors();
-
-    // fetchDeliverables(pgsId: '250210').then((deliverables) {
-    //   setState(() {
-    //     _deliverablesList = deliverables;
-    //   });
-    // });
   }
 
   Future<void> _loadUserName() async {
@@ -194,55 +187,6 @@ class _HomePageState extends State<HomePage> {
         office = officeName ?? [];
       });
     }
-  }
-
-  Future<List<PgsDeliverables>> fetchDeliverables({String? pgsId}) async {
-    List<PgsDeliverables> deliverablesList = [];
-    final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
-
-    debugPrint("Fetching deliverables for PGS ID: $pgsId");
-
-    try {
-      String? token = await AuthUtil.fetchAccessToken();
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return deliverablesList;
-      }
-
-      final response = await AuthenticatedRequest.get(
-        dio,
-        url,
-        // options: Options(headers: {"Authorization": "Bearer $token"}),
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        final pgsDataList = data is List ? data : [data];
-
-        for (var pgsJson in pgsDataList) {
-          final deliverables =
-              (pgsJson['pgsDeliverables'] as List)
-                  .map((d) => PgsDeliverables.fromJson(d))
-                  .where((d) => d.id != null)
-                  .toList();
-
-          deliverablesList.addAll(deliverables);
-        }
-
-        for (var d in deliverablesList) {
-          debugPrint("Deliverable: ${d.toJson()}");
-        }
-      } else {
-        debugPrint("Failed to fetch deliverables: ${response.statusCode}");
-      }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-
-    return deliverablesList;
   }
 
   double get _kraProgress =>

@@ -25,7 +25,7 @@ const gap7 = SizedBox(height: 60);
 
 //For Logo Widget
 class Logo extends StatelessWidget {
-  const Logo({super.key}); // Add a const constructor
+  const Logo({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -13,20 +13,15 @@ class PermissionService {
   bool _initialized = false;
 
   void loadPermissions(List<String> permissions) {
-    debugPrint('Loading permissions: $permissions');
     _permissions.value = Set.unmodifiable(permissions);
     _initialized = true;
   }
 
   bool hasPermission(String permission) {
     if (!_initialized) {
-      debugPrint(
-        'PermissionService not initialized yet! Checking for: $permission',
-      );
       return false;
     }
     final hasPerm = _permissions.value.contains(permission);
-    debugPrint('Checking permission $permission: $hasPerm');
     return hasPerm;
   }
 

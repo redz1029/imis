@@ -210,9 +210,12 @@ class RolePermissions {
     'Standard User': [AppPermission.viewPerformanceGovernanceSystem],
 
     'Pgs Manager': [
+      // PGS
+      AppPermission.addPerformanceGovernanceSystem,
       AppPermission.viewPerformanceGovernanceSystem,
       AppPermission.editPerformanceGovernanceSystem,
-      AppPermission.addPerformanceGovernanceSystem,
+
+      AppPermission.viewPgsDeliverableMonitor,
     ],
   };
 

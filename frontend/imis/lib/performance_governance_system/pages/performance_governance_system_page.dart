@@ -161,8 +161,6 @@ class _PerformanceGovernanceSystemPageState
       userId = user!.id ?? "UserId";
     });
 
-    debugPrint('Loaded userId from SharedPreferences: $userId');
-
     if (mounted) {
       setState(() {
         _submittedByUserId = userId;
@@ -196,7 +194,7 @@ class _PerformanceGovernanceSystemPageState
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
       } else {
-        debugPrint("Failed to save Pgs data: ${response.statusCode}");
+        debugPrint("Failed to save Pgs data");
         debugPrint("Response: ${response.data}");
       }
     } on DioException catch (e) {
@@ -249,7 +247,7 @@ class _PerformanceGovernanceSystemPageState
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
       } else {
-        debugPrint("Failed to update PGS: ${response.statusCode}");
+        debugPrint("Failed to update PGS");
         debugPrint("Response: ${response.data}");
 
         if (response.statusCode == 401 || response.statusCode == 403) {
@@ -772,10 +770,8 @@ class _PerformanceGovernanceSystemPageState
             data.map<Map<String, dynamic>>((item) {
               return {'id': item['id'] as int, 'name': item['name'].toString()};
             }).toList();
-
-        debugPrint("Fetched Data: $options");
       } else {
-        debugPrint("Failed to load data: ${response.statusCode}");
+        debugPrint("Failed to load data");
       }
     } catch (e) {
       debugPrint("Error fetching data: $e");
@@ -809,6 +805,8 @@ class _PerformanceGovernanceSystemPageState
       office: Office(
         id: int.tryParse(selectedOffice!) ?? 0,
         name: "Office Name",
+        officeTypeId: 0,
+        parentOfficeId: 0,
         isActive: false,
         rowVersion: "",
       ),
@@ -1574,9 +1572,7 @@ class _PerformanceGovernanceSystemPageState
   Future<List<PgsSignatory>> fetchSignatoryList({required String pgsId}) async {
     final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
 
-    debugPrint("Fetching signatories for PGS ID: $pgsId");
-
-    displaySignatoryList.clear(); // Clear before adding new
+    displaySignatoryList.clear();
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -1615,7 +1611,7 @@ class _PerformanceGovernanceSystemPageState
           }
         }
       } else {
-        debugPrint("Failed to fetch signatories: ${response.statusCode}");
+        debugPrint("Failed to fetch signatories");
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.response?.data ?? e.message}");
@@ -2621,6 +2617,7 @@ class _PerformanceGovernanceSystemPageState
                       style: TextStyle(color: primaryColor),
                     ),
                   ),
+                  //SUBMIT BUTTON
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -2668,6 +2665,148 @@ class _PerformanceGovernanceSystemPageState
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
+                  //NOTED BUTTON
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () async {
+                      bool? confirm = await showDialog(
+                        context: context,
+                        builder:
+                            (_) => AlertDialog(
+                              title: Text("Confirm Submit"),
+                              content: Text(
+                                "Are you sure you want to submit this record? You won’t be able to make any changes.",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.pop(context, false),
+                                  child: Text("No"),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: Text("Yes"),
+                                ),
+                              ],
+                            ),
+                      );
+
+                      if (confirm == true) {
+                        int? pgsId = int.tryParse(id ?? '');
+                        PerformanceGovernanceSystem audit = getPgsAuditDetails(
+                          id: pgsId ?? 0,
+                          pgsStatus: "Noted",
+                        );
+                        await savePGS(audit);
+
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text('Noted', style: TextStyle(color: Colors.white)),
+                  ),
+                  //REVIEW BUTTON
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () async {
+                      bool? confirm = await showDialog(
+                        context: context,
+                        builder:
+                            (_) => AlertDialog(
+                              title: Text("Confirm Submit"),
+                              content: Text(
+                                "Are you sure you want to submit this record? You won’t be able to make any changes.",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.pop(context, false),
+                                  child: Text("No"),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: Text("Yes"),
+                                ),
+                              ],
+                            ),
+                      );
+
+                      if (confirm == true) {
+                        int? pgsId = int.tryParse(id ?? '');
+                        PerformanceGovernanceSystem audit = getPgsAuditDetails(
+                          id: pgsId ?? 0,
+                          pgsStatus: "Review",
+                        );
+                        await savePGS(audit);
+
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text(
+                      'Review',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+
+                  //Approve BUTTON
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purpleAccent,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () async {
+                      bool? confirm = await showDialog(
+                        context: context,
+                        builder:
+                            (_) => AlertDialog(
+                              title: Text("Confirm Submit"),
+                              content: Text(
+                                "Are you sure you want to submit this record? You won’t be able to make any changes.",
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.pop(context, false),
+                                  child: Text("No"),
+                                ),
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: Text("Yes"),
+                                ),
+                              ],
+                            ),
+                      );
+
+                      if (confirm == true) {
+                        int? pgsId = int.tryParse(id ?? '');
+                        PerformanceGovernanceSystem audit = getPgsAuditDetails(
+                          id: pgsId ?? 0,
+                          pgsStatus: "Approve",
+                        );
+                        await savePGS(audit);
+
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Text(
+                      'Approve',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
                 ],
               ],
             );
@@ -2683,7 +2822,7 @@ class _PerformanceGovernanceSystemPageState
     if (selectedByWhen[index] == null ||
         selectedByWhenControllers[index]?.text.isEmpty == true) {
       DateTime now = DateTime.now();
-      String defaultDate = DateFormat('yyyy-MM-dd').format(now); // ISO format
+      String defaultDate = DateFormat('yyyy-MM-dd').format(now);
       selectedByWhen[index] = defaultDate;
       selectedByWhenControllers[index]?.text = DateFormat(
         'MMMM yyyy',

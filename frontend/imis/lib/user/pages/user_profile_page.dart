@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/user/models/user_registration.dart';
@@ -5,6 +7,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 
 import '../../utils/http_util.dart';
 
@@ -203,6 +206,8 @@ class _UserProfileState extends State<UserProfilePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -543,7 +548,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: userNameController,
                     decoration: InputDecoration(
                       labelText: 'User Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -560,7 +570,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: emailController,
                     decoration: InputDecoration(
                       labelText: 'Email',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -578,7 +593,12 @@ class _UserProfileState extends State<UserProfilePage> {
                       controller: passwordController,
                       decoration: InputDecoration(
                         labelText: 'Password',
+                        focusColor: primaryColor,
+                        floatingLabelStyle: TextStyle(color: primaryColor),
                         border: OutlineInputBorder(),
+                        focusedBorder: const OutlineInputBorder(
+                          borderSide: BorderSide(color: primaryColor),
+                        ),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
@@ -625,8 +645,14 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: firstNameController,
                     decoration: InputDecoration(
                       labelText: 'First Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
+
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please fill out this field';
@@ -642,7 +668,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: middleNameController,
                     decoration: InputDecoration(
                       labelText: 'Middle Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -659,7 +690,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: lastNameController,
                     decoration: InputDecoration(
                       labelText: 'Last Name',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -677,7 +713,12 @@ class _UserProfileState extends State<UserProfilePage> {
                     controller: suffixController,
                     decoration: InputDecoration(
                       labelText: 'Suffix',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                   ),
                 ),
@@ -1107,7 +1148,7 @@ class _UserProfileState extends State<UserProfilePage> {
                           isLoading: _isLoading,
                           onPageChanged: (page) => fetchUserProfile(page: page),
                         ),
-                        Container(width: 60), // For alignment
+                        Container(width: 60),
                       ],
                     ),
                   ),

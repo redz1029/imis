@@ -7,6 +7,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 
 import '../../../utils/http_util.dart';
 
@@ -160,6 +161,7 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override

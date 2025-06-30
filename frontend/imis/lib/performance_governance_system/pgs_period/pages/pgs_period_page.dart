@@ -6,6 +6,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 
 import '../../../utils/http_util.dart';
 
@@ -47,6 +48,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   //fetch PGS PERIOD list
@@ -491,7 +493,6 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                   ),
                 ),
 
-                // Show 'Add New' button on the right
                 if (!isMinimized)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -728,7 +729,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                     isLoading: _isLoading,
                     onPageChanged: (page) => fetchPGSPeriods(page: page),
                   ),
-                  Container(width: 60), // For alignment
+                  Container(width: 60),
                 ],
               ),
             ),
@@ -736,7 +737,6 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
         ),
       ),
 
-      // Show FloatingActionButton only when minimized
       floatingActionButton:
           isMinimized
               ? FloatingActionButton(

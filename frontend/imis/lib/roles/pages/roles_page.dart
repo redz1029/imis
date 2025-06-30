@@ -5,6 +5,7 @@ import 'package:imis/roles/models/roles.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 
 import '../../utils/http_util.dart';
 
@@ -132,6 +133,7 @@ class _RolesPageState extends State<RolesPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -263,7 +265,7 @@ class _RolesPageState extends State<RolesPage> {
                         await updateRole(id, roleName);
                       }
                       // ignore: use_build_context_synchronously
-                      Navigator.pop(context); // Close dialog
+                      Navigator.pop(context);
                     }
                   }
                 }

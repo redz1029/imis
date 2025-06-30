@@ -159,15 +159,12 @@ class AuthUtil {
     if (loggedUser != null) {
       final accessToken = await fetchAccessToken();
       final refreshToken = await fetchRefreshToken();
-      debugPrint('Access token: $accessToken');
-      debugPrint('Refresh token: $refreshToken');
 
       final isAccessTokenExpired =
           accessToken == null || JwtDecoder.isExpired(accessToken);
       final isRefreshTokenExpired =
           refreshToken == null || JwtDecoder.isExpired(refreshToken);
-      debugPrint('Is access token expired? $isAccessTokenExpired');
-      debugPrint('Is refresh token expired? $isRefreshTokenExpired');
+
       if (!isAccessTokenExpired) return loggedUser;
 
       if (isRefreshTokenExpired) {

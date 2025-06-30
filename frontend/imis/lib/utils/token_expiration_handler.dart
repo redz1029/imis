@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:imis/constant/constant.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:jwt_decoder/jwt_decoder.dart';
@@ -13,29 +14,67 @@ class TokenExpirationHandler {
     if (!isLoggedIn) return;
 
     final String? accessToken = await AuthUtil.fetchAccessToken();
-    if (accessToken == null || accessToken.isEmpty) return;
+    final String? refreshToken = await AuthUtil.fetchRefreshToken();
 
-    if (JwtDecoder.isExpired(accessToken)) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(_buildExpiredTokenSnackBar());
+    if (accessToken == null ||
+        accessToken.isEmpty ||
+        refreshToken == null ||
+        refreshToken.isEmpty) {
+      _handleTokenInvalid();
+      return;
+    }
 
-        Future.delayed(const Duration(seconds: 3), () {
-          if (context.mounted) {
-            _navigateToLogin();
-          }
-        });
-      }
+    final bool isAccessTokenExpired = JwtDecoder.isExpired(accessToken);
+    final bool isRefreshTokenExpired = JwtDecoder.isExpired(refreshToken);
+
+    if (isRefreshTokenExpired) {
+      _showTokenDialog(
+        title: "Session Expired",
+        message: "Your refresh token has expired. Please login again.",
+      );
+    } else if (isAccessTokenExpired) {
+      _showTokenDialog(
+        title: "Session Expired",
+        message: "Your session has expired. Redirecting to login...",
+      );
     }
   }
 
-  SnackBar _buildExpiredTokenSnackBar() {
-    return const SnackBar(
-      content: Text('Your session has expired. Redirecting to login...'),
-      backgroundColor: Colors.red,
-      behavior: SnackBarBehavior.floating,
-      duration: Duration(seconds: 3),
+  Future<void> _handleTokenInvalid() async {
+    _showTokenDialog(
+      title: "Invalid Token",
+      message: "Your token is invalid. Redirecting to login...",
+    );
+  }
+
+  void _showTokenDialog({required String title, required String message}) {
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        // ignore: deprecated_member_use
+        return WillPopScope(
+          onWillPop: () async => false,
+          child: AlertDialog(
+            title: Text(title),
+            content: Text(message),
+            actions: [
+              TextButton(
+                child: const Text(
+                  "Okay",
+                  style: TextStyle(color: primaryColor),
+                ),
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+                  await _navigateToLogin();
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

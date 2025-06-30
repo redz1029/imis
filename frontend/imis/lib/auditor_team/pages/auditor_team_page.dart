@@ -7,6 +7,7 @@ import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuditorTeamPage extends StatefulWidget {
@@ -147,9 +148,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         fetchAuditorTeam();
       } else {
-        debugPrint(
-          "Failed to add/update office. Status code: ${response.statusCode}",
-        );
+        debugPrint("Failed to add/update office");
       }
     } catch (e) {
       debugPrint("Error adding/updating office: $e");
@@ -178,6 +177,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     fetchTeam();
     fetchAuditors();
     fetchAuditorTeam();
+    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -477,7 +477,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
               .where(
                 (auditorTeam) => auditorTeam['name']!.toLowerCase().contains(
                   query.toLowerCase(),
-                ), // Filter based on the query
+                ),
               )
               .toList();
     });
