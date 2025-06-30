@@ -730,7 +730,7 @@ class _OfficePageState extends State<OfficePage> {
                     isLoading: _isLoading,
                     onPageChanged: (page) => fetchOffices(page: page),
                   ),
-                  Container(width: 60), // For alignment
+                  Container(width: 60),
                 ],
               ),
             ),

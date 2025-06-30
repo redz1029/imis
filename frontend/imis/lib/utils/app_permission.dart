@@ -210,52 +210,12 @@ class RolePermissions {
     'Standard User': [AppPermission.viewPerformanceGovernanceSystem],
 
     'Pgs Manager': [
-      AppPermission.viewTeam,
-      AppPermission.editTeam,
+      // PGS
+      AppPermission.addPerformanceGovernanceSystem,
+      AppPermission.viewPerformanceGovernanceSystem,
+      AppPermission.editPerformanceGovernanceSystem,
 
-      // KRA
-      AppPermission.addKra,
-      AppPermission.viewKra,
-      AppPermission.editKra,
-
-      // Period
-      AppPermission.addPeriod,
-      AppPermission.viewPeriod,
-      AppPermission.editPeriod,
-
-      // Deliverable Monitor
       AppPermission.viewPgsDeliverableMonitor,
-      AppPermission.scorePgsDeliverableMonitor,
-
-      // Deliverable Score History
-      AppPermission.viewPgsDeliverableScoreHistory,
-      AppPermission.scorePgsDeliverableScoreHistory,
-
-      // Signatory Template
-      AppPermission.addPgsSignatoryTemplate,
-      AppPermission.viewPgsSignatoryTemplate,
-      AppPermission.editPgsSignatoryTemplate,
-
-      // Office
-      AppPermission.addOffice,
-      AppPermission.viewOffice,
-      AppPermission.editOffice,
-
-      // User Office
-      AppPermission.addUserOffice,
-      AppPermission.viewUserOffice,
-      AppPermission.editUserOffice,
-
-      // Audit
-      AppPermission.addAuditSchedule,
-      AppPermission.viewAuditSchedule,
-      AppPermission.editAuditSchedule,
-      AppPermission.addAuditorTeam,
-      AppPermission.viewAuditorTeam,
-      AppPermission.editAuditorTeam,
-      AppPermission.addAuditor,
-      AppPermission.viewAuditor,
-      AppPermission.editAuditor,
     ],
   };
 

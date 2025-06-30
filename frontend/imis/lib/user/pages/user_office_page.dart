@@ -82,7 +82,6 @@ class _UserOfficePageState extends State<UserOfficePage> {
 
     try {
       var response = await AuthenticatedRequest.get(dio, url);
-      debugPrint(" Raw Office response: ${response.data}");
 
       if (response.statusCode == 200 && response.data is List) {
         List<Office> data =
@@ -92,7 +91,6 @@ class _UserOfficePageState extends State<UserOfficePage> {
           officenameList = data;
         });
 
-        debugPrint("Office list loaded: ${data.length}");
         printUserOfficeWithOfficeName();
       }
     } catch (e) {
@@ -105,7 +103,6 @@ class _UserOfficePageState extends State<UserOfficePage> {
 
     try {
       var response = await AuthenticatedRequest.get(dio, url);
-      debugPrint("Raw User response: ${response.data}");
 
       if (response.statusCode == 200 && response.data is List) {
         List<User> data =
@@ -115,7 +112,6 @@ class _UserOfficePageState extends State<UserOfficePage> {
           userList = data;
         });
 
-        debugPrint("User list loaded: ${data.length}");
         printUserNameWithUserName();
       }
     } catch (e) {
@@ -125,13 +121,9 @@ class _UserOfficePageState extends State<UserOfficePage> {
 
   void printUserNameWithUserName() {
     for (var userOffice in userOfficeList) {
-      final userName = userList.firstWhere(
+      userList.firstWhere(
         (user) => user.id == userOffice.userId,
         orElse: () => User(id: '', fullName: 'Unknown', position: 'position'),
-      );
-
-      debugPrint(
-        " userId: ${userOffice.userId}, officeId: ${userOffice.officeId}, fullName: ${userName.fullName}",
       );
     }
   }
@@ -202,12 +194,10 @@ class _UserOfficePageState extends State<UserOfficePage> {
             if (_selectedOfficeId == null && filteredListOffice.isNotEmpty) {
               _selectedOfficeId = filteredListOffice[0]['id'].toString();
             }
-
-            debugPrint("Auto-selected office: $_selectedOfficeId");
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.response?.data ?? e.message}");
@@ -233,7 +223,6 @@ class _UserOfficePageState extends State<UserOfficePage> {
 
             if (filteredListUser.isNotEmpty) {
               _selectedUserId = filteredListUser[0].id;
-              debugPrint("Auto-selected user: $_selectedUserId");
             }
           });
         }
@@ -758,8 +747,6 @@ class _UserOfficePageState extends State<UserOfficePage> {
                       ),
                     ),
                   ),
-
-                  // Pagination Section
                   Container(
                     padding: EdgeInsets.all(10),
                     color: secondaryColor,
@@ -778,7 +765,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
                           isLoading: _isLoading,
                           onPageChanged: (page) => fetchUserOffice(page: page),
                         ),
-                        Container(width: 60), // For alignment
+                        Container(width: 60),
                       ],
                     ),
                   ),

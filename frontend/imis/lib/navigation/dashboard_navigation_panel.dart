@@ -96,7 +96,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
       final permissions = RolePermissions.getPermissionsForRoles(
         roleList ?? [],
       );
-      debugPrint('Calculated permissions: $permissions');
+
       PermissionService().loadPermissions(permissions);
       setState(() {
         firstName = user.firstName ?? "firstName";

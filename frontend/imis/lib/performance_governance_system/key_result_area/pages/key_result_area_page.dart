@@ -559,7 +559,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                     isLoading: _isLoading,
                     onPageChanged: (page) => fetchKRAs(page: page),
                   ),
-                  Container(width: 60), // For alignment
+                  Container(width: 60),
                 ],
               ),
             ),

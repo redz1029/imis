@@ -3,8 +3,6 @@ import 'package:imis/user/pages/login_page.dart';
 
 import 'package:imis/utils/api_endpoint.dart';
 
-final GlobalKey<ScaffoldMessengerState> snackbarKey =
-    GlobalKey<ScaffoldMessengerState>();
 void main() async {
   await ApiEndpoint.setBaseUrl();
   runApp(const MainApp());
@@ -15,10 +13,6 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      scaffoldMessengerKey: snackbarKey,
-      debugShowCheckedModeBanner: false,
-      home: LoginPage(),
-    );
+    return MaterialApp(debugShowCheckedModeBanner: false, home: LoginPage());
   }
 }

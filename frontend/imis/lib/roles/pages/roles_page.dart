@@ -265,7 +265,7 @@ class _RolesPageState extends State<RolesPage> {
                         await updateRole(id, roleName);
                       }
                       // ignore: use_build_context_synchronously
-                      Navigator.pop(context); // Close dialog
+                      Navigator.pop(context);
                     }
                   }
                 }

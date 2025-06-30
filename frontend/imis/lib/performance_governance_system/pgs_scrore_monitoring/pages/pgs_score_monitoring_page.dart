@@ -7,10 +7,12 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
 import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
+import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../utils/http_util.dart';
@@ -214,7 +216,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
     try {
       var response = await AuthenticatedRequest.get(dio, url);
-      debugPrint("Raw User response: ${response.data}");
 
       if (response.statusCode == 200 && response.data is List) {
         List<PgsDeliverableHistoryGrouped> data =
@@ -226,7 +227,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
           deliverableHistoryGrouped = data;
         });
 
-        debugPrint("deliverable list loaded: ${data.length}");
+        debugPrint("deliverable list loaded");
       }
     } catch (e) {
       debugPrint("fetchdeliverableList Error: $e");
@@ -318,8 +319,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
             data.map<Map<String, dynamic>>((item) {
               return {'id': item['id'] as int, 'name': item['name'].toString()};
             }).toList();
-
-        debugPrint("Fetched Data: $kraListOptions");
       } else {
         debugPrint("Failed to load data: ${response.statusCode}");
       }
@@ -1067,61 +1066,64 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 ),
               ),
 
-              Padding(
-                padding: const EdgeInsets.all(32.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () async {
-                        bool? confirmAction = await showDialog<bool>(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: Text("Confirm Save"),
-                              content: Text(
-                                "Are you sure you want to save this record?",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed:
-                                      () => Navigator.pop(context, false),
-                                  child: Text(
-                                    "No",
-                                    style: TextStyle(color: primaryColor),
-                                  ),
+              PermissionWidget(
+                permission: AppPermission.scorePgsDeliverableMonitor,
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () async {
+                          bool? confirmAction = await showDialog<bool>(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text("Confirm Save"),
+                                content: Text(
+                                  "Are you sure you want to save this record?",
                                 ),
-                                TextButton(
-                                  onPressed: () {
-                                    {
-                                      Navigator.pop(context, true);
-                                    }
-                                  },
-                                  child: Text(
-                                    "Yes",
-                                    style: TextStyle(color: primaryColor),
+                                actions: [
+                                  TextButton(
+                                    onPressed:
+                                        () => Navigator.pop(context, false),
+                                    child: Text(
+                                      "No",
+                                      style: TextStyle(color: primaryColor),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            );
-                          },
-                        );
-                        if (confirmAction == true) {
-                          await saveData();
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                                  TextButton(
+                                    onPressed: () {
+                                      {
+                                        Navigator.pop(context, true);
+                                      }
+                                    },
+                                    child: Text(
+                                      "Yes",
+                                      style: TextStyle(color: primaryColor),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                          if (confirmAction == true) {
+                            await saveData();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        child: Text(
+                          'Save',
+                          style: TextStyle(color: Colors.white),
                         ),
                       ),
-                      child: Text(
-                        'Save',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],

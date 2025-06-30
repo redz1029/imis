@@ -148,9 +148,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         fetchAuditorTeam();
       } else {
-        debugPrint(
-          "Failed to add/update office. Status code: ${response.statusCode}",
-        );
+        debugPrint("Failed to add/update office");
       }
     } catch (e) {
       debugPrint("Error adding/updating office: $e");
@@ -479,7 +477,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
               .where(
                 (auditorTeam) => auditorTeam['name']!.toLowerCase().contains(
                   query.toLowerCase(),
-                ), // Filter based on the query
+                ),
               )
               .toList();
     });

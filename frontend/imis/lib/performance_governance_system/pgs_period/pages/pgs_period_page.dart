@@ -493,7 +493,6 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                   ),
                 ),
 
-                // Show 'Add New' button on the right
                 if (!isMinimized)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -730,7 +729,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                     isLoading: _isLoading,
                     onPageChanged: (page) => fetchPGSPeriods(page: page),
                   ),
-                  Container(width: 60), // For alignment
+                  Container(width: 60),
                 ],
               ),
             ),
@@ -738,7 +737,6 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
         ),
       ),
 
-      // Show FloatingActionButton only when minimized
       floatingActionButton:
           isMinimized
               ? FloatingActionButton(
