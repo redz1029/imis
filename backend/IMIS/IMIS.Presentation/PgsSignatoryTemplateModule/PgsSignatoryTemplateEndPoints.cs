@@ -21,13 +21,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            //app.MapPost("/", async ([FromBody] PgsSignatoryTemplateDto pgsSignatoryTemplateDto, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            //{
-            //    var createdUserOffice = await service.SaveOrUpdateAsync(pgsSignatoryTemplateDto, cancellationToken).ConfigureAwait(false);
-            //    await cache.EvictByTagAsync(_PgsSignatoryTemplate, cancellationToken);
-            //    return Results.Ok("Record has been successfully saved.");
-            //})
-
+           
             app.MapPost("/", async ([FromBody] List<PgsSignatoryTemplateDto> pgsSignatoryTemplateDtos, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var result = await service.SaveOrUpdateAsync(pgsSignatoryTemplateDtos, cancellationToken).ConfigureAwait(false);
@@ -58,21 +52,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
-
-            // app.MapPut("/{id}", async (int id, [FromBody] PgsSignatoryTemplateDto pgsSignatoryTemplateDto, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            // {
-            //     var existingpgsSignatoryTemplate = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            //     if (existingpgsSignatoryTemplate == null)
-            //     {
-            //         return Results.NotFound($"Team with ID {id} not found.");
-            //     }
-            //     var updatedSignatoryTemplate = await service.SaveOrUpdateAsync(pgsSignatoryTemplateDto, cancellationToken).ConfigureAwait(false);
-            //     await cache.EvictByTagAsync(_PgsSignatoryTemplate, cancellationToken);
-            //     return Results.Ok(updatedSignatoryTemplate);
-            // })
-            //.WithTags(_PgsSignatoryTemplate)
-            //.RequireAuthorization(e => e.RequireClaim(
-            // PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Edit));
+           
 
             app.MapPut("/", async ([FromBody] List<PgsSignatoryTemplateDto> pgsSignatoryTemplateDtos, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -81,17 +61,16 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                     return Results.BadRequest("No data provided for update.");
                 }
 
-                // Optional: validate that all exist (you can skip this if unnecessary)
-                // var existing = await service.GetByIdsAsync(pgsSignatoryTemplateDtos.Select(x => x.Id).ToList(), cancellationToken);
+               
 
                 var updatedTemplates = await service.SaveOrUpdateAsync(pgsSignatoryTemplateDtos, cancellationToken).ConfigureAwait(false);
 
                 await cache.EvictByTagAsync(_PgsSignatoryTemplate, cancellationToken);
                 return Results.Ok(updatedTemplates);
             })
-.WithTags(_PgsSignatoryTemplate)
-.RequireAuthorization(e => e.RequireClaim(
-    PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Edit));
+            .WithTags(_PgsSignatoryTemplate)
+            .RequireAuthorization(e => e.RequireClaim(
+                PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Edit));
 
             ;
             app.MapGet("/page", async (int page, int pageSize, IPgsSignatoryTemplateService service, CancellationToken cancellationToken) =>
