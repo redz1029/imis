@@ -23,7 +23,7 @@ class PgsSignatoryTemplateNewPage extends StatefulWidget {
 
 class _PgsSignatoryTemplateNewPageState
     extends State<PgsSignatoryTemplateNewPage> {
-  List<Map<String, dynamic>> auditorTeamList = [];
+  List<Map<String, dynamic>> signatoryTemplateList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
@@ -61,20 +61,22 @@ class _PgsSignatoryTemplateNewPageState
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils.fetchPaginatedData<AuditorTeam>(
-        endpoint: ApiEndpoint().signatoryTemplate,
-        page: page,
-        pageSize: _pageSize,
-        searchQuery: searchQuery,
-        fromJson: (json) => AuditorTeam.fromJson(json),
-      );
+      final pageList = await _paginationUtils
+          .fetchPaginatedData<PgsSignatoryTemplate>(
+            endpoint: ApiEndpoint().signatoryTemplate,
+            page: page,
+            pageSize: _pageSize,
+            searchQuery: searchQuery,
+            fromJson: (json) => PgsSignatoryTemplate.fromJson(json),
+          );
 
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          auditorTeamList = pageList.items.map((a) => a.toJson()).toList();
-          filteredListSignatoryTemplate = List.from(auditorTeamList);
+          signatoryTemplateList =
+              pageList.items.map((a) => a.toJson()).toList();
+          filteredListSignatoryTemplate = List.from(signatoryTemplateList);
         });
       }
     } catch (e) {
@@ -232,7 +234,11 @@ class _PgsSignatoryTemplateNewPageState
     super.dispose();
   }
 
-  void showFormDialog({String? id, bool isDeleted = false}) {
+  void showFormDialog({
+    String? id,
+    bool isDeleted = false,
+    String? defaultSignatoryId,
+  }) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -288,12 +294,6 @@ class _PgsSignatoryTemplateNewPageState
                                 },
                               ),
                             ),
-                            // if (selectOffice != null)
-                            //   Positioned.fill(
-                            //     child: AbsorbPointer(
-                            //       child: Container(color: Colors.transparent),
-                            //     ),
-                            //   ),
                           ],
                         ),
                       ),
@@ -308,7 +308,7 @@ class _PgsSignatoryTemplateNewPageState
                       if (selectedSignatory.isNotEmpty)
                         Column(
                           children: [
-                            gap3,
+                            gap,
                             ListView.builder(
                               shrinkWrap: true,
                               physics: NeverScrollableScrollPhysics(),
@@ -318,9 +318,14 @@ class _PgsSignatoryTemplateNewPageState
                                 return ListTile(
                                   title: Text(
                                     "${signatory['label']} : ",
-                                    style: TextStyle(fontSize: 12),
+                                    style: TextStyle(fontSize: 14),
                                   ),
-                                  subtitle: Text(signatory['name']),
+                                  subtitle: Text(
+                                    signatory['name'],
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                   trailing: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
@@ -713,7 +718,7 @@ class _PgsSignatoryTemplateNewPageState
   void filterSearchResults(String query) {
     setState(() {
       filteredList =
-          auditorTeamList
+          signatoryTemplateList
               .where(
                 (auditorTeam) => auditorTeam['name']!.toLowerCase().contains(
                   query.toLowerCase(),
@@ -723,28 +728,33 @@ class _PgsSignatoryTemplateNewPageState
     });
   }
 
-  String getTeamNameById(int id, List<Map<String, dynamic>> teamList) {
-    final team = teamList.firstWhere(
-      (team) => team['id'] == id,
-      orElse: () => {'name': 'Unknown Team'},
-    );
-    return team['name'] ?? 'Unknown Team';
+  Map<int, List<Map<String, dynamic>>> groupByOfficeId(
+    List<Map<String, dynamic>> list,
+  ) {
+    Map<int, List<Map<String, dynamic>>> grouped = {};
+
+    for (var item in list) {
+      int? officeId = item['officeId'];
+      if (officeId == null) continue;
+
+      if (!grouped.containsKey(officeId)) {
+        grouped[officeId] = [];
+      }
+      grouped[officeId]!.add(item);
+    }
+
+    return grouped;
   }
 
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
-
-    // ignore: unused_local_variable
-    final uniqueTeams =
-        {
-          for (var item in filteredListSignatoryTemplate) item['teamId']: item,
-        }.values.toList();
+    final groupedData = groupByOfficeId(filteredListSignatoryTemplate);
 
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: Text('Signatory Template Information'),
+        title: Text('Signatoy Template Information'),
         backgroundColor: mainBgColor,
       ),
       body: Padding(
@@ -769,7 +779,7 @@ class _PgsSignatoryTemplateNewPageState
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Office',
+                      labelText: 'Search Signatory',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -788,6 +798,7 @@ class _PgsSignatoryTemplateNewPageState
                     onChanged: filterSearchResults,
                   ),
                 ),
+
                 if (!isMinimized)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -809,6 +820,64 @@ class _PgsSignatoryTemplateNewPageState
               ],
             ),
             gap,
+            Expanded(
+              child: ListView(
+                children:
+                    groupedData.entries.map((entry) {
+                      final officeId = entry.key;
+                      final signatories = entry.value;
+
+                      return Card(
+                        color: secondaryColor,
+                        elevation: 0,
+                        margin: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Theme(
+                          data: Theme.of(
+                            context,
+                          ).copyWith(dividerColor: Colors.transparent),
+                          child: ExpansionTile(
+                            collapsedBackgroundColor: secondaryColor,
+                            backgroundColor: secondaryBgButton,
+                            tilePadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                            ),
+                            childrenPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                            ),
+                            title: Text(
+                              'Office ID: $officeId',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                            trailing: const Icon(
+                              Icons.expand_more,
+                              color: Colors.black,
+                            ),
+                            children:
+                                signatories.map((signatory) {
+                                  return ListTile(
+                                    title: Text(
+                                      signatory['signatoryLabel'] ?? 'No Label',
+                                    ),
+                                    subtitle: Text(
+                                      'ID: ${signatory['defaultSignatoryId'] ?? 'No ID'}',
+                                    ),
+                                  );
+                                }).toList(),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+              ),
+            ),
 
             Container(
               padding: EdgeInsets.all(10),
