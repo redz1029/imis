@@ -17,6 +17,7 @@ PgsSignatoryTemplate _$PgsSignatoryTemplateFromJson(
   status: json['status'] as String?,
   rowVersion: json['rowVersion'] as String?,
   signatoryLabel: json['signatoryLabel'] as String?,
+  officeId: (json['officeId'] as num?)?.toInt(),
 );
 
 Map<String, dynamic> _$PgsSignatoryTemplateToJson(
@@ -30,4 +31,5 @@ Map<String, dynamic> _$PgsSignatoryTemplateToJson(
   'isActive': instance.isActive,
   'rowVersion': instance.rowVersion,
   'signatoryLabel': instance.signatoryLabel,
+  'officeId': instance.officeId,
 };

@@ -11,6 +11,7 @@ class PgsSignatoryTemplate {
   bool isActive;
   String? rowVersion;
   String? signatoryLabel;
+  int? officeId;
 
   PgsSignatoryTemplate(
     this.id,
@@ -21,6 +22,7 @@ class PgsSignatoryTemplate {
     required this.status,
     this.rowVersion,
     required this.signatoryLabel,
+    required this.officeId,
   });
 
   factory PgsSignatoryTemplate.fromJson(Map<String, dynamic> json) =>
