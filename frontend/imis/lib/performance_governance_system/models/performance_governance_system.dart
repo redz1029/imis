@@ -21,7 +21,7 @@ class PerformanceGovernanceSystem {
   final String? remarks;
 
   @JsonKey()
-  List<PgsDeliverables> pgsDeliverables;
+  List<PgsDeliverables>? pgsDeliverables;
 
   @JsonKey()
   final PgsReadiness pgsReadinessRating;
@@ -33,6 +33,7 @@ class PerformanceGovernanceSystem {
   final String? rowVersion;
   final double percentDeliverables;
   final String? pgsStatus;
+  final bool forSignature;
 
   PerformanceGovernanceSystem({
     required this.id,
@@ -46,6 +47,7 @@ class PerformanceGovernanceSystem {
     this.rowVersion,
     required this.percentDeliverables,
     required this.pgsStatus,
+    required this.forSignature,
   });
 
   factory PerformanceGovernanceSystem.fromJson(Map<String, dynamic> json) =>

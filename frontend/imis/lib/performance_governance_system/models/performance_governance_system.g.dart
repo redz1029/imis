@@ -13,8 +13,8 @@ PerformanceGovernanceSystem _$PerformanceGovernanceSystemFromJson(
   office: Office.fromJson(json['office'] as Map<String, dynamic>),
   pgsPeriod: PgsPeriod.fromJson(json['pgsPeriod'] as Map<String, dynamic>),
   pgsDeliverables:
-      (json['pgsDeliverables'] as List<dynamic>)
-          .map((e) => PgsDeliverables.fromJson(e as Map<String, dynamic>))
+      (json['pgsDeliverables'] as List<dynamic>?)
+          ?.map((e) => PgsDeliverables.fromJson(e as Map<String, dynamic>))
           .toList(),
   pgsReadinessRating: PgsReadiness.fromJson(
     json['pgsReadinessRating'] as Map<String, dynamic>,
@@ -28,6 +28,7 @@ PerformanceGovernanceSystem _$PerformanceGovernanceSystemFromJson(
   rowVersion: json['rowVersion'] as String?,
   percentDeliverables: (json['percentDeliverables'] as num).toDouble(),
   pgsStatus: json['pgsStatus'] as String?,
+  forSignature: json['forSignature'] as bool,
 );
 
 Map<String, dynamic> _$PerformanceGovernanceSystemToJson(
@@ -44,4 +45,5 @@ Map<String, dynamic> _$PerformanceGovernanceSystemToJson(
   'rowVersion': instance.rowVersion,
   'percentDeliverables': instance.percentDeliverables,
   'pgsStatus': instance.pgsStatus,
+  'forSignature': instance.forSignature,
 };

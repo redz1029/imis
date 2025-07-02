@@ -81,16 +81,6 @@ class _PerformanceGovernanceSystemPageState
   List<int> rows = [];
   int rowIndex = 1;
 
-  String? _submittedByUserId;
-  String? _notedByUserId;
-  String? _approvedByUserId;
-  String? _reviewedByUserId;
-
-  int? submittedRecordId = 0;
-  int? notedRecordId = 0;
-  int? aprroveRecordId = 0;
-  int? reviewedRecordId = 0;
-
   String officeDisplay = "";
   String officeIdList = "";
   String? selectedOffice = "";
@@ -163,7 +153,7 @@ class _PerformanceGovernanceSystemPageState
 
     if (mounted) {
       setState(() {
-        _submittedByUserId = userId;
+        // _submittedByUserId = userId;
       });
     }
   }
@@ -314,9 +304,9 @@ class _PerformanceGovernanceSystemPageState
             filteredListUser = List.from(userList);
 
             if (filteredListUser.isNotEmpty) {
-              _submittedByUserId = filteredListUser[0].id;
-              _approvedByUserId = filteredListUser[0].id;
-              _notedByUserId = filteredListUser[0].id;
+              // _submittedByUserId = filteredListUser[0].id;
+              // _approvedByUserId = filteredListUser[0].id;
+              // _notedByUserId = filteredListUser[0].id;
             }
           });
         }
@@ -349,14 +339,61 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
-  Widget _buildSignatoryColumn({
+  String getPositionFromSignatoryId(String? signatoryTemplateId) {
+    if (signatoryTemplateId == null) return 'Unknown';
+
+    try {
+      final signatory = signatoryList.firstWhere(
+        (s) => s['id'].toString() == signatoryTemplateId.toString(),
+        orElse: () => <String, dynamic>{},
+      );
+      if (signatory.isEmpty || signatory['defaultSignatoryId'] == null) {
+        return 'Unknown';
+      }
+      final userId = signatory['defaultSignatoryId'].toString();
+      final user = userList.firstWhere(
+        (u) => u.id.toString() == userId,
+        orElse: () => User(id: '', fullName: 'Unknown', position: 'Unknown'),
+      );
+
+      return user.position;
+    } catch (e) {
+      return 'Unknown';
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _getFilteredSignatories() async {
+    final prefs = await SharedPreferences.getInstance();
+    final selectedOfficeId = prefs.getString('selectedOfficeId');
+
+    return signatoryList.where((signatory) {
+      return selectedOfficeId == null ||
+          signatory['officeId']?.toString() == selectedOfficeId;
+    }).toList();
+  }
+
+  Future<Widget> _buildSignatoryColumn({
     required String title,
     required String? currentValue,
     required ValueChanged<String?> onChanged,
     required VoidCallback onDeleted,
-  }) {
-    final bool isSubmittedField = title.contains(
-      getSignatoryTitleByOrderLevel(1) ?? '',
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    final selectedOfficeId = prefs.getString('selectedOfficeId');
+
+    final filteredSignatoryList =
+        signatoryList.where((signatory) {
+          final signatoryOfficeId = signatory['officeId']?.toString();
+          final shouldInclude =
+              selectedOfficeId == null || signatoryOfficeId == selectedOfficeId;
+
+          return shouldInclude;
+        }).toList();
+
+    final sortedSignatoryList = List<Map<String, dynamic>>.from(
+      filteredSignatoryList,
+    )..sort(
+      (a, b) => (a['orderLevel'] as int).compareTo(b['orderLevel'] as int),
     );
 
     return Center(
@@ -364,63 +401,47 @@ class _PerformanceGovernanceSystemPageState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(title, style: const TextStyle(fontSize: 12)),
-          gap6,
+          const SizedBox(height: 6),
           Container(width: 200, height: 1.8, color: Colors.grey),
-          gap,
-          currentValue == null
-              ? DropdownButton<String>(
-                hint: const Text('Select name'),
-                value: currentValue,
-                items:
-                    userList.map((user) {
-                      return DropdownMenuItem<String>(
-                        value: user.id,
-                        child: Text(user.fullName),
-                      );
-                    }).toList(),
-                onChanged: (value) {
-                  onChanged(value);
-                },
-              )
-              : Row(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        (userList.any((user) => user.id == currentValue)
-                                ? userList
-                                    .firstWhere(
-                                      (user) => user.id == currentValue,
-                                    )
-                                    .fullName
-                                : getFullNameFromSignatoryId(currentValue))
-                            .toUpperCase(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        (userList.any((user) => user.id == currentValue)
-                            ? userList
-                                .firstWhere((user) => user.id == currentValue)
-                                .position
-                            : getFullNameFromSignatoryId(currentValue)),
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  // IconButton(
-                  //   icon: const Icon(Icons.close),
-                  //   onPressed: onDeleted,
-                  // ),
-                  if (!isSubmittedField)
-                    IconButton(
-                      icon: const Icon(Icons.close),
-                      onPressed: onDeleted,
+          const SizedBox(height: 8),
+          if (currentValue != null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                if (sortedSignatoryList.any(
+                  (signatory) => signatory['id'].toString() == currentValue,
+                ))
+                  Text(
+                    sortedSignatoryList.firstWhere(
+                          (signatory) =>
+                              signatory['id'].toString() == currentValue,
+                        )['signatoryLabel'] ??
+                        '',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontStyle: FontStyle.italic,
                     ),
-                ],
-              ),
+                  ),
+                const SizedBox(height: 4),
+                Text(
+                  (userList.any((user) => user.id == currentValue)
+                          ? userList
+                              .firstWhere((user) => user.id == currentValue)
+                              .fullName
+                          : getFullNameFromSignatoryId(currentValue))
+                      .toUpperCase(),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  userList.any((user) => user.id == currentValue)
+                      ? userList
+                          .firstWhere((user) => user.id == currentValue)
+                          .position
+                      : getPositionFromSignatoryId(currentValue),
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -791,6 +812,20 @@ class _PerformanceGovernanceSystemPageState
       debugPrint("Error parsing percentDeliverables: $e");
     }
 
+    final filteredSignatoryList =
+        signatoryList.where((signatory) {
+          final signatoryOfficeId = signatory['officeId']?.toString();
+          final shouldInclude =
+              selectedOffice == null || signatoryOfficeId == selectedOffice;
+          return shouldInclude;
+        }).toList();
+
+    final sortedSignatoryList = List<Map<String, dynamic>>.from(
+      filteredSignatoryList,
+    )..sort(
+      (a, b) => (a['orderLevel'] as int).compareTo(b['orderLevel'] as int),
+    );
+
     return PerformanceGovernanceSystem(
       id: id,
       pgsStatus: pgsStatus,
@@ -820,11 +855,15 @@ class _PerformanceGovernanceSystemPageState
         confidenceScore.value,
         totalScore,
       ),
-      pgsSignatories: _getPgsSignatory(id),
+      pgsSignatories:
+          existingSignatories.isNotEmpty
+              ? existingSignatories
+              : _getPgsSignatory(id, sortedSignatoryList),
       isDeleted: false,
       remarks: "",
       rowVersion: "",
       percentDeliverables: percentDeliverables,
+      forSignature: false,
     );
   }
 
@@ -896,46 +935,21 @@ class _PerformanceGovernanceSystemPageState
     return updatedDeliverables;
   }
 
-  List<PgsSignatory> _getPgsSignatory(int pgsId) {
-    return [
-      PgsSignatory(
+  List<PgsSignatory> _getPgsSignatory(
+    int pgsId,
+    List<Map<String, dynamic>> sortedSignatoryList,
+  ) {
+    return sortedSignatoryList.map((signatory) {
+      return PgsSignatory(
         DateTime.now(),
         false,
         "",
-        id: submittedRecordId ?? 0,
+        id: 0,
         pgsId: pgsId,
-        pgsSignatoryTemplateId: 1,
-        signatoryId: _submittedByUserId?.toString() ?? '',
-      ),
-      PgsSignatory(
-        DateTime.now(),
-        false,
-        "",
-        id: notedRecordId ?? 0,
-        pgsId: pgsId,
-        pgsSignatoryTemplateId: 2,
-        signatoryId: _notedByUserId?.toString() ?? '',
-      ),
-      PgsSignatory(
-        DateTime.now(),
-        false,
-        "",
-        id: aprroveRecordId ?? 0,
-        pgsId: pgsId,
-        pgsSignatoryTemplateId: 3,
-        signatoryId: _approvedByUserId?.toString() ?? '',
-      ),
-
-      PgsSignatory(
-        DateTime.now(),
-        false,
-        "",
-        id: reviewedRecordId ?? 0, // Existing ID for Approved
-        pgsId: pgsId,
-        pgsSignatoryTemplateId: 4,
-        signatoryId: _reviewedByUserId?.toString() ?? '',
-      ),
-    ];
+        pgsSignatoryTemplateId: signatory['id'],
+        signatoryId: signatory['defaultSignatoryId'],
+      );
+    }).toList();
   }
 
   //Add rows-------------
@@ -1298,9 +1312,9 @@ class _PerformanceGovernanceSystemPageState
 
                                                       if (dynamicSelectedId !=
                                                           null) {
-                                                        setSignatoryLevels(
-                                                          dynamicSelectedId,
-                                                        );
+                                                        // setSignatoryLevels(
+                                                        //   dynamicSelectedId,
+                                                        // );
                                                       } else {
                                                         debugPrint(
                                                           "Error: Invalid ID format for setSignatoryLevels.",
@@ -1660,40 +1674,40 @@ class _PerformanceGovernanceSystemPageState
 
   int? selectedPgsId;
 
-  void setSignatoryLevels(int? dynamicSelectedId) {
-    final currentPgsId = dynamicSelectedId ?? 0;
+  // void setSignatoryLevels(int? dynamicSelectedId) {
+  //   final currentPgsId = dynamicSelectedId ?? 0;
 
-    if (currentPgsId != 0) {
-      _submittedByUserId = getSignatoryByOrderLevelEdit(
-        pgsIdSignatory: currentPgsId,
-        level: 1,
-      );
-      _notedByUserId = getSignatoryByOrderLevelEdit(
-        pgsIdSignatory: currentPgsId,
-        level: 2,
-      );
-      _approvedByUserId = getSignatoryByOrderLevelEdit(
-        pgsIdSignatory: currentPgsId,
-        level: 3,
-      );
-      _reviewedByUserId = getSignatoryByOrderLevelEdit(
-        pgsIdSignatory: currentPgsId,
-        level: 4,
-      );
-      _reviewedByUserId = null;
-    } else {
-      debugPrint("No valid selectedId provided, cannot proceed.");
-      _submittedByUserId = null;
-      _notedByUserId = null;
-      _approvedByUserId = null;
-    }
-  }
+  //   if (currentPgsId != 0) {
+  //     _submittedByUserId = getSignatoryByOrderLevelEdit(
+  //       pgsIdSignatory: currentPgsId,
+  //       level: 1,
+  //     );
+  //     _notedByUserId = getSignatoryByOrderLevelEdit(
+  //       pgsIdSignatory: currentPgsId,
+  //       level: 2,
+  //     );
+  //     _approvedByUserId = getSignatoryByOrderLevelEdit(
+  //       pgsIdSignatory: currentPgsId,
+  //       level: 3,
+  //     );
+  //     _reviewedByUserId = getSignatoryByOrderLevelEdit(
+  //       pgsIdSignatory: currentPgsId,
+  //       level: 4,
+  //     );
+  //     _reviewedByUserId = null;
+  //   } else {
+  //     debugPrint("No valid selectedId provided, cannot proceed.");
+  //     _submittedByUserId = null;
+  //     _notedByUserId = null;
+  //     _approvedByUserId = null;
+  //   }
+  // }
 
   void onPgsIdChanged(int? newPgsId) {
     setState(() {
       selectedPgsId = newPgsId;
 
-      setSignatoryLevels(selectedPgsId);
+      // setSignatoryLevels(selectedPgsId);
     });
   }
 
@@ -1733,17 +1747,6 @@ class _PerformanceGovernanceSystemPageState
         selectedByWhenControllers.clear();
         selectedStatus.clear();
         deliverableIds.clear();
-
-        submittedRecordId = 0;
-        notedRecordId = 0;
-        aprroveRecordId = 0;
-
-        // _submittedByUserId = getSignatoryByOrderLevelDefault(1);
-
-        _submittedByUserId = userId;
-        _notedByUserId = getSignatoryByOrderLevelDefault(2);
-        _approvedByUserId = getSignatoryByOrderLevelDefault(3);
-        _reviewedByUserId = getSignatoryByOrderLevelDefault(4);
       } else {
         competenceScore.value = double.tryParse(competencescore ?? '') ?? 0.0;
         resourceScore.value = double.tryParse(resourcescore ?? '') ?? 0.0;
@@ -1824,8 +1827,6 @@ class _PerformanceGovernanceSystemPageState
                 "",
               ),
         );
-        submittedRecordId = submittedSignatory?.id ?? 0;
-        _submittedByUserId = submittedSignatory?.signatoryId ?? '0';
 
         final notedSignatory = signatories?.firstWhere(
           (signatory) => signatory.pgsSignatoryTemplateId == 2,
@@ -1840,8 +1841,6 @@ class _PerformanceGovernanceSystemPageState
                 "",
               ),
         );
-        notedRecordId = notedSignatory?.id ?? 0;
-        _notedByUserId = notedSignatory?.signatoryId ?? '0';
 
         final approveSignatory = signatories?.firstWhere(
           (signatory) => signatory.pgsSignatoryTemplateId == 3,
@@ -1856,8 +1855,6 @@ class _PerformanceGovernanceSystemPageState
                 "",
               ),
         );
-        aprroveRecordId = approveSignatory?.id ?? 0;
-        _approvedByUserId = approveSignatory?.signatoryId ?? '0';
 
         final reviewedSignatory = signatories?.firstWhere(
           (signatory) => signatory.pgsSignatoryTemplateId == 4,
@@ -1871,11 +1868,6 @@ class _PerformanceGovernanceSystemPageState
                 false,
                 "",
               ),
-        );
-        reviewedRecordId = reviewedSignatory?.id ?? 0;
-        _reviewedByUserId = reviewedSignatory?.signatoryId ?? '0';
-        debugPrint(
-          '? reviewed Record ID: $reviewedRecordId | Signatory ID: $_reviewedByUserId',
         );
       }
     });
@@ -2387,80 +2379,76 @@ class _PerformanceGovernanceSystemPageState
                               ),
                             ),
 
-                            Padding(
-                              padding: const EdgeInsets.all(8),
-                              child: SingleChildScrollView(
-                                scrollDirection: Axis.horizontal,
-                                child: Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Text('$firstName $middleName $lastName'),
-                                    _buildSignatoryColumn(
-                                      title:
-                                          '${getSignatoryTitleByOrderLevel(1) ?? ''}:',
-                                      currentValue: _submittedByUserId,
-                                      onChanged: (value) {
-                                        setDialogState(() {
-                                          _submittedByUserId = value;
-                                        });
-                                      },
-                                      onDeleted: () {
-                                        setDialogState(() {
-                                          _submittedByUserId = null;
-                                        });
-                                      },
-                                    ),
-                                    const SizedBox(width: 100),
-                                    _buildSignatoryColumn(
-                                      title:
-                                          '${getSignatoryTitleByOrderLevel(2) ?? ''}:',
-                                      currentValue: _notedByUserId,
-                                      onChanged: (value) {
-                                        setDialogState(() {
-                                          _notedByUserId = value;
-                                        });
-                                      },
-                                      onDeleted: () {
-                                        setDialogState(() {
-                                          _notedByUserId = null;
-                                        });
-                                      },
-                                    ),
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: FutureBuilder<List<Map<String, dynamic>>>(
+                                future: _getFilteredSignatories(),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return const Center(
+                                      child: CircularProgressIndicator(),
+                                    );
+                                  }
 
-                                    const SizedBox(width: 100),
-                                    _buildSignatoryColumn(
-                                      title:
-                                          '${getSignatoryTitleByOrderLevel(4) ?? ''}:',
-                                      currentValue: _reviewedByUserId,
-                                      onChanged: (value) {
-                                        setDialogState(() {
-                                          _reviewedByUserId = value;
-                                        });
-                                      },
-                                      onDeleted: () {
-                                        setDialogState(() {
-                                          _reviewedByUserId = null;
-                                        });
-                                      },
-                                    ),
-                                    const SizedBox(width: 100),
-                                    _buildSignatoryColumn(
-                                      title:
-                                          '${getSignatoryTitleByOrderLevel(3) ?? ''}:',
-                                      currentValue: _approvedByUserId,
-                                      onChanged: (value) {
-                                        setDialogState(() {
-                                          _approvedByUserId = value;
-                                        });
-                                      },
-                                      onDeleted: () {
-                                        setDialogState(() {
-                                          _approvedByUserId = null;
-                                        });
-                                      },
-                                    ),
-                                  ],
-                                ),
+                                  if (snapshot.hasError) {
+                                    return const Center(
+                                      child: Text('Error loading signatories'),
+                                    );
+                                  }
+
+                                  final officeFilteredSignatories =
+                                      snapshot.data ?? [];
+
+                                  return Row(
+                                    children: [
+                                      for (var signatory
+                                          in officeFilteredSignatories)
+                                        Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: FutureBuilder<Widget>(
+                                            future: _buildSignatoryColumn(
+                                              title:
+                                                  signatory['signatoryLabel'] ??
+                                                  'Signatory',
+                                              currentValue:
+                                                  signatory['defaultSignatoryId'],
+                                              onChanged: (newValue) {
+                                                setState(() {
+                                                  signatory['defaultSignatoryId'] =
+                                                      newValue;
+                                                });
+                                              },
+                                              onDeleted: () {
+                                                setState(() {
+                                                  signatoryList.removeWhere(
+                                                    (s) =>
+                                                        s['id'] ==
+                                                        signatory['id'],
+                                                  );
+                                                });
+                                              },
+                                            ),
+                                            builder: (context, innerSnapshot) {
+                                              if (innerSnapshot
+                                                      .connectionState ==
+                                                  ConnectionState.waiting) {
+                                                return const SizedBox(
+                                                  width: 200,
+                                                  child: Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  ),
+                                                );
+                                              }
+                                              return innerSnapshot.data ??
+                                                  Container();
+                                            },
+                                          ),
+                                        ),
+                                    ],
+                                  );
+                                },
                               ),
                             ),
                           ],
@@ -3505,9 +3493,7 @@ class _PerformanceGovernanceSystemPageState
           controller: percentageControllers[index],
           maxLines: null,
           keyboardType: TextInputType.multiline,
-          style: const TextStyle(
-            fontSize: 13.0, // ?? Set your desired font size here
-          ),
+          style: const TextStyle(fontSize: 13.0),
           inputFormatters: [
             FilteringTextInputFormatter.digitsOnly,
             LengthLimitingTextInputFormatter(3),
@@ -3901,8 +3887,6 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  // Filter search results based on query
-
   void filterSearchResults(String query) {
     deliverables.then((data) {
       setState(() {
@@ -3919,7 +3903,6 @@ class _PerformanceGovernanceSystemPageState
   }
 }
 
-// Capitalize first letter of each word
 extension StringExtension on String {
   String capitalize() {
     return split(' ')
