@@ -728,19 +728,46 @@ class _PgsSignatoryTemplateNewPageState
     });
   }
 
-  Map<int, List<Map<String, dynamic>>> groupByOfficeId(
+  Map<String, List<Map<String, dynamic>>> groupByOfficeName(
     List<Map<String, dynamic>> list,
+    List<Office> offices,
+    List<User> users,
   ) {
-    Map<int, List<Map<String, dynamic>>> grouped = {};
+    Map<String, List<Map<String, dynamic>>> grouped = {};
 
     for (var item in list) {
       int? officeId = item['officeId'];
       if (officeId == null) continue;
 
-      if (!grouped.containsKey(officeId)) {
-        grouped[officeId] = [];
+      var office = offices.firstWhere(
+        (o) => o.id == officeId,
+        orElse:
+            () => Office(
+              id: -1,
+              name: 'Unknown Office',
+              officeTypeId: -1,
+              isActive: false,
+            ),
+      );
+
+      String? signatoryId = item['defaultSignatoryId']?.toString();
+      String signatoryName = 'Unknown User';
+      if (signatoryId != null) {
+        var user = users.firstWhere(
+          (u) => u.id == signatoryId,
+          orElse: () => User(id: '', fullName: 'Unknown User', position: ''),
+        );
+        signatoryName = user.fullName;
       }
-      grouped[officeId]!.add(item);
+
+      // Add the user name to the item
+      var itemWithName = Map<String, dynamic>.from(item);
+      itemWithName['signatoryName'] = signatoryName;
+
+      if (!grouped.containsKey(office.name)) {
+        grouped[office.name] = [];
+      }
+      grouped[office.name]!.add(itemWithName);
     }
 
     return grouped;
@@ -749,7 +776,13 @@ class _PgsSignatoryTemplateNewPageState
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
-    final groupedData = groupByOfficeId(filteredListSignatoryTemplate);
+    List<Office> offices =
+        officeList.map((officeMap) => Office.fromJson(officeMap)).toList();
+    final groupedData = groupByOfficeName(
+      filteredListSignatoryTemplate,
+      offices,
+      userList,
+    );
 
     return Scaffold(
       backgroundColor: mainBgColor,
@@ -824,7 +857,7 @@ class _PgsSignatoryTemplateNewPageState
               child: ListView(
                 children:
                     groupedData.entries.map((entry) {
-                      final officeId = entry.key;
+                      final officeName = entry.key;
                       final signatories = entry.value;
 
                       return Card(
@@ -851,7 +884,7 @@ class _PgsSignatoryTemplateNewPageState
                               horizontal: 16,
                             ),
                             title: Text(
-                              'Office ID: $officeId',
+                              officeName,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black,
@@ -866,9 +899,16 @@ class _PgsSignatoryTemplateNewPageState
                                   return ListTile(
                                     title: Text(
                                       signatory['signatoryLabel'] ?? 'No Label',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
                                     ),
-                                    subtitle: Text(
-                                      'ID: ${signatory['defaultSignatoryId'] ?? 'No ID'}',
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(signatory['signatoryName']),
+                                      ],
                                     ),
                                   );
                                 }).toList(),
