@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user.dart';
@@ -36,7 +35,6 @@ class _PgsSignatoryTemplateNewPageState
   List<PgsSignatoryTemplate> addSignatories = [];
   int? selectOffice;
 
-  int? selectAuditor;
   String? selectTeamText;
   List<User> userList = [];
   List<User> filteredListUser = [];
@@ -178,34 +176,16 @@ class _PgsSignatoryTemplateNewPageState
     }
   }
 
-  Future<void> addOrUpdateSignatoryTemplate(AuditorTeam auditorTeam) async {
-    var url = ApiEndpoint().auditorteam;
-
-    try {
-      final Map<String, dynamic> requestData = auditorTeam.toJson();
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: requestData,
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        fetchSignatoryTemplate();
-      } else {
-        debugPrint("Failed to add/update office");
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating office: $e");
-    }
-  }
-
   Future<void> deleteSignatoryTemplate(String kraId) async {
-    var url = ApiEndpoint().keyresult;
+    var url = ApiEndpoint().signatoryTemplate;
     try {
       final response = await AuthenticatedRequest.delete(dio, url);
 
       if (response.statusCode == 200) {
         await fetchSignatoryTemplate();
+        setState(() {
+          fetchSignatoryTemplate();
+        });
       }
     } catch (e) {
       debugPrint("Error deleting KRA: $e");
@@ -234,11 +214,36 @@ class _PgsSignatoryTemplateNewPageState
     super.dispose();
   }
 
+  void resetFormFields() {
+    selectOffice = null;
+    selectedUserId = null;
+    selectedSignatory = [];
+  }
+
   void showFormDialog({
     String? id,
     bool isDeleted = false,
     String? defaultSignatoryId,
+    int? officeId,
+    List<Map<String, dynamic>>? signatories,
   }) {
+    selectOffice = officeId;
+    selectedUserId = defaultSignatoryId;
+
+    if (signatories != null && signatories.isNotEmpty) {
+      selectedSignatory =
+          signatories.map((s) {
+            return {
+              'id': s['id'],
+              'userId': s['defaultSignatoryId']?.toString(),
+              'name': s['signatoryName'],
+              'label': s['signatoryLabel'],
+              'status': s['status'] ?? '',
+              'level': s['orderLevel'] ?? 1,
+            };
+          }).toList();
+    }
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -304,7 +309,6 @@ class _PgsSignatoryTemplateNewPageState
                         child: Text("List of Signatories"),
                       ),
 
-                      // Display added signatories
                       if (selectedSignatory.isNotEmpty)
                         Column(
                           children: [
@@ -440,7 +444,7 @@ class _PgsSignatoryTemplateNewPageState
                         for (var signatory in selectedSignatory) {
                           signatories.add(
                             PgsSignatoryTemplate(
-                              int.tryParse(id ?? '0') ?? 0,
+                              signatory['id'] ?? 0,
                               isDeleted,
                               signatory['level'],
                               signatory['userId'],
@@ -455,7 +459,10 @@ class _PgsSignatoryTemplateNewPageState
 
                       await addOrUpdateSignatory(signatories);
                       // ignore: use_build_context_synchronously
-                      Navigator.pop(context);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        resetFormFields();
+                      }
                     }
                   },
                   child: Text(
@@ -483,7 +490,10 @@ class _PgsSignatoryTemplateNewPageState
       );
 
       if (response.statusCode == 200) {
-        setState(() {});
+        await fetchSignatoryTemplate();
+        setState(() {
+          fetchSignatoryTemplate();
+        });
       }
     } catch (e) {
       debugPrint("Error adding/updating pgs: $e");
@@ -495,7 +505,7 @@ class _PgsSignatoryTemplateNewPageState
     required Function setDialogState,
     int? index,
     Map<String, dynamic>? signatory,
-    String? selectedUserId,
+    String? defaultSignatoryId,
   }) {
     final signatoryLabelController = TextEditingController(
       text: signatory?['label'] ?? '',
@@ -503,10 +513,10 @@ class _PgsSignatoryTemplateNewPageState
     final signatoryStatusController = TextEditingController(
       text: signatory?['status'] ?? '',
     );
-    // ignore: no_leading_underscores_for_local_identifiers
-    int _value = signatory?['level'] ?? 1;
-    // ignore: no_leading_underscores_for_local_identifiers
-    String? _selectedUserId = signatory?['id'] ?? selectedUserId;
+
+    int? currentId = signatory?['id'];
+    int currentLevel = signatory?['level'] ?? 1;
+    String? selectedUserId = signatory?['userId'] ?? defaultSignatoryId;
 
     showDialog(
       context: context,
@@ -524,44 +534,43 @@ class _PgsSignatoryTemplateNewPageState
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               content: SizedBox(
-                height: 200,
+                height: 250, // Increased height to accommodate all fields
+                width: 500, // Set a fixed width
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(
-                      width: 480,
-                      child: DropdownButtonFormField<String>(
-                        value:
-                            filteredListUser.any(
-                                  (user) => user.id == _selectedUserId,
-                                )
-                                ? _selectedUserId
-                                : null,
-                        decoration: InputDecoration(
-                          labelText: 'Signatory Name',
-                          border: OutlineInputBorder(),
+                    // Signatory Name Dropdown
+                    DropdownButtonFormField<String>(
+                      value: selectedUserId,
+                      decoration: InputDecoration(
+                        labelText: 'Signatory Name',
+                        border: OutlineInputBorder(),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
                         ),
-                        items:
-                            filteredListUser.map((user) {
-                              return DropdownMenuItem<String>(
-                                value: user.id,
-                                child: Text(user.fullName),
-                              );
-                            }).toList(),
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedUserId = value;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a user';
-                          }
-                          return null;
-                        },
                       ),
+                      items:
+                          filteredListUser.map((user) {
+                            return DropdownMenuItem<String>(
+                              value: user.id,
+                              child: Text(user.fullName),
+                            );
+                          }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedUserId = value;
+                        });
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please select a user';
+                        }
+                        return null;
+                      },
                     ),
-                    gap,
+                    SizedBox(height: 16),
+                    // Signatory Label
                     TextField(
                       controller: signatoryLabelController,
                       decoration: InputDecoration(
@@ -573,72 +582,55 @@ class _PgsSignatoryTemplateNewPageState
                         ),
                       ),
                     ),
-                    gap,
+                    SizedBox(height: 16),
                     Row(
                       children: [
                         // Signatory Status
                         Expanded(
-                          child: SizedBox(
-                            child: TextField(
-                              controller: signatoryStatusController,
-                              decoration: InputDecoration(
-                                labelText: 'Signatory Status',
-                                border: OutlineInputBorder(),
+                          child: TextField(
+                            controller: signatoryStatusController,
+                            decoration: InputDecoration(
+                              labelText: 'Signatory Status',
+                              border: OutlineInputBorder(),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
                               ),
-                              style: TextStyle(fontSize: 16),
                             ),
                           ),
                         ),
                         SizedBox(width: 16),
                         // Level Spinner
-                        SizedBox(
+                        Container(
                           width: 120,
-                          height: 48,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Padding(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                    ),
-                                    child: Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: Text(
-                                        '$_value',
-                                        style: TextStyle(fontSize: 16),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    InkWell(
-                                      onTap: () => setState(() => _value++),
-                                      child: Icon(
-                                        Icons.arrow_drop_up,
-                                        size: 20,
-                                      ),
-                                    ),
-                                    InkWell(
-                                      onTap:
-                                          () => setState(() {
-                                            if (_value > 1) _value--;
-                                          }),
-                                      child: Icon(
-                                        Icons.arrow_drop_down,
-                                        size: 20,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.remove),
+                                onPressed: () {
+                                  setState(() {
+                                    if (currentLevel > 1) currentLevel--;
+                                  });
+                                },
+                              ),
+                              Text(
+                                '$currentLevel',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.add),
+                                onPressed: () {
+                                  setState(() {
+                                    currentLevel++;
+                                  });
+                                },
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -649,22 +641,14 @@ class _PgsSignatoryTemplateNewPageState
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  style: TextButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
                   child: Text('Cancel', style: TextStyle(color: primaryColor)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
                   ),
                   onPressed: () {
-                    if (_selectedUserId == null || _selectedUserId!.isEmpty) {
+                    if (selectedUserId == null || selectedUserId!.isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Please select a signatory')),
                       );
@@ -672,26 +656,25 @@ class _PgsSignatoryTemplateNewPageState
                     }
 
                     final selectedUser = filteredListUser.firstWhere(
-                      (user) => user.id == _selectedUserId,
+                      (user) => user.id == selectedUserId,
                       orElse: () => throw Exception('User not found'),
                     );
 
                     final result = {
-                      'userId': _selectedUserId,
+                      'id': currentId,
+                      'userId': selectedUserId,
                       'name': selectedUser.fullName,
                       'label': signatoryLabelController.text,
                       'status': signatoryStatusController.text,
-                      'level': _value,
+                      'level': currentLevel,
                     };
 
                     if (index != null) {
-                      // Editing existing signatory
                       setDialogState(() {
                         selectedSignatory[index] = result;
                       });
                       Navigator.pop(context);
                     } else {
-                      // Creating new signatory
                       Navigator.pop(context, result);
                     }
                   },
@@ -707,7 +690,6 @@ class _PgsSignatoryTemplateNewPageState
       },
     ).then((value) {
       if (value != null && index == null) {
-        // Only for create operation
         setDialogState(() {
           selectedSignatory.add(value);
         });
@@ -760,7 +742,6 @@ class _PgsSignatoryTemplateNewPageState
         signatoryName = user.fullName;
       }
 
-      // Add the user name to the item
       var itemWithName = Map<String, dynamic>.from(item);
       itemWithName['signatoryName'] = signatoryName;
 
@@ -840,7 +821,10 @@ class _PgsSignatoryTemplateNewPageState
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    onPressed: () => showFormDialog(),
+                    onPressed: () {
+                      resetFormFields();
+                      showFormDialog();
+                    },
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -859,6 +843,10 @@ class _PgsSignatoryTemplateNewPageState
                     groupedData.entries.map((entry) {
                       final officeName = entry.key;
                       final signatories = entry.value;
+                      final officeId =
+                          signatories.isNotEmpty
+                              ? signatories.first['officeId']
+                              : null;
 
                       return Card(
                         color: secondaryColor,
@@ -894,24 +882,66 @@ class _PgsSignatoryTemplateNewPageState
                               Icons.expand_more,
                               color: Colors.black,
                             ),
-                            children:
-                                signatories.map((signatory) {
-                                  return ListTile(
-                                    title: Text(
-                                      signatory['signatoryLabel'] ?? 'No Label',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w500,
+                            children: [
+                              ...signatories.map((signatory) {
+                                return ListTile(
+                                  title: Text(
+                                    signatory['signatoryLabel'] ?? 'No Label',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  subtitle: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        signatory['signatoryName'] ?? 'No Name',
                                       ),
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(signatory['signatoryName']),
-                                      ],
-                                    ),
-                                  );
-                                }).toList(),
+                                    ],
+                                  ),
+                                );
+                              }),
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  left: 16,
+                                  right: 16,
+                                  bottom: 8,
+                                ),
+                                child: Align(
+                                  alignment: Alignment.centerRight,
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(Icons.edit),
+                                        onPressed: () {
+                                          if (officeId != null) {
+                                            final officeSignatories =
+                                                signatories;
+                                            final templateId =
+                                                signatories.first['id']
+                                                    ?.toString();
+                                            showFormDialog(
+                                              id: templateId,
+                                              officeId: officeId,
+                                              signatories: officeSignatories,
+                                            );
+                                          }
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: primaryColor,
+                                        ),
+                                        onPressed: () => {},
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       );
@@ -962,7 +992,7 @@ class _PgsSignatoryTemplateNewPageState
         return AlertDialog(
           title: Text("Confirm Delete"),
           content: Text(
-            "Are you sure you want to delete this Auditor Team? This action cannot be undone.",
+            "Are you sure you want to delete this Signatory Template? This action cannot be undone.",
           ),
           actions: [
             TextButton(
