@@ -627,7 +627,7 @@ class _OfficePageState extends State<OfficePage> {
                                               ),
                                               child: Text(
                                                 getOfficeTypeName(
-                                                  office.officeTypeId,
+                                                  office.officeTypeId ?? 0,
                                                 ),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,

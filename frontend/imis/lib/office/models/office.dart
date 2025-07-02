@@ -9,13 +9,13 @@ class Office {
   bool isActive;
   bool isDeleted;
   String? rowVersion;
-  int officeTypeId;
+  int? officeTypeId;
   int? parentOfficeId;
 
   Office({
     required this.id,
     required this.name,
-    required this.officeTypeId,
+    this.officeTypeId,
     this.parentOfficeId,
     this.isActive = true,
     this.isDeleted = false,
