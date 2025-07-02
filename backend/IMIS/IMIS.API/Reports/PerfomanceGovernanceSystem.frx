@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="07/01/2025 14:01:06" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="07/01/2025 14:34:54" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -227,14 +227,14 @@ namespace FastReport
       <LineObject Name="Line4" Left="409.75" Top="177.1" Width="252.1" Diagonal="true"/>
       <TextObject Name="Text16" Left="75" Top="57.7" Width="302.85" Height="22.25" Anchor="Top, Left, Right" CanGrow="true" BeforePrintEvent="Text16_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId1]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text17" Left="379.75" Top="57.7" Width="318.8" Height="21.6" Anchor="Top, Left, Right" CanGrow="true" BeforePrintEvent="Text17_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId2]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text18" Left="381.2" Top="180.55" Width="318.35" Height="22.25" Anchor="Top, Left, Right" CanGrow="true" BeforePrintEvent="Text18_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId4]&#13;&#10;&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <TextObject Name="txtPgsSignatoryId3" Left="700.5" Top="57.7" Width="264.65" Height="22.25" Anchor="Top, Left, Right" CanGrow="true" BeforePrintEvent="Text18_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId3]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text29" Left="381.45" Top="258.3" Width="317.8" Height="28.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
       <TextObject Name="Text59" Left="74.6" Top="80.08" Width="303.05" Height="20.25" Anchor="Bottom, Left, Right" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition1]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text60" Left="380" Top="80.08" Width="319.05" Height="20.45" Anchor="Bottom, Left, Right" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition2]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text61" Left="381" Top="202.84" Width="319.05" Height="20.35" Anchor="Bottom, Left, Right" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition4]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
       <LineObject Name="Line32" Left="723.1" Top="56.7" Width="237.1" Diagonal="true"/>
       <TextObject Name="Text62" Left="708.75" Top="2" Width="179.55" Height="18.9" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel3]" Font="Segoe UI, 10pt"/>
-      <TextObject Name="txtPgsSignatoryId4" Left="700.75" Top="57.7" Width="264.6" Height="21.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId4_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId3]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <TextObject Name="txtPgsSignatoryId4" Left="381.45" Top="180.55" Width="318.3" Height="21.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId4_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId4]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text64" Left="701.3" Top="80.05" Width="263.6" Height="20.9" CanGrow="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition3]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
     </PageFooterBand>
   </ReportPage>

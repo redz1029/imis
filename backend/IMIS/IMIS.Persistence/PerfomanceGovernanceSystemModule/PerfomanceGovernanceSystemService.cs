@@ -64,12 +64,14 @@ namespace IMIS.Persistence.PgsModule
                     StartDate = perfomanceGovernanceSystem.PgsPeriod.StartDate,
                     EndDate = perfomanceGovernanceSystem.PgsPeriod.EndDate
                 },
-
+           
                 Office = new OfficeDto
                 {
                     Id = perfomanceGovernanceSystem.Office.Id,
                     Name = perfomanceGovernanceSystem.Office.Name,
-                    IsActive = perfomanceGovernanceSystem.Office.IsActive
+                    IsActive = perfomanceGovernanceSystem.Office.IsActive,
+                    OfficeTypeId = perfomanceGovernanceSystem.Office.OfficeTypeId,
+                    ParentOfficeId = perfomanceGovernanceSystem.Office.ParentOfficeId
                 },
 
                 PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto
@@ -145,7 +147,9 @@ namespace IMIS.Persistence.PgsModule
                     {
                         Id = perfomanceGovernanceSystem.Office.Id,
                         Name = perfomanceGovernanceSystem.Office.Name,
-                        IsActive = perfomanceGovernanceSystem.Office.IsActive
+                        IsActive = perfomanceGovernanceSystem.Office.IsActive,
+                        OfficeTypeId = perfomanceGovernanceSystem.Office.OfficeTypeId,
+                        ParentOfficeId = perfomanceGovernanceSystem.Office.ParentOfficeId
                     },
                     PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto
                     {
@@ -423,7 +427,9 @@ namespace IMIS.Persistence.PgsModule
                 {
                     Id = createdPerfomanceGovernanceSystem.Office.Id,
                     Name = createdPerfomanceGovernanceSystem.Office.Name,
-                    IsActive = createdPerfomanceGovernanceSystem.Office.IsActive
+                    IsActive = createdPerfomanceGovernanceSystem.Office.IsActive,
+                    OfficeTypeId = createdPerfomanceGovernanceSystem.Office.OfficeTypeId,
+                    ParentOfficeId = createdPerfomanceGovernanceSystem.Office.ParentOfficeId
                 },
                 PgsReadinessRating = new PgsReadinessRatingDto
                 {
