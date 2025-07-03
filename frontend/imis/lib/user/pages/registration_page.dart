@@ -238,7 +238,7 @@ class RegistrationPageState extends State<RegistrationPage> {
 
   Widget _buildRegistrationForm() {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 300),
+      constraints: const BoxConstraints(maxWidth: 400),
       child: Form(
         key: _formKey,
         child: Column(
@@ -282,7 +282,6 @@ class RegistrationPageState extends State<RegistrationPage> {
             gap,
             if (_currentStep == 0) ...[
               SizedBox(
-                width: 350,
                 height: 65,
                 child: DropdownButtonFormField<String>(
                   value:
@@ -294,7 +293,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                   },
                   items: [
                     DropdownMenuItem(value: '', child: Text('')),
-                    ...['Mr.', 'Ms.', 'Mrs.', 'Dr.', 'Prof.'].map(
+                    ...['Mr.', 'Ms.', 'Mrs.', 'Dr.', 'Prof.', 'Engr.'].map(
                       (prefix) =>
                           DropdownMenuItem(value: prefix, child: Text(prefix)),
                     ),
@@ -302,11 +301,15 @@ class RegistrationPageState extends State<RegistrationPage> {
                   decoration: InputDecoration(
                     labelText: 'Prefix',
                     border: OutlineInputBorder(),
+                    focusedBorder: const OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
                   ),
                 ),
               ),
 
               TextFormField(
+                textInputAction: TextInputAction.next,
                 style: TextStyle(fontSize: 14),
                 controller: firstNameController,
                 focusNode: focusFirstName,
@@ -332,14 +335,9 @@ class RegistrationPageState extends State<RegistrationPage> {
               ),
               gap,
               TextFormField(
+                textInputAction: TextInputAction.next,
                 style: TextStyle(fontSize: 14),
                 controller: middleNameController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter some text";
-                  }
-                  return null;
-                },
                 focusNode: focusMiddleName,
                 onTap: () {
                   FocusScope.of(context).requestFocus(focusMiddleName);
@@ -357,6 +355,7 @@ class RegistrationPageState extends State<RegistrationPage> {
               ),
               gap,
               TextFormField(
+                textInputAction: TextInputAction.next,
                 style: TextStyle(fontSize: 14),
                 controller: lastNameController,
                 focusNode: focusLastName,
@@ -382,17 +381,12 @@ class RegistrationPageState extends State<RegistrationPage> {
               ),
               gap,
               TextFormField(
+                textInputAction: TextInputAction.next,
                 style: TextStyle(fontSize: 14),
                 controller: suffixController,
                 focusNode: focusSuffix,
                 onTap: () {
                   FocusScope.of(context).requestFocus(focusSuffix);
-                },
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter some text";
-                  }
-                  return null;
                 },
                 decoration: InputDecoration(
                   labelText: 'Suffix',
@@ -408,6 +402,7 @@ class RegistrationPageState extends State<RegistrationPage> {
             ],
             if (_currentStep == 1) ...[
               TextFormField(
+                textInputAction: TextInputAction.next,
                 style: TextStyle(fontSize: 14),
                 controller: userNameController,
                 focusNode: focusUsername,
@@ -433,6 +428,7 @@ class RegistrationPageState extends State<RegistrationPage> {
               ),
               gap,
               TextFormField(
+                textInputAction: TextInputAction.next,
                 style: TextStyle(fontSize: 14),
                 controller: emailController,
                 focusNode: focusEmail,
@@ -453,6 +449,7 @@ class RegistrationPageState extends State<RegistrationPage> {
               ),
               gap,
               TextFormField(
+                textInputAction: TextInputAction.next,
                 style: TextStyle(fontSize: 14),
                 controller: passwordController,
                 focusNode: focusPassword,
@@ -494,6 +491,7 @@ class RegistrationPageState extends State<RegistrationPage> {
               ),
               gap,
               TextFormField(
+                textInputAction: TextInputAction.done,
                 style: TextStyle(fontSize: 14),
                 controller: confirmPasswordController,
                 focusNode: focusConfirmPassword,
@@ -552,7 +550,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                     selectedPosition = newValue;
                   });
                 },
-                style: const TextStyle(fontSize: 14, color: Colors.black),
+                style: const TextStyle(fontSize: 12, color: Colors.black),
                 items:
                     jobPositions.map<DropdownMenuItem<String>>((String value) {
                       return DropdownMenuItem<String>(
@@ -569,6 +567,7 @@ class RegistrationPageState extends State<RegistrationPage> {
               ),
             ],
             gap3,
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -581,7 +580,6 @@ class RegistrationPageState extends State<RegistrationPage> {
                     ),
                   ),
                 Spacer(),
-
                 ElevatedButton(
                   onPressed:
                       _isRegister
@@ -615,12 +613,9 @@ class RegistrationPageState extends State<RegistrationPage> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-
                   child:
                       _isRegister
-                          ? const Center(
-                            child: CircularProgressIndicator(),
-                          ) // Show loading spinner
+                          ? const Center(child: CircularProgressIndicator())
                           : Text(
                             _currentStep == 1 ? "Register" : "Next",
                             style: TextStyle(color: Colors.white),
