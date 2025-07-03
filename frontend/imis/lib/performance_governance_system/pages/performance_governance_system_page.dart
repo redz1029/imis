@@ -5,6 +5,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
@@ -660,6 +661,7 @@ class _PerformanceGovernanceSystemPageState
                   'totalscore': pgs.pgsReadinessRating.totalScore.toString(),
                   'percentDeliverables': pgs.percentDeliverables.toString(),
                   'remarks': pgs.remarks,
+                  'forSignature': pgs.forSignature,
                 };
               }).toList();
 
@@ -1132,7 +1134,7 @@ class _PerformanceGovernanceSystemPageState
                         ),
 
                         SizedBox(
-                          width: 300,
+                          width: 500,
                           child: Padding(
                             padding: const EdgeInsets.only(right: 10),
                             child: Text(
@@ -1181,6 +1183,13 @@ class _PerformanceGovernanceSystemPageState
                             ),
                           ),
                         ),
+                        Expanded(
+                          flex: 1,
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 1),
+                            child: Text('', style: TextStyle(color: grey)),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -1225,7 +1234,7 @@ class _PerformanceGovernanceSystemPageState
                                           ),
 
                                           SizedBox(
-                                            width: 300,
+                                            width: 500,
                                             child: Text(
                                               pgsgovernancesystem['name'],
                                               // Display office
@@ -1484,6 +1493,52 @@ class _PerformanceGovernanceSystemPageState
                                               ),
                                             ),
                                           ),
+                                          Expanded(
+                                            flex: 1,
+                                            child: Align(
+                                              alignment: Alignment.centerLeft,
+                                              child: Stack(
+                                                clipBehavior: Clip.none,
+                                                children: [
+                                                  // Signature Icon
+                                                  FaIcon(
+                                                    FontAwesomeIcons.signature,
+                                                    size: 24,
+                                                    color: primaryTextColor,
+                                                  ),
+
+                                                  if (pgsgovernancesystem['forSignature'] ==
+                                                      true)
+                                                    Positioned(
+                                                      top: -4,
+                                                      right: -4,
+                                                      child: Container(
+                                                        width: 14,
+                                                        height: 14,
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.green,
+                                                          shape:
+                                                              BoxShape.circle,
+                                                          border: Border.all(
+                                                            color: Colors.white,
+                                                            width: 2.0,
+                                                          ),
+                                                          boxShadow: [
+                                                            BoxShadow(
+                                                              color: Colors.black
+                                                              // ignore: deprecated_member_use
+                                                              .withOpacity(0.2),
+                                                              blurRadius: 2,
+                                                              spreadRadius: 1,
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ),
@@ -1674,40 +1729,9 @@ class _PerformanceGovernanceSystemPageState
 
   int? selectedPgsId;
 
-  // void setSignatoryLevels(int? dynamicSelectedId) {
-  //   final currentPgsId = dynamicSelectedId ?? 0;
-
-  //   if (currentPgsId != 0) {
-  //     _submittedByUserId = getSignatoryByOrderLevelEdit(
-  //       pgsIdSignatory: currentPgsId,
-  //       level: 1,
-  //     );
-  //     _notedByUserId = getSignatoryByOrderLevelEdit(
-  //       pgsIdSignatory: currentPgsId,
-  //       level: 2,
-  //     );
-  //     _approvedByUserId = getSignatoryByOrderLevelEdit(
-  //       pgsIdSignatory: currentPgsId,
-  //       level: 3,
-  //     );
-  //     _reviewedByUserId = getSignatoryByOrderLevelEdit(
-  //       pgsIdSignatory: currentPgsId,
-  //       level: 4,
-  //     );
-  //     _reviewedByUserId = null;
-  //   } else {
-  //     debugPrint("No valid selectedId provided, cannot proceed.");
-  //     _submittedByUserId = null;
-  //     _notedByUserId = null;
-  //     _approvedByUserId = null;
-  //   }
-  // }
-
   void onPgsIdChanged(int? newPgsId) {
     setState(() {
       selectedPgsId = newPgsId;
-
-      // setSignatoryLevels(selectedPgsId);
     });
   }
 
@@ -1813,62 +1837,6 @@ class _PerformanceGovernanceSystemPageState
         } else {
           rows = [0];
         }
-
-        final submittedSignatory = signatories?.firstWhere(
-          (signatory) => signatory.pgsSignatoryTemplateId == 1,
-          orElse:
-              () => PgsSignatory(
-                id: 0,
-                pgsId: 0,
-                pgsSignatoryTemplateId: 1,
-                signatoryId: '0',
-                DateTime.now(),
-                false,
-                "",
-              ),
-        );
-
-        final notedSignatory = signatories?.firstWhere(
-          (signatory) => signatory.pgsSignatoryTemplateId == 2,
-          orElse:
-              () => PgsSignatory(
-                id: 0,
-                pgsId: 0,
-                pgsSignatoryTemplateId: 2,
-                signatoryId: '0',
-                DateTime.now(),
-                false,
-                "",
-              ),
-        );
-
-        final approveSignatory = signatories?.firstWhere(
-          (signatory) => signatory.pgsSignatoryTemplateId == 3,
-          orElse:
-              () => PgsSignatory(
-                id: 0,
-                pgsId: 0,
-                pgsSignatoryTemplateId: 3,
-                signatoryId: '0',
-                DateTime.now(),
-                false,
-                "",
-              ),
-        );
-
-        final reviewedSignatory = signatories?.firstWhere(
-          (signatory) => signatory.pgsSignatoryTemplateId == 4,
-          orElse:
-              () => PgsSignatory(
-                id: 0,
-                pgsId: 0,
-                pgsSignatoryTemplateId: 4,
-                signatoryId: '0',
-                DateTime.now(),
-                false,
-                "",
-              ),
-        );
       }
     });
 
