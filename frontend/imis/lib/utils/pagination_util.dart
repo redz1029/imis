@@ -51,10 +51,10 @@ class PaginationUtil {
           'hasPreviousPage': page > 1,
         }, fromJson);
       } else {
-        throw Exception('Failed to load data: ${response.statusCode}');
+        throw Exception('Failed to load data');
       }
     } on DioException catch (e) {
-      throw Exception('Dio error: ${e.response?.data ?? e.message}');
+      throw Exception('Dio error');
     } catch (e) {
       throw Exception('Unexpected error: $e');
     }

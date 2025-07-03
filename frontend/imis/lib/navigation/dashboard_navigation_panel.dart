@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/performance_governance_system/pgs_scrore_monitoring/pages/pgs_score_monitoring_page.dart';
-import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_new_page.dart';
+import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
@@ -72,7 +72,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
         PermissionService().loadPermissions(roles);
       }
     });
-    TokenExpirationHandler(context).checkTokenExpiration();
+    // TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override

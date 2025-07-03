@@ -262,7 +262,7 @@ class LoginPageState extends State<LoginPage> {
                   },
                 ),
               ),
-              textInputAction: TextInputAction.done, // Handle Enter key press
+              textInputAction: TextInputAction.done,
               onFieldSubmitted: (value) {
                 if (_formKey.currentState!.validate()) {
                   login(

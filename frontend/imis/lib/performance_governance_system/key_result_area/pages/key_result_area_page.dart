@@ -112,22 +112,6 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
     }
   }
 
-  // Future<void> deleteKRA(String kraId) async {
-  //   var url = '${ApiEndpoint().keyresult}/$kraId'; // Add kraId to endpoint
-  //   try {
-  //     final response = await dio.patch(
-  //       url,
-  //       data: {'isDeleted': true}, // send the updated field only
-  //     );
-
-  //     if (response.statusCode == 200) {
-  //       await fetchKRAs();
-  //     }
-  //   } catch (e) {
-  //     debugPrint("Error deleting KRA: $e");
-  //   }
-  // }
-
   //filtered result
   Future<void> filterSearchResults(String query) async {
     final results = await kraSearchUtil.filter(

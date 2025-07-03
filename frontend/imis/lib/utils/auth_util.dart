@@ -170,7 +170,6 @@ class AuthUtil {
       if (isRefreshTokenExpired) {
         await logout();
 
-        debugPrint('Showing expired token snackbar');
         snackbarKey.currentState?.showSnackBar(
           const SnackBar(content: Text('Token expired :( Please login again.')),
         );

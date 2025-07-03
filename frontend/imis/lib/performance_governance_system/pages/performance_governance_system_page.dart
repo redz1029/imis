@@ -100,7 +100,7 @@ class _PerformanceGovernanceSystemPageState
 
   final _paginationUtils = PaginationUtil(Dio());
   int _currentPage = 1;
-  final int _pageSize = 15;
+  final int _pageSize = 30;
   int _totalCount = 0;
   bool _isLoading = false;
 
@@ -153,9 +153,7 @@ class _PerformanceGovernanceSystemPageState
     });
 
     if (mounted) {
-      setState(() {
-        // _submittedByUserId = userId;
-      });
+      setState(() {});
     }
   }
 
@@ -226,11 +224,6 @@ class _PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("? PGS data updated successfully!");
-        debugPrint("Updated PGS ID: ${response.data['id']}");
-        debugPrint("Payload sent: $pgs");
-
-        // Refresh UI
         setState(() {
           fetchPgsList();
           clearAllSelections();
@@ -452,8 +445,6 @@ class _PerformanceGovernanceSystemPageState
     List<PgsDeliverables> deliverablesList = [];
     final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
 
-    debugPrint("Fetching deliverables for PGS ID: $pgsId");
-
     try {
       final response = await AuthenticatedRequest.get(dio, url);
 
@@ -471,7 +462,7 @@ class _PerformanceGovernanceSystemPageState
           deliverablesList.addAll(deliverables);
         }
       } else {
-        debugPrint("Failed to fetch deliverables: ${response.statusCode}");
+        debugPrint("Failed to fetch deliverables");
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.response?.data ?? e.message}");
@@ -591,7 +582,7 @@ class _PerformanceGovernanceSystemPageState
     // ignore: unrelated_type_equality_checks
     if (selectedOffice == null || selectedOffice == -1) {
       await AuthUtil.removeSelectedOfficeId();
-      debugPrint('Selected office ID removed.');
+
       return null;
     } else {
       await AuthUtil.saveSelectedOfficeId(selectedOffice);
@@ -1500,7 +1491,6 @@ class _PerformanceGovernanceSystemPageState
                                               child: Stack(
                                                 clipBehavior: Clip.none,
                                                 children: [
-                                                  // Signature Icon
                                                   FaIcon(
                                                     FontAwesomeIcons.signature,
                                                     size: 24,
@@ -1668,12 +1658,6 @@ class _PerformanceGovernanceSystemPageState
             final signatories =
                 signatoriesJson.map((d) => PgsSignatory.fromJson(d)).toList();
 
-            for (var d in signatories) {
-              debugPrint(
-                "Signatory loaded: ID=${d.id}, SignatoryId=${d.signatoryId}",
-              );
-            }
-
             displaySignatoryList.addAll(signatories);
           } else {
             debugPrint("No valid 'pgsSignatories' list found in response.");
@@ -1696,10 +1680,6 @@ class _PerformanceGovernanceSystemPageState
     required int level,
   }) {
     try {
-      debugPrint(
-        "Getting signatory for PGS ID: $pgsIdSignatory, Level: $level",
-      );
-
       final signatory = displaySignatoryList.firstWhere(
         (item) =>
             item.pgsId == pgsIdSignatory &&
@@ -3103,9 +3083,7 @@ class _PerformanceGovernanceSystemPageState
   // }
 
   void saveStatusToDb(int index, PgsStatus status) {
-    int statusIndex = status.index;
-
-    debugPrint('Saving status for index $index: $statusIndex');
+    debugPrint('Saving status for index');
   }
 
   // // Check Box
@@ -3140,14 +3118,6 @@ class _PerformanceGovernanceSystemPageState
                 if (newValue) {
                   oppositeValues[index] = false;
                 }
-
-                debugPrint("Index: $index");
-                debugPrint(
-                  "${isDirect ? "Direct" : "Indirect"} checked: $newValue",
-                );
-                debugPrint(
-                  "${isDirect ? "Indirect" : "Direct"} unchecked: ${oppositeValues[index]}",
-                );
               });
             },
             activeColor: Colors.white,
@@ -3416,7 +3386,6 @@ class _PerformanceGovernanceSystemPageState
   Widget _buildExpandableTextAreaRemarksCell(int index) {
     if (!remarksControllers.containsKey(index)) {
       remarksControllers[index] = TextEditingController();
-      debugPrint("? Initialized new controller at index: $index");
     }
 
     return Padding(
@@ -3427,18 +3396,14 @@ class _PerformanceGovernanceSystemPageState
           controller: remarksControllers[index],
           maxLines: null,
           keyboardType: TextInputType.multiline,
-          style: const TextStyle(
-            fontSize: 13.0, // ?? Set your desired font size here
-          ),
+          style: const TextStyle(fontSize: 13.0),
           decoration: InputDecoration(
             border: OutlineInputBorder(),
             contentPadding: EdgeInsets.all(8.0),
           ),
           enabled: false,
           onChanged: (value) {
-            setState(() {
-              debugPrint("Updated TextField at index $index: $value");
-            });
+            setState(() {});
           },
         ),
       ),
@@ -3450,7 +3415,6 @@ class _PerformanceGovernanceSystemPageState
   Widget _buildExpandableTextAreaPercentageCell(int index) {
     if (!percentageControllers.containsKey(index)) {
       percentageControllers[index] = TextEditingController();
-      debugPrint("? Initialized new controller at index: $index");
     }
 
     return Padding(
@@ -3474,9 +3438,7 @@ class _PerformanceGovernanceSystemPageState
           ),
           enabled: false,
           onChanged: (value) {
-            setState(() {
-              debugPrint("Updated TextField at index $index: $value");
-            });
+            setState(() {});
           },
         ),
       ),
@@ -3521,7 +3483,6 @@ class _PerformanceGovernanceSystemPageState
                           'rowVersion': '',
                         },
                   );
-                  debugPrint("KRA changed for index $index ? KRAID: $newValue");
                 });
               },
               decoration: const InputDecoration(
@@ -3721,9 +3682,7 @@ class _PerformanceGovernanceSystemPageState
               contentPadding: EdgeInsets.all(8.0),
             ),
             onChanged: (value) {
-              setState(() {
-                debugPrint("Updated TextField at index $index: $value");
-              });
+              setState(() {});
             },
           ),
         ),
@@ -3826,7 +3785,6 @@ class _PerformanceGovernanceSystemPageState
   Widget _buildExpandableTextAreaCell(int index) {
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
-      debugPrint("? Initialized new controller at index: $index");
     }
 
     return Padding(
@@ -3845,9 +3803,7 @@ class _PerformanceGovernanceSystemPageState
               contentPadding: EdgeInsets.all(8.0),
             ),
             onChanged: (value) {
-              setState(() {
-                debugPrint("Updated TextField at index $index: $value");
-              });
+              setState(() {});
             },
           ),
         ),
