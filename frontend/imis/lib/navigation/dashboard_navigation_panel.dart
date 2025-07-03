@@ -587,7 +587,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                                   'PGS Signatory',
                                   9,
                                   () => _setScreen(
-                                    (PgsSignatoryTemplateNewPage()),
+                                    (PgsSignatoryTemplatePage()),
                                     9,
                                   ),
                                 ),
