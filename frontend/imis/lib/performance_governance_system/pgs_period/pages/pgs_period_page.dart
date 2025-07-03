@@ -7,6 +7,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/token_expiration_handler.dart';
+import 'package:intl/intl.dart';
 
 import '../../../utils/http_util.dart';
 
@@ -31,6 +32,14 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
+  DateTime? _selectedDate;
+  TextEditingController _searchDateController = TextEditingController();
+
+  // Add these controllers to your state class
+  TextEditingController startDateController = TextEditingController();
+  TextEditingController endDateController = TextEditingController();
+  DateTime? selectedStartDate;
+  DateTime? selectedEndDate;
 
   final dio = Dio();
 
@@ -121,47 +130,47 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     super.dispose();
   }
 
-  // Future<void> filterSearchResults(String query) async {
-  //   final results = await pgsPeriodSearchUtil.filter(
-  //     query,
-  //     (pgsperiod, search) =>
-  //         pgsperiod.startDate.toString().toLowerCase().contains(
-  //           search.toLowerCase(),
-  //         ) ||
-  //         pgsperiod.endDate.toString().toLowerCase().contains(
-  //           search.toLowerCase(),
-  //         ),
-  //   );
+  Future<void> filterByDateRange() async {
+    try {
+      if (selectedStartDate == null && selectedEndDate == null) {
+        setState(() {
+          filteredList = List<PgsPeriod>.from(pgsPeriodList);
+        });
+        return;
+      }
 
-  //   setState(() {
-  //     filteredList = results;
-  //   });
-  // }
-  Future<void> filterSearchResults(String query) async {
-    final searchStr = (query).trim();
+      setState(() {
+        filteredList =
+            pgsPeriodList.where((period) {
+              final periodStart = period.startDate;
+              final periodEnd = period.endDate;
 
-    final results = await pgsPeriodSearchUtil.filter(searchStr, (
-      pgsperiod,
-      search,
-    ) {
-      final searchText = search;
-      final start =
-          // ignore: unnecessary_null_comparison
-          pgsperiod.startDate != null
-              ? DateTimeConverter.dateFormat.format(pgsperiod.startDate)
-              : '';
-      final end =
-          // ignore: unnecessary_null_comparison
-          pgsperiod.endDate != null
-              ? DateTimeConverter.dateFormat.format(pgsperiod.endDate)
-              : '';
+              if (selectedStartDate == null && selectedEndDate == null) {
+                return true;
+              }
 
-      return start.contains(searchText) || end.contains(searchText);
-    });
+              if (selectedStartDate != null && selectedEndDate == null) {
+                return (periodStart.isAfter(selectedStartDate!) ||
+                    periodStart.isAtSameMomentAs(selectedStartDate!));
+              }
 
-    setState(() {
-      filteredList = results;
-    });
+              if (selectedStartDate == null && selectedEndDate != null) {
+                return (periodEnd.isBefore(selectedEndDate!) ||
+                    periodEnd.isAtSameMomentAs(selectedEndDate!));
+              }
+
+              return (periodStart.isAfter(selectedStartDate!) ||
+                      periodStart.isAtSameMomentAs(selectedStartDate!)) &&
+                  (periodEnd.isBefore(selectedEndDate!) ||
+                      periodEnd.isAtSameMomentAs(selectedEndDate!));
+            }).toList();
+      });
+    } catch (e) {
+      debugPrint('Error filtering by date range: $e');
+      setState(() {
+        filteredList = List<PgsPeriod>.from(pgsPeriodList);
+      });
+    }
   }
 
   void showDeleteDialog(String id) {
@@ -458,39 +467,140 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  height: 30,
-                  width: 300,
-                  child: TextField(
-                    focusNode: isSearchfocus,
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: lightGrey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Period',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: isSearchfocus.hasFocus ? primaryColor : grey,
-                        size: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      filled: true,
-                      fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 5,
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 350,
+                      height: 30,
+                      child: TextFormField(
+                        controller: startDateController,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelText: 'Start Date',
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          border: OutlineInputBorder(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          suffixIcon:
+                              startDateController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: Icon(Icons.close),
+                                    onPressed: () {
+                                      setState(() {
+                                        startDateController.clear();
+                                        selectedStartDate = null;
+                                        filterByDateRange();
+                                      });
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                  : Icon(
+                                    Icons.calendar_today,
+                                    color:
+                                        isSearchfocus.hasFocus
+                                            ? primaryColor
+                                            : grey,
+                                  ),
+                        ),
+                        readOnly: true,
+                        onTap: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedStartDate ?? DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2101),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedStartDate = picked;
+                              startDateController.text = DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(picked);
+                              filterByDateRange();
+                            });
+                          }
+                        },
                       ),
                     ),
-                    onChanged: filterSearchResults,
-                  ),
+
+                    SizedBox(width: 15),
+                    SizedBox(
+                      width: 350,
+                      height: 30,
+                      child: TextFormField(
+                        controller: endDateController,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
+                          ),
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelText: 'End Date',
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          border: OutlineInputBorder(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          suffixIcon:
+                              endDateController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: Icon(Icons.close),
+                                    onPressed: () {
+                                      setState(() {
+                                        endDateController.clear();
+                                        selectedEndDate = null;
+                                        filterByDateRange();
+                                      });
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                  : Icon(
+                                    Icons.calendar_today,
+                                    color:
+                                        isSearchfocus.hasFocus
+                                            ? primaryColor
+                                            : grey,
+                                  ),
+                        ),
+                        readOnly: true,
+                        onTap: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedEndDate ?? DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2101),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedEndDate = picked;
+                              endDateController.text = DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(picked);
+                              filterByDateRange();
+                            });
+                          }
+                        },
+                      ),
+                    ),
+                  ],
                 ),
 
                 if (!isMinimized)
