@@ -30,6 +30,8 @@ dependencies:
   flutter_html: ^3.0.0
   fl_chart: ^0.63.0
   number_inc_dec: ^0.8.0
+  font_awesome_flutter: ^10.8.0
+  dropdown_search: ^5.0.6
 
  
 
