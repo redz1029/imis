@@ -23,6 +23,7 @@ class PgsSignatoryTemplatePage extends StatefulWidget {
 }
 
 class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
+  final _formKey = GlobalKey<FormState>();
   late FilterSearchResultUtil<PgsSignatoryTemplate> signatoryTemplateUtil;
 
   List<Map<String, dynamic>> signatoryTemplateList = [];
@@ -272,26 +273,71 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     : 'Edit Signatory Template',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              content: SizedBox(
-                width: 400,
-                height: 500,
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Stack(
-                          children: [
-                            DropdownSearch<Map<String, dynamic>?>(
-                              popupProps: PopupProps.menu(
-                                showSearchBox: true,
-                                searchFieldProps: TextFieldProps(
-                                  decoration: InputDecoration(
-                                    hintText: 'Search offices...',
+              content: Form(
+                key: _formKey,
+                child: SizedBox(
+                  width: 400,
+                  height: 500,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: Stack(
+                            children: [
+                              DropdownSearch<Map<String, dynamic>?>(
+                                popupProps: PopupProps.menu(
+                                  showSearchBox: true,
+                                  searchFieldProps: TextFieldProps(
+                                    decoration: InputDecoration(
+                                      hintText: 'Search offices...',
+                                      fillColor: mainBgColor,
+                                      filled: true,
+
+                                      prefixIcon: Icon(Icons.search),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderSide: BorderSide(
+                                          color: primaryColor,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  itemBuilder:
+                                      (context, item, isSelected) => ListTile(
+                                        tileColor: mainBgColor,
+
+                                        title: Text(item?['name'] ?? ''),
+                                      ),
+                                ),
+
+                                items: officeList.cast<Map<String, dynamic>?>(),
+                                itemAsString: (o) => o?['name'] ?? '',
+                                selectedItem: officeList
+                                    .cast<Map<String, dynamic>?>()
+                                    .firstWhere(
+                                      (o) => o?['id'] == selectOffice,
+                                      orElse: () => null,
+                                    ),
+                                onChanged:
+                                    (value) => setState(
+                                      () => selectOffice = value?['id'],
+                                    ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please select an office';
+                                  }
+                                  return null;
+                                },
+                                dropdownDecoratorProps: DropDownDecoratorProps(
+                                  dropdownSearchDecoration: InputDecoration(
+                                    labelText: 'Select Office',
                                     fillColor: mainBgColor,
                                     filled: true,
-
-                                    prefixIcon: Icon(Icons.search),
+                                    floatingLabelBehavior:
+                                        FloatingLabelBehavior.never,
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -302,127 +348,93 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                     ),
                                   ),
                                 ),
-                                itemBuilder:
-                                    (context, item, isSelected) => ListTile(
-                                      tileColor: mainBgColor,
-
-                                      title: Text(item?['name'] ?? ''),
-                                    ),
                               ),
-
-                              items: officeList.cast<Map<String, dynamic>?>(),
-                              itemAsString: (o) => o?['name'] ?? '',
-                              selectedItem: officeList
-                                  .cast<Map<String, dynamic>?>()
-                                  .firstWhere(
-                                    (o) => o?['id'] == selectOffice,
-                                    orElse: () => null,
-                                  ),
-                              onChanged:
-                                  (value) => setState(
-                                    () => selectOffice = value?['id'],
-                                  ),
-                              dropdownDecoratorProps: DropDownDecoratorProps(
-                                dropdownSearchDecoration: InputDecoration(
-                                  labelText: 'Select Office',
-                                  fillColor: mainBgColor,
-                                  filled: true,
-                                  floatingLabelBehavior:
-                                      FloatingLabelBehavior.never,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderSide: BorderSide(color: primaryColor),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      gap3,
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("List of Signatories"),
-                      ),
-
-                      if (selectedSignatory.isNotEmpty)
-                        Column(
-                          children: [
-                            gap,
-                            ListView.builder(
-                              shrinkWrap: true,
-                              physics: NeverScrollableScrollPhysics(),
-                              itemCount: selectedSignatory.length,
-                              itemBuilder: (context, index) {
-                                final signatory = selectedSignatory[index];
-                                return ListTile(
-                                  title: Text(
-                                    "${signatory['label']} : ",
-                                    style: TextStyle(fontSize: 14),
-                                  ),
-                                  subtitle: Text(
-                                    signatory['name'],
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.edit,
-                                          color: primaryTextColor,
-                                        ),
-
-                                        onPressed: () {
-                                          showSignatoryDialog(
-                                            context: context,
-                                            setDialogState: setDialogState,
-                                            index: index,
-                                            signatory: signatory,
-                                          );
-                                        },
-                                      ),
-                                      // Delete Button
-                                      IconButton(
-                                        icon: Icon(
-                                          Icons.delete,
-                                          color: primaryTextColor,
-                                        ),
-                                        onPressed: () {
-                                          setDialogState(() {
-                                            selectedSignatory.removeAt(index);
-                                          });
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
-                          ],
-                        ),
-                      Align(
-                        alignment: Alignment.center,
-                        child: TextButton.icon(
-                          onPressed: () {
-                            showSignatoryDialog(
-                              context: context,
-                              setDialogState: setDialogState,
-                            );
-                          },
-                          icon: Icon(Icons.add, color: primaryColor),
-                          label: Text(
-                            "Add new Signatory",
-                            style: TextStyle(color: primaryColor),
+                            ],
                           ),
                         ),
-                      ),
-                    ],
+
+                        gap3,
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text("List of Signatories"),
+                        ),
+
+                        if (selectedSignatory.isNotEmpty)
+                          Column(
+                            children: [
+                              gap,
+                              ListView.builder(
+                                shrinkWrap: true,
+                                physics: NeverScrollableScrollPhysics(),
+                                itemCount: selectedSignatory.length,
+                                itemBuilder: (context, index) {
+                                  final signatory = selectedSignatory[index];
+                                  return ListTile(
+                                    title: Text(
+                                      "${signatory['label']} : ",
+                                      style: TextStyle(fontSize: 14),
+                                    ),
+                                    subtitle: Text(
+                                      signatory['name'],
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    trailing: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.edit,
+                                            color: primaryTextColor,
+                                          ),
+
+                                          onPressed: () {
+                                            showSignatoryDialog(
+                                              context: context,
+                                              setDialogState: setDialogState,
+                                              index: index,
+                                              signatory: signatory,
+                                            );
+                                          },
+                                        ),
+                                        // Delete Button
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.delete,
+                                            color: primaryTextColor,
+                                          ),
+                                          onPressed: () {
+                                            setDialogState(() {
+                                              selectedSignatory.removeAt(index);
+                                            });
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        Align(
+                          alignment: Alignment.center,
+                          child: TextButton.icon(
+                            onPressed: () {
+                              showSignatoryDialog(
+                                context: context,
+                                setDialogState: setDialogState,
+                              );
+                            },
+                            icon: Icon(Icons.add, color: primaryColor),
+                            label: Text(
+                              "Add new Signatory",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -445,62 +457,64 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     ),
                   ),
                   onPressed: () async {
-                    bool? confirmAction = await showDialog<bool>(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text(
-                            id == null ? "Confirm Save" : "Confirm Update",
-                          ),
-                          content: Text(
-                            id == null
-                                ? "Are you sure you want to save this record?"
-                                : "Are you sure you want to update this record?",
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                "No",
-                                style: TextStyle(color: primaryColor),
+                    if (_formKey.currentState!.validate()) {
+                      bool? confirmAction = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text(
+                              id == null ? "Confirm Save" : "Confirm Update",
+                            ),
+                            content: Text(
+                              id == null
+                                  ? "Are you sure you want to save this record?"
+                                  : "Are you sure you want to update this record?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(
+                                  "No",
+                                  style: TextStyle(color: primaryColor),
+                                ),
                               ),
-                            ),
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: Text(
-                                "Yes",
-                                style: TextStyle(color: primaryColor),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text(
+                                  "Yes",
+                                  style: TextStyle(color: primaryColor),
+                                ),
                               ),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                    if (confirmAction == true) {
-                      List<PgsSignatoryTemplate> signatories = [];
-
-                      if (selectedSignatory.isNotEmpty) {
-                        for (var signatory in selectedSignatory) {
-                          signatories.add(
-                            PgsSignatoryTemplate(
-                              signatory['id'] ?? 0,
-                              isDeleted,
-                              signatory['level'],
-                              signatory['userId'],
-                              true,
-                              status: signatory['status'] ?? '',
-                              signatoryLabel: signatory['label'] ?? '',
-                              officeId: selectOffice ?? 0,
-                            ),
+                            ],
                           );
-                        }
-                      }
+                        },
+                      );
+                      if (confirmAction == true) {
+                        List<PgsSignatoryTemplate> signatories = [];
 
-                      await addOrUpdateSignatory(signatories);
-                      // ignore: use_build_context_synchronously
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        resetFormFields();
+                        if (selectedSignatory.isNotEmpty) {
+                          for (var signatory in selectedSignatory) {
+                            signatories.add(
+                              PgsSignatoryTemplate(
+                                signatory['id'] ?? 0,
+                                isDeleted,
+                                signatory['level'],
+                                signatory['userId'],
+                                true,
+                                status: signatory['status'] ?? '',
+                                signatoryLabel: signatory['label'] ?? '',
+                                officeId: selectOffice ?? 0,
+                              ),
+                            );
+                          }
+                        }
+
+                        await addOrUpdateSignatory(signatories);
+                        // ignore: use_build_context_synchronously
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          resetFormFields();
+                        }
                       }
                     }
                   },
