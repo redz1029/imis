@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
@@ -390,64 +391,120 @@ class _UserRolePageState extends State<UserRolePage> {
               children: [
                 SizedBox(
                   width: 450,
-                  child: DropdownButtonFormField<String>(
-                    value:
-                        filteredListUser.any(
-                              (user) => user.id == _selectedUserId,
-                            )
-                            ? _selectedUserId
-                            : null,
-                    decoration: InputDecoration(
-                      labelText: 'User Name',
-                      border: OutlineInputBorder(),
+                  child: DropdownSearch<User?>(
+                    popupProps: PopupProps.menu(
+                      showSearchBox: true,
+                      searchFieldProps: TextFieldProps(
+                        decoration: InputDecoration(
+                          hintText: 'Search User Name...',
+                          filled: true,
+                          fillColor: mainBgColor,
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                        ),
+                      ),
+                      itemBuilder:
+                          (context, user, isSelected) => ListTile(
+                            tileColor: mainBgColor,
+                            title: Text(user?.fullName ?? ''),
+                          ),
                     ),
-                    items:
-                        filteredListUser.map((user) {
-                          return DropdownMenuItem<String>(
-                            value: user.id,
-                            child: Text(user.fullName),
-                          );
-                        }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedUserId = value;
-                      });
-                    },
+                    items: userList,
+                    itemAsString: (u) => u?.fullName ?? '',
+                    selectedItem: userList.cast<User?>().firstWhere(
+                      (u) => u?.id == _selectedUserId,
+                      orElse: () => null,
+                    ),
+                    onChanged:
+                        (value) => setState(() => _selectedUserId = value?.id),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
+                      if (value == null) {
                         return 'Please select a user';
                       }
                       return null;
                     },
+                    dropdownDecoratorProps: DropDownDecoratorProps(
+                      dropdownSearchDecoration: InputDecoration(
+                        labelText: 'Select User',
+                        filled: true,
+                        fillColor: mainBgColor,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: primaryColor),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
                 SizedBox(height: 15),
                 SizedBox(
                   width: 450,
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedRoleId,
-                    decoration: InputDecoration(
-                      labelText: 'Role',
-                      border: OutlineInputBorder(),
+                  child: DropdownSearch<Map<String, dynamic>?>(
+                    popupProps: PopupProps.menu(
+                      showSearchBox: true,
+                      searchFieldProps: TextFieldProps(
+                        decoration: InputDecoration(
+                          hintText: 'Search Role...',
+                          fillColor: mainBgColor,
+                          filled: true,
+
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                        ),
+                      ),
+                      itemBuilder:
+                          (context, item, isSelected) => ListTile(
+                            tileColor: mainBgColor,
+
+                            title: Text(item?['name'] ?? ''),
+                          ),
                     ),
-                    items:
-                        filteredListRole.map((roleData) {
-                          return DropdownMenuItem<String>(
-                            value: roleData['id'].toString(),
-                            child: Text(roleData['name']),
-                          );
-                        }).toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedRoleId = value;
-                      });
-                    },
+
+                    items: roleList.cast<Map<String, dynamic>?>(),
+                    itemAsString: (o) => o?['name'] ?? '',
+                    selectedItem: roleList
+                        .cast<Map<String, dynamic>?>()
+                        .firstWhere(
+                          (o) => o?['id'] == _selectedRoleId,
+                          orElse: () => null,
+                        ),
+                    onChanged:
+                        (value) =>
+                            setState(() => _selectedRoleId = value?['id']),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please select a role';
                       }
                       return null;
                     },
+                    dropdownDecoratorProps: DropDownDecoratorProps(
+                      dropdownSearchDecoration: InputDecoration(
+                        labelText: 'Select Role',
+                        fillColor: mainBgColor,
+                        filled: true,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: primaryColor),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],

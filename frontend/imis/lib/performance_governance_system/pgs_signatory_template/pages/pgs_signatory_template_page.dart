@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
@@ -277,36 +278,64 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
-                      // Team Dropdown
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Stack(
                           children: [
-                            DropdownButtonHideUnderline(
-                              child: DropdownButtonFormField<int>(
-                                dropdownColor: mainBgColor,
-                                isExpanded: true,
-                                decoration: InputDecoration(
+                            DropdownSearch<Map<String, dynamic>?>(
+                              popupProps: PopupProps.menu(
+                                showSearchBox: true,
+                                searchFieldProps: TextFieldProps(
+                                  decoration: InputDecoration(
+                                    hintText: 'Search offices...',
+                                    fillColor: mainBgColor,
+                                    filled: true,
+
+                                    prefixIcon: Icon(Icons.search),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderSide: BorderSide(
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                itemBuilder:
+                                    (context, item, isSelected) => ListTile(
+                                      tileColor: mainBgColor,
+
+                                      title: Text(item?['name'] ?? ''),
+                                    ),
+                              ),
+
+                              items: officeList.cast<Map<String, dynamic>?>(),
+                              itemAsString: (o) => o?['name'] ?? '',
+                              selectedItem: officeList
+                                  .cast<Map<String, dynamic>?>()
+                                  .firstWhere(
+                                    (o) => o?['id'] == selectOffice,
+                                    orElse: () => null,
+                                  ),
+                              onChanged:
+                                  (value) => setState(
+                                    () => selectOffice = value?['id'],
+                                  ),
+                              dropdownDecoratorProps: DropDownDecoratorProps(
+                                dropdownSearchDecoration: InputDecoration(
                                   labelText: 'Select Office',
+                                  fillColor: mainBgColor,
+                                  filled: true,
                                   floatingLabelBehavior:
                                       FloatingLabelBehavior.never,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(8),
                                   ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: primaryColor),
+                                  ),
                                 ),
-                                value: selectOffice,
-                                items:
-                                    officeList.map((team) {
-                                      return DropdownMenuItem<int>(
-                                        value: team['id'],
-                                        child: Text(team['name']),
-                                      );
-                                    }).toList(),
-                                onChanged: (value) {
-                                  setState(() {
-                                    selectOffice = value;
-                                  });
-                                },
                               ),
                             ),
                           ],
@@ -544,47 +573,64 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               content: SizedBox(
-                height: 250, // Increased height to accommodate all fields
-                width: 500, // Set a fixed width
+                height: 250,
+                width: 500,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Signatory Name Dropdown
-                    DropdownButtonFormField<String>(
-                      value: selectedUserId,
-                      decoration: InputDecoration(
-                        labelText: 'Signatory Name',
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 12,
+                    DropdownSearch<User?>(
+                      popupProps: PopupProps.menu(
+                        showSearchBox: true,
+                        searchFieldProps: TextFieldProps(
+                          decoration: InputDecoration(
+                            hintText: 'Search User Name...',
+                            filled: true,
+                            fillColor: mainBgColor,
+                            prefixIcon: Icon(Icons.search),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: primaryColor),
+                            ),
+                          ),
                         ),
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
-                        ),
-                        floatingLabelStyle: const TextStyle(
-                          color: primaryColor,
-                        ),
+                        itemBuilder:
+                            (context, user, isSelected) => ListTile(
+                              tileColor: mainBgColor,
+                              title: Text(user?.fullName ?? ''),
+                            ),
                       ),
-                      items:
-                          filteredListUser.map((user) {
-                            return DropdownMenuItem<String>(
-                              value: user.id,
-                              child: Text(user.fullName),
-                            );
-                          }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedUserId = value;
-                        });
-                      },
+                      items: userList,
+                      itemAsString: (u) => u?.fullName ?? '',
+                      selectedItem: userList.cast<User?>().firstWhere(
+                        (u) => u?.id == selectedUserId,
+                        orElse: () => null,
+                      ),
+                      onChanged:
+                          (value) => setState(() => selectedUserId = value?.id),
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
+                        if (value == null) {
                           return 'Please select a user';
                         }
                         return null;
                       },
+                      dropdownDecoratorProps: DropDownDecoratorProps(
+                        dropdownSearchDecoration: InputDecoration(
+                          labelText: 'Select User',
+                          filled: true,
+                          fillColor: mainBgColor,
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                        ),
+                      ),
                     ),
+
                     SizedBox(height: 16),
                     // Signatory Label
                     TextField(
