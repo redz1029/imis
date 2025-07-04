@@ -22,6 +22,7 @@ import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
 import 'package:imis/utils/token_expiration_handler.dart';
@@ -43,6 +44,7 @@ class PerformanceGovernanceSystemPage extends StatefulWidget {
 
 class _PerformanceGovernanceSystemPageState
     extends State<PerformanceGovernanceSystemPage> {
+  late FilterSearchResultUtil<PerformanceGovernanceSystem> pgsSearchUtil;
   final GlobalKey _menuKey = GlobalKey();
 
   Map<int, TextEditingController> deliverablesControllers = {};
@@ -67,10 +69,11 @@ class _PerformanceGovernanceSystemPageState
   List<User> userList = [];
   List<User> filteredListUser = [];
   List<PgsSignatory> displaySignatoryList = [];
+  List<Map<String, dynamic>> filteredList = [];
 
   List<Map<String, dynamic>> deliverableLists = [];
   List<Map<String, dynamic>> readinessList = [];
-  List<Map<String, dynamic>> filteredList = [];
+
   List<Map<String, dynamic>> filteredListSignatory = [];
   List<Map<String, dynamic>> options = [];
 
@@ -173,7 +176,6 @@ class _PerformanceGovernanceSystemPageState
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         debugPrint("Pgs data saved successfully!");
-        debugPrint("Pgs ID: ${response.data['id']}");
 
         setState(() {
           fetchPgsList();
@@ -184,12 +186,9 @@ class _PerformanceGovernanceSystemPageState
         await prefs.remove('selectedOfficeName');
       } else {
         debugPrint("Failed to save Pgs data");
-        debugPrint("Response: ${response.data}");
       }
     } on DioException catch (e) {
-      debugPrint(
-        "Dio error: ${e.response?.statusCode} - ${e.response?.data ?? e.message}",
-      );
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -206,7 +205,7 @@ class _PerformanceGovernanceSystemPageState
       String? token = prefs.getString('accessToken');
 
       if (token == null || token.isEmpty) {
-        debugPrint("? Error: Access token is missing!");
+        debugPrint("Error: Access token is missing!");
         return;
       }
 
@@ -232,7 +231,6 @@ class _PerformanceGovernanceSystemPageState
         await prefs.remove('selectedOfficeName');
       } else {
         debugPrint("Failed to update PGS");
-        debugPrint("Response: ${response.data}");
 
         if (response.statusCode == 401 || response.statusCode == 403) {
           debugPrint(
@@ -241,9 +239,7 @@ class _PerformanceGovernanceSystemPageState
         }
       }
     } on DioException catch (e) {
-      debugPrint(
-        "?? DioException: ${e.response?.statusCode} - ${e.response?.data ?? e.message}",
-      );
+      debugPrint("?? DioException");
     } catch (e) {
       debugPrint("?? Unexpected error: $e");
     }
@@ -274,7 +270,7 @@ class _PerformanceGovernanceSystemPageState
         debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -297,11 +293,7 @@ class _PerformanceGovernanceSystemPageState
             userList = data;
             filteredListUser = List.from(userList);
 
-            if (filteredListUser.isNotEmpty) {
-              // _submittedByUserId = filteredListUser[0].id;
-              // _approvedByUserId = filteredListUser[0].id;
-              // _notedByUserId = filteredListUser[0].id;
-            }
+            if (filteredListUser.isNotEmpty) {}
           });
         }
       }
@@ -354,6 +346,25 @@ class _PerformanceGovernanceSystemPageState
     } catch (e) {
       return 'Unknown';
     }
+  }
+
+  Future<void> filterSearchResults(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        filteredList = List.from(deliverableLists);
+      });
+      return;
+    }
+
+    final filtered =
+        deliverableLists.where((item) {
+          final officeName = item['name']?.toString().toLowerCase() ?? '';
+          return officeName.contains(query.toLowerCase());
+        }).toList();
+
+    setState(() {
+      filteredList = filtered;
+    });
   }
 
   Future<List<Map<String, dynamic>>> _getFilteredSignatories() async {
@@ -465,7 +476,7 @@ class _PerformanceGovernanceSystemPageState
         debugPrint("Failed to fetch deliverables");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -529,7 +540,7 @@ class _PerformanceGovernanceSystemPageState
           ),
           child: Container(
             width: MediaQuery.of(context).size.width * 0.30,
-            constraints: BoxConstraints(maxHeight: 250),
+            constraints: BoxConstraints(maxHeight: 350),
             padding: EdgeInsets.all(16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -660,7 +671,7 @@ class _PerformanceGovernanceSystemPageState
         });
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     } finally {
@@ -693,7 +704,7 @@ class _PerformanceGovernanceSystemPageState
         debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -740,6 +751,13 @@ class _PerformanceGovernanceSystemPageState
             "${filteredListPeriod[0]['startDate']} - ${filteredListPeriod[0]['endDate']}";
       }
     });
+
+    pgsSearchUtil = FilterSearchResultUtil<PerformanceGovernanceSystem>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().performancegovernancesystem,
+      pageSize: _pageSize,
+      fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
+    );
   }
 
   //Save deliverables
@@ -766,7 +784,7 @@ class _PerformanceGovernanceSystemPageState
         debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -2553,7 +2571,7 @@ class _PerformanceGovernanceSystemPageState
                       style: TextStyle(color: primaryColor),
                     ),
                   ),
-                  //SUBMIT BUTTON
+
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -3252,8 +3270,7 @@ class _PerformanceGovernanceSystemPageState
           fontSize: 15,
           fontStyle: FontStyle.normal,
         ),
-        // TableCell(child: Padding(padding: const EdgeInsets.all(8.0))),
-        // BuildHeaderCell(text: 'Percent:'),
+
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -3553,7 +3570,7 @@ class _PerformanceGovernanceSystemPageState
     if (selectedByWhen[index] == null ||
         selectedByWhenControllers[index]?.text.isEmpty == true) {
       DateTime now = DateTime.now();
-      String defaultDate = DateFormat('yyyy-MM-dd').format(now); // ISO format
+      String defaultDate = DateFormat('yyyy-MM-dd').format(now);
       selectedByWhen[index] = defaultDate;
       selectedByWhenControllers[index]?.text = DateFormat(
         'MMMM yyyy',
@@ -3603,12 +3620,12 @@ class _PerformanceGovernanceSystemPageState
             if (pickedDate != null) {
               String formattedDate = DateFormat(
                 'yyyy-MM-dd',
-              ).format(pickedDate); // ISO format for saving
+              ).format(pickedDate);
               setDialogState(() {
                 selectedByWhen[index] = formattedDate;
                 selectedByWhenControllers[index]?.text = DateFormat(
                   'MMMM yyyy',
-                ).format(pickedDate); // User-friendly format
+                ).format(pickedDate);
               });
             }
           },
@@ -3674,9 +3691,7 @@ class _PerformanceGovernanceSystemPageState
             controller: deliverablesControllers[index],
             maxLines: null,
             keyboardType: TextInputType.multiline,
-            style: TextStyle(
-              fontSize: 14.0, // ?? Set your desired font size here
-            ),
+            style: TextStyle(fontSize: 14.0),
             decoration: InputDecoration(
               border: OutlineInputBorder(),
               contentPadding: EdgeInsets.all(8.0),
@@ -3809,21 +3824,6 @@ class _PerformanceGovernanceSystemPageState
         ),
       ),
     );
-  }
-
-  void filterSearchResults(String query) {
-    deliverables.then((data) {
-      setState(() {
-        filteredList =
-            data
-                .where(
-                  (item) => item['deliverableName'].toLowerCase().contains(
-                    query.toLowerCase(),
-                  ),
-                )
-                .toList();
-      });
-    });
   }
 }
 
