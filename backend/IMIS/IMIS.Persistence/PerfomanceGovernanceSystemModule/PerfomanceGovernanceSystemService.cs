@@ -8,9 +8,9 @@ using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
-using IMIS.Persistence.Migrations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography.Xml;
 
 namespace IMIS.Persistence.PgsModule
 {
@@ -41,7 +41,6 @@ namespace IMIS.Persistence.PgsModule
             return systems.Select(e => new PerfomanceGovernanceSystemDto(e)).ToList();
         }
 
-
         public async Task<PerfomanceGovernanceSystemDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var pgs = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -51,7 +50,6 @@ namespace IMIS.Persistence.PgsModule
         public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
             var records = await _repository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
-
             var result = new List<PerfomanceGovernanceSystemDto>();
 
             if (records == null)
@@ -60,11 +58,57 @@ namespace IMIS.Persistence.PgsModule
             foreach (var pgs in records)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                var dto = new PerfomanceGovernanceSystemDto(pgs);
 
-                var dto = new PerfomanceGovernanceSystemDto(pgs)
+                if (dto.PgsSignatories != null)
                 {
-                    ForSignature = await IsUserNextSignatoryAsync(pgs, userId, cancellationToken).ConfigureAwait(false)
-                };
+                    var currentStatus = pgs.PgsSignatories?.LastOrDefault();
+                    if (currentStatus != null)
+                    {
+                        var signatoryTemplates = await GetSignatoryTemplates(pgs.Office, cancellationToken).ConfigureAwait(false);
+
+                        var currentTemplate = currentStatus.PgsSignatoryTemplate
+                            ?? await _signatoryTemplateRepository.GetByIdAsync(currentStatus.PgsSignatoryTemplateId, cancellationToken);
+
+                        var nextTemplate = signatoryTemplates.Where(e => e.OrderLevel == (currentTemplate.OrderLevel + 1)).FirstOrDefault();
+
+                        // Append signatory template, if the passed userId is equal to the DefaultSignatoryId
+                        if (nextTemplate != null && nextTemplate.DefaultSignatoryId != null && nextTemplate.DefaultSignatoryId == userId)
+                        {
+                            var user = await _userManager
+                                .FindByIdAsync(userId)
+                                .ConfigureAwait(false);
+                            dto.PgsSignatories.Add(new PgsSignatoryDto()
+                            {
+                                Id = 0,
+                                PgsId = pgs.Id,
+                                PgsSignatoryTemplateId = nextTemplate.Id,
+                                SignatoryId = userId,
+                                Status = nextTemplate.Status,
+                                Label = nextTemplate.SignatoryLabel,
+                                IsNextStatus = true,
+                                SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}"
+                            });
+                        }
+                    }
+
+                    foreach (var signatory in dto.PgsSignatories)
+                    {
+                        var signatoryTemplate = await _signatoryTemplateRepository
+                            .GetByIdAsync(signatory.PgsSignatoryTemplateId, cancellationToken)
+                            .ConfigureAwait(false);
+
+                        var user = await _userManager
+                            .FindByIdAsync(signatory.SignatoryId)
+                            .ConfigureAwait(false);
+
+                        signatory.Label = signatoryTemplate.SignatoryLabel;
+                        signatory.Status = signatoryTemplate.Status;
+                        signatory.SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}";
+                        signatory.IsNextStatus = false;
+                    }
+                }
+
                 result.Add(dto);
             }
 
@@ -95,25 +139,6 @@ namespace IMIS.Persistence.PgsModule
             return signatoryTemplates;
         }
 
-        private async Task<bool> IsUserNextSignatoryAsync(
-        PerfomanceGovernanceSystem pgs,
-        string userId,
-        CancellationToken cancellationToken)
-        {
-            var currentStatus = pgs.PgsSignatories?.LastOrDefault();
-            if (currentStatus == null) // Currently saved as draft
-                return false;
-
-            var signatoryTemplates = await GetSignatoryTemplates(pgs.Office, cancellationToken).ConfigureAwait(false);
-
-            var currentTemplate = currentStatus.PgsSignatoryTemplate 
-                ?? await _signatoryTemplateRepository.GetByIdAsync(currentStatus.PgsSignatoryTemplateId, cancellationToken);
-
-            var nextTemplate = signatoryTemplates.Where(e => e.OrderLevel == (currentTemplate.OrderLevel + 1)).FirstOrDefault();
-
-            return nextTemplate?.DefaultSignatoryId == userId;
-        }
-
         public async Task<ReportPerfomanceGovernanceSystemDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var perfomanceGovernanceSystem = await _repository.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -139,15 +164,11 @@ namespace IMIS.Persistence.PgsModule
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var perfomanceGovernanceSystemDto = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (perfomanceGovernanceSystemDto.TotalCount == 0)
-                return null;
             return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(perfomanceGovernanceSystemDto.Items, page, pageSize, perfomanceGovernanceSystemDto.TotalCount);
         }
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var perfomanceGovernanceSystemDto = await _repository.GetPaginatedPgsPeriodIdAsync(pgsPeriodId, page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (perfomanceGovernanceSystemDto.TotalCount == 0)
-                return null;
             return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(perfomanceGovernanceSystemDto.Items, page, pageSize, perfomanceGovernanceSystemDto.TotalCount);
         }
 
