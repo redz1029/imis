@@ -2,14 +2,13 @@
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
-using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Application.PgsPeriodModule;
-using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
+using IMIS.Persistence.Migrations;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -72,6 +71,30 @@ namespace IMIS.Persistence.PgsModule
             return result;
         }
 
+        private async Task<IEnumerable<PgsSignatoryTemplate>> GetSignatoryTemplates(Office office, CancellationToken cancellationToken)
+        {
+            // Try to get custom template or specific template of an office.
+            // Basically if the office has it's own signatory workflow that differs on it's Service/Parent
+            var signatoryTemplates = await _signatoryTemplateRepository
+                .GetSignatoryTemplateByOfficeIdAsync(office.Id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (signatoryTemplates.Count == 0)
+            {
+                // Get the root parent office.
+                var parentOffice = await _officeRepository
+                    .GetRootParentOffice(office, cancellationToken)
+                    .ConfigureAwait(false);
+
+                // retrieve the template for services.
+                signatoryTemplates = await _signatoryTemplateRepository
+                    .GetSignatoryTemplateByOfficeIdAsync(parentOffice.Id, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            return signatoryTemplates;
+        }
+
         private async Task<bool> IsUserNextSignatoryAsync(
         PerfomanceGovernanceSystem pgs,
         string userId,
@@ -81,24 +104,7 @@ namespace IMIS.Persistence.PgsModule
             if (currentStatus == null) // Currently saved as draft
                 return false;
 
-            // Try to get custom template or specific template of an office.
-            // Basically if the office has it's own signatory workflow that differs on it's Service/Parent
-            var signatoryTemplates = await _signatoryTemplateRepository
-                .GetSignatoryTemplateByOfficeIdAsync(pgs.OfficeId, cancellationToken)
-                .ConfigureAwait(false);
-
-            if(signatoryTemplates.Count == 0)
-            {
-                // Get the root parent office.
-                var office = await _officeRepository
-                    .GetRootParentOffice(pgs.Office, cancellationToken)
-                    .ConfigureAwait(false);
-
-                // retrieve the template for services.
-                signatoryTemplates = await _signatoryTemplateRepository
-                    .GetSignatoryTemplateByOfficeIdAsync(office.Id, cancellationToken)
-                    .ConfigureAwait(false);
-            }
+            var signatoryTemplates = await GetSignatoryTemplates(pgs.Office, cancellationToken).ConfigureAwait(false);
 
             var currentTemplate = currentStatus.PgsSignatoryTemplate 
                 ?? await _signatoryTemplateRepository.GetByIdAsync(currentStatus.PgsSignatoryTemplateId, cancellationToken);
@@ -144,6 +150,7 @@ namespace IMIS.Persistence.PgsModule
                 return null;
             return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(perfomanceGovernanceSystemDto.Items, page, pageSize, perfomanceGovernanceSystemDto.TotalCount);
         }
+
         public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto, CancellationToken cancellationToken)
         {
             if (perfomanceGovernanceSystemDto == null) throw new ArgumentNullException(nameof(perfomanceGovernanceSystemDto));
@@ -163,71 +170,8 @@ namespace IMIS.Persistence.PgsModule
             // Handle Save or Update
             var createdPerfomanceGovernanceSystem = await _repository.SaveOrUpdateAsync(perfomanceGovernanceSystemEntity, cancellationToken).ConfigureAwait(false);
 
-
-
-            return new PerfomanceGovernanceSystemDto
-            {
-                Id = createdPerfomanceGovernanceSystem.Id,
-                Remarks = createdPerfomanceGovernanceSystem.Remarks,
-                PercentDeliverables = createdPerfomanceGovernanceSystem.PercentDeliverables,
-                PgsStatus = createdPerfomanceGovernanceSystem.PgsStatus,
-                PgsPeriod = new PgsPeriodDto
-                {
-                    Id = createdPerfomanceGovernanceSystem.PgsPeriod.Id,
-                    StartDate = createdPerfomanceGovernanceSystem.PgsPeriod.StartDate,
-                    EndDate = createdPerfomanceGovernanceSystem.PgsPeriod.EndDate
-                },
-                Office = new OfficeDto
-                {
-                    Id = createdPerfomanceGovernanceSystem.Office.Id,
-                    Name = createdPerfomanceGovernanceSystem.Office.Name,
-                    IsActive = createdPerfomanceGovernanceSystem.Office.IsActive,
-                    OfficeTypeId = createdPerfomanceGovernanceSystem.Office.OfficeTypeId,
-                    ParentOfficeId = createdPerfomanceGovernanceSystem.Office.ParentOfficeId
-                },
-                PgsReadinessRating = createdPerfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto
-                {
-                    Id = createdPerfomanceGovernanceSystem.PgsReadinessRating!.Id,
-                    CompetenceToDeliver = createdPerfomanceGovernanceSystem.PgsReadinessRating.CompetenceToDeliver,
-                    ResourceAvailability = createdPerfomanceGovernanceSystem.PgsReadinessRating.ResourceAvailability,
-                    ConfidenceToDeliver = createdPerfomanceGovernanceSystem.PgsReadinessRating.ConfidenceToDeliver,
-                } : null,
-                PgsDeliverables = createdPerfomanceGovernanceSystem.PgsDeliverables?.Select(deliverable => new PGSDeliverableDto
-                {
-                    Id = deliverable.Id,
-                    IsDirect = deliverable.IsDirect,
-                    DeliverableName = deliverable.DeliverableName,
-                    ByWhen = deliverable.ByWhen,
-                    PercentDeliverables = deliverable.PercentDeliverables,
-                    Status = deliverable.Status,
-                    RowVersion = deliverable.RowVersion,
-                    KraDescription = deliverable.KraDescription,
-                    Kra = deliverable.Kra != null ? new KeyResultAreaDto
-                    {
-                        Id = deliverable.Kra.Id,
-                        Name = deliverable.Kra.Name,
-                        Remarks = deliverable.Kra.Remarks
-                    } : null,
-                    Remarks = deliverable.Remarks,
-                    PgsDeliverableScoreHistory = deliverable.PgsDeliverableScoreHistory?.Select(pgsDeliverableScoreHistoryDto => new PgsDeliverableScoreHistoryDto
-                    {
-                        Id = pgsDeliverableScoreHistoryDto.Id,
-                        PgsDeliverableId = pgsDeliverableScoreHistoryDto.PgsDeliverableId,
-                        Date = pgsDeliverableScoreHistoryDto.Date,
-                        Score = pgsDeliverableScoreHistoryDto.Score,
-
-                    }).ToList()
-                }).ToList(),
-                PgsSignatories = createdPerfomanceGovernanceSystem.PgsSignatories?.Select(s => new PgsSignatoryDto
-                {
-                    Id = s.Id,
-                    PgsId = s.PgsId,
-                    PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
-                    SignatoryId = s.SignatoryId,
-                    DateSigned = s.DateSigned,
-                   
-                }).ToList()
-            };
+            return new PerfomanceGovernanceSystemDto(createdPerfomanceGovernanceSystem);
+                
         }
 
 
@@ -238,6 +182,25 @@ namespace IMIS.Persistence.PgsModule
 
             var pgsEntity = pgsDto.ToEntity();
             await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
-        }       
+        }
+
+        public async Task<PerfomanceGovernanceSystemDto> Submit(PerfomanceGovernanceSystemDto pgs, string userId, CancellationToken cancellationToken)
+        {
+            var signatoryTemplates = await GetSignatoryTemplates(pgs.Office.ToEntity(), cancellationToken).ConfigureAwait(false);
+            var initialStatus =  signatoryTemplates.OrderBy(x => x.OrderLevel).FirstOrDefault();
+            var initialSignatory = new PgsSignatoryDto() 
+            { 
+                Id = 0, 
+                PgsId = pgs.Id, 
+                PgsSignatoryTemplateId = initialStatus!.Id, 
+                SignatoryId = userId, 
+                DateSigned = DateTime.Now 
+            };
+
+            pgs.PgsSignatories = pgs.PgsSignatories ?? [];
+            pgs.PgsSignatories.Add(initialSignatory);
+
+            return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
+        }
     }
 }
