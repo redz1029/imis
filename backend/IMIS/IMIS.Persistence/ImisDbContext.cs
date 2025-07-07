@@ -77,6 +77,36 @@ namespace IMIS.Persistence
                 .WithMany(o => o.AuditableOffices)
                 .HasForeignKey(ao => ao.OfficeId);
 
+            builder.Entity<Office>()
+               .HasOne(o => o.ParentOffice)
+               .WithMany()
+               .HasForeignKey(o => o.ParentOfficeId)
+               .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<PgsSignatoryTemplate>()
+                .HasOne(p => p.Office)
+                .WithMany(o => o.SignatoryTemplates)
+                .HasForeignKey(p => p.OfficeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<AuditorOffices>()
+                .HasOne(x => x.Office)
+                .WithMany(o => o.AuditorOffices)
+                .HasForeignKey(x => x.OfficeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<AuditableOffices>()
+                .HasOne(x => x.Office)
+                .WithMany(o => o.AuditableOffices)
+                .HasForeignKey(x => x.OfficeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            builder.Entity<UserOffices>()
+                .HasOne<Office>() // inferred FK
+                .WithMany(o => o.UserOffices)
+                .HasForeignKey(x => x.OfficeId)
+                .OnDelete(DeleteBehavior.NoAction);
+
             builder.Entity<OfficeType>().HasData(
                new OfficeType { Id = 1, Name = "Service", IsActive = true },
                new OfficeType { Id = 2, Name = "Department", IsActive = true },

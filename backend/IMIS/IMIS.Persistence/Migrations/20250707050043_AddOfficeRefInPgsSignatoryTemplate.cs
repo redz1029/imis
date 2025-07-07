@@ -5,14 +5,22 @@
 namespace IMIS.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class updatePgsSignatoryTemplateAddOfficeId : Migration
+    public partial class AddOfficeRefInPgsSignatoryTemplate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_PgsSignatoryTemplate_Offices_OfficeId",
-                table: "PgsSignatoryTemplate");
+                name: "FK_AuditableOffices_Offices_OfficeId",
+                table: "AuditableOffices");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_AuditorOffices_Offices_OfficeId",
+                table: "AuditorOffices");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_UserOffices_Offices_OfficeId",
+                table: "UserOffices");
 
             migrationBuilder.AlterColumn<int>(
                 name: "OfficeId",
@@ -29,65 +37,86 @@ namespace IMIS.Persistence.Migrations
                 keyColumn: "Id",
                 keyValue: "56996e97-9e8a-4d22-a693-c865144e9b96",
                 column: "ConcurrencyStamp",
-                value: "a461bb8b-384d-4c97-b2e0-01c6c4d69f59");
+                value: "d7da037b-ab9f-4f98-84a4-7d0079a3df0b");
 
             migrationBuilder.UpdateData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
                 keyValue: "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
                 column: "ConcurrencyStamp",
-                value: "67e336ca-9a34-490e-85d1-c9935b4b550b");
+                value: "205ea5a4-1708-4c31-9d5c-ada866cb2c4a");
 
             migrationBuilder.UpdateData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
                 keyValue: "af7b586c7ee6490bbd878f46f6a47831",
                 column: "ConcurrencyStamp",
-                value: "2877cca7-ae83-4191-ade1-136ac60a8ba4");
+                value: "324630b8-3833-4298-b42d-7ec4c11063b6");
 
             migrationBuilder.UpdateData(
                 table: "AspNetRoles",
                 keyColumn: "Id",
                 keyValue: "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                 column: "ConcurrencyStamp",
-                value: "153f494e-b30e-45b8-8b5e-62beb4d1a1f0");
+                value: "21dd1934-6c36-431c-8b5c-79265c6447fc");
 
             migrationBuilder.UpdateData(
                 table: "AspNetUsers",
                 keyColumn: "Id",
                 keyValue: "176bcfeb-f12a-4d42-b790-5d2312660801",
                 columns: new[] { "ConcurrencyStamp", "PasswordHash", "SecurityStamp" },
-                values: new object[] { "417c70e5-ada3-4136-be10-9e3774d1dd12", "AQAAAAIAAYagAAAAEDmv/FzJlwuosXMhqtc6JADhBzGzkfqMWj5UWZXxwyB36G1+oM9AuxweQyrRWiS6+g==", "17df75f6-4582-49b5-8e14-c4aa33d355ae" });
+                values: new object[] { "7879e496-2548-495d-9652-c26309b30d8a", "AQAAAAIAAYagAAAAEPrKs7IMN12/lV5p6ybP9GlkTTOmmlexDlKmNyDj8badLqZ9JLabo6vVMb+EU/iFFg==", "ed8ab9ae-1ac2-4f17-8400-8c29936d228b" });
 
             migrationBuilder.UpdateData(
                 table: "AspNetUsers",
                 keyColumn: "Id",
                 keyValue: "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                 columns: new[] { "ConcurrencyStamp", "PasswordHash", "SecurityStamp" },
-                values: new object[] { "5b3e49a8-5082-4e5a-aeeb-6f46d9db2e2b", "AQAAAAIAAYagAAAAEEnVEfdznIS8XMetGdmApAuPRF0RpzBNYIXh2BFPJtlBaqLuKIhC6l6BoI/g36ijwA==", "9d4f0172-8ce7-4d39-9fd1-2c57438668f7" });
+                values: new object[] { "fa2377f5-15cd-4d72-9d28-4de159a03847", "AQAAAAIAAYagAAAAEN61JwylqcI82aLBTgMdQyqwpsNRIktgf3QlRN663w7YVKgl+AGVRmNOjFZRDs9uaw==", "132ae571-1a18-4de9-8fdb-5076e7231759" });
 
             migrationBuilder.UpdateData(
                 table: "AspNetUsers",
                 keyColumn: "Id",
                 keyValue: "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                 columns: new[] { "ConcurrencyStamp", "PasswordHash", "SecurityStamp" },
-                values: new object[] { "8ed91a89-7482-43ee-b47a-89a5dfe4c7de", "AQAAAAIAAYagAAAAELDuOa04DXnHXw5QeMML+g5t/aCdeORg6i6ZCW4rBaSoWnWGioXAufEY9640ofTrFg==", "b8650519-b03f-45f2-9bb2-cf9afea7b49d" });
+                values: new object[] { "d9aefb81-c46b-4d9b-b943-6b1a6b1bc1ac", "AQAAAAIAAYagAAAAEJ3zUVpRJCLBpBQk2pg2HbRhHPcknxmSS2LpB3e8E8yVv1exwQObDGiezTwoEyCZKA==", "8f7a4cc2-1af3-4124-8b4a-5e747fca0a5f" });
 
             migrationBuilder.AddForeignKey(
-                name: "FK_PgsSignatoryTemplate_Offices_OfficeId",
-                table: "PgsSignatoryTemplate",
+                name: "FK_AuditableOffices_Offices_OfficeId",
+                table: "AuditableOffices",
                 column: "OfficeId",
                 principalTable: "Offices",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AuditorOffices_Offices_OfficeId",
+                table: "AuditorOffices",
+                column: "OfficeId",
+                principalTable: "Offices",
+                principalColumn: "Id");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_UserOffices_Offices_OfficeId",
+                table: "UserOffices",
+                column: "OfficeId",
+                principalTable: "Offices",
+                principalColumn: "Id");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
-                name: "FK_PgsSignatoryTemplate_Offices_OfficeId",
-                table: "PgsSignatoryTemplate");
+                name: "FK_AuditableOffices_Offices_OfficeId",
+                table: "AuditableOffices");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_AuditorOffices_Offices_OfficeId",
+                table: "AuditorOffices");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_UserOffices_Offices_OfficeId",
+                table: "UserOffices");
 
             migrationBuilder.AlterColumn<int>(
                 name: "OfficeId",
@@ -147,11 +176,28 @@ namespace IMIS.Persistence.Migrations
                 values: new object[] { "4b4a73e7-8f14-4c9d-96e6-249244c0fd7c", "AQAAAAIAAYagAAAAEHzdrX4CM7nysW7gAomCDxyUTZXe1hVpRnjp4ZYx71zeBba6sjMLNU8PvdwXv1oa3w==", "cf37c404-9e67-4cd3-9707-b3ea187e0458" });
 
             migrationBuilder.AddForeignKey(
-                name: "FK_PgsSignatoryTemplate_Offices_OfficeId",
-                table: "PgsSignatoryTemplate",
+                name: "FK_AuditableOffices_Offices_OfficeId",
+                table: "AuditableOffices",
                 column: "OfficeId",
                 principalTable: "Offices",
-                principalColumn: "Id");
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_AuditorOffices_Offices_OfficeId",
+                table: "AuditorOffices",
+                column: "OfficeId",
+                principalTable: "Offices",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_UserOffices_Offices_OfficeId",
+                table: "UserOffices",
+                column: "OfficeId",
+                principalTable: "Offices",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
     }
 }

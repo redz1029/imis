@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IMIS.Persistence.Migrations
 {
     [DbContext(typeof(ImisDbContext))]
-    [Migration("20250624074415_updatePgsSignatoryTemplateAddOfficeId")]
-    partial class updatePgsSignatoryTemplateAddOfficeId
+    [Migration("20250707050043_AddOfficeRefInPgsSignatoryTemplate")]
+    partial class AddOfficeRefInPgsSignatoryTemplate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -674,28 +674,28 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
-                            ConcurrencyStamp = "a461bb8b-384d-4c97-b2e0-01c6c4d69f59",
+                            ConcurrencyStamp = "d7da037b-ab9f-4f98-84a4-7d0079a3df0b",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                            ConcurrencyStamp = "67e336ca-9a34-490e-85d1-c9935b4b550b",
+                            ConcurrencyStamp = "205ea5a4-1708-4c31-9d5c-ada866cb2c4a",
                             Name = "Pgs Manager",
                             NormalizedName = "PGS MANAGER"
                         },
                         new
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            ConcurrencyStamp = "153f494e-b30e-45b8-8b5e-62beb4d1a1f0",
+                            ConcurrencyStamp = "21dd1934-6c36-431c-8b5c-79265c6447fc",
                             Name = "Standard User",
                             NormalizedName = "PGS USER"
                         },
                         new
                         {
                             Id = "af7b586c7ee6490bbd878f46f6a47831",
-                            ConcurrencyStamp = "2877cca7-ae83-4191-ade1-136ac60a8ba4",
+                            ConcurrencyStamp = "324630b8-3833-4298-b42d-7ec4c11063b6",
                             Name = "Pgs Auditor",
                             NormalizedName = "PGS AUDITOR"
                         });
@@ -804,15 +804,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5b3e49a8-5082-4e5a-aeeb-6f46d9db2e2b",
+                            ConcurrencyStamp = "fa2377f5-15cd-4d72-9d28-4de159a03847",
                             Email = "marcrejohncastillano@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
                             NormalizedUserName = "REDZ1029",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEnVEfdznIS8XMetGdmApAuPRF0RpzBNYIXh2BFPJtlBaqLuKIhC6l6BoI/g36ijwA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN61JwylqcI82aLBTgMdQyqwpsNRIktgf3QlRN663w7YVKgl+AGVRmNOjFZRDs9uaw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "9d4f0172-8ce7-4d39-9fd1-2c57438668f7",
+                            SecurityStamp = "132ae571-1a18-4de9-8fdb-5076e7231759",
                             TwoFactorEnabled = false,
                             UserName = "redz1029"
                         },
@@ -820,15 +820,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "417c70e5-ada3-4136-be10-9e3774d1dd12",
+                            ConcurrencyStamp = "7879e496-2548-495d-9652-c26309b30d8a",
                             Email = "alondealexa2021@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ALONDEALEXA2021@GMAIL.COM",
                             NormalizedUserName = "ALYXX1988",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDmv/FzJlwuosXMhqtc6JADhBzGzkfqMWj5UWZXxwyB36G1+oM9AuxweQyrRWiS6+g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPrKs7IMN12/lV5p6ybP9GlkTTOmmlexDlKmNyDj8badLqZ9JLabo6vVMb+EU/iFFg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "17df75f6-4582-49b5-8e14-c4aa33d355ae",
+                            SecurityStamp = "ed8ab9ae-1ac2-4f17-8400-8c29936d228b",
                             TwoFactorEnabled = false,
                             UserName = "alyxx1988"
                         },
@@ -836,15 +836,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8ed91a89-7482-43ee-b47a-89a5dfe4c7de",
+                            ConcurrencyStamp = "d9aefb81-c46b-4d9b-b943-6b1a6b1bc1ac",
                             Email = "CrossVampireNe0@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "CROSSVAMPIRENE0@GMAIL.COM",
                             NormalizedUserName = "DARKWIZWIZ",
-                            PasswordHash = "AQAAAAIAAYagAAAAELDuOa04DXnHXw5QeMML+g5t/aCdeORg6i6ZCW4rBaSoWnWGioXAufEY9640ofTrFg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ3zUVpRJCLBpBQk2pg2HbRhHPcknxmSS2LpB3e8E8yVv1exwQObDGiezTwoEyCZKA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b8650519-b03f-45f2-9bb2-cf9afea7b49d",
+                            SecurityStamp = "8f7a4cc2-1af3-4124-8b4a-5e747fca0a5f",
                             TwoFactorEnabled = false,
                             UserName = "darkwizwiz"
                         });
@@ -1013,7 +1013,7 @@ namespace IMIS.Persistence.Migrations
                     b.HasOne("IMIS.Domain.Office", "Office")
                         .WithMany("AuditableOffices")
                         .HasForeignKey("OfficeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("AuditSchedule");
@@ -1032,7 +1032,7 @@ namespace IMIS.Persistence.Migrations
                     b.HasOne("IMIS.Domain.Office", "Office")
                         .WithMany("AuditorOffices")
                         .HasForeignKey("OfficeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Auditor");
@@ -1069,7 +1069,8 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasOne("IMIS.Domain.Office", "ParentOffice")
                         .WithMany()
-                        .HasForeignKey("ParentOfficeId");
+                        .HasForeignKey("ParentOfficeId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.Navigation("OfficeType");
 
@@ -1163,7 +1164,7 @@ namespace IMIS.Persistence.Migrations
                     b.HasOne("IMIS.Domain.Office", "Office")
                         .WithMany("SignatoryTemplates")
                         .HasForeignKey("OfficeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("DefaultSignatory");
@@ -1176,7 +1177,7 @@ namespace IMIS.Persistence.Migrations
                     b.HasOne("IMIS.Domain.Office", null)
                         .WithMany("UserOffices")
                         .HasForeignKey("OfficeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
                 });
 
