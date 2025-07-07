@@ -25,21 +25,17 @@ namespace IMIS.Persistence.PgsModule
         private readonly IPgsPeriodRepository _pgsPeriodRepository;
         private readonly IKeyResultAreaRepository _kraRepository;
         private readonly UserManager<User> _userManager;
-        private readonly ImisDbContext _dbContext;
-        private readonly IOutputCacheStore _cache;
-        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IPgsSignatoryTemplateService _signatoryTemplateService;
 
-        public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository, UserManager<User> userManager, ImisDbContext dbContext, IOutputCacheStore cache, IHttpContextAccessor httpContextAccessor, IPgsSignatoryTemplateService signatoryTemplateService)
+        public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, 
+            IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, 
+            IKeyResultAreaRepository kraRepository, UserManager<User> userManager, IPgsSignatoryTemplateService signatoryTemplateService)
         {
             _repository = repository;
             _officeRepository = officeRepository;
             _pgsPeriodRepository = pgsPeriodRepository;
             _kraRepository = kraRepository;
             _userManager = userManager;
-            _dbContext = dbContext;
-            _cache = cache;
-            _httpContextAccessor = httpContextAccessor;
             _signatoryTemplateService = signatoryTemplateService;
         }
 
@@ -48,10 +44,9 @@ namespace IMIS.Persistence.PgsModule
             var systems = await _repository.GetAllAsyncFilterByPgsPeriod(pgsPeriodId, cancellationToken).ConfigureAwait(false);
             return systems.Select(ConvPerfomanceGovernanceSystemToDTO).ToList();
         }
+
         private PerfomanceGovernanceSystemDto ConvPerfomanceGovernanceSystemToDTO(PerfomanceGovernanceSystem perfomanceGovernanceSystem)
         {
-          
-
             return new PerfomanceGovernanceSystemDto
             {
                 Id = perfomanceGovernanceSystem.Id,
