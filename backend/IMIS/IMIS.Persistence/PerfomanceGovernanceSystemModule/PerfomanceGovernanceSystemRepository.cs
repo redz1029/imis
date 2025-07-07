@@ -1,5 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
@@ -271,5 +272,46 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetPagedAsync(int skip, int pageSize, CancellationToken cancellationToken)
     {    
         return await _dbContext.PerformanceGovernanceSystem.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
-    }    
+    }
+
+    public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, CancellationToken cancellationToken)
+    {
+        var userPgs = _entities.Where(p => !p.IsDeleted &&
+            p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
+              .Include(p => p.PgsPeriod)
+              .Include(p => p.Office)
+              .Include(p => p.PgsReadinessRating)
+              .Include(p => p.PgsSignatories);
+
+        var forApprovalPgs = _entities
+            .Where(p => !p.IsDeleted &&
+                _dbContext.PgsSignatoryTemplate
+                    .Where(template =>
+                        template.OfficeId == p.OfficeId &&
+                        template.IsActive &&
+                        template.DefaultSignatoryId == userId)
+                    .OrderBy(template => template.OrderLevel)
+                    .Any(template =>
+                        !_dbContext.PgsSignatory.Any(sig =>
+                            sig.PgsId == p.Id &&
+                            sig.PgsSignatoryTemplateId == template.Id)))
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories);
+
+        var combinedPgs = userPgs.Union(forApprovalPgs).Distinct();
+
+        if (filter.PgsPeriodId != null)
+            combinedPgs = combinedPgs.Where(p => p.PgsPeriod.Id == filter.PgsPeriodId);
+
+        if(filter.OfficeId != null)
+            combinedPgs = combinedPgs.Where(p => p.OfficeId == filter.OfficeId);
+
+        var pagedPgs = await EntityPageList<PerfomanceGovernanceSystem, long>
+            .CreateAsync(combinedPgs, filter.Page, filter.PageSize, cancellationToken)
+            .ConfigureAwait(false);
+
+        return pagedPgs;
+    }
 }

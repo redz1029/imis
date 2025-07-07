@@ -54,6 +54,16 @@ namespace IMIS.Presentation.PgsModuleAPI
              PermissionClaimType.Claim, _performanceGovernanceSystem.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
+            app.MapGet("/filter", async ([AsParameters]PgsFilter filter, string userId, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var pgs = await service.GetFilteredPGSAsync(filter, userId, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(pgs);
+            })
+            .WithTags(_pgsTag)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _performanceGovernanceSystem.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
             app.MapGet("/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
                 var performanceGovernanceSystem = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
