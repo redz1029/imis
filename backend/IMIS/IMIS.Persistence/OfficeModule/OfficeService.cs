@@ -99,5 +99,12 @@ namespace IMIS.Persistence.OfficeModule
 
             await _repository.SaveOrUpdateAsync(office, cancellationToken).ConfigureAwait(false);
         }
+
+        public async Task<OfficeDto> GetRootParentOfficeAsync(int officeId, CancellationToken cancellationToken)
+        {
+            var childOffice = await _repository.GetByIdAsync(officeId, cancellationToken).ConfigureAwait(false);
+            var parentOffice = await _repository.GetRootParentOffice(childOffice, cancellationToken).ConfigureAwait(false);
+            return ConvOfficeToDTO(parentOffice);
+        }
     }
 }

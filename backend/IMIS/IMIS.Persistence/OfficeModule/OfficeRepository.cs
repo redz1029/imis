@@ -72,6 +72,36 @@ namespace IMIS.Persistence.OfficeModule
                     .AsNoTracking()
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
-        }     
+        }
+
+        // Recursively find the root parent office with an OfficeTypeId of 1
+        // Office type ID with a value of 1 is a Service and is considered the root office of CRMC's Organizational Structure.
+        public async Task<Office> GetRootParentOffice(Office childOffice, CancellationToken cancellationToken)
+        {
+            int serviceOfficeTypeId = 1;
+
+            if (childOffice.ParentOfficeId == null)
+            {
+                if (childOffice.OfficeTypeId == serviceOfficeTypeId)
+                    return childOffice; // Root office, return itself
+                else
+                    throw new ArgumentException("Child office does not have a parent office.");
+            }
+            else
+            {
+                // Bawal maging magulang ng anak ang sarili
+                if (childOffice.Id == childOffice.ParentOfficeId)
+                    throw new ArgumentException("Child office cannot be its own parent.");
+
+                var parentOffice = await _entities.FindAsync(childOffice.ParentOfficeId, cancellationToken).ConfigureAwait(false);
+                if (parentOffice!.OfficeTypeId != serviceOfficeTypeId)
+                {
+                    // Recursively get the parent office until we find the root office
+                    parentOffice = await GetRootParentOffice(parentOffice, cancellationToken).ConfigureAwait(false);
+                }
+
+                return parentOffice;
+            }
+        }
     }
 }
