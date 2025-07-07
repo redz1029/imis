@@ -12,6 +12,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
         {
             _repository = repository;          
         }
+
         private static PgsSignatoryTemplateDto ConvSignatoryTemplateToDTO(PgsSignatoryTemplate signatoryTemplate)
         {
             return new PgsSignatoryTemplateDto()
@@ -42,24 +43,6 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
             var pgsSignatoryTemplateDto = await _repository.GetAllAsync(cancellationToken).ConfigureAwait(false);
             return pgsSignatoryTemplateDto?.Select(t => ConvSignatoryTemplateToDTO(t)).ToList();
         }
-        //public async Task<PgsSignatoryTemplateDto> SaveOrUpdateAsync(PgsSignatoryTemplateDto pgsSignatoryTemplateDto, CancellationToken cancellationToken)
-        //{
-        //    if (pgsSignatoryTemplateDto == null) throw new ArgumentNullException(nameof(pgsSignatoryTemplateDto));
-
-        //    var pgsSignatoryTemplateEntity = pgsSignatoryTemplateDto.ToEntity();
-        //    // Handle Save or Update
-        //    var createdPgsSignatoryTemplate = await _repository.SaveOrUpdateAsync(pgsSignatoryTemplateEntity, cancellationToken);
-
-        //    return new PgsSignatoryTemplateDto
-        //    {
-        //        Id = createdPgsSignatoryTemplate.Id,
-        //        Status = createdPgsSignatoryTemplate.Status,
-        //        SignatoryLabel = createdPgsSignatoryTemplate.SignatoryLabel,
-        //        OrderLevel = createdPgsSignatoryTemplate.OrderLevel,
-        //        DefaultSignatoryId = createdPgsSignatoryTemplate.DefaultSignatoryId,
-        //        IsActive = createdPgsSignatoryTemplate.IsActive,
-        //    };
-        //}
 
         public async Task<List<PgsSignatoryTemplateDto>> SaveOrUpdateAsync(List<PgsSignatoryTemplateDto> dtoList, CancellationToken cancellationToken)
         {
@@ -87,7 +70,6 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
             return result;
         }
 
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             if (dto is not PgsSignatoryTemplateDto pgsSignatoryTemplateDto)
@@ -95,6 +77,12 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
 
             var pgsSignatoryTemplateEntity = pgsSignatoryTemplateDto.ToEntity();
             await _repository.SaveOrUpdateAsync(pgsSignatoryTemplateEntity, cancellationToken);
+        }
+
+        public async Task<List<PgsSignatoryTemplateDto>> GetSignatoryTemplateByOfficeIdAsync(int officeId, CancellationToken cancellationToken)
+        {
+            var signatoryTemplate = await _repository.GetSignatoryTemplateByOfficeIdAsync(officeId, cancellationToken).ConfigureAwait(false);
+            return [.. signatoryTemplate.Select(e => new PgsSignatoryTemplateDto(e))];
         }
     }
 }

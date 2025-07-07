@@ -26,6 +26,8 @@ namespace IMIS.Application.PgsModule
         {
             this.Id = perfomanceGovernanceSystem.Id;
             this.Remarks = perfomanceGovernanceSystem.Remarks;
+            this.PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables;
+            this.PgsStatus = perfomanceGovernanceSystem.PgsStatus;
             this.PgsPeriod =  new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod);
             this.Office =  new OfficeDto(perfomanceGovernanceSystem.Office);
             this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;
@@ -40,7 +42,10 @@ namespace IMIS.Application.PgsModule
                  }).ToList();
 
             this.ForSignature = false;
+            this.IsDeleted = perfomanceGovernanceSystem.IsDeleted;
+            this.RowVersion = perfomanceGovernanceSystem.RowVersion;
         }
+
         public override PerfomanceGovernanceSystem ToEntity()
         {
             return new PerfomanceGovernanceSystem()
@@ -54,10 +59,8 @@ namespace IMIS.Application.PgsModule
                 PercentDeliverables = PercentDeliverables,
                 PgsStatus = PgsStatus,
                 PgsSignatories = PgsSignatories?.Select(s => s.ToEntity()).ToList()
-
             };
         }
-       
     }
 }
 

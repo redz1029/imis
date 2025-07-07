@@ -19,6 +19,8 @@ namespace IMIS.Application.PgsPeriodModule
             this.StartDate = pgsPeriod.StartDate;
             this.EndDate = pgsPeriod.EndDate;
             this.Remarks = pgsPeriod.Remarks;
+            this.IsDeleted = pgsPeriod.IsDeleted;
+            this.RowVersion = pgsPeriod.RowVersion;
         }
         public override PgsPeriod ToEntity()
         {

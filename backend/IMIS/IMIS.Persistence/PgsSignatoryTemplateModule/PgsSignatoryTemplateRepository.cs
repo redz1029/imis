@@ -52,5 +52,14 @@ namespace IMIS.Persistence.PgsSignatoryTemplateModule
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return pgsSignatoryTemplate;
         }
+
+        public async Task<List<PgsSignatoryTemplate>> GetSignatoryTemplateByOfficeIdAsync(int officeId, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Where(e => e.OfficeId == officeId && !e.IsDeleted && e.IsActive)
+                .OrderBy(e => e.OrderLevel)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

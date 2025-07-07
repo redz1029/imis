@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Base.Auths.Permissions;
+﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
@@ -15,7 +14,6 @@ namespace IMIS.Presentation.PgsModuleAPI
 {
     public class PerfomanceGovernanceSystemEndPoints : CarterModule
     {
-        const string ScoreHistoryTag = "PgsDeliverableScoreHistory"; 
         private const string _pgsTag = "Performance Governance System";
         public readonly PerformanceGovernanceSystemPermission _performanceGovernanceSystem = new();
 
@@ -87,9 +85,6 @@ namespace IMIS.Presentation.PgsModuleAPI
                     cancellationToken
                 ).ConfigureAwait(false);
                 return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
-
-                //var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-                //return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
             })
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);

@@ -23,6 +23,8 @@ namespace IMIS.Application.OfficeModule
             this.IsActive = office.IsActive;
             this.OfficeTypeId = office.OfficeTypeId;          
             this.ParentOfficeId = office.ParentOfficeId;
+            this.IsDeleted = office.IsDeleted;
+            this.RowVersion = office.RowVersion;
         }
 
         public override Office ToEntity()

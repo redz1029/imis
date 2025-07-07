@@ -45,6 +45,9 @@ namespace IMIS.Application.PgsModule
                 Date = s.Date,
                 Score = s.Score,              
             }).ToList();
+
+            this.IsDeleted = pgsDeliverable.IsDeleted;
+            this.RowVersion = pgsDeliverable.RowVersion;
         }
 
         public override PgsDeliverable ToEntity()

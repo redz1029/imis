@@ -15,6 +15,8 @@ namespace IMIS.Application.PgsKraModule
             this.Id = keyResultArea.Id;
             this.Name = keyResultArea.Name;
             this.Remarks = keyResultArea.Remarks;
+            this.IsDeleted = keyResultArea.IsDeleted;
+            this.RowVersion = keyResultArea.RowVersion;
         }
 
         public override KeyResultArea ToEntity()

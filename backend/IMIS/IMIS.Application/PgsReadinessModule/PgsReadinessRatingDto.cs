@@ -19,10 +19,8 @@ namespace IMIS.Application.PGSReadinessRatingCancerCareModule
             this.ResourceAvailability = pgsReadinessRating.ResourceAvailability;
             this.ConfidenceToDeliver = ConfidenceToDeliver;
             this.TotalScore = pgsReadinessRating.TotalScore;
-
-
-
-
+            this.IsDeleted = pgsReadinessRating.IsDeleted;
+            this.RowVersion = pgsReadinessRating.RowVersion;
         }
         public override PgsReadinessRating ToEntity()
         {

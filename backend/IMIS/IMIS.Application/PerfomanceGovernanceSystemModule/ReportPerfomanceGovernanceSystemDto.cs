@@ -115,6 +115,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
             this.Id = perfomanceGovernanceSystem.Id;
             this.Remarks = perfomanceGovernanceSystem.Remarks;
             this.PgsPeriod =  new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod);
+            this.PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables;
             this.Office =  new OfficeDto(perfomanceGovernanceSystem.Office);
             this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(d => new ReportPGSDeliverableDto(d)).ToList();
             this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;
