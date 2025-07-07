@@ -38,7 +38,7 @@ namespace IMIS.Application.PgsModule
                     PgsId = s.PgsId,
                     PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
                     SignatoryId = s.SignatoryId,
-                    DateSigned = s.DateSigned,                   
+                    DateSigned = s.DateSigned,
                  }).ToList();
 
             this.ForSignature = false;
