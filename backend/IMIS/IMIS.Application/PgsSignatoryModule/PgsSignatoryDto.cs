@@ -11,7 +11,7 @@ namespace IMIS.Application.PgsSignatoryModule
         public required long PgsId { get; set; }    
         public required int PgsSignatoryTemplateId { get; set; }     
         public required string SignatoryId { get; set; }        
-        public DateTime DateSigned { get; set; }
+        public DateTime DateSigned { get; set; }    
 
        
         public override PgsSignatory ToEntity()
