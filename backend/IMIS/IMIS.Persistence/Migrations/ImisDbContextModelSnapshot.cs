@@ -671,28 +671,28 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
-                            ConcurrencyStamp = "410b1b71-43d8-4782-8454-bbf2a7ffd8eb",
+                            ConcurrencyStamp = "d7da037b-ab9f-4f98-84a4-7d0079a3df0b",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                            ConcurrencyStamp = "52dff866-3c44-4d34-b898-9ab47ad58ae1",
+                            ConcurrencyStamp = "205ea5a4-1708-4c31-9d5c-ada866cb2c4a",
                             Name = "Pgs Manager",
                             NormalizedName = "PGS MANAGER"
                         },
                         new
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            ConcurrencyStamp = "d97d88ef-befa-4cb9-a876-12175784a917",
+                            ConcurrencyStamp = "21dd1934-6c36-431c-8b5c-79265c6447fc",
                             Name = "Standard User",
                             NormalizedName = "PGS USER"
                         },
                         new
                         {
                             Id = "af7b586c7ee6490bbd878f46f6a47831",
-                            ConcurrencyStamp = "664d815f-13c7-465a-a486-8916b81d93e3",
+                            ConcurrencyStamp = "324630b8-3833-4298-b42d-7ec4c11063b6",
                             Name = "Pgs Auditor",
                             NormalizedName = "PGS AUDITOR"
                         });
@@ -801,15 +801,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b2a25051-8091-4c33-ad4e-0da9b5652db9",
+                            ConcurrencyStamp = "fa2377f5-15cd-4d72-9d28-4de159a03847",
                             Email = "marcrejohncastillano@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
                             NormalizedUserName = "REDZ1029",
-                            PasswordHash = "AQAAAAIAAYagAAAAENl448iIAjv0Lmuo8Yaj1Vrs+zUenp9H3V2PpQmvnw6T+4m5aZWRg0wFbQZzvrepxg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN61JwylqcI82aLBTgMdQyqwpsNRIktgf3QlRN663w7YVKgl+AGVRmNOjFZRDs9uaw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "da21bfd9-37a8-4515-ba74-0aa22166a1db",
+                            SecurityStamp = "132ae571-1a18-4de9-8fdb-5076e7231759",
                             TwoFactorEnabled = false,
                             UserName = "redz1029"
                         },
@@ -817,15 +817,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6c1254d9-2873-4b4d-b88d-d33273a616b3",
+                            ConcurrencyStamp = "7879e496-2548-495d-9652-c26309b30d8a",
                             Email = "alondealexa2021@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ALONDEALEXA2021@GMAIL.COM",
                             NormalizedUserName = "ALYXX1988",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJnZCoF9T12Vt2qmwa29SE29fWbv7plpUE/cM/RyudKb4GfaStgzhVjfmM7dvx7laA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPrKs7IMN12/lV5p6ybP9GlkTTOmmlexDlKmNyDj8badLqZ9JLabo6vVMb+EU/iFFg==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "bd1fa6fa-d528-49a5-aae2-98a2d67c4250",
+                            SecurityStamp = "ed8ab9ae-1ac2-4f17-8400-8c29936d228b",
                             TwoFactorEnabled = false,
                             UserName = "alyxx1988"
                         },
@@ -833,15 +833,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d541fdb5-67b4-4001-a0d7-fefabbf02913",
+                            ConcurrencyStamp = "d9aefb81-c46b-4d9b-b943-6b1a6b1bc1ac",
                             Email = "CrossVampireNe0@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "CROSSVAMPIRENE0@GMAIL.COM",
                             NormalizedUserName = "DARKWIZWIZ",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFY9Y9yHs0nam8CAZhuXRBb3zofPnoYNVSYayENBZLBAP+iIg4EKeAFOGllUam9/ig==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ3zUVpRJCLBpBQk2pg2HbRhHPcknxmSS2LpB3e8E8yVv1exwQObDGiezTwoEyCZKA==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1ce9962e-52b6-4d26-926b-b55bb0320f51",
+                            SecurityStamp = "8f7a4cc2-1af3-4124-8b4a-5e747fca0a5f",
                             TwoFactorEnabled = false,
                             UserName = "darkwizwiz"
                         });
