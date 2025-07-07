@@ -185,13 +185,13 @@ namespace IMIS.Persistence.PgsModule
                     OfficeTypeId = createdPerfomanceGovernanceSystem.Office.OfficeTypeId,
                     ParentOfficeId = createdPerfomanceGovernanceSystem.Office.ParentOfficeId
                 },
-                PgsReadinessRating = new PgsReadinessRatingDto
+                PgsReadinessRating = createdPerfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto
                 {
                     Id = createdPerfomanceGovernanceSystem.PgsReadinessRating!.Id,
                     CompetenceToDeliver = createdPerfomanceGovernanceSystem.PgsReadinessRating.CompetenceToDeliver,
                     ResourceAvailability = createdPerfomanceGovernanceSystem.PgsReadinessRating.ResourceAvailability,
                     ConfidenceToDeliver = createdPerfomanceGovernanceSystem.PgsReadinessRating.ConfidenceToDeliver,
-                },
+                } : null,
                 PgsDeliverables = createdPerfomanceGovernanceSystem.PgsDeliverables?.Select(deliverable => new PGSDeliverableDto
                 {
                     Id = deliverable.Id,

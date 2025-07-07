@@ -55,7 +55,7 @@ namespace IMIS.Application.PgsModule
                 Office = Office.ToEntity(),
                 Remarks = Remarks,
                 PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),  
-                PgsReadinessRating = PgsReadinessRating!.ToEntity(),
+                PgsReadinessRating = PgsReadinessRating?.ToEntity(),
                 PercentDeliverables = PercentDeliverables,
                 PgsStatus = PgsStatus,
                 PgsSignatories = PgsSignatories?.Select(s => s.ToEntity()).ToList()
