@@ -283,5 +283,10 @@ namespace IMIS.Persistence.PgsModule
 
             return pagedPgs;
         }
+
+        public async Task Disapprove(long pgsId, CancellationToken cancellationToken)
+        {
+            await _repository.Disapprove(pgsId, cancellationToken).ConfigureAwait(false);
+        }
     }
 }

@@ -10,6 +10,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
 
         public override string PermissionGroup => PermissionGrouper.Transaction;
 
+        public string Disapprove => $"Disapprove{ModuleName}";
     }
 }
 
