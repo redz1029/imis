@@ -16,8 +16,7 @@ namespace IMIS.Presentation.PgsModuleAPI
     {
         private const string _pgsTag = "Performance Governance System";
         public readonly PerformanceGovernanceSystemPermission _performanceGovernanceSystem = new();
-        public readonly PgsDisapprovePermission _pgsDisapprovePermission = new();
-        
+            
 
         public PerfomanceGovernanceSystemEndPoints() : base("/pgs")
         {
