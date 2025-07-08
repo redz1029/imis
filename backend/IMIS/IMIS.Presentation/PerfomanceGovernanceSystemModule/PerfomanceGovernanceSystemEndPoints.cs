@@ -184,7 +184,7 @@ namespace IMIS.Presentation.PgsModuleAPI
                 return Results.NoContent();
             })
             .WithTags(_pgsTag)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDisapprovePermission.Edit));          
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Edit));          
         }
     }
 }
