@@ -2,7 +2,6 @@
 using Base.Pagination;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Domain;
-using Microsoft.AspNetCore.OutputCaching;
 
 namespace IMIS.Application.PgsModule
 {
@@ -17,5 +16,6 @@ namespace IMIS.Application.PgsModule
         new Task<PerfomanceGovernanceSystem> SaveOrUpdateAsync(PerfomanceGovernanceSystem perfomanceGovernanceSystem, CancellationToken cancellationToken);
         Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken);
         Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, CancellationToken cancellationToken);
+        Task Disapprove(long pgsId, CancellationToken cancellationToken);
     }
 }

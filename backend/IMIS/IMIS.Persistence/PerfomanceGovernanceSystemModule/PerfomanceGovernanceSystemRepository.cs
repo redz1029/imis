@@ -4,7 +4,6 @@ using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
-using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -313,5 +312,28 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             .ConfigureAwait(false);
 
         return pagedPgs;
+    }
+
+    public async Task Disapprove(long pgsId, CancellationToken cancellationToken)
+    {
+        var pgs = await _entities
+         .Include(p => p.PgsSignatories)!
+             .ThenInclude(s => s.PgsSignatoryTemplate)
+         .FirstOrDefaultAsync(p => p.Id == pgsId, cancellationToken)
+         .ConfigureAwait(false);
+
+        if (pgs == null)
+            throw new InvalidOperationException($"PGS record with ID {pgsId} not found.");
+
+        var signatoriesToRemove = pgs.PgsSignatories!
+            .Where(s => s.PgsSignatoryTemplate?.OrderLevel > 1)
+            .ToList();
+
+        foreach (var signatory in signatoriesToRemove)
+        {
+            signatory.IsDeleted = true;
+        }
+
+        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 }

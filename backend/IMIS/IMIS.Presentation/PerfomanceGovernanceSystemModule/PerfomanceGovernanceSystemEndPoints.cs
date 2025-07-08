@@ -149,6 +149,15 @@ namespace IMIS.Presentation.PgsModuleAPI
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _performanceGovernanceSystem.View));
+
+            app.MapPut("/disapprove/{pgsId}", async (long pgsId, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                await service.Disapprove(pgsId, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+                return Results.NoContent();
+            })
+            .WithTags(_pgsTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Disapprove));
         }
     }
 }
