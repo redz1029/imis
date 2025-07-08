@@ -46,6 +46,18 @@ namespace IMIS.Persistence.PgsModule
             return pgs != null ? new PerfomanceGovernanceSystemDto(pgs) : null;
         }
 
+        public async Task<List<PerfomanceGovernanceSystemDto>?> GetUserByIdSaveUpdateAsync(int id, CancellationToken cancellationToken)
+        {
+            var pgsList = await _repository.GetUserByIdSaveUpdateAsync(id, cancellationToken).ConfigureAwait(false);
+
+            if (pgsList == null || !pgsList.Any())
+                return null;
+
+            return pgsList.Select(p => new PerfomanceGovernanceSystemDto(p)).ToList();
+        }
+
+
+
         private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(PerfomanceGovernanceSystem pgs, string userId, CancellationToken cancellationToken)
         {
             var dto = new PerfomanceGovernanceSystemDto(pgs);
@@ -215,14 +227,14 @@ namespace IMIS.Persistence.PgsModule
         public async Task<PerfomanceGovernanceSystemDto> Submit(PerfomanceGovernanceSystemDto pgs, string userId, CancellationToken cancellationToken)
         {
             var signatoryTemplates = await GetSignatoryTemplates(pgs.Office.ToEntity(), cancellationToken).ConfigureAwait(false);
-            var initialStatus =  signatoryTemplates.OrderBy(x => x.OrderLevel).FirstOrDefault();
-            var initialSignatory = new PgsSignatoryDto() 
-            { 
-                Id = 0, 
-                PgsId = pgs.Id, 
-                PgsSignatoryTemplateId = initialStatus!.Id, 
-                SignatoryId = userId, 
-                DateSigned = DateTime.Now 
+            var initialStatus = signatoryTemplates.OrderBy(x => x.OrderLevel).FirstOrDefault();
+            var initialSignatory = new PgsSignatoryDto()
+            {
+                Id = 0,
+                PgsId = pgs.Id,
+                PgsSignatoryTemplateId = initialStatus!.Id,
+                SignatoryId = userId,
+                DateSigned = DateTime.Now
             };
 
             pgs.PgsSignatories = pgs.PgsSignatories ?? [];
@@ -230,6 +242,8 @@ namespace IMIS.Persistence.PgsModule
 
             return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
         }
+
+
 
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, CancellationToken cancellationToken)
         {

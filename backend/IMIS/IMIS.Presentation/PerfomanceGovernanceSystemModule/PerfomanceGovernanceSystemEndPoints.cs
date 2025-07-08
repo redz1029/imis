@@ -16,6 +16,8 @@ namespace IMIS.Presentation.PgsModuleAPI
     {
         private const string _pgsTag = "Performance Governance System";
         public readonly PerformanceGovernanceSystemPermission _performanceGovernanceSystem = new();
+        public readonly PgsDisapprovePermission _pgsDisapprovePermission = new();
+        
 
         public PerfomanceGovernanceSystemEndPoints() : base("/pgs")
         {
@@ -43,6 +45,32 @@ namespace IMIS.Presentation.PgsModuleAPI
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _performanceGovernanceSystem.Add));
+
+            app.MapPut("Submit/{id}", async (
+            int id,
+            [FromBody] List<PerfomanceGovernanceSystemDto> performanceGovernanceSystemList,
+            IPerfomanceGovernanceSystemService service,
+            IOutputCacheStore cache,
+            CancellationToken cancellationToken) =>
+            {
+                if (performanceGovernanceSystemList == null || !performanceGovernanceSystemList.Any())
+                    return Results.BadRequest("No PGS records submitted.");
+
+                var existingPgsList = await service.GetUserByIdSaveUpdateAsync(id, cancellationToken).ConfigureAwait(false);
+
+                if (existingPgsList == null || !existingPgsList.Any())
+                    return Results.NotFound($"Performance Governance System with ID {id} not found.");
+
+                foreach (var dto in performanceGovernanceSystemList)
+                {
+                    await service.SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
+                }
+
+                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+                return Results.Ok(performanceGovernanceSystemList);
+            })
+            .WithTags(_pgsTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Edit));
 
             app.MapGet("/", async (IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
@@ -157,7 +185,7 @@ namespace IMIS.Presentation.PgsModuleAPI
                 return Results.NoContent();
             })
             .WithTags(_pgsTag)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Disapprove));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDisapprovePermission.Edit));          
         }
     }
 }

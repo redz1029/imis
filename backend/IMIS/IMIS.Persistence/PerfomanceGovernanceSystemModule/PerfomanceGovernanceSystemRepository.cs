@@ -36,6 +36,23 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 //.ThenInclude(s => s.PgsSignatoryTemplate) // needed for OrderLevel
             .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
     }
+    
+    public async Task<List<PerfomanceGovernanceSystem>?> GetUserByIdSaveUpdateAsync(int id, CancellationToken cancellationToken)
+    {
+        return await _dbContext.PerformanceGovernanceSystem
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+            .Include(p => p.PgsDeliverables)
+                .ThenInclude(d => d.Kra)
+            .Include(p => p.PgsDeliverables)
+                .ThenInclude(d => d.PgsDeliverableScoreHistory)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories!)
+            //.ThenInclude(s => s.PgsSignatoryTemplate) // Uncomment if needed
+            .Where(p => p.Id == id && !p.IsDeleted)
+            .ToListAsync(cancellationToken);
+    }
+
     //Get Pgs Report: Filter by Id
     public async Task<PerfomanceGovernanceSystem?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
     {

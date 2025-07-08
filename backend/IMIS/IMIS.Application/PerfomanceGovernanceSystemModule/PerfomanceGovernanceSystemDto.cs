@@ -10,8 +10,8 @@ namespace IMIS.Application.PgsModule
 {
     public class PerfomanceGovernanceSystemDto : BaseDto<PerfomanceGovernanceSystem, long>
     {
-        public required PgsPeriodDto PgsPeriod { get; set; }    
-        public required OfficeDto Office { get; set; }   
+        public required PgsPeriodDto PgsPeriod { get; set; }
+        public required OfficeDto Office { get; set; }
         public string? Remarks { get; set; }
         public List<PGSDeliverableDto>? PgsDeliverables { get; set; }
         public PgsReadinessRatingDto? PgsReadinessRating { get; set; }
@@ -28,18 +28,18 @@ namespace IMIS.Application.PgsModule
             this.Remarks = perfomanceGovernanceSystem.Remarks;
             this.PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables;
             this.PgsStatus = perfomanceGovernanceSystem.PgsStatus;
-            this.PgsPeriod =  new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod);
-            this.Office =  new OfficeDto(perfomanceGovernanceSystem.Office);
+            this.PgsPeriod = new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod);
+            this.Office = new OfficeDto(perfomanceGovernanceSystem.Office);
             this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;
-            this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(d => new PGSDeliverableDto(d)).ToList();           
+            this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(d => new PGSDeliverableDto(d)).ToList();
             this.PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?.Select(s => new PgsSignatoryDto
-                 {
-                    Id = s.Id,
-                    PgsId = s.PgsId,
-                    PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
-                    SignatoryId = s.SignatoryId,
-                    DateSigned = s.DateSigned,
-                 }).ToList();
+            {
+                Id = s.Id,
+                PgsId = s.PgsId,
+                PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
+                SignatoryId = s.SignatoryId,
+                DateSigned = s.DateSigned,
+            }).ToList();
 
             this.ForSignature = false;
             this.IsDeleted = perfomanceGovernanceSystem.IsDeleted;
@@ -52,9 +52,10 @@ namespace IMIS.Application.PgsModule
             {
                 Id = Id,
                 PgsPeriod = PgsPeriod.ToEntity(),
+
                 Office = Office.ToEntity(),
                 Remarks = Remarks,
-                PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),  
+                PgsDeliverables = PgsDeliverables?.Select(d => d.ToEntity()).ToList(),
                 PgsReadinessRating = PgsReadinessRating?.ToEntity(),
                 PercentDeliverables = PercentDeliverables,
                 PgsStatus = PgsStatus,
