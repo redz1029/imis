@@ -67,6 +67,7 @@ namespace IMIS.Persistence.PgsModule
 
                         signatory.Label = signatoryTemplate.SignatoryLabel;
                         signatory.Status = signatoryTemplate.Status;
+                        signatory.OrderLevel = signatoryTemplate.OrderLevel;
                         signatory.SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}";
                         signatory.IsNextStatus = false;
                     }
@@ -92,6 +93,7 @@ namespace IMIS.Persistence.PgsModule
                             SignatoryId = userId,
                             Status = nextTemplate.Status,
                             Label = nextTemplate.SignatoryLabel,
+                            OrderLevel = nextTemplate.OrderLevel,
                             IsNextStatus = true,
                             SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}"
                         });
@@ -250,6 +252,7 @@ namespace IMIS.Persistence.PgsModule
 
                         signatory.Label = signatoryTemplate.SignatoryLabel;
                         signatory.Status = signatoryTemplate.Status;
+                        signatory.OrderLevel = signatoryTemplate.OrderLevel;
                         signatory.SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}";
                         signatory.IsNextStatus = false;
                     }
@@ -274,6 +277,7 @@ namespace IMIS.Persistence.PgsModule
                             SignatoryId = userId,
                             Status = nextTemplate.Status,
                             Label = nextTemplate.SignatoryLabel,
+                            OrderLevel = nextTemplate.OrderLevel,
                             IsNextStatus = true,
                             SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}"
                         });
