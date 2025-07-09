@@ -32,10 +32,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-  DateTime? _selectedDate;
-  TextEditingController _searchDateController = TextEditingController();
 
-  // Add these controllers to your state class
   TextEditingController startDateController = TextEditingController();
   TextEditingController endDateController = TextEditingController();
   DateTime? selectedStartDate;
@@ -49,7 +46,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
     fetchPGSPeriods();
     pgsPeriodSearchUtil = FilterSearchResultUtil<PgsPeriod>(
       paginationUtils: _paginationUtils,
-      endpoint: ApiEndpoint().performancegovernancesystem,
+      endpoint: ApiEndpoint().pgsperiod,
       pageSize: _pageSize,
       fromJson: (json) => PgsPeriod.fromJson(json),
     );
@@ -482,7 +479,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                             horizontal: 12,
                           ),
                           floatingLabelBehavior: FloatingLabelBehavior.never,
-                          labelText: 'Start Date',
+                          labelText: 'Search Start Date',
                           labelStyle: TextStyle(color: grey, fontSize: 14),
                           border: OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(
@@ -548,7 +545,7 @@ class _PgsPeriodPageState extends State<PgsPeriodPage> {
                             horizontal: 12,
                           ),
                           floatingLabelBehavior: FloatingLabelBehavior.never,
-                          labelText: 'End Date',
+                          labelText: 'Search End Date',
                           labelStyle: TextStyle(color: grey, fontSize: 14),
                           border: OutlineInputBorder(),
                           focusedBorder: OutlineInputBorder(

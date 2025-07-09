@@ -92,6 +92,13 @@ class _UserProfileState extends State<UserProfilePage> {
     'Head, Department of Surgery',
     'Head, Trauma Care',
     'Chief Administrative Officer',
+    'Nurse V',
+    'Chief Nurse',
+    'Supervising Administrative Officer',
+    'Engineer IV',
+    'OIC-Chief Health Program Officer',
+    'Head, Cancer Care',
+    'Social Welfare Officer IV',
   ];
 
   Future<void> fetchUserProfile({int page = 1, String? searchQuery}) async {
@@ -623,7 +630,16 @@ class _UserProfileState extends State<UserProfilePage> {
                     },
                     items: [
                       DropdownMenuItem(value: '', child: Text('')),
-                      ...['Mr.', 'Ms.', 'Mrs.', 'Dr.', 'Prof.'].map(
+                      ...[
+                        'Mr.',
+                        'Ms.',
+                        'Mrs.',
+                        'Dr.',
+                        'Prof.',
+                        'Engr.',
+                        'Atty.',
+                        'Gen.',
+                      ].map(
                         (prefix) => DropdownMenuItem(
                           value: prefix,
                           child: Text(prefix),

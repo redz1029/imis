@@ -592,15 +592,79 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // DropdownSearch<User?>(
+                    //   popupProps: PopupProps.menu(
+                    //     showSearchBox: true,
+                    //     searchFieldProps: TextFieldProps(
+                    //       decoration: InputDecoration(
+                    //         label: Text('Signatory Name'),
+                    //         hintText: 'Search User Name...',
+                    //         filled: true,
+                    //         fillColor: mainBgColor,
+                    //         prefixIcon: Icon(Icons.search),
+                    //         border: OutlineInputBorder(
+                    //           borderRadius: BorderRadius.circular(8),
+                    //         ),
+                    //         focusedBorder: OutlineInputBorder(
+                    //           borderSide: BorderSide(color: primaryColor),
+                    //         ),
+                    //       ),
+                    //     ),
+                    //     itemBuilder:
+                    //         (context, user, isSelected) => ListTile(
+                    //           tileColor: mainBgColor,
+                    //           title: Text(user?.fullName ?? ''),
+                    //         ),
+                    //   ),
+                    //   items: userList,
+                    //   itemAsString: (u) => u?.fullName ?? '',
+                    //   selectedItem: userList.cast<User?>().firstWhere(
+                    //     (u) => u?.id == selectedUserId,
+                    //     orElse: () => null,
+                    //   ),
+                    //   onChanged:
+                    //       (value) => setState(() => selectedUserId = value?.id),
+                    //   validator: (value) {
+                    //     if (value == null) {
+                    //       return 'Please select a user';
+                    //     }
+                    //     return null;
+                    //   },
+                    //   dropdownDecoratorProps: DropDownDecoratorProps(
+                    //     dropdownSearchDecoration: InputDecoration(
+                    //       labelText: 'Select User',
+                    //       filled: true,
+                    //       fillColor: mainBgColor,
+                    //       floatingLabelBehavior: FloatingLabelBehavior.never,
+                    //       border: OutlineInputBorder(
+                    //         borderRadius: BorderRadius.circular(8),
+                    //       ),
+                    //       focusedBorder: OutlineInputBorder(
+                    //         borderSide: BorderSide(color: primaryColor),
+                    //       ),
+                    //     ),
+                    //   ),
+                    // ),
                     DropdownSearch<User?>(
                       popupProps: PopupProps.menu(
                         showSearchBox: true,
                         searchFieldProps: TextFieldProps(
                           decoration: InputDecoration(
-                            hintText: 'Search User Name...',
+                            // Use labelText instead of a Text widget so we can style it easily
+                            labelText: 'Signatory Name',
+                            hintText: 'Search user name…',
                             filled: true,
                             fillColor: mainBgColor,
-                            prefixIcon: Icon(Icons.search),
+
+                            // ✨ Floating label styling
+                            floatingLabelStyle: TextStyle(
+                              color: primaryColor, // focused color
+                              fontWeight: FontWeight.w600,
+                            ),
+                            // (Optional) base label style when not floating
+                            labelStyle: TextStyle(color: Colors.grey.shade600),
+
+                            prefixIcon: const Icon(Icons.search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -623,18 +687,18 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                       ),
                       onChanged:
                           (value) => setState(() => selectedUserId = value?.id),
-                      validator: (value) {
-                        if (value == null) {
-                          return 'Please select a user';
-                        }
-                        return null;
-                      },
+                      validator:
+                          (value) =>
+                              value == null ? 'Please select a user' : null,
+
                       dropdownDecoratorProps: DropDownDecoratorProps(
                         dropdownSearchDecoration: InputDecoration(
                           labelText: 'Select User',
                           filled: true,
                           fillColor: mainBgColor,
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          floatingLabelBehavior: FloatingLabelBehavior.auto,
+                          floatingLabelStyle: TextStyle(color: primaryColor),
+                          labelStyle: TextStyle(color: Colors.grey.shade600),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -689,38 +753,63 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                         ),
                         SizedBox(width: 16),
 
-                        Container(
-                          width: 120,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
+                        Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: 120,
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.grey),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.remove),
+                                    onPressed: () {
+                                      setState(() {
+                                        if (currentLevel > 1) currentLevel--;
+                                      });
+                                    },
+                                  ),
+                                  Text(
+                                    '$currentLevel',
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.add),
+                                    onPressed: () {
+                                      setState(() {
+                                        currentLevel++;
+                                      });
+                                    },
+                                  ),
+                                ],
+                              ),
+                            ),
 
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.remove),
-                                onPressed: () {
-                                  setState(() {
-                                    if (currentLevel > 1) currentLevel--;
-                                  });
-                                },
+                            Positioned(
+                              left: 8,
+                              top: -10,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                color: mainBgColor,
+
+                                child: const Text(
+                                  'Order level',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryColor,
+                                  ),
+                                ),
                               ),
-                              Text(
-                                '$currentLevel',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.add),
-                                onPressed: () {
-                                  setState(() {
-                                    currentLevel++;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

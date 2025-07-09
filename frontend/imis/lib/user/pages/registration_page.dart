@@ -293,7 +293,16 @@ class RegistrationPageState extends State<RegistrationPage> {
                   },
                   items: [
                     DropdownMenuItem(value: '', child: Text('')),
-                    ...['Mr.', 'Ms.', 'Mrs.', 'Dr.', 'Prof.', 'Engr.'].map(
+                    ...[
+                      'Mr.',
+                      'Ms.',
+                      'Mrs.',
+                      'Dr.',
+                      'Prof.',
+                      'Engr.',
+                      'Atty.',
+                      'Gen.',
+                    ].map(
                       (prefix) =>
                           DropdownMenuItem(value: prefix, child: Text(prefix)),
                     ),
