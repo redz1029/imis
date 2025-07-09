@@ -176,7 +176,7 @@ class _OfficePageState extends State<OfficePage> {
         debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -334,7 +334,7 @@ class _OfficePageState extends State<OfficePage> {
                 SizedBox(
                   width: 480,
                   child: DropdownButtonFormField<String>(
-                    value: _selectedParentOffice ?? '0', // Handle null case
+                    value: _selectedParentOffice ?? '0',
                     decoration: InputDecoration(
                       labelText: 'Parent Office',
                       border: OutlineInputBorder(),
@@ -503,7 +503,7 @@ class _OfficePageState extends State<OfficePage> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    // onPressed: () => showFormDialog(),
+
                     onPressed: () async {
                       await fetchOffices();
 

@@ -9,7 +9,7 @@ import 'package:jwt_decoder/jwt_decoder.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthUtil {
-  static const String key = "user";
+  static const String userkey = "user";
   static const String rolesKey = "roles";
   static const String officeNamesKey = "officeNames";
   static const String officeIdsKey = "officeIds";
@@ -52,7 +52,7 @@ class AuthUtil {
       await sharedPref.setStringList(officeIdsKey, officeIds);
     }
 
-    await sharedPref.setString(key, jsonEncode(user.toJson()));
+    await sharedPref.setString(userkey, jsonEncode(user.toJson()));
     await sharedPref.setBool(isLoggedInKey, true);
     return user;
   }
@@ -61,7 +61,7 @@ class AuthUtil {
     SharedPreferences? sharedPref,
   ]) async {
     sharedPref ??= await SharedPreferences.getInstance();
-    String? userJson = sharedPref.getString(key);
+    String? userJson = sharedPref.getString(userkey);
 
     if (userJson != null) {
       return UserRegistration.fromJson(jsonDecode(userJson));
@@ -140,7 +140,7 @@ class AuthUtil {
 
   static Future<void> logout() async {
     final SharedPreferences sharedPref = await SharedPreferences.getInstance();
-    await sharedPref.remove(key);
+    await sharedPref.remove(userkey);
     await sharedPref.remove(rolesKey);
     await sharedPref.remove(officeNamesKey);
     await sharedPref.remove(officeIdsKey);

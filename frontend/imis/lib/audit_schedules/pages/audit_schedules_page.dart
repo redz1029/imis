@@ -98,10 +98,10 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -124,10 +124,10 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -152,10 +152,10 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format:");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -176,10 +176,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
         fetchAuditSchedule();
         selectedOffice.clear();
       } else {
-        debugPrint(
-          "Failed to add/update office. Status code: ${response.statusCode}",
-        );
-        debugPrint("Response data: ${response.data}");
+        debugPrint("Response data");
       }
     } catch (e) {
       if (e is DioException) {

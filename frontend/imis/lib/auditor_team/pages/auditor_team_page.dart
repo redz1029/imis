@@ -97,10 +97,10 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -125,10 +125,10 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -148,10 +148,10 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         fetchAuditorTeam();
       } else {
-        debugPrint("Failed to add/update office");
+        debugPrint("Failed to add/update audtor team");
       }
     } catch (e) {
-      debugPrint("Error adding/updating office: $e");
+      debugPrint("Error adding/updating audtor team: $e");
     }
   }
 

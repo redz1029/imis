@@ -241,7 +241,7 @@ class _UserRolePageState extends State<UserRolePage> {
         debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -315,30 +315,6 @@ class _UserRolePageState extends State<UserRolePage> {
     isSearchfocus.dispose();
     super.dispose();
   }
-
-  // void filterSearchResults(String query) {
-  //   final lowerQuery = query.toLowerCase();
-
-  //   setState(() {
-  //     filteredList =
-  //         userRoleList.where((userRole) {
-  //           final user = userList.firstWhereOrNull(
-  //             (u) => u.id == userRole.userId,
-  //           );
-
-  //           final role = rolenameList.firstWhereOrNull(
-  //             (r) => r.id == userRole.roleId,
-  //           );
-  //           if (user == null || role == null) return false;
-
-  //           final userFullName = user.fullName.toLowerCase();
-  //           final roleName = role.name.toLowerCase();
-
-  //           return userFullName.contains(lowerQuery) ||
-  //               roleName.contains(lowerQuery);
-  //         }).toList();
-  //   });
-  // }
 
   void filterSearchResults(String query) {
     final lowerQuery = query.toLowerCase();
@@ -568,7 +544,6 @@ class _UserRolePageState extends State<UserRolePage> {
                     }
 
                     if (id == null) {
-                      // Add new role assignment
                       final newUserRole = UserRoles(
                         userId: _selectedUserId!,
                         roleId: _selectedRoleId!,
@@ -576,7 +551,6 @@ class _UserRolePageState extends State<UserRolePage> {
 
                       await addorUpdateUserRoles(newUserRole);
                     } else {
-                      // Update existing role
                       await updateRole(_selectedUserId!, _selectedRoleId!);
                     }
 
