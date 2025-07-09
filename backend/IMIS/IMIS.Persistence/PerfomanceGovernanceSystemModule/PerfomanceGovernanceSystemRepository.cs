@@ -2,6 +2,7 @@
 using Base.Pagination;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
+using IMIS.Application.PgsSignatoryModule;
 using IMIS.Domain;
 using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -290,14 +291,15 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         return await _dbContext.PerformanceGovernanceSystem.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, CancellationToken cancellationToken)
-    {
-        var userPgs = _entities.Where(p => !p.IsDeleted &&
-            p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
-              .Include(p => p.PgsPeriod)
-              .Include(p => p.Office)
-              .Include(p => p.PgsReadinessRating)
-              .Include(p => p.PgsSignatories);
+    public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(
+    PgsFilter filter,
+    string userId,
+    CancellationToken cancellationToken)
+    {       
+        var userPgs = _entities
+            .Where(p => !p.IsDeleted &&
+                p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
+            .Select(p => p.Id);
 
         var forApprovalPgs = _entities
             .Where(p => !p.IsDeleted &&
@@ -311,24 +313,31 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                         !_dbContext.PgsSignatory.Any(sig =>
                             sig.PgsId == p.Id &&
                             sig.PgsSignatoryTemplateId == template.Id)))
+            .Select(p => p.Id);
+
+        var combinedIds = await userPgs
+            .Union(forApprovalPgs)
+            .Distinct()
+            .ToListAsync(cancellationToken);
+       
+        var filteredQuery = _entities
+            .Where(p => combinedIds.Contains(p.Id));
+
+        if (filter.PgsPeriodId != null)
+            filteredQuery = filteredQuery.Where(p => p.PgsPeriod.Id == filter.PgsPeriodId);
+
+        if (filter.OfficeId != null)
+            filteredQuery = filteredQuery.Where(p => p.OfficeId == filter.OfficeId);
+       
+        var fullQuery = filteredQuery
             .Include(p => p.PgsPeriod)
             .Include(p => p.Office)
             .Include(p => p.PgsReadinessRating)
             .Include(p => p.PgsSignatories);
 
-        var combinedPgs = userPgs.Union(forApprovalPgs).Distinct();
-
-        if (filter.PgsPeriodId != null)
-            combinedPgs = combinedPgs.Where(p => p.PgsPeriod.Id == filter.PgsPeriodId);
-
-        if(filter.OfficeId != null)
-            combinedPgs = combinedPgs.Where(p => p.OfficeId == filter.OfficeId);
-
-        var pagedPgs = await EntityPageList<PerfomanceGovernanceSystem, long>
-            .CreateAsync(combinedPgs, filter.Page, filter.PageSize, cancellationToken)
+        return await EntityPageList<PerfomanceGovernanceSystem, long>
+            .CreateAsync(fullQuery, filter.Page, filter.PageSize, cancellationToken)
             .ConfigureAwait(false);
-
-        return pagedPgs;
     }
 
     public async Task Disapprove(long pgsId, CancellationToken cancellationToken)
