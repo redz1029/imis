@@ -45,18 +45,15 @@ namespace IMIS.Persistence.PgsModule
             var pgs = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return pgs != null ? new PerfomanceGovernanceSystemDto(pgs) : null;
         }
-
-        public async Task<List<PerfomanceGovernanceSystemDto>?> GetUserByIdSaveUpdateAsync(int id, CancellationToken cancellationToken)
+             
+        public async Task<PerfomanceGovernanceSystemDto?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
         {
-            var pgsList = await _repository.GetUserByIdSaveUpdateAsync(id, cancellationToken).ConfigureAwait(false);
+            var pgs = await _repository.GetByUserIdAndPgsIdAsync(userId, pgsId, cancellationToken);
+            if (pgs == null) return null;
 
-            if (pgsList == null || !pgsList.Any())
-                return null;
-
-            return pgsList.Select(p => new PerfomanceGovernanceSystemDto(p)).ToList();
+            var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken);
+            return dto;
         }
-
-
 
         private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(PerfomanceGovernanceSystem pgs, string userId, CancellationToken cancellationToken)
         {

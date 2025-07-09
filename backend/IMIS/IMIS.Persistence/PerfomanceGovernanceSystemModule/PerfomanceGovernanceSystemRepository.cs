@@ -20,7 +20,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
           .Include(p => p.Office)
           .Include(p => p.PgsReadinessRating)
           .Include(p => p.PgsSignatories)
-          .ToListAsync(cancellationToken).ConfigureAwait(false);
+          .ToListAsync(cancellationToken).ConfigureAwait(false); 
         return pgs;
     }   
     public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -37,21 +37,20 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 //.ThenInclude(s => s.PgsSignatoryTemplate) // needed for OrderLevel
             .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
     }
-    
-    public async Task<List<PerfomanceGovernanceSystem>?> GetUserByIdSaveUpdateAsync(int id, CancellationToken cancellationToken)
+    public async Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
     {
-        return await _dbContext.PerformanceGovernanceSystem
+        var pgs = await _dbContext.PerformanceGovernanceSystem
+            .Where(p => !p.IsDeleted &&
+                        p.Id == pgsId && //
+                        p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
             .Include(p => p.PgsPeriod)
             .Include(p => p.Office)
-            .Include(p => p.PgsDeliverables)
-                .ThenInclude(d => d.Kra)
-            .Include(p => p.PgsDeliverables)
-                .ThenInclude(d => d.PgsDeliverableScoreHistory)
             .Include(p => p.PgsReadinessRating)
-            .Include(p => p.PgsSignatories!)
-            //.ThenInclude(s => s.PgsSignatoryTemplate) // Uncomment if needed
-            .Where(p => p.Id == id && !p.IsDeleted)
-            .ToListAsync(cancellationToken);
+            .Include(p => p.PgsSignatories)
+            .FirstOrDefaultAsync(cancellationToken) 
+            .ConfigureAwait(false);
+
+        return pgs;
     }
 
     //Get Pgs Report: Filter by Id
