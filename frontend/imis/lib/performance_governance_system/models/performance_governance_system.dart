@@ -27,7 +27,7 @@ class PerformanceGovernanceSystem {
   final PgsReadiness pgsReadinessRating;
 
   @JsonKey()
-  final List<PgsSignatory>? pgsSignatories;
+  List<PgsSignatory>? pgsSignatories;
 
   final bool isDeleted;
   final String? rowVersion;
