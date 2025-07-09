@@ -7,7 +7,12 @@ class PgsSignatory {
   int? id;
   int? pgsId;
   int? pgsSignatoryTemplateId;
+  String? signatoryName;
   String? signatoryId;
+  String? label;
+  String? status;
+  bool isNextStatus;
+  int? orderLevel;
 
   @JsonKey()
   @DateTimeConverter()
@@ -17,14 +22,19 @@ class PgsSignatory {
   String? rowVersion;
 
   PgsSignatory(
+    this.id,
+    this.pgsId,
+    this.pgsSignatoryTemplateId,
+    this.signatoryName,
+    this.signatoryId,
+    this.label,
+    this.status,
+    this.isNextStatus,
+    this.orderLevel,
     this.dateSigned,
     this.isDeleted,
-    this.rowVersion, {
-    required this.id,
-    required this.pgsId,
-    required this.pgsSignatoryTemplateId,
-    required this.signatoryId,
-  });
+    this.rowVersion,
+  );
   factory PgsSignatory.fromJson(Map<String, dynamic> json) =>
       _$PgsSignatoryFromJson(json);
 
