@@ -53,7 +53,7 @@ class PaginationUtil {
       } else {
         throw Exception('Failed to load data');
       }
-    } on DioException catch (e) {
+    } on DioException {
       throw Exception('Dio error');
     } catch (e) {
       throw Exception('Unexpected error: $e');

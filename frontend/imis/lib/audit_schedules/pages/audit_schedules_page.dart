@@ -100,7 +100,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
       } else {
         debugPrint("Unexpected response format");
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
@@ -126,7 +126,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
       } else {
         debugPrint("Unexpected response format");
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
@@ -154,7 +154,7 @@ class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
       } else {
         debugPrint("Unexpected response format:");
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
