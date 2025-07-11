@@ -594,6 +594,7 @@ class _PerformanceGovernanceSystemPageState
                   'orderLevel': sig.orderLevel,
                   'defaultSignatoryId': sig.signatoryId,
                   'officeId': pgs.office.id.toString(),
+                  'isNextStatus': sig.isNextStatus,
                 },
               )
               .toList();
@@ -1718,8 +1719,13 @@ class _PerformanceGovernanceSystemPageState
                                                     size: 24,
                                                     color: primaryTextColor,
                                                   ),
-
-                                                  if (pgsgovernancesystem['forSignature'] ==
+                                                  if ((pgsgovernancesystem['signatories']
+                                                              as List?)
+                                                          ?.any(
+                                                            (s) =>
+                                                                s['isNextStatus'] ==
+                                                                true,
+                                                          ) ==
                                                       true)
                                                     Positioned(
                                                       top: -4,
@@ -1727,24 +1733,20 @@ class _PerformanceGovernanceSystemPageState
                                                       child: Container(
                                                         width: 14,
                                                         height: 14,
-                                                        decoration: BoxDecoration(
-                                                          color: Colors.green,
-                                                          shape:
-                                                              BoxShape.circle,
-                                                          border: Border.all(
-                                                            color: Colors.white,
-                                                            width: 2.0,
-                                                          ),
-                                                          boxShadow: [
-                                                            BoxShadow(
-                                                              color: Colors.black
-                                                              // ignore: deprecated_member_use
-                                                              .withOpacity(0.2),
-                                                              blurRadius: 2,
-                                                              spreadRadius: 1,
+                                                        decoration:
+                                                            BoxDecoration(
+                                                              color:
+                                                                  Colors.green,
+                                                              shape:
+                                                                  BoxShape
+                                                                      .circle,
+                                                              border: Border.all(
+                                                                color:
+                                                                    Colors
+                                                                        .white,
+                                                                width: 2.0,
+                                                              ),
                                                             ),
-                                                          ],
-                                                        ),
                                                       ),
                                                     ),
                                                 ],
@@ -2566,6 +2568,7 @@ class _PerformanceGovernanceSystemPageState
                         ).show(context);
                         return;
                       }
+
                       int? pgsId = int.tryParse(id ?? '');
 
                       PerformanceGovernanceSystem pgs = getPgsAuditDetails(
@@ -2574,6 +2577,8 @@ class _PerformanceGovernanceSystemPageState
                       );
 
                       try {
+                        final currentUser = await AuthUtil.fetchLoggedUser();
+                        final currentUserId = currentUser?.id;
                         if (pgsId == null) {
                           debugPrint("Saving new PGS...");
                           await savePGS(pgs);
@@ -2585,7 +2590,9 @@ class _PerformanceGovernanceSystemPageState
                           await updateSavePGS(
                             pgsId: pgsId.toString(),
                             updatePgs: pgs,
+                            userId: currentUserId,
                           );
+
                           // ignore: use_build_context_synchronously
                           Navigator.pop(context);
                         }
@@ -2665,14 +2672,33 @@ class _PerformanceGovernanceSystemPageState
 
                       PerformanceGovernanceSystem pgs = getPgsAuditDetails(
                         id: pgsId ?? 0,
-                        pgsStatus: "Draft",
+                        pgsStatus: "Submit",
                       );
+
+                      int? signatoryId = int.tryParse(id ?? '');
+
+                      PgsSignatory? signatory;
+                      if (pgs.pgsSignatories != null &&
+                          pgs.pgsSignatories!.isNotEmpty) {
+                        try {
+                          signatory = pgs.pgsSignatories!
+                          // ignore: unrelated_type_equality_checks
+                          .firstWhere((s) => s.signatoryId == signatoryId);
+                        } catch (e) {
+                          // No match found
+                          signatory = null;
+                        }
+                      }
 
                       try {
                         final currentUser = await AuthUtil.fetchLoggedUser();
                         final currentUserId = currentUser?.id;
                         if (pgsId == null) {
                           debugPrint("Saving new PGS...");
+                          await submitPGS(pgs);
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+                        } else if (signatory == null) {
                           await submitPGS(pgs);
                           // ignore: use_build_context_synchronously
                           Navigator.pop(context);
