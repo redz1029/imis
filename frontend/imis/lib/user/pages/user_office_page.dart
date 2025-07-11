@@ -387,60 +387,66 @@ class _UserOfficePageState extends State<UserOfficePage> {
                   ),
                 ),
                 SizedBox(height: 15),
-                DropdownSearch<Map<String, dynamic>?>(
-                  popupProps: PopupProps.menu(
-                    showSearchBox: true,
-                    searchFieldProps: TextFieldProps(
-                      decoration: InputDecoration(
-                        hintText: 'Search offices...',
-                        fillColor: mainBgColor,
-                        filled: true,
 
-                        prefixIcon: Icon(Icons.search),
+                SizedBox(
+                  width: 480,
+                  child: DropdownSearch<Map<String, dynamic>>(
+                    popupProps: PopupProps.menu(
+                      showSearchBox: true,
+                      searchFieldProps: TextFieldProps(
+                        decoration: InputDecoration(
+                          hintText: 'Search Office Name...',
+                          filled: true,
+                          fillColor: mainBgColor,
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                        ),
+                      ),
+                      itemBuilder:
+                          (context, office, isSelected) => ListTile(
+                            tileColor: mainBgColor,
+                            title: Text(office['name']),
+                          ),
+                    ),
+                    items: filteredListOffice,
+                    itemAsString: (office) => office['name'],
+                    selectedItem:
+                        _selectedOfficeId == null
+                            ? null
+                            : filteredListOffice.firstWhere(
+                              (office) =>
+                                  office['id'].toString() == _selectedOfficeId,
+                              orElse: () => <String, dynamic>{},
+                            ),
+
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedOfficeId = value?['id'].toString();
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Please select an office';
+                      }
+                      return null;
+                    },
+                    dropdownDecoratorProps: DropDownDecoratorProps(
+                      dropdownSearchDecoration: InputDecoration(
+                        labelText: 'Select Office',
+                        filled: true,
+                        fillColor: mainBgColor,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderSide: BorderSide(color: primaryColor),
                         ),
-                      ),
-                    ),
-                    itemBuilder:
-                        (context, item, isSelected) => ListTile(
-                          tileColor: mainBgColor,
-
-                          title: Text(item?['name'] ?? ''),
-                        ),
-                  ),
-
-                  items: officeList.cast<Map<String, dynamic>?>(),
-                  itemAsString: (o) => o?['name'] ?? '',
-                  selectedItem: officeList
-                      .cast<Map<String, dynamic>?>()
-                      .firstWhere(
-                        (o) => o?['id'] == _selectedOfficeId,
-                        orElse: () => null,
-                      ),
-                  onChanged:
-                      (value) =>
-                          setState(() => _selectedOfficeId = value?['id']),
-                  validator: (value) {
-                    if (value == null) {
-                      return 'Please select an office';
-                    }
-                    return null;
-                  },
-                  dropdownDecoratorProps: DropDownDecoratorProps(
-                    dropdownSearchDecoration: InputDecoration(
-                      labelText: 'Select Office',
-                      fillColor: mainBgColor,
-                      filled: true,
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
                       ),
                     ),
                   ),
