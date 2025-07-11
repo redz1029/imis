@@ -749,10 +749,14 @@ class _PerformanceGovernanceSystemPageState
         'userId': userId,
         'Page': page.toString(),
         'PageSize': pageSize.toString(),
-
         if (selectedStartPeriod != null)
-          'startDate': selectedStartPeriod.toString(),
-        if (selectedEndDate != null) 'endDate': selectedEndDate.toString(),
+          'FromDate': DateFormat(
+            'yyyy-MM-dd',
+          ).format(DateTime.parse(selectedStartPeriod!)),
+        if (selectedEndDate != null)
+          'ToDate': DateFormat(
+            'yyyy-MM-dd',
+          ).format(DateTime.parse(selectedEndDate!)),
         if (_selectedOfficeId != null && _selectedOfficeId!.isNotEmpty)
           'officeId': _selectedOfficeId,
       };
@@ -1211,6 +1215,7 @@ class _PerformanceGovernanceSystemPageState
                               });
                               fetchPgsFilter();
                             },
+
                             itemBuilder: (BuildContext context) {
                               final periodOptions = [
                                 {'date': '', 'displayText': 'All Start Date'},
@@ -1260,7 +1265,7 @@ class _PerformanceGovernanceSystemPageState
                                 selectedEndDateText =
                                     selectedEndDate ?? 'All End Date';
                               });
-                              // fetchPgsFilter();
+                              fetchPgsFilter();
                             },
                             itemBuilder: (BuildContext context) {
                               final periodOptions = [
