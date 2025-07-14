@@ -783,7 +783,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                             children: [
                               ClipOval(
                                 child: Image.asset(
-                                  'assets/profile1.jpg',
+                                  'assets/iconprofile.png',
                                   width: 40,
                                   height: 40,
                                   fit: BoxFit.cover,
