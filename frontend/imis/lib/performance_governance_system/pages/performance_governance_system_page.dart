@@ -235,15 +235,11 @@ class _PerformanceGovernanceSystemPageState
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
       } else {
-        debugPrint("Failed to save PGS data. Status: ${response.statusCode}");
-        debugPrint("Response: ${response.data}");
+        debugPrint("Failed to submit PGS data");
       }
     } on DioException catch (e) {
       debugPrint("Dio Error: ${e.message}");
-      if (e.response != null) {
-        debugPrint("Status: ${e.response?.statusCode}");
-        debugPrint("Response: ${e.response?.data}");
-      }
+      if (e.response != null) {}
     } catch (e) {
       debugPrint("Unexpected Error: $e");
     }
@@ -2693,28 +2689,33 @@ class _PerformanceGovernanceSystemPageState
                       try {
                         final currentUser = await AuthUtil.fetchLoggedUser();
                         final currentUserId = currentUser?.id;
+
                         if (pgsId == null) {
-                          debugPrint("Saving new PGS...");
                           await submitPGS(pgs);
-                          // ignore: use_build_context_synchronously
-                          Navigator.pop(context);
-                        } else if (signatory == null) {
-                          await submitPGS(pgs);
-                          // ignore: use_build_context_synchronously
                           Navigator.pop(context);
                         } else {
-                          debugPrint("Updating PGS with ID: $pgsId...");
+                          final hasSignatory =
+                              pgs.pgsSignatories?.any(
+                                (s) => s.signatoryId == signatoryId,
+                              ) ??
+                              false;
 
-                          await updateSavePGS(
-                            pgsId: pgsId.toString(),
-                            updatePgs: pgs,
-                            userId: currentUserId,
-                          );
+                          if (!hasSignatory) {
+                            await submitPGS(pgs);
+                          } else {
+                            await updateSavePGS(
+                              pgsId: pgsId.toString(),
+                              updatePgs: pgs,
+                              userId: currentUserId,
+                            );
+                          }
+
                           // ignore: use_build_context_synchronously
                           Navigator.pop(context);
                         }
                       } catch (e) {
                         debugPrint("Error saving/updating PGS: $e");
+
                         // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Failed to save PGS: $e')),
