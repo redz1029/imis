@@ -14,7 +14,7 @@ PgsSignatory _$PgsSignatoryFromJson(Map<String, dynamic> json) => PgsSignatory(
   json['signatoryId'] as String?,
   json['label'] as String?,
   json['status'] as String?,
-  json['isNextStatus'] as bool,
+  json['isNextStatus'] as bool?,
   (json['orderLevel'] as num?)?.toInt(),
   const DateTimeConverter().fromJson(json['dateSigned'] as String),
   json['isDeleted'] as bool,

@@ -240,7 +240,7 @@ class _UserRolePageState extends State<UserRolePage> {
       } else {
         debugPrint("Unexpected response format");
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");

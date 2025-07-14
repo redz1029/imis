@@ -33,6 +33,9 @@ class ApiEndpoint {
   late String pgsDeliverableScoreHistory;
   late String pgsDeliverableScoreHistoryGrouped;
   late String officetype;
+  late String pgsSubmit;
+  late String pgsSubmitUserId;
+  late String performancegovernancesystemFilter;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -56,6 +59,7 @@ class ApiEndpoint {
     auditSchedule = '$baseUrl/auditSchedule';
     signatoryTemplate = '$baseUrl/pgsSignatoryTemplate';
     performancegovernancesystemUserId = '$baseUrl/pgs';
+
     generatePdf = '$baseUrl/pgs/list-report/pdf';
     refresh = '$baseUrl/refresh';
     filterBy = '$baseUrl/deliverables/filter';
@@ -65,6 +69,9 @@ class ApiEndpoint {
         '$baseUrl/pgsDeliverableScoreHistory/grouped';
 
     officetype = '$baseUrl/officetype';
+    pgsSubmit = '$baseUrl/pgs/submit';
+    pgsSubmitUserId = '$baseUrl/pgs/submit/userId';
+    performancegovernancesystemFilter = '$baseUrl/pgs/filter';
   }
 
   static Future<void> setBaseUrl() async {

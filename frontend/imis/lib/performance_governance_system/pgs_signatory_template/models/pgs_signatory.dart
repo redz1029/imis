@@ -11,7 +11,7 @@ class PgsSignatory {
   String? signatoryId;
   String? label;
   String? status;
-  bool isNextStatus;
+  bool? isNextStatus;
   int? orderLevel;
 
   @JsonKey()

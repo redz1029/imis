@@ -175,7 +175,7 @@ class _OfficePageState extends State<OfficePage> {
       } else {
         debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
