@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="07/01/2025 14:34:54" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="07/14/2025 11:19:40" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -58,16 +58,27 @@ namespace FastReport
       {      
       }              
     }
-    
+  
     private void Text16_BeforePrint(object sender, EventArgs e)
     {
       TextObject txt = sender as TextObject;
       object value = Report.GetColumnValue(&quot;ReportPerfomanceGovernanceSystemDto.PgsSignatoryId1&quot;);
 
-      if (value != null)
+      // Set text
+      if (value != null &amp;&amp; !string.IsNullOrWhiteSpace(value.ToString()))
+      {
         txt.Text = value.ToString().ToUpper();
+
+        // Show the line
+        SigLine1.Visible = true;
+      }
       else
+      {
         txt.Text = &quot;&quot;;
+
+        // Hide the line if no signatory
+        SigLine1.Visible = false;
+      }
     }
 
     private void Text17_BeforePrint(object sender, EventArgs e)
@@ -75,10 +86,21 @@ namespace FastReport
       TextObject txt = sender as TextObject;
       object value = Report.GetColumnValue(&quot;ReportPerfomanceGovernanceSystemDto.PgsSignatoryId2&quot;);
 
-      if (value != null)
+      // Set text
+      if (value != null &amp;&amp; !string.IsNullOrWhiteSpace(value.ToString()))
+      {
         txt.Text = value.ToString().ToUpper();
+
+        // Show the line
+        SigLine2.Visible = true;
+      }
       else
+      {
         txt.Text = &quot;&quot;;
+
+        // Hide the line if no signatory
+        SigLine2.Visible = false;
+      }
     }
 
     private void Text18_BeforePrint(object sender, EventArgs e)
@@ -86,10 +108,21 @@ namespace FastReport
       TextObject txt = sender as TextObject;
       object value = Report.GetColumnValue(&quot;ReportPerfomanceGovernanceSystemDto.PgsSignatoryId3&quot;);
 
-      if (value != null)
+      // Set text
+      if (value != null &amp;&amp; !string.IsNullOrWhiteSpace(value.ToString()))
+      {
         txt.Text = value.ToString().ToUpper();
+
+        // Show the line
+        SigLine3.Visible = true;
+      }
       else
+      {
         txt.Text = &quot;&quot;;
+
+        // Hide the line if no signatory
+        SigLine3.Visible = false;
+      }
     }
        
     private void txtPgsOffice_BeforePrint(object sender, EventArgs e)
@@ -134,10 +167,21 @@ namespace FastReport
       TextObject txt = sender as TextObject;
       object value = Report.GetColumnValue(&quot;ReportPerfomanceGovernanceSystemDto.PgsSignatoryId4&quot;);
 
-      if (value != null)
+      // Set text
+      if (value != null &amp;&amp; !string.IsNullOrWhiteSpace(value.ToString()))
+      {
         txt.Text = value.ToString().ToUpper();
+
+        // Show the line
+        SigLine4.Visible = true;
+      }
       else
+      {
         txt.Text = &quot;&quot;;
+
+        // Hide the line if no signatory
+        SigLine4.Visible = false;
+      }
     }
   }
 }</ScriptText>
@@ -218,24 +262,24 @@ namespace FastReport
         <TextObject Name="Text25" Left="86.45" Top="0.45" Width="93.6" Height="29.9" CanGrow="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.KraName]&#13;&#10;&#13;&#10;[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.KraDescription]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 12pt"/>
       </DataBand>
     </DataBand>
-    <PageFooterBand Name="PageFooter1" Top="284.35" Width="1047.06" Height="293.1">
-      <TextObject Name="Text13" Left="371.75" Top="126.85" Width="170.1" Height="19.8" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel4]&#13;&#10;" VertAlign="Center" Font="Segoe UI, 10pt"/>
+    <PageFooterBand Name="PageFooter1" Top="284.35" Width="1047.06" Height="251.75">
+      <TextObject Name="Text13" Left="371.75" Top="115.85" Width="170.1" Height="19.8" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel4]&#13;&#10;" VertAlign="Center" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text14" Left="374.95" Top="4" Width="170.1" Height="19.8" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel2]" VertAlign="Center" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text15" Left="81" Top="4" Width="170.1" Height="19.8" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel1]&#13;&#10;" VertAlign="Center" Font="Segoe UI, 10pt"/>
-      <LineObject Name="Line2" Left="102.15" Top="54.8" Width="238.65" Diagonal="true"/>
-      <LineObject Name="Line3" Left="409.85" Top="55.25" Width="249.1" Diagonal="true"/>
-      <LineObject Name="Line4" Left="409.75" Top="177.1" Width="252.1" Diagonal="true"/>
-      <TextObject Name="Text16" Left="75" Top="57.7" Width="302.85" Height="22.25" Anchor="Top, Left, Right" CanGrow="true" BeforePrintEvent="Text16_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId1]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text17" Left="379.75" Top="57.7" Width="318.8" Height="21.6" Anchor="Top, Left, Right" CanGrow="true" BeforePrintEvent="Text17_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId2]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
-      <TextObject Name="txtPgsSignatoryId3" Left="700.5" Top="57.7" Width="264.65" Height="22.25" Anchor="Top, Left, Right" CanGrow="true" BeforePrintEvent="Text18_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId3]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text29" Left="381.45" Top="258.3" Width="317.8" Height="28.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-      <TextObject Name="Text59" Left="74.6" Top="80.08" Width="303.05" Height="20.25" Anchor="Bottom, Left, Right" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition1]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text60" Left="380" Top="80.08" Width="319.05" Height="20.45" Anchor="Bottom, Left, Right" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition2]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text61" Left="381" Top="202.84" Width="319.05" Height="20.35" Anchor="Bottom, Left, Right" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition4]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
-      <LineObject Name="Line32" Left="723.1" Top="56.7" Width="237.1" Diagonal="true"/>
+      <LineObject Name="SigLine1" Left="102.15" Top="48.8" Width="238.65" Diagonal="true"/>
+      <LineObject Name="SigLine2" Left="409.85" Top="49.25" Width="249.1" Diagonal="true"/>
+      <LineObject Name="SigLine4" Left="409.75" Top="162.1" Width="252.1" Diagonal="true"/>
+      <TextObject Name="Text16" Left="75" Top="51.7" Width="302.85" Height="22.25" CanGrow="true" BeforePrintEvent="Text16_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId1]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <TextObject Name="Text17" Left="379.75" Top="51.7" Width="318.8" Height="21.6" CanGrow="true" BeforePrintEvent="Text17_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId2]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <TextObject Name="txtPgsSignatoryId3" Left="701.95" Top="51.7" Width="265.2" Height="22.25" CanGrow="true" BeforePrintEvent="Text18_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId3]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <TextObject Name="Text29" Left="381.45" Top="223.4" Width="317.8" Height="28.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
+      <TextObject Name="Text59" Left="74.6" Top="74.08" Width="303.05" Height="20.25" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition1]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <TextObject Name="Text60" Left="380" Top="74.08" Width="319.05" Height="20.45" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition2]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <TextObject Name="Text61" Left="381" Top="187.84" Width="319.05" Height="20.35" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition4]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <LineObject Name="SigLine3" Left="720.1" Top="50.7" Width="242.1" Diagonal="true"/>
       <TextObject Name="Text62" Left="708.75" Top="2" Width="179.55" Height="18.9" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel3]" Font="Segoe UI, 10pt"/>
-      <TextObject Name="txtPgsSignatoryId4" Left="381.45" Top="180.55" Width="318.3" Height="21.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId4_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId4]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text64" Left="701.3" Top="80.05" Width="263.6" Height="20.9" CanGrow="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition3]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <TextObject Name="txtPgsSignatoryId4" Left="381.45" Top="165.55" Width="318.3" Height="21.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId4_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId4]&#13;&#10;" HorzAlign="Center" Font="Segoe UI, 10pt"/>
+      <TextObject Name="Text64" Left="702.3" Top="74.05" Width="264.6" Height="20.9" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition3]" HorzAlign="Center" Font="Segoe UI, 10pt"/>
     </PageFooterBand>
   </ReportPage>
   <ReportPage Name="Page2" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt" LastPageSource="15" FirstPageSource="15">

@@ -50,7 +50,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
 
         public string? PgsSignatoryId1 =>
             PgsSignatories != null && PgsSignatories.Count >= 1 && PgsSignatories[0].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-             ? PgsSignatories[0].User!.Prefix + " " + 
+             ? PgsSignatories[0].User!.Prefix + " " +
             PgsSignatories[0].User!.FirstName + " " +
             PgsSignatories[0].User!.MiddleName + " " +
             PgsSignatories[0].User!.LastName +
@@ -59,13 +59,13 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
 
         public string? PgsSignatoryPosition1 =>
             PgsSignatories != null && PgsSignatories.Count >= 1 && PgsSignatories[0].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-            ?                       
+            ?
             (PgsSignatories[0].User!.Position)
             : null;
 
         public string? PgsSignatoryId2 =>
             PgsSignatories != null && PgsSignatories.Count >= 2 && PgsSignatories[1].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-             ? PgsSignatories[1].User!.Prefix + " " + 
+             ? PgsSignatories[1].User!.Prefix + " " +
             PgsSignatories[1].User!.FirstName + " " +
             PgsSignatories[1].User!.MiddleName + " " +
             PgsSignatories[1].User!.LastName +
@@ -114,9 +114,9 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
         {
             this.Id = perfomanceGovernanceSystem.Id;
             this.Remarks = perfomanceGovernanceSystem.Remarks;
-            this.PgsPeriod =  new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod);
+            this.PgsPeriod = new PgsPeriodDto(perfomanceGovernanceSystem.PgsPeriod);
             this.PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables;
-            this.Office =  new OfficeDto(perfomanceGovernanceSystem.Office);
+            this.Office = new OfficeDto(perfomanceGovernanceSystem.Office);
             this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(d => new ReportPGSDeliverableDto(d)).ToList();
             this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;
             this.PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?
@@ -168,4 +168,5 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
         }
     }
 }
+
 
