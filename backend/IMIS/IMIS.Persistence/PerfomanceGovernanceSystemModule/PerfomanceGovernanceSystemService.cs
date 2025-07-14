@@ -55,6 +55,7 @@ namespace IMIS.Persistence.PgsModule
             return dto;
         }
 
+       
         private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(PerfomanceGovernanceSystem pgs, string userId, CancellationToken cancellationToken)
         {
             var dto = new PerfomanceGovernanceSystemDto(pgs);
@@ -64,6 +65,7 @@ namespace IMIS.Persistence.PgsModule
                 var currentStatus = pgs.PgsSignatories?.LastOrDefault();
                 if (currentStatus != null)
                 {
+             
                     foreach (var signatory in dto.PgsSignatories)
                     {
                         var signatoryTemplate = await _signatoryTemplateRepository
@@ -77,23 +79,41 @@ namespace IMIS.Persistence.PgsModule
                         signatory.Label = signatoryTemplate.SignatoryLabel;
                         signatory.Status = signatoryTemplate.Status;
                         signatory.OrderLevel = signatoryTemplate.OrderLevel;
-                        signatory.SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}";
+                        signatory.SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim();
                         signatory.IsNextStatus = false;
                     }
 
-                    var signatoryTemplates = await GetSignatoryTemplates(pgs.Office, cancellationToken).ConfigureAwait(false);
+               
+                    var signatoryTemplates = (await GetSignatoryTemplates(pgs.Office, cancellationToken))
+                        .OrderBy(t => t.OrderLevel)
+                        .ToList();
 
+                    if (signatoryTemplates.Count == 0)
+                        return dto;
+
+                 
                     var currentTemplate = currentStatus.PgsSignatoryTemplate
                         ?? await _signatoryTemplateRepository.GetByIdAsync(currentStatus.PgsSignatoryTemplateId, cancellationToken);
 
-                    var nextTemplate = signatoryTemplates.Where(e => e.OrderLevel == (currentTemplate.OrderLevel + 1)).FirstOrDefault();
+                   
+                    PgsSignatoryTemplate? nextTemplate;
 
-                    // Append signatory template, if the passed userId is equal to the DefaultSignatoryId
-                    if (nextTemplate != null && nextTemplate.DefaultSignatoryId != null && nextTemplate.DefaultSignatoryId == userId)
+                    if (currentTemplate.OrderLevel >= signatoryTemplates.Max(t => t.OrderLevel))
                     {
-                        var user = await _userManager
-                            .FindByIdAsync(userId)
-                            .ConfigureAwait(false);
+                      
+                        nextTemplate = signatoryTemplates.FirstOrDefault();
+                    }
+                    else
+                    {
+                       
+                        nextTemplate = signatoryTemplates
+                            .FirstOrDefault(t => t.OrderLevel == currentTemplate.OrderLevel + 1);
+                    }
+
+                
+                    if (nextTemplate != null && nextTemplate.DefaultSignatoryId == userId)
+                    {
+                        var user = await _userManager.FindByIdAsync(userId).ConfigureAwait(false);
                         dto.PgsSignatories.Add(new PgsSignatoryDto()
                         {
                             Id = 0,
@@ -104,7 +124,7 @@ namespace IMIS.Persistence.PgsModule
                             Label = nextTemplate.SignatoryLabel,
                             OrderLevel = nextTemplate.OrderLevel,
                             IsNextStatus = true,
-                            SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}"
+                            SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim()
                         });
                     }
                 }
@@ -125,11 +145,17 @@ namespace IMIS.Persistence.PgsModule
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken).ConfigureAwait(false);
-                result.Add(dto);
+
+                // Only include if this user is the current next signatory
+                bool isNext = dto.PgsSignatories!.Any(s => s.SignatoryId == userId && s.IsNextStatus);
+
+                if (isNext)
+                    result.Add(dto);
             }
 
             return result;
         }
+
 
         private async Task<IEnumerable<PgsSignatoryTemplate>> GetSignatoryTemplates(Office office, CancellationToken cancellationToken)
         {

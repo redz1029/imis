@@ -323,7 +323,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
               
                 var filteredQuery = _entities
                     .Where(p => combinedIds.Contains(p.Id));
-          
+
                 if (filter.FromDate != null && filter.ToDate != null)
                 {
                     filteredQuery = filteredQuery.Where(p =>
@@ -340,7 +340,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     filteredQuery = filteredQuery.Where(p =>
                         p.PgsPeriod.EndDate <= filter.ToDate);
                 }
-               
+
                 if (filter.OfficeId != null)
                 {
                     filteredQuery = filteredQuery.Where(p => p.OfficeId == filter.OfficeId);
