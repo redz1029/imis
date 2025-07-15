@@ -169,7 +169,7 @@ class _UserRolePageState extends State<UserRolePage> {
     }
   }
 
-  Future<void> addorUpdateUserRoles(UserRoles userRole) async {
+  Future<void> addUserRoles(UserRoles userRole) async {
     final url = ApiEndpoint().userRole;
 
     try {
@@ -549,13 +549,13 @@ class _UserRolePageState extends State<UserRolePage> {
                         roleId: _selectedRoleId!,
                       );
 
-                      await addorUpdateUserRoles(newUserRole);
+                      await addUserRoles(newUserRole);
                     } else {
                       await updateRole(_selectedUserId!, _selectedRoleId!);
                     }
 
                     // ignore: use_build_context_synchronously
-                    Navigator.pop(context); // Close the dialog
+                    Navigator.pop(context);
                   }
                 }
               },
@@ -688,7 +688,6 @@ class _UserRolePageState extends State<UserRolePage> {
                                       index +
                                       1;
 
-                                  // Get the matching role by roleId
                                   final matchedRole = rolenameList.firstWhere(
                                     (roles) => roles.id == userRoles.roleId,
                                     orElse:
@@ -697,7 +696,6 @@ class _UserRolePageState extends State<UserRolePage> {
                                   );
                                   final String roleName = matchedRole.name;
 
-                                  // Get the matching user by userId
                                   final matchUserName = userList.firstWhere(
                                     (user) => user.id == userRoles.userId,
                                     orElse:
@@ -786,36 +784,24 @@ class _UserRolePageState extends State<UserRolePage> {
                                                   IconButton(
                                                     icon: Icon(Icons.edit),
                                                     onPressed: () {
-                                                      final selectedUser =
-                                                          userList.firstWhere(
-                                                            (user) =>
-                                                                user.id ==
-                                                                userRoles
-                                                                    .userId,
-                                                            orElse:
-                                                                () => User(
-                                                                  id: 'unknown',
-                                                                  fullName:
-                                                                      'Unknown',
-                                                                  position:
-                                                                      'position',
-                                                                ),
-                                                          );
+                                                      userList.firstWhere(
+                                                        (user) =>
+                                                            user.id ==
+                                                            userRoles.userId,
+                                                        orElse:
+                                                            () => User(
+                                                              id: 'unknown',
+                                                              fullName:
+                                                                  'Unknown',
+                                                              position:
+                                                                  'position',
+                                                            ),
+                                                      );
 
                                                       final selectedRoleId =
                                                           userRoles.roleId;
                                                       final selectedUserId =
                                                           userRoles.userId;
-
-                                                      debugPrint(
-                                                        "Editing User: ${selectedUser.fullName} (ID: ${selectedUser.id})",
-                                                      );
-                                                      debugPrint(
-                                                        "Role ID: $selectedRoleId",
-                                                      );
-                                                      debugPrint(
-                                                        "User ID: $selectedUserId",
-                                                      );
 
                                                       showFormDialog(
                                                         id: selectedUserId,
