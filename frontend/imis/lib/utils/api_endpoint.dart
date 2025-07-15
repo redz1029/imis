@@ -36,6 +36,7 @@ class ApiEndpoint {
   late String pgsSubmit;
   late String pgsSubmitUserId;
   late String performancegovernancesystemFilter;
+  late String disapprovePgs;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -72,6 +73,7 @@ class ApiEndpoint {
     pgsSubmit = '$baseUrl/pgs/submit';
     pgsSubmitUserId = '$baseUrl/pgs/submit/userId';
     performancegovernancesystemFilter = '$baseUrl/pgs/filter';
+    disapprovePgs = '$baseUrl/pgs/disapprove';
   }
 
   static Future<void> setBaseUrl() async {
