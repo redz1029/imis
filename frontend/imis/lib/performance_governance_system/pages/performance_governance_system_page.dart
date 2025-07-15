@@ -201,6 +201,7 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
+  //Submit gs
   Future<void> submitPGS(PerformanceGovernanceSystem audit) async {
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
@@ -223,7 +224,7 @@ class _PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("PGS data saved successfully!");
+        debugPrint("PGS data submitted successfully!");
 
         if (mounted) {
           setState(() {
@@ -245,6 +246,7 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
+  // Update Save PGS
   Future<void> updateSavePGS({
     String? pgsId,
     required PerformanceGovernanceSystem updatePgs,
@@ -265,9 +267,9 @@ class _PerformanceGovernanceSystemPageState
         return;
       }
 
-      final signatoryResponse = await Dio().get(
+      final signatoryResponse = await AuthenticatedRequest.get(
+        dio,
         "${ApiEndpoint().pgsSubmitUserId}/${user.id}?pgsId=$pgsId",
-        options: Options(headers: {"Authorization": "Bearer $token"}),
       );
 
       if (signatoryResponse.statusCode != 200) {
@@ -284,15 +286,10 @@ class _PerformanceGovernanceSystemPageState
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
 
-      final response = await dio.put(
+      final response = await AuthenticatedRequest.put(
+        dio,
         url,
         data: updatedPgsJson,
-        options: Options(
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer $token",
-          },
-        ),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -316,6 +313,40 @@ class _PerformanceGovernanceSystemPageState
         debugPrint("Response data: ${e.response?.data}");
         debugPrint("Response status: ${e.response?.statusCode}");
       }
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+  }
+
+  //Disapprove pgs
+  Future<void> disapprovePGS(PerformanceGovernanceSystem audit) async {
+    var url = ApiEndpoint().disapprovePgs;
+
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+
+      final requestData = audit.toJson();
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: requestData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint("Pgs data disapprove successfully!");
+
+        setState(() {
+          fetchPgsList();
+          clearAllSelections();
+        });
+
+        await prefs.remove('selectedOfficeId');
+        await prefs.remove('selectedOfficeName');
+      } else {
+        debugPrint("Failed to disapprove Pgs data");
+      }
+    } on DioException {
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -1398,13 +1429,6 @@ class _PerformanceGovernanceSystemPageState
                             ),
                           ),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 1),
-                            child: Text('', style: TextStyle(color: grey)),
-                          ),
-                        ),
                       ],
                     ),
                   ),
@@ -1699,52 +1723,6 @@ class _PerformanceGovernanceSystemPageState
                                                               .toString(),
                                                         ),
                                                   ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Align(
-                                              alignment: Alignment.centerLeft,
-                                              child: Stack(
-                                                clipBehavior: Clip.none,
-                                                children: [
-                                                  FaIcon(
-                                                    FontAwesomeIcons.signature,
-                                                    size: 24,
-                                                    color: primaryTextColor,
-                                                  ),
-                                                  if ((pgsgovernancesystem['signatories']
-                                                              as List?)
-                                                          ?.any(
-                                                            (s) =>
-                                                                s['isNextStatus'] ==
-                                                                true,
-                                                          ) ==
-                                                      true)
-                                                    Positioned(
-                                                      top: -4,
-                                                      right: -4,
-                                                      child: Container(
-                                                        width: 14,
-                                                        height: 14,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                              color:
-                                                                  Colors.green,
-                                                              shape:
-                                                                  BoxShape
-                                                                      .circle,
-                                                              border: Border.all(
-                                                                color:
-                                                                    Colors
-                                                                        .white,
-                                                                width: 2.0,
-                                                              ),
-                                                            ),
-                                                      ),
-                                                    ),
                                                 ],
                                               ),
                                             ),
@@ -2504,109 +2482,192 @@ class _PerformanceGovernanceSystemPageState
 
               // Action Buttons
               actions: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 235, 172, 172),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+                // save as draft
+                // ElevatedButton(
+                //   style: ElevatedButton.styleFrom(
+                //     backgroundColor: const Color.fromARGB(255, 235, 172, 172),
+                //     shape: RoundedRectangleBorder(
+                //       borderRadius: BorderRadius.circular(4),
+                //     ),
+                //   ),
+                //   onPressed: () async {
+                //     bool? confirm = await showDialog<bool>(
+                //       context: context,
+                //       builder:
+                //           (_) => AlertDialog(
+                //             title: Text(
+                //               id == null ? "Confirm Save" : "Confirm Update",
+                //             ),
+                //             content: Text(
+                //               id == null
+                //                   ? "Are you sure you want to save this record?"
+                //                   : "Are you sure you want to update this record?",
+                //             ),
+                //             actions: [
+                //               TextButton(
+                //                 onPressed: () => Navigator.pop(context, false),
+                //                 child: Text(
+                //                   "No",
+                //                   style: TextStyle(color: primaryColor),
+                //                 ),
+                //               ),
+                //               TextButton(
+                //                 onPressed: () => Navigator.pop(context, true),
+                //                 child: Text(
+                //                   "Yes",
+                //                   style: TextStyle(color: primaryColor),
+                //                 ),
+                //               ),
+                //             ],
+                //           ),
+                //     );
+
+                //     if (confirm == true) {
+                //       if (selectedPeriod == null ||
+                //           selectedDirect.isEmpty ||
+                //           selectedIndirect.isEmpty ||
+                //           deliverablesControllers.values.any(
+                //             (controller) => controller.text.trim().isEmpty,
+                //           ) ||
+                //           percentageDeliverables.text.trim().isEmpty) {
+                //         MotionToast.error(
+                //           title: const Text("Missing Fields"),
+                //           description: Text(
+                //             selectedPeriod == null
+                //                 ? "Please complete all required fields before saving."
+                //                 : "Please complete all required fields before saving.",
+                //           ),
+                //           // ignore: deprecated_member_use
+                //           position: MotionToastPosition.top,
+                //           // ignore: use_build_context_synchronously
+                //         ).show(context);
+                //         return;
+                //       }
+
+                //       int? pgsId = int.tryParse(id ?? '');
+
+                //       PerformanceGovernanceSystem pgs = getPgsAuditDetails(
+                //         id: pgsId ?? 0,
+                //         pgsStatus: "Draft",
+                //       );
+
+                //       try {
+                //         final currentUser = await AuthUtil.fetchLoggedUser();
+                //         final currentUserId = currentUser?.id;
+                //         if (pgsId == null) {
+                //           debugPrint("Saving new PGS...");
+                //           await savePGS(pgs);
+                //           // ignore: use_build_context_synchronously
+                //           Navigator.pop(context);
+                //         } else {
+                //           debugPrint("Updating PGS with ID: $pgsId...");
+
+                //           await updateSavePGS(
+                //             pgsId: pgsId.toString(),
+                //             updatePgs: pgs,
+                //             userId: currentUserId,
+                //           );
+
+                //           // ignore: use_build_context_synchronously
+                //           Navigator.pop(context);
+                //         }
+                //       } catch (e) {
+                //         debugPrint("Error saving/updating PGS: $e");
+                //         // ignore: use_build_context_synchronously
+                //         ScaffoldMessenger.of(context).showSnackBar(
+                //           SnackBar(content: Text('Failed to save PGS: $e')),
+                //         );
+                //       }
+                //     }
+                //   },
+                //   child: Text(
+                //     id == null ? 'Save as draft' : 'Save as draft',
+                //     style: TextStyle(color: primaryColor),
+                //   ),
+                // ),
+
+                //DISAPPROVE BUTTON\
+                if (id != null &&
+                    signatoryList.any(
+                      (signatory) => signatory['isNextStatus'] == true,
+                    ))
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color.fromARGB(255, 235, 172, 172),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
-                  onPressed: () async {
-                    bool? confirm = await showDialog<bool>(
-                      context: context,
-                      builder:
-                          (_) => AlertDialog(
-                            title: Text(
-                              id == null ? "Confirm Save" : "Confirm Update",
-                            ),
-                            content: Text(
-                              id == null
-                                  ? "Are you sure you want to save this record?"
-                                  : "Are you sure you want to update this record?",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(
-                                  "No",
-                                  style: TextStyle(color: primaryColor),
-                                ),
+                    onPressed: () async {
+                      bool? confirm = await showDialog(
+                        context: context,
+                        builder:
+                            (_) => AlertDialog(
+                              title: const Text("Confirm Disapprove"),
+                              content: const Text(
+                                "Are you sure you want to disapprove this record? You won't be able to make any changes.",
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(
-                                  "Yes",
-                                  style: TextStyle(color: primaryColor),
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.pop(context, false),
+                                  child: Text(
+                                    "No",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                    );
-
-                    if (confirm == true) {
-                      if (selectedPeriod == null ||
-                          selectedDirect.isEmpty ||
-                          selectedIndirect.isEmpty ||
-                          deliverablesControllers.values.any(
-                            (controller) => controller.text.trim().isEmpty,
-                          ) ||
-                          percentageDeliverables.text.trim().isEmpty) {
-                        MotionToast.error(
-                          title: const Text("Missing Fields"),
-                          description: Text(
-                            selectedPeriod == null
-                                ? "Please complete all required fields before saving."
-                                : "Please complete all required fields before saving.",
-                          ),
-                          // ignore: deprecated_member_use
-                          position: MotionToastPosition.top,
-                          // ignore: use_build_context_synchronously
-                        ).show(context);
-                        return;
-                      }
-
-                      int? pgsId = int.tryParse(id ?? '');
-
-                      PerformanceGovernanceSystem pgs = getPgsAuditDetails(
-                        id: pgsId ?? 0,
-                        pgsStatus: "Draft",
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context, true),
+                                  child: Text(
+                                    "Yes",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
+                                ),
+                              ],
+                            ),
                       );
 
-                      try {
-                        final currentUser = await AuthUtil.fetchLoggedUser();
-                        final currentUserId = currentUser?.id;
-                        if (pgsId == null) {
-                          debugPrint("Saving new PGS...");
-                          await savePGS(pgs);
-                          // ignore: use_build_context_synchronously
-                          Navigator.pop(context);
-                        } else {
-                          debugPrint("Updating PGS with ID: $pgsId...");
+                      if (confirm == true) {
+                        try {
+                          int? pgsId = int.tryParse(id ?? '');
+                          if (pgsId == null) {
+                            throw Exception("Invalid PGS ID");
+                          }
 
-                          await updateSavePGS(
-                            pgsId: pgsId.toString(),
-                            updatePgs: pgs,
-                            userId: currentUserId,
+                          PerformanceGovernanceSystem pgs = getPgsAuditDetails(
+                            id: pgsId,
+                            pgsStatus: "Disapprove",
                           );
 
+                          await disapprovePGS(pgs);
+
+                          MotionToast.success(
+                            description: const Text(
+                              "Disapproved successfully!",
+                            ),
+                            // ignore: use_build_context_synchronously
+                          ).show(context);
+
                           // ignore: use_build_context_synchronously
                           Navigator.pop(context);
+                        } catch (e) {
+                          debugPrint("Error disapproving PGS: $e");
+                          MotionToast.error(
+                            description: Text(
+                              "Failed to disapprove: ${e.toString()}",
+                            ),
+                            // ignore: use_build_context_synchronously
+                          ).show(context);
                         }
-                      } catch (e) {
-                        debugPrint("Error saving/updating PGS: $e");
-                        // ignore: use_build_context_synchronously
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to save PGS: $e')),
-                        );
                       }
-                    }
-                  },
-                  child: Text(
-                    id == null ? 'Save as draft' : 'Save as draft',
-                    style: TextStyle(color: primaryColor),
+                    },
+                    child: const Text(
+                      'Disapprove',
+                      style: TextStyle(color: primaryColor),
+                    ),
                   ),
-                ),
 
+                // SUBMIT BUTTON
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
@@ -2689,33 +2750,35 @@ class _PerformanceGovernanceSystemPageState
                       try {
                         final currentUser = await AuthUtil.fetchLoggedUser();
                         final currentUserId = currentUser?.id;
-
                         if (pgsId == null) {
                           await submitPGS(pgs);
+                          // ignore: use_build_context_synchronously
                           Navigator.pop(context);
-                        } else {
-                          final hasSignatory =
-                              pgs.pgsSignatories?.any(
-                                (s) => s.signatoryId == signatoryId,
-                              ) ??
-                              false;
+                        }
+                        // if (signatory == null) {
+                        //   submitPGS(pgs);
+                        // }
+                        else {
+                          debugPrint("Updating PGS with ID: $pgsId...");
 
-                          if (!hasSignatory) {
-                            await submitPGS(pgs);
-                          } else {
-                            await updateSavePGS(
-                              pgsId: pgsId.toString(),
-                              updatePgs: pgs,
-                              userId: currentUserId,
-                            );
-                          }
+                          await updateSavePGS(
+                            pgsId: pgsId.toString(),
+                            updatePgs: pgs,
+                            userId: currentUserId,
+                          );
 
+                          MotionToast.success(
+                            description: const Text("Submit successfully!"),
+
+                            // ignore: deprecated_member_use
+                            position: MotionToastPosition.top,
+                            // ignore: use_build_context_synchronously
+                          ).show(context);
                           // ignore: use_build_context_synchronously
                           Navigator.pop(context);
                         }
                       } catch (e) {
                         debugPrint("Error saving/updating PGS: $e");
-
                         // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Failed to save PGS: $e')),
