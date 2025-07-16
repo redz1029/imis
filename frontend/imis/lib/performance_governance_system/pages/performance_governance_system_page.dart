@@ -5,7 +5,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
@@ -479,7 +478,7 @@ class _PerformanceGovernanceSystemPageState
   }
 
   Future<void> fetchOffice() async {
-    var url = ApiEndpoint().office;
+    final url = ApiEndpoint().office;
 
     try {
       final response = await AuthenticatedRequest.get(dio, url);
@@ -494,9 +493,8 @@ class _PerformanceGovernanceSystemPageState
           setState(() {
             officeList = data.map((office) => office.toJson()).toList();
             filteredListOffice = List.from(officeList);
-
-            debugPrint("Auto-selected office: $_selectedOfficeId");
           });
+          debugPrint("Fetched ${officeList.length} offices.");
         }
       } else {
         debugPrint("Unexpected response format: ${response.data.runtimeType}");
@@ -509,27 +507,24 @@ class _PerformanceGovernanceSystemPageState
   }
 
   Future<String?> _selectOffice() async {
-    final officeName = await AuthUtil.fetchOfficeNames();
-    final officeId = await AuthUtil.fetchOfficeIds();
+    final officeNames = await AuthUtil.fetchOfficeNames();
+    final officeIds = await AuthUtil.fetchOfficeIds();
 
-    if (officeName == null ||
-        officeId == null ||
-        officeName.isEmpty ||
-        officeId.isEmpty) {
+    if (officeNames == null ||
+        officeIds == null ||
+        officeNames.isEmpty ||
+        officeIds.isEmpty) {
       MotionToast.error(
         title: const Text("Office Not Found"),
         description: const Text(
-          "The selected office ID does not match any known office. Please contact the Administrator.",
+          "The selected office ID does not match any known office.\nPlease contact the administrator.",
         ),
-        toastDuration: Duration(seconds: 10),
+        toastDuration: const Duration(seconds: 10),
         toastAlignment: Alignment.topCenter,
         // ignore: use_build_context_synchronously
       ).show(context);
       return null;
     }
-
-    List<String> officeNames = officeName;
-    List<String> officeIds = officeId;
 
     String? selectedOffice = await showDialog<String>(
       // ignore: use_build_context_synchronously
@@ -539,19 +534,20 @@ class _PerformanceGovernanceSystemPageState
         return Dialog(
           backgroundColor: mainBgColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Container(
-            width: MediaQuery.of(context).size.width * 0.30,
-            constraints: BoxConstraints(maxHeight: 350),
-            padding: EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            constraints: const BoxConstraints(maxHeight: 450, maxWidth: 500),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Close button
                 Align(
                   alignment: Alignment.topRight,
                   child: IconButton(
-                    icon: Icon(Icons.close, color: primaryTextColor),
+                    icon: Icon(Icons.close, color: Colors.grey.shade600),
+
                     onPressed: () async {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.remove('selectedOfficeId');
@@ -561,26 +557,45 @@ class _PerformanceGovernanceSystemPageState
                     },
                   ),
                 ),
+                // Title
                 Text(
                   "Select an Office",
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: primaryTextColor,
+                  ),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
+                const Divider(),
+                const SizedBox(height: 8),
+                // List of offices
                 Expanded(
-                  child: ListView.builder(
-                    shrinkWrap: true,
+                  child: ListView.separated(
                     itemCount: officeNames.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 6),
                     itemBuilder: (context, index) {
                       return Card(
-                        color: mainBgColor,
-                        margin: EdgeInsets.symmetric(vertical: 4),
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                         child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 10,
+                          ),
+                          leading: Icon(
+                            Icons.apartment_rounded,
+                            color: primaryColor,
+                          ),
                           title: Text(
                             officeNames[index],
-                            style: TextStyle(fontSize: 16),
+                            style: const TextStyle(fontSize: 16),
                           ),
-                          leading: Icon(Icons.apartment, color: primaryColor),
                           onTap: () => Navigator.pop(context, officeIds[index]),
+                          // ignore: deprecated_member_use
+                          hoverColor: primaryColor.withOpacity(0.1),
                         ),
                       );
                     },
@@ -593,16 +608,13 @@ class _PerformanceGovernanceSystemPageState
       },
     );
 
-    // ignore: unrelated_type_equality_checks
-    if (selectedOffice == null || selectedOffice == -1) {
+    if (selectedOffice == null || selectedOffice == '-1') {
       await AuthUtil.removeSelectedOfficeId();
-
       return null;
-    } else {
-      await AuthUtil.saveSelectedOfficeId(selectedOffice);
-
-      return selectedOffice;
     }
+
+    await AuthUtil.saveSelectedOfficeId(selectedOffice);
+    return selectedOffice;
   }
 
   Map<String, dynamic> _mapPgsToListItem(
@@ -1982,6 +1994,13 @@ class _PerformanceGovernanceSystemPageState
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            final orderLevel =
+                signatoryList.firstWhere(
+                  (signatory) => signatory['isNextStatus'] == true,
+                  orElse: () => {'orderLevel': 1},
+                )['orderLevel'] ??
+                1;
+
             return AlertDialog(
               backgroundColor: mainBgColor,
               shape: RoundedRectangleBorder(
@@ -2173,6 +2192,8 @@ class _PerformanceGovernanceSystemPageState
                                                     '',
                                                     setState,
                                                     setDialogState,
+                                                    orderLevel: orderLevel,
+                                                    id: id,
                                                   ),
                                             ),
                                           ],
@@ -2482,110 +2503,6 @@ class _PerformanceGovernanceSystemPageState
 
               // Action Buttons
               actions: [
-                // save as draft
-                // ElevatedButton(
-                //   style: ElevatedButton.styleFrom(
-                //     backgroundColor: const Color.fromARGB(255, 235, 172, 172),
-                //     shape: RoundedRectangleBorder(
-                //       borderRadius: BorderRadius.circular(4),
-                //     ),
-                //   ),
-                //   onPressed: () async {
-                //     bool? confirm = await showDialog<bool>(
-                //       context: context,
-                //       builder:
-                //           (_) => AlertDialog(
-                //             title: Text(
-                //               id == null ? "Confirm Save" : "Confirm Update",
-                //             ),
-                //             content: Text(
-                //               id == null
-                //                   ? "Are you sure you want to save this record?"
-                //                   : "Are you sure you want to update this record?",
-                //             ),
-                //             actions: [
-                //               TextButton(
-                //                 onPressed: () => Navigator.pop(context, false),
-                //                 child: Text(
-                //                   "No",
-                //                   style: TextStyle(color: primaryColor),
-                //                 ),
-                //               ),
-                //               TextButton(
-                //                 onPressed: () => Navigator.pop(context, true),
-                //                 child: Text(
-                //                   "Yes",
-                //                   style: TextStyle(color: primaryColor),
-                //                 ),
-                //               ),
-                //             ],
-                //           ),
-                //     );
-
-                //     if (confirm == true) {
-                //       if (selectedPeriod == null ||
-                //           selectedDirect.isEmpty ||
-                //           selectedIndirect.isEmpty ||
-                //           deliverablesControllers.values.any(
-                //             (controller) => controller.text.trim().isEmpty,
-                //           ) ||
-                //           percentageDeliverables.text.trim().isEmpty) {
-                //         MotionToast.error(
-                //           title: const Text("Missing Fields"),
-                //           description: Text(
-                //             selectedPeriod == null
-                //                 ? "Please complete all required fields before saving."
-                //                 : "Please complete all required fields before saving.",
-                //           ),
-                //           // ignore: deprecated_member_use
-                //           position: MotionToastPosition.top,
-                //           // ignore: use_build_context_synchronously
-                //         ).show(context);
-                //         return;
-                //       }
-
-                //       int? pgsId = int.tryParse(id ?? '');
-
-                //       PerformanceGovernanceSystem pgs = getPgsAuditDetails(
-                //         id: pgsId ?? 0,
-                //         pgsStatus: "Draft",
-                //       );
-
-                //       try {
-                //         final currentUser = await AuthUtil.fetchLoggedUser();
-                //         final currentUserId = currentUser?.id;
-                //         if (pgsId == null) {
-                //           debugPrint("Saving new PGS...");
-                //           await savePGS(pgs);
-                //           // ignore: use_build_context_synchronously
-                //           Navigator.pop(context);
-                //         } else {
-                //           debugPrint("Updating PGS with ID: $pgsId...");
-
-                //           await updateSavePGS(
-                //             pgsId: pgsId.toString(),
-                //             updatePgs: pgs,
-                //             userId: currentUserId,
-                //           );
-
-                //           // ignore: use_build_context_synchronously
-                //           Navigator.pop(context);
-                //         }
-                //       } catch (e) {
-                //         debugPrint("Error saving/updating PGS: $e");
-                //         // ignore: use_build_context_synchronously
-                //         ScaffoldMessenger.of(context).showSnackBar(
-                //           SnackBar(content: Text('Failed to save PGS: $e')),
-                //         );
-                //       }
-                //     }
-                //   },
-                //   child: Text(
-                //     id == null ? 'Save as draft' : 'Save as draft',
-                //     style: TextStyle(color: primaryColor),
-                //   ),
-                // ),
-
                 //DISAPPROVE BUTTON\
                 if (id != null &&
                     signatoryList.any(
@@ -2629,7 +2546,7 @@ class _PerformanceGovernanceSystemPageState
 
                       if (confirm == true) {
                         try {
-                          int? pgsId = int.tryParse(id ?? '');
+                          int? pgsId = int.tryParse(id);
                           if (pgsId == null) {
                             throw Exception("Invalid PGS ID");
                           }
@@ -2732,18 +2649,12 @@ class _PerformanceGovernanceSystemPageState
                         pgsStatus: "Submit",
                       );
 
-                      int? signatoryId = int.tryParse(id ?? '');
+                      int.tryParse(id ?? '');
 
-                      PgsSignatory? signatory;
                       if (pgs.pgsSignatories != null &&
                           pgs.pgsSignatories!.isNotEmpty) {
-                        try {
-                          signatory = pgs.pgsSignatories!
-                          // ignore: unrelated_type_equality_checks
-                          .firstWhere((s) => s.signatoryId == signatoryId);
-                        } catch (e) {
+                        try {} catch (e) {
                           // No match found
-                          signatory = null;
                         }
                       }
 
@@ -2768,7 +2679,15 @@ class _PerformanceGovernanceSystemPageState
                           );
 
                           MotionToast.success(
-                            description: const Text("Submit successfully!"),
+                            description: Text(
+                              (id != null &&
+                                      signatoryList.any(
+                                        (signatory) =>
+                                            signatory['isNextStatus'] == true,
+                                      ))
+                                  ? "Approved successfully!"
+                                  : "Submitted successfully!",
+                            ),
 
                             // ignore: deprecated_member_use
                             position: MotionToastPosition.top,
@@ -2786,7 +2705,10 @@ class _PerformanceGovernanceSystemPageState
                       }
                     }
                   },
-                  child: Text('Submit', style: TextStyle(color: Colors.white)),
+                  child: Text(
+                    (id != null && orderLevel >= 2) ? 'Approve' : 'Submit',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -3036,7 +2958,7 @@ class _PerformanceGovernanceSystemPageState
   }
 
   // Sub Header
-  TableRow _buildTableSubHeaderStrategic() {
+  TableRow _buildTableSubHeaderStrategic({bool showApprovalColumn = false}) {
     return TableRow(
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 255, 254, 254),
@@ -3047,7 +2969,9 @@ class _PerformanceGovernanceSystemPageState
         BuildHeaderCell(text: 'INDIRECT'),
         BuildHeaderCell(text: 'DELIVERABLES'),
         BuildHeaderCell(text: 'BY WHEN'),
+
         // BuildHeaderCell(text: 'STATUS'),
+        // BuildHeaderCell(text: 'ACTION'),
         BuildHeaderCell(text: 'ACTION'),
       ],
     );
@@ -3059,8 +2983,11 @@ class _PerformanceGovernanceSystemPageState
     String direct,
     String indirect,
     Function setState,
-    Function setDialogState,
-  ) {
+    Function setDialogState, {
+    int orderLevel = 1,
+    String? id,
+    // int? id,
+  }) {
     deliverablesControllers.putIfAbsent(index, () => TextEditingController());
     selectedDirect.putIfAbsent(index, () => false);
     selectedIndirect.putIfAbsent(index, () => false);
@@ -3089,9 +3016,13 @@ class _PerformanceGovernanceSystemPageState
         ),
         _buildExpandableTextAreaCell(index),
         _buildDatePickerCell(index, setDialogState),
+
         // _buildDropdownCellStatus(index, () => (index)),
-        _buildRemoveButton(index, setDialogState),
-        // _buildApprovedDisapproved(index, setDialogState),
+        // _buildRemoveButton(index, setDialogState),
+        //  _buildApprovedDisapproved(index, setDialogState),
+        (id == null || orderLevel < 2)
+            ? _buildRemoveButton(index, setDialogState)
+            : _buildApprovedDisapproved(index, setDialogState),
       ],
     );
   }
