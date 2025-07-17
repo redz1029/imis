@@ -1,5 +1,7 @@
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'dart:io';
-// ignore: avoid_web_libraries_in_flutter, deprecated_member_use
+// ignore: avoid_web_libraries_in_flutter,
 import 'dart:html' as html;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -118,7 +120,7 @@ class _PerformanceGovernanceSystemPageState
   //For search controller
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
-  TextEditingController reasonController = TextEditingController();
+  Map<int, TextEditingController> reasonController = {};
   Map<int, TextEditingController> kraDescriptionController = {};
 
   List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
@@ -238,7 +240,7 @@ class _PerformanceGovernanceSystemPageState
         debugPrint("Failed to submit PGS data");
       }
     } on DioException catch (e) {
-      debugPrint("Dio Error: ${e.message}");
+      debugPrint("Dio Error");
       if (e.response != null) {}
     } catch (e) {
       debugPrint("Unexpected Error: $e");
@@ -307,11 +309,8 @@ class _PerformanceGovernanceSystemPageState
         }
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.message}");
-      if (e.response != null) {
-        debugPrint("Response data: ${e.response?.data}");
-        debugPrint("Response status: ${e.response?.statusCode}");
-      }
+      debugPrint("Dio error");
+      if (e.response != null) {}
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -456,27 +455,6 @@ class _PerformanceGovernanceSystemPageState
     return deliverablesList;
   }
 
-  Future<bool?> _confirmAction(String title, String message) async {
-    return await showDialog<bool>(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Text(title),
-            content: Text(message),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text("No"),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text("Yes"),
-              ),
-            ],
-          ),
-    );
-  }
-
   Future<void> fetchOffice() async {
     final url = ApiEndpoint().office;
 
@@ -497,10 +475,10 @@ class _PerformanceGovernanceSystemPageState
           debugPrint("Fetched ${officeList.length} offices.");
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -521,13 +499,11 @@ class _PerformanceGovernanceSystemPageState
         ),
         toastDuration: const Duration(seconds: 10),
         toastAlignment: Alignment.topCenter,
-        // ignore: use_build_context_synchronously
       ).show(context);
       return null;
     }
 
     String? selectedOffice = await showDialog<String>(
-      // ignore: use_build_context_synchronously
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
@@ -552,7 +528,7 @@ class _PerformanceGovernanceSystemPageState
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.remove('selectedOfficeId');
                       await prefs.remove('selectedOfficeName');
-                      // ignore: use_build_context_synchronously
+
                       Navigator.pop(context, null);
                     },
                   ),
@@ -594,7 +570,7 @@ class _PerformanceGovernanceSystemPageState
                             style: const TextStyle(fontSize: 16),
                           ),
                           onTap: () => Navigator.pop(context, officeIds[index]),
-                          // ignore: deprecated_member_use
+
                           hoverColor: primaryColor.withOpacity(0.1),
                         ),
                       );
@@ -704,7 +680,7 @@ class _PerformanceGovernanceSystemPageState
         });
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     } finally {
@@ -756,10 +732,7 @@ class _PerformanceGovernanceSystemPageState
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.message}");
-      if (e.response != null) {
-        debugPrint("Response data: ${e.response?.data}");
-        debugPrint("Response status: ${e.response?.statusCode}");
-      }
+      if (e.response != null) {}
     } catch (e) {
       debugPrint("Unexpected error: $e");
     } finally {
@@ -828,10 +801,7 @@ class _PerformanceGovernanceSystemPageState
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.message}");
-      if (e.response != null) {
-        debugPrint("Status: ${e.response!.statusCode}");
-        debugPrint("Response: ${e.response!.data}");
-      }
+      if (e.response != null) {}
     } catch (e) {
       debugPrint("Unexpected error: $e");
     } finally {
@@ -941,7 +911,7 @@ class _PerformanceGovernanceSystemPageState
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException {
       debugPrint("Dio error");
@@ -1051,7 +1021,8 @@ class _PerformanceGovernanceSystemPageState
 
       final percentperDeliverables =
           double.tryParse(percentageControllers[index]!.text) ?? 0.0;
-
+      final disapprovalRemarksText = reasonController[index]?.text ?? '';
+      final isDisapproved = selectedDisapproved[index] ?? false;
       final statusIndex =
           selectedStatus[index]?.index ?? PgsStatus.notStarted.index;
       final status = PgsStatus.values.firstWhere(
@@ -1079,6 +1050,8 @@ class _PerformanceGovernanceSystemPageState
           isDirect,
           byWhen,
           percentperDeliverables,
+          disapprovalRemarksText,
+          isDisapproved,
           status,
 
           remarks: remarks,
@@ -1919,6 +1892,7 @@ class _PerformanceGovernanceSystemPageState
         selectedByWhenControllers.clear();
         selectedStatus.clear();
         deliverableIds.clear();
+        kraDescriptionController.clear();
       } else {
         competenceScore.value = double.tryParse(competencescore ?? '') ?? 0.0;
         resourceScore.value = double.tryParse(resourcescore ?? '') ?? 0.0;
@@ -1955,6 +1929,7 @@ class _PerformanceGovernanceSystemPageState
         selectedByWhenControllers.clear();
         selectedStatus.clear();
         deliverableIds.clear();
+        kraDescriptionController.clear();
 
         if (deliverables != null && deliverables.isNotEmpty) {
           rows = List.generate(deliverables.length, (index) => index);
@@ -1981,6 +1956,10 @@ class _PerformanceGovernanceSystemPageState
             kraDescriptionController[i] = TextEditingController(
               text: item.kraDescription,
             );
+            reasonController[i] = TextEditingController(
+              text: item.disapprovalRemarks,
+            );
+            selectedDisapproved[i] = item.isDisapproved;
           }
         } else {
           rows = [0];
@@ -2453,7 +2432,7 @@ class _PerformanceGovernanceSystemPageState
 
                                   if (signatories.isEmpty) {
                                     return const Center(
-                                      child: Text('No signatories available'),
+                                      // child: Text('No signatories available'),
                                     );
                                   }
 
@@ -2503,88 +2482,6 @@ class _PerformanceGovernanceSystemPageState
 
               // Action Buttons
               actions: [
-                //DISAPPROVE BUTTON\
-                if (id != null &&
-                    signatoryList.any(
-                      (signatory) => signatory['isNextStatus'] == true,
-                    ))
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color.fromARGB(255, 235, 172, 172),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    onPressed: () async {
-                      bool? confirm = await showDialog(
-                        context: context,
-                        builder:
-                            (_) => AlertDialog(
-                              title: const Text("Confirm Disapprove"),
-                              content: const Text(
-                                "Are you sure you want to disapprove this record? You won't be able to make any changes.",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed:
-                                      () => Navigator.pop(context, false),
-                                  child: Text(
-                                    "No",
-                                    style: TextStyle(color: primaryColor),
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: Text(
-                                    "Yes",
-                                    style: TextStyle(color: primaryColor),
-                                  ),
-                                ),
-                              ],
-                            ),
-                      );
-
-                      if (confirm == true) {
-                        try {
-                          int? pgsId = int.tryParse(id);
-                          if (pgsId == null) {
-                            throw Exception("Invalid PGS ID");
-                          }
-
-                          PerformanceGovernanceSystem pgs = getPgsAuditDetails(
-                            id: pgsId,
-                            pgsStatus: "Disapprove",
-                          );
-
-                          await disapprovePGS(pgs);
-
-                          MotionToast.success(
-                            description: const Text(
-                              "Disapproved successfully!",
-                            ),
-                            // ignore: use_build_context_synchronously
-                          ).show(context);
-
-                          // ignore: use_build_context_synchronously
-                          Navigator.pop(context);
-                        } catch (e) {
-                          debugPrint("Error disapproving PGS: $e");
-                          MotionToast.error(
-                            description: Text(
-                              "Failed to disapprove: ${e.toString()}",
-                            ),
-                            // ignore: use_build_context_synchronously
-                          ).show(context);
-                        }
-                      }
-                    },
-                    child: const Text(
-                      'Disapprove',
-                      style: TextStyle(color: primaryColor),
-                    ),
-                  ),
-
-                // SUBMIT BUTTON
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
@@ -2632,12 +2529,11 @@ class _PerformanceGovernanceSystemPageState
                           title: const Text("Missing Fields"),
                           description: Text(
                             selectedPeriod == null
-                                ? "Please complete all required fields before saving."
-                                : "Please complete all required fields before saving.",
+                                ? "Please complete all required fields before submitting."
+                                : "Please complete all required fields before submitting.",
                           ),
-                          // ignore: deprecated_member_use
+
                           position: MotionToastPosition.top,
-                          // ignore: use_build_context_synchronously
                         ).show(context);
                         return;
                       }
@@ -2661,52 +2557,49 @@ class _PerformanceGovernanceSystemPageState
                       try {
                         final currentUser = await AuthUtil.fetchLoggedUser();
                         final currentUserId = currentUser?.id;
+
                         if (pgsId == null) {
                           await submitPGS(pgs);
-                          // ignore: use_build_context_synchronously
-                          Navigator.pop(context);
-                        }
-                        // if (signatory == null) {
-                        //   submitPGS(pgs);
-                        // }
-                        else {
-                          debugPrint("Updating PGS with ID: $pgsId...");
-
+                        } else {
                           await updateSavePGS(
                             pgsId: pgsId.toString(),
                             updatePgs: pgs,
                             userId: currentUserId,
                           );
-
-                          MotionToast.success(
-                            description: Text(
-                              (id != null &&
-                                      signatoryList.any(
-                                        (signatory) =>
-                                            signatory['isNextStatus'] == true,
-                                      ))
-                                  ? "Approved successfully!"
-                                  : "Submitted successfully!",
-                            ),
-
-                            // ignore: deprecated_member_use
-                            position: MotionToastPosition.top,
-                            // ignore: use_build_context_synchronously
-                          ).show(context);
-                          // ignore: use_build_context_synchronously
-                          Navigator.pop(context);
                         }
+
+                        final String successMessage =
+                            (id != null && orderLevel >= 2)
+                                ? "Approved successfully!"
+                                : "Submitted successfully!";
+
+                        MotionToast.success(
+                          description: Text(successMessage),
+
+                          position: MotionToastPosition.top,
+                        ).show(context);
+
+                        // Give time to show toast before closing
+                        await Future.delayed(Duration(milliseconds: 1500));
+                        Navigator.pop(context);
                       } catch (e) {
-                        debugPrint("Error saving/updating PGS: $e");
-                        // ignore: use_build_context_synchronously
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Failed to save PGS: $e')),
-                        );
+                        final String errorMessage =
+                            (id != null && orderLevel >= 2)
+                                ? "Failed to Confirm!"
+                                : "Failed to submit!";
+
+                        MotionToast.error(
+                          description: Text(errorMessage),
+                          position: MotionToastPosition.top,
+                        ).show(context);
+
+                        await Future.delayed(Duration(milliseconds: 1500));
+                        Navigator.pop(context);
                       }
                     }
                   },
                   child: Text(
-                    (id != null && orderLevel >= 2) ? 'Approve' : 'Submit',
+                    (id != null && orderLevel >= 2) ? 'Confirm' : 'Submit',
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -2716,7 +2609,7 @@ class _PerformanceGovernanceSystemPageState
         );
       },
     );
-  } //end
+  }
 
   Widget _buildDatePickerCell(int index, Function setDialogState) {
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
@@ -2958,7 +2851,7 @@ class _PerformanceGovernanceSystemPageState
   }
 
   // Sub Header
-  TableRow _buildTableSubHeaderStrategic({bool showApprovalColumn = false}) {
+  TableRow _buildTableSubHeaderStrategic() {
     return TableRow(
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 255, 254, 254),
@@ -3682,9 +3575,84 @@ class _PerformanceGovernanceSystemPageState
   }
 
   //Approved & Disapproved Buttons
+  // Widget _buildApprovedDisapproved(int index, Function setDialogState) {
+  //   bool isApproved = selectedApproved[index] ?? false;
+  //   bool isDisapproved = selectedDisapproved[index] ?? false;
+
+  //   // Initialize controller if it doesn't exist
+  //   reasonController[index] ??= TextEditingController();
+
+  //   return Column(
+  //     mainAxisSize: MainAxisSize.min,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //         children: [
+  //           Column(
+  //             children: [
+  //               IconButton(
+  //                 icon: Icon(
+  //                   Icons.thumb_up,
+  //                   color: isApproved ? Colors.green : primaryTextColor,
+  //                 ),
+  //                 onPressed: () {
+  //                   setDialogState(() {
+  //                     selectedApproved[index] = true;
+  //                     selectedDisapproved[index] = false;
+  //                   });
+  //                 },
+  //               ),
+  //               Text("Approve", style: TextStyle(fontSize: 12)),
+  //             ],
+  //           ),
+  //           Column(
+  //             children: [
+  //               IconButton(
+  //                 icon: Icon(
+  //                   Icons.thumb_down,
+  //                   color: isDisapproved ? Colors.red : primaryTextColor,
+  //                 ),
+  //                 onPressed: () {
+  //                   setDialogState(() {
+  //                     selectedApproved[index] = false;
+  //                     selectedDisapproved[index] = true;
+  //                   });
+  //                 },
+  //               ),
+  //               Text("Disapprove", style: TextStyle(fontSize: 12)),
+  //             ],
+  //           ),
+  //         ],
+  //       ),
+
+  //       // Show reason input only if disapproved
+  //       if (isDisapproved) ...[
+  //         SizedBox(height: 16),
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 20),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               Text("Reason:", style: TextStyle(fontWeight: FontWeight.bold)),
+  //               TextField(
+  //                 controller: reasonController[index],
+  //                 decoration: InputDecoration(
+  //                   hintText: "Enter your reason here...",
+  //                   border: OutlineInputBorder(),
+  //                 ),
+  //                 maxLines: 3,
+  //               ),
+  //               gap,
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ],
+  //   );
+  // }
   Widget _buildApprovedDisapproved(int index, Function setDialogState) {
-    bool isApproved = selectedApproved[index] ?? false;
-    bool isDisapproved = selectedDisapproved[index] ?? false;
+    bool? isDisapproved = selectedDisapproved[index];
+    reasonController[index] ??= TextEditingController();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -3697,16 +3665,19 @@ class _PerformanceGovernanceSystemPageState
                 IconButton(
                   icon: Icon(
                     Icons.thumb_up,
-                    color: isApproved ? Colors.green : primaryTextColor,
+                    color:
+                        isDisapproved == false
+                            ? Colors.green
+                            : primaryTextColor,
                   ),
                   onPressed: () {
                     setDialogState(() {
-                      selectedApproved[index] = true;
                       selectedDisapproved[index] = false;
+                      reasonController[index]?.clear();
                     });
                   },
                 ),
-                Text("Approve", style: TextStyle(fontSize: 12)),
+                const Text("Approve", style: TextStyle(fontSize: 12)),
               ],
             ),
             Column(
@@ -3714,38 +3685,41 @@ class _PerformanceGovernanceSystemPageState
                 IconButton(
                   icon: Icon(
                     Icons.thumb_down,
-                    color: isDisapproved ? Colors.red : primaryTextColor,
+                    color:
+                        isDisapproved == true ? Colors.red : primaryTextColor,
                   ),
                   onPressed: () {
                     setDialogState(() {
-                      selectedApproved[index] = false;
                       selectedDisapproved[index] = true;
                     });
                   },
                 ),
-                Text("Disapprove", style: TextStyle(fontSize: 12)),
+                const Text("Disapprove", style: TextStyle(fontSize: 12)),
               ],
             ),
           ],
         ),
 
-        if (isDisapproved) ...[
-          SizedBox(height: 16),
+        if (isDisapproved == true) ...[
+          const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Reason:", style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  "Reason:",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 TextField(
-                  controller: reasonController,
-                  decoration: InputDecoration(
+                  controller: reasonController[index],
+                  decoration: const InputDecoration(
                     hintText: "Enter your reason here...",
                     border: OutlineInputBorder(),
                   ),
                   maxLines: 3,
                 ),
-                gap,
+                gap, // Keep this if you already defined `gap` elsewhere
               ],
             ),
           ),
