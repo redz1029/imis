@@ -236,6 +236,8 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
               true,
               DateTime.now(),
               0,
+              'disapproveRemarkes',
+              false,
               PgsStatus.notStarted,
             ),
       );
@@ -413,6 +415,8 @@ class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
                                               true,
                                               DateTime.now(),
                                               0,
+                                              'disapproveRemarkes',
+                                              false,
                                               PgsStatus.notStarted,
                                             ),
                                       );

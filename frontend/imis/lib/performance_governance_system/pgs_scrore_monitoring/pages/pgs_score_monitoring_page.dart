@@ -1021,7 +1021,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                                 _buildTableHeaderCell('BY WHEN'),
                                 _buildTableHeaderCell('STATUS'),
                                 _buildTableHeaderCell('REMARKS'),
-                                _buildTableHeaderCell('SCORING'),
+                                _buildTableHeaderCell('SCORE'),
                               ],
                             ),
 

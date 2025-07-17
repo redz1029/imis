@@ -28,6 +28,9 @@ class PgsDeliverables {
   PgsStatus status;
 
   String? remarks;
+  String disapprovalRemarks;
+  bool isDisapproved;
+
   String? rowVersion;
   List<PgsDeliverableHistory>? pgsDeliverableHistory;
 
@@ -40,7 +43,10 @@ class PgsDeliverables {
     this.isDirect,
     this.byWhen,
     this.percentDeliverables,
+    this.disapprovalRemarks,
+    this.isDisapproved,
     this.status, {
+
     this.pgsDeliverableHistory,
     this.remarks,
     this.rowVersion,
