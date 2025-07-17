@@ -2,6 +2,7 @@
 using Carter;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsModule;
+using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -119,8 +120,8 @@ namespace IMIS.Presentation.PGSModule
             PermissionClaimType.Claim,
             _pgsDeliverableAuditorPermission.Score,
             _pgsDeliverableAuditorPermission.View));
-
-
+          
+        
         }
     }
 }

@@ -13,7 +13,11 @@ namespace IMIS.Domain
         public required DateTime ByWhen { get; set; }  
         public required double PercentDeliverables { get; set; } // This should be set as the current/lates score of the deliverable
         public required PgsStatus Status { get; set; }                         
-        public string? Remarks { get; set; }    
+        public string? Remarks { get; set; }
+
+        public string? DisapprovalRemarks { get; set; }
+        public bool IsDisapproved { get; set; } = false;
+
         public ICollection<PgsDeliverableScoreHistory>? PgsDeliverableScoreHistory { get; set; }
         public long PerfomanceGovernanceSystemId { get; set; }
 

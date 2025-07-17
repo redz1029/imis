@@ -17,6 +17,10 @@ namespace IMIS.Application.PgsModule
         public required double PercentDeliverables { get; set; }
         public required PgsStatus Status { get; set; }
         public string? Remarks { get; set; }
+
+        public string? DisapprovalRemarks { get; set; }
+        public bool IsDisapproved { get; set; }
+
         public List<PgsDeliverableScoreHistoryDto>? PgsDeliverableScoreHistory { get; set; }
         public PGSDeliverableDto() {}
 
@@ -48,6 +52,9 @@ namespace IMIS.Application.PgsModule
 
             this.IsDeleted = pgsDeliverable.IsDeleted;
             this.RowVersion = pgsDeliverable.RowVersion;
+
+            this.DisapprovalRemarks = pgsDeliverable.DisapprovalRemarks;
+            this.IsDisapproved = pgsDeliverable.IsDisapproved;
         }
 
         public override PgsDeliverable ToEntity()
@@ -64,7 +71,9 @@ namespace IMIS.Application.PgsModule
                 KraDescription = KraDescription,
                 Kra = Kra?.ToEntity(),
                 PgsDeliverableScoreHistory = PgsDeliverableScoreHistory?.Select(d => d.ToEntity()).ToList(),
-                Remarks = Remarks
+                Remarks = Remarks,
+                DisapprovalRemarks = DisapprovalRemarks,
+                IsDisapproved = IsDisapproved,
             };
         }
     }
