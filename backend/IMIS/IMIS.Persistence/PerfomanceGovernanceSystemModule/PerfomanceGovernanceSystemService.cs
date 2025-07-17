@@ -258,8 +258,7 @@ namespace IMIS.Persistence.PgsModule
             foreach (var pgs in records)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-
-                // Process signatories and assign labels, status, IsNextStatus, etc.
+            
                 var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken).ConfigureAwait(false);
 
                 // Check if this user is the next signatory
@@ -267,10 +266,9 @@ namespace IMIS.Persistence.PgsModule
 
                 if (isNext)
                 {
-                    // Optional: flag for frontend logic or UI display
+                    
                     dto.ForSignature = true;
-
-                    // Optional: add this property if not yet added in the DTO
+                   
                     dto.HasDisapprovedDeliverables = dto.PgsDeliverables?.Any(d => d.IsDisapproved) == true;
 
                     result.Add(dto);
