@@ -18,6 +18,8 @@ namespace IMIS.Application.PgsModule
         public required double PercentDeliverables { get; set; }
         public string? PgsStatus { get; set; }
         public List<PgsSignatoryDto>? PgsSignatories { get; set; }
+
+        public bool HasDisapprovedDeliverables { get; set; }
         public bool ForSignature { get; set; }
 
         public PerfomanceGovernanceSystemDto() { }

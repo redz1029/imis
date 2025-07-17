@@ -45,7 +45,7 @@ namespace IMIS.Persistence.PgsModule
             var pgs = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return pgs != null ? new PerfomanceGovernanceSystemDto(pgs) : null;
         }
-             
+
         public async Task<PerfomanceGovernanceSystemDto?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
         {
             var pgs = await _repository.GetByUserIdAndPgsIdAsync(userId, pgsId, cancellationToken);
@@ -55,83 +55,197 @@ namespace IMIS.Persistence.PgsModule
             return dto;
         }
 
-       
-        private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(PerfomanceGovernanceSystem pgs, string userId, CancellationToken cancellationToken)
-        {
-            var dto = new PerfomanceGovernanceSystemDto(pgs);
+        //private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(PerfomanceGovernanceSystem pgs, string userId, CancellationToken cancellationToken)
+        //{
+        //    var dto = new PerfomanceGovernanceSystemDto(pgs);
 
-            if (dto.PgsSignatories != null)
+        //    if (dto.PgsSignatories != null)
+        //    {
+        //        var currentStatus = pgs.PgsSignatories?.LastOrDefault();
+        //        if (currentStatus != null)
+        //        {
+
+        //            foreach (var signatory in dto.PgsSignatories)
+        //            {
+        //                var signatoryTemplate = await _signatoryTemplateRepository
+        //                    .GetByIdAsync(signatory.PgsSignatoryTemplateId, cancellationToken)
+        //                    .ConfigureAwait(false);
+
+        //                var user = await _userManager
+        //                    .FindByIdAsync(signatory.SignatoryId)
+        //                    .ConfigureAwait(false);
+
+        //                signatory.Label = signatoryTemplate.SignatoryLabel;
+        //                signatory.Status = signatoryTemplate.Status;
+        //                signatory.OrderLevel = signatoryTemplate.OrderLevel;
+        //                signatory.SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim();
+        //                signatory.IsNextStatus = false;
+        //            }
+
+
+        //            var signatoryTemplates = (await GetSignatoryTemplates(pgs.Office, cancellationToken))
+        //                .OrderBy(t => t.OrderLevel)
+        //                .ToList();
+
+        //            if (signatoryTemplates.Count == 0)
+        //                return dto;
+
+
+        //            var currentTemplate = currentStatus.PgsSignatoryTemplate
+        //                ?? await _signatoryTemplateRepository.GetByIdAsync(currentStatus.PgsSignatoryTemplateId, cancellationToken);
+
+
+        //            PgsSignatoryTemplate? nextTemplate;
+
+        //            if (currentTemplate.OrderLevel >= signatoryTemplates.Max(t => t.OrderLevel))
+        //            {
+
+        //                nextTemplate = signatoryTemplates.FirstOrDefault();
+        //            }
+        //            else
+        //            {
+
+        //                nextTemplate = signatoryTemplates
+        //                    .FirstOrDefault(t => t.OrderLevel == currentTemplate.OrderLevel + 1);
+        //            }
+
+
+        //            if (nextTemplate != null && nextTemplate.DefaultSignatoryId == userId)
+        //            {
+        //                var user = await _userManager.FindByIdAsync(userId).ConfigureAwait(false);
+        //                dto.PgsSignatories.Add(new PgsSignatoryDto()
+        //                {
+        //                    Id = 0,
+        //                    PgsId = pgs.Id,
+        //                    PgsSignatoryTemplateId = nextTemplate.Id,
+        //                    SignatoryId = userId,
+        //                    Status = nextTemplate.Status,
+        //                    Label = nextTemplate.SignatoryLabel,
+        //                    OrderLevel = nextTemplate.OrderLevel,
+        //                    IsNextStatus = true,
+        //                    SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim()
+        //                });
+        //            }
+        //        }
+        //    }
+
+        //    return dto;
+        //}
+
+
+            private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(
+            PerfomanceGovernanceSystem pgs,
+            string userId,
+            CancellationToken cancellationToken)
             {
-                var currentStatus = pgs.PgsSignatories?.LastOrDefault();
-                if (currentStatus != null)
+                var dto = new PerfomanceGovernanceSystemDto(pgs);
+
+                if (dto.PgsSignatories != null)
                 {
-             
-                    foreach (var signatory in dto.PgsSignatories)
+                    var currentStatus = pgs.PgsSignatories?.LastOrDefault();
+                    if (currentStatus != null)
                     {
-                        var signatoryTemplate = await _signatoryTemplateRepository
-                            .GetByIdAsync(signatory.PgsSignatoryTemplateId, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        var user = await _userManager
-                            .FindByIdAsync(signatory.SignatoryId)
-                            .ConfigureAwait(false);
-
-                        signatory.Label = signatoryTemplate.SignatoryLabel;
-                        signatory.Status = signatoryTemplate.Status;
-                        signatory.OrderLevel = signatoryTemplate.OrderLevel;
-                        signatory.SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim();
-                        signatory.IsNextStatus = false;
-                    }
-
-               
-                    var signatoryTemplates = (await GetSignatoryTemplates(pgs.Office, cancellationToken))
-                        .OrderBy(t => t.OrderLevel)
-                        .ToList();
-
-                    if (signatoryTemplates.Count == 0)
-                        return dto;
-
-                 
-                    var currentTemplate = currentStatus.PgsSignatoryTemplate
-                        ?? await _signatoryTemplateRepository.GetByIdAsync(currentStatus.PgsSignatoryTemplateId, cancellationToken);
-
-                   
-                    PgsSignatoryTemplate? nextTemplate;
-
-                    if (currentTemplate.OrderLevel >= signatoryTemplates.Max(t => t.OrderLevel))
-                    {
-                      
-                        nextTemplate = signatoryTemplates.FirstOrDefault();
-                    }
-                    else
-                    {
-                       
-                        nextTemplate = signatoryTemplates
-                            .FirstOrDefault(t => t.OrderLevel == currentTemplate.OrderLevel + 1);
-                    }
-
-                
-                    if (nextTemplate != null && nextTemplate.DefaultSignatoryId == userId)
-                    {
-                        var user = await _userManager.FindByIdAsync(userId).ConfigureAwait(false);
-                        dto.PgsSignatories.Add(new PgsSignatoryDto()
+                        // Load and enrich all signatories
+                        foreach (var signatory in dto.PgsSignatories)
                         {
-                            Id = 0,
-                            PgsId = pgs.Id,
-                            PgsSignatoryTemplateId = nextTemplate.Id,
-                            SignatoryId = userId,
-                            Status = nextTemplate.Status,
-                            Label = nextTemplate.SignatoryLabel,
-                            OrderLevel = nextTemplate.OrderLevel,
-                            IsNextStatus = true,
-                            SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim()
-                        });
+                            var signatoryTemplate = await _signatoryTemplateRepository
+                                .GetByIdAsync(signatory.PgsSignatoryTemplateId, cancellationToken)
+                                .ConfigureAwait(false);
+
+                            var user = await _userManager
+                                .FindByIdAsync(signatory.SignatoryId)
+                                .ConfigureAwait(false);
+
+                            signatory.Label = signatoryTemplate.SignatoryLabel;
+                            signatory.Status = signatoryTemplate.Status;
+                            signatory.OrderLevel = signatoryTemplate.OrderLevel;
+                            signatory.SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim();
+                            signatory.IsNextStatus = false;
+                        }
+
+                        // Get all templates by Office hierarchy
+                        var signatoryTemplates = (await GetSignatoryTemplates(pgs.Office, cancellationToken))
+                            .OrderBy(t => t.OrderLevel)
+                            .ToList();
+
+                        if (signatoryTemplates.Count == 0)
+                            return dto;
+
+                        // Check if any deliverable is disapproved
+                        bool anyDisapproved = pgs.PgsDeliverables?.Any(d => d.IsDisapproved) == true;
+
+                        PgsSignatoryTemplate nextTemplate;
+
+                        if (anyDisapproved)
+                        {
+                            // Return to the first signatory template
+                            nextTemplate = signatoryTemplates.First();
+                        }
+                        else
+                        {
+                            // Normal signatory flow
+                            var currentTemplate = currentStatus.PgsSignatoryTemplate
+                                ?? await _signatoryTemplateRepository.GetByIdAsync(currentStatus.PgsSignatoryTemplateId, cancellationToken);
+
+                            if (currentTemplate.OrderLevel >= signatoryTemplates.Max(t => t.OrderLevel))
+                            {
+                                // Already at the last level; stay or cycle
+                                nextTemplate = signatoryTemplates.First();
+                            }
+                            else
+                            {
+                                // Move to next level
+                                nextTemplate = signatoryTemplates.FirstOrDefault(t => t.OrderLevel == currentTemplate.OrderLevel + 1);
+                            }
+                        }
+
+                        // Add new next signatory only if it's the current user
+                        if (nextTemplate != null && nextTemplate.DefaultSignatoryId == userId)
+                        {
+                            var user = await _userManager.FindByIdAsync(userId).ConfigureAwait(false);
+                            dto.PgsSignatories.Add(new PgsSignatoryDto()
+                            {
+                                Id = 0,
+                                PgsId = pgs.Id,
+                                PgsSignatoryTemplateId = nextTemplate.Id,
+                                SignatoryId = userId,
+                                Status = nextTemplate.Status,
+                                Label = nextTemplate.SignatoryLabel,
+                                OrderLevel = nextTemplate.OrderLevel,
+                                IsNextStatus = true,
+                                SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim()
+                            });
+                        }
                     }
                 }
-            }
 
-            return dto;
-        }
+                return dto;
+            }
+            
+
+        //public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
+        //{
+        //    var records = await _repository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        //    var result = new List<PerfomanceGovernanceSystemDto>();
+
+        //    if (records == null)
+        //        return result;
+
+        //    foreach (var pgs in records)
+        //    {
+        //        cancellationToken.ThrowIfCancellationRequested();
+        //        var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken).ConfigureAwait(false);
+
+        //        // Only include if this user is the current next signatory
+        //        bool isNext = dto.PgsSignatories!.Any(s => s.SignatoryId == userId && s.IsNextStatus);
+
+        //        if (isNext)
+        //            result.Add(dto);
+        //    }
+
+        //    return result;
+        //}
+
 
         public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
@@ -144,13 +258,23 @@ namespace IMIS.Persistence.PgsModule
             foreach (var pgs in records)
             {
                 cancellationToken.ThrowIfCancellationRequested();
+
+                // Process signatories and assign labels, status, IsNextStatus, etc.
                 var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken).ConfigureAwait(false);
 
-                // Only include if this user is the current next signatory
-                bool isNext = dto.PgsSignatories!.Any(s => s.SignatoryId == userId && s.IsNextStatus);
+                // Check if this user is the next signatory
+                bool isNext = dto.PgsSignatories?.Any(s => s.SignatoryId == userId && s.IsNextStatus) == true;
 
                 if (isNext)
+                {
+                    // Optional: flag for frontend logic or UI display
+                    dto.ForSignature = true;
+
+                    // Optional: add this property if not yet added in the DTO
+                    dto.HasDisapprovedDeliverables = dto.PgsDeliverables?.Any(d => d.IsDisapproved) == true;
+
                     result.Add(dto);
+                }
             }
 
             return result;

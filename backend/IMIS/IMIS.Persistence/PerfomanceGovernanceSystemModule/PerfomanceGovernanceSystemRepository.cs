@@ -18,6 +18,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
           .Include(p => p.PgsPeriod)
           .Include(p => p.Office)
+          .Include(p => p.PgsDeliverables)
           .Include(p => p.PgsReadinessRating)
           .Include(p => p.PgsSignatories)
           .ToListAsync(cancellationToken).ConfigureAwait(false); 
@@ -37,6 +38,8 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 //.ThenInclude(s => s.PgsSignatoryTemplate) // needed for OrderLevel
             .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
     }
+
+  
     public async Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
     {
         var pgs = await _dbContext.PerformanceGovernanceSystem
