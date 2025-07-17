@@ -47,6 +47,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             .Include(p => p.PgsPeriod)
             .Include(p => p.Office)         
             .Include(p => p.PgsDeliverables)
+            .ThenInclude(d => d.Kra)
             .Include(p => p.PgsReadinessRating)
             .Include(p => p.PgsSignatories)
             .FirstOrDefaultAsync(cancellationToken) 
