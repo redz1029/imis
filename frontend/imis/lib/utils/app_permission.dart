@@ -205,6 +205,10 @@ class RolePermissions {
     'Pgs Auditor': [
       AppPermission.scorePgsDeliverable,
       AppPermission.scorePgsDeliverableMonitor,
+
+      // Deliverable Monitor
+      AppPermission.viewPgsDeliverableMonitor,
+      AppPermission.scorePgsDeliverableMonitor,
     ],
 
     'Standard User': [AppPermission.viewPerformanceGovernanceSystem],
@@ -214,8 +218,6 @@ class RolePermissions {
       AppPermission.addPerformanceGovernanceSystem,
       AppPermission.viewPerformanceGovernanceSystem,
       AppPermission.editPerformanceGovernanceSystem,
-
-      AppPermission.viewPgsDeliverableMonitor,
     ],
   };
 
