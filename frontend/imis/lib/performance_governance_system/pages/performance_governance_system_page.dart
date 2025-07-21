@@ -477,7 +477,7 @@ class _PerformanceGovernanceSystemPageState
       } else {
         debugPrint("Unexpected response format");
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
@@ -680,7 +680,7 @@ class _PerformanceGovernanceSystemPageState
           filteredList = List.from(deliverableLists);
         });
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
@@ -1981,13 +1981,6 @@ class _PerformanceGovernanceSystemPageState
                 )['orderLevel'] ??
                 1;
 
-            final completed =
-                signatoryList.firstWhere(
-                  (signatory) => signatory['isNextStatus'] == false,
-                  orElse: () => {'orderLevel': 1},
-                )['orderLevel'] ??
-                1;
-
             return AlertDialog(
               backgroundColor: mainBgColor,
               shape: RoundedRectangleBorder(
@@ -2487,11 +2480,9 @@ class _PerformanceGovernanceSystemPageState
               ),
 
               //End third tab
-
-              // Action Button
               actions: [
                 if ((id == null && orderLevel == 1) ||
-                    (id != null && orderLevel >= 2))
+                    (id == null && orderLevel >= 2))
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -2499,242 +2490,130 @@ class _PerformanceGovernanceSystemPageState
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    onPressed: () async {
-                      bool? confirm = await showDialog(
-                        context: context,
-                        builder:
-                            (_) => AlertDialog(
-                              title: Text("Confirm Submit"),
-                              content: Text(
-                                "Are you sure you want to submit this record? You won't be able to make any changes.",
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed:
-                                      () => Navigator.pop(context, false),
-                                  child: Text(
-                                    "No",
-                                    style: TextStyle(color: primaryColor),
-                                  ),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context, true),
-                                  child: Text(
-                                    "Yes",
-                                    style: TextStyle(color: primaryColor),
-                                  ),
-                                ),
-                              ],
-                            ),
-                      );
-
-                      if (confirm == true) {
-                        // Validation check
-                        if (selectedPeriod == null ||
-                            selectedDirect.isEmpty ||
-                            selectedIndirect.isEmpty ||
-                            deliverablesControllers.values.any(
-                              (controller) => controller.text.trim().isEmpty,
-                            ) ||
-                            percentageDeliverables.text.trim().isEmpty) {
-                          MotionToast.error(
-                            title: const Text("Missing Fields"),
-                            description: Text(
-                              selectedPeriod == null
-                                  ? "Please complete all required fields before submitting."
-                                  : "Please complete all required fields before submitting.",
-                            ),
-                            position: MotionToastPosition.top,
-                          ).show(context);
-                          return;
-                        }
-
-                        int? pgsId = int.tryParse(id ?? '');
-
-                        PerformanceGovernanceSystem pgs = getPgsAuditDetails(
-                          id: pgsId ?? 0,
-                          pgsStatus: "Submit",
-                        );
-
-                        try {
-                          final currentUser = await AuthUtil.fetchLoggedUser();
-                          final currentUserId = currentUser?.id;
-
-                          if (pgsId == null) {
-                            await submitPGS(pgs);
-                          } else {
-                            await updateSavePGS(
-                              pgsId: pgsId.toString(),
-                              updatePgs: pgs,
-                              userId: currentUserId,
-                            );
-                          }
-
-                          final String successMessage =
-                              (id != null && orderLevel >= 2)
-                                  ? "Approved successfully!"
-                                  : "Submitted successfully!";
-
-                          MotionToast.success(
-                            description: Text(successMessage),
-                            position: MotionToastPosition.top,
-                          ).show(context);
-
-                          await Future.delayed(Duration(milliseconds: 1500));
-                          Navigator.pop(context);
-                        } catch (e) {
-                          final String errorMessage =
-                              (id != null && orderLevel >= 2)
-                                  ? "Failed to Confirm!"
-                                  : "Failed to submit!";
-
-                          MotionToast.error(
-                            description: Text(errorMessage),
-                            position: MotionToastPosition.top,
-                          ).show(context);
-
-                          await Future.delayed(Duration(milliseconds: 1500));
-                          Navigator.pop(context);
-                        }
-                      }
-                    },
+                    onPressed:
+                        () => handleSubmitOrConfirm(context, id, orderLevel),
                     child: Text(
-                      (id != null && orderLevel >= 2) ? 'Confirm' : 'Submit',
+                      'Submit',
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
-
-                // if (signatoryList.any(
-                //   (signatory) => signatory['isNextStatus'] == true,
-                // ))
-                //   ElevatedButton(
-                //     style: ElevatedButton.styleFrom(
-                //       backgroundColor: primaryColor,
-                //       shape: RoundedRectangleBorder(
-                //         borderRadius: BorderRadius.circular(4),
-                //       ),
-                //     ),
-                //     onPressed: () async {
-                //       bool? confirm = await showDialog(
-                //         context: context,
-                //         builder:
-                //             (_) => AlertDialog(
-                //               title: Text("Confirm Submit"),
-                //               content: Text(
-                //                 "Are you sure you want to submit this record? You won’t be able to make any changes.",
-                //               ),
-                //               actions: [
-                //                 TextButton(
-                //                   onPressed:
-                //                       () => Navigator.pop(context, false),
-                //                   child: Text(
-                //                     "No",
-                //                     style: TextStyle(color: primaryColor),
-                //                   ),
-                //                 ),
-                //                 TextButton(
-                //                   onPressed: () => Navigator.pop(context, true),
-                //                   child: Text(
-                //                     "Yes",
-                //                     style: TextStyle(color: primaryColor),
-                //                   ),
-                //                 ),
-                //               ],
-                //             ),
-                //       );
-
-                //       if (confirm == true) {
-                //         if (selectedPeriod == null ||
-                //             selectedDirect.isEmpty ||
-                //             selectedIndirect.isEmpty ||
-                //             deliverablesControllers.values.any(
-                //               (controller) => controller.text.trim().isEmpty,
-                //             ) ||
-                //             percentageDeliverables.text.trim().isEmpty) {
-                //           MotionToast.error(
-                //             title: const Text("Missing Fields"),
-                //             description: Text(
-                //               selectedPeriod == null
-                //                   ? "Please complete all required fields before submitting."
-                //                   : "Please complete all required fields before submitting.",
-                //             ),
-
-                //             position: MotionToastPosition.top,
-                //           ).show(context);
-                //           return;
-                //         }
-
-                //         int? pgsId = int.tryParse(id ?? '');
-
-                //         PerformanceGovernanceSystem pgs = getPgsAuditDetails(
-                //           id: pgsId ?? 0,
-                //           pgsStatus: "Submit",
-                //         );
-
-                //         int.tryParse(id ?? '');
-
-                //         if (pgs.pgsSignatories != null &&
-                //             pgs.pgsSignatories!.isNotEmpty) {
-                //           try {} catch (e) {
-                //             // No match found
-                //           }
-                //         }
-
-                //         try {
-                //           final currentUser = await AuthUtil.fetchLoggedUser();
-                //           final currentUserId = currentUser?.id;
-
-                //           if (pgsId == null) {
-                //             await submitPGS(pgs);
-                //           } else {
-                //             await updateSavePGS(
-                //               pgsId: pgsId.toString(),
-                //               updatePgs: pgs,
-                //               userId: currentUserId,
-                //             );
-                //           }
-
-                //           final String successMessage =
-                //               (id != null && orderLevel >= 2)
-                //                   ? "Approved successfully!"
-                //                   : "Submitted successfully!";
-
-                //           MotionToast.success(
-                //             description: Text(successMessage),
-
-                //             position: MotionToastPosition.top,
-                //           ).show(context);
-
-                //           // Give time to show toast before closing
-                //           await Future.delayed(Duration(milliseconds: 1500));
-                //           Navigator.pop(context);
-                //         } catch (e) {
-                //           final String errorMessage =
-                //               (id != null && orderLevel >= 2)
-                //                   ? "Failed to Confirm!"
-                //                   : "Failed to submit!";
-
-                //           MotionToast.error(
-                //             description: Text(errorMessage),
-                //             position: MotionToastPosition.top,
-                //           ).show(context);
-
-                //           await Future.delayed(Duration(milliseconds: 1500));
-                //           Navigator.pop(context);
-                //         }
-                //       }
-                //     },
-                //     child: Text(
-                //       (id != null && orderLevel >= 2) ? 'Confirm' : 'Submit',
-                //       style: TextStyle(color: Colors.white),
-                //     ),
-                //   ),
+                if (id != null && orderLevel >= 2)
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed:
+                        () => handleSubmitOrConfirm(context, id, orderLevel),
+                    child: Text(
+                      'Confirm',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
               ],
             );
           },
         );
       },
     );
+  }
+
+  Future<void> handleSubmitOrConfirm(
+    BuildContext context,
+    String? id,
+    int orderLevel,
+  ) async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: Text("Confirm Submit"),
+            content: Text(
+              "Are you sure you want to submit this record? You won't be able to make any changes.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("No", style: TextStyle(color: primaryColor)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Yes", style: TextStyle(color: primaryColor)),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm != true) return;
+
+    if (selectedPeriod == null ||
+        selectedDirect.isEmpty ||
+        selectedIndirect.isEmpty ||
+        deliverablesControllers.values.any(
+          (controller) => controller.text.trim().isEmpty,
+        ) ||
+        percentageDeliverables.text.trim().isEmpty) {
+      MotionToast.error(
+        title: const Text("Missing Fields"),
+        description: Text(
+          selectedPeriod == null
+              ? "Please complete all required fields before submitting."
+              : "Please complete all required fields before submitting.",
+        ),
+        position: MotionToastPosition.top,
+      ).show(context);
+      return;
+    }
+
+    int? pgsId = int.tryParse(id ?? '');
+
+    PerformanceGovernanceSystem pgs = getPgsAuditDetails(
+      id: pgsId ?? 0,
+      pgsStatus: "Submit",
+    );
+
+    try {
+      final currentUser = await AuthUtil.fetchLoggedUser();
+      final currentUserId = currentUser?.id;
+
+      if (pgsId == null) {
+        await submitPGS(pgs);
+      } else {
+        await updateSavePGS(
+          pgsId: pgsId.toString(),
+          updatePgs: pgs,
+          userId: currentUserId,
+        );
+      }
+
+      final String successMessage =
+          (id != null && orderLevel >= 2)
+              ? "Approved successfully!"
+              : "Submitted successfully!";
+
+      MotionToast.success(
+        description: Text(successMessage),
+        position: MotionToastPosition.top,
+      ).show(context);
+
+      await Future.delayed(Duration(milliseconds: 1000));
+      Navigator.pop(context);
+    } catch (e) {
+      final String errorMessage =
+          (id != null && orderLevel >= 2)
+              ? "Failed to Confirm!"
+              : "Failed to submit!";
+
+      MotionToast.error(
+        description: Text(errorMessage),
+        position: MotionToastPosition.top,
+      ).show(context);
+
+      await Future.delayed(Duration(milliseconds: 1500));
+      Navigator.pop(context);
+    }
   }
 
   Widget _buildDatePickerCell(int index, Function setDialogState) {

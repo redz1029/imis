@@ -46,7 +46,6 @@ class PgsDeliverables {
     this.disapprovalRemarks,
     this.isDisapproved,
     this.status, {
-
     this.pgsDeliverableHistory,
     this.remarks,
     this.rowVersion,
