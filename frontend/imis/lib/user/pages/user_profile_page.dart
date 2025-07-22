@@ -269,9 +269,24 @@ class _UserProfileState extends State<UserProfilePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
-          title: Text(
-            id == null ? 'Add User' : 'Change Password',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            decoration: BoxDecoration(
+              color: primaryLightColor,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Text(
+              id == null ? 'Change Password' : 'Change Password',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -539,9 +554,26 @@ class _UserProfileState extends State<UserProfilePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
-          title: Text(
-            id == null ? 'Add User' : 'Edit User',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            decoration: BoxDecoration(
+              color: primaryLightColor,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Text(
+              id == null ? 'Create User' : ' Edit User',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white,
+              ),
+            ),
           ),
           content: Form(
             key: _formKey,

@@ -267,11 +267,31 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0),
               ),
-              title: Text(
-                id == null
-                    ? 'Create Signatory Template'
-                    : 'Edit Signatory Template',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: primaryLightColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  id == null
+                      ? 'Create Signatory Template'
+                      : 'Edit Signatory Template',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
               ),
               content: Form(
                 key: _formKey,
@@ -363,10 +383,12 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                           Column(
                             children: [
                               gap,
-                              ListView.builder(
+                              ListView.separated(
                                 shrinkWrap: true,
                                 physics: NeverScrollableScrollPhysics(),
                                 itemCount: selectedSignatory.length,
+                                separatorBuilder:
+                                    (context, index) => SizedBox(height: 8),
                                 itemBuilder: (context, index) {
                                   final signatory = selectedSignatory[index];
                                   return ListTile(
@@ -386,7 +408,12 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                         IconButton(
                                           icon: Icon(
                                             Icons.edit,
-                                            color: primaryTextColor,
+                                            color: const Color.fromARGB(
+                                              255,
+                                              109,
+                                              109,
+                                              109,
+                                            ),
                                           ),
 
                                           onPressed: () {
@@ -402,7 +429,12 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                         IconButton(
                                           icon: Icon(
                                             Icons.delete,
-                                            color: primaryTextColor,
+                                            color: const Color.fromARGB(
+                                              255,
+                                              109,
+                                              109,
+                                              109,
+                                            ),
                                           ),
                                           onPressed: () {
                                             setDialogState(() {

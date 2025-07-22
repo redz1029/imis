@@ -6,7 +6,7 @@ part 'key_result_area.g.dart';
 class KeyResultArea {
   int id;
   String name;
-  String remarks;
+  String? remarks;
   bool isDeleted;
   String? rowVersion;
 

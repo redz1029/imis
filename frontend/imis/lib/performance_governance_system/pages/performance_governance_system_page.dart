@@ -1,5 +1,4 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
-
 import 'dart:io';
 // ignore: avoid_web_libraries_in_flutter,
 import 'dart:html' as html;
@@ -105,7 +104,6 @@ class _PerformanceGovernanceSystemPageState
   String? selectedStartPeriod;
   String? selectedEndDate;
   int? selectedKra;
-  // String? selectedActions;
   Map<int, bool> selectedApproved = {};
   Map<int, bool> selectedDisapproved = {};
 
@@ -472,7 +470,6 @@ class _PerformanceGovernanceSystemPageState
             officeList = data.map((office) => office.toJson()).toList();
             filteredListOffice = List.from(officeList);
           });
-          debugPrint("Fetched ${officeList.length} offices.");
         }
       } else {
         debugPrint("Unexpected response format");
@@ -1960,7 +1957,7 @@ class _PerformanceGovernanceSystemPageState
             reasonController[i] = TextEditingController(
               text: item.disapprovalRemarks,
             );
-            selectedDisapproved[i] = item.isDisapproved;
+            selectedDisapproved[i] = item.isDisapproved!;
           }
         } else {
           rows = [0];
@@ -3188,7 +3185,7 @@ class _PerformanceGovernanceSystemPageState
         _buildSizedHeaderCell('WHEN', width: 90),
         _buildSizedHeaderCell('STATUS', width: 100),
         _buildSizedHeaderCell('REMARKS', width: 120),
-        _buildSizedHeaderCell('SCORING', width: 100),
+        _buildSizedHeaderCell('SCORE', width: 100),
       ],
     );
   }
@@ -3579,82 +3576,6 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  //Approved & Disapproved Buttons
-  // Widget _buildApprovedDisapproved(int index, Function setDialogState) {
-  //   bool isApproved = selectedApproved[index] ?? false;
-  //   bool isDisapproved = selectedDisapproved[index] ?? false;
-
-  //   // Initialize controller if it doesn't exist
-  //   reasonController[index] ??= TextEditingController();
-
-  //   return Column(
-  //     mainAxisSize: MainAxisSize.min,
-  //     children: [
-  //       Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-  //         children: [
-  //           Column(
-  //             children: [
-  //               IconButton(
-  //                 icon: Icon(
-  //                   Icons.thumb_up,
-  //                   color: isApproved ? Colors.green : primaryTextColor,
-  //                 ),
-  //                 onPressed: () {
-  //                   setDialogState(() {
-  //                     selectedApproved[index] = true;
-  //                     selectedDisapproved[index] = false;
-  //                   });
-  //                 },
-  //               ),
-  //               Text("Approve", style: TextStyle(fontSize: 12)),
-  //             ],
-  //           ),
-  //           Column(
-  //             children: [
-  //               IconButton(
-  //                 icon: Icon(
-  //                   Icons.thumb_down,
-  //                   color: isDisapproved ? Colors.red : primaryTextColor,
-  //                 ),
-  //                 onPressed: () {
-  //                   setDialogState(() {
-  //                     selectedApproved[index] = false;
-  //                     selectedDisapproved[index] = true;
-  //                   });
-  //                 },
-  //               ),
-  //               Text("Disapprove", style: TextStyle(fontSize: 12)),
-  //             ],
-  //           ),
-  //         ],
-  //       ),
-
-  //       // Show reason input only if disapproved
-  //       if (isDisapproved) ...[
-  //         SizedBox(height: 16),
-  //         Padding(
-  //           padding: const EdgeInsets.symmetric(horizontal: 20),
-  //           child: Column(
-  //             crossAxisAlignment: CrossAxisAlignment.start,
-  //             children: [
-  //               Text("Reason:", style: TextStyle(fontWeight: FontWeight.bold)),
-  //               TextField(
-  //                 controller: reasonController[index],
-  //                 decoration: InputDecoration(
-  //                   hintText: "Enter your reason here...",
-  //                   border: OutlineInputBorder(),
-  //                 ),
-  //                 maxLines: 3,
-  //               ),
-  //               gap,
-  //             ],
-  //           ),
-  //         ),
-  //       ],
-  //     ],
-  //   );
-  // }
   Widget _buildApprovedDisapproved(int index, Function setDialogState) {
     bool? isDisapproved = selectedDisapproved[index];
     reasonController[index] ??= TextEditingController();
@@ -3724,7 +3645,6 @@ class _PerformanceGovernanceSystemPageState
                   ),
                   maxLines: 3,
                 ),
-                gap, // Keep this if you already defined `gap` elsewhere
               ],
             ),
           ),

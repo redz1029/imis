@@ -269,9 +269,26 @@ class _OfficePageState extends State<OfficePage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
-          title: Text(
-            id == null ? 'Add Office' : 'Edit Office',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            decoration: BoxDecoration(
+              color: primaryLightColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Text(
+              id == null ? 'Create Office' : 'Edit Office',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white,
+              ),
+            ),
           ),
           content: Form(
             key: _formKey,

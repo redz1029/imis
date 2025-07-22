@@ -28,8 +28,8 @@ class PgsDeliverables {
   PgsStatus status;
 
   String? remarks;
-  String disapprovalRemarks;
-  bool isDisapproved;
+  String? disapprovalRemarks;
+  bool? isDisapproved;
 
   String? rowVersion;
   List<PgsDeliverableHistory>? pgsDeliverableHistory;

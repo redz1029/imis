@@ -172,9 +172,26 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12.0),
           ),
-          title: Text(
-            id == null ? 'Add KRA' : 'Edit KRA',
-            style: TextStyle(fontWeight: FontWeight.bold),
+          titlePadding: EdgeInsets.zero,
+          title: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+            decoration: BoxDecoration(
+              color: primaryLightColor,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Text(
+              id == null ? 'Create KRA' : 'Edit KRA',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.white,
+              ),
+            ),
           ),
           content: Form(
             key: _formKey,
@@ -469,7 +486,7 @@ class _KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                kra.remarks,
+                                                kra.remarks ?? '',
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
