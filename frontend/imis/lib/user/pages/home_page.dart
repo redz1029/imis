@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
+import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
@@ -26,7 +27,11 @@ class _HomePageState extends State<HomePage> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  final List<PgsDeliverables> _deliverablesList = [];
+  List<PgsDeliverables> deliverablesList = [];
+  List<PgsDeliverables> filteredDeliverables = [];
+
+  List<KeyResultArea> kraList = [];
+  List<KeyResultArea> filteredKra = [];
 
   List<User> userList = [];
   List<User> filteredListUser = [];
@@ -47,6 +52,7 @@ class _HomePageState extends State<HomePage> {
   int totalAuditor = 0;
 
   final int maxDeliverables = 100;
+  int? _touchedIndex;
 
   final dio = Dio();
 
@@ -79,6 +85,35 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  Future<void> fetchDeliverables() async {
+    var url = ApiEndpoint().deliverables;
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        // Print raw response for inspection
+        debugPrint("Raw deliverables response: ${response.data}");
+
+        List<PgsDeliverables> data =
+            (response.data as List).map((userJson) {
+              debugPrint("Deliverable item: $userJson");
+              return PgsDeliverables.fromJson(userJson as Map<String, dynamic>);
+            }).toList();
+
+        if (mounted) {
+          setState(() {
+            deliverablesList = data;
+            filteredDeliverables = List.from(deliverablesList);
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format: ${response.data}");
+      }
+    } catch (e) {
+      debugPrint("Error fetching deliverables: $e");
+    }
+  }
+
   //fetch office
   Future<void> fecthOffice() async {
     var url = ApiEndpoint().office;
@@ -99,6 +134,35 @@ class _HomePageState extends State<HomePage> {
             officeList = data;
             filteredListOffice = List.from(officeList);
             totalOffices = officeList.length;
+          });
+        }
+      } else {
+        debugPrint("Unexpected response format");
+      }
+    } catch (e) {
+      debugPrint("Error fetching user: $e");
+    }
+  }
+
+  //fetch KRA
+  Future<void> fetchKra() async {
+    var url = ApiEndpoint().keyresult;
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        List<KeyResultArea> data =
+            (response.data as List)
+                .map(
+                  (userJson) =>
+                      KeyResultArea.fromJson(userJson as Map<String, dynamic>),
+                )
+                .toList();
+
+        if (mounted) {
+          setState(() {
+            kraList = data;
+            filteredKra = List.from(kraList);
           });
         }
       } else {
@@ -176,6 +240,8 @@ class _HomePageState extends State<HomePage> {
     fecthOffice();
     fetchTeam();
     fetchAuditors();
+    fetchDeliverables();
+    fetchKra();
   }
 
   Future<void> _loadUserName() async {
@@ -190,7 +256,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   double get _kraProgress =>
-      (_deliverablesList.length / maxDeliverables).clamp(0.0, 1.0);
+      (deliverablesList.length / maxDeliverables).clamp(0.0, 1.0);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -284,6 +350,7 @@ class _HomePageState extends State<HomePage> {
                               "Total Users",
                               Colors.blue,
                               totalUsers.toString(),
+                              'assets/users.png',
                             ),
                           ),
                           Expanded(
@@ -291,6 +358,7 @@ class _HomePageState extends State<HomePage> {
                               "Total Auditors",
                               Colors.green,
                               totalAuditor.toString(),
+                              'assets/auditor.png',
                             ),
                           ),
                           Expanded(
@@ -298,6 +366,7 @@ class _HomePageState extends State<HomePage> {
                               "Total Teams",
                               Colors.purple,
                               totalTeam.toString(),
+                              'assets/team.png',
                             ),
                           ),
                           Expanded(
@@ -305,12 +374,14 @@ class _HomePageState extends State<HomePage> {
                               "Total Offices",
                               const Color.fromARGB(255, 194, 106, 47),
                               totalOffices.toString(),
+                              'assets/office.png',
                             ),
                           ),
                         ],
                       ),
                       SizedBox(height: 20),
-                      _buildPerformanceIndicators(),
+                      _buildPerformanceChart(kraList, deliverablesList),
+                      // _buildPerformanceIndicators(),
                       SizedBox(height: 20),
                       Align(
                         alignment: Alignment.centerLeft,
@@ -421,35 +492,148 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Dashboard Box Widget
-  Widget _buildDashboardBox(String title, Color color, String count) {
+  Widget _buildPerformanceChart(
+    List<KeyResultArea> kraList,
+    List<PgsDeliverables> deliverablesList,
+  ) {
+    return SizedBox(
+      height: 250,
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: 100,
+          barTouchData: BarTouchData(
+            enabled: true,
+            touchTooltipData: BarTouchTooltipData(
+              tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
+              getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                return BarTooltipItem(
+                  '${rod.toY.toStringAsFixed(1)}%',
+                  TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                );
+              },
+            ),
+          ),
+
+          borderData: FlBorderData(show: true),
+          gridData: FlGridData(show: true),
+          titlesData: FlTitlesData(
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 20,
+                getTitlesWidget: (double value, TitleMeta meta) {
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    space: 4,
+                    child: Text(
+                      value.toInt().toString(),
+                      style: const TextStyle(fontSize: 10),
+                    ),
+                  );
+                },
+              ),
+            ),
+            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                interval: 1,
+                getTitlesWidget: (double value, TitleMeta meta) {
+                  int index = value.toInt();
+                  if (index >= 0 && index < kraList.length) {
+                    final kra = kraList[index];
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        kra.name,
+                        style: const TextStyle(fontSize: 10),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ),
+          ),
+          barGroups: List.generate(kraList.length, (index) {
+            final kra = kraList[index];
+            double percent = 0.0;
+
+            try {
+              final deliverable = deliverablesList.firstWhere(
+                (d) => d.kra.id == kra.id,
+              );
+              percent = deliverable.percentDeliverables.toDouble();
+            } catch (_) {}
+
+            return BarChartGroupData(
+              x: index,
+              barRods: [
+                BarChartRodData(
+                  toY: percent,
+                  color: primaryLightColor,
+                  width: 20,
+                  borderRadius: BorderRadius.circular(4),
+                  backDrawRodData: BackgroundBarChartRodData(
+                    show: true,
+                    toY: 100,
+                    color: Colors.grey.shade200,
+                  ),
+                ),
+              ],
+            );
+          }),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboardBox(
+    String title,
+    Color color,
+    String count,
+    String iconAsset,
+  ) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Container(
-        height: 100,
+        height: 130,
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          // ignore: deprecated_member_use
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10),
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Text(
-              count,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  count,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ],
             ),
-            SizedBox(height: 8),
-            Text(
-              title,
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-            ),
+            SizedBox(width: 80),
+            Image.asset(iconAsset, width: 70, height: 70),
           ],
         ),
       ),
