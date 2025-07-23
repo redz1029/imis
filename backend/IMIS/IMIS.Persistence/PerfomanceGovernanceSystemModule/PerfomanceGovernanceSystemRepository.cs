@@ -17,12 +17,15 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         var pgs = await _dbContext.PerformanceGovernanceSystem.Where(p => !p.IsDeleted &&
         p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
           .Include(p => p.PgsPeriod)
-          .Include(p => p.Office)     
+          .Include(p => p.Office)
           .Include(p => p.PgsReadinessRating)
           .Include(p => p.PgsSignatories)
-          .ToListAsync(cancellationToken).ConfigureAwait(false); 
+          .Include(p => p.PgsDeliverables)           
+          .ToListAsync(cancellationToken).ConfigureAwait(false);
         return pgs;
-    }   
+    }
+
+
     public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
         return await _dbContext.PerformanceGovernanceSystem
@@ -198,7 +201,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                     if (existingDeliverable != null)
                     {
                         // Check if the score has changed before creating history
-                         bool scoreChanged = existingDeliverable.PercentDeliverables != deliverable.PercentDeliverables;
+                        bool scoreChanged = existingDeliverable.PercentDeliverables != deliverable.PercentDeliverables;
 
                         _dbContext.Entry(existingDeliverable).CurrentValues.SetValues(deliverable);
                         existingDeliverable.PerfomanceGovernanceSystemId = existingPerfomanceGovernanceSystem.Id;
@@ -257,6 +260,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 }
             }
 
+
             try
             {
                 // Save changes to the database
@@ -283,7 +287,10 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         return perfomanceGovernanceSystem;
     }
-    
+
+
+
+
     public Task<int> CountAsync(CancellationToken cancellationToken)
     {       
         return _dbContext.PerformanceGovernanceSystem.CountAsync(cancellationToken);
@@ -359,28 +366,29 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                 return await EntityPageList<PerfomanceGovernanceSystem, long>
                     .CreateAsync(fullQuery, filter.Page, filter.PageSize, cancellationToken)
                     .ConfigureAwait(false);
-    }
-
-    public async Task Disapprove(long pgsId, CancellationToken cancellationToken)
-    {
-        var pgs = await _entities
-         .Include(p => p.PgsSignatories)!
-             .ThenInclude(s => s.PgsSignatoryTemplate)
-         .FirstOrDefaultAsync(p => p.Id == pgsId, cancellationToken)
-         .ConfigureAwait(false);
-
-        if (pgs == null)
-            throw new InvalidOperationException($"PGS record with ID {pgsId} not found.");
-
-        var signatoriesToRemove = pgs.PgsSignatories!
-            .Where(s => s.PgsSignatoryTemplate?.OrderLevel > 1)
-            .ToList();
-
-        foreach (var signatory in signatoriesToRemove)
-        {
-            signatory.IsDeleted = true;
         }
 
-        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-    }
+            public async Task Disapprove(long pgsId, CancellationToken cancellationToken)
+            {
+                var pgs = await _entities
+                 .Include(p => p.PgsSignatories)!
+                     .ThenInclude(s => s.PgsSignatoryTemplate)
+                 .FirstOrDefaultAsync(p => p.Id == pgsId, cancellationToken)
+                 .ConfigureAwait(false);
+
+                if (pgs == null)
+                    throw new InvalidOperationException($"PGS record with ID {pgsId} not found.");
+
+                var signatoriesToRemove = pgs.PgsSignatories!
+                    .Where(s => s.PgsSignatoryTemplate?.OrderLevel > 1)
+                    .ToList();
+
+                foreach (var signatory in signatoriesToRemove)
+                {
+                    signatory.IsDeleted = true;
+                }
+
+                await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            }
+
 }

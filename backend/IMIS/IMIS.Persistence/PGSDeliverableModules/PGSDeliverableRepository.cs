@@ -73,30 +73,7 @@ namespace IMIS.Persistence.PGSModules
             }
             await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             return pgsDeliverable;
-        }
-
-
-        public async Task<PgsDeliverable?> DeliverableDisapprove(long deliverableId, bool isDelete, CancellationToken cancellationToken)
-        {
-            var existingPgsDeliverable = await _dbContext.Deliverable
-                .FirstOrDefaultAsync(d => d.Id == deliverableId, cancellationToken)
-                .ConfigureAwait(false);
-
-            if (existingPgsDeliverable == null)
-            {
-                return null;
-            }
-
-            // Only update the IsDelete property here
-            existingPgsDeliverable.IsDeleted = isDelete;
-
-            // Avoid touching foreign keys or navigation properties here unless explicitly handled
-
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-
-            return existingPgsDeliverable;
-        }
-
+        }     
 
         async Task<List<PgsDeliverable>?> IPGSDeliverableRepository.GetAll(CancellationToken cancellationToken)
         {

@@ -63,9 +63,7 @@ namespace IMIS.Persistence.PGSModules
         {
             var pgsDeliverables = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return pgsDeliverables != null ? ConvertToDto(pgsDeliverables) : null;
-        }
-       
-
+        }      
         private static PGSDeliverableDto ConvertToDto(PgsDeliverable deliverable)
         {
             return new PGSDeliverableDto

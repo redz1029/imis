@@ -27,6 +27,7 @@ namespace IMIS.Application.PgsSignatoryModule
                 PgsSignatoryTemplateId = PgsSignatoryTemplateId,
                 SignatoryId = SignatoryId,
                 DateSigned = DateSigned,
+                RowVersion = this.RowVersion
 
             };
         }

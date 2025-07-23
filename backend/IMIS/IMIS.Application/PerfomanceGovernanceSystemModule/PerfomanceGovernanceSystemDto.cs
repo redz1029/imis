@@ -17,9 +17,7 @@ namespace IMIS.Application.PgsModule
         public PgsReadinessRatingDto? PgsReadinessRating { get; set; }
         public required double PercentDeliverables { get; set; }
         public string? PgsStatus { get; set; }
-        public List<PgsSignatoryDto>? PgsSignatories { get; set; }
-
-        public bool HasDisapprovedDeliverables { get; set; }
+        public List<PgsSignatoryDto>? PgsSignatories { get; set; }  
         public bool ForSignature { get; set; }
 
         public PerfomanceGovernanceSystemDto() { }
@@ -61,7 +59,8 @@ namespace IMIS.Application.PgsModule
                 PgsReadinessRating = PgsReadinessRating?.ToEntity(),
                 PercentDeliverables = PercentDeliverables,
                 PgsStatus = PgsStatus,
-                PgsSignatories = PgsSignatories?.Select(s => s.ToEntity()).ToList()
+                PgsSignatories = PgsSignatories?.Select(s => s.ToEntity()).ToList(),
+                RowVersion = this.RowVersion
             };
         }
     }
