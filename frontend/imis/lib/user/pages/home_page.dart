@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +14,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:percent_indicator/circular_percent_indicator.dart';
+import '../../performance_governance_system/enum/pgs_status.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -52,8 +53,10 @@ class _HomePageState extends State<HomePage> {
   int totalAuditor = 0;
 
   final int maxDeliverables = 100;
-  int? _touchedIndex;
+  int _currentImageIndex = 0;
+  late Timer imageTimer;
 
+  final List<String> rotatingImages = ['assets/pic1.jpg', 'assets/pic2.jpg'];
   final dio = Dio();
 
   //fetch Users
@@ -91,7 +94,6 @@ class _HomePageState extends State<HomePage> {
       final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
-        // Print raw response for inspection
         debugPrint("Raw deliverables response: ${response.data}");
 
         List<PgsDeliverables> data =
@@ -242,6 +244,11 @@ class _HomePageState extends State<HomePage> {
     fetchAuditors();
     fetchDeliverables();
     fetchKra();
+    imageTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
+      setState(() {
+        _currentImageIndex = (_currentImageIndex + 1) % rotatingImages.length;
+      });
+    });
   }
 
   Future<void> _loadUserName() async {
@@ -255,8 +262,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  double get _kraProgress =>
-      (deliverablesList.length / maxDeliverables).clamp(0.0, 1.0);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -291,7 +296,7 @@ class _HomePageState extends State<HomePage> {
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                            SizedBox(width: 16), // space from the edge
+                            SizedBox(width: 16),
                             PopupMenuButton<String>(
                               color: mainBgColor,
                               onSelected: (String value) {
@@ -379,15 +384,16 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      SizedBox(height: 20),
+                      gap5,
                       _buildPerformanceChart(kraList, deliverablesList),
-                      // _buildPerformanceIndicators(),
-                      SizedBox(height: 20),
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: SizedBox(
-                          width: 500,
-                          child: _buildStatusWidget(),
+
+                      gap,
+
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: _buildStatusWidget(deliverablesList),
                         ),
                       ),
                     ],
@@ -399,6 +405,7 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     SizedBox(height: 40),
                     Card(
+                      color: mainBgColor,
                       elevation: 4,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
@@ -481,7 +488,32 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 10),
+                    // SizedBox(height: 10),
+                    SizedBox(height: 20),
+
+                    Card(
+                      color: mainBgColor,
+                      elevation: 4,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(10.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            SizedBox(
+                              width: 280,
+                              height: 350,
+                              child: Image.asset(
+                                rotatingImages[_currentImageIndex],
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -496,102 +528,130 @@ class _HomePageState extends State<HomePage> {
     List<KeyResultArea> kraList,
     List<PgsDeliverables> deliverablesList,
   ) {
-    return SizedBox(
-      height: 250,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: 100,
-          barTouchData: BarTouchData(
-            enabled: true,
-            touchTooltipData: BarTouchTooltipData(
-              tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
-              getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                return BarTooltipItem(
-                  '${rod.toY.toStringAsFixed(1)}%',
-                  TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
-                  ),
-                );
-              },
+    final Map<int, double> kraPercentTotals = {};
+    for (var deliverable in deliverablesList) {
+      kraPercentTotals[deliverable.kra.id] =
+          (kraPercentTotals[deliverable.kra.id] ?? 0) +
+          (deliverable.percentDeliverables / 100);
+    }
+
+    if (kraList.isEmpty) {
+      return const Center(
+        child: Text(
+          "No Key Result Areas available",
+          style: TextStyle(fontSize: 14),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(bottom: 8.0),
+          child: Center(
+            child: Text(
+              'Performance Chart',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
-
-          borderData: FlBorderData(show: true),
-          gridData: FlGridData(show: true),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 20,
-                getTitlesWidget: (double value, TitleMeta meta) {
-                  return SideTitleWidget(
-                    axisSide: meta.axisSide,
-                    space: 4,
-                    child: Text(
-                      value.toInt().toString(),
-                      style: const TextStyle(fontSize: 10),
-                    ),
-                  );
-                },
-              ),
-            ),
-            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                interval: 1,
-                getTitlesWidget: (double value, TitleMeta meta) {
-                  int index = value.toInt();
-                  if (index >= 0 && index < kraList.length) {
-                    final kra = kraList[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(
-                        kra.name,
-                        style: const TextStyle(fontSize: 10),
-                        textAlign: TextAlign.center,
+        ),
+        SizedBox(
+          height: 250,
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: 100,
+              barTouchData: BarTouchData(
+                enabled: true,
+                touchTooltipData: BarTouchTooltipData(
+                  // ignore: deprecated_member_use
+                  tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
+                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                    return BarTooltipItem(
+                      '${rod.toY.toStringAsFixed(1)}%',
+                      const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
                       ),
                     );
-                  }
-                  return const SizedBox.shrink();
-                },
+                  },
+                ),
               ),
-            ),
-          ),
-          barGroups: List.generate(kraList.length, (index) {
-            final kra = kraList[index];
-            double percent = 0.0;
-
-            try {
-              final deliverable = deliverablesList.firstWhere(
-                (d) => d.kra.id == kra.id,
-              );
-              percent = deliverable.percentDeliverables.toDouble();
-            } catch (_) {}
-
-            return BarChartGroupData(
-              x: index,
-              barRods: [
-                BarChartRodData(
-                  toY: percent,
-                  color: primaryLightColor,
-                  width: 20,
-                  borderRadius: BorderRadius.circular(4),
-                  backDrawRodData: BackgroundBarChartRodData(
-                    show: true,
-                    toY: 100,
-                    color: Colors.grey.shade200,
+              borderData: FlBorderData(show: true),
+              gridData: FlGridData(show: true),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 20,
+                    getTitlesWidget: (double value, TitleMeta meta) {
+                      return SideTitleWidget(
+                        axisSide: meta.axisSide,
+                        space: 4,
+                        child: Text(
+                          value.toInt().toString(),
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ],
-            );
-          }),
+                rightTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                topTitles: AxisTitles(
+                  sideTitles: SideTitles(showTitles: false),
+                ),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    interval: 1,
+                    getTitlesWidget: (double value, TitleMeta meta) {
+                      int index = value.toInt();
+                      if (index >= 0 && index < kraList.length) {
+                        final kra = kraList[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(top: 8.0),
+                          child: Text(
+                            kra.name,
+                            style: const TextStyle(fontSize: 10),
+                            textAlign: TextAlign.center,
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                ),
+              ),
+              barGroups: List.generate(kraList.length, (index) {
+                final kra = kraList[index];
+                double percent = kraPercentTotals[kra.id] ?? 0;
+                percent = percent.clamp(0.0, 100.0);
+
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: percent,
+                      color: primaryLightColor,
+                      width: 20,
+                      borderRadius: BorderRadius.circular(4),
+                      backDrawRodData: BackgroundBarChartRodData(
+                        show: true,
+                        toY: 100,
+                        color: Colors.grey.shade200,
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 
@@ -608,6 +668,7 @@ class _HomePageState extends State<HomePage> {
         height: 130,
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
+          // ignore: deprecated_member_use
           color: color.withOpacity(0.1),
           borderRadius: BorderRadius.circular(10),
         ),
@@ -640,57 +701,172 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Performance Indicators Box
-  Widget _buildPerformanceIndicators() {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Container(
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: mainBgColor, // Dark background for sleek design
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Column(
-          children: [
-            Text(
-              "Deliverables",
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w500),
-            ),
-            Divider(color: lightGrey),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _buildCircularIndicator(
-                  "KRA",
-                  _kraProgress,
-                  const Color.fromARGB(139, 33, 149, 243),
-                ),
+  Map<PgsStatus, int> _countStatuses(List<PgsDeliverables> deliverablesList) {
+    final Map<PgsStatus, int> statusCounts = {};
 
-                _buildCircularIndicator(
-                  "Resource Availability",
-                  0.7,
-                  const Color.fromARGB(255, 207, 193, 66),
-                ),
-                _buildCircularIndicator(
-                  "Confidence to Deliver",
-                  0.9,
-                  const Color.fromARGB(255, 103, 155, 105),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
+    for (var deliverable in deliverablesList) {
+      final status = deliverable.status;
+      statusCounts[status] = (statusCounts[status] ?? 0) + 1;
+    }
+
+    return statusCounts;
   }
 
-  Widget _buildStatusWidget() {
+  String getStatusLabel(PgsStatus status) {
+    switch (status) {
+      case PgsStatus.notStarted:
+        return "Not Started";
+      case PgsStatus.inProgress:
+        return "In Progress";
+      case PgsStatus.onTrack:
+        return "On Track";
+      case PgsStatus.delayed:
+        return "Delayed";
+      case PgsStatus.needsImprovement:
+        return "Needs Improvement";
+      case PgsStatus.completed:
+        return "Completed";
+      case PgsStatus.exceeded:
+        return "Exceeded";
+      case PgsStatus.onHold:
+        return "On Hold";
+      case PgsStatus.cancelled:
+        return "Cancelled";
+    }
+  }
+
+  Widget _buildStatusWidget(List<PgsDeliverables> deliverablesList) {
+    final statusCounts = _countStatuses(deliverablesList);
+
+    int getCount(PgsStatus status) => statusCounts[status] ?? 0;
+
+    final List<PgsStatus> statusesToDisplay = [
+      PgsStatus.notStarted,
+      PgsStatus.exceeded,
+      PgsStatus.inProgress,
+      PgsStatus.onHold,
+      PgsStatus.onTrack,
+      PgsStatus.cancelled,
+      PgsStatus.delayed,
+      PgsStatus.needsImprovement,
+      PgsStatus.completed,
+    ];
+
+    final Map<PgsStatus, Color> statusColors = {
+      PgsStatus.notStarted: Colors.grey,
+      PgsStatus.inProgress: const Color(0xFFC7A50B),
+      PgsStatus.onTrack: Colors.blue,
+      PgsStatus.delayed: Colors.orange,
+      PgsStatus.needsImprovement: Colors.deepOrange,
+      PgsStatus.completed: Colors.green,
+      PgsStatus.exceeded: Colors.teal,
+      PgsStatus.onHold: Colors.purple,
+      PgsStatus.cancelled: Colors.redAccent,
+    };
+
+    List<Widget> buildStatusRows() {
+      List<Widget> rows = [];
+      for (int i = 0; i < statusesToDisplay.length; i += 3) {
+        final status1 = statusesToDisplay[i];
+        final status2 =
+            (i + 1 < statusesToDisplay.length)
+                ? statusesToDisplay[i + 1]
+                : null;
+        final status3 =
+            (i + 2 < statusesToDisplay.length)
+                ? statusesToDisplay[i + 2]
+                : null;
+        final int totalCount = statusesToDisplay.fold(
+          0,
+          (sum, status) => sum + getCount(status),
+        );
+
+        rows.add(
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      getStatusLabel(status1),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: statusColors[status1] ?? Colors.black,
+                      ),
+                    ),
+
+                    Text(
+                      totalCount > 0
+                          ? "${((getCount(status1) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status1)})"
+                          : "0% (0)",
+                      style: const TextStyle(color: Colors.black54),
+                    ),
+                  ],
+                ),
+              ),
+              // Status 2
+              Expanded(
+                child:
+                    status2 != null
+                        ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              getStatusLabel(status2),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: statusColors[status2] ?? Colors.black,
+                              ),
+                            ),
+                            Text(
+                              totalCount > 0
+                                  ? "${((getCount(status2) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status2)})"
+                                  : "0% (0)",
+                              style: const TextStyle(color: Colors.black54),
+                            ),
+                          ],
+                        )
+                        : Container(),
+              ),
+
+              Expanded(
+                child:
+                    status3 != null
+                        ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              getStatusLabel(status3),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                color: statusColors[status3] ?? Colors.black,
+                              ),
+                            ),
+                            Text(
+                              totalCount > 0
+                                  ? "${((getCount(status3) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status3)})"
+                                  : "0% (0)",
+                              style: const TextStyle(color: Colors.black54),
+                            ),
+                          ],
+                        )
+                        : Container(),
+              ),
+            ],
+          ),
+        );
+        rows.add(const SizedBox(height: 16));
+      }
+      return rows;
+    }
+
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Container(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: mainBgColor,
           borderRadius: BorderRadius.circular(10),
@@ -698,142 +874,94 @@ class _HomePageState extends State<HomePage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Status list
             Expanded(
+              flex: 3,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Status",
+                  const Text(
+                    "PGS Status",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
-                  SizedBox(height: 16),
-                  _buildStatus(
-                    "Approved",
-                    0.23,
-                    const Color.fromARGB(255, 78, 151, 79),
-                    "21K",
-                    "23%",
-                  ),
-                  _buildStatus(
-                    "Disapproved",
-                    0.60,
-                    const Color.fromARGB(255, 165, 88, 82),
-                    "64K",
-                    "60%",
-                  ),
-                  _buildStatus(
-                    "In Progress",
-                    0.16,
-                    const Color.fromARGB(255, 199, 165, 11),
-                    "18K",
-                    "16%",
-                  ),
+                  const SizedBox(height: 16),
+                  ...buildStatusRows(),
                 ],
               ),
             ),
-            SizedBox(width: 16),
-            // Chart
-            _buildPieChart(),
+            const SizedBox(width: 16),
+
+            _buildPieChart(deliverablesList),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStatus(
-    String label,
-    double percentage,
-    Color color,
-    String value,
-    String percentText,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          SizedBox(width: 10),
-          Expanded(child: Text(label, style: TextStyle(fontSize: 14))),
-          Text(value, style: TextStyle(fontWeight: FontWeight.bold)),
-          SizedBox(width: 10),
-          Text(percentText, style: TextStyle(color: Colors.grey)),
-        ],
-      ),
-    );
-  }
+  Widget _buildPieChart(List<PgsDeliverables> deliverablesList) {
+    final statusCounts = _countStatuses(deliverablesList);
 
-  Widget _buildPieChart() {
+    final Map<PgsStatus, Color> statusColors = {
+      PgsStatus.notStarted: Colors.grey,
+      PgsStatus.inProgress: const Color(0xFFC7A50B),
+      PgsStatus.onTrack: Colors.blue,
+      PgsStatus.delayed: Colors.orange,
+      PgsStatus.needsImprovement: Colors.deepOrange,
+      PgsStatus.completed: Colors.green,
+      PgsStatus.exceeded: Colors.teal,
+      PgsStatus.onHold: Colors.purple,
+      PgsStatus.cancelled: Colors.redAccent,
+    };
+
+    final List<PgsStatus> statusesToDisplay = [
+      PgsStatus.notStarted,
+      PgsStatus.exceeded,
+      PgsStatus.inProgress,
+      PgsStatus.onHold,
+      PgsStatus.onTrack,
+      PgsStatus.cancelled,
+      PgsStatus.delayed,
+      PgsStatus.needsImprovement,
+      PgsStatus.completed,
+    ];
+
+    final int totalCount = statusesToDisplay.fold(
+      0,
+      (sum, status) => sum + (statusCounts[status] ?? 0),
+    );
+
+    final sections =
+        statusesToDisplay
+            .map((status) {
+              final count = statusCounts[status] ?? 0;
+              final percentage =
+                  totalCount > 0 ? (count / totalCount) * 100 : 0.0;
+              if (count == 0) return null;
+
+              return PieChartSectionData(
+                color: statusColors[status],
+                value: percentage,
+                title: '${percentage.toStringAsFixed(0)}%',
+                radius: 40,
+                titleStyle: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              );
+            })
+            .where((section) => section != null)
+            .toList();
+
     return SizedBox(
-      width: 150,
-      height: 150,
+      width: 200,
+      height: 200,
       child: PieChart(
         PieChartData(
-          centerSpaceRadius: 35,
+          centerSpaceRadius: 45,
           sectionsSpace: 3,
-          sections: [
-            PieChartSectionData(
-              color: const Color.fromARGB(255, 78, 151, 79),
-              value: 23,
-              title: '23%',
-              radius: 40,
-              titleStyle: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            PieChartSectionData(
-              color: const Color.fromARGB(255, 170, 77, 72),
-              value: 60,
-              title: '60%',
-              radius: 40,
-              titleStyle: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            PieChartSectionData(
-              color: const Color.fromARGB(255, 199, 165, 11),
-              value: 16,
-              title: '16%',
-              radius: 40,
-              titleStyle: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ],
+          sections: sections.cast<PieChartSectionData>(),
         ),
       ),
-    );
-  }
-
-  // Circular Indicator Widget
-  Widget _buildCircularIndicator(String label, double value, Color color) {
-    return Column(
-      children: [
-        CircularPercentIndicator(
-          radius: 60.0,
-          lineWidth: 10.0,
-          percent: value,
-          center: Text(
-            "${(value * 100).toInt()}%",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          progressColor: color,
-          backgroundColor: lightGrey,
-          circularStrokeCap: CircularStrokeCap.round,
-        ),
-        SizedBox(height: 8),
-        Text(label, style: TextStyle(fontSize: 16)),
-      ],
     );
   }
 }
