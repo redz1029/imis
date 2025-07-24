@@ -245,10 +245,18 @@ class _HomePageState extends State<HomePage> {
     fetchDeliverables();
     fetchKra();
     imageTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
-      setState(() {
-        _currentImageIndex = (_currentImageIndex + 1) % rotatingImages.length;
-      });
+      if (mounted) {
+        setState(() {
+          _currentImageIndex = (_currentImageIndex + 1) % rotatingImages.length;
+        });
+      }
     });
+  }
+
+  @override
+  void dispose() {
+    imageTimer.cancel();
+    super.dispose();
   }
 
   Future<void> _loadUserName() async {
@@ -384,9 +392,9 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ],
                       ),
-                      gap5,
-                      _buildPerformanceChart(kraList, deliverablesList),
 
+                      // gap5,
+                      _buildPerformanceChart(kraList, deliverablesList),
                       gap,
 
                       Padding(
@@ -530,8 +538,8 @@ class _HomePageState extends State<HomePage> {
   ) {
     final Map<int, double> kraPercentTotals = {};
     for (var deliverable in deliverablesList) {
-      kraPercentTotals[deliverable.kra.id] =
-          (kraPercentTotals[deliverable.kra.id] ?? 0) +
+      kraPercentTotals[deliverable.kra!.id] =
+          (kraPercentTotals[deliverable.kra!.id] ?? 0) +
           (deliverable.percentDeliverables / 100);
     }
 
