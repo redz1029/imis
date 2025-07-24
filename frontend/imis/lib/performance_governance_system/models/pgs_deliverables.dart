@@ -12,11 +12,11 @@ class PgsDeliverables {
   int? kraId;
 
   @JsonKey()
-  KeyResultArea kra;
+  KeyResultArea? kra;
 
   bool isDirect;
   String deliverableName;
-  String kraDescription;
+  String? kraDescription;
 
   @JsonKey()
   @DateTimeConverter()
@@ -29,7 +29,7 @@ class PgsDeliverables {
 
   String? remarks;
   String? disapprovalRemarks;
-  bool? isDisapproved;
+  bool isDisapproved;
 
   String? rowVersion;
   List<PgsDeliverableHistory>? pgsDeliverableHistory;
