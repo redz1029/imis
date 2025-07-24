@@ -99,6 +99,7 @@ class _PerformanceGovernanceSystemPageState
   List<Map<String, dynamic>> periodList = [];
   List<Map<String, dynamic>> filteredListPeriod = [];
   List<PgsDeliverables> deliverablesList = [];
+  Map<int, PgsDeliverables> deliverablesMap = {};
 
   int? selectedPeriod;
   String? selectedStartPeriod;
@@ -384,7 +385,6 @@ class _PerformanceGovernanceSystemPageState
     required ValueChanged<String?> onChanged,
     required VoidCallback onDeleted,
   }) {
-    // Sort signatories by orderLevel
     final sortedSignatoryList = List<Map<String, dynamic>>.from(signatoryList)
       ..sort(
         (a, b) => (a['orderLevel'] as int).compareTo(b['orderLevel'] as int),
@@ -632,6 +632,7 @@ class _PerformanceGovernanceSystemPageState
       'forSignature': pgs.forSignature,
       'signatories': pgs.pgsSignatories?.map((s) => s.toJson()).toList(),
       'periodId': pgs.pgsPeriod.id.toString(),
+      'pgsDeliverables': pgs.pgsDeliverables?.map((d) => d.toJson()).toList(),
     };
   }
 
@@ -1945,7 +1946,7 @@ class _PerformanceGovernanceSystemPageState
             );
             selectedStatus[i] = item.status;
             deliverableIds[i] = item.id ?? 0;
-            selectedKRA[i] = item.kra.id;
+            selectedKRA[i] = item.kra!.id;
             remarksControllers[i] = TextEditingController(text: item.remarks);
             percentageControllers[i] = TextEditingController(
               text: item.percentDeliverables.toString(),
@@ -1977,6 +1978,8 @@ class _PerformanceGovernanceSystemPageState
                   orElse: () => {'orderLevel': 1},
                 )['orderLevel'] ??
                 1;
+            final isAnyDisapproved =
+                deliverables?.any((d) => d.isDisapproved == true) ?? false;
 
             return AlertDialog(
               backgroundColor: mainBgColor,
@@ -2479,7 +2482,8 @@ class _PerformanceGovernanceSystemPageState
               //End third tab
               actions: [
                 if ((id == null && orderLevel == 1) ||
-                    (id == null && orderLevel >= 2))
+                    (id == null && orderLevel >= 2) ||
+                    isAnyDisapproved)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -2881,6 +2885,7 @@ class _PerformanceGovernanceSystemPageState
     Function setDialogState, {
     int orderLevel = 1,
     String? id,
+
     // int? id,
   }) {
     deliverablesControllers.putIfAbsent(index, () => TextEditingController());
@@ -3498,16 +3503,6 @@ class _PerformanceGovernanceSystemPageState
       child: DropdownButtonFormField<PgsStatus>(
         value: selectedStatus[index] ?? PgsStatus.notStarted,
         onChanged: null,
-        // onChanged: (PgsStatus? newValue) {
-        //   if (newValue != null) {
-        //     debugPrint('Selected Status for index $index: ${newValue.name}');
-        //     setDialogState();
-        //     setState(() {
-        //       selectedStatus[index] = newValue;
-        //     });
-        //     saveStatusToDb(index, newValue);
-        //   }
-        // },
         isExpanded: true,
         decoration: const InputDecoration(
           border: OutlineInputBorder(),
@@ -3561,18 +3556,45 @@ class _PerformanceGovernanceSystemPageState
 
   // Removed Rows
   Widget _buildRemoveButton(int index, Function setDialogState) {
-    return IconButton(
-      icon: Icon(Icons.delete, color: Colors.red),
-      onPressed: () {
-        setDialogState(() {
-          // Update UI after removal
-          rows.remove(index);
-          deliverablesControllers.remove(index);
-          selectedKRA.remove(index);
-          selectedDirect.remove(index);
-          selectedIndirect.remove(index);
-        });
-      },
+    bool showDisapproveControls = false;
+    if (deliverablesList.isNotEmpty) {
+      showDisapproveControls = deliverablesList.any(
+        (deliverable) =>
+            deliverable.id == deliverableIds[index] &&
+            deliverable.isDisapproved == true,
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        gap,
+        IconButton(
+          tooltip: 'Remove row',
+          icon: Icon(Icons.delete, color: Colors.red),
+          onPressed: () {
+            setDialogState(() {
+              // Update UI after removal
+              rows.remove(index);
+              deliverablesControllers.remove(index);
+              selectedKRA.remove(index);
+              selectedDirect.remove(index);
+              selectedIndirect.remove(index);
+            });
+          },
+        ),
+        if (showDisapproveControls || selectedDisapproved[index] == true) ...[
+          gap1,
+          const Divider(thickness: 1, color: Colors.grey),
+          gap1,
+          StatefulBuilder(
+            builder: (context, setDialogState) {
+              return _buildApprovedDisapproved(index, setDialogState);
+            },
+          ),
+          gap1,
+        ],
+      ],
     );
   }
 
@@ -3589,6 +3611,7 @@ class _PerformanceGovernanceSystemPageState
             Column(
               children: [
                 IconButton(
+                  tooltip: 'Click this to approve the deliverable',
                   icon: Icon(
                     Icons.thumb_up,
                     color:
@@ -3609,6 +3632,8 @@ class _PerformanceGovernanceSystemPageState
             Column(
               children: [
                 IconButton(
+                  tooltip: 'Click this to disapprove the deliverable',
+
                   icon: Icon(
                     Icons.thumb_down,
                     color:
@@ -3637,13 +3662,16 @@ class _PerformanceGovernanceSystemPageState
                   "Reason:",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                TextField(
-                  controller: reasonController[index],
-                  decoration: const InputDecoration(
-                    hintText: "Enter your reason here...",
-                    border: OutlineInputBorder(),
+                Tooltip(
+                  message: 'State your reason here',
+                  child: TextField(
+                    controller: reasonController[index],
+                    decoration: const InputDecoration(
+                      hintText: "Enter your reason here...",
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
                   ),
-                  maxLines: 3,
                 ),
               ],
             ),
@@ -3660,24 +3688,29 @@ class _PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 50.0),
-        child: Tooltip(
-          message:
-              'Specify the tangible results or outcomes tied to this responsibility.',
-          child: TextField(
-            controller: deliverablesControllers[index],
-            maxLines: null,
-            keyboardType: TextInputType.multiline,
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 50.0),
+            child: Tooltip(
+              message:
+                  'Specify the tangible results or outcomes tied to this responsibility.',
+              child: TextField(
+                controller: deliverablesControllers[index],
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(8.0),
+                ),
+                onChanged: (value) {
+                  setState(() {});
+                },
+              ),
             ),
-            onChanged: (value) {
-              setState(() {});
-            },
           ),
-        ),
+        ],
       ),
     );
   }

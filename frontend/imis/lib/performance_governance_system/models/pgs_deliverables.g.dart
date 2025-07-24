@@ -9,15 +9,17 @@ part of 'pgs_deliverables.dart';
 PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
     PgsDeliverables(
       (json['id'] as num?)?.toInt(),
-      KeyResultArea.fromJson(json['kra'] as Map<String, dynamic>),
+      json['kra'] == null
+          ? null
+          : KeyResultArea.fromJson(json['kra'] as Map<String, dynamic>),
       (json['kraId'] as num?)?.toInt(),
       json['deliverableName'] as String,
-      json['kraDescription'] as String,
+      json['kraDescription'] as String?,
       json['isDirect'] as bool,
       const DateTimeConverter().fromJson(json['byWhen'] as String),
       (json['percentDeliverables'] as num).toDouble(),
       json['disapprovalRemarks'] as String?,
-      json['isDisapproved'] as bool?,
+      json['isDisapproved'] as bool,
       PgsDeliverables._statusFromJson((json['status'] as num).toInt()),
       pgsDeliverableHistory:
           (json['pgsDeliverableHistory'] as List<dynamic>?)
