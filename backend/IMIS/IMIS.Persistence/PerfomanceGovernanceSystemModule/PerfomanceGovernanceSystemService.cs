@@ -48,8 +48,6 @@ namespace IMIS.Persistence.PgsModule
             return pgs != null ? new PerfomanceGovernanceSystemDto(pgs) : null;
         }
 
-
-
         public async Task<PerfomanceGovernanceSystemDto?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
         {
             var pgs = await _repository.GetByUserIdAndPgsIdAsync(userId, pgsId, cancellationToken);
@@ -108,6 +106,7 @@ namespace IMIS.Persistence.PgsModule
             if (dto.PgsSignatories != null)
             {
                 var currentStatus = pgs.PgsSignatories?.LastOrDefault();
+
                 if (currentStatus != null)
                 {
                     foreach (var signatory in dto.PgsSignatories)
@@ -134,6 +133,7 @@ namespace IMIS.Persistence.PgsModule
 
                     if (nextTemplate != null && nextTemplate.DefaultSignatoryId == userId)
                     {
+                        // Proceed to next signatory
                         var user = await _userManager.FindByIdAsync(userId);
                         dto.PgsSignatories.Add(new PgsSignatoryDto
                         {
@@ -148,8 +148,30 @@ namespace IMIS.Persistence.PgsModule
                             SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim()
                         });
                     }
+                    else if (nextTemplate == null)
+                    {
+                      
+                        var firstTemplate = templates.FirstOrDefault();
+                        if (firstTemplate != null && firstTemplate.DefaultSignatoryId == userId)
+                        {
+                            var user = await _userManager.FindByIdAsync(userId);
+                            dto.PgsSignatories.Add(new PgsSignatoryDto
+                            {
+                                Id = 0,
+                                PgsId = pgs.Id,
+                                PgsSignatoryTemplateId = firstTemplate.Id,
+                                SignatoryId = userId,
+                                Status = firstTemplate.Status,
+                                Label = firstTemplate.SignatoryLabel,
+                                OrderLevel = firstTemplate.OrderLevel,
+                                IsNextStatus = true,
+                                SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim()
+                            });
+                        }
+                    }
                 }
             }
+
 
             return dto;
         }
