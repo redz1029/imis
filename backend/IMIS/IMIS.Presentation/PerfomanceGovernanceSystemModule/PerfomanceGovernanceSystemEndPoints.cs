@@ -125,9 +125,9 @@ namespace IMIS.Presentation.PgsModuleAPI
                 return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
             })
             .WithTags(_pgsTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _performanceGovernanceSystem.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+            //.RequireAuthorization(e => e.RequireClaim(
+            // PermissionClaimType.Claim, _performanceGovernanceSystem.View));
 
             app.MapGet("/page", async (int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
@@ -179,41 +179,7 @@ namespace IMIS.Presentation.PgsModuleAPI
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Disapprove));
 
-           // app.MapPut("/disapprove/{deliverableId}", async (long deliverableId, bool isDelete, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-           // {
-           //     await service.Disapprove(deliverableId, cancellationToken).ConfigureAwait(false);
-           //     await cache.EvictByTagAsync(_pgsTag, cancellationToken);
-           //     return Results.Ok("PGS record disapproved successfully.");
-           // })
-           //.WithTags(_pgsTag);
-
-
-            //  app.MapPut("/disapprove/{deliverableId}", async (
-            //  long deliverableId,
-            //  bool isDelete,
-            //  [FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto,
-            //  IPerfomanceGovernanceSystemService service,
-            //  IOutputCacheStore cache,
-            //  CancellationToken cancellationToken) =>
-            //  {
-            //      // Fix: Added comma between parameters in DeliverableDisapprove call
-            //      var existingPerformanceGovernanceSystem = await service.DeliverableDisapprove(deliverableId, isDelete, cancellationToken).ConfigureAwait(false);
-
-            //      if (existingPerformanceGovernanceSystem == null)
-            //      {
-            //          return Results.NotFound($"Performance Governance System with ID {deliverableId} not found.");
-            //      }
-
-            //      var updatedPgsAuditDetails = await service.SaveOrUpdateAsync(performanceGovernanceSystemDto, cancellationToken).ConfigureAwait(false);
-
-            //      await cache.EvictByTagAsync(_pgsTag, cancellationToken);
-
-            //      return Results.Ok(updatedPgsAuditDetails);
-            //  })
-            //.WithTags(_pgsTag)
-            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Edit));
-
-
+         
         }
     }
 }
