@@ -94,8 +94,6 @@ class _HomePageState extends State<HomePage> {
       final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200 && response.data is List) {
-        debugPrint("Raw deliverables response: ${response.data}");
-
         List<PgsDeliverables> data =
             (response.data as List).map((userJson) {
               debugPrint("Deliverable item: $userJson");

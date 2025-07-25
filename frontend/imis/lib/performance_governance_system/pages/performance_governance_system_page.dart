@@ -1170,9 +1170,8 @@ class _PerformanceGovernanceSystemPageState
                               setState(() {
                                 _selectedOfficeId =
                                     value.isEmpty ? null : value;
+                                fetchPGSPeriods();
                               });
-                              fetchPgsFilter();
-                              debugPrint("Start Period: $selectedStartPeriod");
                             },
                             itemBuilder: (BuildContext context) {
                               final updatedOfficeList = [
@@ -1180,14 +1179,103 @@ class _PerformanceGovernanceSystemPageState
                                 ...filteredListOffice,
                               ];
 
-                              return updatedOfficeList
-                                  .map<PopupMenuItem<String>>((office) {
-                                    return PopupMenuItem<String>(
-                                      value: office['id'].toString(),
-                                      child: Text(office['name']),
-                                    );
-                                  })
-                                  .toList();
+                              final searchController = TextEditingController();
+                              ValueNotifier<String> searchQuery = ValueNotifier(
+                                '',
+                              );
+
+                              return [
+                                PopupMenuItem<String>(
+                                  enabled: false,
+                                  height: kMinInteractiveDimension,
+                                  child: Column(
+                                    children: [
+                                      TextField(
+                                        controller: searchController,
+                                        decoration: InputDecoration(
+                                          hintText: 'Search offices...',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.search,
+                                            size: 18,
+                                          ),
+                                          contentPadding: EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                          border: OutlineInputBorder(),
+                                          isDense: true,
+                                        ),
+                                        onChanged: (value) {
+                                          searchQuery.value =
+                                              value.toLowerCase();
+                                        },
+                                      ),
+                                      const Divider(height: 16, thickness: 1),
+                                    ],
+                                  ),
+                                ),
+                                // Scrollable office list
+                                PopupMenuItem<String>(
+                                  enabled: false,
+                                  child: ValueListenableBuilder<String>(
+                                    valueListenable: searchQuery,
+                                    builder: (context, query, _) {
+                                      final filteredOffices =
+                                          updatedOfficeList
+                                              .where(
+                                                (office) => office['name']
+                                                    .toString()
+                                                    .toLowerCase()
+                                                    .contains(query),
+                                              )
+                                              .toList();
+
+                                      return ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          maxHeight:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.height *
+                                              0.4,
+                                        ),
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children:
+                                                filteredOffices
+                                                    .map<Widget>(
+                                                      (office) => ListTile(
+                                                        dense: true,
+                                                        title: Text(
+                                                          office['name'],
+                                                          style: TextStyle(
+                                                            color: Colors.black,
+                                                          ),
+                                                        ),
+                                                        onTap: () {
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                          setState(() {
+                                                            _selectedOfficeId =
+                                                                office['id']
+                                                                    .toString();
+                                                            fetchPgsFilter();
+                                                          });
+                                                        },
+                                                      ),
+                                                    )
+                                                    .toList(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ];
                             },
                             child: FilterButton(
                               label:
@@ -1393,23 +1481,25 @@ class _PerformanceGovernanceSystemPageState
                             ),
                           ),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 10),
-                            child: Text(
-                              'Status',
-                              style: TextStyle(color: grey),
-                            ),
-                          ),
-                        ),
+                        // Expanded(
+                        //   flex: 1,
+                        //   child: Padding(
+                        //     padding: EdgeInsets.only(right: 10),
+                        //     child: Text(
+                        //       'Status',
+                        //       style: TextStyle(color: grey),
+                        //     ),
+                        //   ),
+                        // ),
                         Expanded(
                           flex: 1,
                           child: Padding(
                             padding: EdgeInsets.only(right: 1),
-                            child: Text(
-                              'Actions',
-                              style: TextStyle(color: grey),
+                            child: Center(
+                              child: Text(
+                                'Actions',
+                                style: TextStyle(color: grey),
+                              ),
                             ),
                           ),
                         ),
@@ -1447,7 +1537,7 @@ class _PerformanceGovernanceSystemPageState
                                             MainAxisAlignment.start,
                                         children: [
                                           SizedBox(
-                                            width: 60,
+                                            width: 55,
                                             child: Text(
                                               itemNumber.toString(),
                                               style: TextStyle(
@@ -1458,6 +1548,7 @@ class _PerformanceGovernanceSystemPageState
 
                                           SizedBox(
                                             width: 500,
+
                                             child: Text(
                                               pgsgovernancesystem['name'],
                                               // Display office
@@ -1473,6 +1564,7 @@ class _PerformanceGovernanceSystemPageState
                                               padding: EdgeInsets.only(
                                                 right: 1,
                                               ),
+
                                               child: Text(
                                                 pgsgovernancesystem['startDate'],
                                                 style: TextStyle(
@@ -1487,6 +1579,7 @@ class _PerformanceGovernanceSystemPageState
                                               padding: EdgeInsets.only(
                                                 right: 1,
                                               ),
+
                                               child: Text(
                                                 pgsgovernancesystem['endDate'],
                                                 style: TextStyle(
@@ -1495,20 +1588,20 @@ class _PerformanceGovernanceSystemPageState
                                               ),
                                             ),
                                           ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                pgsgovernancesystem['pgsStatus'],
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
+                                          // Expanded(
+                                          //   flex: 1,
+                                          //   child: Padding(
+                                          //     padding: EdgeInsets.only(
+                                          //       right: 1,
+                                          //     ),
+                                          //     child: Text(
+                                          //       pgsgovernancesystem['pgsStatus'],
+                                          //       style: TextStyle(
+                                          //         fontWeight: FontWeight.normal,
+                                          //       ),
+                                          //     ),
+                                          //   ),
+                                          // ),
                                           Expanded(
                                             flex: 1,
                                             child: Padding(
@@ -1517,7 +1610,7 @@ class _PerformanceGovernanceSystemPageState
                                               ),
                                               child: Row(
                                                 mainAxisAlignment:
-                                                    MainAxisAlignment.start,
+                                                    MainAxisAlignment.center,
                                                 children: [
                                                   IconButton(
                                                     icon: Icon(Icons.edit),
@@ -1588,7 +1681,7 @@ class _PerformanceGovernanceSystemPageState
 
                                                   IconButton(
                                                     icon: const Icon(
-                                                      Icons.preview,
+                                                      Icons.print,
                                                     ),
                                                     onPressed: () async {
                                                       final previewId =
@@ -1958,7 +2051,7 @@ class _PerformanceGovernanceSystemPageState
             reasonController[i] = TextEditingController(
               text: item.disapprovalRemarks,
             );
-            selectedDisapproved[i] = item.isDisapproved!;
+            selectedDisapproved[i] = item.isDisapproved;
           }
         } else {
           rows = [0];
@@ -2406,71 +2499,71 @@ class _PerformanceGovernanceSystemPageState
                               ),
                             ),
 
-                            SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: FutureBuilder<List<Map<String, dynamic>>>(
-                                future: _getFilteredSignatories(),
-                                builder: (context, snapshot) {
-                                  // Debugging - check what data we're getting
-                                  debugPrint(
-                                    'Signatories snapshot: ${snapshot.data}',
-                                  );
+                            // SingleChildScrollView(
+                            //   scrollDirection: Axis.horizontal,
+                            //   child: FutureBuilder<List<Map<String, dynamic>>>(
+                            //     future: _getFilteredSignatories(),
+                            //     builder: (context, snapshot) {
+                            //       // Debugging - check what data we're getting
+                            //       debugPrint(
+                            //         'Signatories snapshot: ${snapshot.data}',
+                            //       );
 
-                                  if (snapshot.connectionState ==
-                                      ConnectionState.waiting) {
-                                    return const Center(
-                                      child: CircularProgressIndicator(),
-                                    );
-                                  }
+                            //       if (snapshot.connectionState ==
+                            //           ConnectionState.waiting) {
+                            //         return const Center(
+                            //           child: CircularProgressIndicator(),
+                            //         );
+                            //       }
 
-                                  if (snapshot.hasError) {
-                                    return Center(
-                                      child: Text('Error: ${snapshot.error}'),
-                                    );
-                                  }
+                            //       if (snapshot.hasError) {
+                            //         return Center(
+                            //           child: Text('Error: ${snapshot.error}'),
+                            //         );
+                            //       }
 
-                                  final signatories = snapshot.data ?? [];
+                            //       final signatories = snapshot.data ?? [];
 
-                                  if (signatories.isEmpty) {
-                                    return const Center(
-                                      // child: Text('No signatories available'),
-                                    );
-                                  }
+                            //       if (signatories.isEmpty) {
+                            //         return const Center(
+                            //           // child: Text('No signatories available'),
+                            //         );
+                            //       }
 
-                                  return Row(
-                                    children:
-                                        signatories.map((signatory) {
-                                          return Padding(
-                                            padding: const EdgeInsets.all(8.0),
-                                            child: _buildSignatoryColumnSync(
-                                              // Create this synchronous version
-                                              title:
-                                                  signatory['signatoryLabel'] ??
-                                                  'Signatory',
-                                              currentValue:
-                                                  signatory['defaultSignatoryId'],
-                                              onChanged: (newValue) {
-                                                setState(() {
-                                                  signatory['defaultSignatoryId'] =
-                                                      newValue;
-                                                });
-                                              },
-                                              onDeleted: () {
-                                                setState(() {
-                                                  signatoryList.removeWhere(
-                                                    (s) =>
-                                                        s['id'] ==
-                                                        signatory['id'],
-                                                  );
-                                                });
-                                              },
-                                            ),
-                                          );
-                                        }).toList(),
-                                  );
-                                },
-                              ),
-                            ),
+                            //       return Row(
+                            //         children:
+                            //             signatories.map((signatory) {
+                            //               return Padding(
+                            //                 padding: const EdgeInsets.all(8.0),
+                            //                 child: _buildSignatoryColumnSync(
+                            //                   // Create this synchronous version
+                            //                   title:
+                            //                       signatory['signatoryLabel'] ??
+                            //                       'Signatory',
+                            //                   currentValue:
+                            //                       signatory['defaultSignatoryId'],
+                            //                   onChanged: (newValue) {
+                            //                     setState(() {
+                            //                       signatory['defaultSignatoryId'] =
+                            //                           newValue;
+                            //                     });
+                            //                   },
+                            //                   onDeleted: () {
+                            //                     setState(() {
+                            //                       signatoryList.removeWhere(
+                            //                         (s) =>
+                            //                             s['id'] ==
+                            //                             signatory['id'],
+                            //                       );
+                            //                     });
+                            //                   },
+                            //                 ),
+                            //               );
+                            //             }).toList(),
+                            //       );
+                            //     },
+                            //   ),
+                            // ),
                           ],
                         ),
                       ),
@@ -2591,7 +2684,7 @@ class _PerformanceGovernanceSystemPageState
 
       final String successMessage =
           (id != null && orderLevel >= 2)
-              ? "Approved successfully!"
+              ? "Confirm successfully!"
               : "Submitted successfully!";
 
       MotionToast.success(

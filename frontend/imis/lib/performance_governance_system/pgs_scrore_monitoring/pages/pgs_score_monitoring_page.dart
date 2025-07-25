@@ -806,14 +806,103 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                                 ...filteredListOffice,
                               ];
 
-                              return updatedOfficeList
-                                  .map<PopupMenuItem<String>>((office) {
-                                    return PopupMenuItem<String>(
-                                      value: office['id'].toString(),
-                                      child: Text(office['name']),
-                                    );
-                                  })
-                                  .toList();
+                              final searchController = TextEditingController();
+                              ValueNotifier<String> searchQuery = ValueNotifier(
+                                '',
+                              );
+
+                              return [
+                                PopupMenuItem<String>(
+                                  enabled: false,
+                                  height: kMinInteractiveDimension,
+                                  child: Column(
+                                    children: [
+                                      TextField(
+                                        controller: searchController,
+                                        decoration: InputDecoration(
+                                          hintText: 'Search offices...',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.search,
+                                            size: 18,
+                                          ),
+                                          contentPadding: EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                          border: OutlineInputBorder(),
+                                          isDense: true,
+                                        ),
+                                        onChanged: (value) {
+                                          searchQuery.value =
+                                              value.toLowerCase();
+                                        },
+                                      ),
+                                      const Divider(height: 16, thickness: 1),
+                                    ],
+                                  ),
+                                ),
+                                // Scrollable office list
+                                PopupMenuItem<String>(
+                                  enabled: false,
+                                  child: ValueListenableBuilder<String>(
+                                    valueListenable: searchQuery,
+                                    builder: (context, query, _) {
+                                      final filteredOffices =
+                                          updatedOfficeList
+                                              .where(
+                                                (office) => office['name']
+                                                    .toString()
+                                                    .toLowerCase()
+                                                    .contains(query),
+                                              )
+                                              .toList();
+
+                                      return ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          maxHeight:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.height *
+                                              0.4,
+                                        ),
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children:
+                                                filteredOffices
+                                                    .map<Widget>(
+                                                      (office) => ListTile(
+                                                        dense: true,
+                                                        title: Text(
+                                                          office['name'],
+                                                          style: TextStyle(
+                                                            color: Colors.black,
+                                                          ),
+                                                        ),
+                                                        onTap: () {
+                                                          Navigator.pop(
+                                                            context,
+                                                          );
+                                                          setState(() {
+                                                            _selectedOfficeId =
+                                                                office['id']
+                                                                    .toString();
+                                                            fetchFilteredPgsList();
+                                                          });
+                                                        },
+                                                      ),
+                                                    )
+                                                    .toList(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ];
                             },
                             child: FilterButton(
                               label:
@@ -1162,6 +1251,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'From',
+                  labelStyle: TextStyle(color: grey, fontSize: 12),
                   isDense: true,
                   border: OutlineInputBorder(),
                 ),
@@ -1172,6 +1262,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 keyboardType: TextInputType.none,
                 decoration: const InputDecoration(
                   labelText: 'To',
+                  labelStyle: TextStyle(color: grey, fontSize: 12),
                   isDense: true,
                   border: OutlineInputBorder(),
                 ),
@@ -1238,6 +1329,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
                   labelText: 'Page',
+                  labelStyle: TextStyle(color: grey, fontSize: 12),
                   isDense: true,
                   border: OutlineInputBorder(),
                 ),
@@ -1248,6 +1340,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 keyboardType: TextInputType.none,
                 decoration: const InputDecoration(
                   labelText: 'Page Size',
+                  labelStyle: TextStyle(color: grey, fontSize: 12),
                   isDense: true,
                   border: OutlineInputBorder(),
                 ),

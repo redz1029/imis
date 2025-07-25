@@ -795,9 +795,6 @@ class _UserProfileState extends State<UserProfilePage> {
                           ),
                         ),
                       ),
-                      itemBuilder:
-                          (context, item, isSelected) =>
-                              Container(color: mainBgColor),
                     ),
                     items: jobPositions,
                     selectedItem: selectedPosition,
