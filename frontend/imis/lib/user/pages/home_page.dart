@@ -272,263 +272,383 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+
     return Scaffold(
       backgroundColor: mainBgColor,
-
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Analytical Overview",
-                        style: TextStyle(fontSize: 20),
-                      ),
-                      gap,
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 4.0),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Text(
-                                office.join(', '),
-                                style: TextStyle(fontSize: 14, color: grey),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            SizedBox(width: 16),
-                            PopupMenuButton<String>(
-                              color: mainBgColor,
-                              onSelected: (String value) {
-                                // Handle selection here
-                              },
-                              itemBuilder:
-                                  (BuildContext context) =>
-                                      <PopupMenuEntry<String>>[
-                                        const PopupMenuItem<String>(
-                                          value: 'Option 1',
-                                          child: Text('Option 1'),
-                                        ),
-                                        const PopupMenuItem<String>(
-                                          value: 'Option 2',
-                                          child: Text('Option 2'),
-                                        ),
-                                      ],
-                              offset: Offset(0, 30),
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: mainBgColor,
-                                  border: Border.all(
-                                    color: Colors.grey.shade300,
-                                  ),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.filter_list,
-                                      size: 16,
-                                      color: grey,
-                                    ),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      "Filter by",
-                                      style: TextStyle(fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+        child: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+      ),
+    );
+  }
 
-                      gap,
-                      Row(
+  Widget _buildDesktopLayout() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text("Analytical Overview", style: TextStyle(fontSize: 20)),
+                    gap,
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 4.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: _buildDashboardBox(
-                              "Total Users",
-                              Colors.blue,
-                              totalUsers.toString(),
-                              'assets/users.png',
+                            child: Text(
+                              office.join(', '),
+                              style: TextStyle(fontSize: 14, color: grey),
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          Expanded(
-                            child: _buildDashboardBox(
-                              "Total Auditors",
-                              Colors.green,
-                              totalAuditor.toString(),
-                              'assets/auditor.png',
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildDashboardBox(
-                              "Total Teams",
-                              Colors.purple,
-                              totalTeam.toString(),
-                              'assets/team.png',
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildDashboardBox(
-                              "Total Offices",
-                              const Color.fromARGB(255, 194, 106, 47),
-                              totalOffices.toString(),
-                              'assets/office.png',
+                          SizedBox(width: 16),
+                          PopupMenuButton<String>(
+                            color: mainBgColor,
+                            onSelected: (String value) {
+                              // Handle selection here
+                            },
+                            itemBuilder:
+                                (BuildContext context) =>
+                                    <PopupMenuEntry<String>>[
+                                      const PopupMenuItem<String>(
+                                        value: 'Option 1',
+                                        child: Text('Option 1'),
+                                      ),
+                                      const PopupMenuItem<String>(
+                                        value: 'Option 2',
+                                        child: Text('Option 2'),
+                                      ),
+                                    ],
+                            offset: Offset(0, 30),
+                            child: Container(
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: mainBgColor,
+                                border: Border.all(color: Colors.grey.shade300),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.filter_list,
+                                    size: 16,
+                                    color: grey,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    "Filter by",
+                                    style: TextStyle(fontSize: 12),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ],
                       ),
+                    ),
 
-                      // gap5,
-                      _buildPerformanceChart(kraList, deliverablesList),
-                      gap,
-
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Align(
-                          alignment: Alignment.center,
-                          child: _buildStatusWidget(deliverablesList),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: 20),
-
-                Column(
-                  children: [
-                    SizedBox(height: 40),
-                    Card(
-                      color: mainBgColor,
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              "Calendar",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Divider(),
-                            SizedBox(
-                              width: 280,
-                              height: 320,
-                              child: TableCalendar(
-                                firstDay: DateTime.utc(2020, 1, 1),
-                                lastDay: DateTime.utc(2030, 12, 31),
-                                focusedDay: _focusedDay,
-                                calendarFormat: _calendarFormat,
-                                selectedDayPredicate: (day) {
-                                  return isSameDay(_selectedDay, day);
-                                },
-                                onDaySelected: (selectedDay, focusedDay) {
-                                  setState(() {
-                                    _selectedDay = selectedDay;
-                                    _focusedDay = focusedDay;
-                                  });
-                                },
-                                onFormatChanged: (format) {
-                                  setState(() {
-                                    _calendarFormat = format;
-                                  });
-                                },
-                                rowHeight: 40,
-                                calendarStyle: CalendarStyle(
-                                  defaultTextStyle: TextStyle(fontSize: 12),
-                                  weekendTextStyle: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.normal,
-                                  ),
-                                  disabledTextStyle: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                  outsideTextStyle: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.grey,
-                                  ),
-                                  selectedDecoration: BoxDecoration(
-                                    color: secondaryBgButton,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  todayDecoration: BoxDecoration(
-                                    color: primaryColor,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                daysOfWeekStyle: DaysOfWeekStyle(
-                                  weekdayStyle: TextStyle(fontSize: 12),
-                                  weekendStyle: TextStyle(fontSize: 12),
-                                ),
-                                headerStyle: HeaderStyle(
-                                  formatButtonTextStyle: TextStyle(
-                                    fontSize: 12,
-                                  ),
-                                  titleTextStyle: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                    gap,
+                    _buildStatsRow(),
+                    _buildPerformanceChart(kraList, deliverablesList),
+                    gap,
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: _buildStatusWidget(deliverablesList),
                       ),
                     ),
-                    // SizedBox(height: 10),
-                    SizedBox(height: 20),
+                  ],
+                ),
+              ),
+              SizedBox(width: 20),
+              _buildSideColumn(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-                    Card(
-                      color: mainBgColor,
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+  Widget _buildMobileLayout() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Analytical Overview", style: TextStyle(fontSize: 20)),
+              gap,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 4.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        office.join(', '),
+                        style: TextStyle(fontSize: 14, color: grey),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            SizedBox(
-                              width: 280,
-                              height: 350,
-                              child: Image.asset(
-                                rotatingImages[_currentImageIndex],
-                                fit: BoxFit.cover,
-                              ),
+                    ),
+                    SizedBox(width: 16),
+                    PopupMenuButton<String>(
+                      color: mainBgColor,
+                      onSelected: (String value) {
+                        // Handle selection here
+                      },
+                      itemBuilder:
+                          (BuildContext context) => <PopupMenuEntry<String>>[
+                            const PopupMenuItem<String>(
+                              value: 'Option 1',
+                              child: Text('Option 1'),
                             ),
+                            const PopupMenuItem<String>(
+                              value: 'Option 2',
+                              child: Text('Option 2'),
+                            ),
+                          ],
+                      offset: Offset(0, 30),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: mainBgColor,
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.filter_list, size: 16, color: grey),
+                            SizedBox(width: 4),
+                            Text("Filter by", style: TextStyle(fontSize: 12)),
                           ],
                         ),
                       ),
                     ),
                   ],
                 ),
+              ),
+              gap,
+              _buildStatsRow(),
+              _buildPerformanceChart(kraList, deliverablesList),
+              gap,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: _buildStatusWidget(deliverablesList),
+                ),
+              ),
+              gap,
+              _buildSideColumn(),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsRow() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isNarrow = constraints.maxWidth < 400;
+
+        if (isNarrow) {
+          return Column(
+            children: [
+              _buildDashboardBox(
+                "Total Users",
+                Colors.blue,
+                totalUsers.toString(),
+                'assets/users.png',
+              ),
+              SizedBox(height: 10),
+              _buildDashboardBox(
+                "Total Auditors",
+                Colors.green,
+                totalAuditor.toString(),
+                'assets/auditor.png',
+              ),
+              SizedBox(height: 10),
+              _buildDashboardBox(
+                "Total Teams",
+                Colors.purple,
+                totalTeam.toString(),
+                'assets/team.png',
+              ),
+              SizedBox(height: 10),
+              _buildDashboardBox(
+                "Total Offices",
+                const Color.fromARGB(255, 194, 106, 47),
+                totalOffices.toString(),
+                'assets/office.png',
+              ),
+            ],
+          );
+        } else {
+          // Use row layout on wider screens
+          return Row(
+            children: [
+              Expanded(
+                child: _buildDashboardBox(
+                  "Total Users",
+                  Colors.blue,
+                  totalUsers.toString(),
+                  'assets/users.png',
+                ),
+              ),
+              Expanded(
+                child: _buildDashboardBox(
+                  "Total Auditors",
+                  Colors.green,
+                  totalAuditor.toString(),
+                  'assets/auditor.png',
+                ),
+              ),
+              Expanded(
+                child: _buildDashboardBox(
+                  "Total Teams",
+                  Colors.purple,
+                  totalTeam.toString(),
+                  'assets/team.png',
+                ),
+              ),
+              Expanded(
+                child: _buildDashboardBox(
+                  "Total Offices",
+                  const Color.fromARGB(255, 194, 106, 47),
+                  totalOffices.toString(),
+                  'assets/office.png',
+                ),
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildSideColumn() {
+    return Column(
+      children: [
+        Card(
+          color: mainBgColor,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Calendar",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                Divider(),
+                SizedBox(
+                  width: 280,
+                  height: 320,
+                  child: TableCalendar(
+                    firstDay: DateTime.utc(2020, 1, 1),
+                    lastDay: DateTime.utc(2030, 12, 31),
+                    focusedDay: _focusedDay,
+                    calendarFormat: _calendarFormat,
+                    selectedDayPredicate: (day) {
+                      return isSameDay(_selectedDay, day);
+                    },
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    onFormatChanged: (format) {
+                      setState(() {
+                        _calendarFormat = format;
+                      });
+                    },
+                    rowHeight: 40,
+                    calendarStyle: CalendarStyle(
+                      defaultTextStyle: TextStyle(fontSize: 12),
+                      weekendTextStyle: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.normal,
+                      ),
+                      disabledTextStyle: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                      outsideTextStyle: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                      ),
+                      selectedDecoration: BoxDecoration(
+                        color: secondaryBgButton,
+                        shape: BoxShape.circle,
+                      ),
+                      todayDecoration: BoxDecoration(
+                        color: primaryColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    daysOfWeekStyle: DaysOfWeekStyle(
+                      weekdayStyle: TextStyle(fontSize: 12),
+                      weekendStyle: TextStyle(fontSize: 12),
+                    ),
+                    headerStyle: HeaderStyle(
+                      formatButtonTextStyle: TextStyle(fontSize: 12),
+                      titleTextStyle: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
-          ],
+          ),
         ),
-      ),
+        SizedBox(height: 20),
+        Card(
+          color: mainBgColor,
+          elevation: 4,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SizedBox(
+                  width: 280,
+                  height: 350,
+                  child: Image.asset(
+                    rotatingImages[_currentImageIndex],
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 
