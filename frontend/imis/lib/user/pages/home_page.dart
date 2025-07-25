@@ -302,13 +302,13 @@ class _HomePageState extends State<HomePage> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Expanded(
-                            child: Text(
-                              office.join(', '),
-                              style: TextStyle(fontSize: 14, color: grey),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                          // Expanded(
+                          //   child: Text(
+                          //     office.join(', '),
+                          //     style: TextStyle(fontSize: 14, color: grey),
+                          //     overflow: TextOverflow.ellipsis,
+                          //   ),
+                          // ),
                           SizedBox(width: 16),
                           PopupMenuButton<String>(
                             color: mainBgColor,

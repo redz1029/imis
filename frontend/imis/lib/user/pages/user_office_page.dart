@@ -503,11 +503,17 @@ class _UserOfficePageState extends State<UserOfficePage> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text("No"),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context, true),
-                            child: Text("Yes"),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                         ],
                       );
@@ -521,7 +527,7 @@ class _UserOfficePageState extends State<UserOfficePage> {
                           u.officeId ==
                               int.tryParse(_selectedOfficeId ?? '0') &&
                           u.id != int.tryParse(id ?? '0'),
-                    ); // make sure it's not the same record
+                    );
 
                     if (isDuplicate) {
                       // ignore: use_build_context_synchronously

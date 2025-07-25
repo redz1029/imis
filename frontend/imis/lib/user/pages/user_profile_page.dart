@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/constant/constant.dart';
@@ -306,7 +307,7 @@ class _UserProfileState extends State<UserProfilePage> {
                 ),
               ),
               Visibility(
-                visible: false, // change to true to make it visible
+                visible: false,
                 child: SizedBox(
                   width: 350,
                   height: 65,
@@ -364,7 +365,7 @@ class _UserProfileState extends State<UserProfilePage> {
               ),
 
               Visibility(
-                visible: false, // change to true to make it visible
+                visible: false,
                 child: SizedBox(
                   width: 350,
                   height: 65,
@@ -379,7 +380,7 @@ class _UserProfileState extends State<UserProfilePage> {
               ),
 
               Visibility(
-                visible: false, // change to true to make it visible
+                visible: false,
                 child: SizedBox(
                   width: 350,
                   height: 65,
@@ -408,7 +409,7 @@ class _UserProfileState extends State<UserProfilePage> {
                 ),
               ),
               Visibility(
-                visible: false, // set to true to show it
+                visible: false,
                 child: DropdownButtonFormField<String>(
                   decoration: InputDecoration(
                     labelText: 'Position',
@@ -477,11 +478,17 @@ class _UserProfileState extends State<UserProfilePage> {
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context, false),
-                          child: Text("No"),
+                          child: Text(
+                            "No",
+                            style: TextStyle(color: primaryColor),
+                          ),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(context, true),
-                          child: Text("Yes"),
+                          child: Text(
+                            "Yes",
+                            style: TextStyle(color: primaryColor),
+                          ),
                         ),
                       ],
                     );
@@ -685,7 +692,6 @@ class _UserProfileState extends State<UserProfilePage> {
                   ),
                 ),
 
-                gap,
                 SizedBox(
                   width: 450,
                   height: 65,
@@ -770,37 +776,57 @@ class _UserProfileState extends State<UserProfilePage> {
                     ),
                   ),
                 ),
-
-                DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Position',
-                    border: const OutlineInputBorder(),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: primaryColor),
+                SizedBox(
+                  width: 450,
+                  child: DropdownSearch<String>(
+                    popupProps: PopupProps.menu(
+                      showSearchBox: true,
+                      searchFieldProps: TextFieldProps(
+                        decoration: InputDecoration(
+                          hintText: 'Search Position...',
+                          filled: true,
+                          fillColor: mainBgColor,
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                        ),
+                      ),
+                      itemBuilder:
+                          (context, item, isSelected) =>
+                              Container(color: mainBgColor),
                     ),
-                    floatingLabelStyle: const TextStyle(color: primaryColor),
+                    items: jobPositions,
+                    selectedItem: selectedPosition,
+                    onChanged: (String? value) {
+                      setState(() {
+                        selectedPosition = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select a position';
+                      }
+                      return null;
+                    },
+                    dropdownDecoratorProps: DropDownDecoratorProps(
+                      dropdownSearchDecoration: InputDecoration(
+                        labelText: 'Position',
+                        filled: true,
+                        fillColor: mainBgColor,
+                        floatingLabelStyle: TextStyle(color: primaryColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: primaryColor),
+                        ),
+                      ),
+                    ),
                   ),
-                  value: selectedPosition,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedPosition = newValue;
-                    });
-                  },
-                  items:
-                      jobPositions.map<DropdownMenuItem<String>>((
-                        String value,
-                      ) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
-                        );
-                      }).toList(),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a position';
-                    }
-                    return null;
-                  },
                 ),
               ],
             ),

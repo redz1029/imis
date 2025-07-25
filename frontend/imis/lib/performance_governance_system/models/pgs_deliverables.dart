@@ -30,7 +30,6 @@ class PgsDeliverables {
   String? remarks;
   String? disapprovalRemarks;
   bool isDisapproved;
-
   String? rowVersion;
   List<PgsDeliverableHistory>? pgsDeliverableHistory;
 

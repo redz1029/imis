@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
@@ -204,6 +205,10 @@ class _OfficePageState extends State<OfficePage> {
     if (filteredListParentOffice.isNotEmpty) {
       _selectedParentOffice = filteredListParentOffice[0]['id'].toString();
     }
+
+    if (filteredListParentOffice.isNotEmpty) {
+      _selectedParentOffice = filteredListParentOffice[0]['id'].toString();
+    }
     TokenExpirationHandler(context).checkTokenExpiration();
   }
 
@@ -256,8 +261,7 @@ class _OfficePageState extends State<OfficePage> {
 
     TextEditingController officeController = TextEditingController(text: name);
     _selectedOfficeType = selectedOfficeType;
-    // _selectedParentOffice = selectedParentOffice;
-    _selectedParentOffice = selectedParentOffice ?? '0';
+    _selectedParentOffice = selectedParentOffice;
 
     showDialog(
       // ignore: use_build_context_synchronously
@@ -324,8 +328,15 @@ class _OfficePageState extends State<OfficePage> {
                     value: _selectedOfficeType,
                     decoration: InputDecoration(
                       labelText: 'Office Type',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
+
                     items:
                         filteredListOfficeType.map((officeTypeData) {
                           return DropdownMenuItem<String>(
@@ -347,31 +358,68 @@ class _OfficePageState extends State<OfficePage> {
                   ),
                 ),
                 gap,
-
                 SizedBox(
                   width: 480,
-                  child: DropdownButtonFormField<String>(
-                    value: _selectedParentOffice ?? '0',
-                    decoration: InputDecoration(
-                      labelText: 'Parent Office',
-                      border: OutlineInputBorder(),
+                  child: DropdownSearch<Map<String, dynamic>>(
+                    popupProps: PopupProps.menu(
+                      showSearchBox: true,
+                      searchFieldProps: TextFieldProps(
+                        decoration: InputDecoration(
+                          hintText: 'Search Office Name...',
+                          filled: true,
+                          fillColor: mainBgColor,
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                        ),
+                      ),
+                      itemBuilder:
+                          (context, office, isSelected) => ListTile(
+                            tileColor: mainBgColor,
+                            title: Text(office['name']),
+                          ),
                     ),
-                    items: [
-                      DropdownMenuItem<String>(value: '0', child: Text('None')),
-                      ...filteredListParentOffice
-                          .where((o) => o['id'] != 0)
-                          .map((parentOfficeData) {
-                            return DropdownMenuItem<String>(
-                              value: parentOfficeData['id'].toString(),
-                              child: Text(parentOfficeData['name']),
-                            );
-                          }),
-                    ],
+                    items: filteredListParentOffice,
+                    itemAsString: (office) => office['name'],
+                    selectedItem:
+                        _selectedParentOffice == null
+                            ? null
+                            : filteredListParentOffice.firstWhere(
+                              (office) =>
+                                  office['id'].toString() ==
+                                  _selectedParentOffice,
+                              orElse: () => <String, dynamic>{},
+                            ),
+
                     onChanged: (value) {
                       setState(() {
-                        _selectedParentOffice = value;
+                        _selectedParentOffice = value?['id'].toString();
                       });
                     },
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Please select parent office';
+                      }
+                      return null;
+                    },
+                    dropdownDecoratorProps: DropDownDecoratorProps(
+                      dropdownSearchDecoration: InputDecoration(
+                        labelText: 'Select Parent Office',
+                        filled: true,
+                        fillColor: mainBgColor,
+                        floatingLabelStyle: TextStyle(color: primaryColor),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: primaryColor),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
