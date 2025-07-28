@@ -1,7 +1,4 @@
 ﻿using Base.Abstractions;
-using IMIS.Application.PgsKraModule;
-using IMIS.Application.PgsPeriodModule;
-using IMIS.Domain;
 
 namespace IMIS.Application.PgsDeliverableScoreHistoryModule
 {
