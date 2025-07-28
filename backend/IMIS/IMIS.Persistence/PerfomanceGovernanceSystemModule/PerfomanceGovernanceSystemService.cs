@@ -342,12 +342,12 @@ namespace IMIS.Persistence.PgsModule
 
         //    return new PerfomanceGovernanceSystemDto(saved);
         //}
-
+      
 
         public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(
         PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto,
         CancellationToken cancellationToken)
-        {
+            {
             if (perfomanceGovernanceSystemDto == null)
                 throw new ArgumentNullException(nameof(perfomanceGovernanceSystemDto));
 
@@ -363,7 +363,7 @@ namespace IMIS.Persistence.PgsModule
             entity.OfficeId = office.Id;
             entity.PgsPeriod = pgsPeriod;
 
-            // Resolve KRA
+            // Resolve KRA references
             if (entity.PgsDeliverables != null)
             {
                 foreach (var d in entity.PgsDeliverables)
@@ -373,92 +373,105 @@ namespace IMIS.Persistence.PgsModule
                 }
             }
 
-            var existing = await _dbContext.PerformanceGovernanceSystem
-                .Include(p => p.PgsDeliverables)
-                .Include(p => p.PgsSignatories)
-                .Include(p => p.PgsReadinessRating)
-                .FirstOrDefaultAsync(p => p.Id == entity.Id, cancellationToken)
-                ?? throw new InvalidOperationException("PGS record not found.");
+            var isNew = entity.Id == 0;
 
-            var updatedIds = entity.PgsDeliverables?.Select(d => d.Id).ToList() ?? new();
-            var toRemove = existing.PgsDeliverables!.Where(d => !updatedIds.Contains(d.Id)).ToList();
-
-            if (toRemove.Any())
+            if (isNew)
             {
-                // Save to history
-                var deliverableHistoryEntries = toRemove.Select(d => new PgsDeliverableHistory
-                {
-                    Id = 0,
-                    PgsId = existing.Id,
-                    DeliverableId = d.Id,
-                    DeliverableTitle = d.DeliverableName,
-                    Description = d.KraDescription,
-                    KraId = d.KraId,
-                    KraName = d.Kra?.Name,
-                    RemovedBy = "System",
-                    RemovedAt = DateTime.UtcNow
-                }).ToList();
-
-                _dbContext.PgsDeliverableHistory.AddRange(deliverableHistoryEntries);
-                _dbContext.Deliverable.RemoveRange(toRemove);
+                _dbContext.PerformanceGovernanceSystem.Add(entity);
             }
-
-            var anyDisapproved = entity.PgsDeliverables?.Any(d => d.IsDisapproved) == true;
-            if (anyDisapproved)
+            else
             {
-                if (existing.PgsSignatories?.Any() == true)
-                    _dbContext.PgsSignatory.RemoveRange(existing.PgsSignatories);
+                var existing = await _dbContext.PerformanceGovernanceSystem
+                    .Include(p => p.PgsDeliverables)
+                    .Include(p => p.PgsSignatories)
+                    .Include(p => p.PgsReadinessRating)
+                    .FirstOrDefaultAsync(p => p.Id == entity.Id, cancellationToken)
+                    ?? throw new InvalidOperationException("PGS record not found.");
 
-                perfomanceGovernanceSystemDto.PgsSignatories = new List<PgsSignatoryDto>();
-                entity.PgsSignatories = new List<PgsSignatory>();
+                var updatedIds = entity.PgsDeliverables?.Select(d => d.Id).ToList() ?? new();
+                var toRemove = existing.PgsDeliverables!.Where(d => !updatedIds.Contains(d.Id)).ToList();
 
-                var templates = await _dbContext.PgsSignatoryTemplate
-                    .Where(t => t.OfficeId == office.OfficeTypeId)
-                    .OrderBy(t => t.OrderLevel)
-                    .ToListAsync(cancellationToken);
-
-                var firstTemplate = templates.FirstOrDefault(t => t.OrderLevel == 1);
-                if (firstTemplate != null)
+                if (toRemove.Any())
                 {
-                    var newSignatoryDto = new PgsSignatoryDto
+                    // Save to history
+                    var deliverableHistoryEntries = toRemove.Select(d => new PgsDeliverableHistory
                     {
                         Id = 0,
-                        PgsId = entity.Id,
-                        PgsSignatoryTemplateId = firstTemplate.Id,
-                        SignatoryId = firstTemplate.DefaultSignatoryId!,
-                        Status = firstTemplate.Status,
-                        Label = firstTemplate.SignatoryLabel,
-                        OrderLevel = firstTemplate.OrderLevel,
-                        IsNextStatus = true,
-                        DateSigned = default
-                    };
+                        PgsId = existing.Id,
+                        DeliverableId = d.Id,
+                        DeliverableTitle = d.DeliverableName,
+                        Description = d.KraDescription,
+                        KraId = d.KraId,
+                        KraName = d.Kra?.Name,
+                        RemovedBy = "System",
+                        RemovedAt = DateTime.UtcNow
+                    }).ToList();
 
-                    perfomanceGovernanceSystemDto.PgsSignatories.Add(newSignatoryDto);
-                    entity.PgsSignatories.Add(newSignatoryDto.ToEntity());
+                    _dbContext.PgsDeliverableHistory.AddRange(deliverableHistoryEntries);
+                    _dbContext.Deliverable.RemoveRange(toRemove);
                 }
+
+                // Rebuild signatories if any deliverables are disapproved
+                var anyDisapproved = entity.PgsDeliverables?.Any(d => d.IsDisapproved) == true;
+                if (anyDisapproved)
+                {
+                    if (existing.PgsSignatories?.Any() == true)
+                        _dbContext.PgsSignatory.RemoveRange(existing.PgsSignatories);
+
+                    perfomanceGovernanceSystemDto.PgsSignatories = new List<PgsSignatoryDto>();
+                    entity.PgsSignatories = new List<PgsSignatory>();
+
+                    var templates = await _dbContext.PgsSignatoryTemplate
+                        .Where(t => t.OfficeId == office.OfficeTypeId)
+                        .OrderBy(t => t.OrderLevel)
+                        .ToListAsync(cancellationToken);
+
+                    var firstTemplate = templates.FirstOrDefault(t => t.OrderLevel == 1);
+                    if (firstTemplate != null)
+                    {
+                        var newSignatoryDto = new PgsSignatoryDto
+                        {
+                            Id = 0,
+                            PgsId = entity.Id,
+                            PgsSignatoryTemplateId = firstTemplate.Id,
+                            SignatoryId = firstTemplate.DefaultSignatoryId!,
+                            Status = firstTemplate.Status,
+                            Label = firstTemplate.SignatoryLabel,
+                            OrderLevel = firstTemplate.OrderLevel,
+                            IsNextStatus = true,
+                            DateSigned = default
+                        };
+
+                        perfomanceGovernanceSystemDto.PgsSignatories.Add(newSignatoryDto);
+                        entity.PgsSignatories.Add(newSignatoryDto.ToEntity());
+                    }
+                }
+
+                // Update main entity scalar fields
+                _dbContext.Entry(existing).CurrentValues.SetValues(entity);
+                existing.OfficeId = office.Id;
+
+                // Update readiness rating if present
+                if (existing.PgsReadinessRating != null && entity.PgsReadinessRating != null)
+                {
+                    existing.PgsReadinessRating.CompetenceToDeliver = entity.PgsReadinessRating.CompetenceToDeliver;
+                    existing.PgsReadinessRating.ConfidenceToDeliver = entity.PgsReadinessRating.ConfidenceToDeliver;
+                    existing.PgsReadinessRating.ResourceAvailability = entity.PgsReadinessRating.ResourceAvailability;
+                }
+
+                // Replace deliverables
+                existing.PgsDeliverables!.Clear();
+                foreach (var d in entity.PgsDeliverables ?? new())
+                    existing.PgsDeliverables.Add(d);
+
+                // Replace signatories
+                existing.PgsSignatories!.Clear();
+                foreach (var s in entity.PgsSignatories ?? new List<PgsSignatory>())
+                    existing.PgsSignatories.Add(s);
             }
-
-            _dbContext.Entry(existing).CurrentValues.SetValues(entity);
-            existing.OfficeId = office.Id;
-
-            if (existing.PgsReadinessRating != null && entity.PgsReadinessRating != null)
-            {
-                existing.PgsReadinessRating.CompetenceToDeliver = entity.PgsReadinessRating.CompetenceToDeliver;
-                existing.PgsReadinessRating.ConfidenceToDeliver = entity.PgsReadinessRating.ConfidenceToDeliver;
-                existing.PgsReadinessRating.ResourceAvailability = entity.PgsReadinessRating.ResourceAvailability;
-            }
-
-            existing.PgsDeliverables!.Clear();
-            foreach (var d in entity.PgsDeliverables ?? new List<PgsDeliverable>())
-                existing.PgsDeliverables.Add(d);
-
-            existing.PgsSignatories!.Clear();
-            foreach (var s in entity.PgsSignatories ?? new List<PgsSignatory>())
-                existing.PgsSignatories.Add(s);
 
             await _dbContext.SaveChangesAsync(cancellationToken);
-
-            return new PerfomanceGovernanceSystemDto(existing);
+            return new PerfomanceGovernanceSystemDto(entity);
         }
 
         // Save or Update Generic Method
