@@ -19,12 +19,13 @@ namespace IMIS.Application.PgsDeliverableHistoryModule
 
         public PgsDeliverableHistoryDto(PgsDeliverableHistory entity)
         {
-            Id = entity.Id;
+            Id = entity.Id; 
             PgsId = entity.PgsId;
             DeliverableId = entity.DeliverableId;
             DeliverableTitle = entity.DeliverableTitle;
-            Description = entity.DeliverableTitle;
+            Description = entity.Description;
             KraId = entity.KraId;
+            KraName = entity.KraName;
             RemovedBy = entity.RemovedBy;
             RemovedAt = entity.RemovedAt;
         }
@@ -38,8 +39,9 @@ namespace IMIS.Application.PgsDeliverableHistoryModule
                 PgsId = PgsId,
                 DeliverableId = DeliverableId,
                 DeliverableTitle = DeliverableTitle,
-                Description = DeliverableTitle,
+                Description = Description,
                 KraId = KraId,
+                KraName = KraName,
                 RemovedBy = RemovedBy,
                 RemovedAt = RemovedAt,
             };

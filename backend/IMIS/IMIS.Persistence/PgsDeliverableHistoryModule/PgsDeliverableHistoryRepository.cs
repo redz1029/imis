@@ -10,6 +10,13 @@ namespace IMIS.Persistence.PgsDeliverableHistoryModule
         public PgsDeliverableHistoryRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+
+        public async Task<PgsDeliverableHistory?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            return await _dbContext.PgsDeliverableHistory
+           .FirstOrDefaultAsync(p => p.PgsId == id && !p.IsDeleted, cancellationToken);
+        }
+
         public new async Task<PgsDeliverableHistory> SaveOrUpdateAsync(PgsDeliverableHistory pgsDeliverableHistory, CancellationToken cancellationToken)
         {
             if (pgsDeliverableHistory == null) throw new ArgumentNullException(nameof(pgsDeliverableHistory));

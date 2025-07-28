@@ -8,6 +8,7 @@ using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -22,10 +23,11 @@ namespace IMIS.Persistence.PgsModule
         private readonly UserManager<User> _userManager;
         private readonly IPgsSignatoryTemplateRepository _signatoryTemplateRepository;
         private readonly ImisDbContext _dbContext;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
         public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, 
             IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, 
-            IKeyResultAreaRepository kraRepository, UserManager<User> userManager, IPgsSignatoryTemplateRepository signatoryTemplateRepository, ImisDbContext dbContext)
+            IKeyResultAreaRepository kraRepository, UserManager<User> userManager, IPgsSignatoryTemplateRepository signatoryTemplateRepository, ImisDbContext dbContext, IHttpContextAccessor httpContextAccessor)
         {
             _repository = repository;
             _officeRepository = officeRepository;
@@ -34,6 +36,7 @@ namespace IMIS.Persistence.PgsModule
             _userManager = userManager;
             _signatoryTemplateRepository = signatoryTemplateRepository;
             _dbContext = dbContext;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public async Task<List<PerfomanceGovernanceSystemDto>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken)
@@ -392,7 +395,7 @@ namespace IMIS.Persistence.PgsModule
                 var toRemove = existing.PgsDeliverables!.Where(d => !updatedIds.Contains(d.Id)).ToList();
 
                 if (toRemove.Any())
-                {
+                {                   
                     // Save to history
                     var deliverableHistoryEntries = toRemove.Select(d => new PgsDeliverableHistory
                     {

@@ -1,5 +1,6 @@
 ﻿using Base.Primitives;
 using IMIS.Application.PgsDeliverableHistoryModule;
+using IMIS.Application.PgsModule;
 
 namespace IMIS.Persistence.PgsDeliverableHistoryModule
 {
@@ -9,6 +10,14 @@ namespace IMIS.Persistence.PgsDeliverableHistoryModule
         public PgsDeliverableHistoryService(IPgsDeliverableHistoryRepository repository)
         {
             _repository = repository;           
+        }
+        public async Task<PgsDeliverableHistoryDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var pgs = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return new PgsDeliverableHistoryDto(pgs!)
+            {
+                Id = pgs!.Id 
+            };
         }
         public async Task<PgsDeliverableHistoryDto> SaveOrUpdateAsync(PgsDeliverableHistoryDto pgsDeliverableHistoryDto, CancellationToken cancellationToken)
         {
