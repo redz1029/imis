@@ -717,11 +717,18 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Filter by Period',
-                            style: TextStyle(fontSize: 12, color: grey),
+                          Text(
+                            'Filter by',
+                            style: TextStyle(color: Colors.grey),
                           ),
-                          gap2,
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
@@ -770,6 +777,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                                   .toList();
                             },
                             child: FilterButton(
+                              floatingLabel: 'by Period',
                               label:
                                   selectedPeriod == null
                                       ? 'All Period'
@@ -785,11 +793,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Filter by Office',
-                            style: TextStyle(fontSize: 12, color: grey),
-                          ),
-                          gap2,
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
@@ -905,6 +908,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                               ];
                             },
                             child: FilterButton(
+                              floatingLabel: 'by Office',
                               label:
                                   _selectedOfficeId == null
                                       ? 'All Offices'
@@ -924,11 +928,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Filter by KRA',
-                            style: TextStyle(fontSize: 12, color: grey),
-                          ),
-                          gap2,
                           PopupMenuButton<int>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
@@ -954,6 +953,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                               }).toList();
                             },
                             child: FilterButton(
+                              floatingLabel: 'by KRA',
                               label:
                                   selectedKra == null
                                       ? 'All KRA'
@@ -972,11 +972,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Filter by Type',
-                            style: TextStyle(fontSize: 12, color: grey),
-                          ),
-                          gap2,
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
@@ -1009,6 +1004,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                               ];
                             },
                             child: FilterButton(
+                              floatingLabel: 'by Type',
                               label:
                                   isDirect == null
                                       ? 'All Types'
@@ -1026,19 +1022,15 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Filter by Score',
-                            style: TextStyle(fontSize: 12, color: grey),
-                          ),
-                          gap2,
                           GestureDetector(
                             key: _menuScoreRangeKey,
                             onTap: () => _showScoreRangeMenu(context),
                             child: FilterButton(
+                              floatingLabel: 'by Score',
                               label:
                                   (scoreRangeFromController.text.isEmpty ||
                                           scoreRangeToController.text.isEmpty)
-                                      ? 'Filter by Score Range'
+                                      ? 'Score Range'
                                       : 'From ${scoreRangeFromController.text} to ${scoreRangeToController.text}',
                             ),
                           ),
@@ -1050,19 +1042,15 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Filter by Page',
-                            style: TextStyle(fontSize: 12, color: grey),
-                          ),
-                          gap2,
                           GestureDetector(
                             key: _menuPageKey,
                             onTap: () => _showPageSizeMenu(context),
                             child: FilterButton(
+                              floatingLabel: 'by Page',
                               label:
                                   (pageController.text.isEmpty ||
                                           pageSizeController.text.isEmpty)
-                                      ? 'Filter by Page'
+                                      ? 'Page'
                                       : 'From ${pageController.text} to ${pageSizeController.text}',
                             ),
                           ),

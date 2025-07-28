@@ -1158,11 +1158,18 @@ class _PerformanceGovernanceSystemPageState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Filter by Office',
-                            style: TextStyle(fontSize: 12, color: grey),
+                          Text(
+                            'Filter by',
+                            style: TextStyle(color: Colors.grey),
                           ),
-                          gap2,
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
@@ -1278,6 +1285,7 @@ class _PerformanceGovernanceSystemPageState
                               ];
                             },
                             child: FilterButton(
+                              floatingLabel: 'by Office',
                               label:
                                   _selectedOfficeId == null
                                       ? 'All Offices'
@@ -1298,11 +1306,6 @@ class _PerformanceGovernanceSystemPageState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Filter by Start Date',
-                            style: TextStyle(fontSize: 12, color: grey),
-                          ),
-                          gap2,
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
@@ -1337,6 +1340,7 @@ class _PerformanceGovernanceSystemPageState
                               }).toList();
                             },
                             child: FilterButton(
+                              floatingLabel: 'by Start Date',
                               label:
                                   selectedStartDateText ?? 'Select Start Date',
                             ),
@@ -1350,11 +1354,6 @@ class _PerformanceGovernanceSystemPageState
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Filter by End Date',
-                            style: TextStyle(fontSize: 12, color: grey),
-                          ),
-                          gap2,
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
@@ -1388,6 +1387,7 @@ class _PerformanceGovernanceSystemPageState
                               }).toList();
                             },
                             child: FilterButton(
+                              floatingLabel: 'by End Date',
                               label: selectedEndDateText ?? 'Select End Date',
                             ),
                           ),
