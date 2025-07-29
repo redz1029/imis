@@ -5,7 +5,7 @@ namespace IMIS.Application.PgsDeliverableHistoryModule
 {
     public interface IPgsDeliverableHistoryRepository : IRepository<PgsDeliverableHistory, long>
     {
-        Task<PgsDeliverableHistory?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<List<PgsDeliverableHistory>> GetByIdAsync(int id, CancellationToken cancellationToken);
         new Task<PgsDeliverableHistory> SaveOrUpdateAsync(PgsDeliverableHistory pgsDeliverableHistory, CancellationToken cancellationToken);
     }
 }

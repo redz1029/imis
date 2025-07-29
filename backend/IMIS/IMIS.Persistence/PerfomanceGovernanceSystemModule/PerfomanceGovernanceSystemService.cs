@@ -365,8 +365,7 @@ namespace IMIS.Persistence.PgsModule
             entity.Office = office;
             entity.OfficeId = office.Id;
             entity.PgsPeriod = pgsPeriod;
-
-            // Resolve KRA references
+           
             if (entity.PgsDeliverables != null)
             {
                 foreach (var d in entity.PgsDeliverables)
@@ -402,10 +401,16 @@ namespace IMIS.Persistence.PgsModule
                         Id = 0,
                         PgsId = existing.Id,
                         DeliverableId = d.Id,
-                        DeliverableTitle = d.DeliverableName,
-                        Description = d.KraDescription,
-                        KraId = d.KraId,
-                        KraName = d.Kra?.Name,
+                        DeliverableName = d.DeliverableName,
+                        KraDescription = d.KraDescription,
+                        KraId = d.KraId,     
+                        DisapprovalRemarks = d.DisapprovalRemarks,
+                        IsDisapproved = d.IsDisapproved,
+                        IsDirect = d.IsDirect,
+                        PercentDeliverables = d.PercentDeliverables,
+                        ByWhen = d.ByWhen,  
+                        Status = d.Status,  
+                        Remarks = d.Remarks,
                         RemovedBy = "System",
                         RemovedAt = DateTime.UtcNow
                     }).ToList();
