@@ -6,10 +6,16 @@ namespace IMIS.Domain
     {
         public long PgsId { get; set; }
         public long DeliverableId { get; set; }
-        public string? DeliverableTitle { get; set; }
-        public string? Description { get; set; }
-        public long? KraId { get; set; }    
-        public string? KraName { get; set; }
+        public string? DeliverableName { get; set; }
+        public string? KraDescription { get; set; }
+        public long? KraId { get; set; }   
+        public string? DisapprovalRemarks { get; set; }
+        public bool IsDisapproved { get; set; }
+        public required bool IsDirect { get; set; }
+        public required double PercentDeliverables { get; set; }
+        public required DateTime ByWhen { get; set; }
+        public required PgsStatus Status { get; set; }
+        public string? Remarks { get; set; }
         public string? RemovedBy { get; set; }
         public DateTime RemovedAt { get; set; } = DateTime.UtcNow;
     }
