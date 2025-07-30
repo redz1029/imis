@@ -64,6 +64,13 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
   bool? isDirect;
 
+  bool isMenuOpenOffice = false;
+  bool isMenuOpenPeriod = false;
+  bool isMenuOpenKra = false;
+  bool isMenuOpenType = false;
+  bool isMenuScoreRange = false;
+  bool isMenuOpenPage = false;
+
   final dio = Dio();
 
   @override
@@ -732,6 +739,16 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
+                            onCanceled: () {
+                              setState(() {
+                                isMenuOpenPeriod = false;
+                              });
+                            },
+                            onOpened: () {
+                              setState(() {
+                                isMenuOpenPeriod = true;
+                              });
+                            },
                             onSelected: (String value) {
                               setState(() {
                                 selectedPeriod =
@@ -751,6 +768,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                                       );
                                   selectedPeriodText =
                                       "${selected['startDate']} - ${selected['endDate']}";
+                                  isMenuOpenPeriod = true;
                                 }
                                 fetchFilteredPgsList();
                               });
@@ -777,11 +795,11 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                                   .toList();
                             },
                             child: FilterButton(
-                              floatingLabel: 'by Period',
                               label:
                                   selectedPeriod == null
                                       ? 'All Period'
                                       : selectedPeriodText ?? 'Period',
+                              isActive: isMenuOpenPeriod,
                             ),
                           ),
                         ],
@@ -796,10 +814,21 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
+                            onCanceled: () {
+                              setState(() {
+                                isMenuOpenOffice = false;
+                              });
+                            },
+                            onOpened: () {
+                              setState(() {
+                                isMenuOpenOffice = true;
+                              });
+                            },
                             onSelected: (String value) {
                               setState(() {
                                 _selectedOfficeId =
                                     value.isEmpty ? null : value;
+                                isMenuOpenOffice = false;
                                 fetchFilteredPgsList();
                               });
                             },
@@ -908,7 +937,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                               ];
                             },
                             child: FilterButton(
-                              floatingLabel: 'by Office',
                               label:
                                   _selectedOfficeId == null
                                       ? 'All Offices'
@@ -918,6 +946,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                                             _selectedOfficeId,
                                         orElse: () => {'name': 'Office'},
                                       )['name'],
+                              isActive: isMenuOpenOffice,
                             ),
                           ),
                         ],
@@ -931,9 +960,22 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                           PopupMenuButton<int>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
+                            onCanceled: () {
+                              setState(() {
+                                isMenuOpenKra = false;
+                              });
+                            },
+                            onOpened: () {
+                              setState(() {
+                                isMenuOpenKra = true;
+                              });
+                            },
+
                             onSelected: (int value) {
                               setState(() {
                                 selectedKra = (value == -1) ? null : value;
+                                isMenuOpenKra = false;
+
                                 fetchFilteredPgsList();
                               });
                             },
@@ -953,7 +995,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                               }).toList();
                             },
                             child: FilterButton(
-                              floatingLabel: 'by KRA',
                               label:
                                   selectedKra == null
                                       ? 'All KRA'
@@ -961,6 +1002,7 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                                         (kra) => kra['id'] == selectedKra,
                                         orElse: () => {'name': 'Unknown'},
                                       )['name'],
+                              isActive: isMenuOpenKra,
                             ),
                           ),
                         ],
@@ -975,6 +1017,16 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
+                            onCanceled: () {
+                              setState(() {
+                                isMenuOpenType = false;
+                              });
+                            },
+                            onOpened: () {
+                              setState(() {
+                                isMenuOpenType = true;
+                              });
+                            },
                             onSelected: (String value) {
                               setState(() {
                                 if (value.isEmpty) {
@@ -984,6 +1036,8 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                                 } else {
                                   isDirect = false;
                                 }
+                                isMenuOpenType = false;
+
                                 fetchFilteredPgsList();
                               });
                             },
@@ -1004,13 +1058,13 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                               ];
                             },
                             child: FilterButton(
-                              floatingLabel: 'by Type',
                               label:
                                   isDirect == null
                                       ? 'All Types'
                                       : isDirect!
                                       ? 'Direct'
                                       : 'Indirect',
+                              isActive: isMenuOpenType,
                             ),
                           ),
                         ],
@@ -1026,12 +1080,12 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                             key: _menuScoreRangeKey,
                             onTap: () => _showScoreRangeMenu(context),
                             child: FilterButton(
-                              floatingLabel: 'by Score',
                               label:
                                   (scoreRangeFromController.text.isEmpty ||
                                           scoreRangeToController.text.isEmpty)
                                       ? 'Score Range'
                                       : 'From ${scoreRangeFromController.text} to ${scoreRangeToController.text}',
+                              isActive: isMenuScoreRange,
                             ),
                           ),
                         ],
@@ -1046,7 +1100,6 @@ class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                             key: _menuPageKey,
                             onTap: () => _showPageSizeMenu(context),
                             child: FilterButton(
-                              floatingLabel: 'by Page',
                               label:
                                   (pageController.text.isEmpty ||
                                           pageSizeController.text.isEmpty)
