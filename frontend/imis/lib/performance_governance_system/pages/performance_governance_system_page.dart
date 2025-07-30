@@ -1,4 +1,5 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
+
 import 'dart:io';
 // ignore: avoid_web_libraries_in_flutter,
 import 'dart:html' as html;
@@ -32,6 +33,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/http_util.dart';
+import '../models/pgs_deliverable_history.dart';
 
 class PerformanceGovernanceSystemPage extends StatefulWidget {
   const PerformanceGovernanceSystemPage({super.key});
@@ -54,7 +56,7 @@ class _PerformanceGovernanceSystemPageState
   late Future<List<Map<String, dynamic>>> deliverables;
   Map<int, TextEditingController> remarksControllers = {};
   Map<int, TextEditingController> percentageControllers = {};
-
+  String? pgsIdHistory;
   Map<int, PgsStatus> selectedStatus = {};
   Map<int, String> selectedValues = {};
   Map<int, String> selectedByWhen = {};
@@ -99,6 +101,9 @@ class _PerformanceGovernanceSystemPageState
   List<Map<String, dynamic>> periodList = [];
   List<Map<String, dynamic>> filteredListPeriod = [];
   List<PgsDeliverables> deliverablesList = [];
+
+  String? displayText;
+  List<PgsDeliverableHistory> deliverablesListHistory = [];
   Map<int, PgsDeliverables> deliverablesMap = {};
 
   int? selectedPeriod;
@@ -113,6 +118,10 @@ class _PerformanceGovernanceSystemPageState
   final int _pageSize = 30;
   int _totalCount = 0;
   bool _isLoading = false;
+
+  bool isMenuOpenOffice = false;
+  bool isMenuOpenStartDate = false;
+  bool isMenuOpenEndDate = false;
 
   List<Map<String, dynamic>> filteredListOffice = [];
   List<Map<String, dynamic>> officeList = [];
@@ -451,6 +460,78 @@ class _PerformanceGovernanceSystemPageState
     }
 
     return deliverablesList;
+  }
+
+  // Future<List<PgsDeliverableHistory>> fetchDeliverablesHistory({
+  //   String? pgsId,
+  // }) async {
+  //   List<PgsDeliverableHistory> deliverableHistory = [];
+  //   final id = pgsId ?? '450295';
+  //   final url = "${ApiEndpoint().pgsDeliverableHistory}/$id";
+
+  //   try {
+  //     final response = await AuthenticatedRequest.get(dio, url);
+
+  //     if (response.statusCode == 200) {
+  //       final data = response.data;
+  //       final pgsDeliverableHistoryList = data is List ? data : [data];
+
+  //       for (var pgsJson in pgsDeliverableHistoryList) {
+  //         final deliverablesHistory =
+  //             (pgsJson['pgsDeliverableHistory'] as List)
+  //                 .map((d) => PgsDeliverableHistory.fromJson(d))
+  //                 .toList();
+
+  //         deliverableHistory.addAll(deliverablesHistory);
+  //       }
+  //     } else {
+  //       debugPrint("Failed to fetch deliverables");
+  //     }
+  //   } on DioException {
+  //     debugPrint("Dio error");
+  //   } catch (e) {
+  //     debugPrint("Unexpected error: $e");
+  //   }
+
+  //   return deliverableHistory;
+  // }
+
+  Future<List<PgsDeliverableHistory>> fetchDeliverablesHistory({
+    String? pgsId,
+  }) async {
+    final url = "${ApiEndpoint().pgsDeliverableHistory}/$pgsId";
+    final List<PgsDeliverableHistory> deliverablesListHistory =
+        []; // Initialize here
+
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        if (data is List) {
+          deliverablesListHistory.addAll(
+            data
+                .map((json) => PgsDeliverableHistory.fromJson(json))
+                .where((d) => d.id != null)
+                .toList(),
+          );
+        } else if (data is Map<String, dynamic>) {
+          final deliverable = PgsDeliverableHistory.fromJson(data);
+          if (deliverable.id != null) {
+            deliverablesListHistory.add(deliverable);
+          }
+        }
+      } else {
+        debugPrint("Failed to fetch deliverables: ${response.statusCode}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio error: ${e.message}");
+    } catch (e) {
+      debugPrint("Unexpected error: $e");
+    }
+
+    return deliverablesListHistory;
   }
 
   Future<void> fetchOffice() async {
@@ -1173,11 +1254,22 @@ class _PerformanceGovernanceSystemPageState
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
+                            onCanceled: () {
+                              setState(() {
+                                isMenuOpenOffice = false;
+                              });
+                            },
+                            onOpened: () {
+                              setState(() {
+                                isMenuOpenOffice = true;
+                              });
+                            },
                             onSelected: (String value) {
                               setState(() {
                                 _selectedOfficeId =
                                     value.isEmpty ? null : value;
                                 fetchPGSPeriods();
+                                isMenuOpenOffice = false;
                               });
                             },
                             itemBuilder: (BuildContext context) {
@@ -1285,7 +1377,6 @@ class _PerformanceGovernanceSystemPageState
                               ];
                             },
                             child: FilterButton(
-                              floatingLabel: 'by Office',
                               label:
                                   _selectedOfficeId == null
                                       ? 'All Offices'
@@ -1295,12 +1386,59 @@ class _PerformanceGovernanceSystemPageState
                                             _selectedOfficeId,
                                         orElse: () => {'name': 'Office'},
                                       )['name'],
+                              isActive: isMenuOpenOffice,
                             ),
                           ),
                         ],
                       ),
                     ),
 
+                    // Padding(
+                    //   padding: const EdgeInsets.only(right: 8.0),
+                    //   child: Column(
+                    //     crossAxisAlignment: CrossAxisAlignment.start,
+                    //     children: [
+                    //       PopupMenuButton<String>(
+                    //         color: mainBgColor,
+                    //         offset: const Offset(0, 30),
+                    //         onSelected: (String selectedDate) {
+                    //           setState(() {
+                    //             selectedStartPeriod =
+                    //                 selectedDate.isEmpty ? null : selectedDate;
+                    //             selectedStartDateText =
+                    //                 selectedStartPeriod ?? 'All Start Date';
+                    //           });
+                    //           fetchPgsFilter();
+                    //         },
+
+                    //         itemBuilder: (BuildContext context) {
+                    //           final periodOptions = [
+                    //             {'date': '', 'displayText': 'All Start Date'},
+                    //             ...filteredListPeriod.map(
+                    //               (period) => {
+                    //                 'date': period['startDate'],
+                    //                 'displayText': period['startDate'],
+                    //               },
+                    //             ),
+                    //           ];
+
+                    //           return periodOptions.map<PopupMenuItem<String>>((
+                    //             option,
+                    //           ) {
+                    //             return PopupMenuItem<String>(
+                    //               value: option['date'],
+                    //               child: Text(option['displayText']!),
+                    //             );
+                    //           }).toList();
+                    //         },
+                    //         child: FilterButton(
+                    //           label:
+                    //               selectedStartDateText ?? 'Select Start Date',
+                    //         ),
+                    //       ),
+                    //     ],
+                    //   ),
+                    // ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Column(
@@ -1309,16 +1447,26 @@ class _PerformanceGovernanceSystemPageState
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
+                            onCanceled: () {
+                              setState(() {
+                                isMenuOpenStartDate = false;
+                              });
+                            },
+                            onOpened: () {
+                              setState(() {
+                                isMenuOpenStartDate = true;
+                              });
+                            },
                             onSelected: (String selectedDate) {
                               setState(() {
                                 selectedStartPeriod =
                                     selectedDate.isEmpty ? null : selectedDate;
                                 selectedStartDateText =
                                     selectedStartPeriod ?? 'All Start Date';
+                                isMenuOpenStartDate = false;
                               });
                               fetchPgsFilter();
                             },
-
                             itemBuilder: (BuildContext context) {
                               final periodOptions = [
                                 {'date': '', 'displayText': 'All Start Date'},
@@ -1340,15 +1488,14 @@ class _PerformanceGovernanceSystemPageState
                               }).toList();
                             },
                             child: FilterButton(
-                              floatingLabel: 'by Start Date',
                               label:
                                   selectedStartDateText ?? 'Select Start Date',
+                              isActive: isMenuOpenStartDate,
                             ),
                           ),
                         ],
                       ),
                     ),
-
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Column(
@@ -1357,12 +1504,23 @@ class _PerformanceGovernanceSystemPageState
                           PopupMenuButton<String>(
                             color: mainBgColor,
                             offset: const Offset(0, 30),
+                            onCanceled: () {
+                              setState(() {
+                                isMenuOpenEndDate = false;
+                              });
+                            },
+                            onOpened: () {
+                              setState(() {
+                                isMenuOpenEndDate = true;
+                              });
+                            },
                             onSelected: (String selectedDate) {
                               setState(() {
                                 selectedEndDate =
                                     selectedDate.isEmpty ? null : selectedDate;
                                 selectedEndDateText =
                                     selectedEndDate ?? 'All End Date';
+                                isMenuOpenEndDate = false;
                               });
                               fetchPgsFilter();
                             },
@@ -1387,8 +1545,8 @@ class _PerformanceGovernanceSystemPageState
                               }).toList();
                             },
                             child: FilterButton(
-                              floatingLabel: 'by End Date',
                               label: selectedEndDateText ?? 'Select End Date',
+                              isActive: isMenuOpenEndDate,
                             ),
                           ),
                         ],
@@ -1405,6 +1563,7 @@ class _PerformanceGovernanceSystemPageState
                       ),
                     ),
                     onPressed: () async {
+                      clearAllSelections();
                       selectedOffice = await AuthUtil.fetchSelectedOfficeId();
 
                       if (selectedOffice == null || selectedOffice!.isEmpty) {
@@ -1421,6 +1580,10 @@ class _PerformanceGovernanceSystemPageState
                         await _loadOfficeName();
                         showFormDialog();
                       }
+
+                      setState(() {
+                        pgsIdHistory = null;
+                      });
                     },
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -1615,6 +1778,23 @@ class _PerformanceGovernanceSystemPageState
                                                   IconButton(
                                                     icon: Icon(Icons.edit),
                                                     onPressed: () async {
+                                                      final id =
+                                                          pgsgovernancesystem['id'];
+                                                      if (id != null) {
+                                                        setState(() {
+                                                          pgsIdHistory = id;
+                                                        });
+                                                      } else {
+                                                        ScaffoldMessenger.of(
+                                                          context,
+                                                        ).showSnackBar(
+                                                          SnackBar(
+                                                            content: Text(
+                                                              'Invalid PGS ID',
+                                                            ),
+                                                          ),
+                                                        );
+                                                      }
                                                       await AuthUtil.saveSelectedOfficeId(
                                                         pgsgovernancesystem['officeid']
                                                             .toString(),
@@ -1626,6 +1806,15 @@ class _PerformanceGovernanceSystemPageState
                                                       List<PgsDeliverables>
                                                       deliverables =
                                                           await fetchDeliverables(
+                                                            pgsId:
+                                                                pgsgovernancesystem['id'],
+                                                          );
+
+                                                      List<
+                                                        PgsDeliverableHistory
+                                                      >
+                                                      pgsDeliverableHistory =
+                                                          await fetchDeliverablesHistory(
                                                             pgsId:
                                                                 pgsgovernancesystem['id'],
                                                           );
@@ -1669,9 +1858,15 @@ class _PerformanceGovernanceSystemPageState
                                                             pgsgovernancesystem['pgsStatus'],
                                                         remarks:
                                                             pgsgovernancesystem['remarks'],
+                                                        pgsDeliverableHistroy:
+                                                            pgsDeliverableHistory,
                                                       );
 
                                                       fetchPgsList();
+                                                      fetchDeliverablesHistory(
+                                                        pgsId:
+                                                            pgsgovernancesystem['id'],
+                                                      );
                                                       fetchSignatoryList(
                                                         pgsId:
                                                             pgsgovernancesystem['id'],
@@ -1962,6 +2157,7 @@ class _PerformanceGovernanceSystemPageState
     List<dynamic>? deliverabledIds,
     List<PgsDeliverables>? deliverables,
     List<PgsSignatory>? signatories,
+    List<PgsDeliverableHistory>? pgsDeliverableHistroy,
     String? pgsstatus,
     String? pgsId,
     String? remarks,
@@ -2097,6 +2293,9 @@ class _PerformanceGovernanceSystemPageState
                         await prefs.remove('selectedOfficeId');
                         await prefs.remove('selectedOfficeName');
                         fetchPgsList();
+                        setState(() {
+                          pgsIdHistory = null;
+                        });
                       },
                     ),
                   ),
@@ -2106,7 +2305,7 @@ class _PerformanceGovernanceSystemPageState
                       width: MediaQuery.of(context).size.width * 0.9,
                       height: MediaQuery.of(context).size.height * 0.8,
                       child: DefaultTabController(
-                        length: 3, // Number of tabs
+                        length: 4, // Number of tabs
                         child: Column(
                           children: [
                             // Header Row
@@ -2218,6 +2417,9 @@ class _PerformanceGovernanceSystemPageState
                                 Tab(
                                   text: "PGS Deliverables Status",
                                 ), // Tab Name 3
+                                Tab(
+                                  text: "PGS Deliverables History",
+                                ), // Tab Name 4
                               ],
                             ),
 
@@ -2495,75 +2697,141 @@ class _PerformanceGovernanceSystemPageState
                                       ],
                                     ),
                                   ),
+
+                                  pgsIdHistory != null
+                                      ? FutureBuilder<
+                                        List<PgsDeliverableHistory>
+                                      >(
+                                        future: fetchDeliverablesHistory(
+                                          pgsId: pgsIdHistory,
+                                        ),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.connectionState ==
+                                              ConnectionState.waiting) {
+                                            return const Center(
+                                              child:
+                                                  CircularProgressIndicator(),
+                                            );
+                                          }
+                                          if (snapshot.hasError) {
+                                            return Text(
+                                              'Error: ${snapshot.error}',
+                                            );
+                                          }
+                                          if (!snapshot.hasData ||
+                                              snapshot.data!.isEmpty) {
+                                            return const Text(
+                                              'No deliverables history found',
+                                            );
+                                          }
+                                          return Table(
+                                            border: TableBorder.all(
+                                              color: Colors.black,
+                                              width: 1.0,
+                                            ),
+                                            defaultVerticalAlignment:
+                                                TableCellVerticalAlignment
+                                                    .middle,
+                                            columnWidths: const {
+                                              0: FlexColumnWidth(0.7),
+                                              1: FlexColumnWidth(0.7),
+                                              2: FlexColumnWidth(0.7),
+                                              3: FlexColumnWidth(0.7),
+                                              4: FlexColumnWidth(0.7),
+                                              5: FlexColumnWidth(0.7),
+                                              6: FlexColumnWidth(0.7),
+                                            },
+                                            children: [
+                                              TableRow(
+                                                children: [
+                                                  _buildTableHeaderCell('KRA'),
+                                                  _buildTableHeaderCell(
+                                                    'DIRECT',
+                                                  ),
+                                                  _buildTableHeaderCell(
+                                                    'DELIVERABLES',
+                                                  ),
+                                                  _buildTableHeaderCell(
+                                                    'BY WHEN',
+                                                  ),
+                                                  _buildTableHeaderCell(
+                                                    'DISAPPROVAL REMARKS',
+                                                  ),
+                                                  _buildTableHeaderCell(
+                                                    'REMOVE AT',
+                                                  ),
+                                                  _buildTableHeaderCell(
+                                                    'ACTION',
+                                                  ),
+                                                ],
+                                              ),
+                                              ...snapshot.data!.map(
+                                                (deliverable) => TableRow(
+                                                  children: [
+                                                    _buildKraHistory(
+                                                      options.firstWhere(
+                                                        (option) =>
+                                                            option['id'] ==
+                                                            deliverable.kraId,
+                                                        orElse:
+                                                            () => {
+                                                              'id':
+                                                                  deliverable
+                                                                      .kraId,
+                                                              'name': 'Unknown',
+                                                            },
+                                                      )['name'],
+                                                      deliverable
+                                                              .kraDescription ??
+                                                          'No KRA description',
+                                                    ),
+                                                    _buildTableCell(
+                                                      '',
+                                                      isDirect:
+                                                          deliverable.isDirect,
+                                                    ),
+                                                    _buildTableCell(
+                                                      deliverable
+                                                              .deliverableName ??
+                                                          'N/A',
+                                                    ),
+                                                    _buildTableCell(
+                                                      DateFormat(
+                                                        'MMMM, yyyy',
+                                                      ).format(
+                                                        deliverable.byWhen!,
+                                                      ),
+                                                    ),
+                                                    _buildTableCell(
+                                                      deliverable
+                                                              .disapprovalRemarks ??
+                                                          'N/A',
+                                                    ),
+                                                    _buildTableCell(
+                                                      DateTimeConverter()
+                                                          .toJson(
+                                                            deliverable.byWhen!,
+                                                          ),
+                                                    ),
+
+                                                    _buildRecoverHistoryButton(),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          );
+                                        },
+                                      )
+                                      : SizedBox(
+                                        child: Center(
+                                          child: Text(
+                                            "No deleted deliverables",
+                                          ),
+                                        ),
+                                      ),
                                 ],
                               ),
                             ),
-
-                            // SingleChildScrollView(
-                            //   scrollDirection: Axis.horizontal,
-                            //   child: FutureBuilder<List<Map<String, dynamic>>>(
-                            //     future: _getFilteredSignatories(),
-                            //     builder: (context, snapshot) {
-                            //       // Debugging - check what data we're getting
-                            //       debugPrint(
-                            //         'Signatories snapshot: ${snapshot.data}',
-                            //       );
-
-                            //       if (snapshot.connectionState ==
-                            //           ConnectionState.waiting) {
-                            //         return const Center(
-                            //           child: CircularProgressIndicator(),
-                            //         );
-                            //       }
-
-                            //       if (snapshot.hasError) {
-                            //         return Center(
-                            //           child: Text('Error: ${snapshot.error}'),
-                            //         );
-                            //       }
-
-                            //       final signatories = snapshot.data ?? [];
-
-                            //       if (signatories.isEmpty) {
-                            //         return const Center(
-                            //           // child: Text('No signatories available'),
-                            //         );
-                            //       }
-
-                            //       return Row(
-                            //         children:
-                            //             signatories.map((signatory) {
-                            //               return Padding(
-                            //                 padding: const EdgeInsets.all(8.0),
-                            //                 child: _buildSignatoryColumnSync(
-                            //                   // Create this synchronous version
-                            //                   title:
-                            //                       signatory['signatoryLabel'] ??
-                            //                       'Signatory',
-                            //                   currentValue:
-                            //                       signatory['defaultSignatoryId'],
-                            //                   onChanged: (newValue) {
-                            //                     setState(() {
-                            //                       signatory['defaultSignatoryId'] =
-                            //                           newValue;
-                            //                     });
-                            //                   },
-                            //                   onDeleted: () {
-                            //                     setState(() {
-                            //                       signatoryList.removeWhere(
-                            //                         (s) =>
-                            //                             s['id'] ==
-                            //                             signatory['id'],
-                            //                       );
-                            //                     });
-                            //                   },
-                            //                 ),
-                            //               );
-                            //             }).toList(),
-                            //       );
-                            //     },
-                            //   ),
-                            // ),
                           ],
                         ),
                       ),
@@ -3009,10 +3277,6 @@ class _PerformanceGovernanceSystemPageState
         ),
         _buildExpandableTextAreaCell(index),
         _buildDatePickerCell(index, setDialogState),
-
-        // _buildDropdownCellStatus(index, () => (index)),
-        // _buildRemoveButton(index, setDialogState),
-        //  _buildApprovedDisapproved(index, setDialogState),
         (id == null || orderLevel < 2)
             ? _buildRemoveButton(index, setDialogState)
             : _buildApprovedDisapproved(index, setDialogState),
@@ -3753,7 +4017,7 @@ class _PerformanceGovernanceSystemPageState
               children: [
                 const Text(
                   "Reason:",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                  style: TextStyle(fontWeight: FontWeight.bold, color: grey),
                 ),
                 Tooltip(
                   message: 'State your reason here',
@@ -3762,6 +4026,9 @@ class _PerformanceGovernanceSystemPageState
                     decoration: const InputDecoration(
                       hintText: "Enter your reason here...",
                       border: OutlineInputBorder(),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
                     ),
                     maxLines: 3,
                   ),
@@ -3804,6 +4071,271 @@ class _PerformanceGovernanceSystemPageState
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // PGS Table Row  Deliverable History
+  TableRow _buildTableRowDeliverableHistory(
+    int index,
+    String direct,
+    String indirect,
+    Function setState,
+    Function setDialogState, {
+    int orderLevel = 1,
+    String? id,
+
+    // int? id,
+  }) {
+    deliverablesControllers.putIfAbsent(index, () => TextEditingController());
+    selectedDirect.putIfAbsent(index, () => false);
+    selectedIndirect.putIfAbsent(index, () => false);
+    selectedByWhen.putIfAbsent(index, () => '');
+
+    // Define alternating row colors
+    Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
+
+    return TableRow(
+      decoration: BoxDecoration(color: rowColor),
+      children: [
+        _buildDropdownKraCellPGSDeliverableHistory(index),
+        _buildCheckboxCellHistory(
+          index,
+          selectedDirect,
+          selectedIndirect,
+          setDialogState,
+          isDirect: true,
+        ),
+        _buildCheckboxCellHistory(
+          index,
+          selectedIndirect,
+          selectedDirect,
+          setDialogState,
+          isDirect: false,
+        ),
+        _buildExpandableTextAreaCell(index),
+        _buildDatePickerCell(index, setDialogState),
+
+        _buildRemoveButton(index, setDialogState),
+      ],
+    );
+  }
+
+  Widget _buildDropdownKraCellPGSDeliverableHistory(int index) {
+    if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
+      selectedKRA[index] = options.first['id'];
+      selectedKRAObjects[index] = options.first;
+    }
+
+    if (!kraDescriptionController.containsKey(index)) {
+      kraDescriptionController[index] = TextEditingController();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Tooltip(
+            message:
+                'Key Result Areas define the core outcomes expected from this position. Please select the most applicable one.',
+            child: DropdownButtonFormField<int>(
+              isExpanded: true,
+              value: selectedKRA[index],
+              onChanged: (int? newValue) {
+                if (newValue == null) return;
+                setState(() {
+                  selectedKRA[index] = newValue;
+
+                  selectedKRAObjects[index] = options.firstWhere(
+                    (option) => option['id'] == newValue,
+                    orElse:
+                        () => {
+                          'id': 1,
+                          'name': 'Unknown',
+                          'description': '',
+                          'rowVersion': '',
+                        },
+                  );
+                });
+              },
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 20.0,
+                ),
+              ),
+              items:
+                  options.map<DropdownMenuItem<int>>((option) {
+                    return DropdownMenuItem<int>(
+                      value: option['id'],
+                      child: Text(option['name']),
+                    );
+                  }).toList(),
+              selectedItemBuilder: (BuildContext context) {
+                return options.map<Widget>((option) {
+                  return Container(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      option['name'],
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  );
+                }).toList();
+              },
+              dropdownColor: Colors.white,
+              iconSize: 30.0,
+              itemHeight: 50.0,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              "KRA Description",
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          gap2,
+          Tooltip(
+            message:
+                'Enter a short description of what this KRA focuses on achieving',
+            child: TextField(
+              controller: kraDescriptionController[index],
+              decoration: const InputDecoration(
+                hintText: "Enter your description here...",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 3,
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCheckboxCellHistory(
+    int index,
+    Map<int, bool> selectedValues,
+    Map<int, bool> oppositeValues,
+    Function setDialogState, {
+    required bool isDirect,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(4),
+          border: Border.all(
+            color: const Color.fromARGB(255, 255, 255, 255),
+            width: 0.5,
+          ),
+          color: const Color.fromARGB(255, 255, 255, 255),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+          child: Checkbox(
+            value: selectedValues[index] ?? false, // Read from state
+            onChanged: (bool? newValue) {
+              if (newValue == null) return;
+
+              setDialogState(() {
+                selectedValues[index] = newValue;
+
+                if (newValue) {
+                  oppositeValues[index] = false;
+                }
+              });
+            },
+            activeColor: Colors.white,
+            checkColor: Colors.black,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTableCell(String text, {bool? isDirect}) {
+    displayText = text;
+    if (isDirect != null) {
+      displayText = isDirect ? 'Direct' : 'Indirect';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(),
+      child: Center(
+        child: Text(
+          displayText!,
+          style: const TextStyle(fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKraHistory(String textKra, String textKRaDescription) {
+    String displayKraText = textKra;
+    String displayKraDescription = textKRaDescription;
+
+    return Container(
+      padding: EdgeInsets.all(8),
+      decoration: BoxDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Text(
+              displayKraText,
+              style: const TextStyle(fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          gap,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'KRA Description',
+                style: TextStyle(fontSize: 12, color: grey),
+              ),
+              Text(
+                displayKraDescription,
+                style: TextStyle(fontSize: 12),
+                textAlign: TextAlign.start,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecoverHistoryButton() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        IconButton(
+          onPressed: () {},
+          icon: Icon(Icons.restore, color: primaryColor, size: 54),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTableHeaderCell(String text, {double fontSize = 12}) {
+    return Container(
+      color: primaryLightColor,
+      padding: const EdgeInsets.all(8),
+      child: Center(
+        child: Text(
+          text,
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
+          textAlign: TextAlign.start,
+        ),
       ),
     );
   }
