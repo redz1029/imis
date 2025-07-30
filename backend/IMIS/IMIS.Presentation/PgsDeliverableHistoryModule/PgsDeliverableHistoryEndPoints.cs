@@ -1,4 +1,5 @@
 ﻿
+using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.PgsDeliverableHistoryModule;
 using Microsoft.AspNetCore.Builder;
@@ -11,7 +12,7 @@ namespace IMIS.Presentation.PgsDeliverableHistoryModule
     public class PgsDeliverableHistoryEndPoints : CarterModule
     {
         private const string _pgsTag = "Pgs Deliverable History";
-
+        public readonly PgsDeliverableHistoryPermission _pgsDeliverableHistoryPermission = new();
         public PgsDeliverableHistoryEndPoints() : base("/pgsDeliverableHistory")
         {
         }
@@ -24,7 +25,9 @@ namespace IMIS.Presentation.PgsDeliverableHistoryModule
                 return pgsDeliverableHistory != null ? Results.Ok(pgsDeliverableHistory) : Results.NotFound();
             })
           .WithTags(_pgsTag)        
-          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true)
+          .RequireAuthorization(e => e.RequireClaim(
+          PermissionClaimType.Claim, _pgsDeliverableHistoryPermission.View)); ;
         }
     }
 }

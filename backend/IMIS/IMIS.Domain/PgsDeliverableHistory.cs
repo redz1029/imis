@@ -9,7 +9,7 @@ namespace IMIS.Domain
         public string? DeliverableName { get; set; }
         public string? KraDescription { get; set; }
         public long? KraId { get; set; }   
-        public string? DisapprovalRemarks { get; set; }
+        public string? DisapprovalRemarks { get; set; } 
         public bool IsDisapproved { get; set; }
         public required bool IsDirect { get; set; }
         public required double PercentDeliverables { get; set; }
