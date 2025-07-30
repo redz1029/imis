@@ -48,7 +48,6 @@ class _PerformanceGovernanceSystemPageState
     extends State<PerformanceGovernanceSystemPage> {
   late FilterSearchResultUtil<PerformanceGovernanceSystem> pgsSearchUtil;
   final GlobalKey _menuKey = GlobalKey();
-
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> signatoryControllers = {};
   Map<int, TextEditingController> selectedByWhenControllers = {};
@@ -382,6 +381,46 @@ class _PerformanceGovernanceSystemPageState
     } catch (e) {
       debugPrint("Error fetching user: $e");
     }
+  }
+
+  void restoreDeliverable(
+    PgsDeliverableHistory deliverable,
+    Function setDialogState,
+  ) {
+    setDialogState(() {
+      final newIndex = rows.isNotEmpty ? rows.last + 1 : 0;
+      rows.add(newIndex);
+
+      deliverablesControllers[newIndex] = TextEditingController(
+        text: deliverable.deliverableName,
+      );
+      selectedKRA[newIndex] = deliverable.kraId;
+      selectedKRAObjects[newIndex] = options.firstWhere(
+        (option) => option['id'] == deliverable.kraId,
+        orElse: () => {'id': deliverable.kraId, 'name': 'Unknown'},
+      );
+      selectedDirect[newIndex] = deliverable.isDirect!;
+      selectedIndirect[newIndex] = !deliverable.isDirect!;
+      selectedByWhen[newIndex] = deliverable.byWhen?.toIso8601String() ?? '';
+      selectedByWhenControllers[newIndex] = TextEditingController(
+        text:
+            deliverable.byWhen != null
+                ? DateFormat('MMMM yyyy').format(deliverable.byWhen!)
+                : '',
+      );
+      selectedStatus[newIndex] = deliverable.status!;
+      deliverableIds[newIndex] = deliverable.id ?? 0;
+      selectedDisapproved[newIndex] = false;
+      reasonController[newIndex] = TextEditingController(
+        text: deliverable.disapprovalRemarks,
+      );
+      percentageControllers[newIndex] = TextEditingController(
+        text: deliverable.percentDeliverables.toString(),
+      );
+      kraDescriptionController[newIndex] = TextEditingController(
+        text: deliverable.kraDescription,
+      );
+    });
   }
 
   Future<List<Map<String, dynamic>>> _getFilteredSignatories() async {
@@ -2422,7 +2461,6 @@ class _PerformanceGovernanceSystemPageState
                                 ), // Tab Name 4
                               ],
                             ),
-
                             //First Tab Strategic Contributions
                             Expanded(
                               child: TabBarView(
@@ -2814,7 +2852,11 @@ class _PerformanceGovernanceSystemPageState
                                                           ),
                                                     ),
 
-                                                    _buildRecoverHistoryButton(),
+                                                    _buildRecoverHistoryButton(
+                                                      context,
+                                                      deliverable,
+                                                      setDialogState,
+                                                    ),
                                                   ],
                                                 ),
                                               ),
@@ -2840,11 +2882,9 @@ class _PerformanceGovernanceSystemPageState
                 ],
               ),
 
-              //End third tab
               actions: [
                 if ((id == null && orderLevel == 1) ||
-                    (id == null && orderLevel >= 2) ||
-                    isAnyDisapproved)
+                    (id == null && orderLevel >= 2))
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -4314,12 +4354,23 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildRecoverHistoryButton() {
+  Widget _buildRecoverHistoryButton(
+    BuildContext context,
+    PgsDeliverableHistory deliverable,
+    Function setDialogState,
+  ) {
+    final TabController tabController = DefaultTabController.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         IconButton(
-          onPressed: () {},
+          tooltip: 'Recover',
+          onPressed: () {
+            restoreDeliverable(deliverable, setDialogState);
+            if (tabController.index != 0) {
+              tabController.animateTo(0);
+            }
+          },
           icon: Icon(Icons.restore, color: primaryColor, size: 54),
         ),
       ],
