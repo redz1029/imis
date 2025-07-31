@@ -2955,7 +2955,7 @@ class PerformanceGovernanceSystemPageState
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: CustomTooltip(
-        maxLines: 3,
+        maxLines: 4,
         message:
             'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
         child: TextFormField(
@@ -3648,7 +3648,7 @@ class PerformanceGovernanceSystemPageState
         children: [
           CustomTooltip(
             key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
-            maxLines: 5,
+            maxLines: 4,
             message: kraTooltipMessage,
             child: DropdownButtonFormField<int>(
               isExpanded: true,
@@ -3728,7 +3728,7 @@ class PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: CustomTooltip(
+      child: Tooltip(
         message:
             'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
         child: TextFormField(
