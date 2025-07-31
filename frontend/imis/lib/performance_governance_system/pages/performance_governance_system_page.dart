@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
+import 'package:imis/widgets/custom_tooltip.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -967,7 +968,11 @@ class PerformanceGovernanceSystemPageState
 
         options =
             data.map<Map<String, dynamic>>((item) {
-              return {'id': item['id'] as int, 'name': item['name'].toString()};
+              return {
+                'id': item['id'] as int,
+                'name': item['name'].toString(),
+                'remarks': item['remarks']?.toString() ?? '',
+              };
             }).toList();
       } else {
         debugPrint("Failed to load data");
@@ -2289,7 +2294,7 @@ class PerformanceGovernanceSystemPageState
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 8,
                                       ),
-                                      child: Tooltip(
+                                      child: CustomTooltip(
                                         message: 'Select period',
                                         child: DropdownButton<int>(
                                           dropdownColor: mainBgColor,
@@ -2949,7 +2954,8 @@ class PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Tooltip(
+      child: CustomTooltip(
+        maxLines: 3,
         message:
             'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
         child: TextFormField(
@@ -3003,52 +3009,48 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildDropdownKraCell(int index) {
+  Widget _buildDropdownKraCell(int index, Function setDialogState) {
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
     }
 
-    if (!kraDescriptionController.containsKey(index)) {
-      kraDescriptionController[index] = TextEditingController();
-    }
+    final selectedKraObject =
+        selectedKRAObjects[index] ??
+        (options.isNotEmpty ? options.first : null);
+
+    final kraTooltipMessage =
+        selectedKraObject?['remarks'] ?? 'No description available';
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Tooltip(
-            message:
-                'Key Result Areas define the core outcomes expected from this position. Please select the most applicable one.',
+          CustomTooltip(
+            key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
+            maxLines: 5,
+            message: kraTooltipMessage,
             child: DropdownButtonFormField<int>(
               isExpanded: true,
               value: selectedKRA[index],
               onChanged: (int? newValue) {
                 if (newValue == null) return;
-                setState(() {
+                setDialogState(() {
                   selectedKRA[index] = newValue;
-
-                  selectedKRAObjects[index] = options.firstWhere(
+                  final selectedOption = options.firstWhere(
                     (option) => option['id'] == newValue,
                     orElse:
                         () => {
-                          'id': 1,
+                          'id': -1,
                           'name': 'Unknown',
-                          'description': '',
-                          'rowVersion': '',
+                          'remarks': 'Not found',
                         },
                   );
-                  debugPrint("KRA changed for index $index ? KRAID: $newValue");
+
+                  selectedKRAObjects[index] = selectedOption;
                 });
               },
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                  vertical: 20.0,
-                ),
-              ),
               items:
                   options.map<DropdownMenuItem<int>>((option) {
                     return DropdownMenuItem<int>(
@@ -3056,35 +3058,24 @@ class PerformanceGovernanceSystemPageState
                       child: Text(option['name']),
                     );
                   }).toList(),
-              selectedItemBuilder: (BuildContext context) {
-                return options.map<Widget>((option) {
-                  return Container(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      option['name'],
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  );
-                }).toList();
-              },
-              dropdownColor: Colors.white,
-              iconSize: 30.0,
-              itemHeight: 50.0,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 20,
+                ),
+              ),
             ),
           ),
-
           const SizedBox(height: 16),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              "KRA Description",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+          const Text(
+            "KRA Description",
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          gap2,
-          Tooltip(
+          const SizedBox(height: 8),
+          CustomTooltip(
             message:
-                'Enter a short description of what this KRA focuses on achieving',
+                'Enter a short description of what this KRA focuses on achieving.',
             child: TextField(
               controller: kraDescriptionController[index],
               decoration: const InputDecoration(
@@ -3094,7 +3085,6 @@ class PerformanceGovernanceSystemPageState
               maxLines: 3,
             ),
           ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -3130,7 +3120,8 @@ class PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Tooltip(
+            child: CustomTooltip(
+              maxLines: 4,
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextField(
@@ -3216,7 +3207,7 @@ class PerformanceGovernanceSystemPageState
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
-        _buildDropdownKraCell(index),
+        _buildDropdownKraCell(index, setDialogState),
         _buildCheckboxCell(
           index,
           selectedDirect,
@@ -3444,7 +3435,8 @@ class PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Tooltip(
+            child: CustomTooltip(
+              maxLines: 4,
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextField(
@@ -3544,7 +3536,7 @@ class PerformanceGovernanceSystemPageState
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
-        _buildDropdownKraCellPGSDeliverableStatus(index),
+        _buildDropdownKraCellPGSDeliverableStatus(index, setDialogState),
         _buildCheckboxCell(
           index,
           selectedDirect,
@@ -3633,52 +3625,51 @@ class PerformanceGovernanceSystemPageState
   }
   //End------------Pgs Deliverables Status----------------------------------------------
 
-  ////------------------Kra for Pgs Delieverable Status--------------------
-  Widget _buildDropdownKraCellPGSDeliverableStatus(int index) {
+  Widget _buildDropdownKraCellPGSDeliverableStatus(
+    int index,
+    Function setDialogState,
+  ) {
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
     }
 
-    if (!kraDescriptionController.containsKey(index)) {
-      kraDescriptionController[index] = TextEditingController();
-    }
+    final selectedKraObject =
+        selectedKRAObjects[index] ??
+        (options.isNotEmpty ? options.first : null);
+
+    final kraTooltipMessage =
+        selectedKraObject?['remarks'] ?? 'No description available';
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Tooltip(
-            message:
-                'Key Result Areas define the core outcomes expected from this position. Please select the most applicable one.',
+          CustomTooltip(
+            key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
+            maxLines: 5,
+            message: kraTooltipMessage,
             child: DropdownButtonFormField<int>(
               isExpanded: true,
               value: selectedKRA[index],
               onChanged: (int? newValue) {
                 if (newValue == null) return;
-                setState(() {
+                setDialogState(() {
                   selectedKRA[index] = newValue;
-
-                  selectedKRAObjects[index] = options.firstWhere(
+                  final selectedOption = options.firstWhere(
                     (option) => option['id'] == newValue,
                     orElse:
                         () => {
-                          'id': 1,
+                          'id': -1,
                           'name': 'Unknown',
-                          'description': '',
-                          'rowVersion': '',
+                          'remarks': 'Not found',
                         },
                   );
+
+                  selectedKRAObjects[index] = selectedOption;
                 });
               },
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                  vertical: 20.0,
-                ),
-              ),
               items:
                   options.map<DropdownMenuItem<int>>((option) {
                     return DropdownMenuItem<int>(
@@ -3686,35 +3677,24 @@ class PerformanceGovernanceSystemPageState
                       child: Text(option['name']),
                     );
                   }).toList(),
-              selectedItemBuilder: (BuildContext context) {
-                return options.map<Widget>((option) {
-                  return Container(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      option['name'],
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  );
-                }).toList();
-              },
-              dropdownColor: Colors.white,
-              iconSize: 30.0,
-              itemHeight: 50.0,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 20,
+                ),
+              ),
             ),
           ),
-
           const SizedBox(height: 16),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              "KRA Description",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+          const Text(
+            "KRA Description",
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          gap2,
-          Tooltip(
+          const SizedBox(height: 8),
+          CustomTooltip(
             message:
-                'Enter a short description of what this KRA focuses on achieving',
+                'Enter a short description of what this KRA focuses on achieving.',
             child: TextField(
               controller: kraDescriptionController[index],
               decoration: const InputDecoration(
@@ -3724,7 +3704,6 @@ class PerformanceGovernanceSystemPageState
               maxLines: 3,
             ),
           ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -3749,7 +3728,7 @@ class PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Tooltip(
+      child: CustomTooltip(
         message:
             'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
         child: TextFormField(
@@ -3844,7 +3823,7 @@ class PerformanceGovernanceSystemPageState
       padding: const EdgeInsets.all(8.0),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 50.0),
-        child: Tooltip(
+        child: CustomTooltip(
           message:
               'Specify the tangible results or outcomes tied to this responsibility.',
           child: TextField(
@@ -3975,7 +3954,7 @@ class PerformanceGovernanceSystemPageState
                   "Reason:",
                   style: TextStyle(fontWeight: FontWeight.bold, color: grey),
                 ),
-                Tooltip(
+                CustomTooltip(
                   message: 'State your reason here',
                   child: TextField(
                     controller: reasonController[index],
