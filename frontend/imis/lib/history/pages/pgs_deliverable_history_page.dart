@@ -14,12 +14,11 @@ class PgsDeliverableHistoryPage extends StatefulWidget {
   const PgsDeliverableHistoryPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _PgsDeliverableHistoryPageState createState() =>
-      _PgsDeliverableHistoryPageState();
+  PgsDeliverableHistoryPageState createState() =>
+      PgsDeliverableHistoryPageState();
 }
 
-class _PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
+class PgsDeliverableHistoryPageState extends State<PgsDeliverableHistoryPage> {
   final _paginationUtils = PaginationUtil(Dio());
 
   final FocusNode isSearchfocus = FocusNode();

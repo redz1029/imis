@@ -22,11 +22,10 @@ class PgsScoreMonitoringPage extends StatefulWidget {
   const PgsScoreMonitoringPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _PgsScoreMonitoringPageState createState() => _PgsScoreMonitoringPageState();
+  PgsScoreMonitoringPageState createState() => PgsScoreMonitoringPageState();
 }
 
-class _PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
+class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
   final GlobalKey _menuScoreRangeKey = GlobalKey();
   final GlobalKey _menuPageKey = GlobalKey();
   Map<int, TextEditingController> remarkControllers = {};

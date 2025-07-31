@@ -9,7 +9,6 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// ignore: depend_on_referenced_packages
 import 'package:collection/collection.dart';
 import '../../utils/http_util.dart';
 
@@ -17,11 +16,10 @@ class UserRolePage extends StatefulWidget {
   const UserRolePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _UserRolePageState createState() => _UserRolePageState();
+  UserRolePageState createState() => UserRolePageState();
 }
 
-class _UserRolePageState extends State<UserRolePage> {
+class UserRolePageState extends State<UserRolePage> {
   final _formKey = GlobalKey<FormState>();
   List<UserRoles> userRoleList = [];
   List<UserRoles> filteredList = [];

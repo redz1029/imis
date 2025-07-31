@@ -7,7 +7,6 @@ import 'package:imis/user/pages/registration_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:motion_toast/motion_toast.dart';
-// import 'package:http/http.dart' as http;
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -45,8 +44,7 @@ class LoginPageState extends State<LoginPage> {
           await AuthUtil.storeUserAuth(response, dio);
 
           await AuthUtil.setIsLoggedIn(true);
-
-          // ignore: use_build_context_synchronously
+          if (!context.mounted) return;
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
               builder: (context) => const DashboardNavigationPanel(),

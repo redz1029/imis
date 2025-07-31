@@ -15,11 +15,10 @@ class UserOfficePage extends StatefulWidget {
   const UserOfficePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _UserOfficePageState createState() => _UserOfficePageState();
+  UserOfficePageState createState() => UserOfficePageState();
 }
 
-class _UserOfficePageState extends State<UserOfficePage> {
+class UserOfficePageState extends State<UserOfficePage> {
   final _formKey = GlobalKey<FormState>();
   List<UserOffice> userOfficeList = [];
   List<UserOffice> filteredList = [];

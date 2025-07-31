@@ -1,8 +1,7 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
-// ignore: avoid_web_libraries_in_flutter,
-import 'dart:html' as html;
+import 'package:universal_html/html.dart' as html;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -39,12 +38,11 @@ class PerformanceGovernanceSystemPage extends StatefulWidget {
   const PerformanceGovernanceSystemPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _PerformanceGovernanceSystemPageState createState() =>
-      _PerformanceGovernanceSystemPageState();
+  PerformanceGovernanceSystemPageState createState() =>
+      PerformanceGovernanceSystemPageState();
 }
 
-class _PerformanceGovernanceSystemPageState
+class PerformanceGovernanceSystemPageState
     extends State<PerformanceGovernanceSystemPage> {
   late FilterSearchResultUtil<PerformanceGovernanceSystem> pgsSearchUtil;
   final GlobalKey _menuKey = GlobalKey();
@@ -423,52 +421,6 @@ class _PerformanceGovernanceSystemPageState
     });
   }
 
-  Future<List<Map<String, dynamic>>> _getFilteredSignatories() async {
-    return signatoryList.toList();
-  }
-
-  Widget _buildSignatoryColumnSync({
-    required String title,
-    required String? currentValue,
-    required ValueChanged<String?> onChanged,
-    required VoidCallback onDeleted,
-  }) {
-    final sortedSignatoryList = List<Map<String, dynamic>>.from(signatoryList)
-      ..sort(
-        (a, b) => (a['orderLevel'] as int).compareTo(b['orderLevel'] as int),
-      );
-
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 12)),
-          const SizedBox(height: 6),
-          Container(width: 200, height: 1.8, color: Colors.grey),
-          const SizedBox(height: 8),
-          if (currentValue != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (sortedSignatoryList.any(
-                  (s) => s['signatoryId'] == currentValue,
-                ))
-                  const SizedBox(height: 4),
-                Text(
-                  (sortedSignatoryList.firstWhere(
-                            (s) => s['signatoryId'] == currentValue,
-                          )['signatoryName'] ??
-                          '')
-                      .toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
   Future<List<PgsDeliverables>> fetchDeliverables({String? pgsId}) async {
     List<PgsDeliverables> deliverablesList = [];
     final url = "${ApiEndpoint().performancegovernancesystem}/$pgsId";
@@ -500,40 +452,6 @@ class _PerformanceGovernanceSystemPageState
 
     return deliverablesList;
   }
-
-  // Future<List<PgsDeliverableHistory>> fetchDeliverablesHistory({
-  //   String? pgsId,
-  // }) async {
-  //   List<PgsDeliverableHistory> deliverableHistory = [];
-  //   final id = pgsId ?? '450295';
-  //   final url = "${ApiEndpoint().pgsDeliverableHistory}/$id";
-
-  //   try {
-  //     final response = await AuthenticatedRequest.get(dio, url);
-
-  //     if (response.statusCode == 200) {
-  //       final data = response.data;
-  //       final pgsDeliverableHistoryList = data is List ? data : [data];
-
-  //       for (var pgsJson in pgsDeliverableHistoryList) {
-  //         final deliverablesHistory =
-  //             (pgsJson['pgsDeliverableHistory'] as List)
-  //                 .map((d) => PgsDeliverableHistory.fromJson(d))
-  //                 .toList();
-
-  //         deliverableHistory.addAll(deliverablesHistory);
-  //       }
-  //     } else {
-  //       debugPrint("Failed to fetch deliverables");
-  //     }
-  //   } on DioException {
-  //     debugPrint("Dio error");
-  //   } catch (e) {
-  //     debugPrint("Unexpected error: $e");
-  //   }
-
-  //   return deliverableHistory;
-  // }
 
   Future<List<PgsDeliverableHistory>> fetchDeliverablesHistory({
     String? pgsId,
@@ -689,7 +607,7 @@ class _PerformanceGovernanceSystemPageState
                           ),
                           onTap: () => Navigator.pop(context, officeIds[index]),
 
-                          hoverColor: primaryColor.withOpacity(0.1),
+                          hoverColor: primaryColor.withValues(alpha: 0.1),
                         ),
                       );
                     },
@@ -2962,7 +2880,7 @@ class _PerformanceGovernanceSystemPageState
               ? "Please complete all required fields before submitting."
               : "Please complete all required fields before submitting.",
         ),
-        position: MotionToastPosition.top,
+        toastAlignment: Alignment.center,
       ).show(context);
       return;
     }
@@ -2995,7 +2913,7 @@ class _PerformanceGovernanceSystemPageState
 
       MotionToast.success(
         description: Text(successMessage),
-        position: MotionToastPosition.top,
+        toastAlignment: Alignment.center,
       ).show(context);
 
       await Future.delayed(Duration(milliseconds: 1000));
@@ -3008,7 +2926,7 @@ class _PerformanceGovernanceSystemPageState
 
       MotionToast.error(
         description: Text(errorMessage),
-        position: MotionToastPosition.top,
+        toastAlignment: Alignment.center,
       ).show(context);
 
       await Future.delayed(Duration(milliseconds: 1500));
