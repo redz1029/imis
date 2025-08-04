@@ -273,18 +273,19 @@ class LoginPageState extends State<LoginPage> {
                 }
               },
             ),
-            gap,
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                GestureDetector(
-                  child: Text(
-                    "Forgot Password?",
-                    style: TextStyle(color: primaryColor, fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
+            // gap2,
+            // Row(
+            //   mainAxisAlignment: MainAxisAlignment.end,
+            //   children: [
+            //     TextButton(
+            //       onPressed: () {},
+            //       child: Text(
+            //         'Forgot Password?',
+            //         style: TextStyle(color: primaryColor),
+            //       ),
+            //     ),
+            //   ],
+            // ),
             gap3,
             SizedBox(
               width: double.infinity,
