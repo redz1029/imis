@@ -9,6 +9,7 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/token_expiration_handler.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/pgs_signatory_template.dart';
@@ -292,8 +293,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                   ),
                 ),
               ),
-              content: Form(
-                key: _formKey,
+              content: SizedBox(
                 child: SizedBox(
                   width: 400,
                   height: 500,
@@ -487,68 +487,97 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
+
                   onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      bool? confirmAction = await showDialog<bool>(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: Text(
-                              id == null ? "Confirm Save" : "Confirm Update",
-                            ),
-                            content: Text(
-                              id == null
-                                  ? "Are you sure you want to save this record?"
-                                  : "Are you sure you want to update this record?",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(
-                                  "No",
-                                  style: TextStyle(color: primaryColor),
-                                ),
+                    if (selectOffice == null) {
+                      MotionToast.error(
+                        description: Text("Missing Fields"),
+                        toastAlignment: Alignment.center,
+                      ).show(context);
+                      return;
+                    }
+
+                    // Check for duplicate 'level' values
+                    List<int> levels =
+                        selectedSignatory
+                            .map((e) => e['level'] as int)
+                            .toList();
+                    Set<int> uniqueLevels = Set<int>();
+
+                    for (var level in levels) {
+                      if (!uniqueLevels.add(level)) {
+                        // Duplicate found
+                        MotionToast.error(
+                          description: Text(
+                            "Check Order Level: There are duplicates.",
+                          ),
+                          toastAlignment: Alignment.center,
+                        ).show(context);
+                        return;
+                      }
+                    }
+
+                    // Confirmation dialog
+                    bool? confirmAction = await showDialog<bool>(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text(
+                            id == null ? "Confirm Save" : "Confirm Update",
+                          ),
+                          content: Text(
+                            id == null
+                                ? "Are you sure you want to save this record?"
+                                : "Are you sure you want to update this record?",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(
+                                "No",
+                                style: TextStyle(color: primaryColor),
                               ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: Text(
-                                  "Yes",
-                                  style: TextStyle(color: primaryColor),
-                                ),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              child: Text(
+                                "Yes",
+                                style: TextStyle(color: primaryColor),
                               ),
-                            ],
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (confirmAction == true) {
+                      List<PgsSignatoryTemplate> signatories = [];
+
+                      if (selectedSignatory.isNotEmpty) {
+                        for (var signatory in selectedSignatory) {
+                          signatories.add(
+                            PgsSignatoryTemplate(
+                              signatory['id'] ?? 0,
+                              isDeleted,
+                              signatory['level'],
+                              signatory['userId'],
+                              true,
+                              status: signatory['status'] ?? '',
+                              signatoryLabel: signatory['label'] ?? '',
+                              officeId: selectOffice ?? 0,
+                            ),
                           );
-                        },
-                      );
-                      if (confirmAction == true) {
-                        List<PgsSignatoryTemplate> signatories = [];
-
-                        if (selectedSignatory.isNotEmpty) {
-                          for (var signatory in selectedSignatory) {
-                            signatories.add(
-                              PgsSignatoryTemplate(
-                                signatory['id'] ?? 0,
-                                isDeleted,
-                                signatory['level'],
-                                signatory['userId'],
-                                true,
-                                status: signatory['status'] ?? '',
-                                signatoryLabel: signatory['label'] ?? '',
-                                officeId: selectOffice ?? 0,
-                              ),
-                            );
-                          }
                         }
+                      }
 
-                        await addOrUpdateSignatory(signatories);
-                        // ignore: use_build_context_synchronously
-                        if (context.mounted) {
-                          Navigator.pop(context);
-                          resetFormFields();
-                        }
+                      await addOrUpdateSignatory(signatories);
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        resetFormFields();
                       }
                     }
                   },
+
                   child: Text(
                     id == null ? 'Save' : 'Update',
                     style: TextStyle(color: Colors.white),
@@ -617,27 +646,66 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                 index != null ? 'Edit Signatory' : 'Enter Signatory Details',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              content: SizedBox(
-                height: 250,
-                width: 500,
+              content: Form(
+                key: _formKey,
+
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    DropdownSearch<User?>(
-                      popupProps: PopupProps.menu(
-                        showSearchBox: true,
-                        searchFieldProps: TextFieldProps(
-                          decoration: InputDecoration(
-                            labelText: 'Signatory Name',
-                            hintText: 'Search user name…',
+                    SizedBox(
+                      width: 500,
+                      child: DropdownSearch<User?>(
+                        popupProps: PopupProps.menu(
+                          showSearchBox: true,
+                          searchFieldProps: TextFieldProps(
+                            decoration: InputDecoration(
+                              labelText: 'Signatory Name',
+                              hintText: 'Search user name…',
+                              filled: true,
+                              fillColor: mainBgColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor, // focused color
+                                fontWeight: FontWeight.w600,
+                              ),
+                              labelStyle: TextStyle(
+                                color: Colors.grey.shade600,
+                              ),
+                              prefixIcon: const Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
+                          ),
+                          itemBuilder:
+                              (context, user, isSelected) => ListTile(
+                                tileColor: mainBgColor,
+                                title: Text(user?.fullName ?? ''),
+                              ),
+                        ),
+                        items: userList,
+                        itemAsString: (u) => u?.fullName ?? '',
+                        selectedItem: userList.cast<User?>().firstWhere(
+                          (u) => u?.id == selectedUserId,
+                          orElse: () => null,
+                        ),
+                        onChanged:
+                            (value) =>
+                                setState(() => selectedUserId = value?.id),
+                        validator:
+                            (value) =>
+                                value == null ? 'Please select a user' : null,
+
+                        dropdownDecoratorProps: DropDownDecoratorProps(
+                          dropdownSearchDecoration: InputDecoration(
+                            labelText: 'Select User',
                             filled: true,
                             fillColor: mainBgColor,
-                            floatingLabelStyle: TextStyle(
-                              color: primaryColor, // focused color
-                              fontWeight: FontWeight.w600,
-                            ),
+                            floatingLabelBehavior: FloatingLabelBehavior.auto,
+                            floatingLabelStyle: TextStyle(color: primaryColor),
                             labelStyle: TextStyle(color: Colors.grey.shade600),
-                            prefixIcon: const Icon(Icons.search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -646,46 +714,19 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                             ),
                           ),
                         ),
-                        itemBuilder:
-                            (context, user, isSelected) => ListTile(
-                              tileColor: mainBgColor,
-                              title: Text(user?.fullName ?? ''),
-                            ),
-                      ),
-                      items: userList,
-                      itemAsString: (u) => u?.fullName ?? '',
-                      selectedItem: userList.cast<User?>().firstWhere(
-                        (u) => u?.id == selectedUserId,
-                        orElse: () => null,
-                      ),
-                      onChanged:
-                          (value) => setState(() => selectedUserId = value?.id),
-                      validator:
-                          (value) =>
-                              value == null ? 'Please select a user' : null,
-
-                      dropdownDecoratorProps: DropDownDecoratorProps(
-                        dropdownSearchDecoration: InputDecoration(
-                          labelText: 'Select User',
-                          filled: true,
-                          fillColor: mainBgColor,
-                          floatingLabelBehavior: FloatingLabelBehavior.auto,
-                          floatingLabelStyle: TextStyle(color: primaryColor),
-                          labelStyle: TextStyle(color: Colors.grey.shade600),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                        ),
                       ),
                     ),
 
                     SizedBox(height: 16),
                     // Signatory Label
-                    TextField(
+                    TextFormField(
                       controller: signatoryLabelController,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return "Please enter some text";
+                        }
+                        return null;
+                      },
                       decoration: InputDecoration(
                         labelText: 'Signatory Label',
                         border: OutlineInputBorder(),
@@ -696,6 +737,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                         focusedBorder: const OutlineInputBorder(
                           borderSide: BorderSide(color: primaryColor),
                         ),
+
                         floatingLabelStyle: const TextStyle(
                           color: primaryColor,
                         ),
@@ -706,8 +748,14 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                       children: [
                         // Signatory Status
                         Expanded(
-                          child: TextField(
+                          child: TextFormField(
                             controller: signatoryStatusController,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return "Please enter some text";
+                              }
+                              return null;
+                            },
                             decoration: InputDecoration(
                               labelText: 'Signatory Status',
                               border: OutlineInputBorder(),
@@ -801,35 +849,30 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  onPressed: () {
-                    if (selectedUserId == null || selectedUserId!.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Please select a signatory')),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      final selectedUser = filteredListUser.firstWhere(
+                        (user) => user.id == selectedUserId,
+                        orElse: () => throw Exception('User not found'),
                       );
-                      return;
-                    }
 
-                    final selectedUser = filteredListUser.firstWhere(
-                      (user) => user.id == selectedUserId,
-                      orElse: () => throw Exception('User not found'),
-                    );
+                      final result = {
+                        'id': currentId,
+                        'userId': selectedUserId,
+                        'name': selectedUser.fullName,
+                        'label': signatoryLabelController.text,
+                        'status': signatoryStatusController.text,
+                        'level': currentLevel,
+                      };
 
-                    final result = {
-                      'id': currentId,
-                      'userId': selectedUserId,
-                      'name': selectedUser.fullName,
-                      'label': signatoryLabelController.text,
-                      'status': signatoryStatusController.text,
-                      'level': currentLevel,
-                    };
-
-                    if (index != null) {
-                      setDialogState(() {
-                        selectedSignatory[index] = result;
-                      });
-                      Navigator.pop(context);
-                    } else {
-                      Navigator.pop(context, result);
+                      if (index != null) {
+                        setDialogState(() {
+                          selectedSignatory[index] = result;
+                        });
+                        Navigator.pop(context);
+                      } else {
+                        Navigator.pop(context, result);
+                      }
                     }
                   },
                   child: Text(
