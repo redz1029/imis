@@ -10,7 +10,7 @@ namespace IMIS.Persistence.AuditScheduleModule
     {      
         public async Task<AuditScheduleDetails?> GetOverlappingAuditAsync(int officeId, DateTime startDate, DateTime endDate, int currentAuditId)
         {
-            return await ReadOnlyDbContext.Set<AuditScheduleDetails>()
+            return await _dbContext.AuditScheduleDetails
                 .Where(a => a.Id != currentAuditId)
                 .Where(a => a.OfficeId == officeId) 
                 .Where(a => startDate < a.EndDateTime && endDate > a.StartDateTime) 

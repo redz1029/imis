@@ -10,12 +10,14 @@ namespace IMIS.Persistence.AuditorModule
     {
         public async Task<EntityPageList<Auditor, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            return await EntityPageList<Auditor, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);           
+            var query = _dbContext.Auditors.Where(k => !k.IsDeleted).AsNoTracking();
+            var auditor = await EntityPageList<Auditor, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);           
+            return auditor;
         }
         public async Task<IEnumerable<Auditor>?> FilteByName(string name, int auditorNoOfResults, CancellationToken cancellationToken)
         {
-            return await _entities
-                .Where(a => EF.Functions.Like(a.Name, $"{name}%"))
+            return await _dbContext.Auditors
+                .Where(a => EF.Functions.Like(a.Name, $"{name}%") && !a.IsDeleted)
                 .Take(auditorNoOfResults)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
@@ -23,7 +25,8 @@ namespace IMIS.Persistence.AuditorModule
         }
         public async Task<IEnumerable<Auditor>?> GetAll(CancellationToken cancellationToken)
         {
-            return await _entities
+            return await _dbContext.Auditors
+                .Where(a => !a.IsDeleted)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);

@@ -1,6 +1,4 @@
-﻿using Base.Abstractions;
-using Base.Utilities;
-using IMIS.Domain;
+﻿using IMIS.Domain;
 using IMIS.Persistence.SeedConfigurations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -8,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace IMIS.Persistence
 {
-    public class ImisDbContext : IdentityDbContext, IReadOnlyDbContext
+    public class ImisDbContext : IdentityDbContext
     {
         public DbSet<Auditor> Auditors { get; set; }
         public DbSet<Office> Offices { get; set; }
@@ -118,11 +116,6 @@ namespace IMIS.Persistence
             builder.ApplyConfiguration(new OfficeTypeConfiguration());
             builder.ApplyConfiguration(new OfficeConfiguration());
             builder.ApplyConfiguration(new KeyResultAreaConfiguration());
-
-            // Apply global query filter for soft deletion
-            // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false
-            // Use IgnoreQueryFilters() if you want to bypass this filter in specific queries
-            builder.ApplySoftDeleteQueryFilter();
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

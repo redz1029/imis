@@ -11,14 +11,19 @@ namespace IMIS.Persistence.AuditScheduleModule
     {
         public async Task<EntityPageList<AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            return await EntityPageList<AuditSchedule, int>
-             .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken)
-             .ConfigureAwait(false);
-        }
+            var query = _dbContext.AuditSchedules
+                .Where(k => !k.IsDeleted)
+                .AsNoTracking();
 
+            var auditSchedules = await EntityPageList<AuditSchedule, int>
+             .CreateAsync(query, page, pageSize, cancellationToken)
+             .ConfigureAwait(false);
+            return auditSchedules;
+        }
+        // Check Overlapping in AuditScheduleDetails
         public async Task<AuditScheduleDetails?> GetOverlappingAuditAsync(int officeId, DateTime startDateTime, DateTime endDateTime, int id)
         {
-             return await ReadOnlyDbContext.Set<AuditScheduleDetails>()
+             return await _dbContext.AuditScheduleDetails
             .Where(a => a.Id != id) 
             .Where(a => a.OfficeId == officeId) 
             .Where(a => startDateTime < a.EndDateTime && endDateTime > a.StartDateTime)
@@ -26,7 +31,7 @@ namespace IMIS.Persistence.AuditScheduleModule
         }
         public async Task AddAuditableOfficesAsync(List<AuditableOffices> auditableOffices, CancellationToken cancellationToken)
         {
-            var existingOfficeIds = ReadOnlyDbContext.Set<AuditableOffices>()
+            var existingOfficeIds = _dbContext.AuditableOffices
                 .Where(a => auditableOffices.Select(o => o.OfficeId).Contains(a.OfficeId))
                 .Select(a => a.OfficeId)
                 .ToList();
@@ -35,19 +40,20 @@ namespace IMIS.Persistence.AuditScheduleModule
 
             if (newOffices.Any())
             {
-                await ReadOnlyDbContext.Set<AuditableOffices>().AddRangeAsync(newOffices, cancellationToken);
-                await GetDbContext().SaveChangesAsync(cancellationToken);
+                await _dbContext.AuditableOffices.AddRangeAsync(newOffices, cancellationToken);
+                await _dbContext.SaveChangesAsync(cancellationToken);
             }
         }       
         public async Task<IEnumerable<AuditSchedule>> GetAllActiveAsync(CancellationToken cancellationToken)
         {
-            return await _entities
+            return await _dbContext.AuditSchedules
+                .Where(a => !a.IsDeleted)
                 .ToListAsync(cancellationToken);
         }
         public async Task<IEnumerable<AuditSchedule>> GetAllAsync(CancellationToken cancellationToken)
         {
-            return await _entities
-                .Where(a => a.IsActive)
+            return await _dbContext.AuditSchedules
+                .Where(a => a.IsActive && !a.IsDeleted)
                 .Include(a => a.AuditableOffices)
                 .Include(a => a.AuditSchduleDetails)
                 .ToListAsync(cancellationToken);
@@ -56,7 +62,7 @@ namespace IMIS.Persistence.AuditScheduleModule
         {
             if (auditSchedule == null) throw new ArgumentNullException(nameof(auditSchedule));
 
-            var existingAudit = await _entities   
+            var existingAudit = await _dbContext.AuditSchedules              
                 .FirstOrDefaultAsync(d => d.Id == auditSchedule.Id, cancellationToken);
 
             if (existingAudit != null)
@@ -67,7 +73,7 @@ namespace IMIS.Persistence.AuditScheduleModule
             else
             {
                 // Add new audit schedule
-                await _entities.AddAsync(auditSchedule, cancellationToken);
+                await _dbContext.AuditSchedules.AddAsync(auditSchedule, cancellationToken);
             }
             await _dbContext.SaveChangesAsync(cancellationToken);
             return auditSchedule;

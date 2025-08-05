@@ -12,29 +12,29 @@ namespace IMIS.Persistence.OfficeTypeModule
         }
         public async Task<IEnumerable<OfficeType>> GetAll(CancellationToken cancellationToken)
         {
-            return await _entities
+            return await _dbContext.OfficeType
+                .Where(o => !o.IsDeleted)               
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
         public new async Task<OfficeType> SaveOrUpdateAsync(OfficeType officeType, CancellationToken cancellationToken)
         {
             if (officeType == null) throw new ArgumentNullException(nameof(officeType));
 
             try
             {
-                var existing = await _entities
+                var existing = await _dbContext.OfficeType
                     .AsNoTracking()
                     .FirstOrDefaultAsync(d => d.Id == officeType.Id, cancellationToken);
 
                 if (existing != null)
                 {
-                    _entities.Update(officeType);
+                    _dbContext.OfficeType.Update(officeType);
                 }
                 else
                 {
-                    await _entities.AddAsync(officeType, cancellationToken);
+                    await _dbContext.OfficeType.AddAsync(officeType, cancellationToken);
                 }
 
                 await _dbContext.SaveChangesAsync(cancellationToken);
