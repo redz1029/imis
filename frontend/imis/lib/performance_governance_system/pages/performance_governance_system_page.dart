@@ -2229,6 +2229,8 @@ class PerformanceGovernanceSystemPageState
                   orElse: () => {'orderLevel': 1},
                 )['orderLevel'] ??
                 1;
+            final isAnyDisapproved =
+                deliverables?.any((d) => d.isDisapproved == true) ?? false;
 
             return AlertDialog(
               backgroundColor: mainBgColor,
@@ -2265,7 +2267,7 @@ class PerformanceGovernanceSystemPageState
                       width: MediaQuery.of(context).size.width * 0.9,
                       height: MediaQuery.of(context).size.height * 0.8,
                       child: DefaultTabController(
-                        length: 4, // Number of tabs
+                        length: 3, // Number of tabs
                         child: Column(
                           children: [
                             // Header Row
@@ -2377,9 +2379,9 @@ class PerformanceGovernanceSystemPageState
                                 Tab(
                                   text: "PGS Deliverables Status",
                                 ), // Tab Name 3
-                                Tab(
-                                  text: "PGS Deliverables History",
-                                ), // Tab Name 4
+                                // Tab(
+                                //   text: "PGS Deliverables History",
+                                // ), // Tab Name 4
                               ],
                             ),
                             //First Tab Strategic Contributions
@@ -2805,7 +2807,8 @@ class PerformanceGovernanceSystemPageState
 
               actions: [
                 if ((id == null && orderLevel == 1) ||
-                    (id == null && orderLevel >= 2))
+                    (id == null && orderLevel >= 2) ||
+                    isAnyDisapproved)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -2882,8 +2885,8 @@ class PerformanceGovernanceSystemPageState
         title: const Text("Missing Fields"),
         description: Text(
           selectedPeriod == null
-              ? "Please complete all required fields before submitting."
-              : "Please complete all required fields before submitting.",
+              ? "Please complete all required fields."
+              : "Please complete all required fields",
         ),
         toastAlignment: Alignment.center,
       ).show(context);
@@ -2891,6 +2894,11 @@ class PerformanceGovernanceSystemPageState
     }
 
     int? pgsId = int.tryParse(id ?? '');
+
+    final updatedDeliverables = getTableDeliverables();
+    bool isAnyDisapproved = updatedDeliverables.any(
+      (d) => d.isDisapproved == true,
+    );
 
     PerformanceGovernanceSystem pgs = getPgsAuditDetails(
       id: pgsId ?? 0,
@@ -2912,7 +2920,9 @@ class PerformanceGovernanceSystemPageState
       }
 
       final String successMessage =
-          (id != null && orderLevel >= 2)
+          isAnyDisapproved
+              ? "Disapproved successfully!"
+              : (id != null && orderLevel >= 2)
               ? "Confirm successfully!"
               : "Submitted successfully!";
 
@@ -3013,6 +3023,10 @@ class PerformanceGovernanceSystemPageState
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
+    }
+
+    if (!kraDescriptionController.containsKey(index)) {
+      kraDescriptionController[index] = TextEditingController();
     }
 
     final selectedKraObject =
@@ -3634,6 +3648,10 @@ class PerformanceGovernanceSystemPageState
       selectedKRAObjects[index] = options.first;
     }
 
+    if (!kraDescriptionController.containsKey(index)) {
+      kraDescriptionController[index] = TextEditingController();
+    }
+
     final selectedKraObject =
         selectedKRAObjects[index] ??
         (options.isNotEmpty ? options.first : null);
@@ -3959,7 +3977,6 @@ class PerformanceGovernanceSystemPageState
                   child: TextField(
                     controller: reasonController[index],
                     decoration: const InputDecoration(
-                      hintText: "Enter your reason here...",
                       border: OutlineInputBorder(),
                       focusedBorder: OutlineInputBorder(
                         borderSide: BorderSide(color: primaryColor),
