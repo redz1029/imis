@@ -1,6 +1,5 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsKraModule
@@ -13,8 +12,6 @@ namespace IMIS.Application.PgsKraModule
         Task<KeyResultAreaDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<KeyResultAreaDto> SaveOrUpdateAsync(KeyResultAreaDto keyResultAreaDto, CancellationToken cancellationToken);
         Task<List<KeyResultAreaDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
-        Task <List<KeyResultAreaDto>?>GetAllFilteredAsync(KeyResultAreaFilter filter, CancellationToken cancellationToken);
-       
     }
 }
 

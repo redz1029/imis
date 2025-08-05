@@ -29,17 +29,17 @@ namespace IMIS.Presentation.KraModuleAPI
             })
             .WithTags(_keyAreaResultTag)
             .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _keyResultAreaPermission.Add));            
+             PermissionClaimType.Claim, _keyResultAreaPermission.Add));
 
             app.MapGet("/", async (IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
-                var list = await service.GetAllAsync(cancellationToken);
-                return Results.Ok(list);
+                var keyResultAreaDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(keyResultAreaDto);
             })
-           .WithTags(_keyAreaResultTag)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _keyResultAreaPermission.View));
+            .WithTags(_keyAreaResultTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _keyResultAreaPermission.View));
 
             app.MapGet("/filter/{name}", async (string name, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
@@ -85,16 +85,7 @@ namespace IMIS.Presentation.KraModuleAPI
             .WithTags(_keyAreaResultTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
             .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _keyResultAreaPermission.View));
-            app.MapGet("/active", async ([AsParameters] KeyResultAreaFilter filter, IKeyResultAreaService service, CancellationToken cancellationToken) =>
-            {
-                var data = await service.GetAllFilteredAsync(filter, cancellationToken);
-                return Results.Ok(data);
-            })
-          .WithTags(_keyAreaResultTag)
-          .RequireAuthorization(e => e.RequireClaim(
-           PermissionClaimType.Claim, _keyResultAreaPermission.View));
-
+             PermissionClaimType.Claim, _keyResultAreaPermission.View)); ;            
         }
     }
 }

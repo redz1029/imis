@@ -1,6 +1,5 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -32,28 +31,12 @@ namespace IMIS.Persistence.KraModule
         }
         public async Task<IEnumerable<KeyResultArea>> GetAll(CancellationToken cancellationToken)
         {
-            return await _dbContext.KeyResultArea
-           .Where(o => !o.IsDeleted)
-           .AsNoTracking()
-           .ToListAsync(cancellationToken)
-           .ConfigureAwait(false);
-        }
-
-      
-        public async Task<IEnumerable<KeyResultArea>> GetAllFilteredAsync(KeyResultAreaFilter filter, CancellationToken cancellationToken)
-        {
-            var query = _dbContext.KeyResultArea.AsQueryable();
-
-            if (filter.IsDeleted.HasValue)
-            {
-                query = query.Where(x => x.IsDeleted == filter.IsDeleted.Value);
-            }
-
-            return await query
-                .AsNoTracking()
-                .ToListAsync(cancellationToken);
-        }
-
+                return await _dbContext.KeyResultArea
+               .Where(o => !o.IsDeleted)  
+               .AsNoTracking()            
+               .ToListAsync(cancellationToken)
+               .ConfigureAwait(false);
+        }      
         // Save or Update method
         public new async Task<KeyResultArea> SaveOrUpdateAsync(KeyResultArea keyResultArea, CancellationToken cancellationToken)
         {
