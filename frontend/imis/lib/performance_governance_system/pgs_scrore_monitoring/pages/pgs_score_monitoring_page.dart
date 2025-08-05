@@ -1294,6 +1294,14 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   labelStyle: TextStyle(color: grey, fontSize: 12),
                   isDense: true,
                   border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
+
+                  floatingLabelStyle: TextStyle(
+                    color: primaryColor,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               gap,
@@ -1305,6 +1313,13 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   labelStyle: TextStyle(color: grey, fontSize: 12),
                   isDense: true,
                   border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: primaryColor,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               gap,
@@ -1372,6 +1387,13 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   labelStyle: TextStyle(color: grey, fontSize: 12),
                   isDense: true,
                   border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: primaryColor,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               gap,
@@ -1383,6 +1405,13 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   labelStyle: TextStyle(color: grey, fontSize: 12),
                   isDense: true,
                   border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: primaryColor,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               gap,

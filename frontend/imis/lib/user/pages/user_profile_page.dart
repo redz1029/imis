@@ -357,7 +357,12 @@ class UserProfileState extends State<UserProfilePage> {
                   controller: passwordController,
                   decoration: InputDecoration(
                     labelText: 'Password',
+                    labelStyle: TextStyle(color: grey),
                     border: OutlineInputBorder(),
+                    floatingLabelStyle: TextStyle(color: primaryColor),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
                   ),
                   obscureText: true,
                 ),
