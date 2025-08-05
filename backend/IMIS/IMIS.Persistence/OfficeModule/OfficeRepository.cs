@@ -10,45 +10,44 @@ namespace IMIS.Persistence.OfficeModule
     {
         public async Task<EntityPageList<Office, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var query = _dbContext.Offices.Where(k => !k.IsDeleted).AsNoTracking();
-
-            var office = await EntityPageList<Office, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
-
-            return office;
+            return await EntityPageList<Office, int>
+                .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken)
+                .ConfigureAwait(false);
         }
+
         public async Task<IEnumerable<Office>?> FilterByName(string name, int officeNoOfResults, CancellationToken cancellationToken)
         {
-            return await _dbContext.Offices
-                .Where(a => EF.Functions.Like(a.Name, $"{name}%") && !a.IsDeleted)
+            return await _entities
+                .Where(a => EF.Functions.Like(a.Name, $"{name}%"))
                 .Take(officeNoOfResults)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-        public async Task<IEnumerable<Office>> GetAll(CancellationToken cancellationToken)
+        public async Task<IEnumerable<Office>?> GetAll(CancellationToken cancellationToken)
         {
-            return await _dbContext.Offices
-                .Where(o => !o.IsDeleted)
+            return await _entities
                 .Include(o => o.AuditorOffices)
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
+
         public async Task<IEnumerable<Office>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {
             if (auditScheduleId.HasValue)
             {
-                return await _dbContext.AuditableOffices
+                return await ReadOnlyDbContext.Set<AuditableOffices>()
                     .Where(ao => ao.AuditScheduleId == auditScheduleId)
-                    .Select(a => a.Office)
+                    .Select(a => a.Office!)
                     .Include (ao => ao.AuditorOffices)
                     .AsNoTracking()
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
             } else
             {
-                return await _dbContext.AuditableOffices
-                   .Select(a => a.Office)
+                return await ReadOnlyDbContext.Set<AuditableOffices>()
+                   .Select(a => a.Office!)
                    .Distinct()
                    .Include(ao => ao.AuditorOffices)
                    .AsNoTracking()
@@ -63,12 +62,12 @@ namespace IMIS.Persistence.OfficeModule
                 : await GetAuditableOffices(null, cancellationToken).ConfigureAwait(false);
 
             return auditableOffices != null && auditableOffices.Count() > 0 
-                ? await _dbContext.Offices
+                ? await _entities
                     .Where(o => !auditableOffices.Any(a => a.Id == o.Id))
                     .AsNoTracking()
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false)
-                : await _dbContext.Offices
+                : await _entities
                     .AsNoTracking()
                     .ToListAsync(cancellationToken)
                     .ConfigureAwait(false);
