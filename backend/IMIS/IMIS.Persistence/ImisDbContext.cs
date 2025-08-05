@@ -1,5 +1,5 @@
-﻿using System.Reflection.Emit;
-using IMIS.Domain;
+﻿using IMIS.Domain;
+using IMIS.Persistence.SeedConfigurations;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -109,17 +109,13 @@ namespace IMIS.Persistence
                 .HasForeignKey(x => x.OfficeId)
                 .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<OfficeType>().HasData(
-               new OfficeType { Id = 1, Name = "Service", IsActive = true },
-               new OfficeType { Id = 2, Name = "Department", IsActive = true },
-               new OfficeType { Id = 3, Name = "Unit", IsActive = true },
-               new OfficeType { Id = 4, Name = "Section", IsActive = true }
-           );
-
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
             builder.ApplyConfiguration(new UserConfiguration());
             builder.ApplyConfiguration(new UserRoleConfiguration());
+            builder.ApplyConfiguration(new OfficeTypeConfiguration());
+            builder.ApplyConfiguration(new OfficeConfiguration());
+            builder.ApplyConfiguration(new KeyResultAreaConfiguration());
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

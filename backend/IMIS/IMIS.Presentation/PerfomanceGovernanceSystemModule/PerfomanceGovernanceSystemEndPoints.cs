@@ -37,7 +37,7 @@ namespace IMIS.Presentation.PgsModuleAPI
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _performanceGovernanceSystem.Add));
 
-            app.MapPost("/submit", async ([FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, string userId, 
+            app.MapPost("/submit", async ([FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, string userId,
                 IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var submittedPGS = await service.Submit(performanceGovernanceSystemDto, userId, cancellationToken).ConfigureAwait(false);
@@ -46,7 +46,7 @@ namespace IMIS.Presentation.PgsModuleAPI
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _performanceGovernanceSystem.Add));          
+             PermissionClaimType.Claim, _performanceGovernanceSystem.Add));
 
             app.MapGet("submit/userId/{userId}", async (string userId, int pgsId,IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
                 {
@@ -97,7 +97,7 @@ namespace IMIS.Presentation.PgsModuleAPI
            .RequireAuthorization(e => e.RequireClaim(
             PermissionClaimType.Claim, _performanceGovernanceSystem.View))
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-         
+
             app.MapPut("/{id}", async (int id, [FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var existingPerformanceGovernanceSystem = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);

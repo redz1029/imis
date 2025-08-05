@@ -230,10 +230,10 @@ namespace IMIS.Persistence.PgsModule
 
             if (signatoryTemplates.Count == 0)
             {
-                // Get the root parent office.
-                var parentOffice = await _officeRepository
-                    .GetRootParentOffice(office, cancellationToken)
-                    .ConfigureAwait(false);
+                //Get the root parent office.
+               var parentOffice = await _officeRepository
+                   .GetRootParentOffice(office, cancellationToken)
+                   .ConfigureAwait(false);
 
                 // retrieve the template for services.
                 signatoryTemplates = await _signatoryTemplateRepository
@@ -345,12 +345,12 @@ namespace IMIS.Persistence.PgsModule
 
         //    return new PerfomanceGovernanceSystemDto(saved);
         //}
-      
+
 
         public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(
         PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto,
         CancellationToken cancellationToken)
-            {
+        {
             if (perfomanceGovernanceSystemDto == null)
                 throw new ArgumentNullException(nameof(perfomanceGovernanceSystemDto));
 
@@ -365,7 +365,7 @@ namespace IMIS.Persistence.PgsModule
             entity.Office = office;
             entity.OfficeId = office.Id;
             entity.PgsPeriod = pgsPeriod;
-           
+
             if (entity.PgsDeliverables != null)
             {
                 foreach (var d in entity.PgsDeliverables)
@@ -394,7 +394,7 @@ namespace IMIS.Persistence.PgsModule
                 var toRemove = existing.PgsDeliverables!.Where(d => !updatedIds.Contains(d.Id)).ToList();
 
                 if (toRemove.Any())
-                {                   
+                {
                     // Save to history
                     var deliverableHistoryEntries = toRemove.Select(d => new PgsDeliverableHistory
                     {
@@ -403,13 +403,13 @@ namespace IMIS.Persistence.PgsModule
                         DeliverableId = d.Id,
                         DeliverableName = d.DeliverableName,
                         KraDescription = d.KraDescription,
-                        KraId = d.KraId,     
+                        KraId = d.KraId,
                         DisapprovalRemarks = d.DisapprovalRemarks,
                         IsDisapproved = d.IsDisapproved,
                         IsDirect = d.IsDirect,
                         PercentDeliverables = d.PercentDeliverables,
-                        ByWhen = d.ByWhen,  
-                        Status = d.Status,  
+                        ByWhen = d.ByWhen,
+                        Status = d.Status,
                         Remarks = d.Remarks,
                         RemovedBy = "System",
                         RemovedAt = DateTime.UtcNow
