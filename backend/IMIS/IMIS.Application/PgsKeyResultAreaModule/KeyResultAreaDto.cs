@@ -21,7 +21,7 @@ namespace IMIS.Application.PgsKraModule
 
         public override KeyResultArea ToEntity()
         {
-            return new KeyResultArea() { Id = Id, Name = Name, Remarks = Remarks };
+            return new KeyResultArea() { Id = Id, Name = Name, Remarks = Remarks!, IsDeleted = IsDeleted};
         }
     }
 }
