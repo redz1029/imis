@@ -1,8 +1,8 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: use_build_context_synchronously
 
 import 'dart:io';
-// ignore: avoid_web_libraries_in_flutter,
-import 'dart:html' as html;
+import 'package:imis/widgets/custom_tooltip.dart';
+import 'package:universal_html/html.dart' as html;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -39,16 +39,14 @@ class PerformanceGovernanceSystemPage extends StatefulWidget {
   const PerformanceGovernanceSystemPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _PerformanceGovernanceSystemPageState createState() =>
-      _PerformanceGovernanceSystemPageState();
+  PerformanceGovernanceSystemPageState createState() =>
+      PerformanceGovernanceSystemPageState();
 }
 
-class _PerformanceGovernanceSystemPageState
+class PerformanceGovernanceSystemPageState
     extends State<PerformanceGovernanceSystemPage> {
   late FilterSearchResultUtil<PerformanceGovernanceSystem> pgsSearchUtil;
   final GlobalKey _menuKey = GlobalKey();
-
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> signatoryControllers = {};
   Map<int, TextEditingController> selectedByWhenControllers = {};
@@ -384,50 +382,44 @@ class _PerformanceGovernanceSystemPageState
     }
   }
 
-  Future<List<Map<String, dynamic>>> _getFilteredSignatories() async {
-    return signatoryList.toList();
-  }
+  void restoreDeliverable(
+    PgsDeliverableHistory deliverable,
+    Function setDialogState,
+  ) {
+    setDialogState(() {
+      final newIndex = rows.isNotEmpty ? rows.last + 1 : 0;
+      rows.add(newIndex);
 
-  Widget _buildSignatoryColumnSync({
-    required String title,
-    required String? currentValue,
-    required ValueChanged<String?> onChanged,
-    required VoidCallback onDeleted,
-  }) {
-    final sortedSignatoryList = List<Map<String, dynamic>>.from(signatoryList)
-      ..sort(
-        (a, b) => (a['orderLevel'] as int).compareTo(b['orderLevel'] as int),
+      deliverablesControllers[newIndex] = TextEditingController(
+        text: deliverable.deliverableName,
       );
-
-    return Center(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 12)),
-          const SizedBox(height: 6),
-          Container(width: 200, height: 1.8, color: Colors.grey),
-          const SizedBox(height: 8),
-          if (currentValue != null)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                if (sortedSignatoryList.any(
-                  (s) => s['signatoryId'] == currentValue,
-                ))
-                  const SizedBox(height: 4),
-                Text(
-                  (sortedSignatoryList.firstWhere(
-                            (s) => s['signatoryId'] == currentValue,
-                          )['signatoryName'] ??
-                          '')
-                      .toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
+      selectedKRA[newIndex] = deliverable.kraId;
+      selectedKRAObjects[newIndex] = options.firstWhere(
+        (option) => option['id'] == deliverable.kraId,
+        orElse: () => {'id': deliverable.kraId, 'name': 'Unknown'},
+      );
+      selectedDirect[newIndex] = deliverable.isDirect!;
+      selectedIndirect[newIndex] = !deliverable.isDirect!;
+      selectedByWhen[newIndex] = deliverable.byWhen?.toIso8601String() ?? '';
+      selectedByWhenControllers[newIndex] = TextEditingController(
+        text:
+            deliverable.byWhen != null
+                ? DateFormat('MMMM yyyy').format(deliverable.byWhen!)
+                : '',
+      );
+      selectedStatus[newIndex] = deliverable.status!;
+      deliverableIds[newIndex] = deliverable.id ?? 0;
+      selectedDisapproved[newIndex] = false;
+      reasonController[newIndex] = TextEditingController(
+        text: deliverable.disapprovalRemarks,
+      );
+      percentageControllers[newIndex] = TextEditingController(
+        text: deliverable.percentDeliverables.toString(),
+      );
+      kraDescriptionController[newIndex] = TextEditingController(
+        text: deliverable.kraDescription,
+      );
+    });
   }
 
   Future<List<PgsDeliverables>> fetchDeliverables({String? pgsId}) async {
@@ -461,40 +453,6 @@ class _PerformanceGovernanceSystemPageState
 
     return deliverablesList;
   }
-
-  // Future<List<PgsDeliverableHistory>> fetchDeliverablesHistory({
-  //   String? pgsId,
-  // }) async {
-  //   List<PgsDeliverableHistory> deliverableHistory = [];
-  //   final id = pgsId ?? '450295';
-  //   final url = "${ApiEndpoint().pgsDeliverableHistory}/$id";
-
-  //   try {
-  //     final response = await AuthenticatedRequest.get(dio, url);
-
-  //     if (response.statusCode == 200) {
-  //       final data = response.data;
-  //       final pgsDeliverableHistoryList = data is List ? data : [data];
-
-  //       for (var pgsJson in pgsDeliverableHistoryList) {
-  //         final deliverablesHistory =
-  //             (pgsJson['pgsDeliverableHistory'] as List)
-  //                 .map((d) => PgsDeliverableHistory.fromJson(d))
-  //                 .toList();
-
-  //         deliverableHistory.addAll(deliverablesHistory);
-  //       }
-  //     } else {
-  //       debugPrint("Failed to fetch deliverables");
-  //     }
-  //   } on DioException {
-  //     debugPrint("Dio error");
-  //   } catch (e) {
-  //     debugPrint("Unexpected error: $e");
-  //   }
-
-  //   return deliverableHistory;
-  // }
 
   Future<List<PgsDeliverableHistory>> fetchDeliverablesHistory({
     String? pgsId,
@@ -650,7 +608,7 @@ class _PerformanceGovernanceSystemPageState
                           ),
                           onTap: () => Navigator.pop(context, officeIds[index]),
 
-                          hoverColor: primaryColor.withOpacity(0.1),
+                          hoverColor: primaryColor.withValues(alpha: 0.1),
                         ),
                       );
                     },
@@ -1010,7 +968,11 @@ class _PerformanceGovernanceSystemPageState
 
         options =
             data.map<Map<String, dynamic>>((item) {
-              return {'id': item['id'] as int, 'name': item['name'].toString()};
+              return {
+                'id': item['id'] as int,
+                'name': item['name'].toString(),
+                'remarks': item['remarks']?.toString() ?? '',
+              };
             }).toList();
       } else {
         debugPrint("Failed to load data");
@@ -2267,8 +2229,6 @@ class _PerformanceGovernanceSystemPageState
                   orElse: () => {'orderLevel': 1},
                 )['orderLevel'] ??
                 1;
-            final isAnyDisapproved =
-                deliverables?.any((d) => d.isDisapproved == true) ?? false;
 
             return AlertDialog(
               backgroundColor: mainBgColor,
@@ -2334,7 +2294,7 @@ class _PerformanceGovernanceSystemPageState
                                       padding: const EdgeInsets.symmetric(
                                         horizontal: 8,
                                       ),
-                                      child: Tooltip(
+                                      child: CustomTooltip(
                                         message: 'Select period',
                                         child: DropdownButton<int>(
                                           dropdownColor: mainBgColor,
@@ -2422,7 +2382,6 @@ class _PerformanceGovernanceSystemPageState
                                 ), // Tab Name 4
                               ],
                             ),
-
                             //First Tab Strategic Contributions
                             Expanded(
                               child: TabBarView(
@@ -2814,7 +2773,11 @@ class _PerformanceGovernanceSystemPageState
                                                           ),
                                                     ),
 
-                                                    _buildRecoverHistoryButton(),
+                                                    _buildRecoverHistoryButton(
+                                                      context,
+                                                      deliverable,
+                                                      setDialogState,
+                                                    ),
                                                   ],
                                                 ),
                                               ),
@@ -2840,11 +2803,9 @@ class _PerformanceGovernanceSystemPageState
                 ],
               ),
 
-              //End third tab
               actions: [
                 if ((id == null && orderLevel == 1) ||
-                    (id == null && orderLevel >= 2) ||
-                    isAnyDisapproved)
+                    (id == null && orderLevel >= 2))
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -2924,7 +2885,7 @@ class _PerformanceGovernanceSystemPageState
               ? "Please complete all required fields before submitting."
               : "Please complete all required fields before submitting.",
         ),
-        position: MotionToastPosition.top,
+        toastAlignment: Alignment.center,
       ).show(context);
       return;
     }
@@ -2957,7 +2918,7 @@ class _PerformanceGovernanceSystemPageState
 
       MotionToast.success(
         description: Text(successMessage),
-        position: MotionToastPosition.top,
+        toastAlignment: Alignment.center,
       ).show(context);
 
       await Future.delayed(Duration(milliseconds: 1000));
@@ -2970,7 +2931,7 @@ class _PerformanceGovernanceSystemPageState
 
       MotionToast.error(
         description: Text(errorMessage),
-        position: MotionToastPosition.top,
+        toastAlignment: Alignment.center,
       ).show(context);
 
       await Future.delayed(Duration(milliseconds: 1500));
@@ -2993,7 +2954,8 @@ class _PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Tooltip(
+      child: CustomTooltip(
+        maxLines: 4,
         message:
             'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
         child: TextFormField(
@@ -3047,52 +3009,48 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildDropdownKraCell(int index) {
+  Widget _buildDropdownKraCell(int index, Function setDialogState) {
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
     }
 
-    if (!kraDescriptionController.containsKey(index)) {
-      kraDescriptionController[index] = TextEditingController();
-    }
+    final selectedKraObject =
+        selectedKRAObjects[index] ??
+        (options.isNotEmpty ? options.first : null);
+
+    final kraTooltipMessage =
+        selectedKraObject?['remarks'] ?? 'No description available';
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Tooltip(
-            message:
-                'Key Result Areas define the core outcomes expected from this position. Please select the most applicable one.',
+          CustomTooltip(
+            key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
+            maxLines: 5,
+            message: kraTooltipMessage,
             child: DropdownButtonFormField<int>(
               isExpanded: true,
               value: selectedKRA[index],
               onChanged: (int? newValue) {
                 if (newValue == null) return;
-                setState(() {
+                setDialogState(() {
                   selectedKRA[index] = newValue;
-
-                  selectedKRAObjects[index] = options.firstWhere(
+                  final selectedOption = options.firstWhere(
                     (option) => option['id'] == newValue,
                     orElse:
                         () => {
-                          'id': 1,
+                          'id': -1,
                           'name': 'Unknown',
-                          'description': '',
-                          'rowVersion': '',
+                          'remarks': 'Not found',
                         },
                   );
-                  debugPrint("KRA changed for index $index ? KRAID: $newValue");
+
+                  selectedKRAObjects[index] = selectedOption;
                 });
               },
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                  vertical: 20.0,
-                ),
-              ),
               items:
                   options.map<DropdownMenuItem<int>>((option) {
                     return DropdownMenuItem<int>(
@@ -3100,35 +3058,24 @@ class _PerformanceGovernanceSystemPageState
                       child: Text(option['name']),
                     );
                   }).toList(),
-              selectedItemBuilder: (BuildContext context) {
-                return options.map<Widget>((option) {
-                  return Container(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      option['name'],
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  );
-                }).toList();
-              },
-              dropdownColor: Colors.white,
-              iconSize: 30.0,
-              itemHeight: 50.0,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 20,
+                ),
+              ),
             ),
           ),
-
           const SizedBox(height: 16),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              "KRA Description",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+          const Text(
+            "KRA Description",
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          gap2,
-          Tooltip(
+          const SizedBox(height: 8),
+          CustomTooltip(
             message:
-                'Enter a short description of what this KRA focuses on achieving',
+                'Enter a short description of what this KRA focuses on achieving.',
             child: TextField(
               controller: kraDescriptionController[index],
               decoration: const InputDecoration(
@@ -3138,7 +3085,6 @@ class _PerformanceGovernanceSystemPageState
               maxLines: 3,
             ),
           ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -3174,7 +3120,8 @@ class _PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Tooltip(
+            child: CustomTooltip(
+              maxLines: 4,
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextField(
@@ -3260,7 +3207,7 @@ class _PerformanceGovernanceSystemPageState
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
-        _buildDropdownKraCell(index),
+        _buildDropdownKraCell(index, setDialogState),
         _buildCheckboxCell(
           index,
           selectedDirect,
@@ -3488,7 +3435,8 @@ class _PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Tooltip(
+            child: CustomTooltip(
+              maxLines: 4,
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextField(
@@ -3588,7 +3536,7 @@ class _PerformanceGovernanceSystemPageState
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
-        _buildDropdownKraCellPGSDeliverableStatus(index),
+        _buildDropdownKraCellPGSDeliverableStatus(index, setDialogState),
         _buildCheckboxCell(
           index,
           selectedDirect,
@@ -3677,52 +3625,51 @@ class _PerformanceGovernanceSystemPageState
   }
   //End------------Pgs Deliverables Status----------------------------------------------
 
-  ////------------------Kra for Pgs Delieverable Status--------------------
-  Widget _buildDropdownKraCellPGSDeliverableStatus(int index) {
+  Widget _buildDropdownKraCellPGSDeliverableStatus(
+    int index,
+    Function setDialogState,
+  ) {
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
     }
 
-    if (!kraDescriptionController.containsKey(index)) {
-      kraDescriptionController[index] = TextEditingController();
-    }
+    final selectedKraObject =
+        selectedKRAObjects[index] ??
+        (options.isNotEmpty ? options.first : null);
+
+    final kraTooltipMessage =
+        selectedKraObject?['remarks'] ?? 'No description available';
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Tooltip(
-            message:
-                'Key Result Areas define the core outcomes expected from this position. Please select the most applicable one.',
+          CustomTooltip(
+            key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
+            maxLines: 4,
+            message: kraTooltipMessage,
             child: DropdownButtonFormField<int>(
               isExpanded: true,
               value: selectedKRA[index],
               onChanged: (int? newValue) {
                 if (newValue == null) return;
-                setState(() {
+                setDialogState(() {
                   selectedKRA[index] = newValue;
-
-                  selectedKRAObjects[index] = options.firstWhere(
+                  final selectedOption = options.firstWhere(
                     (option) => option['id'] == newValue,
                     orElse:
                         () => {
-                          'id': 1,
+                          'id': -1,
                           'name': 'Unknown',
-                          'description': '',
-                          'rowVersion': '',
+                          'remarks': 'Not found',
                         },
                   );
+
+                  selectedKRAObjects[index] = selectedOption;
                 });
               },
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                  vertical: 20.0,
-                ),
-              ),
               items:
                   options.map<DropdownMenuItem<int>>((option) {
                     return DropdownMenuItem<int>(
@@ -3730,35 +3677,24 @@ class _PerformanceGovernanceSystemPageState
                       child: Text(option['name']),
                     );
                   }).toList(),
-              selectedItemBuilder: (BuildContext context) {
-                return options.map<Widget>((option) {
-                  return Container(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      option['name'],
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  );
-                }).toList();
-              },
-              dropdownColor: Colors.white,
-              iconSize: 30.0,
-              itemHeight: 50.0,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 20,
+                ),
+              ),
             ),
           ),
-
           const SizedBox(height: 16),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              "KRA Description",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+          const Text(
+            "KRA Description",
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          gap2,
-          Tooltip(
+          const SizedBox(height: 8),
+          CustomTooltip(
             message:
-                'Enter a short description of what this KRA focuses on achieving',
+                'Enter a short description of what this KRA focuses on achieving.',
             child: TextField(
               controller: kraDescriptionController[index],
               decoration: const InputDecoration(
@@ -3768,7 +3704,6 @@ class _PerformanceGovernanceSystemPageState
               maxLines: 3,
             ),
           ),
-          const SizedBox(height: 16),
         ],
       ),
     );
@@ -3888,7 +3823,7 @@ class _PerformanceGovernanceSystemPageState
       padding: const EdgeInsets.all(8.0),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 50.0),
-        child: Tooltip(
+        child: CustomTooltip(
           message:
               'Specify the tangible results or outcomes tied to this responsibility.',
           child: TextField(
@@ -4019,7 +3954,7 @@ class _PerformanceGovernanceSystemPageState
                   "Reason:",
                   style: TextStyle(fontWeight: FontWeight.bold, color: grey),
                 ),
-                Tooltip(
+                CustomTooltip(
                   message: 'State your reason here',
                   child: TextField(
                     controller: reasonController[index],
@@ -4076,187 +4011,6 @@ class _PerformanceGovernanceSystemPageState
   }
 
   // PGS Table Row  Deliverable History
-  TableRow _buildTableRowDeliverableHistory(
-    int index,
-    String direct,
-    String indirect,
-    Function setState,
-    Function setDialogState, {
-    int orderLevel = 1,
-    String? id,
-
-    // int? id,
-  }) {
-    deliverablesControllers.putIfAbsent(index, () => TextEditingController());
-    selectedDirect.putIfAbsent(index, () => false);
-    selectedIndirect.putIfAbsent(index, () => false);
-    selectedByWhen.putIfAbsent(index, () => '');
-
-    // Define alternating row colors
-    Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
-
-    return TableRow(
-      decoration: BoxDecoration(color: rowColor),
-      children: [
-        _buildDropdownKraCellPGSDeliverableHistory(index),
-        _buildCheckboxCellHistory(
-          index,
-          selectedDirect,
-          selectedIndirect,
-          setDialogState,
-          isDirect: true,
-        ),
-        _buildCheckboxCellHistory(
-          index,
-          selectedIndirect,
-          selectedDirect,
-          setDialogState,
-          isDirect: false,
-        ),
-        _buildExpandableTextAreaCell(index),
-        _buildDatePickerCell(index, setDialogState),
-
-        _buildRemoveButton(index, setDialogState),
-      ],
-    );
-  }
-
-  Widget _buildDropdownKraCellPGSDeliverableHistory(int index) {
-    if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
-      selectedKRA[index] = options.first['id'];
-      selectedKRAObjects[index] = options.first;
-    }
-
-    if (!kraDescriptionController.containsKey(index)) {
-      kraDescriptionController[index] = TextEditingController();
-    }
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Tooltip(
-            message:
-                'Key Result Areas define the core outcomes expected from this position. Please select the most applicable one.',
-            child: DropdownButtonFormField<int>(
-              isExpanded: true,
-              value: selectedKRA[index],
-              onChanged: (int? newValue) {
-                if (newValue == null) return;
-                setState(() {
-                  selectedKRA[index] = newValue;
-
-                  selectedKRAObjects[index] = options.firstWhere(
-                    (option) => option['id'] == newValue,
-                    orElse:
-                        () => {
-                          'id': 1,
-                          'name': 'Unknown',
-                          'description': '',
-                          'rowVersion': '',
-                        },
-                  );
-                });
-              },
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                  vertical: 20.0,
-                ),
-              ),
-              items:
-                  options.map<DropdownMenuItem<int>>((option) {
-                    return DropdownMenuItem<int>(
-                      value: option['id'],
-                      child: Text(option['name']),
-                    );
-                  }).toList(),
-              selectedItemBuilder: (BuildContext context) {
-                return options.map<Widget>((option) {
-                  return Container(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      option['name'],
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  );
-                }).toList();
-              },
-              dropdownColor: Colors.white,
-              iconSize: 30.0,
-              itemHeight: 50.0,
-            ),
-          ),
-
-          const SizedBox(height: 16),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              "KRA Description",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-          ),
-          gap2,
-          Tooltip(
-            message:
-                'Enter a short description of what this KRA focuses on achieving',
-            child: TextField(
-              controller: kraDescriptionController[index],
-              decoration: const InputDecoration(
-                hintText: "Enter your description here...",
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCheckboxCellHistory(
-    int index,
-    Map<int, bool> selectedValues,
-    Map<int, bool> oppositeValues,
-    Function setDialogState, {
-    required bool isDirect,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: const Color.fromARGB(255, 255, 255, 255),
-            width: 0.5,
-          ),
-          color: const Color.fromARGB(255, 255, 255, 255),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          child: Checkbox(
-            value: selectedValues[index] ?? false, // Read from state
-            onChanged: (bool? newValue) {
-              if (newValue == null) return;
-
-              setDialogState(() {
-                selectedValues[index] = newValue;
-
-                if (newValue) {
-                  oppositeValues[index] = false;
-                }
-              });
-            },
-            activeColor: Colors.white,
-            checkColor: Colors.black,
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildTableCell(String text, {bool? isDirect}) {
     displayText = text;
@@ -4314,12 +4068,23 @@ class _PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildRecoverHistoryButton() {
+  Widget _buildRecoverHistoryButton(
+    BuildContext context,
+    PgsDeliverableHistory deliverable,
+    Function setDialogState,
+  ) {
+    final TabController tabController = DefaultTabController.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         IconButton(
-          onPressed: () {},
+          tooltip: 'Recover',
+          onPressed: () {
+            restoreDeliverable(deliverable, setDialogState);
+            if (tabController.index != 0) {
+              tabController.animateTo(0);
+            }
+          },
           icon: Icon(Icons.restore, color: primaryColor, size: 54),
         ),
       ],

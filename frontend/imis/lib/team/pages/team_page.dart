@@ -15,11 +15,10 @@ class TeamPage extends StatefulWidget {
   const TeamPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _TeamPageState createState() => _TeamPageState();
+  TeamPageState createState() => TeamPageState();
 }
 
-class _TeamPageState extends State<TeamPage> {
+class TeamPageState extends State<TeamPage> {
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Team> teamSearchUtil;
   final _formKey = GlobalKey<FormState>();

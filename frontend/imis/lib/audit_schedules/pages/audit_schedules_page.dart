@@ -16,11 +16,10 @@ class AuditSchedulesPage extends StatefulWidget {
   const AuditSchedulesPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _AuditSchedulesPageState createState() => _AuditSchedulesPageState();
+  AuditSchedulesPageState createState() => AuditSchedulesPageState();
 }
 
-class _AuditSchedulesPageState extends State<AuditSchedulesPage> {
+class AuditSchedulesPageState extends State<AuditSchedulesPage> {
   List<Map<String, dynamic>> auditScheduleList = [];
   List<Map<String, dynamic>> filteredList = [];
   TextEditingController searchController = TextEditingController();

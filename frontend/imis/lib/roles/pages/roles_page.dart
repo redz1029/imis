@@ -6,18 +6,16 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/token_expiration_handler.dart';
-
 import '../../utils/http_util.dart';
 
 class RolesPage extends StatefulWidget {
   const RolesPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _RolesPageState createState() => _RolesPageState();
+  RolesPageState createState() => RolesPageState();
 }
 
-class _RolesPageState extends State<RolesPage> {
+class RolesPageState extends State<RolesPage> {
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Roles> roleSearchUtil;
 

@@ -17,12 +17,11 @@ class PgsSignatoryTemplatePage extends StatefulWidget {
   const PgsSignatoryTemplatePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _PgsSignatoryTemplatePageState createState() =>
-      _PgsSignatoryTemplatePageState();
+  PgsSignatoryTemplatePageState createState() =>
+      PgsSignatoryTemplatePageState();
 }
 
-class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
+class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   final _formKey = GlobalKey<FormState>();
   late FilterSearchResultUtil<PgsSignatoryTemplate> signatoryTemplateUtil;
 
@@ -624,78 +623,20 @@ class _PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // DropdownSearch<User?>(
-                    //   popupProps: PopupProps.menu(
-                    //     showSearchBox: true,
-                    //     searchFieldProps: TextFieldProps(
-                    //       decoration: InputDecoration(
-                    //         label: Text('Signatory Name'),
-                    //         hintText: 'Search User Name...',
-                    //         filled: true,
-                    //         fillColor: mainBgColor,
-                    //         prefixIcon: Icon(Icons.search),
-                    //         border: OutlineInputBorder(
-                    //           borderRadius: BorderRadius.circular(8),
-                    //         ),
-                    //         focusedBorder: OutlineInputBorder(
-                    //           borderSide: BorderSide(color: primaryColor),
-                    //         ),
-                    //       ),
-                    //     ),
-                    //     itemBuilder:
-                    //         (context, user, isSelected) => ListTile(
-                    //           tileColor: mainBgColor,
-                    //           title: Text(user?.fullName ?? ''),
-                    //         ),
-                    //   ),
-                    //   items: userList,
-                    //   itemAsString: (u) => u?.fullName ?? '',
-                    //   selectedItem: userList.cast<User?>().firstWhere(
-                    //     (u) => u?.id == selectedUserId,
-                    //     orElse: () => null,
-                    //   ),
-                    //   onChanged:
-                    //       (value) => setState(() => selectedUserId = value?.id),
-                    //   validator: (value) {
-                    //     if (value == null) {
-                    //       return 'Please select a user';
-                    //     }
-                    //     return null;
-                    //   },
-                    //   dropdownDecoratorProps: DropDownDecoratorProps(
-                    //     dropdownSearchDecoration: InputDecoration(
-                    //       labelText: 'Select User',
-                    //       filled: true,
-                    //       fillColor: mainBgColor,
-                    //       floatingLabelBehavior: FloatingLabelBehavior.never,
-                    //       border: OutlineInputBorder(
-                    //         borderRadius: BorderRadius.circular(8),
-                    //       ),
-                    //       focusedBorder: OutlineInputBorder(
-                    //         borderSide: BorderSide(color: primaryColor),
-                    //       ),
-                    //     ),
-                    //   ),
-                    // ),
                     DropdownSearch<User?>(
                       popupProps: PopupProps.menu(
                         showSearchBox: true,
                         searchFieldProps: TextFieldProps(
                           decoration: InputDecoration(
-                            // Use labelText instead of a Text widget so we can style it easily
                             labelText: 'Signatory Name',
                             hintText: 'Search user name…',
                             filled: true,
                             fillColor: mainBgColor,
-
-                            // ✨ Floating label styling
                             floatingLabelStyle: TextStyle(
                               color: primaryColor, // focused color
                               fontWeight: FontWeight.w600,
                             ),
-                            // (Optional) base label style when not floating
                             labelStyle: TextStyle(color: Colors.grey.shade600),
-
                             prefixIcon: const Icon(Icons.search),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),

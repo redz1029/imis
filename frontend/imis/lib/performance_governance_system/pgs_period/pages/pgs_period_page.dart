@@ -15,11 +15,10 @@ class PgsPeriodPage extends StatefulWidget {
   const PgsPeriodPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _PgsPeriodPageState createState() => _PgsPeriodPageState();
+  PgsPeriodPageState createState() => PgsPeriodPageState();
 }
 
-class _PgsPeriodPageState extends State<PgsPeriodPage> {
+class PgsPeriodPageState extends State<PgsPeriodPage> {
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<PgsPeriod> pgsPeriodSearchUtil;
   final _formKey = GlobalKey<FormState>();

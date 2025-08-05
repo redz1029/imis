@@ -14,11 +14,10 @@ class AuditorPage extends StatefulWidget {
   const AuditorPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _AuditorMainPageState createState() => _AuditorMainPageState();
+  AuditorMainPageState createState() => AuditorMainPageState();
 }
 
-class _AuditorMainPageState extends State<AuditorPage> {
+class AuditorMainPageState extends State<AuditorPage> {
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Auditor> auditorSearchUtil;
   final _formKey = GlobalKey<FormState>();

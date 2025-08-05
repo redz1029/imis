@@ -15,12 +15,10 @@ class OfficePage extends StatefulWidget {
   const OfficePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _OfficePageState createState() => _OfficePageState();
+  OfficePageState createState() => OfficePageState();
 }
 
-class _OfficePageState extends State<OfficePage> {
-  // ignore: non_constant_identifier_names
+class OfficePageState extends State<OfficePage> {
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Office> officeSearchUtil;
   final _formKey = GlobalKey<FormState>();

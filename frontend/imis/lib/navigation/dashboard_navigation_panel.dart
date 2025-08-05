@@ -36,12 +36,11 @@ class DashboardNavigationPanel extends StatefulWidget {
   const DashboardNavigationPanel({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _DashboardNavigationPanelState createState() =>
-      _DashboardNavigationPanelState();
+  DashboardNavigationPanelState createState() =>
+      DashboardNavigationPanelState();
 }
 
-class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
+class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
     with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<ScaffoldMessengerState> snackbarKey =
@@ -72,7 +71,6 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
         PermissionService().loadPermissions(roles);
       }
     });
-    // TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -151,8 +149,7 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
               TextButton(
                 onPressed: () async {
                   await AuthUtil.logout();
-
-                  // ignore: use_build_context_synchronously
+                  if (!context.mounted) return;
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => const LoginPage()),
                     (route) => false,
@@ -653,7 +650,6 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
               ),
             ),
           ),
-          // Keep logout at the bottom
           _buildListTile(
             Icons.exit_to_app,
             'Logout',
@@ -742,15 +738,15 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
       ],
     ).then((value) {
       if (value == "Profile") {
-        // ignore: use_build_context_synchronously
+        if (!context.mounted) return;
         _viewProfile(context);
       } else if (value == "change_password") {
-        // ignore: use_build_context_synchronously
+        if (!context.mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
         );
       } else if (value == "logout") {
-        // ignore: use_build_context_synchronously
+        if (!context.mounted) return;
         _logout(context);
       }
     });
@@ -761,7 +757,6 @@ class _DashboardNavigationPanelState extends State<DashboardNavigationPanel>
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isWideScreen = constraints.maxWidth > 800;
-
         return Scaffold(
           key: _scaffoldKey,
           body: Row(

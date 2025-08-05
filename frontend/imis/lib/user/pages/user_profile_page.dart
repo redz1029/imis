@@ -16,11 +16,10 @@ class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _UserProfileState createState() => _UserProfileState();
+  UserProfileState createState() => UserProfileState();
 }
 
-class _UserProfileState extends State<UserProfilePage> {
+class UserProfileState extends State<UserProfilePage> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController middleNameController = TextEditingController();
@@ -358,7 +357,12 @@ class _UserProfileState extends State<UserProfilePage> {
                   controller: passwordController,
                   decoration: InputDecoration(
                     labelText: 'Password',
+                    labelStyle: TextStyle(color: grey),
                     border: OutlineInputBorder(),
+                    floatingLabelStyle: TextStyle(color: primaryColor),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
                   ),
                   obscureText: true,
                 ),

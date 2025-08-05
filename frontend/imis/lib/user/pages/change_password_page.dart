@@ -105,8 +105,8 @@ class _FormContentState extends State<_FormContent> {
           description: const Text(
             "Failed to change password. Please try again.",
           ),
-          // ignore: deprecated_member_use
-          position: MotionToastPosition.top,
+
+          toastAlignment: Alignment.topCenter,
           // ignore: use_build_context_synchronously
         ).show(context);
       }
@@ -118,8 +118,7 @@ class _FormContentState extends State<_FormContent> {
       MotionToast.error(
         title: const Text("An error occurred:"),
         description: const Text(" Please try again."),
-        // ignore: deprecated_member_use
-        position: MotionToastPosition.top,
+        toastAlignment: Alignment.topCenter,
         // ignore: use_build_context_synchronously
       ).show(context);
     }
