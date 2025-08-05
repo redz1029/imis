@@ -1,16 +1,21 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Domain;
+using IMIS.Persistence;
+using Microsoft.EntityFrameworkCore;
+using VaultSharp.V1.SecretsEngines.Identity;
 
 namespace IMIS.Application.PgsSignatoryTemplateModule
 {
     public class PgsSignatoryTemplateService : IPgsSignatoryTemplateService
     {
-        private readonly IPgsSignatoryTemplateRepository _repository;     
+        private readonly IPgsSignatoryTemplateRepository _repository;
+        private readonly ImisDbContext _dbContext;
 
-        public PgsSignatoryTemplateService(IPgsSignatoryTemplateRepository repository)
+        public PgsSignatoryTemplateService(IPgsSignatoryTemplateRepository repository, ImisDbContext dbContext)
         {
             _repository = repository;          
+            _dbContext = dbContext;
         }
 
         private static PgsSignatoryTemplateDto ConvSignatoryTemplateToDTO(PgsSignatoryTemplate signatoryTemplate)
@@ -49,25 +54,67 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
             if (dtoList == null || dtoList.Count == 0)
                 throw new ArgumentNullException(nameof(dtoList));
 
-            var result = new List<PgsSignatoryTemplateDto>();
+            var officeId = dtoList.First().OfficeId;
+           
+            var existingSignatories = await _dbContext.PgsSignatoryTemplate
+                .Where(x => x.OfficeId == officeId)
+                .ToListAsync(cancellationToken);
+           
+            var incomingIds = dtoList
+                .Where(d => d.Id != 0)
+                .Select(d => d.Id)
+                .ToHashSet();
+           
+            var toRemove = existingSignatories
+                .Where(x => !incomingIds.Contains(x.Id))
+                .ToList();
 
+            if (toRemove.Any())
+            {
+                _dbContext.PgsSignatoryTemplate.RemoveRange(toRemove);
+            }
+           
             foreach (var dto in dtoList)
             {
                 var entity = dto.ToEntity();
-                var savedEntity = await _repository.SaveOrUpdateAsync(entity, cancellationToken);
 
-                result.Add(new PgsSignatoryTemplateDto
+                if (entity.Id == 0)
                 {
-                    Id = savedEntity.Id,
-                    Status = savedEntity.Status,
-                    SignatoryLabel = savedEntity.SignatoryLabel,
-                    OrderLevel = savedEntity.OrderLevel,
-                    DefaultSignatoryId = savedEntity.DefaultSignatoryId,
-                    IsActive = savedEntity.IsActive,
-                });
+                  
+                    _dbContext.PgsSignatoryTemplate.Add(entity);
+                }
+                else
+                {
+                    // Existing – update fields
+                    var existing = existingSignatories.FirstOrDefault(x => x.Id == entity.Id);
+                    if (existing != null)
+                    {
+                        existing.Status = entity.Status;
+                        existing.SignatoryLabel = entity.SignatoryLabel;
+                        existing.OrderLevel = entity.OrderLevel;
+                        existing.DefaultSignatoryId = entity.DefaultSignatoryId;
+                        existing.IsActive = entity.IsActive;
+                        existing.OfficeId = entity.OfficeId;
+                    }
+                }
             }
 
-            return result;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+          
+            var updated = await _dbContext.PgsSignatoryTemplate
+                .Where(x => x.OfficeId == officeId)
+                .Select(x => new PgsSignatoryTemplateDto
+                {
+                    Id = x.Id,
+                    Status = x.Status,
+                    SignatoryLabel = x.SignatoryLabel,
+                    OrderLevel = x.OrderLevel,
+                    DefaultSignatoryId = x.DefaultSignatoryId,
+                    IsActive = x.IsActive,
+                    OfficeId = x.OfficeId
+                })
+                .ToListAsync(cancellationToken);
+            return updated;
         }
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
