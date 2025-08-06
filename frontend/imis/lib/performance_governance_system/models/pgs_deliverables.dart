@@ -1,6 +1,6 @@
-import 'package:imis/history/models/pgs_deliverable_history.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
+import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:json_annotation/json_annotation.dart';
 

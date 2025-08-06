@@ -2,9 +2,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/history/models/pgs_deliverable_history.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
+import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/app_permission.dart';
@@ -483,7 +483,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     );
   }
 
-  Widget _buildHistoryTable(List<PgsDeliverableHistory> items) {
+  Widget _buildHistoryTable(List<PgsDeliverableScoreHistory> items) {
     items.sort((a, b) => b.date.compareTo(a.date));
 
     return Column(
@@ -1525,7 +1525,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
 class PgsDeliverableHistoryGrouped {
   final int pgsDeliverableId;
-  final List<PgsDeliverableHistory>? scoreHistory;
+  final List<PgsDeliverableScoreHistory>? scoreHistory;
 
   PgsDeliverableHistoryGrouped(this.pgsDeliverableId, this.scoreHistory);
 
@@ -1534,7 +1534,7 @@ class PgsDeliverableHistoryGrouped {
       json['pgsDeliverableId'] as int,
       json['scoreHistory'] != null
           ? (json['scoreHistory'] as List)
-              .map((e) => PgsDeliverableHistory.fromJson(e))
+              .map((e) => PgsDeliverableScoreHistory.fromJson(e))
               .toList()
           : null,
     );
