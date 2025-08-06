@@ -1,6 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
+import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:dio/dio.dart';
@@ -33,7 +33,6 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/http_util.dart';
-import '../models/pgs_deliverable_history.dart';
 
 class PerformanceGovernanceSystemPage extends StatefulWidget {
   const PerformanceGovernanceSystemPage({super.key});
@@ -3046,6 +3045,7 @@ class PerformanceGovernanceSystemPageState
             maxLines: 5,
             message: kraTooltipMessage,
             child: DropdownButtonFormField<int>(
+              dropdownColor: mainBgColor,
               isExpanded: true,
               value: selectedKRA[index],
               onChanged: (int? newValue) {
@@ -3245,36 +3245,6 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  // Widget _buildDropdownCellStatus(int index, VoidCallback setDialogState) {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child: DropdownButtonFormField<PgsStatus>(
-  //       value: selectedStatus[index] ?? PgsStatus.notStarted,
-  //       onChanged: (PgsStatus? newValue) {
-  //         if (newValue != null) {
-  //           setDialogState();
-  //           setState(() {
-  //             selectedStatus[index] = newValue;
-  //           });
-  //           saveStatusToDb(index, newValue);
-  //         }
-  //       },
-  //       isExpanded: true,
-  //       decoration: const InputDecoration(
-  //         border: OutlineInputBorder(),
-  //         contentPadding: EdgeInsets.all(8.0),
-  //       ),
-  //       items:
-  //           PgsStatus.values.map((PgsStatus value) {
-  //             return DropdownMenuItem<PgsStatus>(
-  //               value: value,
-  //               child: Text(value.name, style: const TextStyle(fontSize: 14)),
-  //             );
-  //           }).toList(),
-  //     ),
-  //   );
-  // }
-
   void saveStatusToDb(int index, PgsStatus status) {
     debugPrint('Saving status for index');
   }
@@ -3301,7 +3271,7 @@ class PerformanceGovernanceSystemPageState
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
           child: Checkbox(
-            value: selectedValues[index] ?? false, // Read from state
+            value: selectedValues[index] ?? false,
             onChanged: (bool? newValue) {
               if (newValue == null) return;
 
@@ -3884,7 +3854,6 @@ class PerformanceGovernanceSystemPageState
           icon: Icon(Icons.delete, color: Colors.red),
           onPressed: () {
             setDialogState(() {
-              // Update UI after removal
               rows.remove(index);
               deliverablesControllers.remove(index);
               selectedKRA.remove(index);
@@ -4015,6 +3984,9 @@ class PerformanceGovernanceSystemPageState
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.all(8.0),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
                 ),
                 onChanged: (value) {
                   setState(() {});

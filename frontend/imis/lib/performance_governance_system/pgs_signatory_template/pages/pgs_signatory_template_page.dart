@@ -498,7 +498,22 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                       ).show(context);
                       return;
                     }
+                    if (selectOffice != null && id == null) {
+                      final officeExists = signatoryTemplateList.any(
+                        (item) => item['officeId'] == selectOffice,
+                      );
 
+                      if (officeExists) {
+                        MotionToast.warning(
+                          title: Text("Warning"),
+                          description: Text(
+                            "The selected office already has a record.",
+                          ),
+                          toastAlignment: Alignment.center,
+                        ).show(context);
+                        return;
+                      }
+                    }
                     List<int> levels =
                         selectedSignatory
                             .map((e) => e['level'] as int)
