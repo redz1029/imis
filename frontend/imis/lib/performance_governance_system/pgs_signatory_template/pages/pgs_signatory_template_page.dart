@@ -12,6 +12,7 @@ import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../widgets/dotted_button.dart';
 import '../models/pgs_signatory_template.dart';
 
 class PgsSignatoryTemplatePage extends StatefulWidget {
@@ -448,20 +449,18 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                               ),
                             ],
                           ),
+                        gap,
                         Align(
                           alignment: Alignment.center,
-                          child: TextButton.icon(
+                          child: DottedButton(
+                            prefixIcon: Icon(Icons.add),
+                            text: "Add signatory",
                             onPressed: () {
                               showSignatoryDialog(
                                 context: context,
                                 setDialogState: setDialogState,
                               );
                             },
-                            icon: Icon(Icons.add, color: primaryColor),
-                            label: Text(
-                              "Add new Signatory",
-                              style: TextStyle(color: primaryColor),
-                            ),
                           ),
                         ),
                       ],
@@ -491,25 +490,27 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                   onPressed: () async {
                     if (selectOffice == null) {
                       MotionToast.error(
-                        description: Text("Missing Fields"),
+                        title: Text("Error Saving"),
+                        description: Text(
+                          "Please fill out all required fields",
+                        ),
                         toastAlignment: Alignment.center,
                       ).show(context);
                       return;
                     }
 
-                    // Check for duplicate 'level' values
                     List<int> levels =
                         selectedSignatory
                             .map((e) => e['level'] as int)
                             .toList();
-                    Set<int> uniqueLevels = Set<int>();
+                    Set<int> uniqueLevels = <int>{};
 
                     for (var level in levels) {
                       if (!uniqueLevels.add(level)) {
-                        // Duplicate found
                         MotionToast.error(
+                          title: Text("Error Saving"),
                           description: Text(
-                            "Check Order Level: There are duplicates.",
+                            "Check Order Level. There are duplicates.",
                           ),
                           toastAlignment: Alignment.center,
                         ).show(context);
