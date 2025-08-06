@@ -294,69 +294,8 @@ class HomePageState extends State<HomePage> {
                   children: [
                     Text("Analytical Overview", style: TextStyle(fontSize: 20)),
                     gap,
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Expanded(
-                          //   child: Text(
-                          //     office.join(', '),
-                          //     style: TextStyle(fontSize: 14, color: grey),
-                          //     overflow: TextOverflow.ellipsis,
-                          //   ),
-                          // ),
-                          SizedBox(width: 16),
-                          PopupMenuButton<String>(
-                            color: mainBgColor,
-                            onSelected: (String value) {
-                              // Handle selection here
-                            },
-                            itemBuilder:
-                                (BuildContext context) =>
-                                    <PopupMenuEntry<String>>[
-                                      const PopupMenuItem<String>(
-                                        value: 'Option 1',
-                                        child: Text('Option 1'),
-                                      ),
-                                      const PopupMenuItem<String>(
-                                        value: 'Option 2',
-                                        child: Text('Option 2'),
-                                      ),
-                                    ],
-                            offset: Offset(0, 30),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: mainBgColor,
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.filter_list,
-                                    size: 16,
-                                    color: grey,
-                                  ),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    "Filter by",
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    gap,
                     _buildStatsRow(),
+                    gap3,
                     _buildPerformanceChart(kraList, deliverablesList),
                     gap,
                     Padding(
@@ -690,8 +629,7 @@ class HomePageState extends State<HomePage> {
               barTouchData: BarTouchData(
                 enabled: true,
                 touchTooltipData: BarTouchTooltipData(
-                  // ignore: deprecated_member_use
-                  tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
+                  tooltipBgColor: Colors.blueGrey.withValues(alpha: 0.8),
                   getTooltipItem: (group, groupIndex, rod, rodIndex) {
                     return BarTooltipItem(
                       '${rod.toY.toStringAsFixed(1)}%',
@@ -793,8 +731,7 @@ class HomePageState extends State<HomePage> {
         height: 130,
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          // ignore: deprecated_member_use
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
