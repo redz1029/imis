@@ -1,7 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 import 'dart:io';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
+import 'package:imis/utils/app_permission.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
+import 'package:imis/widgets/permission_widget.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -1207,199 +1209,157 @@ class PerformanceGovernanceSystemPageState
                         ],
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PopupMenuButton<String>(
-                            color: mainBgColor,
-                            offset: const Offset(0, 30),
-                            onCanceled: () {
-                              setState(() {
-                                isMenuOpenOffice = false;
-                              });
-                            },
-                            onOpened: () {
-                              setState(() {
-                                isMenuOpenOffice = true;
-                              });
-                            },
-                            onSelected: (String value) {
-                              setState(() {
-                                _selectedOfficeId =
-                                    value.isEmpty ? null : value;
-                                fetchPGSPeriods();
-                                isMenuOpenOffice = false;
-                              });
-                            },
-                            itemBuilder: (BuildContext context) {
-                              final updatedOfficeList = [
-                                {'id': '', 'name': 'All Offices'},
-                                ...filteredListOffice,
-                              ];
+                    PermissionWidget(
+                      permission: AppPermission.viewOffice,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PopupMenuButton<String>(
+                              color: mainBgColor,
+                              offset: const Offset(0, 30),
+                              onCanceled: () {
+                                setState(() {
+                                  isMenuOpenOffice = false;
+                                });
+                              },
+                              onOpened: () {
+                                setState(() {
+                                  isMenuOpenOffice = true;
+                                });
+                              },
+                              onSelected: (String value) {
+                                setState(() {
+                                  _selectedOfficeId =
+                                      value.isEmpty ? null : value;
+                                  fetchPGSPeriods();
+                                  isMenuOpenOffice = false;
+                                });
+                              },
+                              itemBuilder: (BuildContext context) {
+                                final updatedOfficeList = [
+                                  {'id': '', 'name': 'All Offices'},
+                                  ...filteredListOffice,
+                                ];
 
-                              final searchController = TextEditingController();
-                              ValueNotifier<String> searchQuery = ValueNotifier(
-                                '',
-                              );
+                                final searchController =
+                                    TextEditingController();
+                                ValueNotifier<String> searchQuery =
+                                    ValueNotifier('');
 
-                              return [
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  height: kMinInteractiveDimension,
-                                  child: Column(
-                                    children: [
-                                      TextField(
-                                        controller: searchController,
-                                        decoration: InputDecoration(
-                                          hintText: 'Search offices...',
-                                          hintStyle: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 12,
+                                return [
+                                  PopupMenuItem<String>(
+                                    enabled: false,
+                                    height: kMinInteractiveDimension,
+                                    child: Column(
+                                      children: [
+                                        TextField(
+                                          controller: searchController,
+                                          decoration: InputDecoration(
+                                            hintText: 'Search offices...',
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 12,
+                                            ),
+                                            prefixIcon: Icon(
+                                              Icons.search,
+                                              size: 18,
+                                            ),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  vertical: 8,
+                                                ),
+                                            border: OutlineInputBorder(),
+                                            isDense: true,
                                           ),
-                                          prefixIcon: Icon(
-                                            Icons.search,
-                                            size: 18,
-                                          ),
-                                          contentPadding: EdgeInsets.symmetric(
-                                            vertical: 8,
-                                          ),
-                                          border: OutlineInputBorder(),
-                                          isDense: true,
+                                          onChanged: (value) {
+                                            searchQuery.value =
+                                                value.toLowerCase();
+                                          },
                                         ),
-                                        onChanged: (value) {
-                                          searchQuery.value =
-                                              value.toLowerCase();
-                                        },
-                                      ),
-                                      const Divider(height: 16, thickness: 1),
-                                    ],
+                                        const Divider(height: 16, thickness: 1),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                // Scrollable office list
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  child: ValueListenableBuilder<String>(
-                                    valueListenable: searchQuery,
-                                    builder: (context, query, _) {
-                                      final filteredOffices =
-                                          updatedOfficeList
-                                              .where(
-                                                (office) => office['name']
-                                                    .toString()
-                                                    .toLowerCase()
-                                                    .contains(query),
-                                              )
-                                              .toList();
+                                  // Scrollable office list
+                                  PopupMenuItem<String>(
+                                    enabled: false,
+                                    child: ValueListenableBuilder<String>(
+                                      valueListenable: searchQuery,
+                                      builder: (context, query, _) {
+                                        final filteredOffices =
+                                            updatedOfficeList
+                                                .where(
+                                                  (office) => office['name']
+                                                      .toString()
+                                                      .toLowerCase()
+                                                      .contains(query),
+                                                )
+                                                .toList();
 
-                                      return ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxHeight:
-                                              MediaQuery.of(
-                                                context,
-                                              ).size.height *
-                                              0.4,
-                                        ),
-                                        child: SingleChildScrollView(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children:
-                                                filteredOffices
-                                                    .map<Widget>(
-                                                      (office) => ListTile(
-                                                        dense: true,
-                                                        title: Text(
-                                                          office['name'],
-                                                          style: TextStyle(
-                                                            color: Colors.black,
+                                        return ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            maxHeight:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.height *
+                                                0.4,
+                                          ),
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children:
+                                                  filteredOffices
+                                                      .map<Widget>(
+                                                        (office) => ListTile(
+                                                          dense: true,
+                                                          title: Text(
+                                                            office['name'],
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Colors.black,
+                                                            ),
                                                           ),
+                                                          onTap: () {
+                                                            Navigator.pop(
+                                                              context,
+                                                            );
+                                                            setState(() {
+                                                              _selectedOfficeId =
+                                                                  office['id']
+                                                                      .toString();
+                                                              fetchPgsFilter();
+                                                            });
+                                                          },
                                                         ),
-                                                        onTap: () {
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
-                                                          setState(() {
-                                                            _selectedOfficeId =
-                                                                office['id']
-                                                                    .toString();
-                                                            fetchPgsFilter();
-                                                          });
-                                                        },
-                                                      ),
-                                                    )
-                                                    .toList(),
+                                                      )
+                                                      .toList(),
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                              ];
-                            },
-                            child: FilterButton(
-                              label:
-                                  _selectedOfficeId == null
-                                      ? 'All Offices'
-                                      : filteredListOffice.firstWhere(
-                                        (office) =>
-                                            office['id'].toString() ==
-                                            _selectedOfficeId,
-                                        orElse: () => {'name': 'Office'},
-                                      )['name'],
-                              isActive: isMenuOpenOffice,
+                                ];
+                              },
+                              child: FilterButton(
+                                label:
+                                    _selectedOfficeId == null
+                                        ? 'All Offices'
+                                        : filteredListOffice.firstWhere(
+                                          (office) =>
+                                              office['id'].toString() ==
+                                              _selectedOfficeId,
+                                          orElse: () => {'name': 'All Offices'},
+                                        )['name'],
+                                isActive: isMenuOpenOffice,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-
-                    // Padding(
-                    //   padding: const EdgeInsets.only(right: 8.0),
-                    //   child: Column(
-                    //     crossAxisAlignment: CrossAxisAlignment.start,
-                    //     children: [
-                    //       PopupMenuButton<String>(
-                    //         color: mainBgColor,
-                    //         offset: const Offset(0, 30),
-                    //         onSelected: (String selectedDate) {
-                    //           setState(() {
-                    //             selectedStartPeriod =
-                    //                 selectedDate.isEmpty ? null : selectedDate;
-                    //             selectedStartDateText =
-                    //                 selectedStartPeriod ?? 'All Start Date';
-                    //           });
-                    //           fetchPgsFilter();
-                    //         },
-
-                    //         itemBuilder: (BuildContext context) {
-                    //           final periodOptions = [
-                    //             {'date': '', 'displayText': 'All Start Date'},
-                    //             ...filteredListPeriod.map(
-                    //               (period) => {
-                    //                 'date': period['startDate'],
-                    //                 'displayText': period['startDate'],
-                    //               },
-                    //             ),
-                    //           ];
-
-                    //           return periodOptions.map<PopupMenuItem<String>>((
-                    //             option,
-                    //           ) {
-                    //             return PopupMenuItem<String>(
-                    //               value: option['date'],
-                    //               child: Text(option['displayText']!),
-                    //             );
-                    //           }).toList();
-                    //         },
-                    //         child: FilterButton(
-                    //           label:
-                    //               selectedStartDateText ?? 'Select Start Date',
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Column(
