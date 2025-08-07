@@ -436,7 +436,6 @@ class HomePageState extends State<HomePage> {
             ],
           );
         } else {
-          // Use row layout on wider screens
           return Row(
             children: [
               Expanded(

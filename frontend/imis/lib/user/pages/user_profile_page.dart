@@ -1108,7 +1108,7 @@ class UserProfileState extends State<UserProfilePage> {
                                     Container(
                                       padding: EdgeInsets.symmetric(
                                         vertical: 1,
-                                        horizontal: 16,
+                                        horizontal: 10,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(
@@ -1178,39 +1178,49 @@ class UserProfileState extends State<UserProfilePage> {
                                               ),
                                             ),
                                           ),
-                                          IconButton(
-                                            icon: Icon(
-                                              Icons.key,
-                                              color: Colors.blue,
-                                            ),
-                                            onPressed: () {
-                                              showFormDialogChangePassword(
-                                                id: userProfile.id.toString(),
-                                                userName: userProfile.userName,
-                                                email: userProfile.email,
-                                                password: userProfile.password,
-                                                firstName:
-                                                    userProfile.firstName,
-                                                middleName:
-                                                    userProfile.middleName,
-                                                lastName: userProfile.lastName,
-                                                prefix: userProfile.prefix,
-                                                suffix: userProfile.suffix,
-                                                position: userProfile.position,
-                                                fullName:
-                                                    '${userProfile.firstName} ${userProfile.middleName} ${userProfile.lastName}'
-                                                        .trim()
-                                                        .replaceAll(
-                                                          RegExp(' +'),
-                                                          ' ',
-                                                        ),
-                                              );
-                                            },
-                                          ),
+
                                           Expanded(
                                             flex: 1,
                                             child: Row(
                                               children: [
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.key,
+                                                    color: Colors.blue,
+                                                  ),
+                                                  onPressed: () {
+                                                    showFormDialogChangePassword(
+                                                      id:
+                                                          userProfile.id
+                                                              .toString(),
+                                                      userName:
+                                                          userProfile.userName,
+                                                      email: userProfile.email,
+                                                      password:
+                                                          userProfile.password,
+                                                      firstName:
+                                                          userProfile.firstName,
+                                                      middleName:
+                                                          userProfile
+                                                              .middleName,
+                                                      lastName:
+                                                          userProfile.lastName,
+                                                      prefix:
+                                                          userProfile.prefix,
+                                                      suffix:
+                                                          userProfile.suffix,
+                                                      position:
+                                                          userProfile.position,
+                                                      fullName:
+                                                          '${userProfile.firstName} ${userProfile.middleName} ${userProfile.lastName}'
+                                                              .trim()
+                                                              .replaceAll(
+                                                                RegExp(' +'),
+                                                                ' ',
+                                                              ),
+                                                    );
+                                                  },
+                                                ),
                                                 IconButton(
                                                   icon: Icon(Icons.edit),
                                                   onPressed: () {
