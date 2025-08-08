@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/navigation/dashboard_navigation_panel.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/user/models/user_login.dart';
+import 'package:imis/user/pages/forgot_password_page.dart';
 import 'package:imis/user/pages/registration_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
@@ -99,9 +100,9 @@ class LoginPageState extends State<LoginPage> {
 
   void _checkLoginStatus() async {
     bool isLoggedIn = await AuthUtil.isLoggedIn();
+    if (!mounted) return;
 
     if (isLoggedIn) {
-      // ignore: use_build_context_synchronously
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (context) => const DashboardNavigationPanel(),
@@ -278,7 +279,14 @@ class LoginPageState extends State<LoginPage> {
             //   mainAxisAlignment: MainAxisAlignment.end,
             //   children: [
             //     TextButton(
-            //       onPressed: () {},
+            //       onPressed: () {
+            //         Navigator.push(
+            //           context,
+            //           MaterialPageRoute(
+            //             builder: (context) => ForgotPasswordPage(),
+            //           ),
+            //         );
+            //       },
             //       child: Text(
             //         'Forgot Password?',
             //         style: TextStyle(color: primaryColor),

@@ -61,8 +61,8 @@ class RegistrationPageState extends State<RegistrationPage> {
 
         MotionToast.success(
           description: const Text("Registration successful!"),
-          // ignore: deprecated_member_use
-          position: MotionToastPosition.top,
+
+          toastAlignment: Alignment.topCenter,
         ).show(context);
 
         Navigator.pushReplacement(
@@ -75,18 +75,18 @@ class RegistrationPageState extends State<RegistrationPage> {
 
         MotionToast.error(
           description: Text("Error: $errorMessage"),
-          // ignore: deprecated_member_use
-          position: MotionToastPosition.top,
+
+          toastAlignment: Alignment.topCenter,
         ).show(context);
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.statusCode} - ${e.message}");
+      debugPrint("Dio error");
       if (!context.mounted) return;
 
       MotionToast.error(
         description: Text("An error occurred: ${e.message}"),
-        // ignore: deprecated_member_use
-        position: MotionToastPosition.top,
+
+        toastAlignment: Alignment.topCenter,
       ).show(context);
     } catch (e) {
       debugPrint("Unexpected error: $e");
@@ -94,8 +94,7 @@ class RegistrationPageState extends State<RegistrationPage> {
 
       MotionToast.error(
         description: const Text("Something went wrong. Please try again."),
-        // ignore: deprecated_member_use
-        position: MotionToastPosition.top,
+        toastAlignment: Alignment.topCenter,
       ).show(context);
     }
   }
@@ -104,7 +103,6 @@ class RegistrationPageState extends State<RegistrationPage> {
   void initState() {
     super.initState();
 
-    // Triggers UI textfield update
     focusUsername.addListener(() {
       setState(() {});
     });
