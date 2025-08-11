@@ -133,14 +133,14 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+AppContext.SetSwitch("System.Drawing.EnableUnixSupport", true);
+
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
 app.UseCors(allowedOrigins);
-
-
 
 if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
