@@ -1,4 +1,6 @@
-﻿using Base.Pagination;
+﻿using System.Security.Claims;
+using Base.Auths;
+using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
@@ -22,7 +24,7 @@ namespace IMIS.Persistence.PgsModule
         private readonly IKeyResultAreaRepository _kraRepository;
         private readonly UserManager<User> _userManager;
         private readonly IPgsSignatoryTemplateRepository _signatoryTemplateRepository;
-        private readonly ImisDbContext _dbContext;
+        private readonly ImisDbContext _dbContext;  
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, 
@@ -178,7 +180,6 @@ namespace IMIS.Persistence.PgsModule
 
             return dto;
         }
-
         
         public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(
         string userId,
@@ -285,9 +286,14 @@ namespace IMIS.Persistence.PgsModule
         {
             var perfomanceGovernanceSystemDto = await _repository.GetPaginatedPgsPeriodIdAsync(pgsPeriodId, page, pageSize, cancellationToken).ConfigureAwait(false);
             return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(perfomanceGovernanceSystemDto.Items, page, pageSize, perfomanceGovernanceSystemDto.TotalCount);
+        }        
+
+        private async Task<User?> GetCurrentUserAsync()
+        {           
+            var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
+            return await currentUserService.GetCurrentUserAsync();
         }
 
-       
         public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(
         PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto,
         CancellationToken cancellationToken)
@@ -336,11 +342,14 @@ namespace IMIS.Persistence.PgsModule
                 var newlyRemoved = existing.PgsDeliverables!
                     .Where(d => !updatedIds.Contains(d.Id) && !d.IsDeleted)
                     .ToList();
+              
+                var currentUser = await GetCurrentUserAsync();
+                var removedByName = currentUser?.Id ?? "UnknownUserId";
 
                 foreach (var deliverable in newlyRemoved)
                 {
                     deliverable.IsDeleted = true;
-                    deliverable.RemovedBy = "System";
+                    deliverable.RemovedBy = removedByName;
                     deliverable.RemovedAt = DateTime.UtcNow;
                     _dbContext.Entry(deliverable).State = EntityState.Modified;
                 }
