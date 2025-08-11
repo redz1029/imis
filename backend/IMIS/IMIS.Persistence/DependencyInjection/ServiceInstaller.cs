@@ -3,7 +3,6 @@ using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
-using IMIS.Application.PgsDeliverableHistoryModule;
 using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
@@ -18,7 +17,6 @@ using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.OfficeTypeModule;
-using IMIS.Persistence.PgsDeliverableHistoryModule;
 using IMIS.Persistence.PgsDeliverableScoreHistoryModule;
 using IMIS.Persistence.PgsModule;
 using IMIS.Persistence.PGSModules;
@@ -80,8 +78,8 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IOfficeTypeRepository, OfficeTypeRepository>();
             services.AddScoped<IOfficeTypeService, OfficeTypeService>();
 
-            services.AddScoped<IPgsDeliverableHistoryRepository, PgsDeliverableHistoryRepository>();
-            services.AddScoped<IPgsDeliverableHistoryService, PgsDeliverableHistoryService>();
+            //services.AddScoped<IPgsDeliverableHistoryRepository, PgsDeliverableHistoryRepository>();
+            //services.AddScoped<IPgsDeliverableHistoryService, PgsDeliverableHistoryService>();
 
 
             return services;
