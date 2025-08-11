@@ -106,30 +106,19 @@ namespace IMIS.Persistence.UserOfficeModule
             var userOfficeDtos = await Task.WhenAll(userOffices.Select(o => ConvertToDTO(o, users, cancellationToken)));       
             return userOfficeDtos.ToList();
         }
-
-        public async Task<UserOfficeDto> SaveOrUpdateAsync(UserOfficeDto userOfficeDto, CancellationToken cancellationToken)
-        {
-            if (userOfficeDto == null) throw new ArgumentNullException(nameof(userOfficeDto));
-
-            var userOfficeEntity = userOfficeDto.ToEntity();           
-            // Handle Save or Update
-            var createdUserOffice = await _repository.SaveOrUpdateAsync(userOfficeEntity, cancellationToken);
-
-            return new UserOfficeDto
-            {
-                Id = createdUserOffice.Id,
-                UserId = createdUserOffice.UserId,
-                OfficeId = createdUserOffice.OfficeId,
-                IsActive = createdUserOffice.IsActive,               
-            };
-        }
+        
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            if (dto is not UserOfficeDto userOfficeDto)
-                throw new ArgumentException("Invalid User Office Dto type", nameof(dto));
+           
+            var ODto = dto as UserOfficeDto;
+            var userOffice = ODto!.ToEntity();
 
-            var userOfficeEntity = userOfficeDto.ToEntity();          
-            await _repository.SaveOrUpdateAsync(userOfficeEntity, cancellationToken);
+            if (userOffice.Id == 0)
+                _repository.Add(userOffice);
+            else
+                await _repository.UpdateAsync(userOffice, userOffice.Id, cancellationToken).ConfigureAwait(false);
+
+            await _repository.SaveOrUpdateAsync(userOffice, cancellationToken).ConfigureAwait(false);
         }
     }
 }

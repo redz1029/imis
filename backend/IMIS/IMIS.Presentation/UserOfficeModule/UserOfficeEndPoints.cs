@@ -1,5 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.UserOfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -19,10 +20,10 @@ namespace IMIS.Presentation.UserOfficeModule
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] UserOfficeDto userOfficeDto, IUserOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {                
-                var createdUserOffice = await service.SaveOrUpdateAsync(userOfficeDto, cancellationToken).ConfigureAwait(false);
-                await cache.EvictByTagAsync(_userOffice, cancellationToken);               
-                return Results.Ok("Record has been successfully saved.");
+            {                              
+                await service.SaveOrUpdateAsync(userOfficeDto, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_userOffice, cancellationToken);
+                return Results.Ok(userOfficeDto);
             })
             .WithTags(_userOffice)
             .RequireAuthorization(e => e.RequireClaim(
@@ -59,10 +60,9 @@ namespace IMIS.Presentation.UserOfficeModule
                 {
                     return Results.NotFound($"User Office with ID {id} not found.");
                 }
-
-                var updatedUserOffice = await service.SaveOrUpdateAsync(useroffice, cancellationToken).ConfigureAwait(false);
+                await service.SaveOrUpdateAsync(useroffice, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_userOffice, cancellationToken);
-                return Results.Ok(updatedUserOffice);
+                return Results.Ok(useroffice);
             })
             .WithTags(_userOffice)
             .RequireAuthorization(e => e.RequireClaim(
