@@ -23,10 +23,10 @@ namespace IMIS.Presentation.PgsDeliverableScoreHistoryModule
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] PgsDeliverableScoreHistoryDto pgsDeliverableScoreHistoryDto, IPgsDeliverableScoreHistoryService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                var createdTeam = await service.SaveOrUpdateAsync(pgsDeliverableScoreHistoryDto, cancellationToken).ConfigureAwait(false);
+            {             
+                await service.SaveOrUpdateAsync(pgsDeliverableScoreHistoryDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_pgsDeliverableScoreHistory, cancellationToken);
-                return Results.Created($"/pgsDeliverableScoreHistory/{createdTeam}", createdTeam);
+                return Results.Ok(pgsDeliverableScoreHistoryDto);
             })
            .WithTags(_pgsDeliverableScoreHistory)
            .RequireAuthorization(e => e.RequireClaim(
