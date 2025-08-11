@@ -80,18 +80,6 @@ namespace IMIS.Persistence.TeamModule
                 }
                 await _teamRepository.SaveOrUpdateAsync(team, cancellationToken).ConfigureAwait(false);
             }
-        }
-        public async Task<TeamDto> SaveOrUpdateAsync(TeamDto teamDto, CancellationToken cancellationToken)
-        {
-            if (teamDto == null) throw new ArgumentNullException(nameof(TeamDto));
-            var teamEntity = teamDto.ToEntity();
-            var createdTeam = await _teamRepository.SaveOrUpdateAsync(teamEntity, cancellationToken).ConfigureAwait(false);
-            return new TeamDto
-            {
-                Id = createdTeam.Id,
-                Name = createdTeam.Name,
-                IsActive = createdTeam.IsActive
-            };
-        }      
+        }         
     }
 }

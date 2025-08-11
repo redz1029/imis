@@ -1,6 +1,8 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.TeamModule;
+using IMIS.Application.UserOfficeModule;
+using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,9 +24,9 @@ namespace IMIS.Presentation.TeamModule
 
             app.MapPost("/", async ([FromBody] TeamDto teamDto, ITeamService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                var createdTeam = await service.SaveOrUpdateAsync(teamDto, cancellationToken).ConfigureAwait(false);
+                await service.SaveOrUpdateAsync(teamDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_teamTag, cancellationToken);
-                return Results.Created($"/team/{createdTeam.Id}", createdTeam);
+                return Results.Ok(teamDto);
             })
             .WithTags(_teamTag)
             .RequireAuthorization(e => e.RequireClaim(
@@ -69,9 +71,9 @@ namespace IMIS.Presentation.TeamModule
                     return Results.NotFound($"Team with ID {id} not found.");
                 }
 
-                var updatedTeam = await service.SaveOrUpdateAsync(teamDto, cancellationToken).ConfigureAwait(false);
+                await service.SaveOrUpdateAsync(teamDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_teamTag, cancellationToken);
-                return Results.Ok(updatedTeam);
+                return Results.Ok(teamDto);
             })
             .WithTags(_teamTag)
             .RequireAuthorization(e => e.RequireClaim(
