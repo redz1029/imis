@@ -3,13 +3,12 @@ using Base.Primitives;
 using IMIS.Domain;
 using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
-using VaultSharp.V1.SecretsEngines.Identity;
 
 namespace IMIS.Application.PgsSignatoryTemplateModule
 {
     public class PgsSignatoryTemplateService : IPgsSignatoryTemplateService
     {
-        private readonly IPgsSignatoryTemplateRepository _repository;
+        private readonly IPgsSignatoryTemplateRepository _repository;    
         private readonly ImisDbContext _dbContext;
 
         public PgsSignatoryTemplateService(IPgsSignatoryTemplateRepository repository, ImisDbContext dbContext)
@@ -55,16 +54,18 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                 throw new ArgumentNullException(nameof(dtoList));
 
             var officeId = dtoList.First().OfficeId;
-           
+
+            // Get all existing signatories for the office
             var existingSignatories = await _dbContext.PgsSignatoryTemplate
                 .Where(x => x.OfficeId == officeId)
                 .ToListAsync(cancellationToken);
-           
+
             var incomingIds = dtoList
                 .Where(d => d.Id != 0)
                 .Select(d => d.Id)
                 .ToHashSet();
-           
+
+            // Remove records not included in the new dtoList
             var toRemove = existingSignatories
                 .Where(x => !incomingIds.Contains(x.Id))
                 .ToList();
@@ -73,34 +74,31 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
             {
                 _dbContext.PgsSignatoryTemplate.RemoveRange(toRemove);
             }
-           
+
             foreach (var dto in dtoList)
             {
                 var entity = dto.ToEntity();
 
                 if (entity.Id == 0)
                 {
-                  
-                    _dbContext.PgsSignatoryTemplate.Add(entity);
+                    // New record
+                    await _dbContext.PgsSignatoryTemplate.AddAsync(entity, cancellationToken);
                 }
                 else
                 {
-                    // Existing – update fields
+                    // Update existing record
                     var existing = existingSignatories.FirstOrDefault(x => x.Id == entity.Id);
                     if (existing != null)
                     {
-                        existing.Status = entity.Status;
-                        existing.SignatoryLabel = entity.SignatoryLabel;
-                        existing.OrderLevel = entity.OrderLevel;
-                        existing.DefaultSignatoryId = entity.DefaultSignatoryId;
-                        existing.IsActive = entity.IsActive;
-                        existing.OfficeId = entity.OfficeId;
+                        _dbContext.Entry(existing).CurrentValues.SetValues(entity);
                     }
                 }
             }
 
+            // Save changes add/update
             await _dbContext.SaveChangesAsync(cancellationToken);
-          
+
+            // Return updated DTO list
             var updated = await _dbContext.PgsSignatoryTemplate
                 .Where(x => x.OfficeId == officeId)
                 .Select(x => new PgsSignatoryTemplateDto
@@ -114,8 +112,10 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                     OfficeId = x.OfficeId
                 })
                 .ToListAsync(cancellationToken);
+
             return updated;
         }
+
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {

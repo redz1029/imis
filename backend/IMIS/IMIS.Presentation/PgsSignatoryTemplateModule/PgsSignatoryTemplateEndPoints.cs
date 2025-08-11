@@ -25,7 +25,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
             {
                 var result = await service.SaveOrUpdateAsync(pgsSignatoryTemplateDtos, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_PgsSignatoryTemplate, cancellationToken);
-                return Results.Ok("Records have been successfully saved.");
+                return Results.Ok(pgsSignatoryTemplateDtos);
             })
 
             .WithTags(_PgsSignatoryTemplate)
@@ -59,17 +59,14 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                 {
                     return Results.BadRequest("No data provided for update.");
                 }
-
-               
-
+              
                 var updatedTemplates = await service.SaveOrUpdateAsync(pgsSignatoryTemplateDtos, cancellationToken).ConfigureAwait(false);
-
                 await cache.EvictByTagAsync(_PgsSignatoryTemplate, cancellationToken);
                 return Results.Ok(updatedTemplates);
             })
             .WithTags(_PgsSignatoryTemplate)
             .RequireAuthorization(e => e.RequireClaim(
-                PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Edit));
+             PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Edit));
 
             ;
             app.MapGet("/page", async (int page, int pageSize, IPgsSignatoryTemplateService service, CancellationToken cancellationToken) =>
