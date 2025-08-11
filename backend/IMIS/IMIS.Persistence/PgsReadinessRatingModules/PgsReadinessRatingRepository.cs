@@ -13,37 +13,16 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
         }
         public async Task<EntityPageList<PgsReadinessRating, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var query = _dbContext.PgsReadiness.Where(k => !k.IsDeleted).AsNoTracking();
-
-            var pgsReadiness = await EntityPageList<PgsReadinessRating, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
-            return pgsReadiness;
+           
+            return await EntityPageList<PgsReadinessRating, long>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
+           
         }
         public async Task<IEnumerable<PgsReadinessRating>> GetAll(CancellationToken cancellationToken)
         {
-            return await _dbContext.PgsReadiness
-                .Where(o => !o.IsDeleted)
+            return await _entities               
                 .AsNoTracking()
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-        }        
-        public new async Task<PgsReadinessRating> SaveOrUpdateAsync(PgsReadinessRating pgsReadinessRating, CancellationToken cancellationToken)
-        {
-            var existingPgsReadinessRating = await _dbContext.Set<PgsReadinessRating>().FirstOrDefaultAsync(x => x.Id == pgsReadinessRating.Id, cancellationToken);
-            if (existingPgsReadinessRating == null)
-            {
-                // Insert new record
-                await _dbContext.Set<PgsReadinessRating>().AddAsync(pgsReadinessRating, cancellationToken);
-            }
-            else
-            {
-                // Update existing record
-                existingPgsReadinessRating.CompetenceToDeliver = pgsReadinessRating.CompetenceToDeliver;
-                existingPgsReadinessRating.ResourceAvailability = pgsReadinessRating.ResourceAvailability;
-                existingPgsReadinessRating.ConfidenceToDeliver = pgsReadinessRating.ConfidenceToDeliver;
-                _dbContext.Set<PgsReadinessRating>().Update(existingPgsReadinessRating);
-            }
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return pgsReadinessRating;
-        }       
+        }                   
     }
 }

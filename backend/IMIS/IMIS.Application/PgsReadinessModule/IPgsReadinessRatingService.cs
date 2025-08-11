@@ -8,8 +8,7 @@ namespace IMIS.Application.PGSReadinessRatingCancerCareModule
     {
         public Task<DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<List<PgsReadinessRatingDto>?> GetAllAsync(CancellationToken cancellationToken);
-        Task<PgsReadinessRatingDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<PgsReadinessRatingDto> SaveOrUpdateAsync(PgsReadinessRatingDto pgsReadiness, CancellationToken cancellationToken);
+        Task<PgsReadinessRatingDto?> GetByIdAsync(int id, CancellationToken cancellationToken);      
     }
 }
 
