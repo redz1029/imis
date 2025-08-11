@@ -80,10 +80,24 @@ class HomePageState extends State<HomePage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to load data. Please try again later."),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
-      debugPrint("Error fetching user: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to load data. Please try again later."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -95,7 +109,6 @@ class HomePageState extends State<HomePage> {
       if (response.statusCode == 200 && response.data is List) {
         List<PgsDeliverables> data =
             (response.data as List).map((userJson) {
-              debugPrint("Deliverable item: $userJson");
               return PgsDeliverables.fromJson(userJson as Map<String, dynamic>);
             }).toList();
 
@@ -106,10 +119,24 @@ class HomePageState extends State<HomePage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data}");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to load data. Please try again later."),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
-      debugPrint("Error fetching deliverables: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to load data. Please try again later."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -136,10 +163,24 @@ class HomePageState extends State<HomePage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to load data. Please try again later."),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
-      debugPrint("Error fetching user: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to load data. Please try again later."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -165,10 +206,24 @@ class HomePageState extends State<HomePage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to load data. Please try again later."),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
-      debugPrint("Error fetching user: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to load data. Please try again later."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -194,10 +249,24 @@ class HomePageState extends State<HomePage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to load data. Please try again later."),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
-      debugPrint("Error fetching user: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to load data. Please try again later."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
@@ -224,10 +293,24 @@ class HomePageState extends State<HomePage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Failed to load data. Please try again later."),
+              duration: Duration(seconds: 3),
+            ),
+          );
+        }
       }
     } catch (e) {
-      debugPrint("Error fetching user: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Failed to load data. Please try again later."),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
     }
   }
 
