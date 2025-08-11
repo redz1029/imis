@@ -32,25 +32,25 @@ namespace IMIS.Infrastructure.Auths
 
             // This will specific permissions for a role
             await PermissionSeeder.SeedPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
-            new PerformanceGovernanceSystemPermission(), 
-            new PgsSignatoryTemplatePermission(), 
-            new KeyResultAreaPermission(),
-            new PgsPeriodPermission());
+                new PerformanceGovernanceSystemPermission(), 
+                new PgsSignatoryTemplatePermission(), 
+                new KeyResultAreaPermission(),
+                new PgsPeriodPermission());
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
-            new PgsDeliverableScoreHistoryPermission(),
-            new PgsDeliverableAuditorPermission(),
-            new KeyResultAreaPermission(), 
-            new PgsPeriodPermission(), 
-            new OfficePermission());
+                new PgsDeliverableScoreHistoryPermission(),
+                new PgsDeliverableAuditorPermission(),
+                new KeyResultAreaPermission(), 
+                new PgsPeriodPermission(), 
+                new OfficePermission());
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
-            new KeyResultAreaPermission(), 
-            new PgsPeriodPermission(), 
-            new PerformanceGovernanceSystemPermission(), 
-            new PgsSignatoryTemplatePermission());
+                new KeyResultAreaPermission(), 
+                new PgsPeriodPermission(), 
+                new PerformanceGovernanceSystemPermission(), 
+                new PgsSignatoryTemplatePermission());
 
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(             
-                 _roleManager, _userManager, "redz1029");
+                 _roleManager, _userManager, "castillano.mrb");
                 
 
         }

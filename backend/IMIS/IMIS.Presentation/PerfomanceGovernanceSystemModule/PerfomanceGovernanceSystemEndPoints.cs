@@ -1,8 +1,9 @@
-﻿using System.Security.Claims;
+﻿using Base.Auths;
 using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
+using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
+using System.Security.Claims;
 
 
 namespace IMIS.Presentation.PgsModuleAPI
@@ -67,14 +69,15 @@ namespace IMIS.Presentation.PgsModuleAPI
              PermissionClaimType.Claim, _performanceGovernanceSystem.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
-            app.MapGet("/filter", async ([AsParameters] PgsFilter filter, string userId, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapGet("/filter", async ([AsParameters] PgsFilter filter, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                var pgs = await service.GetFilteredPGSAsync(filter, userId, cancellationToken).ConfigureAwait(false);
+                var user = await CurrentUserHelper<User>.GetCurrentUserService().GetCurrentUserAsync().ConfigureAwait(false);
+                var pgs = await service.GetFilteredPGSAsync(filter, user!.Id, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(pgs);
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _performanceGovernanceSystem.View))
+                PermissionClaimType.Claim, _performanceGovernanceSystem.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
             app.MapGet("/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>

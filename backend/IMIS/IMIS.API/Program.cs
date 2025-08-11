@@ -99,10 +99,10 @@ builder.Services.AddIdentityCore<User>()
     .AddApiEndpoints();
 
 builder.Services.AddDbContext<ImisDbContext>(options => options.UseSqlServer(sqlServerConnectionString));
-
 builder.Services.AddPersistence();
 
-
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped(typeof(CurrentUserService<>));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -136,6 +136,7 @@ builder.Services.AddSwaggerGen(c =>
 AppContext.SetSwitch("System.Drawing.EnableUnixSupport", true);
 
 var app = builder.Build();
+CurrentUserHelper<User>.Configure(app.Services.GetRequiredService<IHttpContextAccessor>());
 
 app.UseSwagger();
 app.UseSwaggerUI();
