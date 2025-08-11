@@ -35,6 +35,10 @@
     <ProjectReference Include="..\IMIS.Infrastructure\IMIS.Infrastructure.csproj" />
     <ProjectReference Include="..\IMIS.Persistence\IMIS.Persistence.csproj" />
     <ProjectReference Include="..\IMIS.Presentation\IMIS.Presentation.csproj" />
+	<Content Include="..\IMIS.API\Reports\**\*.frx">
+		<Link>Reports\%(RecursiveDir)%(Filename)%(Extension)</Link>
+		<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	</Content>
   </ItemGroup>
 
 </Project>

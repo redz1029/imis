@@ -28,8 +28,8 @@ namespace IMIS.Infrastructure.Reports
         private static Report LoadReport(string reportName)
         {
             Report report = new();
-            string directory = Directory.GetCurrentDirectory();
-            report.Load(@$"{directory}\Reports\{reportName}.frx");
+            string path = Path.Combine(AppContext.BaseDirectory, "Reports", $"{reportName}.frx");
+            report.Load(path);
             return report;
         }
 
