@@ -2,7 +2,6 @@
 using Carter;
 using IMIS.Application.AuditableOfficesModule;
 using IMIS.Application.AuditScheduleModule;
-using IMIS.Application.OfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -49,7 +48,7 @@ namespace IMIS.Presentation.AuditScheduleModule
                 }
                 // Clear cache
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
-                return Results.Created($"/auditSchedule/{createdAuditSchedule.Id}", createdAuditSchedule);
+                return Results.Created($"/auditSchedule/{createdAuditSchedule.Id}", createdAuditSchedule);               
             })
             .WithTags(_AuditSchedule)
             .RequireAuthorization(e => e.RequireClaim(
