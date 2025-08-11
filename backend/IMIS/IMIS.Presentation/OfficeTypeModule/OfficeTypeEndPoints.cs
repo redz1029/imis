@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.OfficeTypeModule;
+using IMIS.Application.PgsKraModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ namespace IMIS.Presentation.OfficeTypeModule
             {
                 await service.SaveOrUpdateAsync(officeTypeDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_officeType, cancellationToken);
-                return Results.Ok(officeTypeDto);
+                return Results.Ok(officeTypeDto);               
             })
             .WithTags(_officeType)
             .RequireAuthorization(e => e.RequireClaim(
