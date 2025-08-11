@@ -8,7 +8,7 @@ namespace IMIS.Application.PgsPeriodModule
     {
         Task<EntityPageList<PgsPeriod, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<IEnumerable<PgsPeriod>> GetAll(CancellationToken cancellationToken);     
-        new Task<PgsPeriod> SaveOrUpdateAsync(PgsPeriod period, CancellationToken cancellationToken);
+        //new Task<PgsPeriod> SaveOrUpdateAsync(PgsPeriod period, CancellationToken cancellationToken);
     }
 }
 

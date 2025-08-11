@@ -9,6 +9,6 @@ namespace IMIS.Application.PgsPeriodModule
         public Task<DtoPageList<PgsPeriodDto, PgsPeriod, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<List<PgsPeriodDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<PgsPeriodDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<PgsPeriodDto> SaveOrUpdateAsync(PgsPeriodDto periodDto, CancellationToken cancellationToken);
+        //Task<PgsPeriodDto> SaveOrUpdateAsync(PgsPeriodDto periodDto, CancellationToken cancellationToken);
     }
 }

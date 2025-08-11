@@ -1,5 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsPeriodModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -21,10 +22,10 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] PgsPeriodDto pgsPeriodDto, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                var createdPgsPeriod = await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);
+            {              
+                await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_pgsPeriodTag, cancellationToken);
-                return Results.Created($"/pgsPeriod/{createdPgsPeriod.Id}", createdPgsPeriod);
+                return Results.Ok(pgsPeriodDto);
             })
             .WithTags(_pgsPeriodTag)
             .RequireAuthorization(e => e.RequireClaim(
@@ -48,10 +49,12 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
                     if (existingPeriod == null)
                         return Results.NotFound($"PGS Period with ID {id} not found.");
 
-                    pgsPeriodDto.Id = id;
-                    var updated = await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken);
+                    pgsPeriodDto.Id = id;                 
+                    await service.SaveOrUpdateAsync(pgsPeriodDto, cancellationToken).ConfigureAwait(false);
                     await cache.EvictByTagAsync(_pgsPeriodTag, cancellationToken);
-                    return Results.Ok(updated);
+                    return Results.Ok(pgsPeriodDto);
+
+
                 }
                 catch (InvalidOperationException ex) when (ex.InnerException is DbUpdateConcurrencyException)
                 {

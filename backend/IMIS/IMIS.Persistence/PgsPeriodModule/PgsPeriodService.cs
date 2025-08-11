@@ -8,6 +8,7 @@ namespace IMIS.Persistence.PgsPeriodModule
     public class PgsPeriodService : IPgsPeriodService
     {
         private readonly IPgsPeriodRepository _repository;
+        
         public PgsPeriodService(IPgsPeriodRepository repository)
         {
             _repository = repository;
@@ -42,51 +43,20 @@ namespace IMIS.Persistence.PgsPeriodModule
         {
             var periods = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
             return periods?.Select(o => ConvPgsPeriodToDTO(o)).ToList();
-        }
-        public async Task<PgsPeriodDto> SaveOrUpdateAsync(PgsPeriodDto pgsPeriodDto, CancellationToken cancellationToken)
-        {
-            if (pgsPeriodDto == null) throw new ArgumentNullException(nameof(PgsPeriodDto));
+        }       
 
-            PgsPeriod pgsPeriodEntity;
-            // Check if the period exists, and update it, otherwise create a new one
-            if (pgsPeriodDto.Id > 0)
-            {
-                // Update logic
-                var existingPeriod = await _repository.GetByIdAsync(pgsPeriodDto.Id, cancellationToken).ConfigureAwait(false);
-                if (existingPeriod != null)
-                {                   
-                    existingPeriod.StartDate = pgsPeriodDto.StartDate;
-                    existingPeriod.EndDate = pgsPeriodDto.EndDate;
-                    existingPeriod.Remarks = pgsPeriodDto.Remarks;
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
+        where TEntity : Entity<TId>
+        {          
+            var ODto = dto as PgsPeriodDto;
+            var pgsPeriod = ODto!.ToEntity();
 
-                    // Update the existing entity
-                    pgsPeriodEntity = existingPeriod;
-                }
-                else
-                {
-                    // If the period doesn't exist, create a new one
-                    pgsPeriodEntity = pgsPeriodDto.ToEntity();
-                }
-            }
+            if (pgsPeriod.Id == 0)
+                _repository.Add(pgsPeriod);
             else
-            {
-                // Create a new record if ID is 0 or not specified
-                pgsPeriodEntity = pgsPeriodDto.ToEntity();
-            }
-            var savedPgsPeriod = await _repository.SaveOrUpdateAsync(pgsPeriodEntity, cancellationToken).ConfigureAwait(false);
-            return new PgsPeriodDto
-            {
-                Id = savedPgsPeriod.Id,
-                StartDate = savedPgsPeriod.StartDate,
-                EndDate = savedPgsPeriod.EndDate,
-                Remarks = savedPgsPeriod.Remarks,
-            };
-        }
-        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> pgsPeriodDto, CancellationToken cancellationToken) where TEntity : Entity<TId>
-        {
-            if (pgsPeriodDto is not PgsPeriodDto periodDto) throw new ArgumentException("Invalid Pgs Period type", nameof(PgsPeriodDto));
-            var pgsPeriodEntity = periodDto.ToEntity();
-            await _repository.SaveOrUpdateAsync(pgsPeriodEntity, cancellationToken).ConfigureAwait(false);
-        }
+                await _repository.UpdateAsync(pgsPeriod, pgsPeriod.Id, cancellationToken).ConfigureAwait(false);
+
+            await _repository.SaveOrUpdateAsync(pgsPeriod, cancellationToken).ConfigureAwait(false);
+        }      
     }
 }
