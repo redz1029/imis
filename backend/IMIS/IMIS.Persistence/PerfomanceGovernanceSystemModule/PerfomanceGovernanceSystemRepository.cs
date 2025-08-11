@@ -2,7 +2,6 @@
 using Base.Pagination;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsModule;
-using IMIS.Application.PgsSignatoryModule;
 using IMIS.Domain;
 using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -13,70 +12,65 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
-    {
-        var pgs = await _dbContext.PerformanceGovernanceSystem.Where(p => !p.IsDeleted &&
-        p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
-          .Include(p => p.PgsPeriod)
-          .Include(p => p.Office)
-          .Include(p => p.PgsReadinessRating)
-          .Include(p => p.PgsSignatories)
-          .Include(p => p.PgsDeliverables)           
-          .ToListAsync(cancellationToken).ConfigureAwait(false);
+    {     
+        var pgs = await _entities
+        .Where(p => p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
+        .Include(p => p.PgsPeriod)
+        .Include(p => p.Office)
+        .Include(p => p.PgsReadinessRating)
+        .Include(p => p.PgsSignatories)
+        .Include(p => p.PgsDeliverables)
+        .ToListAsync(cancellationToken).ConfigureAwait(false);
         return pgs;
     }
-
 
     public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
-        return await _dbContext.PerformanceGovernanceSystem
-            .Include(p => p.PgsPeriod)
-            .Include(p => p.Office)
-            .Include(p => p.PgsDeliverables)
-                .ThenInclude(d => d.Kra)
-            .Include(p => p.PgsDeliverables)
-                .ThenInclude(d => d.PgsDeliverableScoreHistory)
-            .Include(p => p.PgsReadinessRating)
-            .Include(p => p.PgsSignatories!)
-                //.ThenInclude(s => s.PgsSignatoryTemplate) // needed for OrderLevel
-            .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+         return await _entities
+        .Include(p => p.PgsPeriod)
+        .Include(p => p.Office)
+        .Include(p => p.PgsDeliverables)
+        .ThenInclude(d => d.Kra)
+        .Include(p => p.PgsDeliverables)
+        .ThenInclude(d => d.PgsDeliverableScoreHistory)
+        .Include(p => p.PgsReadinessRating)
+        .Include(p => p.PgsSignatories!)                
+        .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
 
-  
     public async Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
     {
-        var pgs = await _dbContext.PerformanceGovernanceSystem
-            .Where(p => !p.IsDeleted &&
-            p.Id == pgsId && p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
-            .Include(p => p.PgsPeriod)
-            .Include(p => p.Office)         
-            .Include(p => p.PgsDeliverables)
-            .ThenInclude(d => d.Kra)
-            .Include(p => p.PgsReadinessRating)
-            .Include(p => p.PgsSignatories)
-            .FirstOrDefaultAsync(cancellationToken) 
-            .ConfigureAwait(false);
-
-        return pgs;
+        var pgs = await _entities
+       .Where(p => p.Id == pgsId && p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
+       .Include(p => p.PgsPeriod)
+       .Include(p => p.Office)
+       .Include(p => p.PgsDeliverables)
+       .ThenInclude(d => d.Kra)
+       .Include(p => p.PgsReadinessRating)
+       .Include(p => p.PgsSignatories)
+       .FirstOrDefaultAsync(cancellationToken)
+       .ConfigureAwait(false);
+        return pgs;       
     }
-
+    
     //Get Pgs Report: Filter by Id
     public async Task<PerfomanceGovernanceSystem?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
     {
-        return await _dbContext.PerformanceGovernanceSystem
+        return await _entities
         .Include(p => p.PgsPeriod)
         .Include(p => p.Office)
         .Include(p => p.PgsDeliverables)
         .ThenInclude(d => d.Kra)
         .Include(p => p.PgsReadinessRating)
         .Include(p => p.PgsSignatories)
-         .ThenInclude(d => d.PgsSignatoryTemplate)
-        .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted, cancellationToken);
+        .ThenInclude(d => d.PgsSignatoryTemplate)
+        .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
     // Get Pgs, Filter by Pgs Period Id
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken)
     {
-        var query = _dbContext.PerformanceGovernanceSystem
-        .Where(p => !p.IsDeleted && (pgsPeriodId == null || p.PgsPeriod.Id == pgsPeriodId))
+        var query = _entities
+        .Where(p => (pgsPeriodId == null || p.PgsPeriod.Id == pgsPeriodId))
         .Include(pgs => pgs.PgsPeriod)
         .Include(pgs => pgs.Office)                          
         .Include(pgs => pgs.PgsReadinessRating)
@@ -86,8 +80,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     // Get all Pgs
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetAll(CancellationToken cancellationToken)
     {
-        return await _dbContext.PerformanceGovernanceSystem
-        .Where(o => !o.IsDeleted)
+        return await _entities        
         .Include(pgs => pgs.PgsPeriod)
         .Include(pgs => pgs.Office)      
         .Include(pgs => pgs.PgsReadinessRating)
@@ -98,16 +91,15 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     // Get Pgs, Filter by all Paginated
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
-        var query = _dbContext.PerformanceGovernanceSystem.Where(k => !k.IsDeleted).AsNoTracking();
-        var perfomanceGovernanceSystem = await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
-        return perfomanceGovernanceSystem;
+       
+       return await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
+        
     }
     // Get Pgs, Filter by Pgs Period Id with pagination
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(
     long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
     {       
-        var query = _dbContext.PerformanceGovernanceSystem
-        .Where(k => !k.IsDeleted)
+        var query = _entities        
         .Include(pgs => pgs.PgsPeriod)
         .Include(pgs => pgs.Office)
         .Include(pgs => pgs.PgsReadinessRating)
@@ -125,270 +117,81 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         return paginatedResult;
     }
     // Save or Update Record
-    public new async Task<PerfomanceGovernanceSystem> SaveOrUpdateAsync(PerfomanceGovernanceSystem perfomanceGovernanceSystem, CancellationToken cancellationToken)
-    {
-        if (perfomanceGovernanceSystem == null) throw new ArgumentNullException(nameof(perfomanceGovernanceSystem));
-
-        var existingPerfomanceGovernanceSystem = await _dbContext.PerformanceGovernanceSystem
-            .Include(p => p.PgsDeliverables)
-            .Include(p => p.Office)
-            .Include(p => p.PgsPeriod)
-            .Include(p => p.PgsReadinessRating)
-            .Include(p => p.PgsSignatories)
-            .FirstOrDefaultAsync(d => d.Id == perfomanceGovernanceSystem.Id, cancellationToken)
-            .ConfigureAwait(false);
-
-        if (existingPerfomanceGovernanceSystem != null)
-        {
-            // Update main simple fields
-            _dbContext.Entry(existingPerfomanceGovernanceSystem).CurrentValues.SetValues(perfomanceGovernanceSystem);
-
-            // --- Update Office ---            
-            if (perfomanceGovernanceSystem.Office != null)
-            {
-                var office = await _dbContext.Offices
-                    .FirstOrDefaultAsync(o => o.Id == perfomanceGovernanceSystem.Office.Id, cancellationToken);
-
-                if (office != null)
-                {
-                    existingPerfomanceGovernanceSystem.Office = office;
-                }
-            }
-
-            // --- Update PgsPeriod ---           
-            if (perfomanceGovernanceSystem.PgsPeriod != null)
-            {
-                var pgsPeriod = await _dbContext.PgsPeriod
-                    .FirstOrDefaultAsync(o => o.Id == perfomanceGovernanceSystem.PgsPeriod.Id, cancellationToken);
-
-                if (pgsPeriod != null)
-                {
-                    existingPerfomanceGovernanceSystem.PgsPeriod = pgsPeriod;
-                }
-            }
-
-            // --- Update PgsReadinessRating ---                    
-            if (perfomanceGovernanceSystem.PgsReadinessRating != null)
-            {
-                if (perfomanceGovernanceSystem.PgsReadinessRating.Id > 0)
-                {
-                    // Update existing Readiness
-                    var pgsPeriodReadiness = await _dbContext.PgsReadiness
-                        .FirstOrDefaultAsync(o => o.Id == perfomanceGovernanceSystem.PgsReadinessRating.Id, cancellationToken);
-
-                    if (pgsPeriodReadiness != null)
-                    {
-                        pgsPeriodReadiness.CompetenceToDeliver = perfomanceGovernanceSystem.PgsReadinessRating.CompetenceToDeliver;
-                        pgsPeriodReadiness.ResourceAvailability = perfomanceGovernanceSystem.PgsReadinessRating.ResourceAvailability;
-                        pgsPeriodReadiness.ConfidenceToDeliver = perfomanceGovernanceSystem.PgsReadinessRating.ConfidenceToDeliver;
-                    }
-                }
-                else
-                {
-                    // Insert new Readiness
-                    existingPerfomanceGovernanceSystem.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating;
-                }
-            }
-            // --- Sync PgsDeliverables ---
-
-            if (perfomanceGovernanceSystem.PgsDeliverables != null)
-            {
-                foreach (var deliverable in perfomanceGovernanceSystem.PgsDeliverables)
-                {
-                    var existingDeliverable = existingPerfomanceGovernanceSystem.PgsDeliverables!
-                        .FirstOrDefault(d => d.Id == deliverable.Id);
-
-                    if (existingDeliverable != null)
-                    {
-                        // Check if the score has changed before creating history
-                        bool scoreChanged = existingDeliverable.PercentDeliverables != deliverable.PercentDeliverables;
-
-                        _dbContext.Entry(existingDeliverable).CurrentValues.SetValues(deliverable);
-                        existingDeliverable.PerfomanceGovernanceSystemId = existingPerfomanceGovernanceSystem.Id;
-
-                        if (scoreChanged)
-                        {
-                            var history = new PgsDeliverableScoreHistory
-                            {
-                                Id = 0,
-                                PgsDeliverableId = existingDeliverable.Id,
-                                Date = DateTime.Now,
-                                Score = deliverable.PercentDeliverables
-                            };
-                            _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);
-                        }
-                    }
-                    else
-                    {
-                        deliverable.PerfomanceGovernanceSystemId = existingPerfomanceGovernanceSystem.Id;
-                        _dbContext.Entry(deliverable).State = EntityState.Added;
-                    }
-                }
-            }
-
-            // --- Sync PgsSignatories ---                     
-            if (perfomanceGovernanceSystem.PgsSignatories != null)
-            {
-                foreach (var signatory in perfomanceGovernanceSystem.PgsSignatories)
-                {
-                    // Check if the signatory already exists in the system
-                    var existingSignatory = existingPerfomanceGovernanceSystem.PgsSignatories!
-                        .FirstOrDefault(s => s.Id == signatory.Id);
-
-                    if (existingSignatory != null)
-                    {
-                        // Update existing signatory
-                        _dbContext.Entry(existingSignatory).CurrentValues.SetValues(signatory);
-                    }
-                    else
-                    {
-                        // Ensure the PgsId is correct
-                        if (existingPerfomanceGovernanceSystem.Id == 0)
-                        {
-                            throw new InvalidOperationException("Invalid PerformanceGovernanceSystem ID.");
-                        }
-
-                        signatory.PgsId = existingPerfomanceGovernanceSystem.Id;
-
-                        if (_dbContext.Entry(signatory).State == EntityState.Detached)
-                        {
-                            _dbContext.Entry(signatory).State = EntityState.Added;
-                        }
-
-                        existingPerfomanceGovernanceSystem.PgsSignatories!.Add(signatory);
-                    }
-                }
-            }
-
-
-            try
-            {
-                // Save changes to the database
-                await _dbContext.SaveChangesAsync();
-            }
-            catch (DbUpdateException dbEx)
-            {
-                // Handle DB update exceptions
-                throw new InvalidOperationException("An error occurred while saving changes.", dbEx);
-            }
-            catch (Exception ex)
-            {
-                // Handle any other general exceptions
-                throw new InvalidOperationException("An unexpected error occurred.", ex);
-            }
-
-        }
-        else
-        {
-            // Insert new main entity
-            await _dbContext.PerformanceGovernanceSystem.AddAsync(perfomanceGovernanceSystem, cancellationToken).ConfigureAwait(false);
-        }
-        // Save changes to the database
-        await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return perfomanceGovernanceSystem;
-    }
-
-
-
-
+  
     public Task<int> CountAsync(CancellationToken cancellationToken)
-    {       
-        return _dbContext.PerformanceGovernanceSystem.CountAsync(cancellationToken);
+    {
+        return ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().CountAsync(cancellationToken);
     }
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetPagedAsync(int skip, int pageSize, CancellationToken cancellationToken)
-    {    
-        return await _dbContext.PerformanceGovernanceSystem.Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
+    {
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
-   
+
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(
     PgsFilter filter,
     string userId,
     CancellationToken cancellationToken)
     {
-      
+
         var userPgs = _entities
             .Where(p => !p.IsDeleted &&
                 p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
             .Select(p => p.Id);
 
         var forApprovalPgs = _entities
-            .Where(p => !p.IsDeleted &&
-                _dbContext.PgsSignatoryTemplate
+            .Where(p => !p.IsDeleted &&           
+                 ReadOnlyDbContext.Set<PgsSignatoryTemplate>()
                     .Where(template =>
                         template.OfficeId == p.OfficeId &&
                         template.IsActive &&
                         template.DefaultSignatoryId == userId)
                     .OrderBy(template => template.OrderLevel)
                     .Any(template =>
-                        !_dbContext.PgsSignatory.Any(sig =>
+                        !ReadOnlyDbContext.Set<PgsSignatory>().Any(sig =>
                             sig.PgsId == p.Id &&
                             sig.PgsSignatoryTemplateId == template.Id)))
             .Select(p => p.Id);
 
-                var combinedIds = await userPgs
-                    .Union(forApprovalPgs)
-                    .Distinct()
-                    .ToListAsync(cancellationToken);
-              
-                var filteredQuery = _entities
-                    .Where(p => combinedIds.Contains(p.Id));
+        var combinedIds = await userPgs
+            .Union(forApprovalPgs)
+            .Distinct()
+            .ToListAsync(cancellationToken);
 
-                if (filter.FromDate != null && filter.ToDate != null)
-                {
-                    filteredQuery = filteredQuery.Where(p =>
-                        p.PgsPeriod.StartDate >= filter.FromDate &&
-                        p.PgsPeriod.EndDate <= filter.ToDate);
-                }
-                else if (filter.FromDate != null)
-                {
-                    filteredQuery = filteredQuery.Where(p =>
-                        p.PgsPeriod.StartDate >= filter.FromDate);
-                }
-                else if (filter.ToDate != null)
-                {
-                    filteredQuery = filteredQuery.Where(p =>
-                        p.PgsPeriod.EndDate <= filter.ToDate);
-                }
+        var filteredQuery = _entities
+            .Where(p => combinedIds.Contains(p.Id));
 
-                if (filter.OfficeId != null)
-                {
-                    filteredQuery = filteredQuery.Where(p => p.OfficeId == filter.OfficeId);
-                }
-               
-                var fullQuery = filteredQuery
-                    .Include(p => p.PgsPeriod)
-                    .Include(p => p.Office)
-                    .Include(p => p.PgsReadinessRating)
-                    .Include(p => p.PgsSignatories);
-
-                // Step 6: Apply pagination
-                return await EntityPageList<PerfomanceGovernanceSystem, long>
-                    .CreateAsync(fullQuery, filter.Page, filter.PageSize, cancellationToken)
-                    .ConfigureAwait(false);
+        if (filter.FromDate != null && filter.ToDate != null)
+        {
+            filteredQuery = filteredQuery.Where(p =>
+                p.PgsPeriod.StartDate >= filter.FromDate &&
+                p.PgsPeriod.EndDate <= filter.ToDate);
+        }
+        else if (filter.FromDate != null)
+        {
+            filteredQuery = filteredQuery.Where(p =>
+                p.PgsPeriod.StartDate >= filter.FromDate);
+        }
+        else if (filter.ToDate != null)
+        {
+            filteredQuery = filteredQuery.Where(p =>
+                p.PgsPeriod.EndDate <= filter.ToDate);
         }
 
-            public async Task Disapprove(long pgsId, CancellationToken cancellationToken)
-            {
-                var pgs = await _entities
-                 .Include(p => p.PgsSignatories)!
-                     .ThenInclude(s => s.PgsSignatoryTemplate)
-                 .FirstOrDefaultAsync(p => p.Id == pgsId, cancellationToken)
-                 .ConfigureAwait(false);
+        if (filter.OfficeId != null)
+        {
+            filteredQuery = filteredQuery.Where(p => p.OfficeId == filter.OfficeId);
+        }
 
-                if (pgs == null)
-                    throw new InvalidOperationException($"PGS record with ID {pgsId} not found.");
+        var fullQuery = filteredQuery
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories);
 
-                var signatoriesToRemove = pgs.PgsSignatories!
-                    .Where(s => s.PgsSignatoryTemplate?.OrderLevel > 1)
-                    .ToList();
-
-                foreach (var signatory in signatoriesToRemove)
-                {
-                    signatory.IsDeleted = true;
-                }
-
-                await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            }
-
+        // Step 6: Apply pagination
+        return await EntityPageList<PerfomanceGovernanceSystem, long>
+            .CreateAsync(fullQuery, filter.Page, filter.PageSize, cancellationToken)
+            .ConfigureAwait(false);
+    } 
 }

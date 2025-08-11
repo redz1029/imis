@@ -11,12 +11,10 @@ namespace IMIS.Application.PgsModule
         Task<IEnumerable<PerfomanceGovernanceSystem>> GetAll(CancellationToken cancellationToken);
         Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<PerfomanceGovernanceSystem?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userid, CancellationToken cancellationToken);     
-        Task<IEnumerable<PerfomanceGovernanceSystem>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken);      
+        Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userid, CancellationToken cancellationToken);
+        Task<IEnumerable<PerfomanceGovernanceSystem>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken);
         Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
-        new Task<PerfomanceGovernanceSystem> SaveOrUpdateAsync(PerfomanceGovernanceSystem perfomanceGovernanceSystem, CancellationToken cancellationToken);
         Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken);
         Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, CancellationToken cancellationToken);
-        Task Disapprove(long pgsId, CancellationToken cancellationToken);
     }
 }
