@@ -1928,68 +1928,7 @@ namespace IMIS.Persistence.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("KraId");
-
-                    b.HasIndex("PerfomanceGovernanceSystemId");
-
-                    b.ToTable("Deliverable");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.PgsDeliverableHistory", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<DateTime>("ByWhen")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("DeliverableId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("DeliverableName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("DisapprovalRemarks")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDirect")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsDisapproved")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("KraDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long?>("KraId")
-                        .HasColumnType("bigint");
-
-                    b.Property<double>("PercentDeliverables")
-                        .HasColumnType("float");
-
-                    b.Property<long>("PgsId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Remarks")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("RemovedAt")
+                    b.Property<DateTime?>("RemovedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("RemovedBy")
@@ -2005,7 +1944,11 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsDeliverableHistory");
+                    b.HasIndex("KraId");
+
+                    b.HasIndex("PerfomanceGovernanceSystemId");
+
+                    b.ToTable("Deliverable");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverableScoreHistory", b =>
@@ -2276,28 +2219,28 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
-                            ConcurrencyStamp = "d6a4a2f8-ebd7-4e1f-b552-2258c34664f4",
+                            ConcurrencyStamp = "a7bebb35-d560-4376-a6f7-a0f0000e297d",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                            ConcurrencyStamp = "3c26b4ff-f0ad-433f-9729-0476027cd430",
+                            ConcurrencyStamp = "0ebf2c83-2605-4978-8b35-9cc8cc2b2cb9",
                             Name = "Pgs Manager",
                             NormalizedName = "PGS MANAGER"
                         },
                         new
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            ConcurrencyStamp = "d9fffdb3-31a3-4acf-b45f-e82cb0772513",
+                            ConcurrencyStamp = "0535354e-929e-4c76-bb97-786752fcc715",
                             Name = "Standard User",
                             NormalizedName = "PGS USER"
                         },
                         new
                         {
                             Id = "af7b586c7ee6490bbd878f46f6a47831",
-                            ConcurrencyStamp = "b0615745-f9e8-473d-bed8-ec5e6cd9a16c",
+                            ConcurrencyStamp = "74215862-a502-4944-a567-93d30be95315",
                             Name = "Pgs Auditor",
                             NormalizedName = "PGS AUDITOR"
                         });
@@ -2531,15 +2474,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "cc3e73fc-0b92-4f46-a284-e578fc4e3be8",
+                            ConcurrencyStamp = "c051490c-423d-4e84-b461-d880235bf21b",
                             Email = "marcrejohncastillano@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
                             NormalizedUserName = "REDZ1029",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHHeTOfYAZAf6wkxk7rltsCNCQMoVrbCcwz/sXl1ixMuHxOnQTfP9Vct0bUyAMqykQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDAC0xSGcCaoBWBClSI+itC3CYVROGQzDXfHkSaTog3OFKqJiIbg/qLLoStLBZauVw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "9bc99acf-ae7e-475c-8d53-946a7a2b666c",
+                            SecurityStamp = "d87cd67d-6058-48d4-84a0-254bd8c0d7bb",
                             TwoFactorEnabled = false,
                             UserName = "redz1029"
                         },
@@ -2547,15 +2490,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "25720d8c-1657-42f6-88ed-55b79d6e3fef",
+                            ConcurrencyStamp = "d6640228-514d-4032-8ec8-43b9cfafd780",
                             Email = "alondealexa2021@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "ALONDEALEXA2021@GMAIL.COM",
                             NormalizedUserName = "ALYXX1988",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMSolzltEl5tknfg8jVuOiyUKgqw5VCf21DuxBJ31dWgh5ZMugigJW0EjcxEly4ZXg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPS0a3mF/jpUDDcoWq0Rdn3FRxbfMRr9t+gwGis+n1t+QVHLCPmjK+sByB4LW7r98A==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "bcdfb095-8f23-4509-b580-603d3279850f",
+                            SecurityStamp = "d57e0401-ca7e-4538-9550-68e28f7349c7",
                             TwoFactorEnabled = false,
                             UserName = "alyxx1988"
                         },
@@ -2563,15 +2506,15 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a869afc0-d954-493a-ab0e-74538e0c1377",
+                            ConcurrencyStamp = "3ebc2390-434e-4ebb-bde4-66ed37662cb4",
                             Email = "CrossVampireNe0@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "CROSSVAMPIRENE0@GMAIL.COM",
                             NormalizedUserName = "DARKWIZWIZ",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJD83MZdZatjxrzVwmpntZFitkhfEAor/UlDGQD1G9VH7/lom5AppuwitpOosfWZbQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAgw7XppebVYiE/EdvZdFUA+20OiVdb9H3Afdv78xmgd5e/GhJn0X9uKE4GPPI4h6w==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "cdf661f5-749a-445d-b68e-02e7fd0390c5",
+                            SecurityStamp = "15f3c166-4e32-43ae-87c6-8725dc2ea9e7",
                             TwoFactorEnabled = false,
                             UserName = "darkwizwiz"
                         });
