@@ -21,6 +21,8 @@ namespace IMIS.Application.PgsModule
         public string? DisapprovalRemarks { get; set; }
         public bool IsDisapproved { get; set; }
 
+        public long PerfomanceGovernanceSystemId { get; set; }
+
         public List<PgsDeliverableScoreHistoryDto>? PgsDeliverableScoreHistory { get; set; }
         public PGSDeliverableDto() {}
 
@@ -55,6 +57,8 @@ namespace IMIS.Application.PgsModule
 
             this.DisapprovalRemarks = pgsDeliverable.DisapprovalRemarks;
             this.IsDisapproved = pgsDeliverable.IsDisapproved;
+
+            this.PerfomanceGovernanceSystemId = pgsDeliverable.PerfomanceGovernanceSystemId;
         }
 
         public override PgsDeliverable ToEntity()
@@ -74,6 +78,8 @@ namespace IMIS.Application.PgsModule
                 Remarks = Remarks,
                 DisapprovalRemarks = DisapprovalRemarks,
                 IsDisapproved = IsDisapproved,
+                PerfomanceGovernanceSystemId = PerfomanceGovernanceSystemId
+
             };
         }
     }

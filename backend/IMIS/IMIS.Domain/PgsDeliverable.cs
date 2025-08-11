@@ -18,6 +18,9 @@ namespace IMIS.Domain
         public string? DisapprovalRemarks { get; set; }
         public bool IsDisapproved { get; set; }
 
+        public string? RemovedBy { get; set; }
+        public DateTime? RemovedAt { get; set; }
+
         public ICollection<PgsDeliverableScoreHistory>? PgsDeliverableScoreHistory { get; set; }
         public long PerfomanceGovernanceSystemId { get; set; }
 
