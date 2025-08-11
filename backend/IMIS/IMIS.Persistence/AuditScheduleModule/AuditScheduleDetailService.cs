@@ -9,28 +9,19 @@ namespace IMIS.Persistence.AuditScheduleModule
         public AuditScheduleDetailService(IAuditScheduleDetailRepository repository)
         {
             _repository = repository;
-        }     
-        public async Task<AuditScheduleDetailDto> SaveOrUpdateAsync(AuditScheduleDetailDto auditScheduleDetailDto, CancellationToken cancellationToken)
-        {
-            if (auditScheduleDetailDto == null) throw new ArgumentNullException(nameof(auditScheduleDetailDto));
-            var auditEntity = auditScheduleDetailDto.ToEntity();
-            var createdAuditDetailDto = await _repository.SaveOrUpdateAsync(auditEntity, cancellationToken).ConfigureAwait(false);
-            return new AuditScheduleDetailDto
-            {
-       
-                Id = createdAuditDetailDto.Id,
-                AuditScheduleId = createdAuditDetailDto.AuditScheduleId,
-                TeamId = createdAuditDetailDto.TeamId,
-                StartDateTime = createdAuditDetailDto.StartDateTime,
-                EndDateTime = createdAuditDetailDto.EndDateTime,
-                OfficeId = createdAuditDetailDto.OfficeId
-            };
         }
+
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            if (dto is not AuditScheduleDetailDto pgsDto) throw new ArgumentException("Invalid DTO type", nameof(dto));
-            var pgsEntity = pgsDto.ToEntity();
-            await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
-        }
+            var ODto = dto as AuditScheduleDetailDto;
+            var auditScheduleDetailDto = ODto!.ToEntity();
+
+            if (auditScheduleDetailDto.Id == 0)
+                _repository.Add(auditScheduleDetailDto);
+            else
+                await _repository.UpdateAsync(auditScheduleDetailDto, auditScheduleDetailDto.Id, cancellationToken).ConfigureAwait(false);
+
+            await _repository.SaveOrUpdateAsync(auditScheduleDetailDto, cancellationToken).ConfigureAwait(false);
+        }      
     }
 }
