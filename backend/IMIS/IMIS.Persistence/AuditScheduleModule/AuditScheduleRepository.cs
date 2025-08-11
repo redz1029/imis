@@ -51,25 +51,25 @@ namespace IMIS.Persistence.AuditScheduleModule
                 .Include(a => a.AuditableOffices)
                 .Include(a => a.AuditSchduleDetails)
                 .ToListAsync(cancellationToken);
-        }       
+        }
+
         public new async Task<AuditSchedule> SaveOrUpdateAsync(AuditSchedule auditSchedule, CancellationToken cancellationToken)
         {
             if (auditSchedule == null) throw new ArgumentNullException(nameof(auditSchedule));
 
-            var existingAudit = await _entities   
+            var existingAudit = await _entities
                 .FirstOrDefaultAsync(d => d.Id == auditSchedule.Id, cancellationToken);
 
             if (existingAudit != null)
             {
                 // Update only changed fields
-                _dbContext.Entry(existingAudit).CurrentValues.SetValues(auditSchedule);
+                _entities.Entry(existingAudit).CurrentValues.SetValues(auditSchedule);
             }
             else
             {
                 // Add new audit schedule
                 await _entities.AddAsync(auditSchedule, cancellationToken);
-            }
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            }          
             return auditSchedule;
         }
     }

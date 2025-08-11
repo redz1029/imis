@@ -326,7 +326,7 @@ namespace IMIS.Persistence.AuditScheduleModule
 
             await _auditScheduleRepository.AddAuditableOfficesAsync(entities, cancellationToken);
         }
-     
+
         public async Task<AuditScheduleDto> SaveOrUpdateAsync(AuditScheduleDto auditScheduleDto, CancellationToken cancellationToken)
         {
             if (auditScheduleDto == null) throw new ArgumentNullException(nameof(auditScheduleDto));
@@ -340,7 +340,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                 AuditTitle = savedEntity.AuditTitle,
                 StartDate = savedEntity.StartDate,
                 EndDate = savedEntity.EndDate,
-                IsActive = savedEntity.IsActive,               
+                IsActive = savedEntity.IsActive,
                 AuditableOffices = savedEntity.AuditableOffices?.Select(a => new AuditableOfficesDto
                 {
                     AuditScheduleId = a.AuditScheduleId,
