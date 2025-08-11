@@ -32,28 +32,6 @@ namespace IMIS.Persistence.KraModule
                .AsNoTracking()            
                .ToListAsync(cancellationToken)
                .ConfigureAwait(false);
-        }      
-        // Save or Update method
-        public new async Task<KeyResultArea> SaveOrUpdateAsync(KeyResultArea keyResultArea, CancellationToken cancellationToken)
-        {
-            if (keyResultArea == null) throw new ArgumentNullException(nameof(keyResultArea));
-            // Check if the entity already exists
-            var existingKeyResultArea = await _entities
-                .FirstOrDefaultAsync(d => d.Id == keyResultArea.Id, cancellationToken)
-                .ConfigureAwait(false);
-            if (existingKeyResultArea != null)
-            {
-                // Update existing entity
-                _dbContext.Entry(existingKeyResultArea).CurrentValues.SetValues(keyResultArea);
-            }
-            else
-            {
-                // Add new entity
-                await _entities.AddAsync(keyResultArea, cancellationToken).ConfigureAwait(false);
-            }
-            // Save changes to the database
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return keyResultArea;
-        }        
+        }                   
     }
 }

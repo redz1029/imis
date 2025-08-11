@@ -2,6 +2,7 @@
 using Carter;
 using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Application.PgsKraModule;
+using IMIS.Application.PgsPeriodModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,10 +23,10 @@ namespace IMIS.Presentation.KraModuleAPI
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] KeyResultAreaDto keyResultAreaDto, IKeyResultAreaService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                var createdKeyResultAreaDto = await service.SaveOrUpdateAsync(keyResultAreaDto, cancellationToken).ConfigureAwait(false);
+            {              
+                await service.SaveOrUpdateAsync(keyResultAreaDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_keyAreaResultTag, cancellationToken);
-                return Results.Created($"/kra/{createdKeyResultAreaDto.Id}", createdKeyResultAreaDto);
+                return Results.Ok(keyResultAreaDto);
             })
             .WithTags(_keyAreaResultTag)
             .RequireAuthorization(e => e.RequireClaim(
@@ -68,10 +69,9 @@ namespace IMIS.Presentation.KraModuleAPI
                 {
                     return Results.NotFound($"KeyResultArea with ID {id} not found.");
                 }
-
-                var updatedKeyResultArea = await service.SaveOrUpdateAsync(keyResultAreaDto, cancellationToken).ConfigureAwait(false);
+                await service.SaveOrUpdateAsync(keyResultAreaDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_keyAreaResultTag, cancellationToken);
-                return Results.Ok(updatedKeyResultArea);
+                return Results.Ok(keyResultAreaDto);
             })
             .WithTags(_keyAreaResultTag)
             .RequireAuthorization(e => e.RequireClaim(

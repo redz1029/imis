@@ -46,23 +46,19 @@ namespace IMIS.Persistence.KraModule
             var keyResultAreaDto = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
             return keyResultAreaDto?.Select(o => ConvOfficeToDTO(o)).ToList();
         }            
-        public async Task<KeyResultAreaDto> SaveOrUpdateAsync(KeyResultAreaDto keyResultAreaDto, CancellationToken cancellationToken)
-        {
-            if (keyResultAreaDto == null) throw new ArgumentNullException(nameof(keyResultAreaDto));
-            var keyResultAreaEntity = keyResultAreaDto.ToEntity();
-            var createdKeyResultArea = await _repository.SaveOrUpdateAsync(keyResultAreaEntity, cancellationToken).ConfigureAwait(false);
-            return new KeyResultAreaDto
-            {
-                Id = createdKeyResultArea.Id,
-                Name = createdKeyResultArea.Name,
-                Remarks = createdKeyResultArea.Remarks
-            };
-        }     
+       
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)where TEntity : Entity<TId>
         {
-            if (dto is not KeyResultAreaDto pgsDto) throw new ArgumentException("Invalid DTO type", nameof(dto));
-            var pgsEntity = pgsDto.ToEntity();
-            await _repository.SaveOrUpdateAsync(pgsEntity, cancellationToken).ConfigureAwait(false);
+          
+            var ODto = dto as KeyResultAreaDto;
+            var keyResultAreaDto = ODto!.ToEntity();
+
+            if (keyResultAreaDto.Id == 0)
+                _repository.Add(keyResultAreaDto);
+            else
+                await _repository.UpdateAsync(keyResultAreaDto, keyResultAreaDto.Id, cancellationToken).ConfigureAwait(false);
+
+            await _repository.SaveOrUpdateAsync(keyResultAreaDto, cancellationToken).ConfigureAwait(false);
         }      
     }
 }
