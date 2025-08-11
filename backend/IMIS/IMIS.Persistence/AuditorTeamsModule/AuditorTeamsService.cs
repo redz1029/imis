@@ -1,5 +1,7 @@
-﻿using IMIS.Application.AuditorModule;
+﻿using Base.Primitives;
+using IMIS.Application.AuditorModule;
 using IMIS.Domain;
+using IMIS.Persistence.AuditorModule;
 
 namespace IMIS.Application.AuditorTeamsModule
 {
@@ -76,6 +78,6 @@ namespace IMIS.Application.AuditorTeamsModule
                 await _repository.SaveOrUpdateAsync(auditorTeam, cancellationToken);
             }
             return auditorTeamsDto;
-        }
+        }      
     }
 }
