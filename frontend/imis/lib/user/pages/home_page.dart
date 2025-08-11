@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/auditor/models/auditor.dart';
@@ -10,9 +9,9 @@ import 'package:imis/performance_governance_system/models/pgs_deliverables.dart'
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
+import 'package:imis/user/services/home_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/http_util.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../performance_governance_system/enum/pgs_status.dart';
 
@@ -54,276 +53,13 @@ class HomePageState extends State<HomePage> {
   final int maxDeliverables = 100;
   int _currentImageIndex = 0;
   late Timer imageTimer;
-
   final List<String> rotatingImages = ['assets/pic1.jpg', 'assets/pic2.jpg'];
-  final dio = Dio();
-
-  //fetch Users
-  Future<void> fetchUser() async {
-    var url = ApiEndpoint().users;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<User> data =
-            (response.data as List)
-                .map(
-                  (userJson) => User.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            userList = data;
-            filteredListUser = List.from(userList);
-            totalUsers = userList.length;
-          });
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Failed to load data. Please try again later."),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed to load data. Please try again later."),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> fetchDeliverables() async {
-    var url = ApiEndpoint().deliverables;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<PgsDeliverables> data =
-            (response.data as List).map((userJson) {
-              return PgsDeliverables.fromJson(userJson as Map<String, dynamic>);
-            }).toList();
-
-        if (mounted) {
-          setState(() {
-            deliverablesList = data;
-            filteredDeliverables = List.from(deliverablesList);
-          });
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Failed to load data. Please try again later."),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed to load data. Please try again later."),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  //fetch office
-  Future<void> fecthOffice() async {
-    var url = ApiEndpoint().office;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map(
-                  (userJson) =>
-                      Office.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            officeList = data;
-            filteredListOffice = List.from(officeList);
-            totalOffices = officeList.length;
-          });
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Failed to load data. Please try again later."),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed to load data. Please try again later."),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  //fetch KRA
-  Future<void> fetchKra() async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<KeyResultArea> data =
-            (response.data as List)
-                .map(
-                  (userJson) =>
-                      KeyResultArea.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            kraList = data;
-            filteredKra = List.from(kraList);
-          });
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Failed to load data. Please try again later."),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed to load data. Please try again later."),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  //team
-  Future<void> fetchTeam() async {
-    var url = ApiEndpoint().team;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Team> data =
-            (response.data as List)
-                .map(
-                  (userJson) => Team.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            teamList = data;
-            filteredListTeam = List.from(teamList);
-            totalTeam = teamList.length;
-          });
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Failed to load data. Please try again later."),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed to load data. Please try again later."),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  //Auditors
-  Future<void> fetchAuditors() async {
-    var url = ApiEndpoint().auditor;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Auditor> data =
-            (response.data as List)
-                .map(
-                  (userJson) =>
-                      Auditor.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            auditorList = data;
-            filteredListAuditor = List.from(auditorList);
-            totalAuditor = auditorList.length;
-          });
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text("Failed to load data. Please try again later."),
-              duration: Duration(seconds: 3),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Failed to load data. Please try again later."),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
-    fetchUser();
-    fecthOffice();
-    fetchTeam();
-    fetchAuditors();
-    fetchDeliverables();
-    fetchKra();
+    _fetchAllData();
     imageTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
       if (mounted) {
         setState(() {
@@ -337,6 +73,57 @@ class HomePageState extends State<HomePage> {
   void dispose() {
     imageTimer.cancel();
     super.dispose();
+  }
+
+  Future<void> _fetchAllData() async {
+    final service = HomeService();
+    try {
+      final data = await service.fetchAll(
+        usersEndpoint: ApiEndpoint().users,
+        officeEndpoint: ApiEndpoint().office,
+        teamEndpoint: ApiEndpoint().team,
+        auditorEndpoint: ApiEndpoint().auditor,
+        deliverablesEndpoint: ApiEndpoint().deliverables,
+        kraEndpoint: ApiEndpoint().keyresult,
+      );
+
+      if (mounted) {
+        setState(() {
+          userList = data.users;
+          filteredListUser = List.from(data.users);
+          totalUsers = data.users.length;
+
+          officeList = data.offices;
+          filteredListOffice = List.from(data.offices);
+          totalOffices = data.offices.length;
+
+          teamList = data.teams;
+          filteredListTeam = List.from(data.teams);
+          totalTeam = data.teams.length;
+
+          auditorList = data.auditors;
+          filteredListAuditor = List.from(data.auditors);
+          totalAuditor = data.auditors.length;
+
+          deliverablesList = data.deliverables;
+          filteredDeliverables = List.from(data.deliverables);
+
+          kraList = data.kras;
+          filteredKra = List.from(data.kras);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              "Failed to load data. Please check your connection and try again later.",
+            ),
+            duration: Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _loadUserName() async {
