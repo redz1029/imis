@@ -37,7 +37,7 @@ namespace IMIS.Persistence.PgsModule
             "and (8) causing baked global functions to not work or fail.", true)]
         private readonly ImisDbContext _dbContext;
 
-        [Obsolete("Do not inject DbContext directly into services. Use the Repository instead.", true)]
+        [Obsolete("Remove this unused accessor", true)]
         private readonly IHttpContextAccessor _httpContextAccessor;
 
         public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, 
