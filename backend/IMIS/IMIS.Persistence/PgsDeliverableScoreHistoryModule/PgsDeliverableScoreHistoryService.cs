@@ -8,6 +8,17 @@ namespace IMIS.Persistence.PgsDeliverableScoreHistoryModule
     public class PgsDeliverableScoreHistoryService : IPgsDeliverableScoreHistoryService
     {
         private readonly IPgsDeliverableScoreHistoryRepository _repository;
+
+        [Obsolete("Do not inject DbContext directly into services. Use the Repository instead. " +
+            "Kindly follow the design patterns we have discussed to avoid subtle and not so subtle problems such as " +
+            "(1) Multiple DbContext Instances per Request, " +
+            "(2)  Increased Risk of Lazy Loading & Query Tracking Issues, " +
+            "(3) Connection Pooling & Performance Overhead, " +
+            "(4) Harder to Maintain and Debug, " +
+            "(5) Violating Separation of Concerns, " +
+            "(6) Concurrency Effects, " +
+            "(7) Memory Usage and Leaks, " +
+            "and (8) causing baked global functions to not work or fail.", true)]
         private readonly ImisDbContext _dbContext;
         public PgsDeliverableScoreHistoryService(IPgsDeliverableScoreHistoryRepository repository, ImisDbContext dbContext)
         {
