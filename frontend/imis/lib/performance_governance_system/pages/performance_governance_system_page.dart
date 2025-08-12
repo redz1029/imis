@@ -164,14 +164,23 @@ class PerformanceGovernanceSystemPageState
   final dio = Dio();
 
   Future<void> _loadCurrentUserId() async {
-    UserRegistration? user = await AuthUtil.processTokenValidity(dio);
+    final isTokenValid = await AuthUtil.processTokenValidity(dio, context);
 
-    setState(() {
-      userId = user!.id ?? "UserId";
-    });
+    if (!isTokenValid) {
+      if (mounted) {
+        setState(() {
+          userId = "Invalid session";
+        });
+      }
+      return;
+    }
+
+    UserRegistration? user = await AuthUtil.fetchLoggedUser();
 
     if (mounted) {
-      setState(() {});
+      setState(() {
+        userId = user?.id ?? "UserId";
+      });
     }
   }
 
@@ -2515,7 +2524,6 @@ class PerformanceGovernanceSystemPageState
                                                       builder: (
                                                         context,
                                                         res,
-                                                        // _,
                                                         __,
                                                       ) {
                                                         return ValueListenableBuilder<
@@ -2525,7 +2533,6 @@ class PerformanceGovernanceSystemPageState
                                                               confidenceScore,
                                                           builder: (
                                                             context,
-                                                            // _,
                                                             conf,
                                                             __,
                                                           ) {
@@ -3219,32 +3226,39 @@ class PerformanceGovernanceSystemPageState
   }) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
+      child: CustomTooltip(
+        maxLines: 4,
+        message:
+            isDirect
+                ? 'Direct: Indicates if the deliverable is directly managed by the office.'
+                : 'Indirect: Indicates if the deliverable is indirectly supported by the office.',
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(4),
+            border: Border.all(
+              color: const Color.fromARGB(255, 255, 255, 255),
+              width: 0.5,
+            ),
             color: const Color.fromARGB(255, 255, 255, 255),
-            width: 0.5,
           ),
-          color: const Color.fromARGB(255, 255, 255, 255),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          child: Checkbox(
-            value: selectedValues[index] ?? false,
-            onChanged: (bool? newValue) {
-              if (newValue == null) return;
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+            child: Checkbox(
+              value: selectedValues[index] ?? false,
+              onChanged: (bool? newValue) {
+                if (newValue == null) return;
 
-              setDialogState(() {
-                selectedValues[index] = newValue;
+                setDialogState(() {
+                  selectedValues[index] = newValue;
 
-                if (newValue) {
-                  oppositeValues[index] = false;
-                }
-              });
-            },
-            activeColor: Colors.white,
-            checkColor: Colors.black,
+                  if (newValue) {
+                    oppositeValues[index] = false;
+                  }
+                });
+              },
+              activeColor: Colors.white,
+              checkColor: Colors.black,
+            ),
           ),
         ),
       ),
