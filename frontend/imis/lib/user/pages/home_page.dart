@@ -113,16 +113,7 @@ class HomePageState extends State<HomePage> {
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "Failed to load data. Please check your connection and try again later.",
-            ),
-            duration: Duration(seconds: 3),
-          ),
-        );
-      }
+      if (mounted) {}
     }
   }
 
