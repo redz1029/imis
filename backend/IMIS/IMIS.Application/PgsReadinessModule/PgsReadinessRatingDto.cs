@@ -17,7 +17,7 @@ namespace IMIS.Application.PGSReadinessRatingCancerCareModule
             this.Id = pgsReadinessRating.Id;
             this.CompetenceToDeliver = pgsReadinessRating.CompetenceToDeliver;
             this.ResourceAvailability = pgsReadinessRating.ResourceAvailability;
-            this.ConfidenceToDeliver = ConfidenceToDeliver;
+            this.ConfidenceToDeliver = pgsReadinessRating.ConfidenceToDeliver;
             this.TotalScore = pgsReadinessRating.TotalScore;
             this.IsDeleted = pgsReadinessRating.IsDeleted;
             this.RowVersion = pgsReadinessRating.RowVersion;
