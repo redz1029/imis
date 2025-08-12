@@ -49,10 +49,8 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSignatoryTemplatePermission());
 
             // This will seed all roles and permissions for the default users
-            await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(             
-                 _roleManager, _userManager, "Wilbur");
-                
-
+            await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
+                 _roleManager, _userManager, "castillano.mrb", "rama.emg", "pimentel.wb");
         }
     }
 }
