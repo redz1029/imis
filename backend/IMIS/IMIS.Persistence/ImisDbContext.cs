@@ -2,13 +2,12 @@
 using Base.Utilities;
 using IMIS.Domain;
 using IMIS.Persistence.SeedConfigurations;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace IMIS.Persistence
 {
-    public class ImisDbContext : IdentityDbContext, IReadOnlyDbContext
+    public class ImisDbContext : AuditableDbContext
     {
         public DbSet<Auditor> Auditors { get; set; }
         public DbSet<Office> Offices { get; set; }
@@ -27,7 +26,7 @@ namespace IMIS.Persistence
         public DbSet<PgsSignatory> PgsSignatory { get; set; }
         public DbSet<PgsSignatoryTemplate> PgsSignatoryTemplate { get; set; }
         public DbSet<PgsDeliverableScoreHistory> PgsDeliverableScoreHistories { get; set; }
-        public DbSet<OfficeType> OfficeType { get; set; }      
+        public DbSet<OfficeType> OfficeType { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)

@@ -1,8 +1,12 @@
 ﻿using Base.Auths;
+using Base.Auths.Permissions;
+using Base.Auths.Roles;
+using Base.Utilities;
 using Carter;
-using DotNetEnv;
 using IMIS.Domain;
+using IMIS.Infrastructure;
 using IMIS.Infrastructure.Auths;
+using IMIS.Infrastructure.Auths.Roles;
 using IMIS.Persistence;
 using IMIS.Persistence.DependencyInjection;
 using IMIS.Presentation.UserModule;
@@ -12,11 +16,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using Base.Auths.Permissions;
-using Base.Auths.Roles;
-using IMIS.Infrastructure.Auths.Roles;
-using IMIS.Infrastructure;
-
 
 var builder = WebApplication.CreateBuilder(args);
 builder.SetupEnvironment();
@@ -46,9 +45,9 @@ builder.Services.AddAuthentication(options =>
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = TokenUtils.Issuer,
-        ValidAudience = TokenUtils.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TokenUtils.SecretKey!)),       
+        ValidIssuer = IMIS.Infrastructure.Auths.TokenUtils.Issuer,
+        ValidAudience = IMIS.Infrastructure.Auths.TokenUtils.Audience,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(IMIS.Infrastructure.Auths.TokenUtils.SecretKey!)),       
     };
 });
 
@@ -78,7 +77,8 @@ builder.Services.AddIdentityCore<User>()
     .AddDefaultTokenProviders()
     .AddApiEndpoints();
 
-builder.Services.AddDbContext<ImisDbContext>(options => options.UseSqlServer(sqlServerConnectionString));
+builder.Services.AddDbContext<ImisDbContext>(options => 
+    options.UseSqlServer(DatabaseCredentials.SqlServerConnectionString));
 builder.Services.AddPersistence();
 
 builder.Services.AddHttpContextAccessor();
@@ -116,7 +116,6 @@ builder.Services.AddSwaggerGen(c =>
 AppContext.SetSwitch("System.Drawing.EnableUnixSupport", true);
 
 var app = builder.Build();
-CurrentUserHelper<User>.Configure(app.Services.GetRequiredService<IHttpContextAccessor>());
 
 app.UseSwagger();
 app.UseSwaggerUI();
@@ -139,4 +138,6 @@ using (var scope = app.Services.CreateScope())
     var seeder = scope.ServiceProvider.GetRequiredService<IRoleAndPermissionSeeder>();
     await seeder.SeedAsync();
 }
+
+ServiceResolver.Init(app.Services);
 app.Run();
