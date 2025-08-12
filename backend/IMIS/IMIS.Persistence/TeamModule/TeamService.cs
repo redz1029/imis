@@ -78,7 +78,7 @@ namespace IMIS.Persistence.TeamModule
                 {
                     await _teamRepository.UpdateAsync(team, team.Id, cancellationToken).ConfigureAwait(false);
                 }
-                await _teamRepository.SaveOrUpdateAsync(team, cancellationToken).ConfigureAwait(false);
+                await _teamRepository.SaveOrUpdateAsync<User>(team, cancellationToken).ConfigureAwait(false);
             }
         }         
     }
