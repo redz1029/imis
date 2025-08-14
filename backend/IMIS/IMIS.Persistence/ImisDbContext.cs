@@ -51,9 +51,13 @@ namespace IMIS.Persistence
                 .HasOne(ao => ao.Office)
                 .WithMany(a => a.AuditorOffices)
                 .HasForeignKey(a => a.OfficeId);
+           
+            builder.Entity<AuditorTeams>()
+                .HasKey(at => at.Id);
 
             builder.Entity<AuditorTeams>()
-                .HasKey(at => new { at.AuditorId, at.TeamId });
+                .HasIndex(at => new { at.AuditorId, at.TeamId })
+                .IsUnique(); 
 
             builder.Entity<AuditorTeams>()
                 .HasOne(t => t.Team)
@@ -103,7 +107,7 @@ namespace IMIS.Persistence
                 .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<UserOffices>()
-                .HasOne<Office>() // inferred FK
+                .HasOne<Office>()
                 .WithMany(o => o.UserOffices)
                 .HasForeignKey(x => x.OfficeId)
                 .OnDelete(DeleteBehavior.NoAction);
