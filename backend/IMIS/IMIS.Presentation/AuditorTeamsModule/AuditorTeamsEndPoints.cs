@@ -1,7 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AuditorTeamsModule;
-using IMIS.Application.AuditScheduleModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,10 +21,10 @@ namespace IMIS.Presentation.AuditorTeamsModule
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] AuditorTeamsDto auditorTeamsDto, IAuditorTeamsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {               
-                var createdAuditorTeamsDto = await service.SaveOrUpdateAsync(auditorTeamsDto, cancellationToken).ConfigureAwait(false);
-                await cache.EvictByTagAsync(_AuditorTeamTag, cancellationToken);               
-                return Results.Created($"/auditorTeams/{createdAuditorTeamsDto}", createdAuditorTeamsDto);
+            {             
+                await service.SaveOrUpdateAsync(auditorTeamsDto, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_AuditorTeamTag, cancellationToken);
+                return Results.Ok(auditorTeamsDto);
             })
            .WithTags(_AuditorTeamTag)
            .RequireAuthorization(e => e.RequireClaim(
@@ -51,7 +50,7 @@ namespace IMIS.Presentation.AuditorTeamsModule
                 }
                 return Results.Ok(team);
             })
-           .WithTags(_AuditorTeamTag)        
+           .WithTags(_AuditorTeamTag)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
            .RequireAuthorization(e => e.RequireClaim(
             PermissionClaimType.Claim, _auditorTeamPermission.View));

@@ -1,14 +1,11 @@
 ﻿
-using Base.Pagination;
-using IMIS.Application.PgsModule;
-using IMIS.Domain;
+using Base.Abstractions;
 
 namespace IMIS.Application.AuditorTeamsModule
 {
-    public interface IAuditorTeamsService
-    {       
+    public interface IAuditorTeamsService : IService
+    {
         Task<List<AuditorTeamsDto>?> GetAllAsync(CancellationToken cancellationToken);
-        Task<AuditorTeamsDto> SaveOrUpdateAsync(AuditorTeamsDto auditorTeamsDto, CancellationToken cancellationToken);
-        Task<List<AuditorTeamsDto>> GetAllAsyncFilterByTeamId(long? teamId, CancellationToken cancellationToken);       
+        Task<List<AuditorTeamsDto>> GetAllAsyncFilterByTeamId(long? teamId, CancellationToken cancellationToken);
     }
 }
