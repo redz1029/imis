@@ -56,13 +56,12 @@ namespace IMIS.Persistence.UserOfficeModule
             return DtoPageList<UserOfficeDto, UserOffices, int>.Create(userOffice.Items, page, pageSize, userOffice.TotalCount);
         }
         public async Task<UserOfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
-        {
-            // Fetch the user office from the repository by ID
+        {            
             var userOffice = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
 
             if (userOffice == null)
             {
-                return null; // Return null if no UserOffice is found
+                return null; 
             }
           
             var user = await _userManager.FindByIdAsync(userOffice.UserId);
