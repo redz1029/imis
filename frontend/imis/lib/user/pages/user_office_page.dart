@@ -8,7 +8,6 @@ import 'package:imis/user/models/user_office.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
 import '../../utils/http_util.dart';
 
 class UserOfficePage extends StatefulWidget {
@@ -94,7 +93,7 @@ class UserOfficePageState extends State<UserOfficePage> {
         printUserOfficeWithOfficeName();
       }
     } catch (e) {
-      debugPrint("FetchOfficeList Error: $e");
+      if (mounted) {}
     }
   }
 
@@ -115,7 +114,7 @@ class UserOfficePageState extends State<UserOfficePage> {
         printUserNameWithUserName();
       }
     } catch (e) {
-      debugPrint("FetchUserList Error: $e");
+      if (mounted) {}
     }
   }
 
@@ -164,13 +163,12 @@ class UserOfficePageState extends State<UserOfficePage> {
               );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("${isUpdating ? 'Update' : 'Save'} successful");
-        await fetchUserOffice(); // Refresh data
+        await fetchUserOffice();
       } else {
-        debugPrint("Failed: ${response.statusCode}");
+        if (mounted) {}
       }
     } catch (e) {
-      debugPrint(" Error: $e");
+      if (mounted) {}
     }
   }
 
@@ -197,12 +195,12 @@ class UserOfficePageState extends State<UserOfficePage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format");
+        if (mounted) {}
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } on DioException {
+      if (mounted) {}
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      if (mounted) {}
     }
   }
 
@@ -228,7 +226,7 @@ class UserOfficePageState extends State<UserOfficePage> {
         }
       }
     } catch (e) {
-      debugPrint("Error fetching user: $e");
+      if (mounted) {}
     }
   }
 
@@ -241,7 +239,7 @@ class UserOfficePageState extends State<UserOfficePage> {
         await fetchUserOffice();
       }
     } catch (e) {
-      debugPrint("Error deleting KRA: $e");
+      if (mounted) {}
     }
   }
 
@@ -275,7 +273,6 @@ class UserOfficePageState extends State<UserOfficePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
-    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override

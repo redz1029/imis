@@ -14,6 +14,8 @@ class UserRegistration {
   final String? prefix;
   final String? suffix;
   final String? position;
+  String? accessToken;
+  String? refreshToken;
 
   UserRegistration(
     this.id,
@@ -26,6 +28,8 @@ class UserRegistration {
     this.prefix,
     this.suffix,
     this.position,
+    this.accessToken,
+    this.refreshToken,
   );
 
   factory UserRegistration.fromJson(Map<String, dynamic> json) =>

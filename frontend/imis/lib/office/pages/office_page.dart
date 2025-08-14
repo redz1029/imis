@@ -9,8 +9,6 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
-import '../../utils/token_expiration_handler.dart';
-
 class OfficePage extends StatefulWidget {
   const OfficePage({super.key});
 
@@ -90,9 +88,7 @@ class OfficePageState extends State<OfficePage> {
       if (response.statusCode == 200 || response.statusCode == 201) {
         await fetchOffices();
       } else {
-        debugPrint(
-          "Failed to add/update office. Status code: ${response.statusCode}",
-        );
+        debugPrint("Failed to add/update office.");
       }
     } catch (e) {
       debugPrint("Error adding/updating office: $e");
@@ -207,7 +203,6 @@ class OfficePageState extends State<OfficePage> {
     if (filteredListParentOffice.isNotEmpty) {
       _selectedParentOffice = filteredListParentOffice[0]['id'].toString();
     }
-    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override

@@ -26,10 +26,7 @@ import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
-
 import 'package:imis/widgets/permission_widget.dart';
-
 import 'package:motion_toast/motion_toast.dart';
 
 class DashboardNavigationPanel extends StatefulWidget {
@@ -75,9 +72,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      TokenExpirationHandler(context).checkTokenExpiration();
-    }
+    if (state == AppLifecycleState.resumed) {}
   }
 
   @override
@@ -148,7 +143,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
               ),
               TextButton(
                 onPressed: () async {
-                  await AuthUtil.logout();
+                  await AuthUtil.logout(context);
                   if (!context.mounted) return;
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => const LoginPage()),

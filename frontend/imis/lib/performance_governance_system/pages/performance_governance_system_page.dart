@@ -27,7 +27,6 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -164,23 +163,14 @@ class PerformanceGovernanceSystemPageState
   final dio = Dio();
 
   Future<void> _loadCurrentUserId() async {
-    final isTokenValid = await AuthUtil.processTokenValidity(dio, context);
+    UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
 
-    if (!isTokenValid) {
-      if (mounted) {
-        setState(() {
-          userId = "Invalid session";
-        });
-      }
-      return;
-    }
-
-    UserRegistration? user = await AuthUtil.fetchLoggedUser();
+    setState(() {
+      userId = user!.id ?? "UserId";
+    });
 
     if (mounted) {
-      setState(() {
-        userId = user?.id ?? "UserId";
-      });
+      setState(() {});
     }
   }
 
@@ -274,13 +264,6 @@ class PerformanceGovernanceSystemPageState
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) {
-        debugPrint("Error: No user found in shared preferences.");
-        return;
-      }
-
-      String? token = await AuthUtil.fetchAccessToken();
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
         return;
       }
 
@@ -290,7 +273,6 @@ class PerformanceGovernanceSystemPageState
       );
 
       if (signatoryResponse.statusCode != 200) {
-        debugPrint("Failed to fetch signatory data");
         return;
       }
 
@@ -318,11 +300,7 @@ class PerformanceGovernanceSystemPageState
         await prefs.remove('selectedOfficeName');
       } else {
         debugPrint("Failed to update PGS");
-        if (response.statusCode == 401 || response.statusCode == 403) {
-          debugPrint(
-            "Token expired or invalid. Consider redirecting to login.",
-          );
-        }
+        if (response.statusCode == 401 || response.statusCode == 403) {}
       }
     } on DioException catch (e) {
       debugPrint("Dio error");
@@ -693,17 +671,10 @@ class PerformanceGovernanceSystemPageState
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) {
-        debugPrint("Error: No user found in shared preferences.");
         return;
       }
 
       setState(() => userId = user.id ?? "UserId");
-
-      String? token = await AuthUtil.fetchAccessToken();
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
 
       final pageList = await _paginationUtils.fetchPaginatedData<
         PerformanceGovernanceSystem
@@ -749,15 +720,13 @@ class PerformanceGovernanceSystemPageState
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) {
-        debugPrint("Error: No user found in shared preferences.");
         return;
       }
 
       setState(() => userId = user.id ?? "UserId");
 
-      String? token = await AuthUtil.fetchAccessToken();
+      String? token = await AuthUtil.getAccessToken();
       if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
         return;
       }
 
@@ -797,14 +766,8 @@ class PerformanceGovernanceSystemPageState
 
     try {
       final user = await AuthUtil.fetchLoggedUser();
-      final token = await AuthUtil.fetchAccessToken();
 
-      if (user == null || token == null || token.isEmpty) {
-        debugPrint("Missing user or token.");
-        return;
-      }
-
-      setState(() => userId = user.id ?? "UserId");
+      setState(() => userId = user?.id ?? "UserId");
 
       final Map<String, dynamic> queryParams = {
         'userId': userId,
@@ -821,9 +784,6 @@ class PerformanceGovernanceSystemPageState
         if (_selectedOfficeId != null && _selectedOfficeId!.isNotEmpty)
           'officeId': _selectedOfficeId,
       };
-
-      debugPrint("Sending query params: $queryParams");
-
       final response = await AuthenticatedRequest.get(
         dio,
         ApiEndpoint().performancegovernancesystemFilter,
@@ -848,10 +808,10 @@ class PerformanceGovernanceSystemPageState
         }
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.message}");
+      debugPrint("Dio error");
       if (e.response != null) {}
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -917,7 +877,6 @@ class PerformanceGovernanceSystemPageState
     fetchPgsList();
     fetchUser();
     fetchPGSPeriods();
-    TokenExpirationHandler(context).checkTokenExpiration();
 
     isSearchFocus.addListener(() {
       setState(() {});
@@ -1740,14 +1699,14 @@ class PerformanceGovernanceSystemPageState
                                                                 pgsgovernancesystem['id'],
                                                           );
 
-                                                      List<
-                                                        PgsDeliverableHistory
-                                                      >
-                                                      pgsDeliverableHistory =
-                                                          await fetchDeliverablesHistory(
-                                                            pgsId:
-                                                                pgsgovernancesystem['id'],
-                                                          );
+                                                      // List<
+                                                      //   PgsDeliverableHistory
+                                                      // >
+                                                      // pgsDeliverableHistory =
+                                                      //     await fetchDeliverablesHistory(
+                                                      //       pgsId:
+                                                      //           pgsgovernancesystem['id'],
+                                                      //     );
 
                                                       List<PgsSignatory>
                                                       signatory =
@@ -1788,15 +1747,15 @@ class PerformanceGovernanceSystemPageState
                                                             pgsgovernancesystem['pgsStatus'],
                                                         remarks:
                                                             pgsgovernancesystem['remarks'],
-                                                        pgsDeliverableHistroy:
-                                                            pgsDeliverableHistory,
+                                                        // pgsDeliverableHistroy:
+                                                        //     pgsDeliverableHistory,
                                                       );
 
                                                       fetchPgsList();
-                                                      fetchDeliverablesHistory(
-                                                        pgsId:
-                                                            pgsgovernancesystem['id'],
-                                                      );
+                                                      // fetchDeliverablesHistory(
+                                                      //   pgsId:
+                                                      //       pgsgovernancesystem['id'],
+                                                      // );
                                                       fetchSignatoryList(
                                                         pgsId:
                                                             pgsgovernancesystem['id'],
@@ -2625,141 +2584,141 @@ class PerformanceGovernanceSystemPageState
                                     ),
                                   ),
 
-                                  pgsIdHistory != null
-                                      ? FutureBuilder<
-                                        List<PgsDeliverableHistory>
-                                      >(
-                                        future: fetchDeliverablesHistory(
-                                          pgsId: pgsIdHistory,
-                                        ),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            );
-                                          }
-                                          if (snapshot.hasError) {
-                                            return Text(
-                                              'Error: ${snapshot.error}',
-                                            );
-                                          }
-                                          if (!snapshot.hasData ||
-                                              snapshot.data!.isEmpty) {
-                                            return const Text(
-                                              'No deliverables history found',
-                                            );
-                                          }
-                                          return Table(
-                                            border: TableBorder.all(
-                                              color: Colors.black,
-                                              width: 1.0,
-                                            ),
-                                            defaultVerticalAlignment:
-                                                TableCellVerticalAlignment
-                                                    .middle,
-                                            columnWidths: const {
-                                              0: FlexColumnWidth(0.7),
-                                              1: FlexColumnWidth(0.7),
-                                              2: FlexColumnWidth(0.7),
-                                              3: FlexColumnWidth(0.7),
-                                              4: FlexColumnWidth(0.7),
-                                              5: FlexColumnWidth(0.7),
-                                              6: FlexColumnWidth(0.7),
-                                            },
-                                            children: [
-                                              TableRow(
-                                                children: [
-                                                  _buildTableHeaderCell('KRA'),
-                                                  _buildTableHeaderCell(
-                                                    'DIRECT',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'DELIVERABLES',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'BY WHEN',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'DISAPPROVAL REMARKS',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'REMOVE AT',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'ACTION',
-                                                  ),
-                                                ],
-                                              ),
-                                              ...snapshot.data!.map(
-                                                (deliverable) => TableRow(
-                                                  children: [
-                                                    _buildKraHistory(
-                                                      options.firstWhere(
-                                                        (option) =>
-                                                            option['id'] ==
-                                                            deliverable.kraId,
-                                                        orElse:
-                                                            () => {
-                                                              'id':
-                                                                  deliverable
-                                                                      .kraId,
-                                                              'name': 'Unknown',
-                                                            },
-                                                      )['name'],
-                                                      deliverable
-                                                              .kraDescription ??
-                                                          'No KRA description',
-                                                    ),
-                                                    _buildTableCell(
-                                                      '',
-                                                      isDirect:
-                                                          deliverable.isDirect,
-                                                    ),
-                                                    _buildTableCell(
-                                                      deliverable
-                                                              .deliverableName ??
-                                                          'N/A',
-                                                    ),
-                                                    _buildTableCell(
-                                                      DateFormat(
-                                                        'MMMM, yyyy',
-                                                      ).format(
-                                                        deliverable.byWhen!,
-                                                      ),
-                                                    ),
-                                                    _buildTableCell(
-                                                      deliverable
-                                                              .disapprovalRemarks ??
-                                                          'N/A',
-                                                    ),
-                                                    _buildTableCell(
-                                                      DateTimeConverter()
-                                                          .toJson(
-                                                            deliverable.byWhen!,
-                                                          ),
-                                                    ),
+                                  // pgsIdHistory != null
+                                  //     ? FutureBuilder<
+                                  //       List<PgsDeliverableHistory>
+                                  //     >(
+                                  //       future: fetchDeliverablesHistory(
+                                  //         pgsId: pgsIdHistory,
+                                  //       ),
+                                  //       builder: (context, snapshot) {
+                                  //         if (snapshot.connectionState ==
+                                  //             ConnectionState.waiting) {
+                                  //           return const Center(
+                                  //             child:
+                                  //                 CircularProgressIndicator(),
+                                  //           );
+                                  //         }
+                                  //         if (snapshot.hasError) {
+                                  //           return Text(
+                                  //             'Error: ${snapshot.error}',
+                                  //           );
+                                  //         }
+                                  //         if (!snapshot.hasData ||
+                                  //             snapshot.data!.isEmpty) {
+                                  //           return const Text(
+                                  //             'No deliverables history found',
+                                  //           );
+                                  //         }
+                                  //         return Table(
+                                  //           border: TableBorder.all(
+                                  //             color: Colors.black,
+                                  //             width: 1.0,
+                                  //           ),
+                                  //           defaultVerticalAlignment:
+                                  //               TableCellVerticalAlignment
+                                  //                   .middle,
+                                  //           columnWidths: const {
+                                  //             0: FlexColumnWidth(0.7),
+                                  //             1: FlexColumnWidth(0.7),
+                                  //             2: FlexColumnWidth(0.7),
+                                  //             3: FlexColumnWidth(0.7),
+                                  //             4: FlexColumnWidth(0.7),
+                                  //             5: FlexColumnWidth(0.7),
+                                  //             6: FlexColumnWidth(0.7),
+                                  //           },
+                                  //           children: [
+                                  //             TableRow(
+                                  //               children: [
+                                  //                 _buildTableHeaderCell('KRA'),
+                                  //                 _buildTableHeaderCell(
+                                  //                   'DIRECT',
+                                  //                 ),
+                                  //                 _buildTableHeaderCell(
+                                  //                   'DELIVERABLES',
+                                  //                 ),
+                                  //                 _buildTableHeaderCell(
+                                  //                   'BY WHEN',
+                                  //                 ),
+                                  //                 _buildTableHeaderCell(
+                                  //                   'DISAPPROVAL REMARKS',
+                                  //                 ),
+                                  //                 _buildTableHeaderCell(
+                                  //                   'REMOVE AT',
+                                  //                 ),
+                                  //                 _buildTableHeaderCell(
+                                  //                   'ACTION',
+                                  //                 ),
+                                  //               ],
+                                  //             ),
+                                  //             ...snapshot.data!.map(
+                                  //               (deliverable) => TableRow(
+                                  //                 children: [
+                                  //                   _buildKraHistory(
+                                  //                     options.firstWhere(
+                                  //                       (option) =>
+                                  //                           option['id'] ==
+                                  //                           deliverable.kraId,
+                                  //                       orElse:
+                                  //                           () => {
+                                  //                             'id':
+                                  //                                 deliverable
+                                  //                                     .kraId,
+                                  //                             'name': 'Unknown',
+                                  //                           },
+                                  //                     )['name'],
+                                  //                     deliverable
+                                  //                             .kraDescription ??
+                                  //                         'No KRA description',
+                                  //                   ),
+                                  //                   _buildTableCell(
+                                  //                     '',
+                                  //                     isDirect:
+                                  //                         deliverable.isDirect,
+                                  //                   ),
+                                  //                   _buildTableCell(
+                                  //                     deliverable
+                                  //                             .deliverableName ??
+                                  //                         'N/A',
+                                  //                   ),
+                                  //                   _buildTableCell(
+                                  //                     DateFormat(
+                                  //                       'MMMM, yyyy',
+                                  //                     ).format(
+                                  //                       deliverable.byWhen!,
+                                  //                     ),
+                                  //                   ),
+                                  //                   _buildTableCell(
+                                  //                     deliverable
+                                  //                             .disapprovalRemarks ??
+                                  //                         'N/A',
+                                  //                   ),
+                                  //                   _buildTableCell(
+                                  //                     DateTimeConverter()
+                                  //                         .toJson(
+                                  //                           deliverable.byWhen!,
+                                  //                         ),
+                                  //                   ),
 
-                                                    _buildRecoverHistoryButton(
-                                                      context,
-                                                      deliverable,
-                                                      setDialogState,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ],
-                                          );
-                                        },
-                                      )
-                                      : SizedBox(
-                                        child: Center(
-                                          child: Text(
-                                            "No deleted deliverables",
-                                          ),
-                                        ),
-                                      ),
+                                  //                   _buildRecoverHistoryButton(
+                                  //                     context,
+                                  //                     deliverable,
+                                  //                     setDialogState,
+                                  //                   ),
+                                  //                 ],
+                                  //               ),
+                                  //             ),
+                                  //           ],
+                                  //         );
+                                  //       },
+                                  //     )
+                                  //     : SizedBox(
+                                  //       child: Center(
+                                  //         child: Text(
+                                  //           "No deleted deliverables",
+                                  //         ),
+                                  //       ),
+                                  //     ),
                                 ],
                               ),
                             ),
@@ -3217,6 +3176,7 @@ class PerformanceGovernanceSystemPageState
   }
 
   // // Check Box
+
   Widget _buildCheckboxCell(
     int index,
     Map<int, bool> selectedValues,
@@ -3971,111 +3931,5 @@ class PerformanceGovernanceSystemPageState
         ],
       ),
     );
-  }
-
-  // PGS Table Row  Deliverable History
-
-  Widget _buildTableCell(String text, {bool? isDirect}) {
-    displayText = text;
-    if (isDirect != null) {
-      displayText = isDirect ? 'Direct' : 'Indirect';
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(),
-      child: Center(
-        child: Text(
-          displayText!,
-          style: const TextStyle(fontSize: 14),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildKraHistory(String textKra, String textKRaDescription) {
-    String displayKraText = textKra;
-    String displayKraDescription = textKRaDescription;
-
-    return Container(
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(
-              displayKraText,
-              style: const TextStyle(fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          gap,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'KRA Description',
-                style: TextStyle(fontSize: 12, color: grey),
-              ),
-              Text(
-                displayKraDescription,
-                style: TextStyle(fontSize: 12),
-                textAlign: TextAlign.start,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecoverHistoryButton(
-    BuildContext context,
-    PgsDeliverableHistory deliverable,
-    Function setDialogState,
-  ) {
-    final TabController tabController = DefaultTabController.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        IconButton(
-          tooltip: 'Recover',
-          onPressed: () {
-            restoreDeliverable(deliverable, setDialogState);
-            if (tabController.index != 0) {
-              tabController.animateTo(0);
-            }
-          },
-          icon: Icon(Icons.restore, color: primaryColor, size: 54),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTableHeaderCell(String text, {double fontSize = 12}) {
-    return Container(
-      color: primaryLightColor,
-      padding: const EdgeInsets.all(8),
-      child: Center(
-        child: Text(
-          text,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
-          textAlign: TextAlign.start,
-        ),
-      ),
-    );
-  }
-}
-
-extension StringExtension on String {
-  String capitalize() {
-    return split(' ')
-        .map(
-          (word) =>
-              word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '',
-        )
-        .join(' ');
   }
 }

@@ -15,7 +15,7 @@ class CustomTooltip extends StatefulWidget {
     this.backgroundColor = Colors.black54,
     this.textStyle,
     this.preferBelow = true,
-    this.maxLines = 4,
+    this.maxLines = 6,
   });
 
   @override

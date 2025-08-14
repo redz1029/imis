@@ -8,9 +8,7 @@ import 'package:imis/performance_governance_system/models/pgs_deliverable_score_
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/app_permission.dart';
-import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';
@@ -80,19 +78,10 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     fetchKra();
     fetchPGSPeriods();
     fetchScoreHistory();
-    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   Future<void> fetchFilteredPgsList() async {
     try {
-      final user = await AuthUtil.fetchLoggedUser();
-      final token = await AuthUtil.fetchAccessToken();
-
-      if (user == null || token == null || token.isEmpty) {
-        debugPrint("Missing user or token.");
-        return;
-      }
-
       int? scoreFrom =
           scoreRangeFromController.text.isNotEmpty
               ? int.tryParse(scoreRangeFromController.text)

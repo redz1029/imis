@@ -615,7 +615,7 @@ class HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            SizedBox(width: 80),
+            SizedBox(width: 50),
             Image.asset(iconAsset, width: 70, height: 70),
           ],
         ),

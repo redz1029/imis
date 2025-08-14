@@ -8,7 +8,6 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
 
 import '../../utils/http_util.dart';
 
@@ -219,7 +218,7 @@ class UserProfileState extends State<UserProfilePage> {
     focusNewPassword.addListener(() {
       setState(() {});
     });
-    TokenExpirationHandler(context).checkTokenExpiration();
+    // TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -562,6 +561,8 @@ class UserProfileState extends State<UserProfilePage> {
                           prefixController.text,
                           suffixController.text,
                           selectedPosition ?? '',
+                          '',
+                          '',
                         );
 
                         if (id == null) {
@@ -949,6 +950,8 @@ class UserProfileState extends State<UserProfilePage> {
                       prefixController.text,
                       suffixController.text,
                       selectedPosition ?? '',
+                      '',
+                      '',
                     );
 
                     if (id == null) {

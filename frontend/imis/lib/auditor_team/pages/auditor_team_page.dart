@@ -5,10 +5,9 @@ import 'package:imis/auditor_team/models/auditor_team.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AuditorTeamPage extends StatefulWidget {
   const AuditorTeamPage({super.key});
@@ -76,11 +75,8 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     final url = ApiEndpoint().team;
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('accessToken');
-
+      String? token = await AuthUtil.getAccessToken();
       if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
         return;
       }
 
@@ -177,7 +173,6 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     fetchTeam();
     fetchAuditors();
     fetchAuditorTeam();
-    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override

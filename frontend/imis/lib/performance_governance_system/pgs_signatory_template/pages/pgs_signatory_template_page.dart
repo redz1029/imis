@@ -8,10 +8,9 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import '../../../user/models/user_registration.dart';
+import '../../../utils/auth_util.dart';
 import '../../../widgets/dotted_button.dart';
 import '../models/pgs_signatory_template.dart';
 
@@ -85,7 +84,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
         });
       }
     } catch (e) {
-      debugPrint("Error in fetching signatory template: $e");
+      debugPrint("Error in fetching signatory template");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -115,7 +114,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
         }
       }
     } catch (e) {
-      debugPrint("Error fetching user: $e");
+      debugPrint("Error fetching user");
     }
   }
 
@@ -123,11 +122,8 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
     final url = ApiEndpoint().office;
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('accessToken');
-
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
+      UserRegistration? user = await AuthUtil.fetchLoggedUser();
+      if (user == null) {
         return;
       }
 
@@ -146,12 +142,12 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format}");
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } on DioException {
+      debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     }
   }
 
@@ -218,7 +214,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
     if (filteredListUser.isNotEmpty) {
       selectedUserId = filteredListUser[0].id;
     }
-    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -999,7 +994,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: Text('Signatoy Template Information'),
+        title: Text('Signatory Template Information'),
         backgroundColor: mainBgColor,
       ),
       body: Padding(
