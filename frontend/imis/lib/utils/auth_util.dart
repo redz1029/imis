@@ -31,7 +31,6 @@ class AuthUtil {
 
     user.accessToken = response.data['accessToken'] ?? '';
     user.refreshToken = response.data['refreshToken'] ?? '';
-
     if (response.data['roles'] != null) {
       String rolesJson = jsonEncode(response.data['roles']);
       await sharedPref.setString(rolesKey, rolesJson);
@@ -46,7 +45,6 @@ class AuthUtil {
       await sharedPref.setStringList(officeNamesKey, officeNames);
       await sharedPref.setStringList(officeIdsKey, officeIds);
     }
-
     await sharedPref.setString(userKey, jsonEncode(user.toJson()));
     await sharedPref.setBool(isLoggedInKey, true);
     return user;
@@ -59,21 +57,15 @@ class AuthUtil {
 
     String? userJson = sharedPref.getString(userKey);
     if (userJson != null) {
-      Map<String, dynamic> userData = jsonDecode(userJson);
-      UserRegistration user = UserRegistration.fromJson(userData);
-      return user;
+      return UserRegistration.fromJson(jsonDecode(userJson));
     }
+
     return null;
   }
 
   static Future<String?> getAccessToken() async {
     final user = await fetchLoggedUser();
     return user?.accessToken;
-  }
-
-  static Future<String?> getRefreshToken() async {
-    final user = await fetchLoggedUser();
-    return user?.refreshToken;
   }
 
   static Future<List<String>?> fetchRoles() async {
@@ -135,6 +127,65 @@ class AuthUtil {
     }
   }
 
+  // static Future<UserRegistration?> processTokenValidity(
+  //   Dio dio, [
+  //   BuildContext? context,
+  // ]) async {
+  //   var loggedUser = await fetchLoggedUser();
+
+  //   if (loggedUser != null) {
+  //     var accessToken = jwtDecode(loggedUser.accessToken!);
+  //     bool isAccessTokenExpired = accessToken.isExpired ?? true;
+
+  //     if (!isAccessTokenExpired) {
+  //       return loggedUser;
+  //     }
+
+  //     if (_refreshLock != null && !_refreshLock!.isCompleted) {
+  //       await _refreshLock!.future;
+  //       return await fetchLoggedUser();
+  //     }
+
+  //     _refreshLock = Completer<void>();
+
+  //     try {
+  //       final refreshToken = jwtDecode(loggedUser.refreshToken!);
+  //       bool isRefreshTokenExpired = refreshToken.isExpired ?? true;
+
+  //       if (isRefreshTokenExpired) {
+  //         if (context != null && context.mounted) {
+  //           await _showSessionExpiredDialog(context);
+  //         }
+  //         return null;
+  //       }
+
+  //       var refresh = ApiEndpoint().refresh;
+
+  //       var refreshResponse = await dio.post(
+  //         refresh,
+  //         data: jsonEncode(loggedUser),
+  //       );
+
+  //       loggedUser = await storeUserAuth(refreshResponse, dio);
+  //     } on DioException {
+  //       if (context != null && context.mounted) {
+  //         await _showSessionExpiredDialog(context);
+  //       }
+  //       return null;
+  //     } catch (e) {
+  //       if (context != null && context.mounted) {
+  //         await _showSessionExpiredDialog(context);
+  //       }
+  //       return null;
+  //     } finally {
+  //       _refreshLock?.complete();
+  //       _refreshLock = null;
+  //     }
+  //   }
+
+  //   return loggedUser;
+  // }
+
   static Future<UserRegistration?> processTokenValidity(
     Dio dio, [
     BuildContext? context,
@@ -174,7 +225,15 @@ class AuthUtil {
           data: jsonEncode(loggedUser),
         );
 
-        loggedUser = await storeUserAuth(refreshResponse, dio);
+        final existingUser = await fetchLoggedUser();
+        if (existingUser == null) return null;
+
+        existingUser.accessToken = refreshResponse.data['accessToken'] ?? '';
+        existingUser.refreshToken = refreshResponse.data['refreshToken'] ?? '';
+
+        SharedPreferences sharedPref = await SharedPreferences.getInstance();
+        await sharedPref.setString(userKey, jsonEncode(existingUser.toJson()));
+        loggedUser = existingUser;
       } on DioException {
         if (context != null && context.mounted) {
           await _showSessionExpiredDialog(context);
