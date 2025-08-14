@@ -1,6 +1,7 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.PgsDeliverableModule;
+using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
@@ -13,26 +14,28 @@ namespace IMIS.Persistence.PGSModules
     {
         private readonly IPGSDeliverableRepository _repository;
         private readonly IKeyResultAreaRepository _kraRepository;
+        private readonly IPgsDeliverableScoreHistoryRepository _scoreHistoryRepository;
 
-        [Obsolete("Do not inject DbContext directly into services. Use the Repository instead. " +
-            "Kindly follow the design patterns we have discussed to avoid subtle and not so subtle problems such as " +
-            "(1) Multiple DbContext Instances per Request, " +
-            "(2)  Increased Risk of Lazy Loading & Query Tracking Issues, " +
-            "(3) Connection Pooling & Performance Overhead, " +
-            "(4) Harder to Maintain and Debug, " +
-            "(5) Violating Separation of Concerns, " +
-            "(6) Concurrency Effects, " +
-            "(7) Memory Usage and Leaks, " +
-            "and (8) causing baked global functions to not work or fail.", true)]
-        private readonly ImisDbContext _dbContext;
+        //[Obsolete("Do not inject DbContext directly into services. Use the Repository instead. " +
+        //    "Kindly follow the design patterns we have discussed to avoid subtle and not so subtle problems such as " +
+        //    "(1) Multiple DbContext Instances per Request, " +
+        //    "(2)  Increased Risk of Lazy Loading & Query Tracking Issues, " +
+        //    "(3) Connection Pooling & Performance Overhead, " +
+        //    "(4) Harder to Maintain and Debug, " +
+        //    "(5) Violating Separation of Concerns, " +
+        //    "(6) Concurrency Effects, " +
+        //    "(7) Memory Usage and Leaks, " +
+        //    "and (8) causing baked global functions to not work or fail.", true)]
+        //private readonly ImisDbContext _dbContext;
 
         private const string PgsDeliverableScoreHistoryTag = "PgsDeliverableScoreHistory";
        
-        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, ImisDbContext dbContext)
+        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, IPgsDeliverableScoreHistoryRepository scoreHistoryRepository)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _kraRepository = kraRepository ?? throw new ArgumentNullException(nameof(kraRepository));
-            _dbContext = dbContext;           
+            _scoreHistoryRepository = scoreHistoryRepository ?? throw new ArgumentNullException(nameof(scoreHistoryRepository));
+
         }      
         public async Task<DtoPageList<PGSDeliverableDto, PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
@@ -42,44 +45,56 @@ namespace IMIS.Persistence.PGSModules
                 return null;
             }
             return DtoPageList<PGSDeliverableDto, PgsDeliverable, long>.Create(pgsDeliverable.Items, page, pageSize, pgsDeliverable.TotalCount);
-        }       
+        }
 
         public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDeliverableDto, CancellationToken cancellationToken)
         {
             if (pgsDeliverableDto == null)
                 throw new ArgumentNullException(nameof(pgsDeliverableDto));
-          
+
             var pgsDeliverableEntity = pgsDeliverableDto.ToEntity();
-           
+
             if (pgsDeliverableEntity.Kra == null || pgsDeliverableEntity.Kra.Id == 0)
                 throw new InvalidOperationException("Invalid KRA ID");
 
             var keyResultArea = await _kraRepository.GetByIdAsync(pgsDeliverableEntity.Kra.Id, cancellationToken);
             if (keyResultArea == null)
-                throw new InvalidOperationException("KRA not found");
+                throw new InvalidOperationException("KRA ID not found");
 
-            pgsDeliverableEntity.Kra = keyResultArea;
-           
+            pgsDeliverableEntity.KraId = keyResultArea.Id;
+            pgsDeliverableEntity.Kra = null; 
+            pgsDeliverableEntity.IsDeleted = false;
+          
+            if (pgsDeliverableEntity.PgsDeliverableScoreHistory != null)
+            {
+                foreach (var history in pgsDeliverableEntity.PgsDeliverableScoreHistory)
+                {
+                    if (history.Id == 0)
+                    {
+                        
+                        _repository.GetDbContext().Entry(history).State = EntityState.Added;
+                    }
+                    else
+                    {
+                      
+                        _repository.GetDbContext().Entry(history).State = EntityState.Unchanged;
+                    }
+                }
+            }
+
             if (pgsDeliverableEntity.Id == 0)
             {
-                await _dbContext.Deliverable.AddAsync(pgsDeliverableEntity, cancellationToken);
+                await _repository.GetDbContext().AddAsync(pgsDeliverableEntity, cancellationToken);
             }
             else
             {
-                var existingEntity = await _dbContext.Deliverable
-                .Include(x => x.Kra) 
-                .FirstOrDefaultAsync(x => x.Id == pgsDeliverableEntity.Id, cancellationToken);
-
-                if (existingEntity == null)
-                throw new InvalidOperationException("Deliverable not found for update");
-
-                _dbContext.Entry(existingEntity).CurrentValues.SetValues(pgsDeliverableEntity);
+                await _repository.UpdateAsync(pgsDeliverableEntity, pgsDeliverableEntity.Id, cancellationToken);
             }
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
-            return pgsDeliverableDto;
-        }
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
 
+            return ConvertToDto(pgsDeliverableEntity);
+        }
 
         public async Task<List<PGSDeliverableDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
@@ -119,8 +134,12 @@ namespace IMIS.Persistence.PGSModules
             return PgsDeliverableMonitorPageList.Create(filteredDeliverables.Items, filter.Page, filter.PageSize, filteredDeliverables.TotalCount);
         }
 
-        public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(PgsDeliverableMonitorPageList request, IOutputCacheStore cache, CancellationToken cancellationToken)
-        {
+      
+         public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(
+         PgsDeliverableMonitorPageList request,
+         IOutputCacheStore cache,
+         CancellationToken cancellationToken)
+         {
             var updatedItems = new List<PgsDeliverableMonitorDto>();
             bool anyScoreChanged = false;
 
@@ -148,16 +167,15 @@ namespace IMIS.Persistence.PGSModules
                         Score = dto.Score
                     };
 
-                    _dbContext.Set<PgsDeliverableScoreHistory>().Add(history);
+                    _scoreHistoryRepository.Add(history);
                     anyScoreChanged = true;
-                }
+                }               
+                await _repository.UpdateAsync(deliverable, deliverable.Id, cancellationToken);
 
                 updatedItems.Add(dto);
-            }
-
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            // Evict the score history cache if any scores changed
+            }            
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
+           
             if (anyScoreChanged)
             {
                 await cache.EvictByTagAsync(PgsDeliverableScoreHistoryTag, cancellationToken);

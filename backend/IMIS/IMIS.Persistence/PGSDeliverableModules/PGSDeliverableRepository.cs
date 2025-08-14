@@ -9,8 +9,8 @@ namespace IMIS.Persistence.PGSModules
 {   
     public class PGSDeliverableRepository(ImisDbContext dbContext)
     : BaseRepository<PgsDeliverable, long, ImisDbContext>(dbContext), IPGSDeliverableRepository
-    {       
-              
+    {
+       
         public async Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
         {
             var query = _entities

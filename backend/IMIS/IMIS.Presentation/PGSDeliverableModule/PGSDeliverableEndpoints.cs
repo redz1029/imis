@@ -2,7 +2,6 @@
 using Carter;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsModule;
-using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -102,15 +101,9 @@ namespace IMIS.Presentation.PGSModule
              PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
            
-            app.MapPut("/filter/update", async (
-            [FromBody] PgsDeliverableMonitorPageList request,
-            IPGSDeliverableService service,
-            IOutputCacheStore cache,
-            CancellationToken cancellationToken) =>
+            app.MapPut("/filter/update", async ([FromBody] PgsDeliverableMonitorPageList request, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                var result = await service.UpdateDeliverablesAsync(request, cache, cancellationToken);
-
-                // Also evict deliverable monitor cache if needed
+                var result = await service.UpdateDeliverablesAsync(request, cache, cancellationToken);               
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
 
                 return Results.Ok(result);
@@ -120,8 +113,7 @@ namespace IMIS.Presentation.PGSModule
             PermissionClaimType.Claim,
             _pgsDeliverableAuditorPermission.Score,
             _pgsDeliverableAuditorPermission.View));
-          
-        
+                
         }
     }
 }
