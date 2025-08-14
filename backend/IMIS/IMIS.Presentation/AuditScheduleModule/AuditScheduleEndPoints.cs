@@ -26,16 +26,16 @@ namespace IMIS.Presentation.AuditScheduleModule
                 {
                     return Results.BadRequest("No audit schedule details provided.");
                 }
-                // Validate overlapping audits
+              
                 var overlapErrors = await service.GetOverlappingAuditAsync(auditScheduleDto, cancellationToken);
                 if (overlapErrors.Count > 0)
                 {
                     return Results.BadRequest(new { Errors = overlapErrors });
                 }
-                // Save audit schedule
+              
                 var createdAuditSchedule = await service.SaveOrUpdateAsync(auditScheduleDto, cancellationToken).ConfigureAwait(false);
 
-                // Save auditable offices if provided
+              
                 if (auditScheduleDto.AuditableOffices?.Count > 0)
                 {
                     var auditableOfficesList = auditScheduleDto.AuditableOffices.Select(officeId => new AuditableOfficesDto
@@ -46,7 +46,7 @@ namespace IMIS.Presentation.AuditScheduleModule
 
                     await service.SaveAuditableOfficesAsync(auditableOfficesList, cancellationToken);
                 }
-                // Clear cache
+              
                 await cache.EvictByTagAsync(_AuditSchedule, cancellationToken);
                 return Results.Created($"/auditSchedule/{createdAuditSchedule.Id}", createdAuditSchedule);               
             })
