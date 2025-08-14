@@ -11,6 +11,15 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 
+    public async Task<PerfomanceGovernanceSystem?> GetWithIncludesAsync(int id, CancellationToken cancellationToken)
+    {
+        return await _entities
+            .Include(p => p.PgsDeliverables)
+            .Include(p => p.PgsSignatories)
+            .Include(p => p.PgsReadinessRating)
+            .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
+    }
+
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
     {     
         var pgs = await _entities

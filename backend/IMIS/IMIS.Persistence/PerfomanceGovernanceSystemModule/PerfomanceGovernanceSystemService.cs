@@ -1,5 +1,4 @@
-﻿using System.Security.Claims;
-using Base.Auths;
+﻿using Base.Auths;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
@@ -10,7 +9,6 @@ using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PgsSignatoryModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Domain;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -25,24 +23,20 @@ namespace IMIS.Persistence.PgsModule
         private readonly UserManager<User> _userManager;
         private readonly IPgsSignatoryTemplateRepository _signatoryTemplateRepository;
 
-        [Obsolete("Do not inject DbContext directly into services. Use the Repository instead. " +
-            "Kindly follow the design patterns we have discussed to avoid subtle and not so subtle problems such as " +
-            "(1) Multiple DbContext Instances per Request, " +
-            "(2)  Increased Risk of Lazy Loading & Query Tracking Issues, " +
-            "(3) Connection Pooling & Performance Overhead, " +
-            "(4) Harder to Maintain and Debug, " +
-            "(5) Violating Separation of Concerns, " +
-            "(6) Concurrency Effects, " +
-            "(7) Memory Usage and Leaks, " +
-            "and (8) causing baked global functions to not work or fail.", true)]
-        private readonly ImisDbContext _dbContext;
-
-        [Obsolete("Remove this unused accessor", true)]
-        private readonly IHttpContextAccessor _httpContextAccessor;
-
-        public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, 
-            IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, 
-            IKeyResultAreaRepository kraRepository, UserManager<User> userManager, IPgsSignatoryTemplateRepository signatoryTemplateRepository, ImisDbContext dbContext, IHttpContextAccessor httpContextAccessor)
+        //[Obsolete("Do not inject DbContext directly into services. Use the Repository instead. " +
+        //    "Kindly follow the design patterns we have discussed to avoid subtle and not so subtle problems such as " +
+        //    "(1) Multiple DbContext Instances per Request, " +
+        //    "(2)  Increased Risk of Lazy Loading & Query Tracking Issues, " +
+        //    "(3) Connection Pooling & Performance Overhead, " +
+        //    "(4) Harder to Maintain and Debug, " +
+        //    "(5) Violating Separation of Concerns, " +
+        //    "(6) Concurrency Effects, " +
+        //    "(7) Memory Usage and Leaks, " +s
+        //    "and (8) causing baked global functions to not work or fail.", true)]
+     
+        //[Obsolete("Remove this unused accessor", true)]
+       
+        public PerfomanceGovernanceSystemService(IPerfomanceGovernanceSystemRepository repository, IOfficeRepository officeRepository, IPgsPeriodRepository pgsPeriodRepository, IKeyResultAreaRepository kraRepository, UserManager<User> userManager, IPgsSignatoryTemplateRepository signatoryTemplateRepository)
         {
             _repository = repository;
             _officeRepository = officeRepository;
@@ -50,8 +44,7 @@ namespace IMIS.Persistence.PgsModule
             _kraRepository = kraRepository;
             _userManager = userManager;
             _signatoryTemplateRepository = signatoryTemplateRepository;
-            _dbContext = dbContext;
-            _httpContextAccessor = httpContextAccessor;
+           
         }
 
         public async Task<List<PerfomanceGovernanceSystemDto>> GetAllAsyncFilterByPgsPeriod(long? pgsPeriodId, CancellationToken cancellationToken)
@@ -89,8 +82,8 @@ namespace IMIS.Persistence.PgsModule
             {               
                 if (pgs.PgsSignatories?.Any() == true)
                 {
-                    _dbContext.PgsSignatory.RemoveRange(pgs.PgsSignatories);
-                    await _dbContext.SaveChangesAsync(cancellationToken);
+                    _repository.GetDbContext().RemoveRange(pgs.PgsSignatories);
+                    await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
                 }
                
                 var templates = (await GetSignatoryTemplates(pgs.Office, cancellationToken))
@@ -169,7 +162,7 @@ namespace IMIS.Persistence.PgsModule
                     }
                     else if (nextTemplate == null)
                     {
-                      
+
                         var firstTemplate = templates.FirstOrDefault();
                         if (firstTemplate != null && firstTemplate.DefaultSignatoryId == userId)
                         {
@@ -187,13 +180,13 @@ namespace IMIS.Persistence.PgsModule
                                 SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim()
                             });
                         }
-                    }
+                    }                 
                 }
             }
 
             return dto;
         }
-        
+
         public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(
         string userId,
         CancellationToken cancellationToken)
@@ -209,14 +202,14 @@ namespace IMIS.Persistence.PgsModule
             foreach (var pgs in records)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-               
+
                 var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken)
                     .ConfigureAwait(false);
-               
+
                 dto.PgsDeliverables = dto.PgsDeliverables?
                     .Where(d => !d.IsDeleted)
                     .ToList() ?? new List<PGSDeliverableDto>();
-             
+
                 var deliverables = dto.PgsDeliverables;
                 bool hasDisapproved = deliverables.Any(d => d.IsDisapproved);
 
@@ -242,6 +235,8 @@ namespace IMIS.Persistence.PgsModule
 
             return result;
         }
+
+      
 
 
         private async Task<IEnumerable<PgsSignatoryTemplate>> GetSignatoryTemplates(Office office, CancellationToken cancellationToken)
@@ -304,58 +299,61 @@ namespace IMIS.Persistence.PgsModule
         private async Task<User?> GetCurrentUserAsync()
         {           
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
-            return await currentUserService.GetCurrentUserAsync();
+            return await currentUserService!.GetCurrentUserAsync();
         }
-
-        public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(
-        PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto,
-        CancellationToken cancellationToken)
+     
+        public async Task<PerfomanceGovernanceSystemDto> SaveOrUpdateAsync(PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto, CancellationToken cancellationToken)
         {
             if (perfomanceGovernanceSystemDto == null)
                 throw new ArgumentNullException(nameof(perfomanceGovernanceSystemDto));
 
             var entity = perfomanceGovernanceSystemDto.ToEntity();
 
-            var office = await _officeRepository.GetByIdAsync(entity.Office.Id, cancellationToken)
-                ?? throw new InvalidOperationException($"Office with ID {entity.Office.Id} not found.");
+            var office = await _officeRepository.GetByIdAsync(entity.Office.Id, cancellationToken) ?? throw new InvalidOperationException($"Office with ID {entity.Office.Id} not found.");
 
-            var pgsPeriod = await _pgsPeriodRepository.GetByIdAsync(entity.PgsPeriod.Id, cancellationToken)
-                ?? throw new InvalidOperationException($"PGS Period with ID {entity.PgsPeriod.Id} not found.");
+            var pgsPeriod = await _pgsPeriodRepository.GetByIdAsync(entity.PgsPeriod.Id, cancellationToken) ?? throw new InvalidOperationException($"PGS Period with ID {entity.PgsPeriod.Id} not found.");
 
             entity.Office = office;
             entity.OfficeId = office.Id;
             entity.PgsPeriod = pgsPeriod;
-
+          
             if (entity.PgsDeliverables != null)
             {
                 foreach (var d in entity.PgsDeliverables)
                 {
-                    d.Kra = await _kraRepository.GetByIdAsync(d.Kra!.Id, cancellationToken);
-                    d.KraId = d.Kra.Id;
+                    var kra = await _kraRepository.GetByIdAsync(d.Kra!.Id, cancellationToken) ?? throw new InvalidOperationException($"KRA with ID {d.Kra.Id} not found.");
+                    d.Kra = kra;
+                    d.KraId = kra.Id;
                 }
             }
 
             var isNew = entity.Id == 0;
-
+           
             if (isNew)
             {
-                _dbContext.PerformanceGovernanceSystem.Add(entity);
+                foreach (var d in entity.PgsDeliverables ?? Enumerable.Empty<PgsDeliverable>())
+                {
+                    _repository.GetDbContext().Entry(d).State = EntityState.Added;
+                }
+
+                foreach (var s in entity.PgsSignatories ?? Enumerable.Empty<PgsSignatory>())
+                {
+                    _repository.GetDbContext().Entry(s).State = EntityState.Added;
+                }
+
+                _repository.GetDbContext().Add(entity);
             }
+
             else
             {
-                var existing = await _dbContext.PerformanceGovernanceSystem
-                    .Include(p => p.PgsDeliverables)
-                    .Include(p => p.PgsSignatories)
-                    .Include(p => p.PgsReadinessRating)
-                    .FirstOrDefaultAsync(p => p.Id == entity.Id, cancellationToken)
+                var existing = await _repository.GetWithIncludesAsync((int)entity.Id, cancellationToken)
                     ?? throw new InvalidOperationException("PGS record not found.");
-               
+                
                 var updatedIds = entity.PgsDeliverables?.Select(d => d.Id).ToList() ?? new();
-
                 var newlyRemoved = existing.PgsDeliverables!
                     .Where(d => !updatedIds.Contains(d.Id) && !d.IsDeleted)
                     .ToList();
-              
+
                 var currentUser = await GetCurrentUserAsync();
                 var removedByName = currentUser?.Id ?? "UnknownUserId";
 
@@ -364,10 +362,10 @@ namespace IMIS.Persistence.PgsModule
                     deliverable.IsDeleted = true;
                     deliverable.RemovedBy = removedByName;
                     deliverable.RemovedAt = DateTime.UtcNow;
-                    _dbContext.Entry(deliverable).State = EntityState.Modified;
+                    _repository.GetDbContext().Entry(deliverable).State = EntityState.Modified;
                 }
 
-                // ---- Update existing or add new deliverables ----
+                // Update existing deliverables
                 foreach (var d in entity.PgsDeliverables ?? new())
                 {
                     var existingDeliverable = existing.PgsDeliverables!
@@ -375,30 +373,26 @@ namespace IMIS.Persistence.PgsModule
 
                     if (existingDeliverable != null)
                     {
-                        _dbContext.Entry(existingDeliverable).CurrentValues.SetValues(d);
+                        _repository.GetDbContext().Entry(existingDeliverable).CurrentValues.SetValues(d);
                         existingDeliverable.IsDeleted = false;
                     }
                     else
-                    {
+                    {                        
                         existing.PgsDeliverables!.Add(d);
                     }
                 }
                 
-                var anyDisapproved = entity.PgsDeliverables?
-                    .Any(d => d.IsDisapproved && !d.IsDeleted) == true;
+                var anyDisapproved = entity.PgsDeliverables?.Any(d => d.IsDisapproved && !d.IsDeleted) == true;
 
                 if (anyDisapproved)
-                {                   
+                {
                     if (existing.PgsSignatories?.Any() == true)
-                        _dbContext.PgsSignatory.RemoveRange(existing.PgsSignatories);
+                        _repository.GetDbContext().RemoveRange(existing.PgsSignatories);
 
                     perfomanceGovernanceSystemDto.PgsSignatories = new List<PgsSignatoryDto>();
                     entity.PgsSignatories = new List<PgsSignatory>();
 
-                    var templates = await _dbContext.PgsSignatoryTemplate
-                        .Where(t => t.OfficeId == office.OfficeTypeId)
-                        .OrderBy(t => t.OrderLevel)
-                        .ToListAsync(cancellationToken);
+                    var templates = await _signatoryTemplateRepository.GetSignatoryTemplateByOfficeIdAsync(office.OfficeTypeId, cancellationToken);
 
                     var firstTemplate = templates.FirstOrDefault(t => t.OrderLevel == 1);
                     if (firstTemplate != null)
@@ -412,8 +406,7 @@ namespace IMIS.Persistence.PgsModule
                             Status = firstTemplate.Status,
                             Label = firstTemplate.SignatoryLabel,
                             OrderLevel = firstTemplate.OrderLevel,
-                            IsNextStatus = true,
-                            DateSigned = default
+                            IsNextStatus = true
                         };
 
                         perfomanceGovernanceSystemDto.PgsSignatories.Add(newSignatoryDto);
@@ -421,7 +414,7 @@ namespace IMIS.Persistence.PgsModule
                     }
                 }
                 else
-                {                  
+                {
                     foreach (var s in entity.PgsSignatories!)
                     {
                         var existingSignatory = existing.PgsSignatories?
@@ -429,7 +422,7 @@ namespace IMIS.Persistence.PgsModule
 
                         if (existingSignatory != null)
                         {
-                            _dbContext.Entry(existingSignatory).CurrentValues.SetValues(s);
+                            _repository.GetDbContext().Entry(existingSignatory).CurrentValues.SetValues(s);
                         }
                         else
                         {
@@ -438,8 +431,8 @@ namespace IMIS.Persistence.PgsModule
                     }
                 }
 
-               
-                _dbContext.Entry(existing).CurrentValues.SetValues(entity);
+                // Update root entity values
+                _repository.GetDbContext().Entry(existing).CurrentValues.SetValues(entity);
                 existing.OfficeId = office.Id;
 
                 if (existing.PgsReadinessRating != null && entity.PgsReadinessRating != null)
@@ -450,9 +443,11 @@ namespace IMIS.Persistence.PgsModule
                 }
             }
 
-            await _dbContext.SaveChangesAsync(cancellationToken);
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
             return new PerfomanceGovernanceSystemDto(entity);
         }
+
+
 
         // Save or Update
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
