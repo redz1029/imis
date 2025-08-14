@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:imis/navigation/dashboard_navigation_panel.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/user/models/user_login.dart';
-import 'package:imis/user/pages/forgot_password_page.dart';
 import 'package:imis/user/pages/registration_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
