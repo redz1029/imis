@@ -1,5 +1,6 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
+using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Domain;
 using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -10,22 +11,23 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
     {
         private readonly IPgsSignatoryTemplateRepository _repository;
 
-        [Obsolete("Do not inject DbContext directly into services. Use the Repository instead. " +
-         "Kindly follow the design patterns we have discussed to avoid subtle and not so subtle problems such as " +
-         "(1) Multiple DbContext Instances per Request, " +
-         "(2) Increased Risk of Lazy Loading & Query Tracking Issues, " +
-         "(3) Connection Pooling & Performance Overhead, " +
-         "(4) Harder to Maintain and Debug, " +
-         "(5) Violating Separation of Concerns, " +
-         "(6) Concurrency Effects, " +
-         "(7) Memory Usage and Leaks, " +
-         "and (8) causing baked global functions to not work or fail.", true)]
-        private readonly ImisDbContext _dbContext;
 
-        public PgsSignatoryTemplateService(IPgsSignatoryTemplateRepository repository, ImisDbContext dbContext)
+        //[Obsolete("Do not inject DbContext directly into services. Use the Repository instead. " +
+        // "Kindly follow the design patterns we have discussed to avoid subtle and not so subtle problems such as " +
+        // "(1) Multiple DbContext Instances per Request, " +
+        // "(2) Increased Risk of Lazy Loading & Query Tracking Issues, " +
+        // "(3) Connection Pooling & Performance Overhead, " +
+        // "(4) Harder to Maintain and Debug, " +
+        // "(5) Violating Separation of Concerns, " +
+        // "(6) Concurrency Effects, " +
+        // "(7) Memory Usage and Leaks, " +
+        // "and (8) causing baked global functions to not work or fail.", true)]
+        //private readonly ImisDbContext _dbContext;
+
+        public PgsSignatoryTemplateService(IPgsSignatoryTemplateRepository repository)
         {
             _repository = repository;          
-            _dbContext = dbContext;
+          
         }
 
         private static PgsSignatoryTemplateDto ConvSignatoryTemplateToDTO(PgsSignatoryTemplate signatoryTemplate)
@@ -65,76 +67,71 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                 throw new ArgumentNullException(nameof(dtoList));
 
             var officeId = dtoList.First().OfficeId;
+            
+            var existingSignatories = await _repository.GetSignatoryTemplateByOfficeIdAsync(officeId, cancellationToken);
 
-            // Get all existing signatories for the office
-            var existingSignatories = await _dbContext.PgsSignatoryTemplate
-                .Where(x => x.OfficeId == officeId)
-                .ToListAsync(cancellationToken);
-
-            var incomingIds = dtoList
-                .Where(d => d.Id != 0)
-                .Select(d => d.Id)
-                .ToHashSet();
-
-            // Remove records not included in the new dtoList
-            var toRemove = existingSignatories
-                .Where(x => !incomingIds.Contains(x.Id))
-                .ToList();
-
+            var incomingIds = dtoList.Where(d => d.Id != 0).Select(d => d.Id).ToHashSet();
+            
+            var toRemove = existingSignatories.Where(x => !incomingIds.Contains(x.Id)).ToList();
             if (toRemove.Any())
             {
-                _dbContext.PgsSignatoryTemplate.RemoveRange(toRemove);
+                await _repository.DeleteRangeAsync(toRemove, cancellationToken);
             }
-
+           
             foreach (var dto in dtoList)
             {
                 var entity = dto.ToEntity();
 
                 if (entity.Id == 0)
-                {
-                    // New record
-                    await _dbContext.PgsSignatoryTemplate.AddAsync(entity, cancellationToken);
+                {                  
+                    await _repository.GetDbContext().AddAsync(entity, cancellationToken);
                 }
                 else
                 {
-                    // Update existing record
+                   
                     var existing = existingSignatories.FirstOrDefault(x => x.Id == entity.Id);
                     if (existing != null)
-                    {
-                        _dbContext.Entry(existing).CurrentValues.SetValues(entity);
+                    {                       
+                        existing.Status = entity.Status;
+                        existing.SignatoryLabel = entity.SignatoryLabel;
+                        existing.OrderLevel = entity.OrderLevel;
+                        existing.DefaultSignatoryId = entity.DefaultSignatoryId;
+                        existing.IsActive = entity.IsActive;
+                        existing.OfficeId = entity.OfficeId;
+                        
+                        await _repository.UpdateAsync(existing, existing.Id, cancellationToken).ConfigureAwait(false); ;
                     }
                 }
             }
+           
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false); ;
+         
+            var updatedEntities = await _repository.GetSignatoryTemplateByOfficeIdAsync(officeId, cancellationToken);
 
-            // Save changes add/update
-            await _dbContext.SaveChangesAsync(cancellationToken);
-
-            // Return updated DTO list
-            var updated = await _dbContext.PgsSignatoryTemplate
-                .Where(x => x.OfficeId == officeId)
-                .Select(x => new PgsSignatoryTemplateDto
-                {
-                    Id = x.Id,
-                    Status = x.Status,
-                    SignatoryLabel = x.SignatoryLabel,
-                    OrderLevel = x.OrderLevel,
-                    DefaultSignatoryId = x.DefaultSignatoryId,
-                    IsActive = x.IsActive,
-                    OfficeId = x.OfficeId
-                })
-                .ToListAsync(cancellationToken);
-
-            return updated;
+            return updatedEntities.Select(x => new PgsSignatoryTemplateDto
+            {
+                Id = x.Id,
+                Status = x.Status,
+                SignatoryLabel = x.SignatoryLabel,
+                OrderLevel = x.OrderLevel,
+                DefaultSignatoryId = x.DefaultSignatoryId,
+                IsActive = x.IsActive,
+                OfficeId = x.OfficeId
+            }).ToList();
         }
-
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            if (dto is not PgsSignatoryTemplateDto pgsSignatoryTemplateDto)
-                throw new ArgumentException("Invalid Pgs Signatory Template Dto type", nameof(dto));
+          
+            var ODto = dto as PgsSignatoryTemplateDto;
+            var pgsSignatoryTemplateDto = ODto!.ToEntity();
 
-            var pgsSignatoryTemplateEntity = pgsSignatoryTemplateDto.ToEntity();
-            await _repository.SaveOrUpdateAsync(pgsSignatoryTemplateEntity, cancellationToken);
+            if (pgsSignatoryTemplateDto.Id == 0)
+                _repository.Add(pgsSignatoryTemplateDto);
+            else
+                await _repository.UpdateAsync(pgsSignatoryTemplateDto, pgsSignatoryTemplateDto.Id, cancellationToken).ConfigureAwait(false);
+
+            await _repository.SaveOrUpdateAsync(pgsSignatoryTemplateDto, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<List<PgsSignatoryTemplateDto>> GetSignatoryTemplateByOfficeIdAsync(int officeId, CancellationToken cancellationToken)

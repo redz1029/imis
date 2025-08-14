@@ -20,7 +20,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-           
+
             app.MapPost("/", async ([FromBody] List<PgsSignatoryTemplateDto> pgsSignatoryTemplateDtos, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var result = await service.SaveOrUpdateAsync(pgsSignatoryTemplateDtos, cancellationToken).ConfigureAwait(false);
@@ -51,7 +51,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
-           
+
 
             app.MapPut("/", async ([FromBody] List<PgsSignatoryTemplateDto> pgsSignatoryTemplateDtos, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -59,7 +59,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                 {
                     return Results.BadRequest("No data provided for update.");
                 }
-              
+
                 var updatedTemplates = await service.SaveOrUpdateAsync(pgsSignatoryTemplateDtos, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_PgsSignatoryTemplate, cancellationToken);
                 return Results.Ok(updatedTemplates);
@@ -77,7 +77,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
            .WithTags(_PgsSignatoryTemplate)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
            .RequireAuthorization(e => e.RequireClaim(
-           PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
+            PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
         }
     }
 }
