@@ -152,8 +152,7 @@ namespace IMIS.Presentation.UserModule
             {
                 return Results.ValidationProblem(updateResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
             }
-
-            // Optional: update password only if provided
+            
             if (!string.IsNullOrWhiteSpace(registration.Password))
             {
                 var token = await userManager.GeneratePasswordResetTokenAsync(user);
@@ -289,13 +288,11 @@ namespace IMIS.Presentation.UserModule
             await signInManager.UserManager.RemoveAuthenticationTokenAsync(user, "IMIS_API", "refresh_token");          
             return Results.Ok("Refresh token revoked successfully.");
         }
-
-        // Update this method to accept roleName as a simple string parameter.
+      
         private static async Task<IResult> CreateRole([FromBody] string roleName, IServiceProvider sp)
         {
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
-
-            // Check if the role already exists
+           
             if (await roleManager.RoleExistsAsync(roleName))
                 return Results.Conflict("Role already exists.");
 
@@ -417,7 +414,7 @@ namespace IMIS.Presentation.UserModule
             if (!result.Succeeded)
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
-            // Invalidate cache after creation
+            
             var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
             await outputCacheStore.EvictByTagAsync("roles", default);
 
@@ -448,7 +445,7 @@ namespace IMIS.Presentation.UserModule
             if (!addResult.Succeeded)
                 return Results.ValidationProblem(addResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
-            // Invalidate cache after creation
+           
             var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
             await outputCacheStore.EvictByTagAsync("roles", default);
 
