@@ -2,7 +2,6 @@
 using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.PgsDeliverableScoreHistoryModule;
-using IMIS.Application.PgsPeriodModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -44,7 +43,7 @@ namespace IMIS.Presentation.PgsDeliverableScoreHistoryModule
 
             app.MapGet("/grouped", async (IPgsDeliverableScoreHistoryService service, CancellationToken cancellationToken) =>
             {
-                var grouped = await service.GetGroupedScoreHistoryAsync().ConfigureAwait(false);
+                var grouped = await service.GetGroupedScoreHistoryAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(grouped);
             })
             .WithTags(_pgsDeliverableScoreHistory)

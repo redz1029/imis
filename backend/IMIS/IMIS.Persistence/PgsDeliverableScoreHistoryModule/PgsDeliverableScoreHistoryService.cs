@@ -1,7 +1,6 @@
 ﻿using Base.Primitives;
 using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Domain;
-using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PgsDeliverableScoreHistoryModule
 {
@@ -9,21 +8,20 @@ namespace IMIS.Persistence.PgsDeliverableScoreHistoryModule
     {
         private readonly IPgsDeliverableScoreHistoryRepository _repository;
 
-        [Obsolete("Do not inject DbContext directly into services. Use the Repository instead. " +
-            "Kindly follow the design patterns we have discussed to avoid subtle and not so subtle problems such as " +
-            "(1) Multiple DbContext Instances per Request, " +
-            "(2)  Increased Risk of Lazy Loading & Query Tracking Issues, " +
-            "(3) Connection Pooling & Performance Overhead, " +
-            "(4) Harder to Maintain and Debug, " +
-            "(5) Violating Separation of Concerns, " +
-            "(6) Concurrency Effects, " +
-            "(7) Memory Usage and Leaks, " +
-            "and (8) causing baked global functions to not work or fail.", true)]
-        private readonly ImisDbContext _dbContext;
-        public PgsDeliverableScoreHistoryService(IPgsDeliverableScoreHistoryRepository repository, ImisDbContext dbContext)
+        //[Obsolete("Do not inject DbContext directly into services. Use the Repository instead. " +
+        //    "Kindly follow the design patterns we have discussed to avoid subtle and not so subtle problems such as " +
+        //    "(1) Multiple DbContext Instances per Request, " +
+        //    "(2)  Increased Risk of Lazy Loading & Query Tracking Issues, " +
+        //    "(3) Connection Pooling & Performance Overhead, " +
+        //    "(4) Harder to Maintain and Debug, " +
+        //    "(5) Violating Separation of Concerns, " +
+        //    "(6) Concurrency Effects, " +
+        //    "(7) Memory Usage and Leaks, " +
+        //    "and (8) causing baked global functions to not work or fail.", true)]
+        //private readonly ImisDbContext _dbContext;
+        public PgsDeliverableScoreHistoryService(IPgsDeliverableScoreHistoryRepository repository)
         {
-            _repository = repository;
-            _dbContext = dbContext;
+            _repository = repository;           
         }
 
         private PgsDeliverableScoreHistoryDto ConvPgsDeliverableScoreHistoryToDTO(PgsDeliverableScoreHistory pgsDeliverableScoreHistory)
@@ -38,13 +36,12 @@ namespace IMIS.Persistence.PgsDeliverableScoreHistoryModule
                 Score = pgsDeliverableScoreHistory.Score,
             };
         }
-        public async Task<List<PgsDeliverableScoreHistoryGroupDto>> GetGroupedScoreHistoryAsync()
+        public async Task<List<PgsDeliverableScoreHistoryGroupDto>> GetGroupedScoreHistoryAsync(CancellationToken cancellationToken)
         {
-            var histories = await _dbContext.PgsDeliverableScoreHistories
-                .Where(x => !x.IsDeleted)
-                .ToListAsync();
-
+            var histories = await _repository.GetAll(cancellationToken);
+             
             var grouped = histories
+                .Where(x => !x.IsDeleted)
                 .GroupBy(h => h.PgsDeliverableId)
                 .Where(g => g.Count() > 1)
                 .Select(g => new PgsDeliverableScoreHistoryGroupDto
@@ -62,7 +59,7 @@ namespace IMIS.Persistence.PgsDeliverableScoreHistoryModule
                 })
                 .ToList();
 
-            return grouped;
+            return grouped;          
         }
 
         public async Task<List<PgsDeliverableScoreHistoryDto>?> GetAllAsync(CancellationToken cancellationToken)
