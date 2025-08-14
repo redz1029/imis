@@ -607,6 +607,8 @@ class RegistrationPageState extends State<RegistrationPage> {
                                     prefixController.text,
                                     suffixController.text,
                                     selectedPosition ?? '',
+                                    '',
+                                    '',
                                   ),
                                 );
                               }
