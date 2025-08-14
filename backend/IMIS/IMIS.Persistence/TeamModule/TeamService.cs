@@ -18,8 +18,8 @@ namespace IMIS.Persistence.TeamModule
                 Name = team.Name,
                 IsActive = team.IsActive,
                 Auditors = team.AuditorTeams?.Select(a => new AuditorDto()
-                {
-                    Id = a.AuditorId,
+                {                    
+                    Id = a.AuditorId ?? 0,
                     IsActive = a.Auditor!.IsActive,
                     Name = a.Auditor!.Name
                 }).ToList(),
@@ -64,8 +64,8 @@ namespace IMIS.Persistence.TeamModule
                     foreach (var auditor in teamDto.Auditors)
                     {
                         auditorTeams.Add(new AuditorTeams() 
-                        { 
-                            AuditorId = auditor.Id, 
+                        {
+                            Id = 0,
                             TeamId = team.Id, 
                             IsTeamLeader = auditor.IsTeamLeader 
                         });

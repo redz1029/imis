@@ -1,8 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.TeamModule;
-using IMIS.Application.UserOfficeModule;
-using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
