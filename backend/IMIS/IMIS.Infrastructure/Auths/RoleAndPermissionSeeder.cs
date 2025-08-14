@@ -50,7 +50,8 @@ namespace IMIS.Infrastructure.Auths
 
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
-                 _roleManager, _userManager, "castillano.mrb", "rama.emg", "pimentel.wb");
+                 //_roleManager, _userManager, "castillano.mrb", "rama.emg", "pimentel.wb");
+                 _roleManager, _userManager, "Wilbur");
         }
     }
 }
