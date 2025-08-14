@@ -78,10 +78,7 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IOfficeTypeRepository, OfficeTypeRepository>();
             services.AddScoped<IOfficeTypeService, OfficeTypeService>();
 
-            //services.AddScoped<IPgsDeliverableHistoryRepository, PgsDeliverableHistoryRepository>();
-            //services.AddScoped<IPgsDeliverableHistoryService, PgsDeliverableHistoryService>();
-
-
+       
             return services;
         }
     }
