@@ -1,14 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
+import 'package:imis/team/services/team_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
-
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-
-import '../../utils/http_util.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class TeamPage extends StatefulWidget {
   const TeamPage({super.key});
@@ -18,6 +16,7 @@ class TeamPage extends StatefulWidget {
 }
 
 class TeamPageState extends State<TeamPage> {
+  final _teamService = TeamService(Dio());
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Team> teamSearchUtil;
   final _formKey = GlobalKey<FormState>();
@@ -40,12 +39,10 @@ class TeamPageState extends State<TeamPage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils.fetchPaginatedData<Team>(
-        endpoint: ApiEndpoint().team,
+      final pageList = await _teamService.getTeam(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        fromJson: (json) => Team.fromJson(json),
       );
 
       if (mounted) {
@@ -57,55 +54,11 @@ class TeamPageState extends State<TeamPage> {
         });
       }
     } catch (e) {
-      debugPrint("Error in fetchTeam: $e");
+      debugPrint(e.toString());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  Future<void> addOrUpdateTeam(Team team) async {
-    var url = ApiEndpoint().team;
-    try {
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: team.toJson(),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        await fetchTeam();
-      } else {
-        debugPrint(" Save failed: ${response.statusCode}");
-      }
-    } catch (e) {
-      debugPrint(" Error adding/updating team: $e");
-    }
-  }
-
-  Future<void> deleteTeam(String teamId) async {
-    var url = ApiEndpoint().team;
-
-    try {
-      final response = await AuthenticatedRequest.put(
-        dio,
-        url,
-        data: {"isDeleted": true},
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          // ignore: unrelated_type_equality_checks
-          filteredList.removeWhere((team) => team.id == teamId);
-        });
-
-        await fetchTeam();
-      } else {
-        debugPrint("Failed to soft delete team: ${response.statusCode}");
-      }
-    } catch (e) {
-      debugPrint("Error soft deleting team: $e");
     }
   }
 
@@ -250,8 +203,11 @@ class TeamPageState extends State<TeamPage> {
                       isDeleted,
                       rowVersion: '',
                     );
+                    await _teamService.createTeam(team);
+                    setState(() {
+                      fetchTeam();
+                    });
 
-                    await addOrUpdateTeam(team);
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
@@ -574,7 +530,9 @@ class TeamPageState extends State<TeamPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deleteTeam(id);
+                try {} catch (e) {
+                  MotionToast.error(description: Text('Failed to Delete Team'));
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
