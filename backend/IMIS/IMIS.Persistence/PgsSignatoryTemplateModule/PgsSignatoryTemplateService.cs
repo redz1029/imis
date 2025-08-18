@@ -1,9 +1,6 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
-using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Domain;
-using IMIS.Persistence;
-using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Application.PgsSignatoryTemplateModule
 {
@@ -118,7 +115,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                 IsActive = x.IsActive,
                 OfficeId = x.OfficeId
             }).ToList();
-        }
+        }   
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {

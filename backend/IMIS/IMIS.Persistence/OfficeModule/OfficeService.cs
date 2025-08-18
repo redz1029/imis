@@ -3,7 +3,6 @@ using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Domain;
-using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.OfficeModule
 {

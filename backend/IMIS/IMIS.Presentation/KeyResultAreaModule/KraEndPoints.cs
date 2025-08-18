@@ -2,7 +2,6 @@
 using Carter;
 using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Application.PgsKraModule;
-using IMIS.Application.PgsPeriodModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

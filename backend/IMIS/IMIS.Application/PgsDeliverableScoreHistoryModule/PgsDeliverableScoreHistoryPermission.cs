@@ -1,6 +1,4 @@
-﻿
-
-using IMIS.Application.PgsDeliverableModule;
+﻿using IMIS.Application.PgsDeliverableModule;
 
 namespace IMIS.Application.PgsDeliverableScoreHistoryModule
 {

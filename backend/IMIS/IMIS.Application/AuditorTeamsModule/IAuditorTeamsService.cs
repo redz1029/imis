@@ -1,5 +1,4 @@
-﻿
-using Base.Abstractions;
+﻿using Base.Abstractions;
 
 namespace IMIS.Application.AuditorTeamsModule
 {

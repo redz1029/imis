@@ -1,6 +1,4 @@
-﻿
-
-using Base.Primitives;
+﻿using Base.Primitives;
 using IMIS.Application.OfficeTypeModule;
 using IMIS.Domain;
 

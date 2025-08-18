@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.EntityFrameworkCore;
-using IMIS.Infrastructure.Auths;
 using Base.Auths.Roles;
 using IMIS.Infrastructure.Auths.Roles;
 

@@ -1,7 +1,4 @@
-﻿using System.ComponentModel;
-using System.Text.Json.Serialization;
-using Base.Primitives;
-using IMIS.Application.PgsSignatoryTemplateModule;
+﻿using Base.Primitives;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsSignatoryModule

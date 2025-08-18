@@ -1,7 +1,4 @@
-﻿
-using IMIS.Domain;
-
-namespace IMIS.Application.PgsDeliverableScoreHistoryModule
+﻿namespace IMIS.Application.PgsDeliverableScoreHistoryModule
 {
     public class PgsDeliverableScoreHistoryGroupDto
     {

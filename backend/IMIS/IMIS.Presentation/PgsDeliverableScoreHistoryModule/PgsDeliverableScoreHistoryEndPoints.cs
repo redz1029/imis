@@ -1,5 +1,4 @@
-﻿
-using Base.Auths.Permissions;
+﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using Microsoft.AspNetCore.Builder;
