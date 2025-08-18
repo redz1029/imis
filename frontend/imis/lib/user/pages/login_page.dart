@@ -69,13 +69,13 @@ class LoginPageState extends State<LoginPage> {
               description: const Text(
                 "Please check your username and password.",
               ),
-              toastAlignment: Alignment.center,
+              toastAlignment: Alignment.topCenter,
             ).show(context);
           } else {
             MotionToast.error(
               title: const Text("An error has occurred!"),
               description: Text(e.response!.statusMessage ?? "Unknown error"),
-              toastAlignment: Alignment.center,
+              toastAlignment: Alignment.topCenter,
             ).show(context);
           }
         }
@@ -84,7 +84,7 @@ class LoginPageState extends State<LoginPage> {
           MotionToast.error(
             title: const Text("Server is Unreachable!"),
             description: Text(e.message ?? "Unknown error"),
-            toastAlignment: Alignment.center,
+            toastAlignment: Alignment.topCenter,
           ).show(context);
         }
       }
