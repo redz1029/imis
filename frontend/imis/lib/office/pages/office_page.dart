@@ -3,10 +3,9 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
-import 'package:imis/office/models/office_type.dart';
+import 'package:imis/office/services/office_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
-import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 
 class OfficePage extends StatefulWidget {
@@ -17,6 +16,7 @@ class OfficePage extends StatefulWidget {
 }
 
 class OfficePageState extends State<OfficePage> {
+  final _officeService = OfficeService(Dio());
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Office> officeSearchUtil;
   final _formKey = GlobalKey<FormState>();
@@ -47,12 +47,10 @@ class OfficePageState extends State<OfficePage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils.fetchPaginatedData<Office>(
-        endpoint: ApiEndpoint().office,
+      final pageList = await _officeService.getOffice(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        fromJson: (json) => Office.fromJson(json),
       );
 
       if (mounted) {
@@ -72,111 +70,6 @@ class OfficePageState extends State<OfficePage> {
     }
   }
 
-  // Add or update office
-
-  Future<void> addOrUpdateOffice(Office office) async {
-    var url = ApiEndpoint().office;
-
-    try {
-      final Map<String, dynamic> requestData = office.toJson();
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: requestData,
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        await fetchOffices();
-      } else {
-        debugPrint("Failed to add/update office.");
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating office: $e");
-    }
-  }
-
-  Future<void> deleteOffice(String kraId) async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.delete(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchOffices();
-      }
-    } catch (e) {
-      debugPrint("Error deleting Office: $e");
-    }
-  }
-
-  Future<void> fetchOfficeType() async {
-    var url = ApiEndpoint().officetype;
-
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<OfficeType> data =
-            (response.data as List)
-                .map((officeType) => OfficeType.fromJson(officeType))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            officeTypeList =
-                data.map((officeType) => officeType.toJson()).toList();
-            filteredListOfficeType = List.from(officeTypeList);
-
-            if (_selectedOfficeType == null &&
-                filteredListOfficeType.isNotEmpty) {
-              _selectedOfficeType = filteredListOfficeType[0]['id'].toString();
-            }
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
-      }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
-
-  Future<void> fetchParentOffice() async {
-    var url = ApiEndpoint().office;
-
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map((parentOffice) => Office.fromJson(parentOffice))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            parentOfficeList =
-                data.map((parentOffice) => parentOffice.toJson()).toList();
-
-            filteredListParentOffice = [
-              {'id': 0, 'name': 'None'},
-              ...parentOfficeList,
-            ];
-
-            _selectedParentOffice ??= '0';
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -190,25 +83,49 @@ class OfficePageState extends State<OfficePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
-    fetchOfficeType();
+    _officeService
+        .getOfficeType()
+        .then((data) {
+          if (mounted) {
+            setState(() {
+              officeTypeList =
+                  data.map((officeType) => officeType.toJson()).toList();
+              filteredListOfficeType = List.from(officeTypeList);
+              if (filteredListOfficeType.isNotEmpty) {
+                _selectedOfficeType =
+                    filteredListOfficeType[0]['id'].toString();
+              }
+            });
+          }
+        })
+        .catchError((error) {
+          debugPrint("Failed to fetch data");
+        });
+
     if (filteredListOfficeType.isNotEmpty) {
       _selectedOfficeType = filteredListOfficeType[0]['id'].toString();
     }
-    fetchParentOffice();
 
-    if (filteredListParentOffice.isNotEmpty) {
-      _selectedParentOffice = filteredListParentOffice[0]['id'].toString();
-    }
-
-    if (filteredListParentOffice.isNotEmpty) {
-      _selectedParentOffice = filteredListParentOffice[0]['id'].toString();
-    }
-  }
-
-  @override
-  void dispose() {
-    isSearchfocus.dispose();
-    super.dispose();
+    _officeService
+        .getParentOffice()
+        .then((data) {
+          if (mounted) {
+            setState(() {
+              parentOfficeList = data.map((office) => office.toJson()).toList();
+              filteredListParentOffice = [
+                {'id': 0, 'name': 'None'},
+                ...parentOfficeList,
+              ];
+              if (filteredListParentOffice.isNotEmpty) {
+                _selectedParentOffice =
+                    filteredListParentOffice[0]['id'].toString();
+              }
+            });
+          }
+        })
+        .catchError((error) {
+          debugPrint("Failed to fetch data");
+        });
   }
 
   Future<void> filterSearchResults(String query) async {
@@ -223,22 +140,10 @@ class OfficePageState extends State<OfficePage> {
     });
   }
 
-  String getOfficeTypeName(int id) {
-    final officeType = officeTypeList.firstWhere(
-      (type) => type['id'] == id,
-      orElse: () => {'name': 'Unknown'},
-    );
-    return officeType['name'];
-  }
-
-  String getParentOfficeName(int? id) {
-    if (id == null || id == 0) return 'None';
-
-    final parentOffice = parentOfficeList.firstWhere(
-      (office) => office['id'] == id,
-      orElse: () => {'name': 'Unknown'},
-    );
-    return parentOffice['name'];
+  @override
+  void dispose() {
+    isSearchfocus.dispose();
+    super.dispose();
   }
 
   void showFormDialog({
@@ -250,7 +155,7 @@ class OfficePageState extends State<OfficePage> {
     String? selectedOfficeType,
     String? selectedParentOffice,
   }) async {
-    await fetchParentOffice();
+    await _officeService.getParentOffice();
 
     TextEditingController officeController = TextEditingController(text: name);
     _selectedOfficeType = selectedOfficeType;
@@ -485,8 +390,10 @@ class OfficePageState extends State<OfficePage> {
                       isDeleted: false,
                       isActive: true,
                     );
-                    addOrUpdateOffice(office);
-                    await fetchParentOffice();
+                    await _officeService.createOrUpdateOffice(office);
+                    setState(() {
+                      fetchOffices();
+                    });
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
@@ -684,9 +591,11 @@ class OfficePageState extends State<OfficePage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                getOfficeTypeName(
-                                                  office.officeTypeId ?? 0,
-                                                ),
+                                                _officeService
+                                                    .getOfficeTypeName(
+                                                      office.officeTypeId ?? 0,
+                                                      officeTypeList,
+                                                    ),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -701,9 +610,11 @@ class OfficePageState extends State<OfficePage> {
                                                 right: 1,
                                               ),
                                               child: Text(
-                                                getParentOfficeName(
-                                                  office.parentOfficeId,
-                                                ),
+                                                _officeService
+                                                    .getParentOfficeName(
+                                                      office.parentOfficeId,
+                                                      parentOfficeList,
+                                                    ),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -823,7 +734,7 @@ class OfficePageState extends State<OfficePage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deleteOffice(id);
+                await _officeService.deleteOffice(id);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
