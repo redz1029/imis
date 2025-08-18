@@ -30,6 +30,18 @@ namespace IMIS.Infrastructure.Reports
             Report report = new();
             string path = Path.Combine(AppContext.BaseDirectory, "Reports", $"{reportName}.frx");
             report.Load(path);
+            // Force all text objects to a safe font
+            foreach (ReportPage page in report.Pages)
+            {
+                foreach (var obj in page.AllObjects)
+                {
+                    if (obj is FastReport.TextObject text)
+                    {
+                        var oldFont = text.Font;
+                        text.Font = new System.Drawing.Font("DejaVu Sans", oldFont.Size, oldFont.Style);
+                    }
+                }
+            }
             return report;
         }
 
