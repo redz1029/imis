@@ -127,65 +127,6 @@ class AuthUtil {
     }
   }
 
-  // static Future<UserRegistration?> processTokenValidity(
-  //   Dio dio, [
-  //   BuildContext? context,
-  // ]) async {
-  //   var loggedUser = await fetchLoggedUser();
-
-  //   if (loggedUser != null) {
-  //     var accessToken = jwtDecode(loggedUser.accessToken!);
-  //     bool isAccessTokenExpired = accessToken.isExpired ?? true;
-
-  //     if (!isAccessTokenExpired) {
-  //       return loggedUser;
-  //     }
-
-  //     if (_refreshLock != null && !_refreshLock!.isCompleted) {
-  //       await _refreshLock!.future;
-  //       return await fetchLoggedUser();
-  //     }
-
-  //     _refreshLock = Completer<void>();
-
-  //     try {
-  //       final refreshToken = jwtDecode(loggedUser.refreshToken!);
-  //       bool isRefreshTokenExpired = refreshToken.isExpired ?? true;
-
-  //       if (isRefreshTokenExpired) {
-  //         if (context != null && context.mounted) {
-  //           await _showSessionExpiredDialog(context);
-  //         }
-  //         return null;
-  //       }
-
-  //       var refresh = ApiEndpoint().refresh;
-
-  //       var refreshResponse = await dio.post(
-  //         refresh,
-  //         data: jsonEncode(loggedUser),
-  //       );
-
-  //       loggedUser = await storeUserAuth(refreshResponse, dio);
-  //     } on DioException {
-  //       if (context != null && context.mounted) {
-  //         await _showSessionExpiredDialog(context);
-  //       }
-  //       return null;
-  //     } catch (e) {
-  //       if (context != null && context.mounted) {
-  //         await _showSessionExpiredDialog(context);
-  //       }
-  //       return null;
-  //     } finally {
-  //       _refreshLock?.complete();
-  //       _refreshLock = null;
-  //     }
-  //   }
-
-  //   return loggedUser;
-  // }
-
   static Future<UserRegistration?> processTokenValidity(
     Dio dio, [
     BuildContext? context,
