@@ -27,6 +27,7 @@ import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/permission_widget.dart';
+import 'package:imis/widgets/user_initial_profile.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class DashboardNavigationPanel extends StatefulWidget {
@@ -42,7 +43,6 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<ScaffoldMessengerState> snackbarKey =
       GlobalKey<ScaffoldMessengerState>();
-  final GlobalKey _menuKey = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   bool _isLoading = false;
@@ -344,7 +344,6 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                 children: [
                   Stack(
                     children: [
-                      // Profile Picture
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: grey,
@@ -685,68 +684,6 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
     );
   }
 
-  void _showProfileSetting(BuildContext context) {
-    final RenderBox renderBox =
-        _menuKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset offset = renderBox.localToGlobal(Offset.zero);
-
-    showMenu(
-      color: secondaryColor,
-      context: context,
-      position: RelativeRect.fromLTRB(
-        offset.dx,
-        offset.dy + renderBox.size.height,
-        offset.dx + renderBox.size.width,
-        offset.dy + renderBox.size.height + 50,
-      ),
-      items: [
-        PopupMenuItem<String>(
-          value: "Profile",
-          child: Row(
-            children: const [
-              Icon(Icons.person),
-              SizedBox(width: 30),
-              Text("Profile"),
-            ],
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: "change_password",
-          child: Row(
-            children: const [
-              Icon(Icons.lock),
-              SizedBox(width: 30),
-              Text("Change Password"),
-            ],
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: "logout",
-          child: Row(
-            children: const [
-              Icon(Icons.exit_to_app),
-              SizedBox(width: 30),
-              Text("Logout"),
-            ],
-          ),
-        ),
-      ],
-    ).then((value) {
-      if (value == "Profile") {
-        if (!context.mounted) return;
-        _viewProfile(context);
-      } else if (value == "change_password") {
-        if (!context.mounted) return;
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
-        );
-      } else if (value == "logout") {
-        if (!context.mounted) return;
-        _logout(context);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
@@ -754,6 +691,8 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
         bool isWideScreen = constraints.maxWidth > 800;
         return Scaffold(
           key: _scaffoldKey,
+          drawer: isWideScreen ? _buildSidebar() : null,
+          endDrawer: _buildProfileDrawer(),
           body: Row(
             children: [
               if (isWideScreen) _buildSidebar(),
@@ -762,51 +701,42 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                   appBar: AppBar(
                     backgroundColor: secondaryColor,
                     actions: [
-                      GestureDetector(
-                        key: _menuKey,
-                        onTap: () => _showProfileSetting(context),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              ClipOval(
-                                child: Image.asset(
-                                  'assets/iconprofile.png',
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.cover,
+                      Row(
+                        children: [
+                          MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                              onTap:
+                                  () =>
+                                      _scaffoldKey.currentState
+                                          ?.openEndDrawer(),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    Tooltip(
+                                      message:
+                                          '$firstName $middleName $lastName',
+                                      child: UserInitialProfile(
+                                        size: 40,
+                                        color: Colors.blue,
+                                        textColor: Colors.white,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    children: [Text("Welcome, $firstName")],
-                                  ),
-
-                                  Text(
-                                    roles.join(', '),
-                                    style: TextStyle(fontSize: 12, color: grey),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(Icons.expand_more, size: 32),
-                            ],
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
-                  drawer: isWideScreen ? null : Drawer(child: _buildSidebar()),
+                  drawer: isWideScreen ? null : _buildSidebar(),
                   body:
                       _isLoading
                           ? Container(
@@ -824,6 +754,82 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
           ),
         );
       },
+    );
+  }
+
+  Widget _buildProfileDrawer() {
+    return Drawer(
+      backgroundColor: secondaryColor,
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(color: secondaryColor),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+
+              child: Row(
+                children: [
+                  UserInitialProfile(
+                    size: 50,
+                    color: Colors.blue,
+                    textColor: Colors.white,
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$firstName $middleName $lastName',
+                        style: TextStyle(
+                          color: primaryTextColor,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Text(
+                        roles.join(', '),
+                        style: TextStyle(fontSize: 12, color: grey),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          ListTile(
+            leading: Icon(Icons.person, color: primaryTextColor),
+            title: Text('Profile', style: TextStyle(color: primaryTextColor)),
+            onTap: () {
+              Navigator.of(context).pop(); // Close drawer
+              _viewProfile(context);
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.lock, color: primaryTextColor),
+            title: Text(
+              'Change Password',
+              style: TextStyle(color: primaryTextColor),
+            ),
+            onTap: () {
+              Navigator.of(context).pop(); // Close drawer
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (context) => const ChangePasswordPage(),
+                ),
+              );
+            },
+          ),
+          ListTile(
+            leading: Icon(Icons.exit_to_app, color: primaryTextColor),
+            title: Text('Logout', style: TextStyle(color: primaryTextColor)),
+            onTap: () {
+              Navigator.of(context).pop(); // Close drawer
+              _logout(context);
+            },
+          ),
+        ],
+      ),
     );
   }
 }
