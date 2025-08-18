@@ -158,7 +158,7 @@ class HomePageState extends State<HomePage> {
                     _buildStatsRow(),
                     gap3,
                     _buildPerformanceChart(kraList, deliverablesList),
-                    gap,
+                    gap7,
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Align(
@@ -242,7 +242,7 @@ class HomePageState extends State<HomePage> {
               gap,
               _buildStatsRow(),
               _buildPerformanceChart(kraList, deliverablesList),
-              gap,
+              gap7,
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Align(
@@ -459,122 +459,133 @@ class HomePageState extends State<HomePage> {
           (deliverable.percentDeliverables / 100);
     }
 
-    if (kraList.isEmpty) {
-      return const Center(
-        child: Text(
-          "No Key Result Areas available",
-          style: TextStyle(fontSize: 14),
-        ),
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+        final chartHeight = isMobile ? 350.0 : 250.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 8.0),
-          child: Center(
-            child: Text(
-              'Performance Chart',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 250,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: 100,
-              barTouchData: BarTouchData(
-                enabled: true,
-                touchTooltipData: BarTouchTooltipData(
-                  tooltipBgColor: Colors.blueGrey.withValues(alpha: 0.8),
-                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    return BarTooltipItem(
-                      '${rod.toY.toStringAsFixed(1)}%',
-                      const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    );
-                  },
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8.0),
+              child: Center(
+                child: Text(
+                  'Performance Chart',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
-              borderData: FlBorderData(show: true),
-              gridData: FlGridData(show: true),
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 20,
-                    getTitlesWidget: (double value, TitleMeta meta) {
-                      return SideTitleWidget(
-                        axisSide: meta.axisSide,
-                        space: 4,
-                        child: Text(
-                          value.toInt().toString(),
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                rightTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                topTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 1,
-                    getTitlesWidget: (double value, TitleMeta meta) {
-                      int index = value.toInt();
-                      if (index >= 0 && index < kraList.length) {
-                        final kra = kraList[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            kra.name,
-                            style: const TextStyle(fontSize: 10),
-                            textAlign: TextAlign.center,
+            ),
+            Container(
+              height: chartHeight,
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 24 : 8,
+                vertical: 8,
+              ),
+              child: BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: 100,
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipBgColor: Colors.blueGrey.withAlpha(200),
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        return BarTooltipItem(
+                          '${rod.toY.toStringAsFixed(1)}%',
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
                           ),
                         );
-                      }
-                      return const SizedBox.shrink();
-                    },
+                      },
+                    ),
                   ),
-                ),
-              ),
-              barGroups: List.generate(kraList.length, (index) {
-                final kra = kraList[index];
-                double percent = kraPercentTotals[kra.id] ?? 0;
-                percent = percent.clamp(0.0, 100.0);
-
-                return BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    BarChartRodData(
-                      toY: percent,
-                      color: primaryLightColor,
-                      width: 20,
-                      borderRadius: BorderRadius.circular(4),
-                      backDrawRodData: BackgroundBarChartRodData(
-                        show: true,
-                        toY: 100,
-                        color: Colors.grey.shade200,
+                  borderData: FlBorderData(show: true),
+                  gridData: FlGridData(show: true),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 20,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          return SideTitleWidget(
+                            axisSide: meta.axisSide,
+                            space: 4,
+                            child: Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  ],
-                );
-              }),
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 1,
+                        reservedSize: 100,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          int index = value.toInt();
+                          if (index >= 0 && index < kraList.length) {
+                            final kra = kraList[index];
+                            return Transform.translate(
+                              offset: const Offset(0, 80),
+                              child: Transform.rotate(
+                                angle: -0.872, // ~50° rotation
+                                alignment: Alignment.center,
+                                child: Text(
+                                  kra.name,
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 8 : 10,
+                                    color: Colors.black87,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ),
+                  ),
+                  barGroups: List.generate(kraList.length, (index) {
+                    final kra = kraList[index];
+                    double percent = kraPercentTotals[kra.id] ?? 0;
+                    percent = percent.clamp(0.0, 100.0);
+
+                    return BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        BarChartRodData(
+                          toY: percent,
+                          color: primaryLightColor,
+                          width: 20,
+                          borderRadius: BorderRadius.circular(4),
+                          backDrawRodData: BackgroundBarChartRodData(
+                            show: true,
+                            toY: 100,
+                            color: Colors.grey.shade200,
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
