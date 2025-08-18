@@ -25,18 +25,6 @@ class TeamService {
     );
   }
 
-  Future<void> addOrUpdateTeam(Team team) async {
-    try {
-      if (team.id == 0) {
-        await createTeam(team);
-      } else {
-        await updateTeam(team);
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
   Future<void> createTeam(Team team) async {
     final url = ApiEndpoint().team;
     final response = await AuthenticatedRequest.post(
@@ -47,18 +35,6 @@ class TeamService {
 
     if (response.statusCode != 201) {
       throw Exception('Failed to create team');
-    }
-  }
-
-  Future<void> updateTeam(Team team) async {
-    final response = await AuthenticatedRequest.put(
-      dio,
-      '${ApiEndpoint().team}/${team.id}',
-      data: team.toJson(),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update team');
     }
   }
 
