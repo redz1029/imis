@@ -74,7 +74,9 @@ class LoginPageState extends State<LoginPage> {
           } else {
             MotionToast.error(
               title: const Text("An error has occurred!"),
-              description: Text(e.response!.statusMessage ?? "Unknown error"),
+              description: Text(
+                "Oops! Something went wrong. Please try again.",
+              ),
               toastAlignment: Alignment.topCenter,
             ).show(context);
           }
@@ -83,7 +85,7 @@ class LoginPageState extends State<LoginPage> {
         if (context.mounted) {
           MotionToast.error(
             title: const Text("Server is Unreachable!"),
-            description: Text(e.message ?? "Unknown error"),
+            description: Text("Please check your connection."),
             toastAlignment: Alignment.topCenter,
           ).show(context);
         }
