@@ -174,8 +174,8 @@ class PerformanceGovernanceSystemPageState
     }
   }
 
-  //Save pgs
-  Future<void> savePGS(PerformanceGovernanceSystem audit) async {
+  //Save as draft pgs
+  Future<void> saveasDraftPGS(PerformanceGovernanceSystem audit) async {
     var url = ApiEndpoint().performancegovernancesystem;
 
     try {
@@ -2583,142 +2583,6 @@ class PerformanceGovernanceSystemPageState
                                       ],
                                     ),
                                   ),
-
-                                  // pgsIdHistory != null
-                                  //     ? FutureBuilder<
-                                  //       List<PgsDeliverableHistory>
-                                  //     >(
-                                  //       future: fetchDeliverablesHistory(
-                                  //         pgsId: pgsIdHistory,
-                                  //       ),
-                                  //       builder: (context, snapshot) {
-                                  //         if (snapshot.connectionState ==
-                                  //             ConnectionState.waiting) {
-                                  //           return const Center(
-                                  //             child:
-                                  //                 CircularProgressIndicator(),
-                                  //           );
-                                  //         }
-                                  //         if (snapshot.hasError) {
-                                  //           return Text(
-                                  //             'Error: ${snapshot.error}',
-                                  //           );
-                                  //         }
-                                  //         if (!snapshot.hasData ||
-                                  //             snapshot.data!.isEmpty) {
-                                  //           return const Text(
-                                  //             'No deliverables history found',
-                                  //           );
-                                  //         }
-                                  //         return Table(
-                                  //           border: TableBorder.all(
-                                  //             color: Colors.black,
-                                  //             width: 1.0,
-                                  //           ),
-                                  //           defaultVerticalAlignment:
-                                  //               TableCellVerticalAlignment
-                                  //                   .middle,
-                                  //           columnWidths: const {
-                                  //             0: FlexColumnWidth(0.7),
-                                  //             1: FlexColumnWidth(0.7),
-                                  //             2: FlexColumnWidth(0.7),
-                                  //             3: FlexColumnWidth(0.7),
-                                  //             4: FlexColumnWidth(0.7),
-                                  //             5: FlexColumnWidth(0.7),
-                                  //             6: FlexColumnWidth(0.7),
-                                  //           },
-                                  //           children: [
-                                  //             TableRow(
-                                  //               children: [
-                                  //                 _buildTableHeaderCell('KRA'),
-                                  //                 _buildTableHeaderCell(
-                                  //                   'DIRECT',
-                                  //                 ),
-                                  //                 _buildTableHeaderCell(
-                                  //                   'DELIVERABLES',
-                                  //                 ),
-                                  //                 _buildTableHeaderCell(
-                                  //                   'BY WHEN',
-                                  //                 ),
-                                  //                 _buildTableHeaderCell(
-                                  //                   'DISAPPROVAL REMARKS',
-                                  //                 ),
-                                  //                 _buildTableHeaderCell(
-                                  //                   'REMOVE AT',
-                                  //                 ),
-                                  //                 _buildTableHeaderCell(
-                                  //                   'ACTION',
-                                  //                 ),
-                                  //               ],
-                                  //             ),
-                                  //             ...snapshot.data!.map(
-                                  //               (deliverable) => TableRow(
-                                  //                 children: [
-                                  //                   _buildKraHistory(
-                                  //                     options.firstWhere(
-                                  //                       (option) =>
-                                  //                           option['id'] ==
-                                  //                           deliverable.kraId,
-                                  //                       orElse:
-                                  //                           () => {
-                                  //                             'id':
-                                  //                                 deliverable
-                                  //                                     .kraId,
-                                  //                             'name': 'Unknown',
-                                  //                           },
-                                  //                     )['name'],
-                                  //                     deliverable
-                                  //                             .kraDescription ??
-                                  //                         'No KRA description',
-                                  //                   ),
-                                  //                   _buildTableCell(
-                                  //                     '',
-                                  //                     isDirect:
-                                  //                         deliverable.isDirect,
-                                  //                   ),
-                                  //                   _buildTableCell(
-                                  //                     deliverable
-                                  //                             .deliverableName ??
-                                  //                         'N/A',
-                                  //                   ),
-                                  //                   _buildTableCell(
-                                  //                     DateFormat(
-                                  //                       'MMMM, yyyy',
-                                  //                     ).format(
-                                  //                       deliverable.byWhen!,
-                                  //                     ),
-                                  //                   ),
-                                  //                   _buildTableCell(
-                                  //                     deliverable
-                                  //                             .disapprovalRemarks ??
-                                  //                         'N/A',
-                                  //                   ),
-                                  //                   _buildTableCell(
-                                  //                     DateTimeConverter()
-                                  //                         .toJson(
-                                  //                           deliverable.byWhen!,
-                                  //                         ),
-                                  //                   ),
-
-                                  //                   _buildRecoverHistoryButton(
-                                  //                     context,
-                                  //                     deliverable,
-                                  //                     setDialogState,
-                                  //                   ),
-                                  //                 ],
-                                  //               ),
-                                  //             ),
-                                  //           ],
-                                  //         );
-                                  //       },
-                                  //     )
-                                  //     : SizedBox(
-                                  //       child: Center(
-                                  //         child: Text(
-                                  //           "No deleted deliverables",
-                                  //         ),
-                                  //       ),
-                                  //     ),
                                 ],
                               ),
                             ),
@@ -2731,6 +2595,21 @@ class PerformanceGovernanceSystemPageState
               ),
 
               actions: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shadowColor: Colors.transparent,
+                    elevation: 0,
+                    backgroundColor: secondaryBgButton,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  onPressed: () => handleSaveAsDraft(context, id, orderLevel),
+                  child: Text(
+                    'Save as Draft',
+                    style: TextStyle(color: primaryColor),
+                  ),
+                ),
                 if ((id == null && orderLevel == 1) ||
                     (id == null && orderLevel >= 2) ||
                     isAnyDisapproved)
@@ -2806,13 +2685,22 @@ class PerformanceGovernanceSystemPageState
           (controller) => controller.text.trim().isEmpty,
         ) ||
         percentageDeliverables.text.trim().isEmpty) {
-      MotionToast.error(
+      MotionToast.warning(
         title: const Text("Missing Fields"),
         description: Text(
           selectedPeriod == null
               ? "Please complete all required fields."
               : "Please complete all required fields",
         ),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    if (deliverablesControllers.length != 5) {
+      MotionToast.warning(
+        title: const Text("Insufficient Deliverables"),
+        description: const Text("Please provide at least 5 deliverables."),
         toastAlignment: Alignment.center,
       ).show(context);
       return;
@@ -2836,6 +2724,118 @@ class PerformanceGovernanceSystemPageState
 
       if (pgsId == null) {
         await submitPGS(pgs);
+      } else {
+        await updateSavePGS(
+          pgsId: pgsId.toString(),
+          updatePgs: pgs,
+          userId: currentUserId,
+        );
+      }
+
+      final String successMessage =
+          isAnyDisapproved
+              ? "Disapproved successfully!"
+              : (id != null && orderLevel >= 2)
+              ? "Confirm successfully!"
+              : "Submitted successfully!";
+
+      MotionToast.success(
+        description: Text(successMessage),
+        toastAlignment: Alignment.center,
+      ).show(context);
+
+      await Future.delayed(Duration(milliseconds: 1000));
+      Navigator.pop(context);
+    } catch (e) {
+      final String errorMessage =
+          (id != null && orderLevel >= 2)
+              ? "Failed to Confirm!"
+              : "Failed to submit!";
+
+      MotionToast.error(
+        description: Text(errorMessage),
+        toastAlignment: Alignment.center,
+      ).show(context);
+
+      await Future.delayed(Duration(milliseconds: 1500));
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> handleSaveAsDraft(
+    BuildContext context,
+    String? id,
+    int orderLevel,
+  ) async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: Text("Save as Draft"),
+            content: Text(
+              "Do you want to save this record as a draft? You can come back and make changes later.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("No", style: TextStyle(color: primaryColor)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Yes", style: TextStyle(color: primaryColor)),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm != true) return;
+
+    if (selectedPeriod == null ||
+        selectedDirect.isEmpty ||
+        selectedIndirect.isEmpty ||
+        deliverablesControllers.values.any(
+          (controller) => controller.text.trim().isEmpty,
+        ) ||
+        percentageDeliverables.text.trim().isEmpty) {
+      MotionToast.warning(
+        title: const Text("Missing Fields"),
+        description: Text(
+          selectedPeriod == null
+              ? "Please complete all required fields."
+              : "Please complete all required fields",
+        ),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    if (deliverablesControllers.length != 5) {
+      MotionToast.warning(
+        title: const Text("Insufficient Deliverables"),
+        description: const Text("Please provide at least 5 deliverables."),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    int? pgsId = int.tryParse(id ?? '');
+
+    final updatedDeliverables = getTableDeliverables();
+    bool isAnyDisapproved = updatedDeliverables.any(
+      (d) => d.isDisapproved == true,
+    );
+
+    PerformanceGovernanceSystem pgs = getPgsAuditDetails(
+      id: pgsId ?? 0,
+      pgsStatus: "Submit",
+    );
+
+    try {
+      final currentUser = await AuthUtil.fetchLoggedUser();
+      final currentUserId = currentUser?.id;
+
+      if (pgsId == null) {
+        await saveasDraftPGS(pgs);
       } else {
         await updateSavePGS(
           pgsId: pgsId.toString(),
