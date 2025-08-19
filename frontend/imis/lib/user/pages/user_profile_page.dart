@@ -8,6 +8,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
+import 'package:imis/utils/validators.dart';
 
 import '../../utils/http_util.dart';
 
@@ -143,7 +144,6 @@ class UserProfileState extends State<UserProfilePage> {
         url,
         data: userProfile.toJson(),
       );
-      debugPrint("Sent data: ${userProfile.toJson()}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         debugPrint(
@@ -159,7 +159,7 @@ class UserProfileState extends State<UserProfilePage> {
         prefixController.clear();
         suffixController.clear();
       } else {
-        debugPrint("Save failed: ${response.statusCode}");
+        debugPrint("Save failed");
       }
     } catch (e) {
       debugPrint("Error adding/updating team: $e");
@@ -363,53 +363,72 @@ class UserProfileState extends State<UserProfilePage> {
                         ],
                       ),
                     ),
+                    gap2,
+                    Theme(
+                      data: Theme.of(context).copyWith(
+                        inputDecorationTheme: const InputDecorationTheme(
+                          errorStyle: TextStyle(fontSize: 10),
+                        ),
+                      ),
 
-                    TextFormField(
-                      controller: passwordController,
-                      focusNode: focusNewPassword,
-                      onTap: () {
-                        FocusScope.of(context).requestFocus(focusNewPassword);
-                      },
-                      obscureText: !_isNewPassVisible,
+                      child: TextFormField(
+                        controller: passwordController,
+                        focusNode: focusNewPassword,
+                        onTap: () {
+                          FocusScope.of(context).requestFocus(focusNewPassword);
+                        },
+                        obscureText: !_isNewPassVisible,
 
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a password';
-                        }
-                        return value.length < 6
-                            ? 'Password must be at least 6 characters'
-                            : null;
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        labelStyle: TextStyle(color: grey, fontSize: 14),
-                        prefixIcon: Icon(
-                          Icons.lock_outline_rounded,
-                          color:
-                              focusNewPassword.hasFocus
-                                  ? primaryColor
-                                  : Colors.grey,
-                        ),
-                        border: const OutlineInputBorder(),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
-                        ),
-                        floatingLabelStyle: const TextStyle(
-                          color: primaryColor,
-                        ),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _isNewPassVisible
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return validatePassword(value);
+                          }
+                          if (value.length < 6) {
+                            return validatePassword(value);
+                          }
+                          if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                            return validatePassword(value);
+                          }
+                          if (!RegExp(
+                            r'[!@#$%^&*(),.?":{}|<>]',
+                          ).hasMatch(value)) {
+                            return validatePassword(value);
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          prefixIcon: Icon(
+                            Icons.lock_outline_rounded,
                             color:
-                                focusNewPassword.hasFocus ? primaryColor : grey,
+                                focusNewPassword.hasFocus
+                                    ? primaryColor
+                                    : Colors.grey,
                           ),
-                          onPressed: () {
-                            setDialogState(() {
-                              _isNewPassVisible = !_isNewPassVisible;
-                            });
-                          },
+                          border: const OutlineInputBorder(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          floatingLabelStyle: const TextStyle(
+                            color: primaryColor,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isNewPassVisible
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color:
+                                  focusNewPassword.hasFocus
+                                      ? primaryColor
+                                      : grey,
+                            ),
+                            onPressed: () {
+                              setDialogState(() {
+                                _isNewPassVisible = !_isNewPassVisible;
+                              });
+                            },
+                          ),
                         ),
                       ),
                     ),
@@ -1061,7 +1080,7 @@ class UserProfileState extends State<UserProfilePage> {
                         Expanded(
                           flex: 1,
                           child: Text(
-                            'User Name',
+                            'First Name',
                             style: TextStyle(color: grey),
                           ),
                         ),
