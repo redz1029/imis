@@ -589,6 +589,51 @@ class HomePageState extends State<HomePage> {
     );
   }
 
+  // Widget _buildDashboardBox(
+  //   String title,
+  //   Color color,
+  //   String count,
+  //   String iconAsset,
+  // ) {
+  //   return Card(
+  //     elevation: 4,
+  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+  //     child: Container(
+  //       height: 130,
+  //       padding: EdgeInsets.all(16),
+  //       decoration: BoxDecoration(
+  //         color: color.withValues(alpha: 0.1),
+  //         borderRadius: BorderRadius.circular(10),
+  //       ),
+  //       child: Row(
+  //         crossAxisAlignment: CrossAxisAlignment.center,
+  //         children: [
+  //           Column(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: [
+  //               Text(
+  //                 count,
+  //                 style: TextStyle(
+  //                   fontSize: 24,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: color,
+  //                 ),
+  //               ),
+  //               SizedBox(height: 8),
+  //               Text(
+  //                 title,
+  //                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+  //               ),
+  //             ],
+  //           ),
+  //           SizedBox(width: 40),
+  //           Image.asset(iconAsset, width: 70, height: 70),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Widget _buildDashboardBox(
     String title,
     Color color,
@@ -606,28 +651,36 @@ class HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  count,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+            Expanded(
+              flex: 2,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    count,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
                   ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ],
+                  SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(width: 40),
-            Image.asset(iconAsset, width: 70, height: 70),
+            Expanded(
+              flex: 1,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: Image.asset(iconAsset),
+              ),
+            ),
           ],
         ),
       ),
