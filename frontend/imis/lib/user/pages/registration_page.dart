@@ -4,7 +4,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/validators.dart';
+import 'package:imis/utils/string_extension.dart';
 import 'package:imis/validator/validator.dart';
 import 'package:motion_toast/motion_toast.dart';
 
