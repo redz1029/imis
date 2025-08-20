@@ -67,29 +67,28 @@ namespace IMIS.Persistence.PgsModule
             var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken);
             return dto;
         }
-            
+
         private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(
         PerfomanceGovernanceSystem pgs,
         string userId,
         CancellationToken cancellationToken)
         {
             var dto = new PerfomanceGovernanceSystemDto(pgs);
-            
-         
+
             bool hasDisapproved = pgs.PgsDeliverables?.Any(d => d.IsDisapproved) ?? false;
 
             if (hasDisapproved)
-            {               
+            {
                 if (pgs.PgsSignatories?.Any() == true)
                 {
                     _repository.GetDbContext().RemoveRange(pgs.PgsSignatories);
                     await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
                 }
-               
+
                 var templates = (await GetSignatoryTemplates(pgs.Office, cancellationToken))
                     .OrderBy(t => t.OrderLevel)
                     .ToList();
-            
+
                 dto.PgsSignatories = new List<PgsSignatoryDto>();
 
                 if (templates.Any())
@@ -114,7 +113,7 @@ namespace IMIS.Persistence.PgsModule
 
                 return dto;
             }
-          
+         
             if (dto.PgsSignatories != null)
             {
                 var currentStatus = pgs.PgsSignatories?.LastOrDefault();
@@ -180,20 +179,16 @@ namespace IMIS.Persistence.PgsModule
                                 SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim()
                             });
                         }
-                    }                 
+                    }
                 }
             }
 
             return dto;
         }
-
-        public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(
-        string userId,
-        CancellationToken cancellationToken)
+      
+        public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
-            var records = await _repository.GetByUserIdAsync(userId, cancellationToken)
-                .ConfigureAwait(false);
-
+            var records = await _repository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
             var result = new List<PerfomanceGovernanceSystemDto>();
 
             if (records == null || !records.Any())
@@ -203,31 +198,52 @@ namespace IMIS.Persistence.PgsModule
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken)
-                    .ConfigureAwait(false);
+                var isUserAssignedToOffice = pgs.Office.UserOffices!.Any(u => u.UserId == userId);
+
+                if (pgs.PgsStatus == "Draft")
+                {
+                    var templates = await GetSignatoryTemplates(pgs.Office, cancellationToken);
+                    var isUserSignatoryDraft = templates.Any(t => t.DefaultSignatoryId == userId);
+                    var isFirstSignatory = templates.OrderBy(t => t.OrderLevel).FirstOrDefault()?.DefaultSignatoryId == userId;
+
+                    if ((isUserAssignedToOffice && !isUserSignatoryDraft) || isFirstSignatory)
+                    {
+                        var draftDto = new PerfomanceGovernanceSystemDto(pgs);
+                        draftDto.PgsDeliverables = draftDto.PgsDeliverables?
+                            .Where(d => !d.IsDeleted)
+                            .ToList() ?? new List<PGSDeliverableDto>();
+
+                        result.Add(draftDto);
+                    }
+
+                    continue;
+                }
+
+                // For submitted PGS
+                var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken).ConfigureAwait(false);
 
                 dto.PgsDeliverables = dto.PgsDeliverables?
                     .Where(d => !d.IsDeleted)
                     .ToList() ?? new List<PGSDeliverableDto>();
 
-                var deliverables = dto.PgsDeliverables;
-                bool hasDisapproved = deliverables.Any(d => d.IsDisapproved);
+                // Get signatory template to determine actual signatory roles
+                var signatoryTemplates = await GetSignatoryTemplates(pgs.Office, cancellationToken);
+                var isUserSignatoryTemplate = signatoryTemplates.Any(t => t.DefaultSignatoryId == userId);
 
-                var isFirstSignatory = dto.PgsSignatories?.Any(s =>
+                var isFirstSignatorySubmitted = dto.PgsSignatories?.Any(s =>
                     s.SignatoryId == userId && s.OrderLevel == 1
                 ) ?? false;
-
-                if (hasDisapproved && isFirstSignatory)
-                {
-                    result.Add(dto);
-                    continue;
-                }
 
                 var isNext = dto.PgsSignatories?.Any(s =>
                     s.SignatoryId == userId && s.IsNextStatus
                 ) ?? false;
 
-                if (isNext)
+                //  Only show if:
+                //  User is the first signatory
+                //  User is the next signatory              
+                bool canViewSubmitted = isFirstSignatorySubmitted || isNext || (isUserAssignedToOffice && !isUserSignatoryTemplate);
+
+                if (canViewSubmitted)
                 {
                     result.Add(dto);
                 }
@@ -235,9 +251,6 @@ namespace IMIS.Persistence.PgsModule
 
             return result;
         }
-
-      
-
 
         private async Task<IEnumerable<PgsSignatoryTemplate>> GetSignatoryTemplates(Office office, CancellationToken cancellationToken)
         {
@@ -250,9 +263,9 @@ namespace IMIS.Persistence.PgsModule
             if (signatoryTemplates.Count == 0)
             {
                 //Get the root parent office.
-               var parentOffice = await _officeRepository
-                   .GetRootParentOffice(office, cancellationToken)
-                   .ConfigureAwait(false);
+                var parentOffice = await _officeRepository
+                    .GetRootParentOffice(office, cancellationToken)
+                    .ConfigureAwait(false);
 
                 // retrieve the template for services.
                 signatoryTemplates = await _signatoryTemplateRepository
@@ -263,6 +276,7 @@ namespace IMIS.Persistence.PgsModule
             return signatoryTemplates;
         }
 
+    
         public async Task<ReportPerfomanceGovernanceSystemDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var perfomanceGovernanceSystem = await _repository.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -308,6 +322,7 @@ namespace IMIS.Persistence.PgsModule
                 throw new ArgumentNullException(nameof(perfomanceGovernanceSystemDto));
 
             var entity = perfomanceGovernanceSystemDto.ToEntity();
+          
 
             var office = await _officeRepository.GetByIdAsync(entity.Office.Id, cancellationToken) ?? throw new InvalidOperationException($"Office with ID {entity.Office.Id} not found.");
 
@@ -326,9 +341,10 @@ namespace IMIS.Persistence.PgsModule
                     d.KraId = kra.Id;
                 }
             }
+            
+            await HandleSignatoriesAsync(entity, perfomanceGovernanceSystemDto, cancellationToken);
 
-            var isNew = entity.Id == 0;
-           
+            var isNew = entity.Id == 0;           
             if (isNew)
             {
                 foreach (var d in entity.PgsDeliverables ?? Enumerable.Empty<PgsDeliverable>())
@@ -381,16 +397,22 @@ namespace IMIS.Persistence.PgsModule
                         existing.PgsDeliverables!.Add(d);
                     }
                 }
-                
+             
                 var anyDisapproved = entity.PgsDeliverables?.Any(d => d.IsDisapproved && !d.IsDeleted) == true;
 
                 if (anyDisapproved)
                 {
+                    // Reset signatories
                     if (existing.PgsSignatories?.Any() == true)
                         _repository.GetDbContext().RemoveRange(existing.PgsSignatories);
 
                     perfomanceGovernanceSystemDto.PgsSignatories = new List<PgsSignatoryDto>();
                     entity.PgsSignatories = new List<PgsSignatory>();
+
+                    //Update yung  status na Draft automatically
+                    existing.PgsStatus = "Draft";
+                    entity.PgsStatus = "Draft";
+                    perfomanceGovernanceSystemDto.PgsStatus = "Draft";
 
                     var templates = await _signatoryTemplateRepository.GetSignatoryTemplateByOfficeIdAsync(office.OfficeTypeId, cancellationToken);
 
@@ -430,8 +452,7 @@ namespace IMIS.Persistence.PgsModule
                         }
                     }
                 }
-
-                // Update root entity values
+              
                 _repository.GetDbContext().Entry(existing).CurrentValues.SetValues(entity);
                 existing.OfficeId = office.Id;
 
@@ -447,6 +468,77 @@ namespace IMIS.Persistence.PgsModule
             return new PerfomanceGovernanceSystemDto(entity);
         }
 
+
+        private async Task HandleSignatoriesAsync(PerfomanceGovernanceSystem entity, PerfomanceGovernanceSystemDto perfomanceGovernanceSystemDto,
+        CancellationToken cancellationToken)
+            {
+            entity.PgsSignatories ??= new List<PgsSignatory>();
+            perfomanceGovernanceSystemDto.PgsSignatories ??= new List<PgsSignatoryDto>();
+
+            if (entity.PgsStatus == "Draft")
+            {
+                // Wala munang signatory na masave
+                return;
+            }
+
+            if (entity.PgsStatus == "Submit")
+            {
+                // Load signatory templates ordered by level
+                var templatesList = (await GetSignatoryTemplates(entity.Office, cancellationToken))
+                    .OrderBy(t => t.OrderLevel)
+                    .ToList();
+
+                // Get yung last signed na signatory based sa OrderLevel
+                var lastSignedOrderLevel = perfomanceGovernanceSystemDto.PgsSignatories
+                    .Where(s => s.DateSigned != default)
+                    .OrderBy(s => s.OrderLevel)
+                    .LastOrDefault()?.OrderLevel ?? 0;
+
+                PgsSignatoryDto? nextSignatoryDto = null;
+
+                // Check muna kung may pending na signatory
+                var pendingSignatory = perfomanceGovernanceSystemDto.PgsSignatories
+                    .Where(s => s.DateSigned == default)
+                    .OrderBy(s => s.OrderLevel)
+                    .FirstOrDefault();
+
+                if (pendingSignatory != null)
+                {
+                    // update ang isNextStatus to true para sa pending signatory 
+                    pendingSignatory.IsNextStatus = true;
+                }
+                else
+                {
+                    // Get next template using OrderLevel
+                    var nextTemplate = templatesList
+                        .FirstOrDefault(t => t.OrderLevel == (lastSignedOrderLevel + 1));
+
+                    if (nextTemplate != null)
+                    {
+                        var user = await _userManager.FindByIdAsync(nextTemplate.DefaultSignatoryId!);
+
+                        nextSignatoryDto = new PgsSignatoryDto
+                        {
+                            Id = 0,
+                            PgsId = entity.Id,
+                            PgsSignatoryTemplateId = nextTemplate.Id,
+                            SignatoryId = nextTemplate.DefaultSignatoryId!,
+                            Status = nextTemplate.Status,
+                            Label = nextTemplate.SignatoryLabel,
+                            OrderLevel = nextTemplate.OrderLevel,
+                            IsNextStatus = true,
+                            SignatoryName = $"{user?.Prefix} {user?.FirstName} {user?.LastName} {user?.Suffix}".Trim()
+                        };
+                    }
+                }
+
+                if (nextSignatoryDto != null)
+                {
+                    entity.PgsSignatories.Add(nextSignatoryDto.ToEntity());
+                    perfomanceGovernanceSystemDto.PgsSignatories.Add(nextSignatoryDto);
+                }
+            }
+        }
 
 
         // Save or Update
@@ -476,6 +568,16 @@ namespace IMIS.Persistence.PgsModule
 
             return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
         }
+
+        public async Task<PerfomanceGovernanceSystemDto> Draft(PerfomanceGovernanceSystemDto pgs, string userId, CancellationToken cancellationToken)
+        {
+            pgs.PgsStatus = "Draft";
+            pgs.PgsSignatories = [];
+
+            return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
+        }
+
+      
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, CancellationToken cancellationToken)
         {
             var pgs = await _repository.GetFilteredPGSAsync(filter, userId, cancellationToken).ConfigureAwait(false);

@@ -48,6 +48,19 @@ namespace IMIS.Presentation.PgsModuleAPI
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _performanceGovernanceSystem.Add));
 
+            app.MapPost("/draft", async ([FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, string userId,
+               IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var DraftPGS = await service.Draft(performanceGovernanceSystemDto, userId, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+                return Results.Created($"/performanceGovernanceSystem/{DraftPGS.Id}", DraftPGS);
+            })
+           .WithTags(_pgsTag)
+           .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _performanceGovernanceSystem.Add));
+
+
+
             app.MapGet("submit/userId/{userId}", async (string userId, int pgsId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
                 {
                     var dto = await service.GetByUserIdAndPgsIdAsync(userId, pgsId, cancellationToken);

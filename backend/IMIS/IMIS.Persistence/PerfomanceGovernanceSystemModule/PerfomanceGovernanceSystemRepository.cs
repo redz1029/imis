@@ -21,16 +21,29 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     }
 
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
-    {     
+    {
+       
+        /// Get all office IDs where the user is assigned
+        var userOfficeIds = await ReadOnlyDbContext.Set<UserOffices>()
+        .Where(u => u.UserId == userId)
+        .Select(u => u.OfficeId)
+        .Distinct()
+        .ToListAsync(cancellationToken);
+
+        // Fetch all PGS records for those offices
         var pgs = await _entities
-        .Where(p => p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
-        .Include(p => p.PgsPeriod)
-        .Include(p => p.Office)
-        .Include(p => p.PgsReadinessRating)
-        .Include(p => p.PgsSignatories)
-        .Include(p => p.PgsDeliverables)
-        .ToListAsync(cancellationToken).ConfigureAwait(false);
+            .Where(p => userOfficeIds.Contains(p.OfficeId))
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+                .ThenInclude(o => o.UserOffices)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories)
+            .Include(p => p.PgsDeliverables)
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+
         return pgs;
+
     }
 
     public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -198,7 +211,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             .Include(p => p.PgsReadinessRating)
             .Include(p => p.PgsSignatories);
 
-        // Step 6: Apply pagination
+        // Apply pagination
         return await EntityPageList<PerfomanceGovernanceSystem, long>
             .CreateAsync(fullQuery, filter.Page, filter.PageSize, cancellationToken)
             .ConfigureAwait(false);
