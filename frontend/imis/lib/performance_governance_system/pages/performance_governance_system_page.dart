@@ -47,6 +47,7 @@ class PerformanceGovernanceSystemPageState
     extends State<PerformanceGovernanceSystemPage> {
   late FilterSearchResultUtil<PerformanceGovernanceSystem> pgsSearchUtil;
   final GlobalKey _menuKey = GlobalKey();
+  final _formKey = GlobalKey<FormState>();
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> signatoryControllers = {};
   Map<int, TextEditingController> selectedByWhenControllers = {};
@@ -85,8 +86,6 @@ class PerformanceGovernanceSystemPageState
   Map<int, int?> signatoryIds = {};
 
   List<int> rows = [];
-  int rowIndex = 1;
-
   String officeDisplay = "";
   String officeIdList = "";
   String? selectedOffice = "";
@@ -120,6 +119,10 @@ class PerformanceGovernanceSystemPageState
   bool isMenuOpenOffice = false;
   bool isMenuOpenStartDate = false;
   bool isMenuOpenEndDate = false;
+
+  // bool showErrors = false;
+
+  Map<int, bool> rowErrors = {};
 
   List<Map<String, dynamic>> filteredListOffice = [];
   List<Map<String, dynamic>> officeList = [];
@@ -542,7 +545,6 @@ class PerformanceGovernanceSystemPageState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Close button
                 Align(
                   alignment: Alignment.topRight,
                   child: IconButton(
@@ -1093,6 +1095,7 @@ class PerformanceGovernanceSystemPageState
     selectedKRA.clear();
     deliverableIds.clear();
     deliverablesList.clear();
+    rowErrors.clear();
   }
 
   void confirmSelection() {
@@ -2052,6 +2055,10 @@ class PerformanceGovernanceSystemPageState
     String? remarks,
   }) {
     setState(() {
+      if (rows.isEmpty) {
+        rows = [1];
+      }
+
       if (id == null) {
         competenceScore.value = 0.0;
         resourceScore.value = 0.0;
@@ -2195,398 +2202,460 @@ class PerformanceGovernanceSystemPageState
                       height: MediaQuery.of(context).size.height * 0.8,
                       child: DefaultTabController(
                         length: 3, // Number of tabs
-                        child: Column(
-                          children: [
-                            // Header Row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Image.asset('assets/CRMC.png', height: 90),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      id == null
-                                          ? 'COTABATO REGIONAL AND MEDICAL CENTER'
-                                          : 'COTABATO REGIONAL AND MEDICAL CENTER',
-
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-
-                                    Container(
-                                      width: 250,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                      ),
-                                      child: CustomTooltip(
-                                        message: 'Select period',
-                                        child: DropdownButton<int>(
-                                          dropdownColor: mainBgColor,
-                                          value: selectedPeriod,
-                                          isExpanded: true,
-                                          underline: Container(),
-                                          icon: Icon(Icons.arrow_drop_down),
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          hint: Text(
-                                            selectedPeriodText ??
-                                                'Select a period',
-                                          ),
-                                          onChanged: (int? newValue) {
-                                            if (newValue != null) {
-                                              final selected =
-                                                  filteredListPeriod.firstWhere(
-                                                    (period) =>
-                                                        period['id'] ==
-                                                        newValue,
-                                                    orElse: () => {},
-                                                  );
-
-                                              setDialogState(() {
-                                                selectedPeriod = newValue;
-                                                selectedPeriodText =
-                                                    "${selected['startDate']} - ${selected['endDate']}";
-                                              });
-
-                                              debugPrint(
-                                                "Dropdown selected new value: $newValue",
-                                              );
-                                            }
-                                          },
-                                          items:
-                                              filteredListPeriod.map<
-                                                DropdownMenuItem<int>
-                                              >((period) {
-                                                return DropdownMenuItem<int>(
-                                                  value: period['id'],
-                                                  child: Text(
-                                                    "${period['startDate']} - ${period['endDate']}",
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                );
-                                              }).toList(),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            SizedBox(height: 20),
-                            TabBar(
-                              labelColor: primaryLightColor,
-                              unselectedLabelColor: Colors.black,
-                              indicatorColor: primaryColor,
-                              labelStyle: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              unselectedLabelStyle: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              tabs: [
-                                Tab(
-                                  text: "Strategic Contributions",
-                                ), // Tab Name 1
-                                Tab(
-                                  text:
-                                      "Readiness Rating - ${officename ?? officeDisplay}",
-                                ), // Tab Name 2
-                                Tab(
-                                  text: "PGS Deliverables Status",
-                                ), // Tab Name 3
-                                // Tab(
-                                //   text: "PGS Deliverables History",
-                                // ), // Tab Name 4
-                              ],
-                            ),
-                            //First Tab Strategic Contributions
-                            Expanded(
-                              child: TabBarView(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              // Header Row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  SingleChildScrollView(
-                                    child: Column(
-                                      children: [
-                                        SizedBox(height: 20),
-                                        Table(
-                                          border: TableBorder.all(
-                                            color: const Color.fromARGB(
-                                              255,
-                                              49,
-                                              46,
-                                              46,
-                                            ),
-                                            width: 1,
-                                          ),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(1.5),
-                                            1: FlexColumnWidth(0.7),
-                                            2: FlexColumnWidth(0.7),
-                                            3: FlexColumnWidth(2),
-                                            4: FlexColumnWidth(1),
-                                            // 5: FlexColumnWidth(1),
-                                            5: FlexColumnWidth(0.7),
-                                          },
+                                  Image.asset('assets/CRMC.png', height: 90),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        id == null
+                                            ? 'COTABATO REGIONAL AND MEDICAL CENTER'
+                                            : 'COTABATO REGIONAL AND MEDICAL CENTER',
 
-                                          children: [
-                                            _buildMainHeaderStrategic(
-                                              officename:
-                                                  officename ?? officeDisplay,
-                                            ),
-
-                                            _buildTableSubHeaderStrategic(),
-
-                                            ...rows.map(
-                                              (rowId) =>
-                                                  _buildTableRowStrategic(
-                                                    rowId,
-                                                    '',
-                                                    '',
-                                                    setState,
-                                                    setDialogState,
-                                                    orderLevel: orderLevel,
-                                                    id: id,
-                                                  ),
-                                            ),
-                                          ],
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
                                         ),
+                                      ),
 
-                                        TextButton(
-                                          onPressed: () {
-                                            setDialogState(() {
-                                              _addRow();
-                                            });
-                                          },
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                Icons.add,
-                                                color: primaryColor,
+                                      Container(
+                                        width: 250,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        child: CustomTooltip(
+                                          message: 'Select period',
+                                          child: FormField<int>(
+                                            autovalidateMode:
+                                                AutovalidateMode
+                                                    .onUserInteraction,
+                                            validator: (value) {
+                                              if (value == null) {
+                                                return 'Please select a period date';
+                                              }
+                                              return null;
+                                            },
+                                            builder: (
+                                              FormFieldState<int> state,
+                                            ) {
+                                              return Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  DropdownButton<int>(
+                                                    dropdownColor: mainBgColor,
+                                                    value: selectedPeriod,
+                                                    isExpanded: true,
+                                                    underline: Container(),
+                                                    icon: Icon(
+                                                      Icons.arrow_drop_down,
+                                                    ),
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                    hint: Text(
+                                                      selectedPeriodText ??
+                                                          'Select a period',
+                                                    ),
+                                                    onChanged: (int? newValue) {
+                                                      if (newValue != null) {
+                                                        final selected =
+                                                            filteredListPeriod
+                                                                .firstWhere(
+                                                                  (period) =>
+                                                                      period['id'] ==
+                                                                      newValue,
+                                                                  orElse:
+                                                                      () => {},
+                                                                );
+
+                                                        setDialogState(() {
+                                                          selectedPeriod =
+                                                              newValue;
+                                                          selectedPeriodText =
+                                                              "${selected['startDate']} - ${selected['endDate']}";
+                                                        });
+
+                                                        state.didChange(
+                                                          newValue,
+                                                        ); // Notify FormField of change
+                                                      }
+                                                    },
+                                                    items:
+                                                        filteredListPeriod.map<
+                                                          DropdownMenuItem<int>
+                                                        >((period) {
+                                                          return DropdownMenuItem<
+                                                            int
+                                                          >(
+                                                            value: period['id'],
+                                                            child: Text(
+                                                              "${period['startDate']} - ${period['endDate']}",
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                  ),
+                                                  if (state.hasError)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            top: 5,
+                                                          ),
+                                                      child: Text(
+                                                        state.errorText!,
+                                                        style: TextStyle(
+                                                          color: primaryColor,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+
+                              SizedBox(height: 20),
+                              TabBar(
+                                labelColor: primaryLightColor,
+                                unselectedLabelColor: Colors.black,
+                                indicatorColor: primaryColor,
+                                labelStyle: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                unselectedLabelStyle: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                tabs: [
+                                  Tab(
+                                    text: "Strategic Contributions",
+                                  ), // Tab Name 1
+                                  Tab(
+                                    text:
+                                        "Readiness Rating - ${officename ?? officeDisplay}",
+                                  ), // Tab Name 2
+                                  Tab(
+                                    text: "PGS Deliverables Status",
+                                  ), // Tab Name 3
+                                  // Tab(
+                                  //   text: "PGS Deliverables History",
+                                  // ), // Tab Name 4
+                                ],
+                              ),
+                              //First Tab Strategic Contributions
+                              Expanded(
+                                child: TabBarView(
+                                  children: [
+                                    SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          SizedBox(height: 20),
+                                          Table(
+                                            border: TableBorder.all(
+                                              color: const Color.fromARGB(
+                                                255,
+                                                49,
+                                                46,
+                                                46,
                                               ),
-                                              Text(
-                                                'Add Row',
-                                                style: TextStyle(
-                                                  color: primaryColor,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
+                                              width: 1,
+                                            ),
+                                            columnWidths: const {
+                                              0: FlexColumnWidth(1.5),
+                                              1: FlexColumnWidth(0.7),
+                                              2: FlexColumnWidth(0.7),
+                                              3: FlexColumnWidth(2),
+                                              4: FlexColumnWidth(1),
+                                              // 5: FlexColumnWidth(1),
+                                              5: FlexColumnWidth(0.7),
+                                            },
+
+                                            children: [
+                                              _buildMainHeaderStrategic(
+                                                officename:
+                                                    officename ?? officeDisplay,
+                                              ),
+
+                                              _buildTableSubHeaderStrategic(),
+
+                                              ...rows.map(
+                                                (rowId) =>
+                                                    _buildTableRowStrategic(
+                                                      rowId,
+                                                      '',
+                                                      '',
+                                                      setState,
+                                                      setDialogState,
+                                                      orderLevel: orderLevel,
+                                                      id: id,
+                                                      showErrors:
+                                                          rowErrors[rowId] ??
+                                                          false,
+                                                    ),
                                               ),
                                             ],
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  //End First Tab
-
-                                  //Second Tab  Readiness Rating-Cancer Care
-                                  Scaffold(
-                                    backgroundColor: mainBgColor,
-                                    appBar: AppBar(
-                                      automaticallyImplyLeading: false,
-                                      title: Row(
-                                        children: [
-                                          Text(
-                                            'READINESS RATING - ${officename ?? officeDisplay}',
-                                            style: TextStyle(
-                                              fontSize: 30,
-                                              fontWeight: FontWeight.normal,
-                                              color: Colors.white,
+                                          gap,
+                                          TextButton(
+                                            onPressed: () {
+                                              setDialogState(() {
+                                                _addRow();
+                                              });
+                                            },
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.add,
+                                                  color: primaryColor,
+                                                ),
+                                                Text(
+                                                  'Add Row',
+                                                  style: TextStyle(
+                                                    color: primaryColor,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
                                       ),
-                                      toolbarHeight: 60,
-                                      backgroundColor: primaryLightColor,
                                     ),
-                                    body: SingleChildScrollView(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
+                                    //End First Tab
+
+                                    //Second Tab  Readiness Rating-Cancer Care
+                                    Scaffold(
+                                      backgroundColor: mainBgColor,
+                                      appBar: AppBar(
+                                        automaticallyImplyLeading: false,
+                                        title: Row(
                                           children: [
-                                            Container(
-                                              alignment: Alignment(1.0, 0.0),
-                                              padding: EdgeInsets.only(
-                                                right: 50.0,
+                                            Text(
+                                              'READINESS RATING - ${officename ?? officeDisplay}',
+                                              style: TextStyle(
+                                                fontSize: 30,
+                                                fontWeight: FontWeight.normal,
+                                                color: Colors.white,
                                               ),
-                                              child: Text(
-                                                'SCORE',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(height: 8),
-                                            // Competence Score Dropdown
-                                            buildScoreRow(
-                                              'COMPETENCE TO DELIVER',
-                                              [
-                                                'Teams lack adequate skills and training to deliver performance commitments',
-                                                'Teams are skilled but lack training to deliver performance commitments ',
-                                                'Teams are highly skilled and trained to deliver performance commitments',
-                                              ],
-
-                                              competenceScore,
-                                            ),
-
-                                            // Resource Availability Dropdown
-                                            buildScoreRow(
-                                              'RESOURCE AVAILABILITY',
-                                              [
-                                                'Insufficient; external resources difficult to source',
-                                                'Sufficient resources but not available; OR Insufficient but external resources can be tapped',
-                                                'Sufficient and available staff and budget',
-                                              ],
-
-                                              resourceScore,
-                                            ),
-
-                                            // Confidence to Deliver Dropdown
-                                            buildScoreRow(
-                                              'CONFIDENCE TO DELIVER',
-                                              [
-                                                'Low confidence because of high degree of organizational change required',
-                                                'Moderate confidence',
-                                                'High confidence despite organizational change required',
-                                              ],
-
-                                              confidenceScore,
-                                            ),
-
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
-                                              children: [
-                                                ValueListenableBuilder<double>(
-                                                  valueListenable:
-                                                      competenceScore,
-                                                  builder: (context, comp, __) {
-                                                    return ValueListenableBuilder<
-                                                      double
-                                                    >(
-                                                      valueListenable:
-                                                          resourceScore,
-                                                      builder: (
-                                                        context,
-                                                        res,
-                                                        __,
-                                                      ) {
-                                                        return ValueListenableBuilder<
-                                                          double
-                                                        >(
-                                                          valueListenable:
-                                                              confidenceScore,
-                                                          builder: (
-                                                            context,
-                                                            conf,
-                                                            __,
-                                                          ) {
-                                                            final totalScore =
-                                                                comp +
-                                                                res +
-                                                                conf;
-                                                            return Padding(
-                                                              padding:
-                                                                  EdgeInsets.only(
-                                                                    right: 60.0,
-                                                                  ),
-                                                              child: Text(
-                                                                ('TOTAL SCORE:${totalScore.toStringAsFixed(1)}'),
-
-                                                                style: TextStyle(
-                                                                  fontSize: 20,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color:
-                                                                      Colors
-                                                                          .black,
-                                                                ),
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .right,
-                                                              ),
-                                                            );
-                                                          },
-                                                        );
-                                                      },
-                                                    );
-                                                  },
-                                                ),
-                                              ],
                                             ),
                                           ],
+                                        ),
+                                        toolbarHeight: 60,
+                                        backgroundColor: primaryLightColor,
+                                      ),
+                                      body: SingleChildScrollView(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              Container(
+                                                alignment: Alignment(1.0, 0.0),
+                                                padding: EdgeInsets.only(
+                                                  right: 50.0,
+                                                ),
+                                                child: Text(
+                                                  'SCORE',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(height: 8),
+                                              // Competence Score Dropdown
+                                              buildScoreRow(
+                                                'COMPETENCE TO DELIVER',
+                                                [
+                                                  'Teams lack adequate skills and training to deliver performance commitments',
+                                                  'Teams are skilled but lack training to deliver performance commitments ',
+                                                  'Teams are highly skilled and trained to deliver performance commitments',
+                                                ],
+
+                                                competenceScore,
+                                              ),
+
+                                              // Resource Availability Dropdown
+                                              buildScoreRow(
+                                                'RESOURCE AVAILABILITY',
+                                                [
+                                                  'Insufficient; external resources difficult to source',
+                                                  'Sufficient resources but not available; OR Insufficient but external resources can be tapped',
+                                                  'Sufficient and available staff and budget',
+                                                ],
+
+                                                resourceScore,
+                                              ),
+
+                                              // Confidence to Deliver Dropdown
+                                              buildScoreRow(
+                                                'CONFIDENCE TO DELIVER',
+                                                [
+                                                  'Low confidence because of high degree of organizational change required',
+                                                  'Moderate confidence',
+                                                  'High confidence despite organizational change required',
+                                                ],
+
+                                                confidenceScore,
+                                              ),
+
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
+                                                children: [
+                                                  ValueListenableBuilder<
+                                                    double
+                                                  >(
+                                                    valueListenable:
+                                                        competenceScore,
+                                                    builder: (
+                                                      context,
+                                                      comp,
+                                                      __,
+                                                    ) {
+                                                      return ValueListenableBuilder<
+                                                        double
+                                                      >(
+                                                        valueListenable:
+                                                            resourceScore,
+                                                        builder: (
+                                                          context,
+                                                          res,
+                                                          __,
+                                                        ) {
+                                                          return ValueListenableBuilder<
+                                                            double
+                                                          >(
+                                                            valueListenable:
+                                                                confidenceScore,
+                                                            builder: (
+                                                              context,
+                                                              conf,
+                                                              __,
+                                                            ) {
+                                                              final totalScore =
+                                                                  comp +
+                                                                  res +
+                                                                  conf;
+                                                              return Padding(
+                                                                padding:
+                                                                    EdgeInsets.only(
+                                                                      right:
+                                                                          60.0,
+                                                                    ),
+                                                                child: Text(
+                                                                  ('TOTAL SCORE:${totalScore.toStringAsFixed(1)}'),
+
+                                                                  style: TextStyle(
+                                                                    fontSize:
+                                                                        20,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color:
+                                                                        Colors
+                                                                            .black,
+                                                                  ),
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .right,
+                                                                ),
+                                                              );
+                                                            },
+                                                          );
+                                                        },
+                                                      );
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
                                         ),
                                       ),
                                     ),
-                                  ),
 
-                                  //End Second Tab
+                                    //End Second Tab
 
-                                  // Third Tab: PGS Deliverable Status
-                                  SingleChildScrollView(
-                                    child: Column(
-                                      children: [
-                                        SizedBox(height: 20),
-                                        Table(
-                                          border: TableBorder.all(
-                                            color: const Color.fromARGB(
-                                              255,
-                                              49,
-                                              46,
-                                              46,
+                                    // Third Tab: PGS Deliverable Status
+                                    SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          SizedBox(height: 20),
+                                          Table(
+                                            border: TableBorder.all(
+                                              color: const Color.fromARGB(
+                                                255,
+                                                49,
+                                                46,
+                                                46,
+                                              ),
+                                              width: 1,
                                             ),
-                                            width: 1,
+                                            columnWidths: const {
+                                              0: FlexColumnWidth(1),
+                                              1: FlexColumnWidth(0.4),
+                                              2: FlexColumnWidth(0.5),
+                                              3: FlexColumnWidth(1.90),
+                                              4: FlexColumnWidth(0.7),
+                                              5: FlexColumnWidth(0.6),
+                                              6: FlexColumnWidth(1.30),
+                                              7: FlexColumnWidth(0.5),
+                                            },
+                                            children: [
+                                              _PgsDeliverableHeader(
+                                                officename:
+                                                    officename ?? officeDisplay,
+                                              ),
+                                              _PgsBuildTableSubheader(),
+                                              ...rows.map(
+                                                (rowId) =>
+                                                    _buildTableRowStrategicPGSDeliverableStatus(
+                                                      rowId,
+                                                      '',
+                                                      '',
+                                                      setState,
+                                                      setDialogState,
+                                                      showErrors:
+                                                          rowErrors[rowId] ??
+                                                          false,
+                                                    ),
+                                              ),
+                                            ],
                                           ),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(1),
-                                            1: FlexColumnWidth(0.4),
-                                            2: FlexColumnWidth(0.5),
-                                            3: FlexColumnWidth(1.90),
-                                            4: FlexColumnWidth(0.7),
-                                            5: FlexColumnWidth(0.6),
-                                            6: FlexColumnWidth(1.30),
-                                            7: FlexColumnWidth(0.5),
-                                          },
-                                          children: [
-                                            _PgsDeliverableHeader(
-                                              officename:
-                                                  officename ?? officeDisplay,
-                                            ),
-                                            _PgsBuildTableSubheader(),
-                                            ...rows.map(
-                                              (rowId) =>
-                                                  _buildTableRowStrategicPGSDeliverableStatus(
-                                                    rowId,
-                                                    '',
-                                                    '',
-                                                    setState,
-                                                    setDialogState,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -2620,8 +2689,38 @@ class PerformanceGovernanceSystemPageState
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    onPressed:
-                        () => handleSubmitOrConfirm(context, id, orderLevel),
+
+                    onPressed: () {
+                      setDialogState(() {
+                        rowErrors.clear();
+
+                        for (final index in rows) {
+                          final isDirectSelected =
+                              selectedDirect[index] ?? false;
+                          final isIndirectSelected =
+                              selectedIndirect[index] ?? false;
+
+                          rowErrors[index] =
+                              !(isDirectSelected || isIndirectSelected);
+                        }
+                      });
+
+                      // If no errors, proceed
+                      if (_formKey.currentState!.validate()) {
+                        handleSubmitOrConfirm(context, id, orderLevel);
+                      }
+
+                      if (deliverablesControllers.length != 5) {
+                        MotionToast.warning(
+                          title: const Text("Insufficient Deliverables"),
+                          description: const Text(
+                            "Please provide at least 5 deliverables.",
+                          ),
+                          toastAlignment: Alignment.center,
+                        ).show(context);
+                        return;
+                      }
+                    },
                     child: Text(
                       'Submit',
                       style: TextStyle(color: Colors.white),
@@ -2692,15 +2791,6 @@ class PerformanceGovernanceSystemPageState
               ? "Please complete all required fields."
               : "Please complete all required fields",
         ),
-        toastAlignment: Alignment.center,
-      ).show(context);
-      return;
-    }
-
-    if (deliverablesControllers.length != 5) {
-      MotionToast.warning(
-        title: const Text("Insufficient Deliverables"),
-        description: const Text("Please provide at least 5 deliverables."),
         toastAlignment: Alignment.center,
       ).show(context);
       return;
@@ -3016,12 +3106,19 @@ class PerformanceGovernanceSystemPageState
           CustomTooltip(
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
-            child: TextField(
+            child: TextFormField(
               controller: kraDescriptionController[index],
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
                 hintText: "Enter your description here...",
                 border: OutlineInputBorder(),
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Please enter your KRA description";
+                }
+                return null;
+              },
               maxLines: 3,
             ),
           ),
@@ -3064,8 +3161,9 @@ class PerformanceGovernanceSystemPageState
               maxLines: 4,
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
-              child: TextField(
+              child: TextFormField(
                 controller: percentageDeliverables,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.number,
                 style: TextStyle(
@@ -3073,7 +3171,12 @@ class PerformanceGovernanceSystemPageState
                   fontSize: 20,
                   fontStyle: FontStyle.normal,
                 ),
-
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Please enter percentage";
+                  }
+                  return null;
+                },
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(2),
@@ -3084,6 +3187,7 @@ class PerformanceGovernanceSystemPageState
                   labelText: percentDeliverables,
                   hintText: '0',
                   suffixText: '%',
+                  border: OutlineInputBorder(),
                   suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),
                   hintStyle: TextStyle(color: Colors.white),
                   enabledBorder: OutlineInputBorder(
@@ -3133,6 +3237,7 @@ class PerformanceGovernanceSystemPageState
     Function setDialogState, {
     int orderLevel = 1,
     String? id,
+    required bool showErrors,
 
     // int? id,
   }) {
@@ -3140,6 +3245,12 @@ class PerformanceGovernanceSystemPageState
     selectedDirect.putIfAbsent(index, () => false);
     selectedIndirect.putIfAbsent(index, () => false);
     selectedByWhen.putIfAbsent(index, () => '');
+    final isDirectSelected = selectedDirect[index] ?? false;
+    final isIndirectSelected = selectedIndirect[index] ?? false;
+    final errorText =
+        (!isDirectSelected && !isIndirectSelected && showErrors)
+            ? 'Please select either Direct or Indirect.'
+            : null;
 
     // Define alternating row colors
     Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
@@ -3154,6 +3265,7 @@ class PerformanceGovernanceSystemPageState
           selectedIndirect,
           setDialogState,
           isDirect: true,
+          errorText: errorText,
         ),
         _buildCheckboxCell(
           index,
@@ -3161,6 +3273,7 @@ class PerformanceGovernanceSystemPageState
           selectedDirect,
           setDialogState,
           isDirect: false,
+          errorText: errorText,
         ),
         _buildExpandableTextAreaCell(index),
         _buildDatePickerCell(index, setDialogState),
@@ -3175,52 +3288,61 @@ class PerformanceGovernanceSystemPageState
     debugPrint('Saving status for index');
   }
 
-  // // Check Box
-
   Widget _buildCheckboxCell(
     int index,
     Map<int, bool> selectedValues,
     Map<int, bool> oppositeValues,
     Function setDialogState, {
     required bool isDirect,
+    required String? errorText,
   }) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: CustomTooltip(
-        maxLines: 4,
-        message:
-            isDirect
-                ? 'Direct: Indicates if the deliverable is directly managed by the office.'
-                : 'Indirect: Indicates if the deliverable is indirectly supported by the office.',
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(4),
-            border: Border.all(
-              color: const Color.fromARGB(255, 255, 255, 255),
-              width: 0.5,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Tooltip(
+            message:
+                isDirect
+                    ? 'Direct: Indicates if the deliverable is directly managed by the office.'
+                    : 'Indirect: Indicates if the deliverable is indirectly supported by the office.',
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.white, width: 0.5),
+                color: Colors.white,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 4.0,
+                ),
+                child: Center(
+                  child: Checkbox(
+                    value: selectedValues[index] ?? false,
+                    onChanged: (bool? newValue) {
+                      if (newValue == null) return;
+                      setDialogState(() {
+                        selectedValues[index] = newValue;
+                        if (newValue) oppositeValues[index] = false;
+                      });
+                    },
+                    activeColor: Colors.white,
+                    checkColor: Colors.black,
+                  ),
+                ),
+              ),
             ),
-            color: const Color.fromARGB(255, 255, 255, 255),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-            child: Checkbox(
-              value: selectedValues[index] ?? false,
-              onChanged: (bool? newValue) {
-                if (newValue == null) return;
-
-                setDialogState(() {
-                  selectedValues[index] = newValue;
-
-                  if (newValue) {
-                    oppositeValues[index] = false;
-                  }
-                });
-              },
-              activeColor: Colors.white,
-              checkColor: Colors.black,
+          if (errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                errorText,
+                style: const TextStyle(color: primaryColor, fontSize: 12),
+              ),
             ),
-          ),
-        ),
+        ],
       ),
     );
   }
@@ -3441,8 +3563,9 @@ class PerformanceGovernanceSystemPageState
     String direct,
     String indirect,
     Function setState,
-    Function setDialogState,
-  ) {
+    Function setDialogState, {
+    required bool showErrors,
+  }) {
     deliverablesControllers.putIfAbsent(index, () => TextEditingController());
     selectedDirect.putIfAbsent(index, () => false);
     selectedIndirect.putIfAbsent(index, () => false);
@@ -3461,6 +3584,7 @@ class PerformanceGovernanceSystemPageState
           selectedIndirect,
           setDialogState,
           isDirect: true,
+          errorText: '',
         ),
         _buildCheckboxCell(
           index,
@@ -3468,6 +3592,7 @@ class PerformanceGovernanceSystemPageState
           selectedDirect,
           setDialogState,
           isDirect: false,
+          errorText: '',
         ),
         _buildExpandableTextAreaCellPGSDeliverable(index),
         _buildDatePickerCellPgsDeliverableStatus(index, setDialogState),
@@ -3911,8 +4036,9 @@ class PerformanceGovernanceSystemPageState
             child: Tooltip(
               message:
                   'Specify the tangible results or outcomes tied to this responsibility.',
-              child: TextField(
+              child: TextFormField(
                 controller: deliverablesControllers[index],
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
                 decoration: const InputDecoration(
@@ -3922,6 +4048,13 @@ class PerformanceGovernanceSystemPageState
                     borderSide: BorderSide(color: primaryColor),
                   ),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Please enter your deliverable";
+                  }
+
+                  return null;
+                },
                 onChanged: (value) {
                   setState(() {});
                 },
