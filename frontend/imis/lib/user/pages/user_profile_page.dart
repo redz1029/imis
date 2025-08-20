@@ -9,6 +9,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/string_extension.dart';
+import 'package:imis/validator/validator.dart';
 
 import '../../utils/http_util.dart';
 
@@ -701,12 +702,7 @@ class UserProfileState extends State<UserProfilePage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please fill out this field';
-                      }
-                      return null;
-                    },
+                    validator: FormValidator.validateEmail,
                   ),
                 ),
                 if (id == null)
