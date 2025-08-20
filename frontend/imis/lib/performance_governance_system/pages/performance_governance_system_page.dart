@@ -34,6 +34,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/http_util.dart';
+import 'pgs_reports.dart';
 
 class PerformanceGovernanceSystemPage extends StatefulWidget {
   const PerformanceGovernanceSystemPage({super.key});
@@ -1766,111 +1767,34 @@ class PerformanceGovernanceSystemPageState
                                                     },
                                                   ),
 
+                                                  // IconButton(
+                                                  //   icon: const Icon(
+                                                  //     Icons.print,
+                                                  //   ),
+                                                  //   onPressed: () async {},
+                                                  // ),
                                                   IconButton(
                                                     icon: const Icon(
                                                       Icons.print,
                                                     ),
                                                     onPressed: () async {
-                                                      final previewId =
+                                                      final pgsId =
                                                           pgsgovernancesystem['id']
                                                               .toString();
-                                                      if (previewId.isEmpty) {
-                                                        debugPrint(
-                                                          "Preview ID is empty or null.",
-                                                        );
-                                                        return;
-                                                      }
-
-                                                      final pgsId =
-                                                          int.tryParse(
-                                                            previewId,
-                                                          );
-                                                      if (pgsId == null) {
-                                                        debugPrint(
-                                                          "Invalid preview ID: $previewId",
-                                                        );
-                                                        return;
-                                                      }
-
-                                                      final api = ApiEndpoint();
-                                                      final pdfUrl =
-                                                          '${api.generatePdf}/$pgsId';
-
-                                                      debugPrint(
-                                                        "Opening PDF: $pdfUrl",
-                                                      );
-
-                                                      try {
-                                                        if (kIsWeb) {
-                                                          html.window.open(
-                                                            pdfUrl,
-                                                            "_blank",
-                                                          );
-                                                        } else {
-                                                          final url = Uri.parse(
-                                                            pdfUrl,
-                                                          );
-                                                          final response =
-                                                              await http.get(
-                                                                url,
-                                                              );
-
-                                                          if (response
-                                                                  .statusCode ==
-                                                              200) {
-                                                            final directory =
-                                                                await getApplicationDocumentsDirectory();
-                                                            final filePath =
-                                                                "${directory.path}/PGS_Report_$pgsId.pdf";
-                                                            final file = File(
-                                                              filePath,
-                                                            );
-
-                                                            await file
-                                                                .writeAsBytes(
-                                                                  response
-                                                                      .bodyBytes,
-                                                                );
-                                                            await OpenFile.open(
-                                                              file.path,
-                                                            );
-                                                          } else {
-                                                            debugPrint(
-                                                              "Failed to download PDF. Status: ${response.statusCode}",
-                                                            );
-                                                            if (context
-                                                                .mounted) {
-                                                              ScaffoldMessenger.of(
-                                                                context,
-                                                              ).showSnackBar(
-                                                                const SnackBar(
-                                                                  content: Text(
-                                                                    'Failed to download PDF',
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (context) =>
+                                                                  SampleReport(
+                                                                    isPdf: true,
+                                                                    pgsId:
+                                                                        pgsId,
                                                                   ),
-                                                                ),
-                                                              );
-                                                            }
-                                                          }
-                                                        }
-                                                      } catch (e) {
-                                                        debugPrint(
-                                                          "Error opening PDF: $e",
-                                                        );
-                                                        if (context.mounted) {
-                                                          ScaffoldMessenger.of(
-                                                            context,
-                                                          ).showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text(
-                                                                'Error opening PDF file',
-                                                              ),
-                                                            ),
-                                                          );
-                                                        }
-                                                      }
+                                                        ),
+                                                      );
                                                     },
                                                   ),
-
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.delete,
@@ -3279,7 +3203,7 @@ class PerformanceGovernanceSystemPageState
         _buildDatePickerCell(index, setDialogState),
         (id == null || orderLevel < 2)
             ? _buildRemoveButton(index, setDialogState)
-            : _buildApprovedDisapproved(index, setDialogState),
+            : _buildApprovedDisapprovedSignatory(index, setDialogState),
       ],
     );
   }
@@ -3895,15 +3819,6 @@ class PerformanceGovernanceSystemPageState
 
   // Removed Rows
   Widget _buildRemoveButton(int index, Function setDialogState) {
-    bool showDisapproveControls = false;
-    if (deliverablesList.isNotEmpty) {
-      showDisapproveControls = deliverablesList.any(
-        (deliverable) =>
-            deliverable.id == deliverableIds[index] &&
-            deliverable.isDisapproved == true,
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -3921,22 +3836,331 @@ class PerformanceGovernanceSystemPageState
             });
           },
         ),
-        if (showDisapproveControls || selectedDisapproved[index] == true) ...[
-          gap1,
-          const Divider(thickness: 1, color: Colors.grey),
-          gap1,
-          StatefulBuilder(
-            builder: (context, setDialogState) {
-              return _buildApprovedDisapproved(index, setDialogState);
-            },
-          ),
-          gap1,
-        ],
+      ],
+    );
+  }
+
+  // Widget _buildApprovedDisapproved(int index, Function setDialogState) {
+  //   bool? isDisapproved = selectedDisapproved[index];
+  //   reasonController[index] ??= TextEditingController();
+
+  //   return Column(
+  //     mainAxisSize: MainAxisSize.min,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //         children: [
+  //           Column(
+  //             children: [
+  //               IconButton(
+  //                 tooltip: 'Click this to approve the deliverable',
+  //                 icon: Icon(
+  //                   Icons.thumb_up,
+  //                   color:
+  //                       isDisapproved == false
+  //                           ? Colors.green
+  //                           : primaryTextColor,
+  //                 ),
+  //                 onPressed: () {
+  //                   setDialogState(() {
+  //                     selectedDisapproved[index] = false;
+  //                     reasonController[index]?.clear();
+  //                   });
+  //                 },
+  //               ),
+  //               const Text("Approve", style: TextStyle(fontSize: 12)),
+  //             ],
+  //           ),
+  //           Column(
+  //             children: [
+  //               IconButton(
+  //                 tooltip: 'Click this to disapprove the deliverable',
+
+  //                 icon: Icon(
+  //                   Icons.thumb_down,
+  //                   color:
+  //                       isDisapproved == true ? Colors.red : primaryTextColor,
+  //                 ),
+  //                 onPressed: () {
+  //                   setDialogState(() {
+  //                     selectedDisapproved[index] = true;
+  //                   });
+  //                 },
+  //               ),
+  //               const Text("Disapprove", style: TextStyle(fontSize: 12)),
+  //             ],
+  //           ),
+  //         ],
+  //       ),
+
+  //       if (isDisapproved == true) ...[
+  //         const SizedBox(height: 16),
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 20),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               const Text("Reason:"),
+  //               CustomTooltip(
+  //                 message: 'State your reason here',
+  //                 child: TextField(
+  //                   controller: reasonController[index],
+  //                   decoration: const InputDecoration(
+  //                     border: OutlineInputBorder(),
+  //                     focusedBorder: OutlineInputBorder(
+  //                       borderSide: BorderSide(color: primaryColor),
+  //                     ),
+  //                   ),
+  //                   maxLines: 3,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ],
+  //   );
+  // }
+
+  // Widget _buildApprovedDisapproved(int index, Function setDialogState) {
+  //   bool? isDisapproved = selectedDisapproved[index];
+  //   reasonController[index] ??= TextEditingController();
+
+  //   return Column(
+  //     mainAxisSize: MainAxisSize.min,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //         children: [
+  //           Column(children: [
+
+  //             ],
+  //           ),
+
+  //           Container(
+  //             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+  //             decoration: BoxDecoration(
+  //               color: const Color.fromARGB(255, 204, 65, 55),
+  //               borderRadius: BorderRadius.circular(4), // circular 4
+  //             ),
+  //             child: Row(
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: const [
+  //                 Icon(
+  //                   Icons.warning_rounded, // warning circle with "!"
+  //                   color: Colors.white,
+  //                   size: 18,
+  //                 ),
+  //                 SizedBox(width: 6),
+  //                 Text(
+  //                   "Disapproved",
+  //                   style: TextStyle(
+  //                     fontSize: 12,
+  //                     color: Colors.white,
+  //                     fontWeight: FontWeight.w500,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+
+  //       if (isDisapproved == true) ...[
+  //         const SizedBox(height: 16),
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 20),
+  //           child: Container(
+  //             decoration: BoxDecoration(
+  //               color: Colors.red.withOpacity(0.05), // light background
+  //               borderRadius: BorderRadius.circular(8),
+  //               border: Border.all(
+  //                 color: const Color.fromARGB(255, 204, 65, 55),
+  //                 width: 1,
+  //               ),
+  //             ),
+  //             padding: const EdgeInsets.all(12),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Row(
+  //                   children: const [
+  //                     Icon(
+  //                       Icons.warning_amber_rounded,
+  //                       color: Color.fromARGB(255, 204, 65, 55),
+  //                       size: 20,
+  //                     ),
+  //                     SizedBox(width: 6),
+  //                     Text(
+  //                       "Reason for Disapproval",
+  //                       style: TextStyle(
+  //                         fontSize: 14,
+  //                         color: Color.fromARGB(255, 204, 65, 55),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(height: 8),
+  //                 Text(
+  //                   reasonController[index]?.text ?? 'No reason provided',
+  //                   style: const TextStyle(fontSize: 14, color: Colors.black87),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ],
+  //   );
+  // }
+
+  Widget _markAsRevised(int index, Function setDialogState) {
+    // bool? isDisapproved = selectedDisapproved[index];
+    // reasonController[index] ??= TextEditingController();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ✅ Left-aligned Disapproved label
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 52, 146, 57),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.check_circle_outline, // warning sign
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "Mark as Revised",
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ],
     );
   }
 
   Widget _buildApprovedDisapproved(int index, Function setDialogState) {
+    bool? isDisapproved = selectedDisapproved[index];
+    reasonController[index] ??= TextEditingController();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ✅ Left-aligned Disapproved label
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 204, 65, 55),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.warning_rounded, // warning sign
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "Disapproved",
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'This content has been disapproved and needs revision',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ],
+        ),
+        gap,
+        if (isDisapproved == true) ...[
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color.fromARGB(255, 197, 106, 100),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Color.fromARGB(255, 204, 65, 55),
+                        size: 20,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "Reason for Disapproval",
+                        style: TextStyle(
+                          fontSize: 14,
+
+                          color: Color.fromARGB(255, 204, 65, 55),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    reasonController[index]?.text ?? 'No reason provided',
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildApprovedDisapprovedSignatory(
+    int index,
+    Function setDialogState,
+  ) {
     bool? isDisapproved = selectedDisapproved[index];
     reasonController[index] ??= TextEditingController();
 
@@ -4025,12 +4249,27 @@ class PerformanceGovernanceSystemPageState
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
     }
-
+    bool showDisapproveControls = false;
+    if (deliverablesList.isNotEmpty) {
+      showDisapproveControls = deliverablesList.any(
+        (deliverable) =>
+            deliverable.id == deliverableIds[index] &&
+            deliverable.isDisapproved == true,
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (showDisapproveControls || selectedDisapproved[index] == true) ...[
+            StatefulBuilder(
+              builder: (context, setDialogState) {
+                return _buildApprovedDisapproved(index, setDialogState);
+              },
+            ),
+            gap1,
+          ],
           ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 50.0),
             child: Tooltip(
@@ -4061,6 +4300,15 @@ class PerformanceGovernanceSystemPageState
               ),
             ),
           ),
+          gap,
+          if (showDisapproveControls || selectedDisapproved[index] == true) ...[
+            StatefulBuilder(
+              builder: (context, setDialogState) {
+                return _markAsRevised(index, setDialogState);
+              },
+            ),
+            gap1,
+          ],
         ],
       ),
     );
