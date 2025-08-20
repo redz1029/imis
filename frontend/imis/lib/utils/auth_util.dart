@@ -56,11 +56,7 @@ class AuthUtil {
     sharedPref ??= await SharedPreferences.getInstance();
 
     String? userJson = sharedPref.getString(userKey);
-    if (userJson != null) {
-      return UserRegistration.fromJson(jsonDecode(userJson));
-    }
-
-    return null;
+    return UserRegistration.fromJson(jsonDecode(userJson!));
   }
 
   static Future<String?> getAccessToken() async {
