@@ -35,6 +35,12 @@ dependencies:
   collection: ^1.18.0
   dotted_border: ^2.0.0
   async: ^2.11.0
+  syncfusion_flutter_pdfviewer: ^30.1.37
+  webview_flutter_wkwebview: ^3.11.0
+  webview_windows: ^0.4.0
+  responsive_sizer: ^3.3.1
+  webview_flutter: ^4.13.0
+ 
 
 
  
