@@ -193,7 +193,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
             description: const Text("Data saved successfully!"),
 
             // ignore: deprecated_member_use
-            position: MotionToastPosition.top,
+            toastAlignment: Alignment.topCenter,
           ).show(context);
         }
         await fetchScoreHistory();
