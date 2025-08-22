@@ -24,9 +24,25 @@ var allowedOrigins = "_allowedOrigins";
 
 builder.Services.AddCors(opts => opts.AddPolicy(allowedOrigins, policy =>
 {
-    policy.AllowAnyOrigin()
-        .AllowAnyHeader()
-        .AllowAnyMethod();
+    if (builder.Environment.IsDevelopment())
+    {
+        // Allow all origins in development
+        policy.AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+        return;
+    }
+    else
+    {
+        // In production, restrict to specific origins
+        policy.WithOrigins(
+                "http://192.168.0.89:8085",  // LAN Origin
+                "https://demo.imis.crmc.ph" // Production domain
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    }
 }));
 
 builder.Services.AddCarter();

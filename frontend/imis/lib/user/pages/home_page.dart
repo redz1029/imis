@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/auditor/models/auditor.dart';
@@ -10,9 +9,9 @@ import 'package:imis/performance_governance_system/models/pgs_deliverables.dart'
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
+import 'package:imis/user/services/home_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/http_util.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../performance_governance_system/enum/pgs_status.dart';
 
@@ -54,193 +53,13 @@ class HomePageState extends State<HomePage> {
   final int maxDeliverables = 100;
   int _currentImageIndex = 0;
   late Timer imageTimer;
-
   final List<String> rotatingImages = ['assets/pic1.jpg', 'assets/pic2.jpg'];
-  final dio = Dio();
-
-  //fetch Users
-  Future<void> fetchUser() async {
-    var url = ApiEndpoint().users;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<User> data =
-            (response.data as List)
-                .map(
-                  (userJson) => User.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            userList = data;
-            filteredListUser = List.from(userList);
-            totalUsers = userList.length;
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } catch (e) {
-      debugPrint("Error fetching user: $e");
-    }
-  }
-
-  Future<void> fetchDeliverables() async {
-    var url = ApiEndpoint().deliverables;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<PgsDeliverables> data =
-            (response.data as List).map((userJson) {
-              debugPrint("Deliverable item: $userJson");
-              return PgsDeliverables.fromJson(userJson as Map<String, dynamic>);
-            }).toList();
-
-        if (mounted) {
-          setState(() {
-            deliverablesList = data;
-            filteredDeliverables = List.from(deliverablesList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data}");
-      }
-    } catch (e) {
-      debugPrint("Error fetching deliverables: $e");
-    }
-  }
-
-  //fetch office
-  Future<void> fecthOffice() async {
-    var url = ApiEndpoint().office;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map(
-                  (userJson) =>
-                      Office.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            officeList = data;
-            filteredListOffice = List.from(officeList);
-            totalOffices = officeList.length;
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } catch (e) {
-      debugPrint("Error fetching user: $e");
-    }
-  }
-
-  //fetch KRA
-  Future<void> fetchKra() async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<KeyResultArea> data =
-            (response.data as List)
-                .map(
-                  (userJson) =>
-                      KeyResultArea.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            kraList = data;
-            filteredKra = List.from(kraList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } catch (e) {
-      debugPrint("Error fetching user: $e");
-    }
-  }
-
-  //team
-  Future<void> fetchTeam() async {
-    var url = ApiEndpoint().team;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Team> data =
-            (response.data as List)
-                .map(
-                  (userJson) => Team.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            teamList = data;
-            filteredListTeam = List.from(teamList);
-            totalTeam = teamList.length;
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } catch (e) {
-      debugPrint("Error fetching user: $e");
-    }
-  }
-
-  //Auditors
-  Future<void> fetchAuditors() async {
-    var url = ApiEndpoint().auditor;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Auditor> data =
-            (response.data as List)
-                .map(
-                  (userJson) =>
-                      Auditor.fromJson(userJson as Map<String, dynamic>),
-                )
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            auditorList = data;
-            filteredListAuditor = List.from(auditorList);
-            totalAuditor = auditorList.length;
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } catch (e) {
-      debugPrint("Error fetching user: $e");
-    }
-  }
 
   @override
   void initState() {
     super.initState();
     _loadUserName();
-    fetchUser();
-    fecthOffice();
-    fetchTeam();
-    fetchAuditors();
-    fetchDeliverables();
-    fetchKra();
+    _fetchAllData();
     imageTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
       if (mounted) {
         setState(() {
@@ -254,6 +73,48 @@ class HomePageState extends State<HomePage> {
   void dispose() {
     imageTimer.cancel();
     super.dispose();
+  }
+
+  Future<void> _fetchAllData() async {
+    final service = HomeService();
+    try {
+      final data = await service.fetchAll(
+        usersEndpoint: ApiEndpoint().users,
+        officeEndpoint: ApiEndpoint().office,
+        teamEndpoint: ApiEndpoint().team,
+        auditorEndpoint: ApiEndpoint().auditor,
+        deliverablesEndpoint: ApiEndpoint().deliverables,
+        kraEndpoint: ApiEndpoint().keyresult,
+      );
+
+      if (mounted) {
+        setState(() {
+          userList = data.users;
+          filteredListUser = List.from(data.users);
+          totalUsers = data.users.length;
+
+          officeList = data.offices;
+          filteredListOffice = List.from(data.offices);
+          totalOffices = data.offices.length;
+
+          teamList = data.teams;
+          filteredListTeam = List.from(data.teams);
+          totalTeam = data.teams.length;
+
+          auditorList = data.auditors;
+          filteredListAuditor = List.from(data.auditors);
+          totalAuditor = data.auditors.length;
+
+          deliverablesList = data.deliverables;
+          filteredDeliverables = List.from(data.deliverables);
+
+          kraList = data.kras;
+          filteredKra = List.from(data.kras);
+        });
+      }
+    } catch (e) {
+      if (mounted) {}
+    }
   }
 
   Future<void> _loadUserName() async {
@@ -294,71 +155,10 @@ class HomePageState extends State<HomePage> {
                   children: [
                     Text("Analytical Overview", style: TextStyle(fontSize: 20)),
                     gap,
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 4.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Expanded(
-                          //   child: Text(
-                          //     office.join(', '),
-                          //     style: TextStyle(fontSize: 14, color: grey),
-                          //     overflow: TextOverflow.ellipsis,
-                          //   ),
-                          // ),
-                          SizedBox(width: 16),
-                          PopupMenuButton<String>(
-                            color: mainBgColor,
-                            onSelected: (String value) {
-                              // Handle selection here
-                            },
-                            itemBuilder:
-                                (BuildContext context) =>
-                                    <PopupMenuEntry<String>>[
-                                      const PopupMenuItem<String>(
-                                        value: 'Option 1',
-                                        child: Text('Option 1'),
-                                      ),
-                                      const PopupMenuItem<String>(
-                                        value: 'Option 2',
-                                        child: Text('Option 2'),
-                                      ),
-                                    ],
-                            offset: Offset(0, 30),
-                            child: Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: mainBgColor,
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.filter_list,
-                                    size: 16,
-                                    color: grey,
-                                  ),
-                                  SizedBox(width: 4),
-                                  Text(
-                                    "Filter by",
-                                    style: TextStyle(fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    gap,
                     _buildStatsRow(),
+                    gap3,
                     _buildPerformanceChart(kraList, deliverablesList),
-                    gap,
+                    gap7,
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Align(
@@ -442,7 +242,7 @@ class HomePageState extends State<HomePage> {
               gap,
               _buildStatsRow(),
               _buildPerformanceChart(kraList, deliverablesList),
-              gap,
+              gap7,
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Align(
@@ -497,7 +297,6 @@ class HomePageState extends State<HomePage> {
             ],
           );
         } else {
-          // Use row layout on wider screens
           return Row(
             children: [
               Expanded(
@@ -660,125 +459,180 @@ class HomePageState extends State<HomePage> {
           (deliverable.percentDeliverables / 100);
     }
 
-    if (kraList.isEmpty) {
-      return const Center(
-        child: Text(
-          "No Key Result Areas available",
-          style: TextStyle(fontSize: 14),
-        ),
-      );
-    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 600;
+        final chartHeight = isMobile ? 350.0 : 250.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Padding(
-          padding: EdgeInsets.only(bottom: 8.0),
-          child: Center(
-            child: Text(
-              'Performance Chart',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-        SizedBox(
-          height: 250,
-          child: BarChart(
-            BarChartData(
-              alignment: BarChartAlignment.spaceAround,
-              maxY: 100,
-              barTouchData: BarTouchData(
-                enabled: true,
-                touchTooltipData: BarTouchTooltipData(
-                  // ignore: deprecated_member_use
-                  tooltipBgColor: Colors.blueGrey.withOpacity(0.8),
-                  getTooltipItem: (group, groupIndex, rod, rodIndex) {
-                    return BarTooltipItem(
-                      '${rod.toY.toStringAsFixed(1)}%',
-                      const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    );
-                  },
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8.0),
+              child: Center(
+                child: Text(
+                  'Performance Chart',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
-              borderData: FlBorderData(show: true),
-              gridData: FlGridData(show: true),
-              titlesData: FlTitlesData(
-                leftTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 20,
-                    getTitlesWidget: (double value, TitleMeta meta) {
-                      return SideTitleWidget(
-                        axisSide: meta.axisSide,
-                        space: 4,
-                        child: Text(
-                          value.toInt().toString(),
-                          style: const TextStyle(fontSize: 10),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                rightTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                topTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: false),
-                ),
-                bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(
-                    showTitles: true,
-                    interval: 1,
-                    getTitlesWidget: (double value, TitleMeta meta) {
-                      int index = value.toInt();
-                      if (index >= 0 && index < kraList.length) {
-                        final kra = kraList[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(top: 8.0),
-                          child: Text(
-                            kra.name,
-                            style: const TextStyle(fontSize: 10),
-                            textAlign: TextAlign.center,
+            ),
+            Container(
+              height: chartHeight,
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 24 : 8,
+                vertical: 8,
+              ),
+              child: BarChart(
+                BarChartData(
+                  alignment: BarChartAlignment.spaceAround,
+                  maxY: 100,
+                  barTouchData: BarTouchData(
+                    enabled: true,
+                    touchTooltipData: BarTouchTooltipData(
+                      tooltipBgColor: Colors.blueGrey.withAlpha(200),
+                      getTooltipItem: (group, groupIndex, rod, rodIndex) {
+                        return BarTooltipItem(
+                          '${rod.toY.toStringAsFixed(1)}%',
+                          const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
                           ),
                         );
-                      }
-                      return const SizedBox.shrink();
-                    },
+                      },
+                    ),
                   ),
-                ),
-              ),
-              barGroups: List.generate(kraList.length, (index) {
-                final kra = kraList[index];
-                double percent = kraPercentTotals[kra.id] ?? 0;
-                percent = percent.clamp(0.0, 100.0);
-
-                return BarChartGroupData(
-                  x: index,
-                  barRods: [
-                    BarChartRodData(
-                      toY: percent,
-                      color: primaryLightColor,
-                      width: 20,
-                      borderRadius: BorderRadius.circular(4),
-                      backDrawRodData: BackgroundBarChartRodData(
-                        show: true,
-                        toY: 100,
-                        color: Colors.grey.shade200,
+                  borderData: FlBorderData(show: true),
+                  gridData: FlGridData(show: true),
+                  titlesData: FlTitlesData(
+                    leftTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 20,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          return SideTitleWidget(
+                            axisSide: meta.axisSide,
+                            space: 4,
+                            child: Text(
+                              value.toInt().toString(),
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                          );
+                        },
                       ),
                     ),
-                  ],
-                );
-              }),
+                    rightTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    bottomTitles: AxisTitles(
+                      sideTitles: SideTitles(
+                        showTitles: true,
+                        interval: 1,
+                        reservedSize: 100,
+                        getTitlesWidget: (double value, TitleMeta meta) {
+                          int index = value.toInt();
+                          if (index >= 0 && index < kraList.length) {
+                            final kra = kraList[index];
+                            return Transform.translate(
+                              offset: const Offset(0, 80),
+                              child: Transform.rotate(
+                                angle: -0.872, // ~50° rotation
+                                alignment: Alignment.center,
+                                child: Text(
+                                  kra.name,
+                                  style: TextStyle(
+                                    fontSize: isMobile ? 8 : 10,
+                                    color: Colors.black87,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                    ),
+                  ),
+                  barGroups: List.generate(kraList.length, (index) {
+                    final kra = kraList[index];
+                    double percent = kraPercentTotals[kra.id] ?? 0;
+                    percent = percent.clamp(0.0, 100.0);
+
+                    return BarChartGroupData(
+                      x: index,
+                      barRods: [
+                        BarChartRodData(
+                          toY: percent,
+                          color: primaryLightColor,
+                          width: 20,
+                          borderRadius: BorderRadius.circular(4),
+                          backDrawRodData: BackgroundBarChartRodData(
+                            show: true,
+                            toY: 100,
+                            color: Colors.grey.shade200,
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
+
+  // Widget _buildDashboardBox(
+  //   String title,
+  //   Color color,
+  //   String count,
+  //   String iconAsset,
+  // ) {
+  //   return Card(
+  //     elevation: 4,
+  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+  //     child: Container(
+  //       height: 130,
+  //       padding: EdgeInsets.all(16),
+  //       decoration: BoxDecoration(
+  //         color: color.withValues(alpha: 0.1),
+  //         borderRadius: BorderRadius.circular(10),
+  //       ),
+  //       child: Row(
+  //         crossAxisAlignment: CrossAxisAlignment.center,
+  //         children: [
+  //           Column(
+  //             mainAxisAlignment: MainAxisAlignment.center,
+  //             children: [
+  //               Text(
+  //                 count,
+  //                 style: TextStyle(
+  //                   fontSize: 24,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: color,
+  //                 ),
+  //               ),
+  //               SizedBox(height: 8),
+  //               Text(
+  //                 title,
+  //                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+  //               ),
+  //             ],
+  //           ),
+  //           SizedBox(width: 40),
+  //           Image.asset(iconAsset, width: 70, height: 70),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildDashboardBox(
     String title,
@@ -793,33 +647,40 @@ class HomePageState extends State<HomePage> {
         height: 130,
         padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          // ignore: deprecated_member_use
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  count,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: color,
+            Expanded(
+              flex: 2,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    count,
+                    style: TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: color,
+                    ),
                   ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  title,
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                ),
-              ],
+                  SizedBox(height: 8),
+                  Text(
+                    title,
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                  ),
+                ],
+              ),
             ),
-            SizedBox(width: 80),
-            Image.asset(iconAsset, width: 70, height: 70),
+            Expanded(
+              flex: 1,
+              child: FittedBox(
+                fit: BoxFit.contain,
+                child: Image.asset(iconAsset),
+              ),
+            ),
           ],
         ),
       ),

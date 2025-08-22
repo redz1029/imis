@@ -82,7 +82,7 @@ class ApiEndpoint {
     if (kDebugMode) {
       baseUrl = 'https://localhost:7273';
     } else if (kReleaseMode) {
-      throw Exception("Release base Url is not specified!");
+      baseUrl = 'https://demo.api.imis.crmc.ph';
     } else {
       throw Exception("Test base Url is not specified!");
     }

@@ -8,7 +8,8 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
+import 'package:imis/utils/string_extension.dart';
+import 'package:imis/validator/validator.dart';
 
 import '../../utils/http_util.dart';
 
@@ -46,6 +47,9 @@ class UserProfileState extends State<UserProfilePage> {
 
   List<UserRegistration> userProfileList = [];
   List<UserRegistration> filteredList = [];
+
+  final FocusNode focusNewPassword = FocusNode();
+  bool _isNewPassVisible = false;
 
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
@@ -141,7 +145,6 @@ class UserProfileState extends State<UserProfilePage> {
         url,
         data: userProfile.toJson(),
       );
-      debugPrint("Sent data: ${userProfile.toJson()}");
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         debugPrint(
@@ -157,7 +160,7 @@ class UserProfileState extends State<UserProfilePage> {
         prefixController.clear();
         suffixController.clear();
       } else {
-        debugPrint("Save failed: ${response.statusCode}");
+        debugPrint("Save failed");
       }
     } catch (e) {
       debugPrint("Error adding/updating team: $e");
@@ -213,13 +216,17 @@ class UserProfileState extends State<UserProfilePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
-
-    TokenExpirationHandler(context).checkTokenExpiration();
+    focusNewPassword.addListener(() {
+      setState(() {});
+    });
+    // TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
   void dispose() {
     isSearchfocus.dispose();
+    super.dispose();
+    focusNewPassword.dispose();
     super.dispose();
   }
 
@@ -264,270 +271,338 @@ class UserProfileState extends State<UserProfilePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            decoration: BoxDecoration(
-              color: primaryLightColor,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: mainBgColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
               ),
-            ),
-            child: Text(
-              id == null ? 'Change Password' : 'Change Password',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Visibility(
-                visible: false,
-                child: SizedBox(
-                  width: 350,
-                  height: 60,
-                  child: TextField(
-                    controller: userNameController,
-                    decoration: InputDecoration(
-                      labelText: 'User Name',
-                      border: OutlineInputBorder(),
-                    ),
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: primaryLightColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  id == null ? 'Change Password' : 'Change Password',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
                 ),
               ),
-              Visibility(
-                visible: false,
-                child: SizedBox(
-                  width: 350,
-                  height: 65,
-                  child: TextField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ),
-
-              Visibility(
-                visible: false,
-                child: SizedBox(
-                  width: 350,
-                  height: 65,
-                  child: TextField(
-                    controller: prefixController,
-                    decoration: InputDecoration(
-                      labelText: 'Prefix',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ),
-
-              SizedBox(
-                width: 350,
-                height: 55,
+              content: Form(
+                key: _formKey,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    SizedBox(height: 4),
-                    Text(
-                      fullNameController.text,
-                      style: TextStyle(fontSize: 18, color: Colors.black87),
+                    Visibility(
+                      visible: false,
+                      child: SizedBox(
+                        width: 350,
+                        height: 60,
+                        child: TextField(
+                          controller: userNameController,
+                          decoration: InputDecoration(
+                            labelText: 'User Name',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: false,
+                      child: SizedBox(
+                        width: 350,
+                        height: 65,
+                        child: TextField(
+                          controller: emailController,
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Visibility(
+                      visible: false,
+                      child: SizedBox(
+                        width: 350,
+                        height: 65,
+                        child: TextField(
+                          controller: prefixController,
+                          decoration: InputDecoration(
+                            labelText: 'Prefix',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(
+                      width: 350,
+                      height: 55,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          SizedBox(height: 4),
+                          Text(
+                            fullNameController.text,
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    gap2,
+                    Theme(
+                      data: Theme.of(context).copyWith(
+                        inputDecorationTheme: const InputDecorationTheme(
+                          errorStyle: TextStyle(fontSize: 10),
+                        ),
+                      ),
+
+                      child: TextFormField(
+                        controller: passwordController,
+                        focusNode: focusNewPassword,
+                        onTap: () {
+                          FocusScope.of(context).requestFocus(focusNewPassword);
+                        },
+                        obscureText: !_isNewPassVisible,
+
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return validatePassword(value);
+                          }
+                          if (value.length < 6) {
+                            return validatePassword(value);
+                          }
+                          if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                            return validatePassword(value);
+                          }
+                          if (!RegExp(
+                            r'[!@#$%^&*(),.?":{}|<>]',
+                          ).hasMatch(value)) {
+                            return validatePassword(value);
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          prefixIcon: Icon(
+                            Icons.lock_outline_rounded,
+                            color:
+                                focusNewPassword.hasFocus
+                                    ? primaryColor
+                                    : Colors.grey,
+                          ),
+                          border: const OutlineInputBorder(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          floatingLabelStyle: const TextStyle(
+                            color: primaryColor,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _isNewPassVisible
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color:
+                                  focusNewPassword.hasFocus
+                                      ? primaryColor
+                                      : grey,
+                            ),
+                            onPressed: () {
+                              setDialogState(() {
+                                _isNewPassVisible = !_isNewPassVisible;
+                              });
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Visibility(
+                      visible: false,
+                      child: SizedBox(
+                        width: 350,
+                        height: 65,
+                        child: TextField(
+                          controller: middleNameController,
+                          decoration: InputDecoration(
+                            labelText: 'Middle Name',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Visibility(
+                      visible: false,
+                      child: SizedBox(
+                        width: 350,
+                        height: 65,
+                        child: TextField(
+                          controller: lastNameController,
+                          decoration: InputDecoration(
+                            labelText: 'Last Name',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    Visibility(
+                      visible: false,
+                      child: SizedBox(
+                        width: 350,
+                        height: 65,
+                        child: TextField(
+                          controller: suffixController,
+                          decoration: InputDecoration(
+                            labelText: 'Suffix',
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                      ),
+                    ),
+                    Visibility(
+                      visible: false,
+                      child: DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          labelText: 'Position',
+                          border: const OutlineInputBorder(),
+                          focusedBorder: const OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          floatingLabelStyle: const TextStyle(
+                            color: primaryColor,
+                          ),
+                        ),
+                        value: selectedPosition,
+                        onChanged: (String? newValue) {
+                          setState(() {
+                            selectedPosition = newValue;
+                          });
+                        },
+                        items:
+                            jobPositions.map<DropdownMenuItem<String>>((
+                              String value,
+                            ) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a position';
+                          }
+                          return null;
+                        },
+                      ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(
-                width: 350,
-                height: 65,
-                child: TextField(
-                  controller: passwordController,
-                  decoration: InputDecoration(
-                    labelText: 'Password',
-                    labelStyle: TextStyle(color: grey),
-                    border: OutlineInputBorder(),
-                    floatingLabelStyle: TextStyle(color: primaryColor),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: primaryColor),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: secondaryBgButton,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  obscureText: true,
+                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
                 ),
-              ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      bool? confirmAction = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text(
+                              id == null ? "Confirm Save" : "Confirm Update",
+                            ),
+                            content: Text(
+                              id == null
+                                  ? "Are you sure you want to change this password?"
+                                  : "Are you sure you want to change this password?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(
+                                  "No",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text(
+                                  "Yes",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
 
-              Visibility(
-                visible: false,
-                child: SizedBox(
-                  width: 350,
-                  height: 65,
-                  child: TextField(
-                    controller: middleNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Middle Name',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ),
-
-              Visibility(
-                visible: false,
-                child: SizedBox(
-                  width: 350,
-                  height: 65,
-                  child: TextField(
-                    controller: lastNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Last Name',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ),
-
-              Visibility(
-                visible: false,
-                child: SizedBox(
-                  width: 350,
-                  height: 65,
-                  child: TextField(
-                    controller: suffixController,
-                    decoration: InputDecoration(
-                      labelText: 'Suffix',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-              ),
-              Visibility(
-                visible: false,
-                child: DropdownButtonFormField<String>(
-                  decoration: InputDecoration(
-                    labelText: 'Position',
-                    border: const OutlineInputBorder(),
-                    focusedBorder: const OutlineInputBorder(
-                      borderSide: BorderSide(color: primaryColor),
-                    ),
-                    floatingLabelStyle: const TextStyle(color: primaryColor),
-                  ),
-                  value: selectedPosition,
-                  onChanged: (String? newValue) {
-                    setState(() {
-                      selectedPosition = newValue;
-                    });
-                  },
-                  items:
-                      jobPositions.map<DropdownMenuItem<String>>((
-                        String value,
-                      ) {
-                        return DropdownMenuItem<String>(
-                          value: value,
-                          child: Text(value),
+                      if (confirmAction == true) {
+                        final userProfile = UserRegistration(
+                          id,
+                          userNameController.text,
+                          emailController.text,
+                          passwordController.text,
+                          firstNameController.text,
+                          middleNameController.text,
+                          lastNameController.text,
+                          prefixController.text,
+                          suffixController.text,
+                          selectedPosition ?? '',
+                          '',
+                          '',
                         );
-                      }).toList(),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please select a position';
+
+                        if (id == null) {
+                          await addOrUpdateUserProfile(userProfile);
+                        } else {
+                          await updateUserProfile(userProfile);
+                        }
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      }
                     }
-                    return null;
                   },
+                  child: Text(
+                    id == null ? 'Save' : 'Update',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: secondaryBgButton,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to change this password?"
-                            : "Are you sure you want to change this password?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text(
-                            "No",
-                            style: TextStyle(color: primaryColor),
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text(
-                            "Yes",
-                            style: TextStyle(color: primaryColor),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                );
-
-                if (confirmAction == true) {
-                  final userProfile = UserRegistration(
-                    id,
-                    userNameController.text,
-                    emailController.text,
-                    passwordController.text,
-                    firstNameController.text,
-                    middleNameController.text,
-                    lastNameController.text,
-                    prefixController.text,
-                    suffixController.text,
-                    selectedPosition ?? '',
-                  );
-
-                  if (id == null) {
-                    await addOrUpdateUserProfile(userProfile);
-                  } else {
-                    await updateUserProfile(userProfile);
-                  }
-                  // ignore: use_build_context_synchronously
-                  Navigator.pop(context);
-                }
-              },
-              child: Text(
-                id == null ? 'Save' : 'Update',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         );
       },
     );
@@ -627,15 +702,10 @@ class UserProfileState extends State<UserProfilePage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please fill out this field';
-                      }
-                      return null;
-                    },
+                    validator: FormValidator.validateEmail,
                   ),
                 ),
-                if (id == null) // Only show when adding a new user
+                if (id == null)
                   SizedBox(
                     width: 450,
                     height: 65,
@@ -895,6 +965,8 @@ class UserProfileState extends State<UserProfilePage> {
                       prefixController.text,
                       suffixController.text,
                       selectedPosition ?? '',
+                      '',
+                      '',
                     );
 
                     if (id == null) {
@@ -1004,7 +1076,7 @@ class UserProfileState extends State<UserProfilePage> {
                         Expanded(
                           flex: 1,
                           child: Text(
-                            'User Name',
+                            'First Name',
                             style: TextStyle(color: grey),
                           ),
                         ),
@@ -1054,7 +1126,7 @@ class UserProfileState extends State<UserProfilePage> {
                                     Container(
                                       padding: EdgeInsets.symmetric(
                                         vertical: 1,
-                                        horizontal: 16,
+                                        horizontal: 10,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(
@@ -1124,39 +1196,49 @@ class UserProfileState extends State<UserProfilePage> {
                                               ),
                                             ),
                                           ),
-                                          IconButton(
-                                            icon: Icon(
-                                              Icons.key,
-                                              color: Colors.blue,
-                                            ),
-                                            onPressed: () {
-                                              showFormDialogChangePassword(
-                                                id: userProfile.id.toString(),
-                                                userName: userProfile.userName,
-                                                email: userProfile.email,
-                                                password: userProfile.password,
-                                                firstName:
-                                                    userProfile.firstName,
-                                                middleName:
-                                                    userProfile.middleName,
-                                                lastName: userProfile.lastName,
-                                                prefix: userProfile.prefix,
-                                                suffix: userProfile.suffix,
-                                                position: userProfile.position,
-                                                fullName:
-                                                    '${userProfile.firstName} ${userProfile.middleName} ${userProfile.lastName}'
-                                                        .trim()
-                                                        .replaceAll(
-                                                          RegExp(' +'),
-                                                          ' ',
-                                                        ),
-                                              );
-                                            },
-                                          ),
+
                                           Expanded(
                                             flex: 1,
                                             child: Row(
                                               children: [
+                                                IconButton(
+                                                  icon: Icon(
+                                                    Icons.key,
+                                                    color: Colors.blue,
+                                                  ),
+                                                  onPressed: () {
+                                                    showFormDialogChangePassword(
+                                                      id:
+                                                          userProfile.id
+                                                              .toString(),
+                                                      userName:
+                                                          userProfile.userName,
+                                                      email: userProfile.email,
+                                                      password:
+                                                          userProfile.password,
+                                                      firstName:
+                                                          userProfile.firstName,
+                                                      middleName:
+                                                          userProfile
+                                                              .middleName,
+                                                      lastName:
+                                                          userProfile.lastName,
+                                                      prefix:
+                                                          userProfile.prefix,
+                                                      suffix:
+                                                          userProfile.suffix,
+                                                      position:
+                                                          userProfile.position,
+                                                      fullName:
+                                                          '${userProfile.firstName} ${userProfile.middleName} ${userProfile.lastName}'
+                                                              .trim()
+                                                              .replaceAll(
+                                                                RegExp(' +'),
+                                                                ' ',
+                                                              ),
+                                                    );
+                                                  },
+                                                ),
                                                 IconButton(
                                                   icon: Icon(Icons.edit),
                                                   onPressed: () {

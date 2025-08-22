@@ -69,13 +69,15 @@ class LoginPageState extends State<LoginPage> {
               description: const Text(
                 "Please check your username and password.",
               ),
-              toastAlignment: Alignment.center,
+              toastAlignment: Alignment.topCenter,
             ).show(context);
           } else {
             MotionToast.error(
               title: const Text("An error has occurred!"),
-              description: Text(e.response!.statusMessage ?? "Unknown error"),
-              toastAlignment: Alignment.center,
+              description: Text(
+                "Oops! Something went wrong. Please try again.",
+              ),
+              toastAlignment: Alignment.topCenter,
             ).show(context);
           }
         }
@@ -83,8 +85,8 @@ class LoginPageState extends State<LoginPage> {
         if (context.mounted) {
           MotionToast.error(
             title: const Text("Server is Unreachable!"),
-            description: Text(e.message ?? "Unknown error"),
-            toastAlignment: Alignment.center,
+            description: Text("Please check your connection."),
+            toastAlignment: Alignment.topCenter,
           ).show(context);
         }
       }
@@ -99,9 +101,9 @@ class LoginPageState extends State<LoginPage> {
 
   void _checkLoginStatus() async {
     bool isLoggedIn = await AuthUtil.isLoggedIn();
+    if (!mounted) return;
 
     if (isLoggedIn) {
-      // ignore: use_build_context_synchronously
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(
           builder: (context) => const DashboardNavigationPanel(),
@@ -278,7 +280,14 @@ class LoginPageState extends State<LoginPage> {
             //   mainAxisAlignment: MainAxisAlignment.end,
             //   children: [
             //     TextButton(
-            //       onPressed: () {},
+            //       onPressed: () {
+            //         Navigator.push(
+            //           context,
+            //           MaterialPageRoute(
+            //             builder: (context) => ForgotPasswordPage(),
+            //           ),
+            //         );
+            //       },
             //       child: Text(
             //         'Forgot Password?',
             //         style: TextStyle(color: primaryColor),

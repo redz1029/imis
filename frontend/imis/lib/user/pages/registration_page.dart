@@ -4,6 +4,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/string_extension.dart';
 import 'package:imis/validator/validator.dart';
 import 'package:motion_toast/motion_toast.dart';
 
@@ -44,12 +45,11 @@ class RegistrationPageState extends State<RegistrationPage> {
   final bool _isRegister = false;
 
   final dio = Dio();
+
   Future<void> register(BuildContext context, UserRegistration user) async {
     final String url = ApiEndpoint().register;
 
     try {
-      debugPrint("Registering user: ${user.toJson()}");
-
       final response = await dio.post(
         url,
         data: user.toJson(),
@@ -61,8 +61,7 @@ class RegistrationPageState extends State<RegistrationPage> {
 
         MotionToast.success(
           description: const Text("Registration successful!"),
-          // ignore: deprecated_member_use
-          position: MotionToastPosition.top,
+          toastAlignment: Alignment.topCenter,
         ).show(context);
 
         Navigator.pushReplacement(
@@ -70,33 +69,57 @@ class RegistrationPageState extends State<RegistrationPage> {
           MaterialPageRoute(builder: (context) => const LoginPage()),
         );
       } else {
-        final errorMessage = response.data['message'] ?? "Registration failed";
+        final errorData = response.data;
+        final errorMessage = errorData['title'] ?? "Registration failed";
+
         if (!context.mounted) return;
 
         MotionToast.error(
           description: Text("Error: $errorMessage"),
-          // ignore: deprecated_member_use
-          position: MotionToastPosition.top,
+          toastAlignment: Alignment.topCenter,
         ).show(context);
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.statusCode} - ${e.message}");
       if (!context.mounted) return;
 
-      MotionToast.error(
-        description: Text("An error occurred: ${e.message}"),
-        // ignore: deprecated_member_use
-        position: MotionToastPosition.top,
-      ).show(context);
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-      if (!context.mounted) return;
+      if (e.type == DioExceptionType.connectionError ||
+          e.type == DioExceptionType.unknown ||
+          e.type == DioExceptionType.receiveTimeout) {
+        // No internet or timeout
+        MotionToast.warning(
+          title: const Text("Network Error"),
+          description: const Text(
+            "Please check your internet connection and try again.",
+          ),
+          toastAlignment: Alignment.topCenter,
+        ).show(context);
+        return;
+      }
 
-      MotionToast.error(
-        description: const Text("Something went wrong. Please try again."),
-        // ignore: deprecated_member_use
-        position: MotionToastPosition.top,
-      ).show(context);
+      final errorData = e.response?.data;
+      if (errorData is Map<String, dynamic>) {
+        final errors = errorData['errors'] as Map<String, dynamic>?;
+
+        if (errors != null && errors.containsKey('DuplicateUserName')) {
+          MotionToast.warning(
+            title: const Text("User Already Exists"),
+            description: Text(errors['DuplicateUserName'][0]),
+            toastAlignment: Alignment.topCenter,
+          ).show(context);
+          return;
+        }
+
+        final title = errorData['title'] ?? "Registration failed";
+        MotionToast.error(
+          description: Text("Error: $title"),
+          toastAlignment: Alignment.topCenter,
+        ).show(context);
+      } else {
+        MotionToast.error(
+          description: const Text("Unexpected error occurred."),
+          toastAlignment: Alignment.topCenter,
+        ).show(context);
+      }
     }
   }
 
@@ -104,7 +127,6 @@ class RegistrationPageState extends State<RegistrationPage> {
   void initState() {
     super.initState();
 
-    // Triggers UI textfield update
     focusUsername.addListener(() {
       setState(() {});
     });
@@ -166,7 +188,6 @@ class RegistrationPageState extends State<RegistrationPage> {
       }
     });
   }
-  //
 
   //Job Position Dropdown
   String? selectedPosition;
@@ -468,11 +489,18 @@ class RegistrationPageState extends State<RegistrationPage> {
                 obscureText: !_isPasswordVisible,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a password';
+                    return validatePassword(value);
                   }
-                  return value.length < 6
-                      ? 'Password must be at least 6 characters'
-                      : null;
+                  if (value.length < 6) {
+                    return validatePassword(value);
+                  }
+                  if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                    return validatePassword(value);
+                  }
+                  if (!RegExp(r'[!@#$%^&*(),.?":{}|<>]').hasMatch(value)) {
+                    return validatePassword(value);
+                  }
+                  return null;
                 },
                 decoration: InputDecoration(
                   labelText: 'Password',
@@ -609,6 +637,8 @@ class RegistrationPageState extends State<RegistrationPage> {
                                     prefixController.text,
                                     suffixController.text,
                                     selectedPosition ?? '',
+                                    '',
+                                    '',
                                   ),
                                 );
                               }
@@ -669,10 +699,19 @@ class _Logo extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.all(16.0),
-      child: Image.asset(
-        'assets/logo.png',
-        width: isSmallScreen ? 100 : 300,
-        height: isSmallScreen ? 100 : 300,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Image.asset(
+            'assets/logo.png',
+            width: isSmallScreen ? 100 : 300,
+            height: isSmallScreen ? 100 : 300,
+          ),
+          const Text(
+            'IMIS',
+            style: TextStyle(fontSize: 24, color: primaryColor),
+          ),
+        ],
       ),
     );
   }

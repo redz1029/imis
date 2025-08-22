@@ -31,7 +31,10 @@ class Logo extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: [Image.asset('assets/logo.png', width: 300)],
+      children: [
+        Image.asset('assets/logo.png', width: 300),
+        Text('IMIS', style: TextStyle(fontSize: 24, color: primaryColor)),
+      ],
     );
   }
 }

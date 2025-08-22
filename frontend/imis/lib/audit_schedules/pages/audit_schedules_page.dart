@@ -9,7 +9,6 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
 import '../../utils/http_util.dart';
 
 class AuditSchedulesPage extends StatefulWidget {
@@ -69,8 +68,6 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
           filteredListAuditSchedule = List.from(auditScheduleList);
         });
       }
-    } catch (e) {
-      debugPrint("Error in fetchAuditSchedule: $e");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -101,8 +98,6 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
       }
     } on DioException {
       debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
     }
   }
 
@@ -196,7 +191,6 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
     fetchTeam();
     fetchAuditors();
     fetchAuditSchedule();
-    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -1086,7 +1080,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                     Container(
                                       padding: EdgeInsets.symmetric(
                                         vertical: 1,
-                                        horizontal: 16,
+                                        horizontal: 10,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(

@@ -2,15 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/history/models/pgs_deliverable_history.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
+import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/app_permission.dart';
-import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';
@@ -80,19 +78,10 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     fetchKra();
     fetchPGSPeriods();
     fetchScoreHistory();
-    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   Future<void> fetchFilteredPgsList() async {
     try {
-      final user = await AuthUtil.fetchLoggedUser();
-      final token = await AuthUtil.fetchAccessToken();
-
-      if (user == null || token == null || token.isEmpty) {
-        debugPrint("Missing user or token.");
-        return;
-      }
-
       int? scoreFrom =
           scoreRangeFromController.text.isNotEmpty
               ? int.tryParse(scoreRangeFromController.text)
@@ -483,7 +472,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     );
   }
 
-  Widget _buildHistoryTable(List<PgsDeliverableHistory> items) {
+  Widget _buildHistoryTable(List<PgsDeliverableScoreHistory> items) {
     items.sort((a, b) => b.date.compareTo(a.date));
 
     return Column(
@@ -1525,7 +1514,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
 class PgsDeliverableHistoryGrouped {
   final int pgsDeliverableId;
-  final List<PgsDeliverableHistory>? scoreHistory;
+  final List<PgsDeliverableScoreHistory>? scoreHistory;
 
   PgsDeliverableHistoryGrouped(this.pgsDeliverableId, this.scoreHistory);
 
@@ -1534,7 +1523,7 @@ class PgsDeliverableHistoryGrouped {
       json['pgsDeliverableId'] as int,
       json['scoreHistory'] != null
           ? (json['scoreHistory'] as List)
-              .map((e) => PgsDeliverableHistory.fromJson(e))
+              .map((e) => PgsDeliverableScoreHistory.fromJson(e))
               .toList()
           : null,
     );

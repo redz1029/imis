@@ -5,7 +5,6 @@ import 'package:imis/performance_governance_system/key_result_area/models/key_re
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
 import '../../../utils/http_util.dart';
 
 class KeyResultAreaPage extends StatefulWidget {
@@ -37,7 +36,6 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
       pageSize: _pageSize,
       fromJson: (json) => KeyResultArea.fromJson(json),
     );
-    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   final dio = Dio();
@@ -434,7 +432,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                     Container(
                                       padding: EdgeInsets.symmetric(
                                         vertical: 1,
-                                        horizontal: 16,
+                                        horizontal: 10,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(

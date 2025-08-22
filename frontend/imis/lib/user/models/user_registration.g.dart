@@ -18,6 +18,8 @@ UserRegistration _$UserRegistrationFromJson(Map<String, dynamic> json) =>
       json['prefix'] as String?,
       json['suffix'] as String?,
       json['position'] as String?,
+      json['accessToken'] as String?,
+      json['refreshToken'] as String?,
     );
 
 Map<String, dynamic> _$UserRegistrationToJson(UserRegistration instance) =>
@@ -32,4 +34,6 @@ Map<String, dynamic> _$UserRegistrationToJson(UserRegistration instance) =>
       'prefix': instance.prefix,
       'suffix': instance.suffix,
       'position': instance.position,
+      'accessToken': instance.accessToken,
+      'refreshToken': instance.refreshToken,
     };

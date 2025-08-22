@@ -29,11 +29,12 @@ class AuthenticatedRequest {
     ProgressCallback? onReceiveProgress,
   }) async {
     try {
-      await AuthUtil.processTokenValidity(dio, context);
-      final accessToken = await AuthUtil.fetchAccessToken();
+      final loggedUser = await AuthUtil.processTokenValidity(dio, context);
       var response = await dio.get(
         url,
-        options: Options(headers: {"Authorization": "Bearer $accessToken"}),
+        options: Options(
+          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
+        ),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
@@ -56,13 +57,13 @@ class AuthenticatedRequest {
     ProgressCallback? onReceiveProgress,
   }) async {
     try {
-      await AuthUtil.processTokenValidity(dio, context);
-      final accessToken = await AuthUtil.fetchAccessToken();
+      final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+
       var response = await dio.post(
         url,
         options: Options(
           headers: {
-            "Authorization": "Bearer $accessToken",
+            "Authorization": "Bearer ${loggedUser!.accessToken}",
             Headers.contentTypeHeader: 'application/json',
           },
         ),
@@ -90,12 +91,13 @@ class AuthenticatedRequest {
     ProgressCallback? onReceiveProgress,
   }) async {
     try {
-      await AuthUtil.processTokenValidity(dio, context);
-      final accessToken = await AuthUtil.fetchAccessToken();
+      final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+
       var response = await dio.put(
         url,
-        options: Options(headers: {"Authorization": "Bearer $accessToken"}),
-
+        options: Options(
+          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
+        ),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
@@ -118,11 +120,12 @@ class AuthenticatedRequest {
     CancelToken? cancelToken,
   }) async {
     try {
-      await AuthUtil.processTokenValidity(dio, context);
-      final accessToken = await AuthUtil.fetchAccessToken();
+      final loggedUser = await AuthUtil.processTokenValidity(dio, context);
       var response = await dio.delete(
         url,
-        options: Options(headers: {"Authorization": "Bearer $accessToken"}),
+        options: Options(
+          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
+        ),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,
@@ -145,12 +148,12 @@ class AuthenticatedRequest {
     ProgressCallback? onReceiveProgress,
   }) async {
     try {
-      await AuthUtil.processTokenValidity(dio, context);
-      final accessToken = await AuthUtil.fetchAccessToken();
-
+      final loggedUser = await AuthUtil.processTokenValidity(dio, context);
       var response = await dio.patch(
         url,
-        options: Options(headers: {"Authorization": "Bearer $accessToken"}),
+        options: Options(
+          headers: {"Authorization": "Bearer ${loggedUser!.accessToken}"},
+        ),
         data: data,
         queryParameters: queryParameters,
         cancelToken: cancelToken,

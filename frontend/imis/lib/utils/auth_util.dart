@@ -1,22 +1,24 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/globals.dart';
-import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:jwt_decode_full/jwt_decode_full.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../constant/constant.dart';
+
 class AuthUtil {
-  static const String userkey = "user";
+  static Completer<void>? _refreshLock;
+  late final BuildContext context;
+  static const String userKey = "user";
   static const String rolesKey = "roles";
   static const String officeNamesKey = "officeNames";
   static const String officeIdsKey = "officeIds";
   static const String selectedOfficeIdKey = "selectedOfficeId";
   static const String isLoggedInKey = "isLoggedIn";
-  static const String accessTokenKey = "accessToken";
-  static const String refreshTokenKey = "refreshToken";
   static const String pgsKey = "pgs";
 
   static Future<UserRegistration> storeUserAuth(
@@ -27,16 +29,8 @@ class AuthUtil {
     var user = UserRegistration.fromJson(response.data);
     SharedPreferences sharedPref = await SharedPreferences.getInstance();
 
-    String accessToken = response.data['accessToken'] ?? '';
-    if (accessToken.isNotEmpty) {
-      await sharedPref.setString(accessTokenKey, accessToken);
-    }
-
-    String refreshToken = response.data['refreshToken'] ?? '';
-    if (refreshToken.isNotEmpty) {
-      await sharedPref.setString(refreshTokenKey, refreshToken);
-    }
-
+    user.accessToken = response.data['accessToken'] ?? '';
+    user.refreshToken = response.data['refreshToken'] ?? '';
     if (response.data['roles'] != null) {
       String rolesJson = jsonEncode(response.data['roles']);
       await sharedPref.setString(rolesKey, rolesJson);
@@ -51,8 +45,7 @@ class AuthUtil {
       await sharedPref.setStringList(officeNamesKey, officeNames);
       await sharedPref.setStringList(officeIdsKey, officeIds);
     }
-
-    await sharedPref.setString(userkey, jsonEncode(user.toJson()));
+    await sharedPref.setString(userKey, jsonEncode(user.toJson()));
     await sharedPref.setBool(isLoggedInKey, true);
     return user;
   }
@@ -61,70 +54,44 @@ class AuthUtil {
     SharedPreferences? sharedPref,
   ]) async {
     sharedPref ??= await SharedPreferences.getInstance();
-    String? userJson = sharedPref.getString(userkey);
 
-    if (userJson != null) {
-      return UserRegistration.fromJson(jsonDecode(userJson));
-    }
-
-    return null;
+    String? userJson = sharedPref.getString(userKey);
+    return UserRegistration.fromJson(jsonDecode(userJson!));
   }
 
-  static Future<String?> fetchAccessToken([
-    SharedPreferences? sharedPref,
-  ]) async {
-    sharedPref ??= await SharedPreferences.getInstance();
-    return sharedPref.getString(accessTokenKey);
+  static Future<String?> getAccessToken() async {
+    final user = await fetchLoggedUser();
+    return user?.accessToken;
   }
 
-  static Future<String?> fetchRefreshToken([
-    SharedPreferences? sharedPref,
-  ]) async {
-    sharedPref ??= await SharedPreferences.getInstance();
-    return sharedPref.getString(refreshTokenKey);
-  }
-
-  static Future<List<String>?> fetchRoles([
-    SharedPreferences? sharedPref,
-  ]) async {
-    sharedPref ??= await SharedPreferences.getInstance();
+  static Future<List<String>?> fetchRoles() async {
+    final sharedPref = await SharedPreferences.getInstance();
     String? rolesJson = sharedPref.getString(rolesKey);
-
-    if (rolesJson != null) {
-      List<dynamic> rolesListDynamic = jsonDecode(rolesJson);
-      return rolesListDynamic.cast<String>();
-    }
-    return null;
+    return rolesJson != null ? List<String>.from(jsonDecode(rolesJson)) : null;
   }
 
-  static Future<List<String>?> fetchOfficeNames([
-    SharedPreferences? sharedPref,
-  ]) async {
-    sharedPref ??= await SharedPreferences.getInstance();
+  static Future<List<String>?> fetchOfficeNames() async {
+    final sharedPref = await SharedPreferences.getInstance();
     return sharedPref.getStringList(officeNamesKey);
   }
 
-  static Future<List<String>?> fetchOfficeIds([
-    SharedPreferences? sharedPref,
-  ]) async {
-    sharedPref ??= await SharedPreferences.getInstance();
+  static Future<List<String>?> fetchOfficeIds() async {
+    final sharedPref = await SharedPreferences.getInstance();
     return sharedPref.getStringList(officeIdsKey);
   }
 
-  static Future<String?> fetchSelectedOfficeId([
-    SharedPreferences? sharedPref,
-  ]) async {
-    sharedPref ??= await SharedPreferences.getInstance();
+  static Future<String?> fetchSelectedOfficeId() async {
+    final sharedPref = await SharedPreferences.getInstance();
     return sharedPref.getString(selectedOfficeIdKey);
   }
 
   static Future<void> removeSelectedOfficeId() async {
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
     await prefs.remove(selectedOfficeIdKey);
   }
 
-  static Future<bool> isLoggedIn([SharedPreferences? sharedPref]) async {
-    sharedPref ??= await SharedPreferences.getInstance();
+  static Future<bool> isLoggedIn() async {
+    final sharedPref = await SharedPreferences.getInstance();
     return sharedPref.getBool(isLoggedInKey) ?? false;
   }
 
@@ -134,20 +101,26 @@ class AuthUtil {
   }
 
   static Future<void> setIsLoggedIn(bool status) async {
-    final SharedPreferences sharedPref = await SharedPreferences.getInstance();
+    final sharedPref = await SharedPreferences.getInstance();
     await sharedPref.setBool(isLoggedInKey, status);
   }
 
-  static Future<void> logout() async {
-    final SharedPreferences sharedPref = await SharedPreferences.getInstance();
-    await sharedPref.remove(userkey);
+  static Future<void> logout(BuildContext context) async {
+    final sharedPref = await SharedPreferences.getInstance();
+    await sharedPref.remove(userKey);
     await sharedPref.remove(rolesKey);
     await sharedPref.remove(officeNamesKey);
     await sharedPref.remove(officeIdsKey);
     await sharedPref.remove(selectedOfficeIdKey);
     await sharedPref.remove(isLoggedInKey);
-    await sharedPref.remove(accessTokenKey);
-    await sharedPref.remove(refreshTokenKey);
+    await sharedPref.remove(pgsKey);
+
+    if (context.mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+    }
   }
 
   static Future<UserRegistration?> processTokenValidity(
@@ -157,60 +130,93 @@ class AuthUtil {
     var loggedUser = await fetchLoggedUser();
 
     if (loggedUser != null) {
-      final accessToken = await fetchAccessToken();
-      final refreshToken = await fetchRefreshToken();
+      var accessToken = jwtDecode(loggedUser.accessToken!);
+      bool isAccessTokenExpired = accessToken.isExpired ?? true;
 
-      final isAccessTokenExpired =
-          accessToken == null || JwtDecoder.isExpired(accessToken);
-      final isRefreshTokenExpired =
-          refreshToken == null || JwtDecoder.isExpired(refreshToken);
-
-      if (!isAccessTokenExpired) return loggedUser;
-
-      if (isRefreshTokenExpired) {
-        await logout();
-
-        snackbarKey.currentState?.showSnackBar(
-          const SnackBar(content: Text('Token expired :( Please login again.')),
-        );
-
-        if (context != null && context.mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-            (route) => false,
-          );
-        }
-
-        return null;
+      if (!isAccessTokenExpired) {
+        return loggedUser;
       }
 
+      if (_refreshLock != null && !_refreshLock!.isCompleted) {
+        await _refreshLock!.future;
+        return await fetchLoggedUser();
+      }
+
+      _refreshLock = Completer<void>();
+
       try {
-        final refreshUrl = ApiEndpoint().refresh;
-        final response = await dio.post(
-          refreshUrl,
-          data: jsonEncode({'refreshToken': refreshToken}),
-        );
+        final refreshToken = jwtDecode(loggedUser.refreshToken!);
+        bool isRefreshTokenExpired = refreshToken.isExpired ?? true;
 
-        return await storeUserAuth(response, dio);
-      } catch (e) {
-        await logout();
-
-        snackbarKey.currentState?.showSnackBar(
-          const SnackBar(
-            content: Text('Unable to refresh session. Please login again.'),
-          ),
-        );
-        if (context != null && context.mounted) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const LoginPage()),
-            (route) => false,
-          );
+        if (isRefreshTokenExpired) {
+          if (context != null && context.mounted) {
+            await _showSessionExpiredDialog(context);
+          }
+          return null;
         }
 
+        var refresh = ApiEndpoint().refresh;
+
+        var refreshResponse = await dio.post(
+          refresh,
+          data: jsonEncode(loggedUser),
+        );
+
+        final existingUser = await fetchLoggedUser();
+        if (existingUser == null) return null;
+
+        existingUser.accessToken = refreshResponse.data['accessToken'] ?? '';
+        existingUser.refreshToken = refreshResponse.data['refreshToken'] ?? '';
+
+        SharedPreferences sharedPref = await SharedPreferences.getInstance();
+        await sharedPref.setString(userKey, jsonEncode(existingUser.toJson()));
+        loggedUser = existingUser;
+      } on DioException {
+        if (context != null && context.mounted) {
+          await _showSessionExpiredDialog(context);
+        }
         return null;
+      } catch (e) {
+        if (context != null && context.mounted) {
+          await _showSessionExpiredDialog(context);
+        }
+        return null;
+      } finally {
+        _refreshLock?.complete();
+        _refreshLock = null;
       }
     }
 
-    return null;
+    return loggedUser;
+  }
+
+  static Future<void> _showSessionExpiredDialog(BuildContext context) async {
+    if (!context.mounted) return;
+
+    await showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder:
+          // ignore: deprecated_member_use
+          (context) => WillPopScope(
+            onWillPop: () async => false,
+            child: AlertDialog(
+              title: const Text("Session Expired"),
+              content: const Text("Please log in again to continue."),
+              actions: [
+                TextButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await logout(context);
+                  },
+                  child: const Text(
+                    "OK",
+                    style: TextStyle(color: primaryColor),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
   }
 }

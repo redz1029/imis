@@ -26,10 +26,7 @@ import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
-
 import 'package:imis/widgets/permission_widget.dart';
-
 import 'package:motion_toast/motion_toast.dart';
 
 class DashboardNavigationPanel extends StatefulWidget {
@@ -42,10 +39,11 @@ class DashboardNavigationPanel extends StatefulWidget {
 
 class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
     with WidgetsBindingObserver {
+  final GlobalKey _menuKey = GlobalKey();
+
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<ScaffoldMessengerState> snackbarKey =
       GlobalKey<ScaffoldMessengerState>();
-  final GlobalKey _menuKey = GlobalKey();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   bool _isLoading = false;
@@ -75,9 +73,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      TokenExpirationHandler(context).checkTokenExpiration();
-    }
+    if (state == AppLifecycleState.resumed) {}
   }
 
   @override
@@ -148,7 +144,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
               ),
               TextButton(
                 onPressed: () async {
-                  await AuthUtil.logout();
+                  await AuthUtil.logout(context);
                   if (!context.mounted) return;
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(builder: (context) => const LoginPage()),
@@ -227,7 +223,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                         backgroundImage:
                             image != null
                                 ? FileImage(image!) as ImageProvider
-                                : AssetImage('assets/profile1.jpg'),
+                                : AssetImage('assets/profile.jpg'),
                       ),
 
                       Positioned(
@@ -349,14 +345,13 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                 children: [
                   Stack(
                     children: [
-                      // Profile Picture
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: grey,
                         backgroundImage:
                             image != null
                                 ? FileImage(image!) as ImageProvider
-                                : AssetImage('assets/profile1.jpg'),
+                                : AssetImage('assets/iconprofile.jpg'),
                       ),
 
                       Positioned(
@@ -515,13 +510,6 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                       () => _setScreen(PgsScoreMonitoringPage(), 3),
                     ),
                   ),
-
-                  // _buildListTile(
-                  //   Icons.history,
-                  //   'History',
-                  //   1,
-                  //   () => _setScreen(PgsDeliverableHistoryPage(), 1),
-                  // ),
                   PermissionWidget(
                     permission: AppPermission.editTeam,
                     child: Theme(
@@ -794,7 +782,11 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                                     mainAxisSize: MainAxisSize.min,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
-                                    children: [Text("Welcome, $firstName")],
+                                    children: [
+                                      Text(
+                                        "Welcome, ${firstName.split(' ')[0]}",
+                                      ),
+                                    ],
                                   ),
 
                                   Text(

@@ -6,9 +6,8 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_role.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:collection/collection.dart';
 import '../../utils/http_util.dart';
 
@@ -209,11 +208,8 @@ class UserRolePageState extends State<UserRolePage> {
     var url = ApiEndpoint().roles;
 
     try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      String? token = prefs.getString('accessToken');
-
+      String? token = await AuthUtil.getAccessToken();
       if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
         return;
       }
 
@@ -305,7 +301,7 @@ class UserRolePageState extends State<UserRolePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
-    TokenExpirationHandler(context).checkTokenExpiration();
+    // TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -731,7 +727,7 @@ class UserRolePageState extends State<UserRolePage> {
                                     Container(
                                       padding: EdgeInsets.symmetric(
                                         vertical: 1,
-                                        horizontal: 16,
+                                        horizontal: 10,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(

@@ -2,11 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
+import 'package:imis/roles/services/roles_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
-import '../../utils/http_util.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class RolesPage extends StatefulWidget {
   const RolesPage({super.key});
@@ -16,6 +16,7 @@ class RolesPage extends StatefulWidget {
 }
 
 class RolesPageState extends State<RolesPage> {
+  final _rolesService = RolesService(Dio());
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Roles> roleSearchUtil;
 
@@ -39,12 +40,10 @@ class RolesPageState extends State<RolesPage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils.fetchPaginatedData<Roles>(
-        endpoint: ApiEndpoint().roles,
+      final pageList = await _rolesService.getRoles(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        fromJson: (json) => Roles.fromJson(json),
       );
 
       if (mounted) {
@@ -64,59 +63,6 @@ class RolesPageState extends State<RolesPage> {
     }
   }
 
-  Future<void> updateRole(String roleId, String newRoleName) async {
-    final url = '${ApiEndpoint().roles}/$roleId';
-
-    try {
-      final response = await AuthenticatedRequest.put(
-        dio,
-        url,
-        data: '"$newRoleName"',
-      );
-
-      if (response.statusCode == 200) {
-        debugPrint("Role updated successfully: ${response.data}");
-        fetchRoles();
-      } else {
-        debugPrint("Update failed: ${response.statusCode} ${response.data}");
-      }
-    } catch (e) {
-      debugPrint("Error updating role: $e");
-    }
-  }
-
-  Future<void> addRole(String roleName) async {
-    var url = ApiEndpoint().roles;
-    try {
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: '"$roleName"',
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        setState(() {
-          fetchRoles();
-        });
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating role: $e");
-    }
-  }
-
-  Future<void> deleteRoles(String kraId) async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.delete(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchRoles();
-      }
-    } catch (e) {
-      debugPrint("Error deleting KRA: $e");
-    }
-  }
-
   @override
   void initState() {
     super.initState();
@@ -131,7 +77,6 @@ class RolesPageState extends State<RolesPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
-    TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -254,7 +199,10 @@ class RolesPageState extends State<RolesPage> {
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context, false),
-                            child: Text("No"),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                           TextButton(
                             onPressed: () {
@@ -262,26 +210,44 @@ class RolesPageState extends State<RolesPage> {
                                 Navigator.pop(context, true);
                               }
                             },
-                            child: Text("Yes"),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
                           ),
                         ],
                       );
                     },
                   );
-
                   if (confirmAction == true) {
                     final roleName = roleController.text.trim();
 
                     if (roleName.isNotEmpty) {
                       if (id == null) {
-                        // Add role
-                        await addRole(roleName);
+                        try {
+                          await _rolesService.createRole(roleName);
+                          setState(() {
+                            fetchRoles();
+                          });
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+                        } catch (e) {
+                          MotionToast.error(
+                            description: Text('Failed to Add Role'),
+                          );
+                        }
                       } else {
-                        // Update role
-                        await updateRole(id, roleName);
+                        try {
+                          await _rolesService.updateRole(id, roleName);
+                          fetchRoles();
+                          // ignore: use_build_context_synchronously
+                          Navigator.pop(context);
+                        } catch (e) {
+                          MotionToast.error(
+                            description: Text('Failed to Update Role'),
+                          );
+                        }
                       }
-                      // ignore: use_build_context_synchronously
-                      Navigator.pop(context);
                     }
                   }
                 }
@@ -410,7 +376,7 @@ class RolesPageState extends State<RolesPage> {
                                     Container(
                                       padding: EdgeInsets.symmetric(
                                         vertical: 1,
-                                        horizontal: 16,
+                                        horizontal: 10,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(
@@ -554,7 +520,12 @@ class RolesPageState extends State<RolesPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deleteRoles(id);
+                try {
+                  await _rolesService.deleteRole(id);
+                  await fetchRoles();
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Delete Role'));
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,

@@ -1,7 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'dart:io';
+import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
+import 'package:imis/utils/app_permission.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
+import 'package:imis/widgets/permission_widget.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -25,7 +27,6 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
-import 'package:imis/utils/token_expiration_handler.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -33,7 +34,7 @@ import 'package:open_file/open_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/http_util.dart';
-import '../models/pgs_deliverable_history.dart';
+import 'pgs_reports.dart';
 
 class PerformanceGovernanceSystemPage extends StatefulWidget {
   const PerformanceGovernanceSystemPage({super.key});
@@ -47,6 +48,7 @@ class PerformanceGovernanceSystemPageState
     extends State<PerformanceGovernanceSystemPage> {
   late FilterSearchResultUtil<PerformanceGovernanceSystem> pgsSearchUtil;
   final GlobalKey _menuKey = GlobalKey();
+  final _formKey = GlobalKey<FormState>();
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> signatoryControllers = {};
   Map<int, TextEditingController> selectedByWhenControllers = {};
@@ -85,8 +87,6 @@ class PerformanceGovernanceSystemPageState
   Map<int, int?> signatoryIds = {};
 
   List<int> rows = [];
-  int rowIndex = 1;
-
   String officeDisplay = "";
   String officeIdList = "";
   String? selectedOffice = "";
@@ -120,6 +120,10 @@ class PerformanceGovernanceSystemPageState
   bool isMenuOpenOffice = false;
   bool isMenuOpenStartDate = false;
   bool isMenuOpenEndDate = false;
+
+  // bool showErrors = false;
+
+  Map<int, bool> rowErrors = {};
 
   List<Map<String, dynamic>> filteredListOffice = [];
   List<Map<String, dynamic>> officeList = [];
@@ -163,7 +167,7 @@ class PerformanceGovernanceSystemPageState
   final dio = Dio();
 
   Future<void> _loadCurrentUserId() async {
-    UserRegistration? user = await AuthUtil.processTokenValidity(dio);
+    UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
 
     setState(() {
       userId = user!.id ?? "UserId";
@@ -174,8 +178,8 @@ class PerformanceGovernanceSystemPageState
     }
   }
 
-  //Save pgs
-  Future<void> savePGS(PerformanceGovernanceSystem audit) async {
+  //Save as draft pgs
+  Future<void> saveasDraftPGS(PerformanceGovernanceSystem audit) async {
     var url = ApiEndpoint().performancegovernancesystem;
 
     try {
@@ -264,13 +268,6 @@ class PerformanceGovernanceSystemPageState
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) {
-        debugPrint("Error: No user found in shared preferences.");
-        return;
-      }
-
-      String? token = await AuthUtil.fetchAccessToken();
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
         return;
       }
 
@@ -280,7 +277,6 @@ class PerformanceGovernanceSystemPageState
       );
 
       if (signatoryResponse.statusCode != 200) {
-        debugPrint("Failed to fetch signatory data");
         return;
       }
 
@@ -308,11 +304,7 @@ class PerformanceGovernanceSystemPageState
         await prefs.remove('selectedOfficeName');
       } else {
         debugPrint("Failed to update PGS");
-        if (response.statusCode == 401 || response.statusCode == 403) {
-          debugPrint(
-            "Token expired or invalid. Consider redirecting to login.",
-          );
-        }
+        if (response.statusCode == 401 || response.statusCode == 403) {}
       }
     } on DioException catch (e) {
       debugPrint("Dio error");
@@ -554,7 +546,6 @@ class PerformanceGovernanceSystemPageState
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Close button
                 Align(
                   alignment: Alignment.topRight,
                   child: IconButton(
@@ -683,17 +674,10 @@ class PerformanceGovernanceSystemPageState
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) {
-        debugPrint("Error: No user found in shared preferences.");
         return;
       }
 
       setState(() => userId = user.id ?? "UserId");
-
-      String? token = await AuthUtil.fetchAccessToken();
-      if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
-        return;
-      }
 
       final pageList = await _paginationUtils.fetchPaginatedData<
         PerformanceGovernanceSystem
@@ -739,15 +723,13 @@ class PerformanceGovernanceSystemPageState
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) {
-        debugPrint("Error: No user found in shared preferences.");
         return;
       }
 
       setState(() => userId = user.id ?? "UserId");
 
-      String? token = await AuthUtil.fetchAccessToken();
+      String? token = await AuthUtil.getAccessToken();
       if (token == null || token.isEmpty) {
-        debugPrint("Error: Access token is missing!");
         return;
       }
 
@@ -787,14 +769,8 @@ class PerformanceGovernanceSystemPageState
 
     try {
       final user = await AuthUtil.fetchLoggedUser();
-      final token = await AuthUtil.fetchAccessToken();
 
-      if (user == null || token == null || token.isEmpty) {
-        debugPrint("Missing user or token.");
-        return;
-      }
-
-      setState(() => userId = user.id ?? "UserId");
+      setState(() => userId = user?.id ?? "UserId");
 
       final Map<String, dynamic> queryParams = {
         'userId': userId,
@@ -811,9 +787,6 @@ class PerformanceGovernanceSystemPageState
         if (_selectedOfficeId != null && _selectedOfficeId!.isNotEmpty)
           'officeId': _selectedOfficeId,
       };
-
-      debugPrint("Sending query params: $queryParams");
-
       final response = await AuthenticatedRequest.get(
         dio,
         ApiEndpoint().performancegovernancesystemFilter,
@@ -838,10 +811,10 @@ class PerformanceGovernanceSystemPageState
         }
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.message}");
+      debugPrint("Dio error");
       if (e.response != null) {}
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -907,7 +880,6 @@ class PerformanceGovernanceSystemPageState
     fetchPgsList();
     fetchUser();
     fetchPGSPeriods();
-    TokenExpirationHandler(context).checkTokenExpiration();
 
     isSearchFocus.addListener(() {
       setState(() {});
@@ -1124,6 +1096,7 @@ class PerformanceGovernanceSystemPageState
     selectedKRA.clear();
     deliverableIds.clear();
     deliverablesList.clear();
+    rowErrors.clear();
   }
 
   void confirmSelection() {
@@ -1208,199 +1181,157 @@ class PerformanceGovernanceSystemPageState
                         ],
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PopupMenuButton<String>(
-                            color: mainBgColor,
-                            offset: const Offset(0, 30),
-                            onCanceled: () {
-                              setState(() {
-                                isMenuOpenOffice = false;
-                              });
-                            },
-                            onOpened: () {
-                              setState(() {
-                                isMenuOpenOffice = true;
-                              });
-                            },
-                            onSelected: (String value) {
-                              setState(() {
-                                _selectedOfficeId =
-                                    value.isEmpty ? null : value;
-                                fetchPGSPeriods();
-                                isMenuOpenOffice = false;
-                              });
-                            },
-                            itemBuilder: (BuildContext context) {
-                              final updatedOfficeList = [
-                                {'id': '', 'name': 'All Offices'},
-                                ...filteredListOffice,
-                              ];
+                    PermissionWidget(
+                      permission: AppPermission.viewOffice,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            PopupMenuButton<String>(
+                              color: mainBgColor,
+                              offset: const Offset(0, 30),
+                              onCanceled: () {
+                                setState(() {
+                                  isMenuOpenOffice = false;
+                                });
+                              },
+                              onOpened: () {
+                                setState(() {
+                                  isMenuOpenOffice = true;
+                                });
+                              },
+                              onSelected: (String value) {
+                                setState(() {
+                                  _selectedOfficeId =
+                                      value.isEmpty ? null : value;
+                                  fetchPGSPeriods();
+                                  isMenuOpenOffice = false;
+                                });
+                              },
+                              itemBuilder: (BuildContext context) {
+                                final updatedOfficeList = [
+                                  {'id': '', 'name': 'All Offices'},
+                                  ...filteredListOffice,
+                                ];
 
-                              final searchController = TextEditingController();
-                              ValueNotifier<String> searchQuery = ValueNotifier(
-                                '',
-                              );
+                                final searchController =
+                                    TextEditingController();
+                                ValueNotifier<String> searchQuery =
+                                    ValueNotifier('');
 
-                              return [
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  height: kMinInteractiveDimension,
-                                  child: Column(
-                                    children: [
-                                      TextField(
-                                        controller: searchController,
-                                        decoration: InputDecoration(
-                                          hintText: 'Search offices...',
-                                          hintStyle: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 12,
+                                return [
+                                  PopupMenuItem<String>(
+                                    enabled: false,
+                                    height: kMinInteractiveDimension,
+                                    child: Column(
+                                      children: [
+                                        TextField(
+                                          controller: searchController,
+                                          decoration: InputDecoration(
+                                            hintText: 'Search offices...',
+                                            hintStyle: TextStyle(
+                                              color: Colors.grey,
+                                              fontSize: 12,
+                                            ),
+                                            prefixIcon: Icon(
+                                              Icons.search,
+                                              size: 18,
+                                            ),
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  vertical: 8,
+                                                ),
+                                            border: OutlineInputBorder(),
+                                            isDense: true,
                                           ),
-                                          prefixIcon: Icon(
-                                            Icons.search,
-                                            size: 18,
-                                          ),
-                                          contentPadding: EdgeInsets.symmetric(
-                                            vertical: 8,
-                                          ),
-                                          border: OutlineInputBorder(),
-                                          isDense: true,
+                                          onChanged: (value) {
+                                            searchQuery.value =
+                                                value.toLowerCase();
+                                          },
                                         ),
-                                        onChanged: (value) {
-                                          searchQuery.value =
-                                              value.toLowerCase();
-                                        },
-                                      ),
-                                      const Divider(height: 16, thickness: 1),
-                                    ],
+                                        const Divider(height: 16, thickness: 1),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                // Scrollable office list
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  child: ValueListenableBuilder<String>(
-                                    valueListenable: searchQuery,
-                                    builder: (context, query, _) {
-                                      final filteredOffices =
-                                          updatedOfficeList
-                                              .where(
-                                                (office) => office['name']
-                                                    .toString()
-                                                    .toLowerCase()
-                                                    .contains(query),
-                                              )
-                                              .toList();
+                                  // Scrollable office list
+                                  PopupMenuItem<String>(
+                                    enabled: false,
+                                    child: ValueListenableBuilder<String>(
+                                      valueListenable: searchQuery,
+                                      builder: (context, query, _) {
+                                        final filteredOffices =
+                                            updatedOfficeList
+                                                .where(
+                                                  (office) => office['name']
+                                                      .toString()
+                                                      .toLowerCase()
+                                                      .contains(query),
+                                                )
+                                                .toList();
 
-                                      return ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxHeight:
-                                              MediaQuery.of(
-                                                context,
-                                              ).size.height *
-                                              0.4,
-                                        ),
-                                        child: SingleChildScrollView(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children:
-                                                filteredOffices
-                                                    .map<Widget>(
-                                                      (office) => ListTile(
-                                                        dense: true,
-                                                        title: Text(
-                                                          office['name'],
-                                                          style: TextStyle(
-                                                            color: Colors.black,
+                                        return ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                            maxHeight:
+                                                MediaQuery.of(
+                                                  context,
+                                                ).size.height *
+                                                0.4,
+                                          ),
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children:
+                                                  filteredOffices
+                                                      .map<Widget>(
+                                                        (office) => ListTile(
+                                                          dense: true,
+                                                          title: Text(
+                                                            office['name'],
+                                                            style: TextStyle(
+                                                              color:
+                                                                  Colors.black,
+                                                            ),
                                                           ),
+                                                          onTap: () {
+                                                            Navigator.pop(
+                                                              context,
+                                                            );
+                                                            setState(() {
+                                                              _selectedOfficeId =
+                                                                  office['id']
+                                                                      .toString();
+                                                              fetchPgsFilter();
+                                                            });
+                                                          },
                                                         ),
-                                                        onTap: () {
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
-                                                          setState(() {
-                                                            _selectedOfficeId =
-                                                                office['id']
-                                                                    .toString();
-                                                            fetchPgsFilter();
-                                                          });
-                                                        },
-                                                      ),
-                                                    )
-                                                    .toList(),
+                                                      )
+                                                      .toList(),
+                                            ),
                                           ),
-                                        ),
-                                      );
-                                    },
+                                        );
+                                      },
+                                    ),
                                   ),
-                                ),
-                              ];
-                            },
-                            child: FilterButton(
-                              label:
-                                  _selectedOfficeId == null
-                                      ? 'All Offices'
-                                      : filteredListOffice.firstWhere(
-                                        (office) =>
-                                            office['id'].toString() ==
-                                            _selectedOfficeId,
-                                        orElse: () => {'name': 'Office'},
-                                      )['name'],
-                              isActive: isMenuOpenOffice,
+                                ];
+                              },
+                              child: FilterButton(
+                                label:
+                                    _selectedOfficeId == null
+                                        ? 'All Offices'
+                                        : filteredListOffice.firstWhere(
+                                          (office) =>
+                                              office['id'].toString() ==
+                                              _selectedOfficeId,
+                                          orElse: () => {'name': 'All Offices'},
+                                        )['name'],
+                                isActive: isMenuOpenOffice,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-
-                    // Padding(
-                    //   padding: const EdgeInsets.only(right: 8.0),
-                    //   child: Column(
-                    //     crossAxisAlignment: CrossAxisAlignment.start,
-                    //     children: [
-                    //       PopupMenuButton<String>(
-                    //         color: mainBgColor,
-                    //         offset: const Offset(0, 30),
-                    //         onSelected: (String selectedDate) {
-                    //           setState(() {
-                    //             selectedStartPeriod =
-                    //                 selectedDate.isEmpty ? null : selectedDate;
-                    //             selectedStartDateText =
-                    //                 selectedStartPeriod ?? 'All Start Date';
-                    //           });
-                    //           fetchPgsFilter();
-                    //         },
-
-                    //         itemBuilder: (BuildContext context) {
-                    //           final periodOptions = [
-                    //             {'date': '', 'displayText': 'All Start Date'},
-                    //             ...filteredListPeriod.map(
-                    //               (period) => {
-                    //                 'date': period['startDate'],
-                    //                 'displayText': period['startDate'],
-                    //               },
-                    //             ),
-                    //           ];
-
-                    //           return periodOptions.map<PopupMenuItem<String>>((
-                    //             option,
-                    //           ) {
-                    //             return PopupMenuItem<String>(
-                    //               value: option['date'],
-                    //               child: Text(option['displayText']!),
-                    //             );
-                    //           }).toList();
-                    //         },
-                    //         child: FilterButton(
-                    //           label:
-                    //               selectedStartDateText ?? 'Select Start Date',
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // ),
                     Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: Column(
@@ -1772,14 +1703,14 @@ class PerformanceGovernanceSystemPageState
                                                                 pgsgovernancesystem['id'],
                                                           );
 
-                                                      List<
-                                                        PgsDeliverableHistory
-                                                      >
-                                                      pgsDeliverableHistory =
-                                                          await fetchDeliverablesHistory(
-                                                            pgsId:
-                                                                pgsgovernancesystem['id'],
-                                                          );
+                                                      // List<
+                                                      //   PgsDeliverableHistory
+                                                      // >
+                                                      // pgsDeliverableHistory =
+                                                      //     await fetchDeliverablesHistory(
+                                                      //       pgsId:
+                                                      //           pgsgovernancesystem['id'],
+                                                      //     );
 
                                                       List<PgsSignatory>
                                                       signatory =
@@ -1820,15 +1751,15 @@ class PerformanceGovernanceSystemPageState
                                                             pgsgovernancesystem['pgsStatus'],
                                                         remarks:
                                                             pgsgovernancesystem['remarks'],
-                                                        pgsDeliverableHistroy:
-                                                            pgsDeliverableHistory,
+                                                        // pgsDeliverableHistroy:
+                                                        //     pgsDeliverableHistory,
                                                       );
 
                                                       fetchPgsList();
-                                                      fetchDeliverablesHistory(
-                                                        pgsId:
-                                                            pgsgovernancesystem['id'],
-                                                      );
+                                                      // fetchDeliverablesHistory(
+                                                      //   pgsId:
+                                                      //       pgsgovernancesystem['id'],
+                                                      // );
                                                       fetchSignatoryList(
                                                         pgsId:
                                                             pgsgovernancesystem['id'],
@@ -1836,111 +1767,34 @@ class PerformanceGovernanceSystemPageState
                                                     },
                                                   ),
 
+                                                  // IconButton(
+                                                  //   icon: const Icon(
+                                                  //     Icons.print,
+                                                  //   ),
+                                                  //   onPressed: () async {},
+                                                  // ),
                                                   IconButton(
                                                     icon: const Icon(
                                                       Icons.print,
                                                     ),
                                                     onPressed: () async {
-                                                      final previewId =
+                                                      final pgsId =
                                                           pgsgovernancesystem['id']
                                                               .toString();
-                                                      if (previewId.isEmpty) {
-                                                        debugPrint(
-                                                          "Preview ID is empty or null.",
-                                                        );
-                                                        return;
-                                                      }
-
-                                                      final pgsId =
-                                                          int.tryParse(
-                                                            previewId,
-                                                          );
-                                                      if (pgsId == null) {
-                                                        debugPrint(
-                                                          "Invalid preview ID: $previewId",
-                                                        );
-                                                        return;
-                                                      }
-
-                                                      final api = ApiEndpoint();
-                                                      final pdfUrl =
-                                                          '${api.generatePdf}/$pgsId';
-
-                                                      debugPrint(
-                                                        "Opening PDF: $pdfUrl",
-                                                      );
-
-                                                      try {
-                                                        if (kIsWeb) {
-                                                          html.window.open(
-                                                            pdfUrl,
-                                                            "_blank",
-                                                          );
-                                                        } else {
-                                                          final url = Uri.parse(
-                                                            pdfUrl,
-                                                          );
-                                                          final response =
-                                                              await http.get(
-                                                                url,
-                                                              );
-
-                                                          if (response
-                                                                  .statusCode ==
-                                                              200) {
-                                                            final directory =
-                                                                await getApplicationDocumentsDirectory();
-                                                            final filePath =
-                                                                "${directory.path}/PGS_Report_$pgsId.pdf";
-                                                            final file = File(
-                                                              filePath,
-                                                            );
-
-                                                            await file
-                                                                .writeAsBytes(
-                                                                  response
-                                                                      .bodyBytes,
-                                                                );
-                                                            await OpenFile.open(
-                                                              file.path,
-                                                            );
-                                                          } else {
-                                                            debugPrint(
-                                                              "Failed to download PDF. Status: ${response.statusCode}",
-                                                            );
-                                                            if (context
-                                                                .mounted) {
-                                                              ScaffoldMessenger.of(
-                                                                context,
-                                                              ).showSnackBar(
-                                                                const SnackBar(
-                                                                  content: Text(
-                                                                    'Failed to download PDF',
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (context) =>
+                                                                  SampleReport(
+                                                                    isPdf: true,
+                                                                    pgsId:
+                                                                        pgsId,
                                                                   ),
-                                                                ),
-                                                              );
-                                                            }
-                                                          }
-                                                        }
-                                                      } catch (e) {
-                                                        debugPrint(
-                                                          "Error opening PDF: $e",
-                                                        );
-                                                        if (context.mounted) {
-                                                          ScaffoldMessenger.of(
-                                                            context,
-                                                          ).showSnackBar(
-                                                            const SnackBar(
-                                                              content: Text(
-                                                                'Error opening PDF file',
-                                                              ),
-                                                            ),
-                                                          );
-                                                        }
-                                                      }
+                                                        ),
+                                                      );
                                                     },
                                                   ),
-
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.delete,
@@ -2125,6 +1979,10 @@ class PerformanceGovernanceSystemPageState
     String? remarks,
   }) {
     setState(() {
+      if (rows.isEmpty) {
+        rows = [1];
+      }
+
       if (id == null) {
         competenceScore.value = 0.0;
         resourceScore.value = 0.0;
@@ -2268,536 +2126,460 @@ class PerformanceGovernanceSystemPageState
                       height: MediaQuery.of(context).size.height * 0.8,
                       child: DefaultTabController(
                         length: 3, // Number of tabs
-                        child: Column(
-                          children: [
-                            // Header Row
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Image.asset('assets/CRMC.png', height: 90),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      id == null
-                                          ? 'COTABATO REGIONAL AND MEDICAL CENTER'
-                                          : 'COTABATO REGIONAL AND MEDICAL CENTER',
-
-                                      textAlign: TextAlign.center,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-
-                                    Container(
-                                      width: 250,
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                      ),
-                                      child: CustomTooltip(
-                                        message: 'Select period',
-                                        child: DropdownButton<int>(
-                                          dropdownColor: mainBgColor,
-                                          value: selectedPeriod,
-                                          isExpanded: true,
-                                          underline: Container(),
-                                          icon: Icon(Icons.arrow_drop_down),
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            color: Colors.black,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          hint: Text(
-                                            selectedPeriodText ??
-                                                'Select a period',
-                                          ),
-                                          onChanged: (int? newValue) {
-                                            if (newValue != null) {
-                                              final selected =
-                                                  filteredListPeriod.firstWhere(
-                                                    (period) =>
-                                                        period['id'] ==
-                                                        newValue,
-                                                    orElse: () => {},
-                                                  );
-
-                                              setDialogState(() {
-                                                selectedPeriod = newValue;
-                                                selectedPeriodText =
-                                                    "${selected['startDate']} - ${selected['endDate']}";
-                                              });
-
-                                              debugPrint(
-                                                "Dropdown selected new value: $newValue",
-                                              );
-                                            }
-                                          },
-                                          items:
-                                              filteredListPeriod.map<
-                                                DropdownMenuItem<int>
-                                              >((period) {
-                                                return DropdownMenuItem<int>(
-                                                  value: period['id'],
-                                                  child: Text(
-                                                    "${period['startDate']} - ${period['endDate']}",
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                );
-                                              }).toList(),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-
-                            SizedBox(height: 20),
-                            TabBar(
-                              labelColor: primaryLightColor,
-                              unselectedLabelColor: Colors.black,
-                              indicatorColor: primaryColor,
-                              labelStyle: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                              unselectedLabelStyle: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                              tabs: [
-                                Tab(
-                                  text: "Strategic Contributions",
-                                ), // Tab Name 1
-                                Tab(
-                                  text:
-                                      "Readiness Rating - ${officename ?? officeDisplay}",
-                                ), // Tab Name 2
-                                Tab(
-                                  text: "PGS Deliverables Status",
-                                ), // Tab Name 3
-                                // Tab(
-                                //   text: "PGS Deliverables History",
-                                // ), // Tab Name 4
-                              ],
-                            ),
-                            //First Tab Strategic Contributions
-                            Expanded(
-                              child: TabBarView(
+                        child: Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              // Header Row
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  SingleChildScrollView(
-                                    child: Column(
-                                      children: [
-                                        SizedBox(height: 20),
-                                        Table(
-                                          border: TableBorder.all(
-                                            color: const Color.fromARGB(
-                                              255,
-                                              49,
-                                              46,
-                                              46,
-                                            ),
-                                            width: 1,
-                                          ),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(1.5),
-                                            1: FlexColumnWidth(0.7),
-                                            2: FlexColumnWidth(0.7),
-                                            3: FlexColumnWidth(2),
-                                            4: FlexColumnWidth(1),
-                                            // 5: FlexColumnWidth(1),
-                                            5: FlexColumnWidth(0.7),
-                                          },
+                                  Image.asset('assets/CRMC.png', height: 90),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        id == null
+                                            ? 'COTABATO REGIONAL AND MEDICAL CENTER'
+                                            : 'COTABATO REGIONAL AND MEDICAL CENTER',
 
-                                          children: [
-                                            _buildMainHeaderStrategic(
-                                              officename:
-                                                  officename ?? officeDisplay,
-                                            ),
-
-                                            _buildTableSubHeaderStrategic(),
-
-                                            ...rows.map(
-                                              (rowId) =>
-                                                  _buildTableRowStrategic(
-                                                    rowId,
-                                                    '',
-                                                    '',
-                                                    setState,
-                                                    setDialogState,
-                                                    orderLevel: orderLevel,
-                                                    id: id,
-                                                  ),
-                                            ),
-                                          ],
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 18,
                                         ),
+                                      ),
 
-                                        TextButton(
-                                          onPressed: () {
-                                            setDialogState(() {
-                                              _addRow();
-                                            });
-                                          },
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                Icons.add,
-                                                color: primaryColor,
+                                      Container(
+                                        width: 250,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        child: CustomTooltip(
+                                          message: 'Select period',
+                                          child: FormField<int>(
+                                            autovalidateMode:
+                                                AutovalidateMode
+                                                    .onUserInteraction,
+                                            validator: (value) {
+                                              if (value == null) {
+                                                return 'Please select a period date';
+                                              }
+                                              return null;
+                                            },
+                                            builder: (
+                                              FormFieldState<int> state,
+                                            ) {
+                                              return Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  DropdownButton<int>(
+                                                    dropdownColor: mainBgColor,
+                                                    value: selectedPeriod,
+                                                    isExpanded: true,
+                                                    underline: Container(),
+                                                    icon: Icon(
+                                                      Icons.arrow_drop_down,
+                                                    ),
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      color: Colors.black,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                    hint: Text(
+                                                      selectedPeriodText ??
+                                                          'Select a period',
+                                                    ),
+                                                    onChanged: (int? newValue) {
+                                                      if (newValue != null) {
+                                                        final selected =
+                                                            filteredListPeriod
+                                                                .firstWhere(
+                                                                  (period) =>
+                                                                      period['id'] ==
+                                                                      newValue,
+                                                                  orElse:
+                                                                      () => {},
+                                                                );
+
+                                                        setDialogState(() {
+                                                          selectedPeriod =
+                                                              newValue;
+                                                          selectedPeriodText =
+                                                              "${selected['startDate']} - ${selected['endDate']}";
+                                                        });
+
+                                                        state.didChange(
+                                                          newValue,
+                                                        ); // Notify FormField of change
+                                                      }
+                                                    },
+                                                    items:
+                                                        filteredListPeriod.map<
+                                                          DropdownMenuItem<int>
+                                                        >((period) {
+                                                          return DropdownMenuItem<
+                                                            int
+                                                          >(
+                                                            value: period['id'],
+                                                            child: Text(
+                                                              "${period['startDate']} - ${period['endDate']}",
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
+                                                            ),
+                                                          );
+                                                        }).toList(),
+                                                  ),
+                                                  if (state.hasError)
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                            top: 5,
+                                                          ),
+                                                      child: Text(
+                                                        state.errorText!,
+                                                        style: TextStyle(
+                                                          color: primaryColor,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+
+                              SizedBox(height: 20),
+                              TabBar(
+                                labelColor: primaryLightColor,
+                                unselectedLabelColor: Colors.black,
+                                indicatorColor: primaryColor,
+                                labelStyle: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                                unselectedLabelStyle: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                                tabs: [
+                                  Tab(
+                                    text: "Strategic Contributions",
+                                  ), // Tab Name 1
+                                  Tab(
+                                    text:
+                                        "Readiness Rating - ${officename ?? officeDisplay}",
+                                  ), // Tab Name 2
+                                  Tab(
+                                    text: "PGS Deliverables Status",
+                                  ), // Tab Name 3
+                                  // Tab(
+                                  //   text: "PGS Deliverables History",
+                                  // ), // Tab Name 4
+                                ],
+                              ),
+                              //First Tab Strategic Contributions
+                              Expanded(
+                                child: TabBarView(
+                                  children: [
+                                    SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          SizedBox(height: 20),
+                                          Table(
+                                            border: TableBorder.all(
+                                              color: const Color.fromARGB(
+                                                255,
+                                                49,
+                                                46,
+                                                46,
                                               ),
-                                              Text(
-                                                'Add Row',
-                                                style: TextStyle(
-                                                  color: primaryColor,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
+                                              width: 1,
+                                            ),
+                                            columnWidths: const {
+                                              0: FlexColumnWidth(1.5),
+                                              1: FlexColumnWidth(0.7),
+                                              2: FlexColumnWidth(0.7),
+                                              3: FlexColumnWidth(2),
+                                              4: FlexColumnWidth(1),
+                                              // 5: FlexColumnWidth(1),
+                                              5: FlexColumnWidth(0.7),
+                                            },
+
+                                            children: [
+                                              _buildMainHeaderStrategic(
+                                                officename:
+                                                    officename ?? officeDisplay,
+                                              ),
+
+                                              _buildTableSubHeaderStrategic(),
+
+                                              ...rows.map(
+                                                (rowId) =>
+                                                    _buildTableRowStrategic(
+                                                      rowId,
+                                                      '',
+                                                      '',
+                                                      setState,
+                                                      setDialogState,
+                                                      orderLevel: orderLevel,
+                                                      id: id,
+                                                      showErrors:
+                                                          rowErrors[rowId] ??
+                                                          false,
+                                                    ),
                                               ),
                                             ],
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  //End First Tab
-
-                                  //Second Tab  Readiness Rating-Cancer Care
-                                  Scaffold(
-                                    backgroundColor: mainBgColor,
-                                    appBar: AppBar(
-                                      automaticallyImplyLeading: false,
-                                      title: Row(
-                                        children: [
-                                          Text(
-                                            'READINESS RATING - ${officename ?? officeDisplay}',
-                                            style: TextStyle(
-                                              fontSize: 30,
-                                              fontWeight: FontWeight.normal,
-                                              color: Colors.white,
+                                          gap,
+                                          TextButton(
+                                            onPressed: () {
+                                              setDialogState(() {
+                                                _addRow();
+                                              });
+                                            },
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.add,
+                                                  color: primaryColor,
+                                                ),
+                                                Text(
+                                                  'Add Row',
+                                                  style: TextStyle(
+                                                    color: primaryColor,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
                                       ),
-                                      toolbarHeight: 60,
-                                      backgroundColor: primaryLightColor,
                                     ),
-                                    body: SingleChildScrollView(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.stretch,
+                                    //End First Tab
+
+                                    //Second Tab  Readiness Rating-Cancer Care
+                                    Scaffold(
+                                      backgroundColor: mainBgColor,
+                                      appBar: AppBar(
+                                        automaticallyImplyLeading: false,
+                                        title: Row(
                                           children: [
-                                            Container(
-                                              alignment: Alignment(1.0, 0.0),
-                                              padding: EdgeInsets.only(
-                                                right: 50.0,
+                                            Text(
+                                              'READINESS RATING - ${officename ?? officeDisplay}',
+                                              style: TextStyle(
+                                                fontSize: 30,
+                                                fontWeight: FontWeight.normal,
+                                                color: Colors.white,
                                               ),
-                                              child: Text(
-                                                'SCORE',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                            ),
-                                            SizedBox(height: 8),
-                                            // Competence Score Dropdown
-                                            buildScoreRow(
-                                              'COMPETENCE TO DELIVER',
-                                              [
-                                                'Teams lack adequate skills and training to deliver performance commitments',
-                                                'Teams are skilled but lack training to deliver performance commitments ',
-                                                'Teams are highly skilled and trained to deliver performance commitments',
-                                              ],
-
-                                              competenceScore,
-                                            ),
-
-                                            // Resource Availability Dropdown
-                                            buildScoreRow(
-                                              'RESOURCE AVAILABILITY',
-                                              [
-                                                'Insufficient; external resources difficult to source',
-                                                'Sufficient resources but not available; OR Insufficient but external resources can be tapped',
-                                                'Sufficient and available staff and budget',
-                                              ],
-
-                                              resourceScore,
-                                            ),
-
-                                            // Confidence to Deliver Dropdown
-                                            buildScoreRow(
-                                              'CONFIDENCE TO DELIVER',
-                                              [
-                                                'Low confidence because of high degree of organizational change required',
-                                                'Moderate confidence',
-                                                'High confidence despite organizational change required',
-                                              ],
-
-                                              confidenceScore,
-                                            ),
-
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
-                                              children: [
-                                                ValueListenableBuilder<double>(
-                                                  valueListenable:
-                                                      competenceScore,
-                                                  builder: (context, comp, __) {
-                                                    return ValueListenableBuilder<
-                                                      double
-                                                    >(
-                                                      valueListenable:
-                                                          resourceScore,
-                                                      builder: (
-                                                        context,
-                                                        res,
-                                                        // _,
-                                                        __,
-                                                      ) {
-                                                        return ValueListenableBuilder<
-                                                          double
-                                                        >(
-                                                          valueListenable:
-                                                              confidenceScore,
-                                                          builder: (
-                                                            context,
-                                                            // _,
-                                                            conf,
-                                                            __,
-                                                          ) {
-                                                            final totalScore =
-                                                                comp +
-                                                                res +
-                                                                conf;
-                                                            return Padding(
-                                                              padding:
-                                                                  EdgeInsets.only(
-                                                                    right: 60.0,
-                                                                  ),
-                                                              child: Text(
-                                                                ('TOTAL SCORE:${totalScore.toStringAsFixed(1)}'),
-
-                                                                style: TextStyle(
-                                                                  fontSize: 20,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color:
-                                                                      Colors
-                                                                          .black,
-                                                                ),
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .right,
-                                                              ),
-                                                            );
-                                                          },
-                                                        );
-                                                      },
-                                                    );
-                                                  },
-                                                ),
-                                              ],
                                             ),
                                           ],
                                         ),
+                                        toolbarHeight: 60,
+                                        backgroundColor: primaryLightColor,
                                       ),
-                                    ),
-                                  ),
-
-                                  //End Second Tab
-
-                                  // Third Tab: PGS Deliverable Status
-                                  SingleChildScrollView(
-                                    child: Column(
-                                      children: [
-                                        SizedBox(height: 20),
-                                        Table(
-                                          border: TableBorder.all(
-                                            color: const Color.fromARGB(
-                                              255,
-                                              49,
-                                              46,
-                                              46,
-                                            ),
-                                            width: 1,
-                                          ),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(1),
-                                            1: FlexColumnWidth(0.4),
-                                            2: FlexColumnWidth(0.5),
-                                            3: FlexColumnWidth(1.90),
-                                            4: FlexColumnWidth(0.7),
-                                            5: FlexColumnWidth(0.6),
-                                            6: FlexColumnWidth(1.30),
-                                            7: FlexColumnWidth(0.5),
-                                          },
-                                          children: [
-                                            _PgsDeliverableHeader(
-                                              officename:
-                                                  officename ?? officeDisplay,
-                                            ),
-                                            _PgsBuildTableSubheader(),
-                                            ...rows.map(
-                                              (rowId) =>
-                                                  _buildTableRowStrategicPGSDeliverableStatus(
-                                                    rowId,
-                                                    '',
-                                                    '',
-                                                    setState,
-                                                    setDialogState,
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  pgsIdHistory != null
-                                      ? FutureBuilder<
-                                        List<PgsDeliverableHistory>
-                                      >(
-                                        future: fetchDeliverablesHistory(
-                                          pgsId: pgsIdHistory,
-                                        ),
-                                        builder: (context, snapshot) {
-                                          if (snapshot.connectionState ==
-                                              ConnectionState.waiting) {
-                                            return const Center(
-                                              child:
-                                                  CircularProgressIndicator(),
-                                            );
-                                          }
-                                          if (snapshot.hasError) {
-                                            return Text(
-                                              'Error: ${snapshot.error}',
-                                            );
-                                          }
-                                          if (!snapshot.hasData ||
-                                              snapshot.data!.isEmpty) {
-                                            return const Text(
-                                              'No deliverables history found',
-                                            );
-                                          }
-                                          return Table(
-                                            border: TableBorder.all(
-                                              color: Colors.black,
-                                              width: 1.0,
-                                            ),
-                                            defaultVerticalAlignment:
-                                                TableCellVerticalAlignment
-                                                    .middle,
-                                            columnWidths: const {
-                                              0: FlexColumnWidth(0.7),
-                                              1: FlexColumnWidth(0.7),
-                                              2: FlexColumnWidth(0.7),
-                                              3: FlexColumnWidth(0.7),
-                                              4: FlexColumnWidth(0.7),
-                                              5: FlexColumnWidth(0.7),
-                                              6: FlexColumnWidth(0.7),
-                                            },
+                                      body: SingleChildScrollView(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(16.0),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
                                             children: [
-                                              TableRow(
+                                              Container(
+                                                alignment: Alignment(1.0, 0.0),
+                                                padding: EdgeInsets.only(
+                                                  right: 50.0,
+                                                ),
+                                                child: Text(
+                                                  'SCORE',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(height: 8),
+                                              // Competence Score Dropdown
+                                              buildScoreRow(
+                                                'COMPETENCE TO DELIVER',
+                                                [
+                                                  'Teams lack adequate skills and training to deliver performance commitments',
+                                                  'Teams are skilled but lack training to deliver performance commitments ',
+                                                  'Teams are highly skilled and trained to deliver performance commitments',
+                                                ],
+
+                                                competenceScore,
+                                              ),
+
+                                              // Resource Availability Dropdown
+                                              buildScoreRow(
+                                                'RESOURCE AVAILABILITY',
+                                                [
+                                                  'Insufficient; external resources difficult to source',
+                                                  'Sufficient resources but not available; OR Insufficient but external resources can be tapped',
+                                                  'Sufficient and available staff and budget',
+                                                ],
+
+                                                resourceScore,
+                                              ),
+
+                                              // Confidence to Deliver Dropdown
+                                              buildScoreRow(
+                                                'CONFIDENCE TO DELIVER',
+                                                [
+                                                  'Low confidence because of high degree of organizational change required',
+                                                  'Moderate confidence',
+                                                  'High confidence despite organizational change required',
+                                                ],
+
+                                                confidenceScore,
+                                              ),
+
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.end,
                                                 children: [
-                                                  _buildTableHeaderCell('KRA'),
-                                                  _buildTableHeaderCell(
-                                                    'DIRECT',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'DELIVERABLES',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'BY WHEN',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'DISAPPROVAL REMARKS',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'REMOVE AT',
-                                                  ),
-                                                  _buildTableHeaderCell(
-                                                    'ACTION',
+                                                  ValueListenableBuilder<
+                                                    double
+                                                  >(
+                                                    valueListenable:
+                                                        competenceScore,
+                                                    builder: (
+                                                      context,
+                                                      comp,
+                                                      __,
+                                                    ) {
+                                                      return ValueListenableBuilder<
+                                                        double
+                                                      >(
+                                                        valueListenable:
+                                                            resourceScore,
+                                                        builder: (
+                                                          context,
+                                                          res,
+                                                          __,
+                                                        ) {
+                                                          return ValueListenableBuilder<
+                                                            double
+                                                          >(
+                                                            valueListenable:
+                                                                confidenceScore,
+                                                            builder: (
+                                                              context,
+                                                              conf,
+                                                              __,
+                                                            ) {
+                                                              final totalScore =
+                                                                  comp +
+                                                                  res +
+                                                                  conf;
+                                                              return Padding(
+                                                                padding:
+                                                                    EdgeInsets.only(
+                                                                      right:
+                                                                          60.0,
+                                                                    ),
+                                                                child: Text(
+                                                                  ('TOTAL SCORE:${totalScore.toStringAsFixed(1)}'),
+
+                                                                  style: TextStyle(
+                                                                    fontSize:
+                                                                        20,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color:
+                                                                        Colors
+                                                                            .black,
+                                                                  ),
+                                                                  textAlign:
+                                                                      TextAlign
+                                                                          .right,
+                                                                ),
+                                                              );
+                                                            },
+                                                          );
+                                                        },
+                                                      );
+                                                    },
                                                   ),
                                                 ],
                                               ),
-                                              ...snapshot.data!.map(
-                                                (deliverable) => TableRow(
-                                                  children: [
-                                                    _buildKraHistory(
-                                                      options.firstWhere(
-                                                        (option) =>
-                                                            option['id'] ==
-                                                            deliverable.kraId,
-                                                        orElse:
-                                                            () => {
-                                                              'id':
-                                                                  deliverable
-                                                                      .kraId,
-                                                              'name': 'Unknown',
-                                                            },
-                                                      )['name'],
-                                                      deliverable
-                                                              .kraDescription ??
-                                                          'No KRA description',
-                                                    ),
-                                                    _buildTableCell(
-                                                      '',
-                                                      isDirect:
-                                                          deliverable.isDirect,
-                                                    ),
-                                                    _buildTableCell(
-                                                      deliverable
-                                                              .deliverableName ??
-                                                          'N/A',
-                                                    ),
-                                                    _buildTableCell(
-                                                      DateFormat(
-                                                        'MMMM, yyyy',
-                                                      ).format(
-                                                        deliverable.byWhen!,
-                                                      ),
-                                                    ),
-                                                    _buildTableCell(
-                                                      deliverable
-                                                              .disapprovalRemarks ??
-                                                          'N/A',
-                                                    ),
-                                                    _buildTableCell(
-                                                      DateTimeConverter()
-                                                          .toJson(
-                                                            deliverable.byWhen!,
-                                                          ),
-                                                    ),
-
-                                                    _buildRecoverHistoryButton(
-                                                      context,
-                                                      deliverable,
-                                                      setDialogState,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
                                             ],
-                                          );
-                                        },
-                                      )
-                                      : SizedBox(
-                                        child: Center(
-                                          child: Text(
-                                            "No deleted deliverables",
                                           ),
                                         ),
                                       ),
-                                ],
+                                    ),
+
+                                    //End Second Tab
+
+                                    // Third Tab: PGS Deliverable Status
+                                    SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          SizedBox(height: 20),
+                                          Table(
+                                            border: TableBorder.all(
+                                              color: const Color.fromARGB(
+                                                255,
+                                                49,
+                                                46,
+                                                46,
+                                              ),
+                                              width: 1,
+                                            ),
+                                            columnWidths: const {
+                                              0: FlexColumnWidth(1),
+                                              1: FlexColumnWidth(0.4),
+                                              2: FlexColumnWidth(0.5),
+                                              3: FlexColumnWidth(1.90),
+                                              4: FlexColumnWidth(0.7),
+                                              5: FlexColumnWidth(0.6),
+                                              6: FlexColumnWidth(1.30),
+                                              7: FlexColumnWidth(0.5),
+                                            },
+                                            children: [
+                                              _PgsDeliverableHeader(
+                                                officename:
+                                                    officename ?? officeDisplay,
+                                              ),
+                                              _PgsBuildTableSubheader(),
+                                              ...rows.map(
+                                                (rowId) =>
+                                                    _buildTableRowStrategicPGSDeliverableStatus(
+                                                      rowId,
+                                                      '',
+                                                      '',
+                                                      setState,
+                                                      setDialogState,
+                                                      showErrors:
+                                                          rowErrors[rowId] ??
+                                                          false,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
                       ),
                     ),
@@ -2806,6 +2588,21 @@ class PerformanceGovernanceSystemPageState
               ),
 
               actions: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shadowColor: Colors.transparent,
+                    elevation: 0,
+                    backgroundColor: secondaryBgButton,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  onPressed: () => handleSaveAsDraft(context, id, orderLevel),
+                  child: Text(
+                    'Save as Draft',
+                    style: TextStyle(color: primaryColor),
+                  ),
+                ),
                 if ((id == null && orderLevel == 1) ||
                     (id == null && orderLevel >= 2) ||
                     isAnyDisapproved)
@@ -2816,8 +2613,38 @@ class PerformanceGovernanceSystemPageState
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    onPressed:
-                        () => handleSubmitOrConfirm(context, id, orderLevel),
+
+                    onPressed: () {
+                      setDialogState(() {
+                        rowErrors.clear();
+
+                        for (final index in rows) {
+                          final isDirectSelected =
+                              selectedDirect[index] ?? false;
+                          final isIndirectSelected =
+                              selectedIndirect[index] ?? false;
+
+                          rowErrors[index] =
+                              !(isDirectSelected || isIndirectSelected);
+                        }
+                      });
+
+                      // If no errors, proceed
+                      if (_formKey.currentState!.validate()) {
+                        handleSubmitOrConfirm(context, id, orderLevel);
+                      }
+
+                      if (deliverablesControllers.length != 5) {
+                        MotionToast.warning(
+                          title: const Text("Insufficient Deliverables"),
+                          description: const Text(
+                            "Please provide at least 5 deliverables.",
+                          ),
+                          toastAlignment: Alignment.center,
+                        ).show(context);
+                        return;
+                      }
+                    },
                     child: Text(
                       'Submit',
                       style: TextStyle(color: Colors.white),
@@ -2881,7 +2708,7 @@ class PerformanceGovernanceSystemPageState
           (controller) => controller.text.trim().isEmpty,
         ) ||
         percentageDeliverables.text.trim().isEmpty) {
-      MotionToast.error(
+      MotionToast.warning(
         title: const Text("Missing Fields"),
         description: Text(
           selectedPeriod == null
@@ -2911,6 +2738,118 @@ class PerformanceGovernanceSystemPageState
 
       if (pgsId == null) {
         await submitPGS(pgs);
+      } else {
+        await updateSavePGS(
+          pgsId: pgsId.toString(),
+          updatePgs: pgs,
+          userId: currentUserId,
+        );
+      }
+
+      final String successMessage =
+          isAnyDisapproved
+              ? "Disapproved successfully!"
+              : (id != null && orderLevel >= 2)
+              ? "Confirm successfully!"
+              : "Submitted successfully!";
+
+      MotionToast.success(
+        description: Text(successMessage),
+        toastAlignment: Alignment.center,
+      ).show(context);
+
+      await Future.delayed(Duration(milliseconds: 1000));
+      Navigator.pop(context);
+    } catch (e) {
+      final String errorMessage =
+          (id != null && orderLevel >= 2)
+              ? "Failed to Confirm!"
+              : "Failed to submit!";
+
+      MotionToast.error(
+        description: Text(errorMessage),
+        toastAlignment: Alignment.center,
+      ).show(context);
+
+      await Future.delayed(Duration(milliseconds: 1500));
+      Navigator.pop(context);
+    }
+  }
+
+  Future<void> handleSaveAsDraft(
+    BuildContext context,
+    String? id,
+    int orderLevel,
+  ) async {
+    bool? confirm = await showDialog(
+      context: context,
+      builder:
+          (_) => AlertDialog(
+            title: Text("Save as Draft"),
+            content: Text(
+              "Do you want to save this record as a draft? You can come back and make changes later.",
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text("No", style: TextStyle(color: primaryColor)),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text("Yes", style: TextStyle(color: primaryColor)),
+              ),
+            ],
+          ),
+    );
+
+    if (confirm != true) return;
+
+    if (selectedPeriod == null ||
+        selectedDirect.isEmpty ||
+        selectedIndirect.isEmpty ||
+        deliverablesControllers.values.any(
+          (controller) => controller.text.trim().isEmpty,
+        ) ||
+        percentageDeliverables.text.trim().isEmpty) {
+      MotionToast.warning(
+        title: const Text("Missing Fields"),
+        description: Text(
+          selectedPeriod == null
+              ? "Please complete all required fields."
+              : "Please complete all required fields",
+        ),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    if (deliverablesControllers.length != 5) {
+      MotionToast.warning(
+        title: const Text("Insufficient Deliverables"),
+        description: const Text("Please provide at least 5 deliverables."),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    int? pgsId = int.tryParse(id ?? '');
+
+    final updatedDeliverables = getTableDeliverables();
+    bool isAnyDisapproved = updatedDeliverables.any(
+      (d) => d.isDisapproved == true,
+    );
+
+    PerformanceGovernanceSystem pgs = getPgsAuditDetails(
+      id: pgsId ?? 0,
+      pgsStatus: "Submit",
+    );
+
+    try {
+      final currentUser = await AuthUtil.fetchLoggedUser();
+      final currentUserId = currentUser?.id;
+
+      if (pgsId == null) {
+        await saveasDraftPGS(pgs);
       } else {
         await updateSavePGS(
           pgsId: pgsId.toString(),
@@ -3046,6 +2985,7 @@ class PerformanceGovernanceSystemPageState
             maxLines: 5,
             message: kraTooltipMessage,
             child: DropdownButtonFormField<int>(
+              dropdownColor: mainBgColor,
               isExpanded: true,
               value: selectedKRA[index],
               onChanged: (int? newValue) {
@@ -3090,12 +3030,19 @@ class PerformanceGovernanceSystemPageState
           CustomTooltip(
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
-            child: TextField(
+            child: TextFormField(
               controller: kraDescriptionController[index],
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
                 hintText: "Enter your description here...",
                 border: OutlineInputBorder(),
               ),
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return "Please enter your KRA description";
+                }
+                return null;
+              },
               maxLines: 3,
             ),
           ),
@@ -3138,8 +3085,9 @@ class PerformanceGovernanceSystemPageState
               maxLines: 4,
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
-              child: TextField(
+              child: TextFormField(
                 controller: percentageDeliverables,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.number,
                 style: TextStyle(
@@ -3147,7 +3095,12 @@ class PerformanceGovernanceSystemPageState
                   fontSize: 20,
                   fontStyle: FontStyle.normal,
                 ),
-
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Please enter percentage";
+                  }
+                  return null;
+                },
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(2),
@@ -3158,6 +3111,7 @@ class PerformanceGovernanceSystemPageState
                   labelText: percentDeliverables,
                   hintText: '0',
                   suffixText: '%',
+                  border: OutlineInputBorder(),
                   suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),
                   hintStyle: TextStyle(color: Colors.white),
                   enabledBorder: OutlineInputBorder(
@@ -3207,6 +3161,7 @@ class PerformanceGovernanceSystemPageState
     Function setDialogState, {
     int orderLevel = 1,
     String? id,
+    required bool showErrors,
 
     // int? id,
   }) {
@@ -3214,6 +3169,12 @@ class PerformanceGovernanceSystemPageState
     selectedDirect.putIfAbsent(index, () => false);
     selectedIndirect.putIfAbsent(index, () => false);
     selectedByWhen.putIfAbsent(index, () => '');
+    final isDirectSelected = selectedDirect[index] ?? false;
+    final isIndirectSelected = selectedIndirect[index] ?? false;
+    final errorText =
+        (!isDirectSelected && !isIndirectSelected && showErrors)
+            ? 'Please select either Direct or Indirect.'
+            : null;
 
     // Define alternating row colors
     Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
@@ -3228,6 +3189,7 @@ class PerformanceGovernanceSystemPageState
           selectedIndirect,
           setDialogState,
           isDirect: true,
+          errorText: errorText,
         ),
         _buildCheckboxCell(
           index,
@@ -3235,88 +3197,76 @@ class PerformanceGovernanceSystemPageState
           selectedDirect,
           setDialogState,
           isDirect: false,
+          errorText: errorText,
         ),
         _buildExpandableTextAreaCell(index),
         _buildDatePickerCell(index, setDialogState),
         (id == null || orderLevel < 2)
             ? _buildRemoveButton(index, setDialogState)
-            : _buildApprovedDisapproved(index, setDialogState),
+            : _buildApprovedDisapprovedSignatory(index, setDialogState),
       ],
     );
   }
-
-  // Widget _buildDropdownCellStatus(int index, VoidCallback setDialogState) {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child: DropdownButtonFormField<PgsStatus>(
-  //       value: selectedStatus[index] ?? PgsStatus.notStarted,
-  //       onChanged: (PgsStatus? newValue) {
-  //         if (newValue != null) {
-  //           setDialogState();
-  //           setState(() {
-  //             selectedStatus[index] = newValue;
-  //           });
-  //           saveStatusToDb(index, newValue);
-  //         }
-  //       },
-  //       isExpanded: true,
-  //       decoration: const InputDecoration(
-  //         border: OutlineInputBorder(),
-  //         contentPadding: EdgeInsets.all(8.0),
-  //       ),
-  //       items:
-  //           PgsStatus.values.map((PgsStatus value) {
-  //             return DropdownMenuItem<PgsStatus>(
-  //               value: value,
-  //               child: Text(value.name, style: const TextStyle(fontSize: 14)),
-  //             );
-  //           }).toList(),
-  //     ),
-  //   );
-  // }
 
   void saveStatusToDb(int index, PgsStatus status) {
     debugPrint('Saving status for index');
   }
 
-  // // Check Box
   Widget _buildCheckboxCell(
     int index,
     Map<int, bool> selectedValues,
     Map<int, bool> oppositeValues,
     Function setDialogState, {
     required bool isDirect,
+    required String? errorText,
   }) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: const Color.fromARGB(255, 255, 255, 255),
-            width: 0.5,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Tooltip(
+            message:
+                isDirect
+                    ? 'Direct: Indicates if the deliverable is directly managed by the office.'
+                    : 'Indirect: Indicates if the deliverable is indirectly supported by the office.',
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: Colors.white, width: 0.5),
+                color: Colors.white,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 4.0,
+                ),
+                child: Center(
+                  child: Checkbox(
+                    value: selectedValues[index] ?? false,
+                    onChanged: (bool? newValue) {
+                      if (newValue == null) return;
+                      setDialogState(() {
+                        selectedValues[index] = newValue;
+                        if (newValue) oppositeValues[index] = false;
+                      });
+                    },
+                    activeColor: Colors.white,
+                    checkColor: Colors.black,
+                  ),
+                ),
+              ),
+            ),
           ),
-          color: const Color.fromARGB(255, 255, 255, 255),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
-          child: Checkbox(
-            value: selectedValues[index] ?? false, // Read from state
-            onChanged: (bool? newValue) {
-              if (newValue == null) return;
-
-              setDialogState(() {
-                selectedValues[index] = newValue;
-
-                if (newValue) {
-                  oppositeValues[index] = false;
-                }
-              });
-            },
-            activeColor: Colors.white,
-            checkColor: Colors.black,
-          ),
-        ),
+          if (errorText != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4.0),
+              child: Text(
+                errorText,
+                style: const TextStyle(color: primaryColor, fontSize: 12),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -3537,8 +3487,9 @@ class PerformanceGovernanceSystemPageState
     String direct,
     String indirect,
     Function setState,
-    Function setDialogState,
-  ) {
+    Function setDialogState, {
+    required bool showErrors,
+  }) {
     deliverablesControllers.putIfAbsent(index, () => TextEditingController());
     selectedDirect.putIfAbsent(index, () => false);
     selectedIndirect.putIfAbsent(index, () => false);
@@ -3557,6 +3508,7 @@ class PerformanceGovernanceSystemPageState
           selectedIndirect,
           setDialogState,
           isDirect: true,
+          errorText: '',
         ),
         _buildCheckboxCell(
           index,
@@ -3564,6 +3516,7 @@ class PerformanceGovernanceSystemPageState
           selectedDirect,
           setDialogState,
           isDirect: false,
+          errorText: '',
         ),
         _buildExpandableTextAreaCellPGSDeliverable(index),
         _buildDatePickerCellPgsDeliverableStatus(index, setDialogState),
@@ -3866,15 +3819,6 @@ class PerformanceGovernanceSystemPageState
 
   // Removed Rows
   Widget _buildRemoveButton(int index, Function setDialogState) {
-    bool showDisapproveControls = false;
-    if (deliverablesList.isNotEmpty) {
-      showDisapproveControls = deliverablesList.any(
-        (deliverable) =>
-            deliverable.id == deliverableIds[index] &&
-            deliverable.isDisapproved == true,
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -3884,7 +3828,6 @@ class PerformanceGovernanceSystemPageState
           icon: Icon(Icons.delete, color: Colors.red),
           onPressed: () {
             setDialogState(() {
-              // Update UI after removal
               rows.remove(index);
               deliverablesControllers.remove(index);
               selectedKRA.remove(index);
@@ -3893,22 +3836,331 @@ class PerformanceGovernanceSystemPageState
             });
           },
         ),
-        if (showDisapproveControls || selectedDisapproved[index] == true) ...[
-          gap1,
-          const Divider(thickness: 1, color: Colors.grey),
-          gap1,
-          StatefulBuilder(
-            builder: (context, setDialogState) {
-              return _buildApprovedDisapproved(index, setDialogState);
-            },
-          ),
-          gap1,
-        ],
+      ],
+    );
+  }
+
+  // Widget _buildApprovedDisapproved(int index, Function setDialogState) {
+  //   bool? isDisapproved = selectedDisapproved[index];
+  //   reasonController[index] ??= TextEditingController();
+
+  //   return Column(
+  //     mainAxisSize: MainAxisSize.min,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //         children: [
+  //           Column(
+  //             children: [
+  //               IconButton(
+  //                 tooltip: 'Click this to approve the deliverable',
+  //                 icon: Icon(
+  //                   Icons.thumb_up,
+  //                   color:
+  //                       isDisapproved == false
+  //                           ? Colors.green
+  //                           : primaryTextColor,
+  //                 ),
+  //                 onPressed: () {
+  //                   setDialogState(() {
+  //                     selectedDisapproved[index] = false;
+  //                     reasonController[index]?.clear();
+  //                   });
+  //                 },
+  //               ),
+  //               const Text("Approve", style: TextStyle(fontSize: 12)),
+  //             ],
+  //           ),
+  //           Column(
+  //             children: [
+  //               IconButton(
+  //                 tooltip: 'Click this to disapprove the deliverable',
+
+  //                 icon: Icon(
+  //                   Icons.thumb_down,
+  //                   color:
+  //                       isDisapproved == true ? Colors.red : primaryTextColor,
+  //                 ),
+  //                 onPressed: () {
+  //                   setDialogState(() {
+  //                     selectedDisapproved[index] = true;
+  //                   });
+  //                 },
+  //               ),
+  //               const Text("Disapprove", style: TextStyle(fontSize: 12)),
+  //             ],
+  //           ),
+  //         ],
+  //       ),
+
+  //       if (isDisapproved == true) ...[
+  //         const SizedBox(height: 16),
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 20),
+  //           child: Column(
+  //             crossAxisAlignment: CrossAxisAlignment.start,
+  //             children: [
+  //               const Text("Reason:"),
+  //               CustomTooltip(
+  //                 message: 'State your reason here',
+  //                 child: TextField(
+  //                   controller: reasonController[index],
+  //                   decoration: const InputDecoration(
+  //                     border: OutlineInputBorder(),
+  //                     focusedBorder: OutlineInputBorder(
+  //                       borderSide: BorderSide(color: primaryColor),
+  //                     ),
+  //                   ),
+  //                   maxLines: 3,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ],
+  //   );
+  // }
+
+  // Widget _buildApprovedDisapproved(int index, Function setDialogState) {
+  //   bool? isDisapproved = selectedDisapproved[index];
+  //   reasonController[index] ??= TextEditingController();
+
+  //   return Column(
+  //     mainAxisSize: MainAxisSize.min,
+  //     children: [
+  //       Row(
+  //         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //         children: [
+  //           Column(children: [
+
+  //             ],
+  //           ),
+
+  //           Container(
+  //             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+  //             decoration: BoxDecoration(
+  //               color: const Color.fromARGB(255, 204, 65, 55),
+  //               borderRadius: BorderRadius.circular(4), // circular 4
+  //             ),
+  //             child: Row(
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: const [
+  //                 Icon(
+  //                   Icons.warning_rounded, // warning circle with "!"
+  //                   color: Colors.white,
+  //                   size: 18,
+  //                 ),
+  //                 SizedBox(width: 6),
+  //                 Text(
+  //                   "Disapproved",
+  //                   style: TextStyle(
+  //                     fontSize: 12,
+  //                     color: Colors.white,
+  //                     fontWeight: FontWeight.w500,
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+
+  //       if (isDisapproved == true) ...[
+  //         const SizedBox(height: 16),
+  //         Padding(
+  //           padding: const EdgeInsets.symmetric(horizontal: 20),
+  //           child: Container(
+  //             decoration: BoxDecoration(
+  //               color: Colors.red.withOpacity(0.05), // light background
+  //               borderRadius: BorderRadius.circular(8),
+  //               border: Border.all(
+  //                 color: const Color.fromARGB(255, 204, 65, 55),
+  //                 width: 1,
+  //               ),
+  //             ),
+  //             padding: const EdgeInsets.all(12),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 Row(
+  //                   children: const [
+  //                     Icon(
+  //                       Icons.warning_amber_rounded,
+  //                       color: Color.fromARGB(255, 204, 65, 55),
+  //                       size: 20,
+  //                     ),
+  //                     SizedBox(width: 6),
+  //                     Text(
+  //                       "Reason for Disapproval",
+  //                       style: TextStyle(
+  //                         fontSize: 14,
+  //                         color: Color.fromARGB(255, 204, 65, 55),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //                 const SizedBox(height: 8),
+  //                 Text(
+  //                   reasonController[index]?.text ?? 'No reason provided',
+  //                   style: const TextStyle(fontSize: 14, color: Colors.black87),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ],
+  //   );
+  // }
+
+  Widget _markAsRevised(int index, Function setDialogState) {
+    // bool? isDisapproved = selectedDisapproved[index];
+    // reasonController[index] ??= TextEditingController();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ✅ Left-aligned Disapproved label
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 52, 146, 57),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.check_circle_outline, // warning sign
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "Mark as Revised",
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ],
     );
   }
 
   Widget _buildApprovedDisapproved(int index, Function setDialogState) {
+    bool? isDisapproved = selectedDisapproved[index];
+    reasonController[index] ??= TextEditingController();
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ✅ Left-aligned Disapproved label
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: const Color.fromARGB(255, 204, 65, 55),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.warning_rounded, // warning sign
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "Disapproved",
+                        style: TextStyle(fontSize: 12, color: Colors.white),
+                      ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'This content has been disapproved and needs revision',
+                  style: TextStyle(color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ],
+        ),
+        gap,
+        if (isDisapproved == true) ...[
+          const SizedBox(height: 16),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color.fromARGB(255, 197, 106, 100),
+                  width: 1,
+                ),
+              ),
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(
+                        Icons.warning_amber_rounded,
+                        color: Color.fromARGB(255, 204, 65, 55),
+                        size: 20,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        "Reason for Disapproval",
+                        style: TextStyle(
+                          fontSize: 14,
+
+                          color: Color.fromARGB(255, 204, 65, 55),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    reasonController[index]?.text ?? 'No reason provided',
+                    style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildApprovedDisapprovedSignatory(
+    int index,
+    Function setDialogState,
+  ) {
     bool? isDisapproved = selectedDisapproved[index];
     reasonController[index] ??= TextEditingController();
 
@@ -3997,139 +4249,68 @@ class PerformanceGovernanceSystemPageState
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
     }
-
+    bool showDisapproveControls = false;
+    if (deliverablesList.isNotEmpty) {
+      showDisapproveControls = deliverablesList.any(
+        (deliverable) =>
+            deliverable.id == deliverableIds[index] &&
+            deliverable.isDisapproved == true,
+      );
+    }
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (showDisapproveControls || selectedDisapproved[index] == true) ...[
+            StatefulBuilder(
+              builder: (context, setDialogState) {
+                return _buildApprovedDisapproved(index, setDialogState);
+              },
+            ),
+            gap1,
+          ],
           ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 50.0),
             child: Tooltip(
               message:
                   'Specify the tangible results or outcomes tied to this responsibility.',
-              child: TextField(
+              child: TextFormField(
                 controller: deliverablesControllers[index],
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 maxLines: null,
                 keyboardType: TextInputType.multiline,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.all(8.0),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return "Please enter your deliverable";
+                  }
+
+                  return null;
+                },
                 onChanged: (value) {
                   setState(() {});
                 },
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  // PGS Table Row  Deliverable History
-
-  Widget _buildTableCell(String text, {bool? isDirect}) {
-    displayText = text;
-    if (isDirect != null) {
-      displayText = isDirect ? 'Direct' : 'Indirect';
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(),
-      child: Center(
-        child: Text(
-          displayText!,
-          style: const TextStyle(fontSize: 14),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildKraHistory(String textKra, String textKRaDescription) {
-    String displayKraText = textKra;
-    String displayKraDescription = textKRaDescription;
-
-    return Container(
-      padding: EdgeInsets.all(8),
-      decoration: BoxDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(
-              displayKraText,
-              style: const TextStyle(fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-          ),
           gap,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'KRA Description',
-                style: TextStyle(fontSize: 12, color: grey),
-              ),
-              Text(
-                displayKraDescription,
-                style: TextStyle(fontSize: 12),
-                textAlign: TextAlign.start,
-              ),
-            ],
-          ),
+          if (showDisapproveControls || selectedDisapproved[index] == true) ...[
+            StatefulBuilder(
+              builder: (context, setDialogState) {
+                return _markAsRevised(index, setDialogState);
+              },
+            ),
+            gap1,
+          ],
         ],
       ),
     );
-  }
-
-  Widget _buildRecoverHistoryButton(
-    BuildContext context,
-    PgsDeliverableHistory deliverable,
-    Function setDialogState,
-  ) {
-    final TabController tabController = DefaultTabController.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        IconButton(
-          tooltip: 'Recover',
-          onPressed: () {
-            restoreDeliverable(deliverable, setDialogState);
-            if (tabController.index != 0) {
-              tabController.animateTo(0);
-            }
-          },
-          icon: Icon(Icons.restore, color: primaryColor, size: 54),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTableHeaderCell(String text, {double fontSize = 12}) {
-    return Container(
-      color: primaryLightColor,
-      padding: const EdgeInsets.all(8),
-      child: Center(
-        child: Text(
-          text,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
-          textAlign: TextAlign.start,
-        ),
-      ),
-    );
-  }
-}
-
-extension StringExtension on String {
-  String capitalize() {
-    return split(' ')
-        .map(
-          (word) =>
-              word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '',
-        )
-        .join(' ');
   }
 }

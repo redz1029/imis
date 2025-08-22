@@ -4,6 +4,7 @@ using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IMIS.Persistence.Migrations
 {
     [DbContext(typeof(ImisDbContext))]
-    partial class ImisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250806053314_UpdateUserSeedData")]
+    partial class UpdateUserSeedData
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,49 +24,6 @@ namespace IMIS.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("Base.Audits.AuditTrail", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Action")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("KeyValues")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("NewValues")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("OldValues")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<string>("TableName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AuditTrails");
-                });
 
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
                 {
@@ -204,39 +164,21 @@ namespace IMIS.Persistence.Migrations
 
             modelBuilder.Entity("IMIS.Domain.AuditorTeams", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
+                    b.Property<int>("AuditorId")
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int?>("AuditorId")
+                    b.Property<int>("TeamId")
                         .HasColumnType("int");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsTeamLeader")
                         .HasColumnType("bit");
 
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion");
-
-                    b.Property<int>("TeamId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
+                    b.HasKey("AuditorId", "TeamId");
 
                     b.HasIndex("TeamId");
-
-                    b.HasIndex("AuditorId", "TeamId")
-                        .IsUnique()
-                        .HasFilter("[AuditorId] IS NOT NULL");
 
                     b.ToTable("AuditorTeams");
                 });
@@ -1989,12 +1931,6 @@ namespace IMIS.Persistence.Migrations
                     b.Property<string>("Remarks")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime?>("RemovedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("RemovedBy")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
@@ -2010,6 +1946,69 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("PerfomanceGovernanceSystemId");
 
                     b.ToTable("Deliverable");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.PgsDeliverableHistory", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("ByWhen")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("DeliverableId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("DeliverableName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DisapprovalRemarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDirect")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDisapproved")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("KraDescription")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("KraId")
+                        .HasColumnType("bigint");
+
+                    b.Property<double>("PercentDeliverables")
+                        .HasColumnType("float");
+
+                    b.Property<long>("PgsId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Remarks")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("RemovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RemovedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PgsDeliverableHistory");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverableScoreHistory", b =>
@@ -2662,7 +2661,9 @@ namespace IMIS.Persistence.Migrations
                 {
                     b.HasOne("IMIS.Domain.Auditor", "Auditor")
                         .WithMany("AuditorTeams")
-                        .HasForeignKey("AuditorId");
+                        .HasForeignKey("AuditorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("IMIS.Domain.Team", "Team")
                         .WithMany("AuditorTeams")
