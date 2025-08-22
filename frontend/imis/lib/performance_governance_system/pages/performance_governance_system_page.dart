@@ -1,16 +1,11 @@
 // ignore_for_file: use_build_context_synchronously
-import 'dart:io';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/utils/app_permission.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
 import 'package:imis/widgets/permission_widget.dart';
-import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
-import 'package:universal_html/html.dart' as html;
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
@@ -31,8 +26,6 @@ import 'package:imis/utils/range_input_formatter.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-import 'package:open_file/open_file.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/http_util.dart';
 import 'pgs_reports.dart';
@@ -177,41 +170,8 @@ class PerformanceGovernanceSystemPageState
   }
 
   //Save as draft pgs
-  Future<void> saveasDraftPGS(PerformanceGovernanceSystem audit) async {
-    var url = ApiEndpoint().performancegovernancesystem;
 
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-
-      final requestData = audit.toJson();
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: requestData,
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("Pgs data saved successfully!");
-
-        setState(() {
-          fetchPgsList();
-          clearAllSelections();
-        });
-
-        await prefs.remove('selectedOfficeId');
-        await prefs.remove('selectedOfficeName');
-      } else {
-        debugPrint("Failed to save Pgs data");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
-
-  //Submit gs
-  Future<void> submitPGS(PerformanceGovernanceSystem audit) async {
+  Future<void> pgsSaveAsDraft(PerformanceGovernanceSystem audit) async {
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
 
@@ -222,7 +182,7 @@ class PerformanceGovernanceSystemPageState
 
       final prefs = await SharedPreferences.getInstance();
 
-      final baseUrl = ApiEndpoint().pgsSubmit;
+      final baseUrl = ApiEndpoint().pgsSaveAsDraft;
       final url = '$baseUrl?userId=${user.id}';
 
       final requestData = audit.toJson();
@@ -255,6 +215,157 @@ class PerformanceGovernanceSystemPageState
     }
   }
 
+  //Submit gs
+  // Future<void> submitPGS(PerformanceGovernanceSystem audit) async {
+  //   try {
+  //     UserRegistration? user = await AuthUtil.fetchLoggedUser();
+
+  //     if (user == null || user.id == null || user.id!.isEmpty) {
+  //       debugPrint("Error: No valid user found.");
+  //       return;
+  //     }
+
+  //     final prefs = await SharedPreferences.getInstance();
+
+  //     final baseUrl = ApiEndpoint().pgsSubmit;
+  //     final url = '$baseUrl?userId=${user.id}';
+
+  //     final requestData = audit.toJson();
+  //     final response = await AuthenticatedRequest.put(
+  //       dio,
+  //       url,
+  //       data: requestData,
+  //     );
+
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       debugPrint("PGS data submitted successfully!");
+
+  //       if (mounted) {
+  //         setState(() {
+  //           fetchPgsList();
+  //           clearAllSelections();
+  //         });
+  //       }
+
+  //       await prefs.remove('selectedOfficeId');
+  //       await prefs.remove('selectedOfficeName');
+  //     } else {
+  //       debugPrint("Failed to submit PGS data");
+  //     }
+  //   } on DioException catch (e) {
+  //     debugPrint("Dio Error");
+  //     if (e.response != null) {}
+  //   } catch (e) {
+  //     debugPrint("Unexpected Error: $e");
+  //   }
+  // }
+
+  // Future<void> submitPGS({
+  //   String? pgsId,
+  //   required PerformanceGovernanceSystem updatePgs,
+  //   String? userId,
+  // }) async {
+  //   final url = '${ApiEndpoint().pgsSubmit}/$pgsId';
+
+  //   try {
+  //     UserRegistration? user = await AuthUtil.fetchLoggedUser();
+  //     if (user == null) {
+  //       return;
+  //     }
+
+  //     final signatoryResponse = await AuthenticatedRequest.put(
+  //       dio,
+  //       "${ApiEndpoint().pgsSubmitUserId}/${user.id}?pgsId=$pgsId",
+  //     );
+
+  //     if (signatoryResponse.statusCode != 200) {
+  //       return;
+  //     }
+
+  //     final signatoryData = PerformanceGovernanceSystem.fromJson(
+  //       signatoryResponse.data,
+  //     );
+  //     final updatedPgsJson = updatePgs.toJson();
+  //     updatedPgsJson['pgsSignatories'] =
+  //         signatoryData.pgsSignatories?.map((s) => s.toJson()).toList();
+
+  //     SharedPreferences prefs = await SharedPreferences.getInstance();
+
+  //     final response = await AuthenticatedRequest.put(
+  //       dio,
+  //       url,
+  //       data: updatedPgsJson,
+  //     );
+
+  //     if (response.statusCode == 200 || response.statusCode == 201) {
+  //       setState(() {
+  //         fetchPgsList();
+  //         clearAllSelections();
+  //       });
+  //       await prefs.remove('selectedOfficeId');
+  //       await prefs.remove('selectedOfficeName');
+  //     } else {
+  //       debugPrint("Failed to update PGS");
+  //       if (response.statusCode == 401 || response.statusCode == 403) {}
+  //     }
+  //   } on DioException catch (e) {
+  //     debugPrint("Dio error");
+  //     if (e.response != null) {}
+  //   } catch (e) {
+  //     debugPrint("Unexpected error: $e");
+  //   }
+  // }
+
+  Future<void> submitPGS(PerformanceGovernanceSystem audit) async {
+    try {
+      UserRegistration? user = await AuthUtil.fetchLoggedUser();
+
+      if (user == null || user.id == null || user.id!.isEmpty) {
+        debugPrint("Error: No valid user found.");
+        return;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+
+      final baseUrl =
+          ApiEndpoint()
+              .pgsSubmit; // should resolve to https://localhost:7273/pgs/submit
+      final url = '$baseUrl?userId=${user.id}';
+
+      final requestData = audit.toJson();
+
+      // 🔹 Use PUT instead of POST
+      final response = await AuthenticatedRequest.put(
+        dio,
+        url,
+        data: requestData,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint("PGS data submitted successfully via PUT!");
+
+        if (mounted) {
+          setState(() {
+            fetchPgsList();
+            clearAllSelections();
+          });
+        }
+
+        await prefs.remove('selectedOfficeId');
+        await prefs.remove('selectedOfficeName');
+      } else {
+        debugPrint("Failed to submit PGS data via PUT: ${response.statusCode}");
+      }
+    } on DioException catch (e) {
+      debugPrint("Dio Error: ${e.message}");
+      if (e.response != null) {
+        debugPrint("Response data: ${e.response?.data}");
+      }
+    } catch (e) {
+      debugPrint("Unexpected Error: $e");
+    }
+  }
+
   // Update Save PGS
   Future<void> updateSavePGS({
     String? pgsId,
@@ -269,7 +380,7 @@ class PerformanceGovernanceSystemPageState
         return;
       }
 
-      final signatoryResponse = await AuthenticatedRequest.get(
+      final signatoryResponse = await AuthenticatedRequest.put(
         dio,
         "${ApiEndpoint().pgsSubmitUserId}/${user.id}?pgsId=$pgsId",
       );
@@ -2582,83 +2693,79 @@ class PerformanceGovernanceSystemPageState
               ),
 
               actions: [
-                if ((id == null && orderLevel == 1) ||
-                    (id == null && orderLevel >= 2) ||
-                    isAnyDisapproved)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shadowColor: Colors.transparent,
-                      elevation: 0,
-                      backgroundColor: secondaryBgButton,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    onPressed: () => handleSaveAsDraft(context, id, orderLevel),
-                    child: Text(
-                      'Save as Draft',
-                      style: TextStyle(color: primaryColor),
+                // if ((id == null && orderLevel == 1) ||
+                //     (id == null && orderLevel >= 2) ||
+                //     isAnyDisapproved)
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    shadowColor: Colors.transparent,
+                    elevation: 0,
+                    backgroundColor: secondaryBgButton,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                if ((id == null && orderLevel == 1) ||
-                    (id == null && orderLevel >= 2) ||
-                    isAnyDisapproved)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
+                  onPressed: () => handleSaveAsDraft(context, id, orderLevel),
+                  child: Text(
+                    'Save as Draft',
+                    style: TextStyle(color: primaryColor),
+                  ),
+                ),
+                // if ((id == null && orderLevel == 1) ||
+                //     (id == null && orderLevel >= 2) ||
+                //     isAnyDisapproved)
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
                     ),
+                  ),
 
-                    onPressed: () {
-                      setDialogState(() {
-                        rowErrors.clear();
+                  onPressed: () {
+                    setDialogState(() {
+                      rowErrors.clear();
 
-                        for (final index in rows) {
-                          final isDirectSelected =
-                              selectedDirect[index] ?? false;
-                          final isIndirectSelected =
-                              selectedIndirect[index] ?? false;
+                      for (final index in rows) {
+                        final isDirectSelected = selectedDirect[index] ?? false;
+                        final isIndirectSelected =
+                            selectedIndirect[index] ?? false;
 
-                          rowErrors[index] =
-                              !(isDirectSelected || isIndirectSelected);
-                        }
-                      });
-
-                      if (_formKey.currentState!.validate()) {
-                        if (selectedDisapproved.values.any(
-                          (value) => value == true,
-                        )) {
-                          MotionToast.warning(
-                            title: const Text("Revisions Required"),
-                            description: const Text(
-                              "Some deliverables need to be revised before you can proceed with submission.",
-                            ),
-                            toastAlignment: Alignment.center,
-                          ).show(context);
-                          return;
-                        }
-
-                        handleSubmitOrConfirm(context, id, orderLevel);
+                        rowErrors[index] =
+                            !(isDirectSelected || isIndirectSelected);
                       }
+                    });
 
-                      if (deliverablesControllers.length != 5) {
+                    if (_formKey.currentState!.validate()) {
+                      if (selectedDisapproved.values.any(
+                        (value) => value == true,
+                      )) {
                         MotionToast.warning(
-                          title: const Text("Insufficient Deliverables"),
+                          title: const Text("Revisions Required"),
                           description: const Text(
-                            "Please provide at least 5 deliverables.",
+                            "Some deliverables need to be revised before you can proceed with submission.",
                           ),
                           toastAlignment: Alignment.center,
                         ).show(context);
                         return;
                       }
-                    },
-                    child: Text(
-                      'Submit',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
+
+                      handleSubmitOrConfirm(context, id, orderLevel);
+                    }
+
+                    // if (deliverablesControllers.length != 5) {
+                    //   MotionToast.warning(
+                    //     title: const Text("Insufficient Deliverables"),
+                    //     description: const Text(
+                    //       "Please provide at least 5 deliverables.",
+                    //     ),
+                    //     toastAlignment: Alignment.center,
+                    //   ).show(context);
+                    //   return;
+                    // }
+                  },
+                  child: Text('Submit', style: TextStyle(color: Colors.white)),
+                ),
                 if (id != null && orderLevel >= 2)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
@@ -2748,11 +2855,7 @@ class PerformanceGovernanceSystemPageState
       if (pgsId == null) {
         await submitPGS(pgs);
       } else {
-        await updateSavePGS(
-          pgsId: pgsId.toString(),
-          updatePgs: pgs,
-          userId: currentUserId,
-        );
+        await submitPGS(pgs);
       }
 
       final String successMessage =
@@ -2832,14 +2935,14 @@ class PerformanceGovernanceSystemPageState
       return;
     }
 
-    if (deliverablesControllers.length != 5) {
-      MotionToast.warning(
-        title: const Text("Insufficient Deliverables"),
-        description: const Text("Please provide at least 5 deliverables."),
-        toastAlignment: Alignment.center,
-      ).show(context);
-      return;
-    }
+    // if (deliverablesControllers.length != 5) {
+    //   MotionToast.warning(
+    //     title: const Text("Insufficient Deliverables"),
+    //     description: const Text("Please provide at least 5 deliverables."),
+    //     toastAlignment: Alignment.center,
+    //   ).show(context);
+    //   return;
+    // }
 
     int? pgsId = int.tryParse(id ?? '');
 
@@ -2858,7 +2961,7 @@ class PerformanceGovernanceSystemPageState
       final currentUserId = currentUser?.id;
 
       if (pgsId == null) {
-        await saveasDraftPGS(pgs);
+        await pgsSaveAsDraft(pgs);
       } else {
         await updateSavePGS(
           pgsId: pgsId.toString(),
