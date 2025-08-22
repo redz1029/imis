@@ -93,7 +93,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
         url,
         data: period.toJson(),
       );
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         await fetchPGSPeriods();
         setState(() {
           fetchPGSPeriods();

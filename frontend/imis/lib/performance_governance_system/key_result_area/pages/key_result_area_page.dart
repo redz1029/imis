@@ -82,7 +82,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
         data: kra.toJson(),
       );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         await fetchKRAs();
         setState(() {
           fetchKRAs();
