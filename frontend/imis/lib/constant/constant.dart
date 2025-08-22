@@ -22,6 +22,7 @@ const gap4 = SizedBox(width: 16);
 const gap5 = SizedBox(height: 48);
 const gap6 = SizedBox(height: 48);
 const gap7 = SizedBox(height: 60);
+const gap8 = SizedBox(height: 6);
 
 //For Logo Widget
 class Logo extends StatelessWidget {
