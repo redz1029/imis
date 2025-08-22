@@ -38,6 +38,7 @@ class ApiEndpoint {
   late String performancegovernancesystemFilter;
   late String disapprovePgs;
   late String pgsDeliverableHistory;
+  late String pgsSaveAsDraft;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -61,7 +62,7 @@ class ApiEndpoint {
     auditSchedule = '$baseUrl/auditSchedule';
     signatoryTemplate = '$baseUrl/pgsSignatoryTemplate';
     performancegovernancesystemUserId = '$baseUrl/pgs';
-
+    pgsSaveAsDraft = "$baseUrl/pgs/draft";
     generatePdf = '$baseUrl/pgs/list-report/pdf';
     refresh = '$baseUrl/refresh';
     filterBy = '$baseUrl/deliverables/filter';
