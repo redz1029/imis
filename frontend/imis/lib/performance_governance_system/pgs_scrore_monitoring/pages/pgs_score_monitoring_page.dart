@@ -191,8 +191,6 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
           MotionToast.success(
             title: const Text("Success"),
             description: const Text("Data saved successfully!"),
-
-            // ignore: deprecated_member_use
             toastAlignment: Alignment.topCenter,
           ).show(context);
         }
@@ -390,6 +388,26 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       selectedStatus[index] = parsedStatus;
     }
 
+    final statusDescriptions = {
+      PgsStatus.notStarted:
+          "Deliverable has been defined but work has not yet begun",
+      PgsStatus.inProgress: "Deliverable is currently being worked on",
+      PgsStatus.onTrack:
+          "Deliverable is progressing according to the PGS timeline",
+      PgsStatus.delayed:
+          "Deliverable has fallen behind the expected PGS schedule",
+      PgsStatus.needsImprovement:
+          "Deliverable requires corrective action to align with PGS targets",
+      PgsStatus.completed:
+          "Deliverable has been finished and meets PGS requirements",
+      PgsStatus.exceeded:
+          "Deliverable has surpassed PGS performance expectations",
+      PgsStatus.onHold:
+          "Deliverable is temporarily paused pending decision or resources",
+      PgsStatus.cancelled:
+          "Deliverable has been discontinued and removed from the PGS pipeline",
+    };
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: DropdownButtonFormField<PgsStatus>(
@@ -412,7 +430,10 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
             PgsStatus.values.map((PgsStatus value) {
               return DropdownMenuItem<PgsStatus>(
                 value: value,
-                child: Text(value.name, style: const TextStyle(fontSize: 13)),
+                child: Tooltip(
+                  message: statusDescriptions[value] ?? value.name,
+                  child: Text(value.name, style: const TextStyle(fontSize: 13)),
+                ),
               );
             }).toList(),
       ),
