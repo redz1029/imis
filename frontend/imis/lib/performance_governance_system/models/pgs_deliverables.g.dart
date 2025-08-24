@@ -21,6 +21,7 @@ PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
       json['disapprovalRemarks'] as String?,
       json['isDisapproved'] as bool,
       PgsDeliverables._statusFromJson((json['status'] as num).toInt()),
+      (json['perfomanceGovernanceSystemId'] as num?)?.toInt(),
       pgsDeliverableHistory:
           (json['pgsDeliverableHistory'] as List<dynamic>?)
               ?.map(
@@ -47,5 +48,6 @@ Map<String, dynamic> _$PgsDeliverablesToJson(PgsDeliverables instance) =>
       'disapprovalRemarks': instance.disapprovalRemarks,
       'isDisapproved': instance.isDisapproved,
       'rowVersion': instance.rowVersion,
+      'perfomanceGovernanceSystemId': instance.perfomanceGovernanceSystemId,
       'pgsDeliverableHistory': instance.pgsDeliverableHistory,
     };

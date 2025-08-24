@@ -31,6 +31,7 @@ class PgsDeliverables {
   String? disapprovalRemarks;
   bool isDisapproved;
   String? rowVersion;
+  int? perfomanceGovernanceSystemId;
   List<PgsDeliverableHistory>? pgsDeliverableHistory;
 
   PgsDeliverables(
@@ -44,7 +45,8 @@ class PgsDeliverables {
     this.percentDeliverables,
     this.disapprovalRemarks,
     this.isDisapproved,
-    this.status, {
+    this.status,
+    this.perfomanceGovernanceSystemId, {
     this.pgsDeliverableHistory,
     this.remarks,
     this.rowVersion,
