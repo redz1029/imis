@@ -34,7 +34,7 @@ class ApiEndpoint {
   late String pgsDeliverableScoreHistoryGrouped;
   late String officetype;
   late String pgsSubmit;
-  late String pgsSubmitUserId;
+  late String fetchPGSUserId;
   late String performancegovernancesystemFilter;
   late String disapprovePgs;
   late String pgsDeliverableHistory;
@@ -73,7 +73,7 @@ class ApiEndpoint {
 
     officetype = '$baseUrl/officetype';
     pgsSubmit = '$baseUrl/pgs/submit';
-    pgsSubmitUserId = '$baseUrl/pgs/submit/userId';
+    fetchPGSUserId = '$baseUrl/pgs/submit/userId';
     performancegovernancesystemFilter = '$baseUrl/pgs/filter';
     disapprovePgs = '$baseUrl/pgs/disapprove';
     pgsDeliverableHistory = '$baseUrl/pgsDeliverableHistory';
