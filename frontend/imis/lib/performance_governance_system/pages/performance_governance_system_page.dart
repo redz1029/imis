@@ -2546,16 +2546,16 @@ class PerformanceGovernanceSystemPageState
                           return;
                         }
 
-                        // if (deliverablesControllers.length != 5) {
-                        //   MotionToast.warning(
-                        //     title: const Text("Insufficient Deliverables"),
-                        //     description: const Text(
-                        //       "Please provide at least 5 deliverables.",
-                        //     ),
-                        //     toastAlignment: Alignment.center,
-                        //   ).show(context);
-                        //   return;
-                        // }
+                        if (deliverablesControllers.length != 5) {
+                          MotionToast.warning(
+                            title: const Text("Insufficient Deliverables"),
+                            description: const Text(
+                              "Please provide at least 5 deliverables.",
+                            ),
+                            toastAlignment: Alignment.center,
+                          ).show(context);
+                          return;
+                        }
 
                         handlePgsAction(
                           context,
