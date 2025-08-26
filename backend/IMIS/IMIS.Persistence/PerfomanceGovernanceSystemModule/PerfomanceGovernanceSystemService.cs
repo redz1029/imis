@@ -395,9 +395,6 @@ namespace IMIS.Persistence.PgsModule
         }
 
 
-
-
-
         // Fixed narin ito comment lang muna para sa demo
 
         //public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(
@@ -623,26 +620,35 @@ namespace IMIS.Persistence.PgsModule
                     _repository.GetDbContext().Entry(d).State = EntityState.Modified;
                 }
 
-                foreach (var d in entity.PgsDeliverables ?? new())
+
+                var existingDeliverables = existing.PgsDeliverables?.ToList() ?? new List<PgsDeliverable>();               
+                foreach (var d in entity.PgsDeliverables ?? new List<PgsDeliverable>())
                 {
-                    var existingDeliverable = existing.PgsDeliverables!
-                        .FirstOrDefault(ed => ed.Id == d.Id);
-
-                    if (existingDeliverable != null)
-                    {
-                        var tempIsDeleted = existingDeliverable.IsDeleted;
-                        var tempIsDisapproved = existingDeliverable.IsDisapproved;
-
-                        _repository.GetDbContext().Entry(existingDeliverable).CurrentValues.SetValues(d);
-
-                        existingDeliverable.IsDeleted = tempIsDeleted;
-                        existingDeliverable.IsDisapproved = tempIsDisapproved;
-                    }
-                    else
+                    if (d.Id == 0) // New deliverable
                     {
                         existing.PgsDeliverables!.Add(d);
                     }
+                    else
+                    {
+                        var existingDeliverable = existingDeliverables.FirstOrDefault(ed => ed.Id == d.Id);
+                        if (existingDeliverable != null)
+                        {                           
+                            var tempIsDeleted = existingDeliverable.IsDeleted;
+                            var tempIsDisapproved = existingDeliverable.IsDisapproved;
+
+                            // Update values
+                            _repository.GetDbContext().Entry(existingDeliverable).CurrentValues.SetValues(d);
+                            
+                            existingDeliverable.IsDeleted = tempIsDeleted;
+                            existingDeliverable.IsDisapproved = tempIsDisapproved;
+                        }
+                        else
+                        {                            
+                            existing.PgsDeliverables!.Add(d);
+                        }
+                    }
                 }
+
 
                 if (isDraft)
                 {
@@ -863,8 +869,7 @@ namespace IMIS.Persistence.PgsModule
                 else
                 {
                     // Add new deliverable
-                    existing.PgsDeliverables ??= new List<PgsDeliverable>();
-                    existing.PgsDeliverables.Add(d.ToEntity());
+                    existing.PgsDeliverables ??= new List<PgsDeliverable>();                    
                 }
             }
 
