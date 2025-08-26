@@ -24,6 +24,11 @@ const gap6 = SizedBox(height: 48);
 const gap7 = SizedBox(height: 60);
 const gap8 = SizedBox(height: 6);
 
+const gap24px = SizedBox(height: 24);
+const gap32px = SizedBox(height: 32);
+const gap8px = SizedBox(height: 8);
+const gap16px = SizedBox(height: 16);
+
 //For Logo Widget
 class Logo extends StatelessWidget {
   const Logo({super.key});
@@ -34,7 +39,7 @@ class Logo extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Image.asset('assets/logo.png', width: 300),
-        Text('IMIS', style: TextStyle(fontSize: 24, color: primaryColor)),
+        Text('IMIS', style: TextStyle(fontSize: 32, color: primaryColor)),
       ],
     );
   }
