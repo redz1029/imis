@@ -27,16 +27,7 @@ namespace IMIS.Presentation.PgsModuleAPI
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
 
-            app.MapPost("/", async ([FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {
-                var createdPerformanceGovernanceSystem = await service.SaveOrUpdateAsync(performanceGovernanceSystemDto, cancellationToken).ConfigureAwait(false);
-                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
-                return Results.Created($"/performanceGovernanceSystem/{createdPerformanceGovernanceSystem.Id}", createdPerformanceGovernanceSystem);
-            })
-            .WithTags(_pgsTag)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _performanceGovernanceSystem.Add));
-
+          
             app.MapPut("/submit", async ([FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, string userId,
                 IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -57,7 +48,7 @@ namespace IMIS.Presentation.PgsModuleAPI
             })
            .WithTags(_pgsTag)
            .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _performanceGovernanceSystem.Add));
+            PermissionClaimType.Claim, _performanceGovernanceSystem.Add, _performanceGovernanceSystem.Edit));
             
             app.MapGet("submit/userId/{userId}", async (string userId, int pgsId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
                 {
@@ -125,21 +116,26 @@ namespace IMIS.Presentation.PgsModuleAPI
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.Edit));
 
-            app.MapGet("/list-report/pdf/{id}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            app.MapGet("/list-report/pdf/{id}", async (int id, IPerfomanceGovernanceSystemService service, HttpResponse response, CancellationToken cancellationToken) =>
             {
                 var performanceGovernanceSystem = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+
                 var file = await ReportUtil.GeneratePdfReport<ReportPerfomanceGovernanceSystemDto>(
                     "PerfomanceGovernanceSystem",
                     new List<ReportPerfomanceGovernanceSystemDto> { performanceGovernanceSystem! },
                     "PerfomanceGovernanceSystem",
                     cancellationToken
                 ).ConfigureAwait(false);
-                return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+                // Force inline rendering in browser with dynamic timestamp filename
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+
+                return Results.File(file, "application/pdf");
             })
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-            //.RequireAuthorization(e => e.RequireClaim(
-            // PermissionClaimType.Claim, _performanceGovernanceSystem.View));
+
 
             app.MapGet("/page", async (int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
