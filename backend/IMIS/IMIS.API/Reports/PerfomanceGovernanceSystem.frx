@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="08/18/2025 18:37:29" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="08/26/2025 11:19:58" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -273,7 +273,7 @@ namespace FastReport
   </Dictionary>
   <ReportPage Name="Page1" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
     <ReportTitleBand Name="ReportTitle1" Width="1047.06"/>
-    <PageHeaderBand Name="PageHeader1" Top="3.2" Width="1047.06" Height="234.1" CanGrow="true">
+    <PageHeaderBand Name="PageHeader1" Top="1.07" Width="1047.06" Height="234.1" CanGrow="true">
       <ShapeObject Name="Shape1" Left="83.45" Top="106.4" Width="885.1" Height="60.8" Fill.Color="192, 80, 77"/>
       <TextObject Name="Text2" Left="841.15" Top="111.85" Width="121.15" Height="47.9" Fill.Color="192, 80, 77" Text="[ReportPerfomanceGovernanceSystemDto.PercentDeliverables] %" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 16pt" TextFill.Color="White"/>
       <TextObject Name="Text3" Left="352.95" Top="110.85" Width="478.6" Height="48.9" Fill.Color="192, 80, 77" Text="STRATEGIC CONTRIBUTIONS" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 16pt" TextFill.Color="White"/>
@@ -295,9 +295,9 @@ namespace FastReport
       <LineObject Name="Line15" Left="967.6" Top="159.95" Height="73.9" Diagonal="true"/>
       <TextObject Name="txtStartDate" Left="341.65" Top="49.7" Width="397.55" Height="24.9" BeforePrintEvent="txtStartDate_BeforePrint" Text="[ReportPerfomanceGovernanceSystemDto.StartDate]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 12pt"/>
     </PageHeaderBand>
-    <DataBand Name="Data2" Top="240.5" Width="1047.06" DataSource="ReportPerfomanceGovernanceSystemDto">
-      <DataBand Name="Data1" Top="243.7" Width="1047.06" Height="34.3" CanGrow="true" FirstRowStartsNewPage="true" Guides="0" DataSource="PgsDeliverables">
-        <TextObject Name="txtInDirect" Left="256.7" Top="-0.55" Width="93.5" Height="33.25" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtInDirect_BeforePrint" HorzAlign="Center" Font="Segoe UI, 12pt"/>
+    <DataBand Name="Data2" Top="236.23" Width="1047.06" DataSource="ReportPerfomanceGovernanceSystemDto">
+      <DataBand Name="Data1" Top="237.3" Width="1047.06" Height="34.3" CanGrow="true" FirstRowStartsNewPage="true" Guides="0" DataSource="PgsDeliverables">
+        <TextObject Name="txtInDirect" Left="255.7" Top="-0.55" Width="94.5" Height="33.25" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtInDirect_BeforePrint" HorzAlign="Center" Font="Segoe UI, 12pt"/>
         <TextObject Name="Text26" Left="183.65" Top="-1" Width="72.15" Height="33.7" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text26_BeforePrint" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.IsDirect]" HorzAlign="Center" Font="Segoe UI, 12pt"/>
         <ShapeObject Name="Shape12" Left="83.15" Top="-1.65" Width="885.2" Height="35.95" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
         <TextObject Name="Text23" Left="356.7" Top="4.8" Width="474.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.DeliverableName]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 12pt"/>
@@ -305,11 +305,11 @@ namespace FastReport
         <TextObject Name="Text24" Left="840.7" Top="3" Width="121.5" Height="24.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.ByWhen]" Format="Date" Format.Format="MMMM yyyy" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 12pt"/>
         <LineObject Name="Line6" Left="350.15" Top="-1" Height="34.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
         <LineObject Name="Line7" Left="183.5" Top="-1" Height="34.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-        <LineObject Name="Line8" Left="256.55" Top="-1" Height="34.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
+        <LineObject Name="Line8" Left="255.55" Top="-1" Height="34.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
         <TextObject Name="Text25" Left="88.45" Top="3.45" Width="90.6" Height="23.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.KraName]&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 12pt"/>
       </DataBand>
     </DataBand>
-    <PageFooterBand Name="PageFooter1" Top="281.2" Width="1047.06" Height="251.75" CanBreak="true">
+    <PageFooterBand Name="PageFooter1" Top="272.67" Width="1047.06" Height="251.75" CanBreak="true">
       <TextObject Name="Text13" Left="371.75" Top="115.85" Width="170.1" Height="19.8" Anchor="Bottom, Left" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel4]&#13;&#10;" VertAlign="Center" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text14" Left="374.95" Top="4" Width="170.1" Height="19.8" Anchor="Bottom, Left" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel2]" VertAlign="Center" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text15" Left="81" Top="4" Width="170.1" Height="19.8" Anchor="Bottom, Left" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel1]&#13;&#10;" VertAlign="Center" Font="Segoe UI, 10pt"/>
