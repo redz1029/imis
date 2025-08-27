@@ -179,7 +179,6 @@ class PerformanceGovernanceSystemPageState
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
 
       if (user == null || user.id == null || user.id!.isEmpty) {
-        debugPrint("Error: No valid user found.");
         return;
       }
 
@@ -290,8 +289,6 @@ class PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("Pgs data disapprove successfully!");
-
         setState(() {
           fetchPgsList();
           clearAllSelections();
@@ -371,8 +368,7 @@ class PerformanceGovernanceSystemPageState
     String? pgsId,
   }) async {
     final url = "${ApiEndpoint().pgsDeliverableHistory}/$pgsId";
-    final List<PgsDeliverableHistory> deliverablesListHistory =
-        []; // Initialize here
+    final List<PgsDeliverableHistory> deliverablesListHistory = [];
 
     try {
       final response = await AuthenticatedRequest.get(dio, url);
@@ -394,7 +390,7 @@ class PerformanceGovernanceSystemPageState
           }
         }
       } else {
-        debugPrint("Failed to fetch deliverables: ${response.statusCode}");
+        debugPrint("Failed to fetch deliverables");
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.message}");
@@ -763,8 +759,6 @@ class PerformanceGovernanceSystemPageState
             filteredListPeriod = List.from(periodList);
           });
         }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException {
       debugPrint("Dio error");
@@ -886,7 +880,7 @@ class PerformanceGovernanceSystemPageState
     try {
       percentDeliverables = double.tryParse(percentageDeliverables.text) ?? 0.0;
     } catch (e) {
-      debugPrint("Error parsing percentDeliverables: $e");
+      debugPrint("Error parsing percentDeliverables");
     }
 
     return PerformanceGovernanceSystem(
@@ -1677,29 +1671,32 @@ class PerformanceGovernanceSystemPageState
                                                       // );
                                                     },
                                                   ),
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                      Icons.preview,
+                                                  Tooltip(
+                                                    message: 'Print Preview',
+
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons.pageview_outlined,
+                                                      ),
+
+                                                      onPressed: () async {
+                                                        final pgsId =
+                                                            pgsgovernancesystem['id']
+                                                                .toString();
+
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder:
+                                                                (context) =>
+                                                                    ReportViewerPage(
+                                                                      pgsId:
+                                                                          pgsId,
+                                                                    ),
+                                                          ),
+                                                        );
+                                                      },
                                                     ),
-
-                                                    onPressed: () async {
-                                                      final pgsId =
-                                                          pgsgovernancesystem['id']
-                                                              .toString();
-
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (
-                                                                context,
-                                                              ) => ReportViewerPage(
-                                                                pgsId: pgsId,
-                                                                // isPdf: true,
-                                                              ),
-                                                        ),
-                                                      );
-                                                    },
                                                   ),
 
                                                   IconButton(
@@ -2004,10 +2001,9 @@ class PerformanceGovernanceSystemPageState
                   orElse: () => {'orderLevel': 1},
                 )['orderLevel'] ??
                 1;
-            debugPrint('Computed orderLevel: $orderLevel');
+
             final isAnyDisapproved =
                 deliverables?.any((d) => d.isDisapproved == true) ?? false;
-            debugPrint('Computed isAnyDisapproved: $isAnyDisapproved');
             return AlertDialog(
               backgroundColor: mainBgColor,
               shape: RoundedRectangleBorder(
@@ -2078,7 +2074,7 @@ class PerformanceGovernanceSystemPageState
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 8,
                                         ),
-                                        child: CustomTooltip(
+                                        child: Tooltip(
                                           message: 'Select period',
                                           child: DropdownButtonFormField<int>(
                                             autovalidateMode:
@@ -2437,7 +2433,7 @@ class PerformanceGovernanceSystemPageState
                                                 officename:
                                                     officename ?? officeDisplay,
                                               ),
-                                              _PgsBuildTableSubheader(),
+                                              _pgsBuildTableSubheader(),
                                               ...rows.map(
                                                 (rowId) =>
                                                     _buildTableRowStrategicPGSDeliverableStatus(
@@ -2704,7 +2700,7 @@ class PerformanceGovernanceSystemPageState
           pgsSaveAsDraft(pgs);
         });
         // await pgsSaveAsDraft(pgs);
-      } else {
+      } else if (actionType == ActionType.submit) {
         final currentUser = await AuthUtil.fetchLoggedUser();
         final currentUserId = currentUser?.id;
         setState(() {
@@ -2721,11 +2717,15 @@ class PerformanceGovernanceSystemPageState
             userId: currentUserId.toString(),
           );
         });
-        // await submitPGS(
-        //   pgsId: id!,
-        //   updatePgs: pgs,
-        //   userId: currentUserId.toString(),
-        // );
+      } else {
+        final currentUser = await AuthUtil.fetchLoggedUser();
+        final currentUserId = currentUser?.id;
+
+        await submitPGS(
+          pgsId: id!,
+          updatePgs: pgs,
+          userId: currentUserId.toString(),
+        );
       }
 
       String successMessage;
@@ -2804,8 +2804,7 @@ class PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: CustomTooltip(
-        maxLines: 4,
+      child: Tooltip(
         message:
             'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
         child: TextFormField(
@@ -2821,7 +2820,7 @@ class PerformanceGovernanceSystemPageState
           ),
           onTap:
               orderLevel >= 2
-                  ? null // disable date picking when readonly
+                  ? null
                   : () async {
                     DateTime? pickedDate = await showDatePicker(
                       context: context,
@@ -2997,8 +2996,7 @@ class PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: CustomTooltip(
-              maxLines: 4,
+            child: Tooltip(
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextFormField(
@@ -3312,8 +3310,7 @@ class PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: CustomTooltip(
-              maxLines: 4,
+            child: Tooltip(
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextField(
@@ -3358,8 +3355,7 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  // ignore: non_constant_identifier_names
-  TableRow _PgsBuildTableSubheader() {
+  TableRow _pgsBuildTableSubheader() {
     return TableRow(
       decoration: const BoxDecoration(
         color: Color.fromARGB(255, 255, 254, 254),
@@ -3576,7 +3572,7 @@ class PerformanceGovernanceSystemPageState
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          CustomTooltip(
+          Tooltip(
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
             child: TextField(
@@ -3585,7 +3581,6 @@ class PerformanceGovernanceSystemPageState
                 hintText: "Enter your description here...",
                 border: OutlineInputBorder(),
               ),
-              maxLines: 3,
             ),
           ),
         ],
@@ -3701,13 +3696,12 @@ class PerformanceGovernanceSystemPageState
   Widget _buildExpandableTextAreaCellPGSDeliverable(int index) {
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
-      debugPrint("? Initialized new controller at index: $index");
     }
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 50.0),
-        child: CustomTooltip(
+        child: Tooltip(
           message:
               'Specify the tangible results or outcomes tied to this responsibility.',
           child: TextField(
