@@ -1984,7 +1984,7 @@ class PerformanceGovernanceSystemPageState
             reasonController[i] = TextEditingController(
               text: item.disapprovalRemarks,
             );
-            selectedDisapproved[i] = item.isDisapproved!;
+            selectedDisapproved[i] = item.isDisapproved;
           }
         } else {
           rows = [0];
@@ -2543,19 +2543,6 @@ class PerformanceGovernanceSystemPageState
                       );
 
                       if (_formKey.currentState!.validate() && !hasRowErrors) {
-                        if (selectedDisapproved.values.any(
-                          (value) => value == true,
-                        )) {
-                          MotionToast.warning(
-                            title: const Text("Revisions Required"),
-                            description: const Text(
-                              "Some deliverables need to be revised before you can proceed with submission.",
-                            ),
-                            toastAlignment: Alignment.center,
-                          ).show(context);
-                          return;
-                        }
-
                         if (deliverablesControllers.length != 5) {
                           MotionToast.warning(
                             title: const Text("Insufficient Deliverables"),
@@ -2705,16 +2692,40 @@ class PerformanceGovernanceSystemPageState
 
     try {
       if (actionType == ActionType.draft) {
-        await pgsSaveAsDraft(pgs);
+        setState(() {
+          final deliverables = pgs.pgsDeliverables;
+          if (deliverables != null) {
+            for (final deliverable in deliverables) {
+              deliverable.isDisapproved = false;
+              deliverable.disapprovalRemarks = '';
+            }
+          }
+
+          pgsSaveAsDraft(pgs);
+        });
+        // await pgsSaveAsDraft(pgs);
       } else {
         final currentUser = await AuthUtil.fetchLoggedUser();
         final currentUserId = currentUser?.id;
-
-        await submitPGS(
-          pgsId: id!,
-          updatePgs: pgs,
-          userId: currentUserId.toString(),
-        );
+        setState(() {
+          final deliverables = pgs.pgsDeliverables;
+          if (deliverables != null) {
+            for (final deliverable in deliverables) {
+              deliverable.isDisapproved = false;
+              deliverable.disapprovalRemarks = '';
+            }
+          }
+          submitPGS(
+            pgsId: id!,
+            updatePgs: pgs,
+            userId: currentUserId.toString(),
+          );
+        });
+        // await submitPGS(
+        //   pgsId: id!,
+        //   updatePgs: pgs,
+        //   userId: currentUserId.toString(),
+        // );
       }
 
       String successMessage;
@@ -4019,17 +4030,22 @@ class PerformanceGovernanceSystemPageState
                     borderSide: BorderSide(color: Colors.grey),
                   ),
                 ),
+
                 validator: (value) {
+                  final isDisapproved =
+                      selectedDisapproved[index] == true ||
+                      deliverablesList.any(
+                        (deliverable) =>
+                            deliverable.id == deliverableIds[index] &&
+                            deliverable.isDisapproved == true,
+                      );
+
                   if (value == null || value.isEmpty) {
-                    return "Please enter your deliverable";
+                    return isDisapproved
+                        ? "Please revise your deliverable"
+                        : "Please enter your deliverable";
                   }
                   return null;
-                },
-                onChanged: (value) {
-                  if (value.isNotEmpty) {
-                    selectedDisapproved[index] = false;
-                    reasonController[index]?.clear();
-                  }
                 },
               ),
             ),

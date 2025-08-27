@@ -19,7 +19,7 @@ PgsDeliverables _$PgsDeliverablesFromJson(Map<String, dynamic> json) =>
       const DateTimeConverter().fromJson(json['byWhen'] as String),
       (json['percentDeliverables'] as num).toDouble(),
       json['disapprovalRemarks'] as String?,
-      json['isDisapproved'] as bool?,
+      json['isDisapproved'] as bool,
       PgsDeliverables._statusFromJson((json['status'] as num).toInt()),
       (json['perfomanceGovernanceSystemId'] as num?)?.toInt(),
       pgsDeliverableHistory:
