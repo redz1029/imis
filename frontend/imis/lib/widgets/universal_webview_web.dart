@@ -1,5 +1,5 @@
 import 'dart:ui_web' as ui;
-import 'dart:html' as html;
+import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 
 class UniversalWebView extends StatefulWidget {
@@ -13,7 +13,7 @@ class UniversalWebView extends StatefulWidget {
 
 class _UniversalWebViewState extends State<UniversalWebView> {
   late final String viewType;
-  bool _isLoading = true;
+  bool isLoading = true;
 
   @override
   void initState() {
@@ -21,7 +21,6 @@ class _UniversalWebViewState extends State<UniversalWebView> {
 
     viewType = 'iframe-${widget.url.hashCode}';
 
-    // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(viewType, (int viewId) {
       final iframe =
           html.IFrameElement()
@@ -33,7 +32,7 @@ class _UniversalWebViewState extends State<UniversalWebView> {
             ..style.overflow = 'hidden';
 
       iframe.onLoad.listen((event) {
-        setState(() => _isLoading = false);
+        setState(() => isLoading = false);
       });
 
       return iframe;
