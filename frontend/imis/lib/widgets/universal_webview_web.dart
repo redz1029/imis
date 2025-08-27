@@ -42,11 +42,6 @@ class _UniversalWebViewState extends State<UniversalWebView> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        HtmlElementView(viewType: viewType),
-        if (_isLoading) const Center(child: CircularProgressIndicator()),
-      ],
-    );
+    return Stack(children: [HtmlElementView(viewType: viewType)]);
   }
 }
