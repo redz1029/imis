@@ -45,6 +45,8 @@ class PerformanceGovernanceSystemPageState
   final GlobalKey _menuKey = GlobalKey();
   final _formKey = GlobalKey<FormState>();
   Map<int, TextEditingController> deliverablesControllers = {};
+  Map<int, TextEditingController> deliverablesControllersDisapproved = {};
+  Map<int, bool> clearedOnDisapprove = {};
   Map<int, TextEditingController> signatoryControllers = {};
   Map<int, TextEditingController> selectedByWhenControllers = {};
   Map<int, Map<String, dynamic>> selectedKRAObjects = {};
@@ -103,8 +105,8 @@ class PerformanceGovernanceSystemPageState
   String? selectedStartPeriod;
   String? selectedEndDate;
   int? selectedKra;
-  Map<int, bool> selectedApproved = {};
   Map<int, bool> selectedDisapproved = {};
+
   final _paginationUtils = PaginationUtil(Dio());
   int _currentPage = 1;
   final int _pageSize = 30;
@@ -1019,7 +1021,7 @@ class PerformanceGovernanceSystemPageState
     deliverablesControllers.clear();
     reasonController.clear();
     selectedDisapproved.clear();
-    selectedApproved.clear();
+    clearedOnDisapprove.clear();
   }
 
   void confirmSelection() {
@@ -1677,7 +1679,7 @@ class PerformanceGovernanceSystemPageState
                                                   ),
                                                   IconButton(
                                                     icon: const Icon(
-                                                      Icons.print,
+                                                      Icons.preview,
                                                     ),
 
                                                     onPressed: () async {
@@ -1882,6 +1884,7 @@ class PerformanceGovernanceSystemPageState
     String? pgsstatus,
     String? pgsId,
     String? remarks,
+    int? index,
   }) {
     setState(() {
       if (rows.isEmpty) {
@@ -1895,7 +1898,7 @@ class PerformanceGovernanceSystemPageState
         selectedPeriod = null;
         selectedPeriodText = null;
         percentageDeliverables.clear();
-
+        clearedOnDisapprove.clear();
         deliverablesControllers.clear();
         selectedKRA.clear();
         selectedKRAObjects.clear();
@@ -1908,7 +1911,6 @@ class PerformanceGovernanceSystemPageState
         kraDescriptionController.clear();
         reasonController.clear();
         selectedDisapproved.clear();
-        selectedApproved.clear();
       } else {
         competenceScore.value = double.tryParse(competencescore ?? '') ?? 0.0;
         resourceScore.value = double.tryParse(resourcescore ?? '') ?? 0.0;
@@ -1948,7 +1950,7 @@ class PerformanceGovernanceSystemPageState
         kraDescriptionController.clear();
         reasonController.clear();
         selectedDisapproved.clear();
-        selectedApproved.clear();
+        clearedOnDisapprove.clear();
 
         if (deliverables != null && deliverables.isNotEmpty) {
           rows = List.generate(deliverables.length, (index) => index);
@@ -1958,6 +1960,10 @@ class PerformanceGovernanceSystemPageState
             deliverablesControllers[i] = TextEditingController(
               text: item.deliverableName,
             );
+            deliverablesControllersDisapproved[i] = TextEditingController(
+              text: item.deliverableName,
+            );
+
             selectedDirect[i] = item.isDirect;
             selectedIndirect[i] = !item.isDirect;
             selectedByWhen[i] = DateFormat('yyyy-MM-dd').format(item.byWhen);
@@ -1978,7 +1984,7 @@ class PerformanceGovernanceSystemPageState
             reasonController[i] = TextEditingController(
               text: item.disapprovalRemarks,
             );
-            selectedDisapproved[i] = item.isDisapproved;
+            selectedDisapproved[i] = item.isDisapproved!;
           }
         } else {
           rows = [0];
@@ -2093,21 +2099,26 @@ class PerformanceGovernanceSystemPageState
                                                 borderSide: BorderSide.none,
                                               ),
                                             ),
-                                            onChanged: (int? newValue) {
-                                              setState(() {
-                                                selectedPeriod = newValue;
-                                                final selected =
-                                                    filteredListPeriod
-                                                        .firstWhere(
-                                                          (period) =>
-                                                              period['id'] ==
-                                                              newValue,
-                                                          orElse: () => {},
-                                                        );
-                                                selectedPeriodText =
-                                                    "${selected['startDate']} - ${selected['endDate']}";
-                                              });
-                                            },
+                                            onChanged:
+                                                orderLevel >= 2
+                                                    ? null
+                                                    : (int? newValue) {
+                                                      setState(() {
+                                                        selectedPeriod =
+                                                            newValue;
+                                                        final selected =
+                                                            filteredListPeriod
+                                                                .firstWhere(
+                                                                  (period) =>
+                                                                      period['id'] ==
+                                                                      newValue,
+                                                                  orElse:
+                                                                      () => {},
+                                                                );
+                                                        selectedPeriodText =
+                                                            "${selected['startDate']} - ${selected['endDate']}";
+                                                      });
+                                                    },
                                             items:
                                                 filteredListPeriod.map<
                                                   DropdownMenuItem<int>
@@ -2190,6 +2201,7 @@ class PerformanceGovernanceSystemPageState
                                               _buildMainHeaderStrategic(
                                                 officename:
                                                     officename ?? officeDisplay,
+                                                orderLevel: orderLevel,
                                               ),
 
                                               _buildTableSubHeaderStrategic(),
@@ -2473,7 +2485,6 @@ class PerformanceGovernanceSystemPageState
                     onPressed: () {
                       setDialogState(() {
                         rowErrors.clear();
-
                         for (final index in rows) {
                           final isDirectSelected =
                               selectedDirect[index] ?? false;
@@ -2517,7 +2528,6 @@ class PerformanceGovernanceSystemPageState
                     onPressed: () {
                       setDialogState(() {
                         rowErrors.clear();
-
                         for (final index in rows) {
                           final isDirectSelected =
                               selectedDirect[index] ?? false;
@@ -2605,20 +2615,17 @@ class PerformanceGovernanceSystemPageState
     int orderLevel, {
     required ActionType actionType,
   }) async {
-    // 1. Check deliverables (only for approval/disapproval)
     int? pgsId = int.tryParse(id ?? '');
     final updatedDeliverables = getTableDeliverables(pgsId ?? 0);
     bool isAnyDisapproved = updatedDeliverables.any(
       (d) => d.isDisapproved == true,
     );
 
-    // --- Merge approve & disapprove logic ---
     if (actionType == ActionType.approve) {
       actionType =
           isAnyDisapproved ? ActionType.disapprove : ActionType.approve;
     }
 
-    // 2. Dialog message setup
     String title;
     String content;
 
@@ -2738,7 +2745,6 @@ class PerformanceGovernanceSystemPageState
 
       Navigator.pop(context);
     } catch (e) {
-      // Error messages
       String errorMessage;
       switch (actionType) {
         case ActionType.draft:
@@ -2768,7 +2774,11 @@ class PerformanceGovernanceSystemPageState
     }
   }
 
-  Widget _buildDatePickerCell(int index, Function setDialogState) {
+  Widget _buildDatePickerCell(
+    int index,
+    Function setDialogState,
+    int orderLevel,
+  ) {
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
 
     if (selectedByWhen[index] == null ||
@@ -2798,47 +2808,54 @@ class PerformanceGovernanceSystemPageState
             contentPadding: EdgeInsets.all(8.0),
             suffixIcon: Icon(Icons.calendar_today),
           ),
-          onTap: () async {
-            DateTime? pickedDate = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2100),
-              builder: (context, child) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: ColorScheme.light(
-                      primary: primaryColor,
-                      onPrimary: secondaryColor,
-                    ),
-                    textButtonTheme: TextButtonThemeData(
-                      style: TextButton.styleFrom(
-                        foregroundColor: primaryColor,
-                      ),
-                    ),
-                  ),
-                  child: child!,
-                );
-              },
-            );
-            if (pickedDate != null) {
-              String formattedDate = DateFormat(
-                'yyyy-MM-dd',
-              ).format(pickedDate);
-              setDialogState(() {
-                selectedByWhen[index] = formattedDate;
-                selectedByWhenControllers[index]?.text = DateFormat(
-                  'MMMM yyyy',
-                ).format(pickedDate);
-              });
-            }
-          },
+          onTap:
+              orderLevel >= 2
+                  ? null // disable date picking when readonly
+                  : () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: primaryColor,
+                              onPrimary: secondaryColor,
+                            ),
+                            textButtonTheme: TextButtonThemeData(
+                              style: TextButton.styleFrom(
+                                foregroundColor: primaryColor,
+                              ),
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (pickedDate != null) {
+                      String formattedDate = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(pickedDate);
+                      setDialogState(() {
+                        selectedByWhen[index] = formattedDate;
+                        selectedByWhenControllers[index]?.text = DateFormat(
+                          'MMMM yyyy',
+                        ).format(pickedDate);
+                      });
+                    }
+                  },
         ),
       ),
     );
   }
 
-  Widget _buildDropdownKraCell(int index, Function setDialogState) {
+  Widget _buildDropdownKraCell(
+    int index,
+    Function setDialogState,
+    int orderLevel,
+  ) {
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
@@ -2868,23 +2885,26 @@ class PerformanceGovernanceSystemPageState
               dropdownColor: mainBgColor,
               isExpanded: true,
               value: selectedKRA[index],
-              onChanged: (int? newValue) {
-                if (newValue == null) return;
-                setDialogState(() {
-                  selectedKRA[index] = newValue;
-                  final selectedOption = options.firstWhere(
-                    (option) => option['id'] == newValue,
-                    orElse:
-                        () => {
-                          'id': -1,
-                          'name': 'Unknown',
-                          'remarks': 'Not found',
-                        },
-                  );
+              onChanged:
+                  orderLevel >= 2
+                      ? null
+                      : (int? newValue) {
+                        if (newValue == null) return;
+                        setDialogState(() {
+                          selectedKRA[index] = newValue;
+                          final selectedOption = options.firstWhere(
+                            (option) => option['id'] == newValue,
+                            orElse:
+                                () => {
+                                  'id': -1,
+                                  'name': 'Unknown',
+                                  'remarks': 'Not found',
+                                },
+                          );
 
-                  selectedKRAObjects[index] = selectedOption;
-                });
-              },
+                          selectedKRAObjects[index] = selectedOption;
+                        });
+                      },
               items:
                   options.map<DropdownMenuItem<int>>((option) {
                     return DropdownMenuItem<int>(
@@ -2911,6 +2931,7 @@ class PerformanceGovernanceSystemPageState
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
             child: TextFormField(
+              readOnly: orderLevel >= 2,
               controller: kraDescriptionController[index],
               autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
@@ -2937,6 +2958,7 @@ class PerformanceGovernanceSystemPageState
   TableRow _buildMainHeaderStrategic({
     String? officename,
     String? percentDeliverables,
+    required int orderLevel,
   }) {
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
@@ -2969,6 +2991,7 @@ class PerformanceGovernanceSystemPageState
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextFormField(
+                readOnly: orderLevel >= 2,
                 controller: percentageDeliverables,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 textAlign: TextAlign.center,
@@ -3065,7 +3088,7 @@ class PerformanceGovernanceSystemPageState
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
-        _buildDropdownKraCell(index, setDialogState),
+        _buildDropdownKraCell(index, setDialogState, orderLevel),
         _buildCheckboxCell(
           index,
           selectedDirect,
@@ -3082,8 +3105,8 @@ class PerformanceGovernanceSystemPageState
           isDirect: false,
           errorText: errorText,
         ),
-        _buildExpandableTextAreaCell(index, orderLevel),
-        _buildDatePickerCell(index, setDialogState),
+        _buildExpandableTextAreaCell(index, orderLevel, setDialogState),
+        _buildDatePickerCell(index, setDialogState, orderLevel),
         (id == null || orderLevel < 2)
             ? _buildRemoveButton(index, setDialogState)
             : _buildApprovedDisapprovedSignatory(index, setDialogState),
@@ -3719,54 +3742,6 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _markAsRevised(int index, Function setDialogState) {
-    bool? isRevised = selectedDisapproved[index] == false;
-
-    return GestureDetector(
-      onTap: () {
-        setDialogState(() {
-          if (isRevised) {
-            selectedDisapproved[index] = true;
-          } else {
-            selectedDisapproved[index] = false;
-            reasonController[index]?.clear();
-          }
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-        decoration: BoxDecoration(
-          color:
-              isRevised
-                  ? Colors.transparent
-                  : const Color.fromARGB(255, 52, 146, 57),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: isRevised ? Colors.green : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isRevised ? Icons.check_circle : Icons.check_circle_outline,
-              color: isRevised ? Colors.green : Colors.white,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              isRevised ? 'Revised' : 'Mark as Revised',
-              style: TextStyle(
-                color: isRevised ? Colors.green : Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildReasonDisapproval(int index, Function setDialogState) {
     bool? isDisapproved = selectedDisapproved[index];
     reasonController[index] ??= TextEditingController();
@@ -3780,10 +3755,15 @@ class PerformanceGovernanceSystemPageState
             padding: const EdgeInsets.symmetric(horizontal: 1),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.05),
+                color: const Color.fromARGB(
+                  255,
+                  226,
+                  85,
+                  74,
+                ).withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: const Color.fromARGB(255, 197, 106, 100),
+                  color: const Color.fromARGB(255, 201, 149, 145),
                   width: 1,
                 ),
               ),
@@ -3834,13 +3814,56 @@ class PerformanceGovernanceSystemPageState
                     style: TextStyle(
                       fontSize: 14,
 
-                      color: Color.fromARGB(255, 204, 65, 55),
+                      color: Color.fromARGB(255, 185, 28, 28),
                     ),
                   ),
                   gap8,
                   Text(
                     reasonController[index]?.text ?? 'No reason provided',
                     style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                  gap,
+                  const Divider(
+                    color: Color.fromARGB(255, 0, 0, 0),
+                    thickness: 0.3,
+                    indent: 1,
+                    endIndent: 1,
+                  ),
+
+                  gap2,
+                  Text(
+                    "Original Submission",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: const Color.fromARGB(255, 107, 107, 107),
+                    ),
+                  ),
+                  gap8,
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(
+                      minHeight: 60,
+                      maxHeight: 120,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F8F8),
+                      border: Border.all(color: Colors.grey, width: 1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      deliverablesControllersDisapproved[index]?.text ??
+                          'No deliverables',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.black87,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 3,
+                    ),
                   ),
                 ],
               ),
@@ -3939,25 +3962,37 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildExpandableTextAreaCell(int index, int orderLevel) {
+  Widget _buildExpandableTextAreaCell(
+    int index,
+    int orderLevel,
+    Function setDialogState,
+  ) {
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
     }
+
     bool showDisapproveControls = false;
-    if (deliverablesList.isNotEmpty) {
+    if (selectedDisapproved[index] == true && orderLevel == 1) {
+      showDisapproveControls = true;
+    } else if (deliverablesList.isNotEmpty) {
       showDisapproveControls = deliverablesList.any(
         (deliverable) =>
             deliverable.id == deliverableIds[index] &&
             deliverable.isDisapproved == true,
       );
     }
+
+    if (showDisapproveControls && clearedOnDisapprove[index] != true) {
+      deliverablesControllers[index]!.clear();
+      clearedOnDisapprove[index] = true;
+    }
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showDisapproveControls ||
-              selectedDisapproved[index] == true && orderLevel == 1) ...[
+          if (showDisapproveControls) ...[
             StatefulBuilder(
               builder: (context, setDialogState) {
                 return _buildReasonDisapproval(index, setDialogState);
@@ -3988,25 +4023,17 @@ class PerformanceGovernanceSystemPageState
                   if (value == null || value.isEmpty) {
                     return "Please enter your deliverable";
                   }
-
                   return null;
                 },
                 onChanged: (value) {
-                  setState(() {});
+                  if (value.isNotEmpty) {
+                    selectedDisapproved[index] = false;
+                    reasonController[index]?.clear();
+                  }
                 },
               ),
             ),
           ),
-          gap,
-          if (showDisapproveControls ||
-              selectedDisapproved[index] == true && orderLevel == 1) ...[
-            StatefulBuilder(
-              builder: (context, setDialogState) {
-                return _markAsRevised(index, setDialogState);
-              },
-            ),
-            gap1,
-          ],
         ],
       ),
     );

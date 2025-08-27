@@ -29,7 +29,7 @@ class PgsDeliverables {
 
   String? remarks;
   String? disapprovalRemarks;
-  bool isDisapproved;
+  bool? isDisapproved;
   String? rowVersion;
   int? perfomanceGovernanceSystemId;
   List<PgsDeliverableHistory>? pgsDeliverableHistory;
