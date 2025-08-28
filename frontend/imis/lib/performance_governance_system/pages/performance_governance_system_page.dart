@@ -45,6 +45,8 @@ class PerformanceGovernanceSystemPageState
   final GlobalKey _menuKey = GlobalKey();
   final _formKey = GlobalKey<FormState>();
   Map<int, TextEditingController> deliverablesControllers = {};
+  Map<int, TextEditingController> deliverablesControllersDisapproved = {};
+  Map<int, bool> clearedOnDisapprove = {};
   Map<int, TextEditingController> signatoryControllers = {};
   Map<int, TextEditingController> selectedByWhenControllers = {};
   Map<int, Map<String, dynamic>> selectedKRAObjects = {};
@@ -103,8 +105,8 @@ class PerformanceGovernanceSystemPageState
   String? selectedStartPeriod;
   String? selectedEndDate;
   int? selectedKra;
-  Map<int, bool> selectedApproved = {};
   Map<int, bool> selectedDisapproved = {};
+
   final _paginationUtils = PaginationUtil(Dio());
   int _currentPage = 1;
   final int _pageSize = 30;
@@ -177,7 +179,6 @@ class PerformanceGovernanceSystemPageState
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
 
       if (user == null || user.id == null || user.id!.isEmpty) {
-        debugPrint("Error: No valid user found.");
         return;
       }
 
@@ -288,8 +289,6 @@ class PerformanceGovernanceSystemPageState
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint("Pgs data disapprove successfully!");
-
         setState(() {
           fetchPgsList();
           clearAllSelections();
@@ -369,8 +368,7 @@ class PerformanceGovernanceSystemPageState
     String? pgsId,
   }) async {
     final url = "${ApiEndpoint().pgsDeliverableHistory}/$pgsId";
-    final List<PgsDeliverableHistory> deliverablesListHistory =
-        []; // Initialize here
+    final List<PgsDeliverableHistory> deliverablesListHistory = [];
 
     try {
       final response = await AuthenticatedRequest.get(dio, url);
@@ -392,7 +390,7 @@ class PerformanceGovernanceSystemPageState
           }
         }
       } else {
-        debugPrint("Failed to fetch deliverables: ${response.statusCode}");
+        debugPrint("Failed to fetch deliverables");
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.message}");
@@ -761,8 +759,6 @@ class PerformanceGovernanceSystemPageState
             filteredListPeriod = List.from(periodList);
           });
         }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
       }
     } on DioException {
       debugPrint("Dio error");
@@ -884,7 +880,7 @@ class PerformanceGovernanceSystemPageState
     try {
       percentDeliverables = double.tryParse(percentageDeliverables.text) ?? 0.0;
     } catch (e) {
-      debugPrint("Error parsing percentDeliverables: $e");
+      debugPrint("Error parsing percentDeliverables");
     }
 
     return PerformanceGovernanceSystem(
@@ -1019,7 +1015,7 @@ class PerformanceGovernanceSystemPageState
     deliverablesControllers.clear();
     reasonController.clear();
     selectedDisapproved.clear();
-    selectedApproved.clear();
+    clearedOnDisapprove.clear();
   }
 
   void confirmSelection() {
@@ -1675,29 +1671,32 @@ class PerformanceGovernanceSystemPageState
                                                       // );
                                                     },
                                                   ),
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                      Icons.print,
+                                                  Tooltip(
+                                                    message: 'Print Preview',
+
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons.pageview_outlined,
+                                                      ),
+
+                                                      onPressed: () async {
+                                                        final pgsId =
+                                                            pgsgovernancesystem['id']
+                                                                .toString();
+
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder:
+                                                                (context) =>
+                                                                    ReportViewerPage(
+                                                                      pgsId:
+                                                                          pgsId,
+                                                                    ),
+                                                          ),
+                                                        );
+                                                      },
                                                     ),
-
-                                                    onPressed: () async {
-                                                      final pgsId =
-                                                          pgsgovernancesystem['id']
-                                                              .toString();
-
-                                                      Navigator.push(
-                                                        context,
-                                                        MaterialPageRoute(
-                                                          builder:
-                                                              (
-                                                                context,
-                                                              ) => ReportViewerPage(
-                                                                pgsId: pgsId,
-                                                                // isPdf: true,
-                                                              ),
-                                                        ),
-                                                      );
-                                                    },
                                                   ),
 
                                                   IconButton(
@@ -1882,6 +1881,7 @@ class PerformanceGovernanceSystemPageState
     String? pgsstatus,
     String? pgsId,
     String? remarks,
+    int? index,
   }) {
     setState(() {
       if (rows.isEmpty) {
@@ -1895,7 +1895,7 @@ class PerformanceGovernanceSystemPageState
         selectedPeriod = null;
         selectedPeriodText = null;
         percentageDeliverables.clear();
-
+        clearedOnDisapprove.clear();
         deliverablesControllers.clear();
         selectedKRA.clear();
         selectedKRAObjects.clear();
@@ -1908,7 +1908,6 @@ class PerformanceGovernanceSystemPageState
         kraDescriptionController.clear();
         reasonController.clear();
         selectedDisapproved.clear();
-        selectedApproved.clear();
       } else {
         competenceScore.value = double.tryParse(competencescore ?? '') ?? 0.0;
         resourceScore.value = double.tryParse(resourcescore ?? '') ?? 0.0;
@@ -1948,7 +1947,7 @@ class PerformanceGovernanceSystemPageState
         kraDescriptionController.clear();
         reasonController.clear();
         selectedDisapproved.clear();
-        selectedApproved.clear();
+        clearedOnDisapprove.clear();
 
         if (deliverables != null && deliverables.isNotEmpty) {
           rows = List.generate(deliverables.length, (index) => index);
@@ -1958,6 +1957,10 @@ class PerformanceGovernanceSystemPageState
             deliverablesControllers[i] = TextEditingController(
               text: item.deliverableName,
             );
+            deliverablesControllersDisapproved[i] = TextEditingController(
+              text: item.deliverableName,
+            );
+
             selectedDirect[i] = item.isDirect;
             selectedIndirect[i] = !item.isDirect;
             selectedByWhen[i] = DateFormat('yyyy-MM-dd').format(item.byWhen);
@@ -1998,10 +2001,9 @@ class PerformanceGovernanceSystemPageState
                   orElse: () => {'orderLevel': 1},
                 )['orderLevel'] ??
                 1;
-            debugPrint('Computed orderLevel: $orderLevel');
+
             final isAnyDisapproved =
                 deliverables?.any((d) => d.isDisapproved == true) ?? false;
-            debugPrint('Computed isAnyDisapproved: $isAnyDisapproved');
             return AlertDialog(
               backgroundColor: mainBgColor,
               shape: RoundedRectangleBorder(
@@ -2072,8 +2074,9 @@ class PerformanceGovernanceSystemPageState
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 8,
                                         ),
-                                        child: CustomTooltip(
-                                          message: 'Select period',
+                                        child: Tooltip(
+                                          message:
+                                              'A defined timeframe (quarter, semester, or year) used to track, evaluate, and report performance deliverables.',
                                           child: DropdownButtonFormField<int>(
                                             autovalidateMode:
                                                 AutovalidateMode
@@ -2093,21 +2096,26 @@ class PerformanceGovernanceSystemPageState
                                                 borderSide: BorderSide.none,
                                               ),
                                             ),
-                                            onChanged: (int? newValue) {
-                                              setState(() {
-                                                selectedPeriod = newValue;
-                                                final selected =
-                                                    filteredListPeriod
-                                                        .firstWhere(
-                                                          (period) =>
-                                                              period['id'] ==
-                                                              newValue,
-                                                          orElse: () => {},
-                                                        );
-                                                selectedPeriodText =
-                                                    "${selected['startDate']} - ${selected['endDate']}";
-                                              });
-                                            },
+                                            onChanged:
+                                                id != null && orderLevel >= 2
+                                                    ? null
+                                                    : (int? newValue) {
+                                                      setState(() {
+                                                        selectedPeriod =
+                                                            newValue;
+                                                        final selected =
+                                                            filteredListPeriod
+                                                                .firstWhere(
+                                                                  (period) =>
+                                                                      period['id'] ==
+                                                                      newValue,
+                                                                  orElse:
+                                                                      () => {},
+                                                                );
+                                                        selectedPeriodText =
+                                                            "${selected['startDate']} - ${selected['endDate']}";
+                                                      });
+                                                    },
                                             items:
                                                 filteredListPeriod.map<
                                                   DropdownMenuItem<int>
@@ -2190,6 +2198,7 @@ class PerformanceGovernanceSystemPageState
                                               _buildMainHeaderStrategic(
                                                 officename:
                                                     officename ?? officeDisplay,
+                                                orderLevel: orderLevel,
                                               ),
 
                                               _buildTableSubHeaderStrategic(),
@@ -2202,8 +2211,8 @@ class PerformanceGovernanceSystemPageState
                                                       '',
                                                       setState,
                                                       setDialogState,
-                                                      orderLevel: orderLevel,
-                                                      id: id,
+                                                      orderLevel,
+                                                      id,
                                                       showErrors:
                                                           rowErrors[rowId] ??
                                                           false,
@@ -2212,29 +2221,36 @@ class PerformanceGovernanceSystemPageState
                                             ],
                                           ),
                                           gap,
-                                          TextButton(
-                                            onPressed: () {
-                                              setDialogState(() {
-                                                _addRow();
-                                              });
-                                            },
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.add,
-                                                  color: primaryColor,
-                                                ),
-                                                Text(
-                                                  'Add Row',
-                                                  style: TextStyle(
+                                          if ((id == null && orderLevel == 1) ||
+                                              (id == null && orderLevel >= 2) ||
+                                              isAnyDisapproved ||
+                                              (signatories == null ||
+                                                  signatories.isEmpty))
+                                            TextButton(
+                                              onPressed: () {
+                                                setDialogState(() {
+                                                  _addRow();
+                                                });
+                                              },
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.add,
                                                     color: primaryColor,
-                                                    fontWeight: FontWeight.w500,
                                                   ),
-                                                ),
-                                              ],
+
+                                                  Text(
+                                                    'Add Row',
+                                                    style: TextStyle(
+                                                      color: primaryColor,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
                                         ],
                                       ),
                                     ),
@@ -2425,7 +2441,7 @@ class PerformanceGovernanceSystemPageState
                                                 officename:
                                                     officename ?? officeDisplay,
                                               ),
-                                              _PgsBuildTableSubheader(),
+                                              _pgsBuildTableSubheader(),
                                               ...rows.map(
                                                 (rowId) =>
                                                     _buildTableRowStrategicPGSDeliverableStatus(
@@ -2433,6 +2449,8 @@ class PerformanceGovernanceSystemPageState
                                                       '',
                                                       '',
                                                       setState,
+                                                      orderLevel,
+                                                      id,
                                                       setDialogState,
                                                       showErrors:
                                                           rowErrors[rowId] ??
@@ -2473,7 +2491,6 @@ class PerformanceGovernanceSystemPageState
                     onPressed: () {
                       setDialogState(() {
                         rowErrors.clear();
-
                         for (final index in rows) {
                           final isDirectSelected =
                               selectedDirect[index] ?? false;
@@ -2517,7 +2534,6 @@ class PerformanceGovernanceSystemPageState
                     onPressed: () {
                       setDialogState(() {
                         rowErrors.clear();
-
                         for (final index in rows) {
                           final isDirectSelected =
                               selectedDirect[index] ?? false;
@@ -2533,19 +2549,6 @@ class PerformanceGovernanceSystemPageState
                       );
 
                       if (_formKey.currentState!.validate() && !hasRowErrors) {
-                        if (selectedDisapproved.values.any(
-                          (value) => value == true,
-                        )) {
-                          MotionToast.warning(
-                            title: const Text("Revisions Required"),
-                            description: const Text(
-                              "Some deliverables need to be revised before you can proceed with submission.",
-                            ),
-                            toastAlignment: Alignment.center,
-                          ).show(context);
-                          return;
-                        }
-
                         if (deliverablesControllers.length != 5) {
                           MotionToast.warning(
                             title: const Text("Insufficient Deliverables"),
@@ -2605,20 +2608,17 @@ class PerformanceGovernanceSystemPageState
     int orderLevel, {
     required ActionType actionType,
   }) async {
-    // 1. Check deliverables (only for approval/disapproval)
     int? pgsId = int.tryParse(id ?? '');
     final updatedDeliverables = getTableDeliverables(pgsId ?? 0);
     bool isAnyDisapproved = updatedDeliverables.any(
       (d) => d.isDisapproved == true,
     );
 
-    // --- Merge approve & disapprove logic ---
     if (actionType == ActionType.approve) {
       actionType =
           isAnyDisapproved ? ActionType.disapprove : ActionType.approve;
     }
 
-    // 2. Dialog message setup
     String title;
     String content;
 
@@ -2698,7 +2698,35 @@ class PerformanceGovernanceSystemPageState
 
     try {
       if (actionType == ActionType.draft) {
-        await pgsSaveAsDraft(pgs);
+        setState(() {
+          final deliverables = pgs.pgsDeliverables;
+          if (deliverables != null) {
+            for (final deliverable in deliverables) {
+              deliverable.isDisapproved = false;
+              deliverable.disapprovalRemarks = '';
+            }
+          }
+
+          pgsSaveAsDraft(pgs);
+        });
+        // await pgsSaveAsDraft(pgs);
+      } else if (actionType == ActionType.submit) {
+        final currentUser = await AuthUtil.fetchLoggedUser();
+        final currentUserId = currentUser?.id;
+        setState(() {
+          final deliverables = pgs.pgsDeliverables;
+          if (deliverables != null) {
+            for (final deliverable in deliverables) {
+              deliverable.isDisapproved = false;
+              deliverable.disapprovalRemarks = '';
+            }
+          }
+          submitPGS(
+            pgsId: id!,
+            updatePgs: pgs,
+            userId: currentUserId.toString(),
+          );
+        });
       } else {
         final currentUser = await AuthUtil.fetchLoggedUser();
         final currentUserId = currentUser?.id;
@@ -2738,7 +2766,6 @@ class PerformanceGovernanceSystemPageState
 
       Navigator.pop(context);
     } catch (e) {
-      // Error messages
       String errorMessage;
       switch (actionType) {
         case ActionType.draft:
@@ -2768,7 +2795,12 @@ class PerformanceGovernanceSystemPageState
     }
   }
 
-  Widget _buildDatePickerCell(int index, Function setDialogState) {
+  Widget _buildDatePickerCell(
+    int index,
+    String? id,
+    Function setDialogState,
+    int orderLevel,
+  ) {
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
 
     if (selectedByWhen[index] == null ||
@@ -2783,8 +2815,7 @@ class PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: CustomTooltip(
-        maxLines: 4,
+      child: Tooltip(
         message:
             'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
         child: TextFormField(
@@ -2798,47 +2829,55 @@ class PerformanceGovernanceSystemPageState
             contentPadding: EdgeInsets.all(8.0),
             suffixIcon: Icon(Icons.calendar_today),
           ),
-          onTap: () async {
-            DateTime? pickedDate = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2100),
-              builder: (context, child) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: ColorScheme.light(
-                      primary: primaryColor,
-                      onPrimary: secondaryColor,
-                    ),
-                    textButtonTheme: TextButtonThemeData(
-                      style: TextButton.styleFrom(
-                        foregroundColor: primaryColor,
-                      ),
-                    ),
-                  ),
-                  child: child!,
-                );
-              },
-            );
-            if (pickedDate != null) {
-              String formattedDate = DateFormat(
-                'yyyy-MM-dd',
-              ).format(pickedDate);
-              setDialogState(() {
-                selectedByWhen[index] = formattedDate;
-                selectedByWhenControllers[index]?.text = DateFormat(
-                  'MMMM yyyy',
-                ).format(pickedDate);
-              });
-            }
-          },
+          onTap:
+              id != null && orderLevel >= 2
+                  ? null
+                  : () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: primaryColor,
+                              onPrimary: secondaryColor,
+                            ),
+                            textButtonTheme: TextButtonThemeData(
+                              style: TextButton.styleFrom(
+                                foregroundColor: primaryColor,
+                              ),
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (pickedDate != null) {
+                      String formattedDate = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(pickedDate);
+                      setDialogState(() {
+                        selectedByWhen[index] = formattedDate;
+                        selectedByWhenControllers[index]?.text = DateFormat(
+                          'MMMM yyyy',
+                        ).format(pickedDate);
+                      });
+                    }
+                  },
         ),
       ),
     );
   }
 
-  Widget _buildDropdownKraCell(int index, Function setDialogState) {
+  Widget _buildDropdownKraCell(
+    int index,
+    String? id,
+    Function setDialogState,
+    int orderLevel,
+  ) {
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
@@ -2868,23 +2907,26 @@ class PerformanceGovernanceSystemPageState
               dropdownColor: mainBgColor,
               isExpanded: true,
               value: selectedKRA[index],
-              onChanged: (int? newValue) {
-                if (newValue == null) return;
-                setDialogState(() {
-                  selectedKRA[index] = newValue;
-                  final selectedOption = options.firstWhere(
-                    (option) => option['id'] == newValue,
-                    orElse:
-                        () => {
-                          'id': -1,
-                          'name': 'Unknown',
-                          'remarks': 'Not found',
-                        },
-                  );
+              onChanged:
+                  id != null && orderLevel >= 2
+                      ? null
+                      : (int? newValue) {
+                        if (newValue == null) return;
+                        setDialogState(() {
+                          selectedKRA[index] = newValue;
+                          final selectedOption = options.firstWhere(
+                            (option) => option['id'] == newValue,
+                            orElse:
+                                () => {
+                                  'id': -1,
+                                  'name': 'Unknown',
+                                  'remarks': 'Not found',
+                                },
+                          );
 
-                  selectedKRAObjects[index] = selectedOption;
-                });
-              },
+                          selectedKRAObjects[index] = selectedOption;
+                        });
+                      },
               items:
                   options.map<DropdownMenuItem<int>>((option) {
                     return DropdownMenuItem<int>(
@@ -2911,6 +2953,7 @@ class PerformanceGovernanceSystemPageState
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
             child: TextFormField(
+              readOnly: id != null && orderLevel >= 2,
               controller: kraDescriptionController[index],
               autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
@@ -2936,7 +2979,9 @@ class PerformanceGovernanceSystemPageState
 
   TableRow _buildMainHeaderStrategic({
     String? officename,
+    String? id,
     String? percentDeliverables,
+    required int orderLevel,
   }) {
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
@@ -2964,11 +3009,11 @@ class PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: CustomTooltip(
-              maxLines: 4,
+            child: Tooltip(
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextFormField(
+                readOnly: id != null && orderLevel >= 2,
                 controller: percentageDeliverables,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 textAlign: TextAlign.center,
@@ -3041,12 +3086,10 @@ class PerformanceGovernanceSystemPageState
     String direct,
     String indirect,
     Function setState,
-    Function setDialogState, {
-    int orderLevel = 1,
-    String? id,
+    Function setDialogState,
+    int orderLevel,
+    String? id, {
     required bool showErrors,
-
-    // int? id,
   }) {
     deliverablesControllers.putIfAbsent(index, () => TextEditingController());
     selectedDirect.putIfAbsent(index, () => false);
@@ -3065,25 +3108,29 @@ class PerformanceGovernanceSystemPageState
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
-        _buildDropdownKraCell(index, setDialogState),
+        _buildDropdownKraCell(index, id, setDialogState, orderLevel),
         _buildCheckboxCell(
           index,
+          id,
           selectedDirect,
           selectedIndirect,
           setDialogState,
+          orderLevel,
           isDirect: true,
           errorText: errorText,
         ),
         _buildCheckboxCell(
           index,
+          id,
           selectedIndirect,
           selectedDirect,
           setDialogState,
+          orderLevel,
           isDirect: false,
           errorText: errorText,
         ),
-        _buildExpandableTextAreaCell(index, orderLevel),
-        _buildDatePickerCell(index, setDialogState),
+        _buildExpandableTextAreaCell(index, id, orderLevel, setDialogState),
+        _buildDatePickerCell(index, id, setDialogState, orderLevel),
         (id == null || orderLevel < 2)
             ? _buildRemoveButton(index, setDialogState)
             : _buildApprovedDisapprovedSignatory(index, setDialogState),
@@ -3093,12 +3140,15 @@ class PerformanceGovernanceSystemPageState
 
   Widget _buildCheckboxCell(
     int index,
+    String? id,
     Map<int, bool> selectedValues,
     Map<int, bool> oppositeValues,
-    Function setDialogState, {
+    Function setDialogState,
+    int orderLevel, {
     required bool isDirect,
     required String? errorText,
   }) {
+    final enabled = id != null && orderLevel >= 2;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -3123,13 +3173,17 @@ class PerformanceGovernanceSystemPageState
                 child: Center(
                   child: Checkbox(
                     value: selectedValues[index] ?? false,
-                    onChanged: (bool? newValue) {
-                      if (newValue == null) return;
-                      setDialogState(() {
-                        selectedValues[index] = newValue;
-                        if (newValue) oppositeValues[index] = false;
-                      });
-                    },
+                    onChanged:
+                        enabled
+                            ? null
+                            : (bool? newValue) {
+                              if (newValue == null) return;
+                              setDialogState(() {
+                                selectedValues[index] = newValue;
+                                if (newValue) oppositeValues[index] = false;
+                              });
+                            },
+
                     activeColor: Colors.white,
                     checkColor: Colors.black,
                   ),
@@ -3278,8 +3332,7 @@ class PerformanceGovernanceSystemPageState
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: CustomTooltip(
-              maxLines: 4,
+            child: Tooltip(
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextField(
@@ -3324,8 +3377,7 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  // ignore: non_constant_identifier_names
-  TableRow _PgsBuildTableSubheader() {
+  TableRow _pgsBuildTableSubheader() {
     return TableRow(
       decoration: const BoxDecoration(
         color: Color.fromARGB(255, 255, 254, 254),
@@ -3366,6 +3418,8 @@ class PerformanceGovernanceSystemPageState
     String direct,
     String indirect,
     Function setState,
+    int orderLevel,
+    String? id,
     Function setDialogState, {
     required bool showErrors,
   }) {
@@ -3383,17 +3437,23 @@ class PerformanceGovernanceSystemPageState
         _buildDropdownKraCellPGSDeliverableStatus(index, setDialogState),
         _buildCheckboxCell(
           index,
+          id,
           selectedDirect,
           selectedIndirect,
           setDialogState,
+          orderLevel,
           isDirect: true,
           errorText: '',
         ),
         _buildCheckboxCell(
           index,
+          id,
           selectedIndirect,
           selectedDirect,
+
           setDialogState,
+          orderLevel,
+
           isDirect: false,
           errorText: '',
         ),
@@ -3542,7 +3602,7 @@ class PerformanceGovernanceSystemPageState
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          CustomTooltip(
+          Tooltip(
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
             child: TextField(
@@ -3551,7 +3611,6 @@ class PerformanceGovernanceSystemPageState
                 hintText: "Enter your description here...",
                 border: OutlineInputBorder(),
               ),
-              maxLines: 3,
             ),
           ),
         ],
@@ -3667,13 +3726,12 @@ class PerformanceGovernanceSystemPageState
   Widget _buildExpandableTextAreaCellPGSDeliverable(int index) {
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
-      debugPrint("? Initialized new controller at index: $index");
     }
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ConstrainedBox(
         constraints: BoxConstraints(minHeight: 50.0),
-        child: CustomTooltip(
+        child: Tooltip(
           message:
               'Specify the tangible results or outcomes tied to this responsibility.',
           child: TextField(
@@ -3719,54 +3777,6 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _markAsRevised(int index, Function setDialogState) {
-    bool? isRevised = selectedDisapproved[index] == false;
-
-    return GestureDetector(
-      onTap: () {
-        setDialogState(() {
-          if (isRevised) {
-            selectedDisapproved[index] = true;
-          } else {
-            selectedDisapproved[index] = false;
-            reasonController[index]?.clear();
-          }
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-        decoration: BoxDecoration(
-          color:
-              isRevised
-                  ? Colors.transparent
-                  : const Color.fromARGB(255, 52, 146, 57),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(
-            color: isRevised ? Colors.green : Colors.transparent,
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              isRevised ? Icons.check_circle : Icons.check_circle_outline,
-              color: isRevised ? Colors.green : Colors.white,
-            ),
-            const SizedBox(width: 5),
-            Text(
-              isRevised ? 'Revised' : 'Mark as Revised',
-              style: TextStyle(
-                color: isRevised ? Colors.green : Colors.white,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildReasonDisapproval(int index, Function setDialogState) {
     bool? isDisapproved = selectedDisapproved[index];
     reasonController[index] ??= TextEditingController();
@@ -3780,10 +3790,15 @@ class PerformanceGovernanceSystemPageState
             padding: const EdgeInsets.symmetric(horizontal: 1),
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.red.withValues(alpha: 0.05),
+                color: const Color.fromARGB(
+                  255,
+                  226,
+                  85,
+                  74,
+                ).withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: const Color.fromARGB(255, 197, 106, 100),
+                  color: const Color.fromARGB(255, 201, 149, 145),
                   width: 1,
                 ),
               ),
@@ -3834,13 +3849,70 @@ class PerformanceGovernanceSystemPageState
                     style: TextStyle(
                       fontSize: 14,
 
-                      color: Color.fromARGB(255, 204, 65, 55),
+                      color: Color.fromARGB(255, 185, 28, 28),
                     ),
                   ),
                   gap8,
                   Text(
                     reasonController[index]?.text ?? 'No reason provided',
                     style: const TextStyle(fontSize: 14, color: Colors.black87),
+                  ),
+                  gap,
+                  const Divider(
+                    color: Color.fromARGB(255, 0, 0, 0),
+                    thickness: 0.3,
+                    indent: 1,
+                    endIndent: 1,
+                  ),
+
+                  gap2,
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.insert_drive_file,
+                        color: Colors.grey,
+                        size: 16,
+                      ),
+                      SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          'Original Submission',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color.fromARGB(255, 107, 107, 107),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  gap8,
+                  Container(
+                    width: double.infinity,
+                    constraints: const BoxConstraints(
+                      minHeight: 60,
+                      maxHeight: 120,
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8F8F8),
+                      border: Border.all(color: Colors.grey, width: 1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      '"${deliverablesControllersDisapproved[index]?.text ?? 'No deliverables'}"',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Colors.black87,
+                        fontStyle: FontStyle.italic,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 3,
+                    ),
                   ),
                 ],
               ),
@@ -3939,25 +4011,38 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildExpandableTextAreaCell(int index, int orderLevel) {
+  Widget _buildExpandableTextAreaCell(
+    int index,
+    String? id,
+    int orderLevel,
+    Function setDialogState,
+  ) {
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
     }
+
     bool showDisapproveControls = false;
-    if (deliverablesList.isNotEmpty) {
+    if (selectedDisapproved[index] == true && orderLevel == 1) {
+      showDisapproveControls = true;
+    } else if (deliverablesList.isNotEmpty) {
       showDisapproveControls = deliverablesList.any(
         (deliverable) =>
             deliverable.id == deliverableIds[index] &&
             deliverable.isDisapproved == true,
       );
     }
+
+    if (showDisapproveControls && clearedOnDisapprove[index] != true) {
+      deliverablesControllers[index]!.clear();
+      clearedOnDisapprove[index] = true;
+    }
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showDisapproveControls ||
-              selectedDisapproved[index] == true && orderLevel == 1) ...[
+          if (showDisapproveControls) ...[
             StatefulBuilder(
               builder: (context, setDialogState) {
                 return _buildReasonDisapproval(index, setDialogState);
@@ -3971,7 +4056,7 @@ class PerformanceGovernanceSystemPageState
               message:
                   'Specify the tangible results or outcomes tied to this responsibility.',
               child: TextFormField(
-                readOnly: orderLevel >= 2,
+                readOnly: id != null && orderLevel >= 2,
                 focusNode: FocusNode(canRequestFocus: orderLevel == 1),
                 controller: deliverablesControllers[index],
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -3984,29 +4069,26 @@ class PerformanceGovernanceSystemPageState
                     borderSide: BorderSide(color: Colors.grey),
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter your deliverable";
-                  }
 
+                validator: (value) {
+                  final isDisapproved =
+                      selectedDisapproved[index] == true ||
+                      deliverablesList.any(
+                        (deliverable) =>
+                            deliverable.id == deliverableIds[index] &&
+                            deliverable.isDisapproved == true,
+                      );
+
+                  if (value == null || value.isEmpty) {
+                    return isDisapproved
+                        ? "Please revise your deliverable"
+                        : "Please enter your deliverable";
+                  }
                   return null;
-                },
-                onChanged: (value) {
-                  setState(() {});
                 },
               ),
             ),
           ),
-          gap,
-          if (showDisapproveControls ||
-              selectedDisapproved[index] == true && orderLevel == 1) ...[
-            StatefulBuilder(
-              builder: (context, setDialogState) {
-                return _markAsRevised(index, setDialogState);
-              },
-            ),
-            gap1,
-          ],
         ],
       ),
     );

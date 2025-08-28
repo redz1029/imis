@@ -183,16 +183,16 @@ class LoginPageState extends State<LoginPage> {
                   'Login',
                   style: TextStyle(fontSize: 32, fontWeight: FontWeight.w300),
                 ),
-                gap2, // Adjust spacing
+                gap8px, // Adjust spacing
                 Text(
                   'Enter your credentials to access your account.',
                   style: TextStyle(fontSize: 14),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            gap24px,
             TextFormField(
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(fontSize: 16),
               controller: _usernameController,
               focusNode: focusIconUsername,
               onTap: () {
@@ -218,9 +218,9 @@ class LoginPageState extends State<LoginPage> {
                 floatingLabelStyle: const TextStyle(color: primaryColor),
               ),
             ),
-            gap3,
+            gap16px,
             TextFormField(
-              style: TextStyle(fontSize: 14),
+              style: TextStyle(fontSize: 16),
               controller: _passwordController,
               focusNode: focusIconPassword,
               onTap: () {
@@ -295,7 +295,7 @@ class LoginPageState extends State<LoginPage> {
             //     ),
             //   ],
             // ),
-            gap3,
+            gap24px,
             SizedBox(
               width: double.infinity,
               child:
@@ -328,13 +328,13 @@ class LoginPageState extends State<LoginPage> {
                             'Sign In',
                             style: TextStyle(
                               color: secondaryColor,
-                              fontSize: 14,
+                              fontSize: 16,
                             ),
                           ),
                         ),
                       ),
             ),
-            gap,
+            gap16px,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

@@ -275,7 +275,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                     'Register',
                     style: TextStyle(fontSize: 32, fontWeight: FontWeight.w300),
                   ),
-                  gap2, // Adjust spacing
+                  gap8px,
                   Text(
                     'Create your account to get started.',
                     style: TextStyle(fontSize: 14),
@@ -283,7 +283,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                 ],
               ),
             ),
-            gap1,
+            gap24px,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -300,7 +300,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                 ),
               ],
             ),
-            gap,
+            gap16px,
             if (_currentStep == 0) ...[
               SizedBox(
                 height: 65,
@@ -330,6 +330,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                   ],
                   decoration: InputDecoration(
                     labelText: 'Prefix',
+                    labelStyle: TextStyle(color: grey, fontSize: 14),
                     border: OutlineInputBorder(),
                     focusedBorder: const OutlineInputBorder(
                       borderSide: BorderSide(color: primaryColor),
@@ -340,7 +341,7 @@ class RegistrationPageState extends State<RegistrationPage> {
 
               TextFormField(
                 textInputAction: TextInputAction.next,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 16),
                 controller: firstNameController,
                 focusNode: focusFirstName,
                 onTap: () {
@@ -363,10 +364,10 @@ class RegistrationPageState extends State<RegistrationPage> {
                   floatingLabelStyle: const TextStyle(color: primaryColor),
                 ),
               ),
-              gap,
+              gap16px,
               TextFormField(
                 textInputAction: TextInputAction.next,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 16),
                 controller: middleNameController,
                 focusNode: focusMiddleName,
                 onTap: () {
@@ -383,10 +384,10 @@ class RegistrationPageState extends State<RegistrationPage> {
                   floatingLabelStyle: const TextStyle(color: primaryColor),
                 ),
               ),
-              gap,
+              gap16px,
               TextFormField(
                 textInputAction: TextInputAction.next,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 16),
                 controller: lastNameController,
                 focusNode: focusLastName,
                 onTap: () {
@@ -409,10 +410,10 @@ class RegistrationPageState extends State<RegistrationPage> {
                   floatingLabelStyle: const TextStyle(color: primaryColor),
                 ),
               ),
-              gap,
+              gap16px,
               TextFormField(
                 textInputAction: TextInputAction.next,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 16),
                 controller: suffixController,
                 focusNode: focusSuffix,
                 onTap: () {
@@ -433,7 +434,7 @@ class RegistrationPageState extends State<RegistrationPage> {
             if (_currentStep == 1) ...[
               TextFormField(
                 textInputAction: TextInputAction.next,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 16),
                 controller: userNameController,
                 focusNode: focusUsername,
                 onTap: () {
@@ -456,10 +457,10 @@ class RegistrationPageState extends State<RegistrationPage> {
                   floatingLabelStyle: const TextStyle(color: primaryColor),
                 ),
               ),
-              gap,
+              gap16px,
               TextFormField(
                 textInputAction: TextInputAction.next,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 16),
                 controller: emailController,
                 focusNode: focusEmail,
                 onTap: () {
@@ -477,10 +478,10 @@ class RegistrationPageState extends State<RegistrationPage> {
                   floatingLabelStyle: const TextStyle(color: primaryColor),
                 ),
               ),
-              gap,
+              gap16px,
               TextFormField(
                 textInputAction: TextInputAction.next,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 16),
                 controller: passwordController,
                 focusNode: focusPassword,
                 onTap: () {
@@ -504,6 +505,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                 },
                 decoration: InputDecoration(
                   labelText: 'Password',
+
                   labelStyle: TextStyle(color: grey, fontSize: 14),
 
                   border: const OutlineInputBorder(),
@@ -526,10 +528,10 @@ class RegistrationPageState extends State<RegistrationPage> {
                   ),
                 ),
               ),
-              gap,
+              gap16px,
               TextFormField(
                 textInputAction: TextInputAction.done,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(fontSize: 16),
                 controller: confirmPasswordController,
                 focusNode: focusConfirmPassword,
                 onTap: () {
@@ -571,10 +573,11 @@ class RegistrationPageState extends State<RegistrationPage> {
                   ),
                 ),
               ),
-              gap,
+              gap16px,
               DropdownButtonFormField<String>(
                 decoration: InputDecoration(
                   labelText: 'Position',
+                  labelStyle: TextStyle(color: grey, fontSize: 14),
                   border: const OutlineInputBorder(),
                   focusedBorder: const OutlineInputBorder(
                     borderSide: BorderSide(color: primaryColor),
@@ -603,8 +606,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                 },
               ),
             ],
-            gap3,
-
+            gap24px,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -613,7 +615,7 @@ class RegistrationPageState extends State<RegistrationPage> {
                     onPressed: _prevStep,
                     child: const Text(
                       "Back",
-                      style: TextStyle(color: primaryTextColor),
+                      style: TextStyle(color: primaryTextColor, fontSize: 14),
                     ),
                   ),
                 Spacer(),
@@ -657,13 +659,12 @@ class RegistrationPageState extends State<RegistrationPage> {
                           ? const Center(child: CircularProgressIndicator())
                           : Text(
                             _currentStep == 1 ? "Register" : "Next",
-                            style: TextStyle(color: Colors.white),
+                            style: TextStyle(color: Colors.white, fontSize: 16),
                           ),
                 ),
               ],
             ),
-
-            gap,
+            gap16px,
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -709,7 +710,7 @@ class _Logo extends StatelessWidget {
           ),
           const Text(
             'IMIS',
-            style: TextStyle(fontSize: 24, color: primaryColor),
+            style: TextStyle(fontSize: 32, color: primaryColor),
           ),
         ],
       ),

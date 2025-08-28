@@ -1,46 +1,39 @@
 import 'package:dio/dio.dart';
-import 'package:imis/team/models/team.dart';
+import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';
 import 'package:imis/utils/pagination_util.dart';
 
-class TeamService {
+class KeyResultAreaService {
   final Dio dio;
 
-  TeamService(this.dio);
-
-  Future<PageList<Team>> getTeam({
+  KeyResultAreaService(this.dio);
+  Future<PageList<KeyResultArea>> getKRA({
     int page = 1,
     int pageSize = 15,
     String? searchQuery,
   }) async {
     final paginationUtil = PaginationUtil(dio);
-    return await paginationUtil.fetchPaginatedData<Team>(
-      endpoint: ApiEndpoint().team,
+    return await paginationUtil.fetchPaginatedData<KeyResultArea>(
+      endpoint: ApiEndpoint().keyresult,
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
-      fromJson: (json) => Team.fromJson(json),
+      fromJson: (json) => KeyResultArea.fromJson(json),
     );
   }
 
-  Future<void> createTeam(Team team) async {
-    final url = ApiEndpoint().team;
-    final Map<String, dynamic> requestData = team.toJson();
+  Future<void> createOrUpdateKra(KeyResultArea kra) async {
+    var url = ApiEndpoint().keyresult;
+    final Map<String, dynamic> requestData = kra.toJson();
     final response = await AuthenticatedRequest.post(
       dio,
       url,
       data: requestData,
     );
-
     if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Failed to create team');
+      throw Exception('Failed to create kra');
     }
-  }
-
-  Future<void> deleteTeam(String teamId) async {
-    final url = '${ApiEndpoint().team}/$teamId';
-    await AuthenticatedRequest.delete(dio, url);
   }
 }
