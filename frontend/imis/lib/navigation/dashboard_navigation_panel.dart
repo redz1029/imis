@@ -85,7 +85,6 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
   Future<void> _loadUserName() async {
     UserRegistration? user = await AuthUtil.fetchLoggedUser();
     List<String>? roleList = await AuthUtil.fetchRoles();
-
     if (user != null) {
       final permissions = RolePermissions.getPermissionsForRoles(
         roleList ?? [],
@@ -100,7 +99,6 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
         username = user.userName ?? "No username found";
         roles = roleList ?? [];
       });
-
       if (roleList == null || roleList.isEmpty) {
         MotionToast.error(
           title: const Text("No Role Assigned"),
@@ -223,9 +221,8 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                         backgroundImage:
                             image != null
                                 ? FileImage(image!) as ImageProvider
-                                : AssetImage('assets/profile.jpg'),
+                                : AssetImage('assets/iconprofile.png'),
                       ),
-
                       Positioned(
                         bottom: 0,
                         right: 0,

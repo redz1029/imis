@@ -1676,7 +1676,8 @@ class PerformanceGovernanceSystemPageState
 
                                                     child: IconButton(
                                                       icon: const Icon(
-                                                        Icons.pageview_outlined,
+                                                        Icons
+                                                            .description_outlined,
                                                       ),
 
                                                       onPressed: () async {
@@ -3870,7 +3871,7 @@ class PerformanceGovernanceSystemPageState
                     mainAxisSize: MainAxisSize.min,
                     children: const [
                       Icon(
-                        Icons.insert_drive_file,
+                        Icons.article_outlined,
                         color: Colors.grey,
                         size: 16,
                       ),
