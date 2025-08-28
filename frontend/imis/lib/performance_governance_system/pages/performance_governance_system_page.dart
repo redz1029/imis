@@ -2075,7 +2075,8 @@ class PerformanceGovernanceSystemPageState
                                           horizontal: 8,
                                         ),
                                         child: Tooltip(
-                                          message: 'Select period',
+                                          message:
+                                              'A defined timeframe (quarter, semester, or year) used to track, evaluate, and report performance deliverables.',
                                           child: DropdownButtonFormField<int>(
                                             autovalidateMode:
                                                 AutovalidateMode
@@ -2096,7 +2097,7 @@ class PerformanceGovernanceSystemPageState
                                               ),
                                             ),
                                             onChanged:
-                                                orderLevel >= 2
+                                                id != null && orderLevel >= 2
                                                     ? null
                                                     : (int? newValue) {
                                                       setState(() {
@@ -2210,8 +2211,8 @@ class PerformanceGovernanceSystemPageState
                                                       '',
                                                       setState,
                                                       setDialogState,
-                                                      orderLevel: orderLevel,
-                                                      id: id,
+                                                      orderLevel,
+                                                      id,
                                                       showErrors:
                                                           rowErrors[rowId] ??
                                                           false,
@@ -2220,29 +2221,36 @@ class PerformanceGovernanceSystemPageState
                                             ],
                                           ),
                                           gap,
-                                          TextButton(
-                                            onPressed: () {
-                                              setDialogState(() {
-                                                _addRow();
-                                              });
-                                            },
-                                            child: Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(
-                                                  Icons.add,
-                                                  color: primaryColor,
-                                                ),
-                                                Text(
-                                                  'Add Row',
-                                                  style: TextStyle(
+                                          if ((id == null && orderLevel == 1) ||
+                                              (id == null && orderLevel >= 2) ||
+                                              isAnyDisapproved ||
+                                              (signatories == null ||
+                                                  signatories.isEmpty))
+                                            TextButton(
+                                              onPressed: () {
+                                                setDialogState(() {
+                                                  _addRow();
+                                                });
+                                              },
+                                              child: Row(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Icon(
+                                                    Icons.add,
                                                     color: primaryColor,
-                                                    fontWeight: FontWeight.w500,
                                                   ),
-                                                ),
-                                              ],
+
+                                                  Text(
+                                                    'Add Row',
+                                                    style: TextStyle(
+                                                      color: primaryColor,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
                                             ),
-                                          ),
                                         ],
                                       ),
                                     ),
@@ -2441,6 +2449,8 @@ class PerformanceGovernanceSystemPageState
                                                       '',
                                                       '',
                                                       setState,
+                                                      orderLevel,
+                                                      id,
                                                       setDialogState,
                                                       showErrors:
                                                           rowErrors[rowId] ??
@@ -2787,6 +2797,7 @@ class PerformanceGovernanceSystemPageState
 
   Widget _buildDatePickerCell(
     int index,
+    String? id,
     Function setDialogState,
     int orderLevel,
   ) {
@@ -2819,7 +2830,7 @@ class PerformanceGovernanceSystemPageState
             suffixIcon: Icon(Icons.calendar_today),
           ),
           onTap:
-              orderLevel >= 2
+              id != null && orderLevel >= 2
                   ? null
                   : () async {
                     DateTime? pickedDate = await showDatePicker(
@@ -2863,6 +2874,7 @@ class PerformanceGovernanceSystemPageState
 
   Widget _buildDropdownKraCell(
     int index,
+    String? id,
     Function setDialogState,
     int orderLevel,
   ) {
@@ -2896,7 +2908,7 @@ class PerformanceGovernanceSystemPageState
               isExpanded: true,
               value: selectedKRA[index],
               onChanged:
-                  orderLevel >= 2
+                  id != null && orderLevel >= 2
                       ? null
                       : (int? newValue) {
                         if (newValue == null) return;
@@ -2941,7 +2953,7 @@ class PerformanceGovernanceSystemPageState
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
             child: TextFormField(
-              readOnly: orderLevel >= 2,
+              readOnly: id != null && orderLevel >= 2,
               controller: kraDescriptionController[index],
               autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
@@ -2967,6 +2979,7 @@ class PerformanceGovernanceSystemPageState
 
   TableRow _buildMainHeaderStrategic({
     String? officename,
+    String? id,
     String? percentDeliverables,
     required int orderLevel,
   }) {
@@ -3000,7 +3013,7 @@ class PerformanceGovernanceSystemPageState
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextFormField(
-                readOnly: orderLevel >= 2,
+                readOnly: id != null && orderLevel >= 2,
                 controller: percentageDeliverables,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 textAlign: TextAlign.center,
@@ -3073,12 +3086,10 @@ class PerformanceGovernanceSystemPageState
     String direct,
     String indirect,
     Function setState,
-    Function setDialogState, {
-    int orderLevel = 1,
-    String? id,
+    Function setDialogState,
+    int orderLevel,
+    String? id, {
     required bool showErrors,
-
-    // int? id,
   }) {
     deliverablesControllers.putIfAbsent(index, () => TextEditingController());
     selectedDirect.putIfAbsent(index, () => false);
@@ -3097,25 +3108,29 @@ class PerformanceGovernanceSystemPageState
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
-        _buildDropdownKraCell(index, setDialogState, orderLevel),
+        _buildDropdownKraCell(index, id, setDialogState, orderLevel),
         _buildCheckboxCell(
           index,
+          id,
           selectedDirect,
           selectedIndirect,
           setDialogState,
+          orderLevel,
           isDirect: true,
           errorText: errorText,
         ),
         _buildCheckboxCell(
           index,
+          id,
           selectedIndirect,
           selectedDirect,
           setDialogState,
+          orderLevel,
           isDirect: false,
           errorText: errorText,
         ),
-        _buildExpandableTextAreaCell(index, orderLevel, setDialogState),
-        _buildDatePickerCell(index, setDialogState, orderLevel),
+        _buildExpandableTextAreaCell(index, id, orderLevel, setDialogState),
+        _buildDatePickerCell(index, id, setDialogState, orderLevel),
         (id == null || orderLevel < 2)
             ? _buildRemoveButton(index, setDialogState)
             : _buildApprovedDisapprovedSignatory(index, setDialogState),
@@ -3125,12 +3140,15 @@ class PerformanceGovernanceSystemPageState
 
   Widget _buildCheckboxCell(
     int index,
+    String? id,
     Map<int, bool> selectedValues,
     Map<int, bool> oppositeValues,
-    Function setDialogState, {
+    Function setDialogState,
+    int orderLevel, {
     required bool isDirect,
     required String? errorText,
   }) {
+    final enabled = id != null && orderLevel >= 2;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -3155,13 +3173,17 @@ class PerformanceGovernanceSystemPageState
                 child: Center(
                   child: Checkbox(
                     value: selectedValues[index] ?? false,
-                    onChanged: (bool? newValue) {
-                      if (newValue == null) return;
-                      setDialogState(() {
-                        selectedValues[index] = newValue;
-                        if (newValue) oppositeValues[index] = false;
-                      });
-                    },
+                    onChanged:
+                        enabled
+                            ? null
+                            : (bool? newValue) {
+                              if (newValue == null) return;
+                              setDialogState(() {
+                                selectedValues[index] = newValue;
+                                if (newValue) oppositeValues[index] = false;
+                              });
+                            },
+
                     activeColor: Colors.white,
                     checkColor: Colors.black,
                   ),
@@ -3396,6 +3418,8 @@ class PerformanceGovernanceSystemPageState
     String direct,
     String indirect,
     Function setState,
+    int orderLevel,
+    String? id,
     Function setDialogState, {
     required bool showErrors,
   }) {
@@ -3413,17 +3437,23 @@ class PerformanceGovernanceSystemPageState
         _buildDropdownKraCellPGSDeliverableStatus(index, setDialogState),
         _buildCheckboxCell(
           index,
+          id,
           selectedDirect,
           selectedIndirect,
           setDialogState,
+          orderLevel,
           isDirect: true,
           errorText: '',
         ),
         _buildCheckboxCell(
           index,
+          id,
           selectedIndirect,
           selectedDirect,
+
           setDialogState,
+          orderLevel,
+
           isDirect: false,
           errorText: '',
         ),
@@ -3836,12 +3866,26 @@ class PerformanceGovernanceSystemPageState
                   ),
 
                   gap2,
-                  Text(
-                    "Original Submission",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: const Color.fromARGB(255, 107, 107, 107),
-                    ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: const [
+                      Icon(
+                        Icons.insert_drive_file,
+                        color: Colors.grey,
+                        size: 16,
+                      ),
+                      SizedBox(width: 5),
+                      Flexible(
+                        child: Text(
+                          'Original Submission',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Color.fromARGB(255, 107, 107, 107),
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
                   ),
                   gap8,
                   Container(
@@ -3860,11 +3904,11 @@ class PerformanceGovernanceSystemPageState
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
-                      deliverablesControllersDisapproved[index]?.text ??
-                          'No deliverables',
+                      '"${deliverablesControllersDisapproved[index]?.text ?? 'No deliverables'}"',
                       style: const TextStyle(
                         fontSize: 11,
                         color: Colors.black87,
+                        fontStyle: FontStyle.italic,
                       ),
                       overflow: TextOverflow.ellipsis,
                       maxLines: 3,
@@ -3969,6 +4013,7 @@ class PerformanceGovernanceSystemPageState
 
   Widget _buildExpandableTextAreaCell(
     int index,
+    String? id,
     int orderLevel,
     Function setDialogState,
   ) {
@@ -4011,7 +4056,7 @@ class PerformanceGovernanceSystemPageState
               message:
                   'Specify the tangible results or outcomes tied to this responsibility.',
               child: TextFormField(
-                readOnly: orderLevel >= 2,
+                readOnly: id != null && orderLevel >= 2,
                 focusNode: FocusNode(canRequestFocus: orderLevel == 1),
                 controller: deliverablesControllers[index],
                 autovalidateMode: AutovalidateMode.onUserInteraction,
