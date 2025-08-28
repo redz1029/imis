@@ -15,8 +15,8 @@ class OfficeService {
     int pageSize = 15,
     String? searchQuery,
   }) async {
-    final pagiinationUtil = PaginationUtil(dio);
-    return await pagiinationUtil.fetchPaginatedData<Office>(
+    final paginationUtil = PaginationUtil(dio);
+    return await paginationUtil.fetchPaginatedData<Office>(
       endpoint: ApiEndpoint().office,
       page: page,
       pageSize: pageSize,

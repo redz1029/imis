@@ -27,13 +27,14 @@ class TeamService {
 
   Future<void> createTeam(Team team) async {
     final url = ApiEndpoint().team;
+    final Map<String, dynamic> requestData = team.toJson();
     final response = await AuthenticatedRequest.post(
       dio,
       url,
-      data: team.toJson(),
+      data: requestData,
     );
 
-    if (response.statusCode != 201) {
+    if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create team');
     }
   }
