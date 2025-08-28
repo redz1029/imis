@@ -2744,7 +2744,7 @@ class PerformanceGovernanceSystemPageState
         case ActionType.draft:
           successMessage =
               isAnyDisapproved
-                  ? "Disapproved successfully!"
+                  ? "Save successfully!"
                   : (id != null && orderLevel >= 2)
                   ? "Confirm successfully!"
                   : "Saved successfully!";
