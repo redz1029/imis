@@ -2,10 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
+import 'package:imis/performance_governance_system/key_result_area/services/key_result_area_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import '../../../utils/http_util.dart';
 
 class KeyResultAreaPage extends StatefulWidget {
   const KeyResultAreaPage({super.key});
@@ -16,6 +16,8 @@ class KeyResultAreaPage extends StatefulWidget {
 
 class KeyResultAreaPageState extends State<KeyResultAreaPage> {
   final _formKey = GlobalKey<FormState>();
+  final _kraService = KeyResultAreaService(Dio());
+
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<KeyResultArea> kraSearchUtil;
   List<KeyResultArea> kraList = [];
@@ -29,7 +31,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
   @override
   void initState() {
     super.initState();
-    fetchKRAs();
+    fetchKRA();
     kraSearchUtil = FilterSearchResultUtil<KeyResultArea>(
       paginationUtils: _paginationUtils,
       endpoint: ApiEndpoint().keyresult,
@@ -40,19 +42,16 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
 
   final dio = Dio();
 
-  //fetch kra list
-  Future<void> fetchKRAs({int page = 1, String? searchQuery}) async {
+  Future<void> fetchKRA({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils.fetchPaginatedData<KeyResultArea>(
-        endpoint: ApiEndpoint().keyresult,
+      final pageList = await _kraService.getKRA(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        fromJson: (json) => KeyResultArea.fromJson(json),
       );
 
       if (mounted) {
@@ -72,43 +71,6 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
     }
   }
 
-  // Add or Update KRA list
-  Future<void> addOrUpdateKRA(KeyResultArea kra) async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: kra.toJson(),
-      );
-
-      if (response.statusCode == 200) {
-        await fetchKRAs();
-        setState(() {
-          fetchKRAs();
-        });
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating KRA: $e");
-    }
-  }
-
-  //Delete KRA LIST
-
-  Future<void> deleteKRA(String kraId) async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.delete(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchKRAs();
-      }
-    } catch (e) {
-      debugPrint("Error deleting KRA: $e");
-    }
-  }
-
-  //filtered result
   Future<void> filterSearchResults(String query) async {
     final results = await kraSearchUtil.filter(
       query,
@@ -137,7 +99,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deleteKRA(id);
+                // await deleteKRA(id);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
@@ -303,8 +265,10 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                       remarksController.text,
                       false,
                     );
-
-                    addOrUpdateKRA(kra);
+                    await _kraService.createOrUpdateKra(kra);
+                    setState(() {
+                      fetchKRA();
+                    });
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
@@ -554,7 +518,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                     totalItems: _totalCount,
                     itemsPerPage: _pageSize,
                     isLoading: _isLoading,
-                    onPageChanged: (page) => fetchKRAs(page: page),
+                    onPageChanged: (page) => fetchKRA(page: page),
                   ),
                   Container(width: 60),
                 ],
