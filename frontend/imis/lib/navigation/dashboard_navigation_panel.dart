@@ -494,7 +494,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                   PermissionWidget(
                     permission: AppPermission.viewPerformanceGovernanceSystem,
                     child: _buildListTile(
-                      Icons.file_copy,
+                      Icons.insert_drive_file,
                       'Performance Governance System',
                       2,
                       () => _setScreen(PerformanceGovernanceSystemPage(), 2),
