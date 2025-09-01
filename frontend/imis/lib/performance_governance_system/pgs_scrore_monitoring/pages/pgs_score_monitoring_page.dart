@@ -451,12 +451,18 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(
+              10.0,
+            ), // Set to 0 for sharp edges
+          ),
           backgroundColor: mainBgColor,
+
           contentPadding: EdgeInsets.zero,
           titlePadding: EdgeInsets.all(16),
           title: Stack(
             children: [
-              const Text('Score History'),
+              const Text("Deliverable's History"),
               Align(
                 alignment: Alignment.topRight,
                 child: IconButton(
@@ -468,7 +474,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
             ],
           ),
           content: SizedBox(
-            width: 600,
+            width: 1600,
             height: 700,
             child: SingleChildScrollView(
               child: Column(
@@ -507,17 +513,20 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
             children: const [
               Expanded(
                 flex: 2,
-                child: Text(
-                  'Date',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                child: Text('Date', style: TextStyle(color: grey)),
+              ),
+
+              Expanded(
+                flex: 2,
+                child: Text('Status', style: TextStyle(color: grey)),
+              ),
+              Expanded(
+                flex: 3,
+                child: Text('Remarks', style: TextStyle(color: grey)),
               ),
               Expanded(
                 flex: 1,
-                child: Text(
-                  'Score',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                child: Text('Score', style: TextStyle(color: grey)),
               ),
             ],
           ),
@@ -555,6 +564,17 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       ],
                     ),
                   ),
+                ),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    'Not Started',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+                Expanded(
+                  flex: 3,
+                  child: Text('Remarks', style: const TextStyle(fontSize: 14)),
                 ),
                 Expanded(
                   flex: 1,
