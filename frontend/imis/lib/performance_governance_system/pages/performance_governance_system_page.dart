@@ -1856,7 +1856,7 @@ class PerformanceGovernanceSystemPageState
   }) {
     setState(() {
       if (rows.isEmpty) {
-        rows = [1];
+        rows = [0];
       }
 
       if (id == null) {
@@ -2141,89 +2141,132 @@ class PerformanceGovernanceSystemPageState
                               Expanded(
                                 child: TabBarView(
                                   children: [
-                                    SingleChildScrollView(
-                                      child: Column(
-                                        children: [
-                                          SizedBox(height: 20),
-                                          Table(
-                                            border: TableBorder.all(
-                                              color: const Color.fromARGB(
-                                                255,
-                                                49,
-                                                46,
-                                                46,
-                                              ),
-                                              width: 1,
+                                    Column(
+                                      children: [
+                                        SizedBox(height: 20),
+
+                                        Table(
+                                          border: TableBorder.all(
+                                            color: const Color.fromARGB(
+                                              255,
+                                              49,
+                                              46,
+                                              46,
                                             ),
-                                            columnWidths: const {
-                                              0: FlexColumnWidth(1.5),
-                                              1: FlexColumnWidth(0.7),
-                                              2: FlexColumnWidth(0.7),
-                                              3: FlexColumnWidth(2),
-                                              4: FlexColumnWidth(1),
-                                              // 5: FlexColumnWidth(1),
-                                              5: FlexColumnWidth(0.7),
-                                            },
-
-                                            children: [
-                                              _buildMainHeaderStrategic(
-                                                officename:
-                                                    officename ?? officeDisplay,
-                                                orderLevel: orderLevel,
-                                              ),
-
-                                              _buildTableSubHeaderStrategic(),
-
-                                              ...rows.map(
-                                                (rowId) =>
-                                                    _buildTableRowStrategic(
-                                                      rowId,
-                                                      '',
-                                                      '',
-                                                      setState,
-                                                      setDialogState,
-                                                      orderLevel,
-                                                      id,
-                                                      showErrors:
-                                                          rowErrors[rowId] ??
-                                                          false,
-                                                    ),
-                                              ),
-                                            ],
+                                            width: 1,
                                           ),
-                                          gap16px,
-                                          if ((id == null && orderLevel == 1) ||
-                                              (id == null && orderLevel >= 2) ||
-                                              isAnyDisapproved ||
-                                              (signatories == null ||
-                                                  signatories.isEmpty))
-                                            TextButton(
-                                              onPressed: () {
-                                                setDialogState(() {
-                                                  _addRow();
-                                                });
-                                              },
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.add,
-                                                    color: primaryColor,
-                                                  ),
-
-                                                  Text(
-                                                    'Add Row',
-                                                    style: TextStyle(
-                                                      color: primaryColor,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
+                                          columnWidths: {
+                                            0: FlexColumnWidth(1.7),
+                                            1: FlexColumnWidth(1.0),
+                                            2: FlexColumnWidth(3.0),
+                                            3: FlexColumnWidth(1.7),
+                                          },
+                                          children: [
+                                            _buildMainHeaderStrategic(
+                                              officename:
+                                                  officename ?? officeDisplay,
+                                              orderLevel: orderLevel,
                                             ),
-                                        ],
-                                      ),
+                                          ],
+                                        ),
+
+                                        Table(
+                                          border: TableBorder.all(
+                                            color: const Color.fromARGB(
+                                              255,
+                                              49,
+                                              46,
+                                              46,
+                                            ),
+                                            width: 1,
+                                          ),
+                                          columnWidths: {
+                                            0: FlexColumnWidth(0.2),
+                                            1: FlexColumnWidth(1.5),
+                                            2: FlexColumnWidth(0.5),
+                                            3: FlexColumnWidth(0.5),
+                                            4: FlexColumnWidth(3),
+                                            5: FlexColumnWidth(1),
+                                            6: FlexColumnWidth(0.7),
+                                          },
+                                          children: [
+                                            _buildTableSubHeaderStrategic(),
+                                          ],
+                                        ),
+
+                                        Expanded(
+                                          child: SingleChildScrollView(
+                                            child: Table(
+                                              border: TableBorder.all(
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  49,
+                                                  46,
+                                                  46,
+                                                ),
+                                                width: 1,
+                                              ),
+                                              columnWidths: const {
+                                                0: FlexColumnWidth(0.2),
+                                                1: FlexColumnWidth(1.5),
+                                                2: FlexColumnWidth(0.5),
+                                                3: FlexColumnWidth(0.5),
+                                                4: FlexColumnWidth(3),
+                                                5: FlexColumnWidth(1),
+                                                6: FlexColumnWidth(0.7),
+                                              },
+                                              children: [
+                                                ...rows.map(
+                                                  (rowId) =>
+                                                      _buildTableRowStrategic(
+                                                        rowId,
+                                                        '',
+                                                        '',
+                                                        setState,
+                                                        setDialogState,
+                                                        orderLevel,
+                                                        id,
+                                                        showErrors:
+                                                            rowErrors[rowId] ??
+                                                            false,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+
+                                        gap16px,
+                                        if ((id == null && orderLevel == 1) ||
+                                            (id == null && orderLevel >= 2) ||
+                                            isAnyDisapproved ||
+                                            (signatories == null ||
+                                                signatories.isEmpty))
+                                          TextButton(
+                                            onPressed: () {
+                                              setDialogState(() {
+                                                _addRow();
+                                              });
+                                            },
+                                            child: Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(
+                                                  Icons.add,
+                                                  color: primaryColor,
+                                                ),
+
+                                                Text(
+                                                  'Add Row',
+                                                  style: TextStyle(
+                                                    color: primaryColor,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                      ],
                                     ),
                                     //End First Tab
 
@@ -2383,55 +2426,100 @@ class PerformanceGovernanceSystemPageState
                                     //End Second Tab
 
                                     // Third Tab: PGS Deliverable Status
-                                    SingleChildScrollView(
-                                      child: Column(
-                                        children: [
-                                          SizedBox(height: 20),
-                                          Table(
-                                            border: TableBorder.all(
-                                              color: const Color.fromARGB(
-                                                255,
-                                                49,
-                                                46,
-                                                46,
-                                              ),
-                                              width: 1,
+                                    Column(
+                                      children: [
+                                        SizedBox(height: 20),
+                                        Table(
+                                          border: TableBorder.all(
+                                            color: const Color.fromARGB(
+                                              255,
+                                              49,
+                                              46,
+                                              46,
                                             ),
-                                            columnWidths: const {
-                                              0: FlexColumnWidth(1),
-                                              1: FlexColumnWidth(0.4),
-                                              2: FlexColumnWidth(0.5),
-                                              3: FlexColumnWidth(1.90),
-                                              4: FlexColumnWidth(0.7),
-                                              5: FlexColumnWidth(0.6),
-                                              6: FlexColumnWidth(1.30),
-                                              7: FlexColumnWidth(0.5),
-                                            },
-                                            children: [
-                                              _PgsDeliverableHeader(
-                                                officename:
-                                                    officename ?? officeDisplay,
-                                              ),
-                                              _pgsBuildTableSubheader(),
-                                              ...rows.map(
-                                                (rowId) =>
-                                                    _buildTableRowStrategicPGSDeliverableStatus(
-                                                      rowId,
-                                                      '',
-                                                      '',
-                                                      setState,
-                                                      orderLevel,
-                                                      id,
-                                                      setDialogState,
-                                                      showErrors:
-                                                          rowErrors[rowId] ??
-                                                          false,
-                                                    ),
-                                              ),
-                                            ],
+                                            width: 1,
                                           ),
-                                        ],
-                                      ),
+                                          columnWidths: const {
+                                            0: FlexColumnWidth(1.5),
+                                            1: FlexColumnWidth(1.0),
+                                            2: FlexColumnWidth(3.0),
+                                            3: FlexColumnWidth(1.7),
+                                          },
+                                          children: [
+                                            _PgsDeliverableHeader(
+                                              officename:
+                                                  officename ?? officeDisplay,
+                                            ),
+                                            // _pgsBuildTableSubheader(),
+                                          ],
+                                        ),
+                                        Table(
+                                          border: TableBorder.all(
+                                            color: const Color.fromARGB(
+                                              255,
+                                              49,
+                                              46,
+                                              46,
+                                            ),
+                                            width: 1,
+                                          ),
+                                          columnWidths: {
+                                            0: FlexColumnWidth(0.2),
+                                            1: FlexColumnWidth(1.3),
+                                            2: FlexColumnWidth(0.4),
+                                            3: FlexColumnWidth(0.4),
+                                            4: FlexColumnWidth(1.90),
+                                            5: FlexColumnWidth(0.7),
+                                            6: FlexColumnWidth(0.6),
+                                            7: FlexColumnWidth(1.30),
+                                            8: FlexColumnWidth(0.5),
+                                          },
+                                          children: [_pgsBuildTableSubheader()],
+                                        ),
+                                        Expanded(
+                                          child: SingleChildScrollView(
+                                            child: Table(
+                                              border: TableBorder.all(
+                                                color: const Color.fromARGB(
+                                                  255,
+                                                  49,
+                                                  46,
+                                                  46,
+                                                ),
+                                                width: 1,
+                                              ),
+                                              columnWidths: const {
+                                                0: FlexColumnWidth(0.2),
+                                                1: FlexColumnWidth(1.3),
+                                                2: FlexColumnWidth(0.4),
+                                                3: FlexColumnWidth(0.4),
+                                                4: FlexColumnWidth(1.90),
+                                                5: FlexColumnWidth(0.7),
+                                                6: FlexColumnWidth(0.6),
+                                                7: FlexColumnWidth(1.30),
+                                                8: FlexColumnWidth(0.5),
+                                              },
+                                              children: [
+                                                ...rows.map(
+                                                  (rowId) =>
+                                                      _buildTableRowStrategicPGSDeliverableStatus(
+                                                        rowId,
+                                                        '',
+                                                        '',
+                                                        setState,
+                                                        orderLevel,
+                                                        id,
+                                                        setDialogState,
+                                                        showErrors:
+                                                            rowErrors[rowId] ??
+                                                            false,
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -2968,8 +3056,13 @@ class PerformanceGovernanceSystemPageState
           ),
         ),
 
-        BuildHeaderCell(text: ''),
-        BuildHeaderCell(text: ''),
+        BuildHeaderCell(
+          text: 'Alignment',
+          color: Colors.white,
+          fontSize: 20,
+          fontStyle: FontStyle.normal,
+        ),
+
         BuildHeaderCell(
           text: 'STRATEGIC CONTRIBUTIONS',
           color: Colors.white,
@@ -3024,9 +3117,6 @@ class PerformanceGovernanceSystemPageState
             ),
           ),
         ),
-
-        // BuildHeaderCell(text: ''),
-        BuildHeaderCell(text: ''),
       ],
     );
   }
@@ -3038,7 +3128,9 @@ class PerformanceGovernanceSystemPageState
         color: const Color.fromARGB(255, 255, 254, 254),
       ),
       children: [
+        BuildHeaderCell(text: '#'),
         BuildHeaderCell(text: 'KRA'),
+
         BuildHeaderCell(text: 'DIRECT'),
         BuildHeaderCell(text: 'INDIRECT'),
         BuildHeaderCell(text: 'DELIVERABLES'),
@@ -3079,6 +3171,7 @@ class PerformanceGovernanceSystemPageState
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
+        _buildNumbering(index),
         _buildDropdownKraCell(index, id, setDialogState, orderLevel),
         _buildCheckboxCell(
           index,
@@ -3109,6 +3202,15 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
+  Widget _buildNumbering(int index) {
+    return TableCell(
+      verticalAlignment: TableCellVerticalAlignment.middle,
+      child: Center(
+        child: Text((index + 1).toString(), style: TextStyle(fontSize: 16)),
+      ),
+    );
+  }
+
   Widget _buildCheckboxCell(
     int index,
     String? id,
@@ -3131,11 +3233,7 @@ class PerformanceGovernanceSystemPageState
                     ? 'Direct: Indicates if the deliverable is directly managed by the office.'
                     : 'Indirect: Indicates if the deliverable is indirectly supported by the office.',
             child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.white, width: 0.5),
-                color: Colors.white,
-              ),
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 8.0,
@@ -3292,8 +3390,7 @@ class PerformanceGovernanceSystemPageState
           fontSize: 15,
           fontStyle: FontStyle.normal,
         ),
-        BuildHeaderCell(text: ''),
-        BuildHeaderCell(text: ''),
+        BuildHeaderCell(text: 'Alignment'),
         BuildHeaderCell(
           text: 'STRATEGIC CONTRIBUTIONS',
           fontSize: 15,
@@ -3341,9 +3438,9 @@ class PerformanceGovernanceSystemPageState
             ),
           ),
         ),
-        BuildHeaderCell(text: ''),
-        BuildHeaderCell(text: ''),
-        BuildHeaderCell(text: ''),
+        // BuildHeaderCell(text: ''),
+        // BuildHeaderCell(text: ''),
+        // BuildHeaderCell(text: ''),
       ],
     );
   }
@@ -3354,6 +3451,7 @@ class PerformanceGovernanceSystemPageState
         color: Color.fromARGB(255, 255, 254, 254),
       ),
       children: [
+        _buildSizedHeaderCell('#', width: 20),
         _buildSizedHeaderCell('KRA', width: 100),
         _buildSizedHeaderCell('DIRECT', width: 70),
         _buildSizedHeaderCell('INDIRECT', width: 80),
@@ -3405,6 +3503,7 @@ class PerformanceGovernanceSystemPageState
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
+        _buildNumbering(index),
         _buildDropdownKraCellPGSDeliverableStatus(index, setDialogState),
         _buildCheckboxCell(
           index,
@@ -3736,7 +3835,8 @@ class PerformanceGovernanceSystemPageState
           icon: Icon(Icons.delete, color: Colors.red),
           onPressed: () {
             setDialogState(() {
-              rows.remove(index);
+              rows.removeAt(index);
+              rows = List<int>.generate(rows.length, (i) => i + 0);
               deliverablesControllers.remove(index);
               selectedKRA.remove(index);
               selectedDirect.remove(index);
