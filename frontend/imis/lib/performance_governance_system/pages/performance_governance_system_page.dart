@@ -1,7 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/utils/app_permission.dart';
+import 'package:imis/widgets/build_header_cell.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -15,7 +17,6 @@ import 'package:imis/performance_governance_system/models/pgs_deliverables.dart'
 import 'package:imis/performance_governance_system/models/pgs_readiness.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/models/pgs_signatory.dart';
-import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
@@ -42,6 +43,7 @@ class PerformanceGovernanceSystemPage extends StatefulWidget {
 class PerformanceGovernanceSystemPageState
     extends State<PerformanceGovernanceSystemPage> {
   late FilterSearchResultUtil<PerformanceGovernanceSystem> pgsSearchUtil;
+  // final _commonService = CommonService(Dio());
   final GlobalKey _menuKey = GlobalKey();
   final _formKey = GlobalKey<FormState>();
   Map<int, TextEditingController> deliverablesControllers = {};
@@ -65,8 +67,6 @@ class PerformanceGovernanceSystemPageState
   Map<int, bool> tempSelectedIndirect = {};
   Map<int, int?> selectedKRA = {};
   String userId = "";
-  List<User> userList = [];
-  List<User> filteredListUser = [];
 
   List<Map<String, dynamic>> filteredList = [];
 
@@ -128,9 +128,6 @@ class PerformanceGovernanceSystemPageState
   Map<int, TextEditingController> kraDescriptionController = {};
 
   List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
-  // ignore: non_constant_identifier_names
-  List<String> StatusOptions = ['PATIENT', 'RESEARCH', 'LINKAGES', 'HR'];
-
   //Start Readiness Rating-Cancer Care------------------------------------------------------------------------------------------------
   TextEditingController competenceScoreController = TextEditingController(
     text: '',
@@ -303,32 +300,6 @@ class PerformanceGovernanceSystemPageState
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
-    }
-  }
-
-  //-----------------End Signatories---------------------------------------------------------
-
-  Future<void> fetchUser() async {
-    var url = ApiEndpoint().users;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-      if (response.statusCode == 200 && response.data is List) {
-        List<User> data =
-            (response.data as List)
-                .map((userJson) => User.fromJson(userJson))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            userList = data;
-            filteredListUser = List.from(userList);
-
-            if (filteredListUser.isNotEmpty) {}
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching user: $e");
     }
   }
 
@@ -794,7 +765,6 @@ class PerformanceGovernanceSystemPageState
     _loadOfficeName();
     _loadCurrentUserId();
     fetchPgsList();
-    fetchUser();
     fetchPGSPeriods();
 
     isSearchFocus.addListener(() {
@@ -1408,7 +1378,7 @@ class PerformanceGovernanceSystemPageState
                   ),
               ],
             ),
-            gap,
+            gap16px,
             Expanded(
               child: Column(
                 children: [
@@ -2221,7 +2191,7 @@ class PerformanceGovernanceSystemPageState
                                               ),
                                             ],
                                           ),
-                                          gap,
+                                          gap16px,
                                           if ((id == null && orderLevel == 1) ||
                                               (id == null && orderLevel >= 2) ||
                                               isAnyDisapproved ||
@@ -2744,7 +2714,7 @@ class PerformanceGovernanceSystemPageState
         case ActionType.draft:
           successMessage =
               isAnyDisapproved
-                  ? "Save successfully!"
+                  ? "Saved successfully!"
                   : (id != null && orderLevel >= 2)
                   ? "Confirm successfully!"
                   : "Saved successfully!";
@@ -3760,7 +3730,7 @@ class PerformanceGovernanceSystemPageState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        gap,
+        gap16px,
         IconButton(
           tooltip: 'Remove row',
           icon: Icon(Icons.delete, color: Colors.red),
@@ -3844,7 +3814,7 @@ class PerformanceGovernanceSystemPageState
                       ),
                     ],
                   ),
-                  gap,
+                  gap16px,
                   Text(
                     "Reason for Disapproval",
                     style: TextStyle(
@@ -3853,12 +3823,12 @@ class PerformanceGovernanceSystemPageState
                       color: Color.fromARGB(255, 185, 28, 28),
                     ),
                   ),
-                  gap8,
+                  gap6px,
                   Text(
                     reasonController[index]?.text ?? 'No reason provided',
                     style: const TextStyle(fontSize: 14, color: Colors.black87),
                   ),
-                  gap,
+                  gap16px,
                   const Divider(
                     color: Color.fromARGB(255, 0, 0, 0),
                     thickness: 0.3,
@@ -3866,7 +3836,7 @@ class PerformanceGovernanceSystemPageState
                     endIndent: 1,
                   ),
 
-                  gap2,
+                  gap4px,
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: const [
@@ -3888,7 +3858,7 @@ class PerformanceGovernanceSystemPageState
                       ),
                     ],
                   ),
-                  gap8,
+                  gap6px,
                   Container(
                     width: double.infinity,
                     constraints: const BoxConstraints(
@@ -4049,7 +4019,7 @@ class PerformanceGovernanceSystemPageState
                 return _buildReasonDisapproval(index, setDialogState);
               },
             ),
-            gap1,
+            gap14px,
           ],
           ConstrainedBox(
             constraints: const BoxConstraints(minHeight: 50.0),

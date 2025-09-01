@@ -8,6 +8,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../user/models/user_registration.dart';
 import '../../../utils/auth_util.dart';
@@ -368,7 +369,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                           ),
                         ),
 
-                        gap3,
+                        gap32px,
                         Align(
                           alignment: Alignment.centerLeft,
                           child: Text("List of Signatories"),
@@ -377,7 +378,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                         if (selectedSignatory.isNotEmpty)
                           Column(
                             children: [
-                              gap,
+                              gap16px,
                               ListView.separated(
                                 shrinkWrap: true,
                                 physics: NeverScrollableScrollPhysics(),
@@ -444,7 +445,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                               ),
                             ],
                           ),
-                        gap,
+                        gap16px,
                         Align(
                           alignment: Alignment.center,
                           child: DottedButton(
@@ -1062,7 +1063,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                   ),
               ],
             ),
-            gap,
+            gap16px,
             Expanded(
               child: ListView(
                 children:

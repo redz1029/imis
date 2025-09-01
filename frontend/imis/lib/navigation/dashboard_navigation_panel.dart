@@ -243,7 +243,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                       ),
                     ],
                   ),
-                  gap,
+                  gap16px,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -256,8 +256,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                       ),
                     ],
                   ),
-                  gap2,
-
+                  gap4px,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -267,13 +266,12 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                       ),
                     ],
                   ),
-
-                  gap2,
+                  gap4px,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [Text(email)],
                   ),
-                  gap,
+                  gap16px,
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -371,12 +369,12 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                       ),
                     ],
                   ),
-                  gap2,
+                  gap4px,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [Text('Full name')],
                   ),
-                  gap2,
+                  gap4px,
                   SizedBox(
                     width: 350,
                     height: 60,
@@ -390,12 +388,12 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                       ),
                     ),
                   ),
-                  gap2,
+                  gap4px,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [Text('Username')],
                   ),
-                  gap2,
+                  gap4px,
                   SizedBox(
                     width: 350,
                     height: 60,
@@ -409,12 +407,12 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                       ),
                     ),
                   ),
-                  gap2,
+                  gap4px,
                   Row(
                     mainAxisAlignment: MainAxisAlignment.start,
                     children: [Text('Email')],
                   ),
-                  gap2,
+                  gap4px,
                   SizedBox(
                     width: 350,
                     height: 60,

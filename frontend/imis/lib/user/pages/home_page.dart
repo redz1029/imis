@@ -154,11 +154,11 @@ class HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text("Analytical Overview", style: TextStyle(fontSize: 20)),
-                    gap,
+                    gap16px,
                     _buildStatsRow(),
-                    gap3,
+                    gap32px,
                     _buildPerformanceChart(kraList, deliverablesList),
-                    gap7,
+                    gap60px,
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Align(
@@ -186,7 +186,7 @@ class HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text("Analytical Overview", style: TextStyle(fontSize: 20)),
-              gap,
+              gap16px,
               Padding(
                 padding: const EdgeInsets.only(bottom: 4.0),
                 child: Row(
@@ -239,10 +239,10 @@ class HomePageState extends State<HomePage> {
                   ],
                 ),
               ),
-              gap,
+              gap16px,
               _buildStatsRow(),
               _buildPerformanceChart(kraList, deliverablesList),
-              gap7,
+              gap60px,
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Align(
@@ -250,7 +250,7 @@ class HomePageState extends State<HomePage> {
                   child: _buildStatusWidget(deliverablesList),
                 ),
               ),
-              gap,
+              gap16px,
               _buildSideColumn(),
             ],
           ),

@@ -1,15 +1,15 @@
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_role.dart';
-import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/auth_util.dart';
+import 'package:imis/user/services/user_role_service.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:collection/collection.dart';
-import '../../utils/http_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 
 class UserRolePage extends StatefulWidget {
   const UserRolePage({super.key});
@@ -20,127 +20,52 @@ class UserRolePage extends StatefulWidget {
 
 class UserRolePageState extends State<UserRolePage> {
   final _formKey = GlobalKey<FormState>();
+  final _commonService = CommonService(Dio());
+  final _userRole = UserRoleService(Dio());
+  final _userRoleService = UserRoleService(Dio());
   List<UserRoles> userRoleList = [];
   List<UserRoles> filteredList = [];
-  List<Map<String, dynamic>> filteredListUsersRole = [];
-  List<Roles> rolenameList = [];
-  List<Map<String, dynamic>> auditorList = [];
-
-  List<Map<String, dynamic>> filteredListRole = [];
-  List<Map<String, dynamic>> roleList = [];
+  List<Roles> roleList = [];
   String? _selectedRoleId;
-
   List<User> userList = [];
-  List<User> filteredListUser = [];
   String? _selectedUserId;
   String? roleName;
   String? userName;
-
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
   late FilterSearchResultUtil<UserRoles> userRoleSearchUtil;
   bool _isLoading = false;
-
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
 
-  Future<void> fetchUserRoles({int page = 1}) async {
+  Future<void> fetchUserRoles({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final int usersPerFetch = 50;
-      final response = await AuthenticatedRequest.get(
-        dio,
-        '${ApiEndpoint().userRole}?page=1&pageSize=$usersPerFetch',
+      final pageList = await _userRoleService.getUserRoles(
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
       );
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<UserRoles> allRoles = [];
-
-        for (var userJson in response.data) {
-          String userId = userJson['userId'];
-          if (userJson['roles'] != null && userJson['roles'] is List) {
-            for (var role in userJson['roles']) {
-              allRoles.add(UserRoles(userId: userId, roleId: role['roleId']));
-            }
-          }
-        }
-
-        _totalCount = allRoles.length;
-
-        int start = (page - 1) * _pageSize;
-        int end = start + _pageSize;
-        if (start >= _totalCount) {
-          setState(() {
-            userRoleList = [];
-            filteredList = [];
-            _currentPage = page;
-          });
-          return;
-        }
-        if (end > _totalCount) end = _totalCount;
-
-        List<UserRoles> pageRoles = allRoles.sublist(start, end);
-
-        if (mounted) {
-          setState(() {
-            userRoleList = pageRoles;
-            filteredList = List.from(userRoleList);
-            _currentPage = page;
-          });
-        }
-      } else {
-        debugPrint("Unexpected response: ${response.data}");
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          userRoleList = pageList.items;
+          filteredList = List.from(userRoleList);
+        });
       }
     } catch (e) {
-      debugPrint("Fetch error: $e");
+      debugPrint("Error fetching user roles: $e");
     } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> fetchRoleList() async {
-    var url = ApiEndpoint().roles;
-
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Roles> data =
-            (response.data as List).map((e) => Roles.fromJson(e)).toList();
-
-        setState(() {
-          rolenameList = data;
-        });
-        printUserOfficeWithOfficeName();
+      if (mounted) {
+        setState(() => _isLoading = false);
       }
-    } catch (e) {
-      debugPrint(" FetchOfficeList Error: $e");
-    }
-  }
-
-  Future<void> fetchUserList() async {
-    var url = ApiEndpoint().users;
-
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<User> data =
-            (response.data as List).map((e) => User.fromJson(e)).toList();
-
-        setState(() {
-          userList = data;
-        });
-
-        printUserNameWithUserName();
-      }
-    } catch (e) {
-      debugPrint("etchUserList Error: $e");
     }
   }
 
@@ -157,127 +82,10 @@ class UserRolePageState extends State<UserRolePage> {
 
   void printUserOfficeWithOfficeName() {
     for (var userRole in userRoleList) {
-      debugPrint("Checking userRole: ${userRole.roleId}");
-
-      rolenameList.firstWhere(
+      roleList.firstWhere(
         (role) => role.id == userRole.roleId,
         orElse: () => Roles("unknown", "Unknown", "", ""),
       );
-    }
-  }
-
-  Future<void> addUserRoles(UserRoles userRole) async {
-    final url = ApiEndpoint().userRole;
-
-    try {
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: userRole.toJson(),
-      );
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        await fetchUserRoles();
-      } else {
-        debugPrint("Save failed");
-      }
-    } catch (e) {
-      debugPrint("Error: $e");
-    }
-  }
-
-  Future<void> updateRole(String userId, String roleId) async {
-    final url =
-        '${ApiEndpoint().updateUserRole}?userId=$userId&newRoleId=$roleId';
-
-    try {
-      final response = await AuthenticatedRequest.put(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchUserRoles();
-      } else {
-        debugPrint(" Update failed");
-      }
-    } catch (e) {
-      debugPrint(" Error updating role: $e");
-    }
-  }
-
-  // Display Form-----
-  Future<void> fetchRole() async {
-    var url = ApiEndpoint().roles;
-
-    try {
-      String? token = await AuthUtil.getAccessToken();
-      if (token == null || token.isEmpty) {
-        return;
-      }
-
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Roles> data =
-            (response.data as List)
-                .map((roles) => Roles.fromJson(roles))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            roleList = data.map((roles) => roles.toJson()).toList();
-            filteredListRole = List.from(roleList);
-
-            if (_selectedRoleId == null && filteredListRole.isNotEmpty) {
-              _selectedRoleId = filteredListRole[0]['id'].toString();
-            }
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
-
-  // User Name ----------
-  Future<void> fetchUser() async {
-    var url = ApiEndpoint().users;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-      if (response.statusCode == 200 && response.data is List) {
-        List<User> data =
-            (response.data as List)
-                .map((userJson) => User.fromJson(userJson))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            userList = data;
-            filteredListUser = List.from(userList);
-
-            if (filteredListUser.isNotEmpty) {
-              _selectedUserId = filteredListUser[0].id;
-            }
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching user: $e");
-    }
-  }
-
-  Future<void> deleteUserRole(String kraId) async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.delete(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchRole();
-      }
-    } catch (e) {
-      debugPrint("Error deleting KRA: $e");
     }
   }
 
@@ -285,23 +93,22 @@ class UserRolePageState extends State<UserRolePage> {
   void initState() {
     super.initState();
     fetchUserRoles();
-    fetchRoleList();
-    fetchRole();
-    fetchUser();
-    printUserOfficeWithOfficeName();
-    fetchUserList();
-    printUserNameWithUserName();
+    () async {
+      final roles = await _userRole.fetchRoles();
+      final users = await _commonService.fetchUsers();
 
-    if (filteredListRole.isNotEmpty) {
-      _selectedRoleId = filteredListRole[0]['id'].toString();
-    }
-    if (filteredListUser.isNotEmpty) {
-      _selectedUserId = filteredListUser[0].id;
-    }
-    isSearchfocus.addListener(() {
-      setState(() {});
-    });
-    // TokenExpirationHandler(context).checkTokenExpiration();
+      if (!mounted) return;
+
+      setState(() {
+        roleList = roles;
+        userList = users;
+        _selectedRoleId = roles.isNotEmpty ? roles[0].id.toString() : null;
+        _selectedUserId = users.isNotEmpty ? users[0].id : null;
+      });
+
+      printUserOfficeWithOfficeName();
+      printUserNameWithUserName();
+    }();
   }
 
   @override
@@ -319,7 +126,7 @@ class UserRolePageState extends State<UserRolePage> {
             final user = userList.firstWhereOrNull(
               (u) => u.id == userRole.userId,
             );
-            final role = rolenameList.firstWhereOrNull(
+            final role = roleList.firstWhereOrNull(
               (r) => r.id == userRole.roleId,
             );
 
@@ -437,7 +244,7 @@ class UserRolePageState extends State<UserRolePage> {
                 SizedBox(height: 15),
                 SizedBox(
                   width: 450,
-                  child: DropdownSearch<Map<String, dynamic>?>(
+                  child: DropdownSearch<Roles?>(
                     popupProps: PopupProps.menu(
                       showSearchBox: true,
                       searchFieldProps: TextFieldProps(
@@ -459,23 +266,20 @@ class UserRolePageState extends State<UserRolePage> {
                           (context, item, isSelected) => ListTile(
                             tileColor: mainBgColor,
 
-                            title: Text(item?['name'] ?? ''),
+                            title: Text(item?.name ?? ''),
                           ),
                     ),
 
-                    items: roleList.cast<Map<String, dynamic>?>(),
-                    itemAsString: (o) => o?['name'] ?? '',
-                    selectedItem: roleList
-                        .cast<Map<String, dynamic>?>()
-                        .firstWhere(
-                          (o) => o?['id'] == _selectedRoleId,
-                          orElse: () => null,
-                        ),
+                    items: roleList,
+                    itemAsString: (o) => o?.name ?? '',
+                    selectedItem: roleList.cast<Roles?>().firstWhere(
+                      (o) => o?.id == _selectedRoleId,
+                      orElse: () => null,
+                    ),
                     onChanged:
-                        (value) =>
-                            setState(() => _selectedRoleId = value?['id']),
+                        (value) => setState(() => _selectedRoleId = value?.id),
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
+                      if (value == null) {
                         return 'Please select a role';
                       }
                       return null;
@@ -563,11 +367,19 @@ class UserRolePageState extends State<UserRolePage> {
                         roleId: _selectedRoleId!,
                       );
 
-                      await addUserRoles(newUserRole);
+                      await _userRoleService.addUserRoles(newUserRole);
+                      setState(() {
+                        fetchUserRoles();
+                      });
                     } else {
-                      await updateRole(_selectedUserId!, _selectedRoleId!);
+                      await _userRoleService.updateRole(
+                        _selectedUserId!,
+                        _selectedRoleId!,
+                      );
+                      setState(() {
+                        fetchUserRoles();
+                      });
                     }
-
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
@@ -702,7 +514,7 @@ class UserRolePageState extends State<UserRolePage> {
                                       index +
                                       1;
 
-                                  final matchedRole = rolenameList.firstWhere(
+                                  final matchedRole = roleList.firstWhere(
                                     (roles) => roles.id == userRoles.roleId,
                                     orElse:
                                         () =>
@@ -908,7 +720,7 @@ class UserRolePageState extends State<UserRolePage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deleteUserRole(id);
+                await _userRoleService.deleteUserRole(id);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,

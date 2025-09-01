@@ -7,6 +7,7 @@ import 'package:imis/office/services/office_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 
 class OfficePage extends StatefulWidget {
   const OfficePage({super.key});
@@ -255,7 +256,7 @@ class OfficePageState extends State<OfficePage> {
                     },
                   ),
                 ),
-                gap,
+                gap16px,
                 SizedBox(
                   width: 480,
                   child: DropdownSearch<Map<String, dynamic>>(
@@ -485,7 +486,7 @@ class OfficePageState extends State<OfficePage> {
                   ),
               ],
             ),
-            gap,
+            gap16px,
             Expanded(
               child: Column(
                 children: [

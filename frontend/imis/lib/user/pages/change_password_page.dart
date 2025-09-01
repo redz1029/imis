@@ -162,7 +162,7 @@ class _FormContentState extends State<_FormContent> {
               'Change Password',
               style: TextStyle(fontSize: 32, fontWeight: FontWeight.w300),
             ),
-            gap3,
+            gap32px,
             TextFormField(
               style: TextStyle(fontSize: 14),
               controller: _usernameController,
@@ -190,7 +190,7 @@ class _FormContentState extends State<_FormContent> {
                 floatingLabelStyle: const TextStyle(color: primaryColor),
               ),
             ),
-            gap,
+            gap16px,
             TextFormField(
               style: TextStyle(fontSize: 14),
               controller: _oldpasswordController,
@@ -234,7 +234,7 @@ class _FormContentState extends State<_FormContent> {
                 ),
               ),
             ),
-            gap,
+            gap16px,
             TextFormField(
               style: TextStyle(fontSize: 14),
               controller: _newPasswordController,
@@ -277,7 +277,7 @@ class _FormContentState extends State<_FormContent> {
                 ),
               ),
             ),
-            gap3,
+            gap32px,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

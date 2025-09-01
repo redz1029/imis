@@ -9,6 +9,7 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 import '../../utils/http_util.dart';
 
 class AuditSchedulesPage extends StatefulWidget {
@@ -306,8 +307,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      gap1,
-                      // Audit Title
+                      gap14px,
                       SizedBox(
                         width: double.infinity,
                         height: 60,
@@ -319,9 +319,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                           ),
                         ),
                       ),
-                      gap2,
-
-                      // Start Date
+                      gap4px,
                       SizedBox(
                         width: double.infinity,
                         height: 60,
@@ -370,8 +368,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                           },
                         ),
                       ),
-                      gap2,
-                      // End Date
+                      gap4px,
                       SizedBox(
                         width: double.infinity,
                         height: 60,
@@ -420,10 +417,9 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                           },
                         ),
                       ),
-                      gap2,
-
+                      gap4px,
                       Text('List of Office'),
-                      gap,
+                      gap16px,
                       ...selectedOffice.map((office) {
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
@@ -470,7 +466,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                           ),
                         ),
                       ),
-                      gap5,
+                      gap48px,
                       Column(
                         children: [
                           Column(
@@ -527,9 +523,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                           ),
                                         ],
                                       ),
-                                      gap,
-
-                                      // Team Dropdown
+                                      gap16px,
                                       DropdownButtonHideUnderline(
                                         child: DropdownButtonFormField<int>(
                                           dropdownColor: mainBgColor,
@@ -560,9 +554,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                           },
                                         ),
                                       ),
-                                      gap,
-
-                                      // Office Dropdown
+                                      gap16px,
                                       DropdownButtonHideUnderline(
                                         child: DropdownButtonFormField<int>(
                                           dropdownColor: mainBgColor,
@@ -593,9 +585,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                           },
                                         ),
                                       ),
-                                      gap,
-
-                                      // Start Date Input
+                                      gap16px,
                                       SizedBox(
                                         width: double.infinity,
                                         height: 60,
@@ -643,10 +633,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                           },
                                         ),
                                       ),
-
-                                      gap,
-
-                                      // End Date Input
+                                      gap16px,
                                       SizedBox(
                                         width: double.infinity,
                                         height: 60,
@@ -694,13 +681,13 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                         ),
                                       ),
 
-                                      gap2,
+                                      gap4px,
                                       Divider(
                                         color: lightGrey,
                                         thickness: 1.0,
                                         height: 20,
                                       ),
-                                      gap2,
+                                      gap4px,
                                     ],
                                   );
                                 }).toList(),
@@ -1032,8 +1019,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                   ),
               ],
             ),
-            gap,
-            // List of Audit Schedules
+            gap16px,
             Expanded(
               child: Column(
                 children: [

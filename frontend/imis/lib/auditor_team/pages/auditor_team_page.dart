@@ -8,6 +8,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 
 class AuditorTeamPage extends StatefulWidget {
   const AuditorTeamPage({super.key});
@@ -256,15 +257,12 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                           ],
                         ),
                       ),
-
-                      gap3,
+                      gap32px,
                       Align(
                         alignment: Alignment.centerLeft,
                         child: Text("List of Auditors"),
                       ),
-                      gap,
-
-                      // Selected Auditors
+                      gap16px,
                       ...selectedAuditors.map((auditor) {
                         return Container(
                           margin: const EdgeInsets.symmetric(vertical: 4),
@@ -562,7 +560,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                   ),
               ],
             ),
-            gap,
+            gap16px,
             Expanded(
               child: GridView.count(
                 crossAxisCount: isMinimized ? 1 : 3,

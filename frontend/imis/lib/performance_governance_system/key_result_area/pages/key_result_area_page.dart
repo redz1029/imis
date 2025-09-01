@@ -6,6 +6,7 @@ import 'package:imis/performance_governance_system/key_result_area/services/key_
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 
 class KeyResultAreaPage extends StatefulWidget {
   const KeyResultAreaPage({super.key});
@@ -178,7 +179,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                     },
                   ),
                 ),
-                gap2,
+                gap4px,
                 SizedBox(
                   width: 350,
                   height: 65,
@@ -350,7 +351,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                   ),
               ],
             ),
-            gap,
+            gap16px,
             Expanded(
               child: Column(
                 children: [

@@ -6,6 +6,7 @@ import 'package:imis/team/services/team_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class TeamPage extends StatefulWidget {
@@ -26,6 +27,8 @@ class TeamPageState extends State<TeamPage> {
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
+  String statusFilter = 'Active';
+  final List<String> statusOptions = ['Active', 'Inactive'];
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
@@ -224,10 +227,6 @@ class TeamPageState extends State<TeamPage> {
     );
   }
 
-  String statusFilter = 'Active';
-
-  final List<String> statusOptions = ['Active', 'Inactive'];
-
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
@@ -279,10 +278,7 @@ class TeamPageState extends State<TeamPage> {
                     onChanged: filterSearchResults,
                   ),
                 ),
-
-                gap4,
-
-                // Status Dropdown
+                SizedBox(width: 16),
                 SizedBox(
                   height: 30,
                   width: 140,

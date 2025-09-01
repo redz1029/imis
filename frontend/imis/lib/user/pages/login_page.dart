@@ -6,6 +6,7 @@ import 'package:imis/user/models/user_login.dart';
 import 'package:imis/user/pages/registration_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/widgets/logo.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class LoginPage extends StatefulWidget {
@@ -275,6 +276,8 @@ class LoginPageState extends State<LoginPage> {
                 }
               },
             ),
+
+            // for next feauture (Forgot password)
             // gap2,
             // Row(
             //   mainAxisAlignment: MainAxisAlignment.end,

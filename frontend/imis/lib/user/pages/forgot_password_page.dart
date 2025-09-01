@@ -44,11 +44,11 @@ class _FormForgotPasswordState extends State<_FormForgotPassword> {
               style: TextStyle(fontSize: 32, fontWeight: FontWeight.w300),
             ),
             Image.asset('assets/forgotpass.png', width: 250),
-            gap3,
+            gap32px,
             Text(
               'Please enter your phone number to receive a verification code',
             ),
-            gap,
+            gap16px,
             TextFormField(
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
@@ -57,7 +57,7 @@ class _FormForgotPasswordState extends State<_FormForgotPassword> {
                 ),
               ),
             ),
-            gap3,
+            gap32px,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [

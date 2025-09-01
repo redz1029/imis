@@ -5,6 +5,7 @@ import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 import '../../utils/http_util.dart';
 
 class AuditorPage extends StatefulWidget {
@@ -387,7 +388,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                   ),
               ],
             ),
-            gap,
+            gap16px,
             Expanded(
               child: Column(
                 children: [

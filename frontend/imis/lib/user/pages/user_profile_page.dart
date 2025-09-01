@@ -1,17 +1,16 @@
 import 'dart:async';
-
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/user/services/users_profile_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/string_extension.dart';
 import 'package:imis/validator/validator.dart';
-
-import '../../utils/http_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -22,6 +21,7 @@ class UserProfilePage extends StatefulWidget {
 
 class UserProfileState extends State<UserProfilePage> {
   final _formKey = GlobalKey<FormState>();
+  final _userProfileService = UsersProfileService(Dio());
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController middleNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
@@ -44,7 +44,6 @@ class UserProfileState extends State<UserProfilePage> {
   final FocusNode focusPassword = FocusNode();
   final FocusNode focusConfirmPassword = FocusNode();
   final FocusNode focusFullname = FocusNode();
-
   List<UserRegistration> userProfileList = [];
   List<UserRegistration> filteredList = [];
 
@@ -62,48 +61,7 @@ class UserProfileState extends State<UserProfilePage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-
-  //Job Position Dropdown
   String? selectedPosition;
-  final List<String> jobPositions = [
-    'Chief of Medical Professional Staff II',
-    'Medical Center Chief II',
-    'Head, Department of Anesthesiology',
-    'Head, Cancer Institute',
-    'Head, COVID-19 Center',
-    'Head, Dental Department',
-    'Head, NDD',
-    'Head, Delivery Room',
-    'Head, EFMD',
-    'Head, Emergency Room',
-    'Head, Finance Service',
-    'Head, HIMD',
-    'Head, Human Resource Mngt. Department',
-    'Head, IHOMP',
-    'Head, Department of Internal Medicine',
-    'Nurse VI',
-    'Head, Department of OB-GYN',
-    'Head, OPD',
-    'Head, OR (Cath. Lab)',
-    'Head, OSM',
-    'Head, PACD',
-    'Head, Department of Pathology',
-    'Head, Department of Pediatrics',
-    'Head, PETRU',
-    'Head, Pharmacy Deparment',
-    'Head, Physical Medicine and Rehabilitation Department',
-    'Head, DDTR',
-    'Head, Department of Surgery',
-    'Head, Trauma Care',
-    'Chief Administrative Officer',
-    'Nurse V',
-    'Chief Nurse',
-    'Supervising Administrative Officer',
-    'Engineer IV',
-    'OIC-Chief Health Program Officer',
-    'Head, Cancer Care',
-    'Social Welfare Officer IV',
-  ];
 
   Future<void> fetchUserProfile({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
@@ -111,14 +69,11 @@ class UserProfileState extends State<UserProfilePage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils
-          .fetchPaginatedData<UserRegistration>(
-            endpoint: ApiEndpoint().getUser,
-            page: page,
-            pageSize: _pageSize,
-            searchQuery: searchQuery,
-            fromJson: (json) => UserRegistration.fromJson(json),
-          );
+      final pageList = await _userProfileService.getUsers(
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+      );
 
       if (mounted) {
         setState(() {
@@ -134,67 +89,6 @@ class UserProfileState extends State<UserProfilePage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  Future<void> addOrUpdateUserProfile(UserRegistration userProfile) async {
-    var url = ApiEndpoint().register;
-    try {
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: userProfile.toJson(),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint(
-          "Save successful (${response.statusCode}), fetching updated list...",
-        );
-        await fetchUserProfile();
-        userNameController.clear();
-        emailController.clear();
-        passwordController.clear();
-        firstNameController.clear();
-        middleNameController.clear();
-        lastNameController.clear();
-        prefixController.clear();
-        suffixController.clear();
-      } else {
-        debugPrint("Save failed");
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating team: $e");
-    }
-  }
-
-  Future<void> updateUserProfile(UserRegistration userProfile) async {
-    var url = ApiEndpoint().updateUser;
-    try {
-      final response = await AuthenticatedRequest.put(
-        dio,
-        url,
-        data: userProfile.toJson(),
-      );
-      debugPrint("Sent data: ${userProfile.toJson()}");
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint(
-          "Save successful (${response.statusCode}), fetching updated list...",
-        );
-        await fetchUserProfile();
-        userNameController.clear();
-        emailController.clear();
-        passwordController.clear();
-        firstNameController.clear();
-        middleNameController.clear();
-        lastNameController.clear();
-        prefixController.clear();
-        suffixController.clear();
-      } else {
-        debugPrint("Save failed: ${response.statusCode}");
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating team: $e");
     }
   }
 
@@ -219,7 +113,6 @@ class UserProfileState extends State<UserProfilePage> {
     focusNewPassword.addListener(() {
       setState(() {});
     });
-    // TokenExpirationHandler(context).checkTokenExpiration();
   }
 
   @override
@@ -264,7 +157,8 @@ class UserProfileState extends State<UserProfilePage> {
     lastNameController.text = lastName ?? '';
     prefixController.text = prefix ?? '';
     suffixController.text = suffix ?? '';
-    selectedPosition = jobPositions.contains(position) ? position : null;
+    selectedPosition =
+        JobPositions.positions.contains(position) ? position : null;
     fullNameController.text = fullName ?? '';
 
     showDialog(
@@ -302,69 +196,7 @@ class UserProfileState extends State<UserProfilePage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Visibility(
-                      visible: false,
-                      child: SizedBox(
-                        width: 350,
-                        height: 60,
-                        child: TextField(
-                          controller: userNameController,
-                          decoration: InputDecoration(
-                            labelText: 'User Name',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: false,
-                      child: SizedBox(
-                        width: 350,
-                        height: 65,
-                        child: TextField(
-                          controller: emailController,
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Visibility(
-                      visible: false,
-                      child: SizedBox(
-                        width: 350,
-                        height: 65,
-                        child: TextField(
-                          controller: prefixController,
-                          decoration: InputDecoration(
-                            labelText: 'Prefix',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(
-                      width: 350,
-                      height: 55,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          SizedBox(height: 4),
-                          Text(
-                            fullNameController.text,
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    gap2,
+                    gap4px,
                     Theme(
                       data: Theme.of(context).copyWith(
                         inputDecorationTheme: const InputDecorationTheme(
@@ -431,87 +263,6 @@ class UserProfileState extends State<UserProfilePage> {
                             },
                           ),
                         ),
-                      ),
-                    ),
-
-                    Visibility(
-                      visible: false,
-                      child: SizedBox(
-                        width: 350,
-                        height: 65,
-                        child: TextField(
-                          controller: middleNameController,
-                          decoration: InputDecoration(
-                            labelText: 'Middle Name',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Visibility(
-                      visible: false,
-                      child: SizedBox(
-                        width: 350,
-                        height: 65,
-                        child: TextField(
-                          controller: lastNameController,
-                          decoration: InputDecoration(
-                            labelText: 'Last Name',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    Visibility(
-                      visible: false,
-                      child: SizedBox(
-                        width: 350,
-                        height: 65,
-                        child: TextField(
-                          controller: suffixController,
-                          decoration: InputDecoration(
-                            labelText: 'Suffix',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Visibility(
-                      visible: false,
-                      child: DropdownButtonFormField<String>(
-                        decoration: InputDecoration(
-                          labelText: 'Position',
-                          border: const OutlineInputBorder(),
-                          focusedBorder: const OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelStyle: const TextStyle(
-                            color: primaryColor,
-                          ),
-                        ),
-                        value: selectedPosition,
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            selectedPosition = newValue;
-                          });
-                        },
-                        items:
-                            jobPositions.map<DropdownMenuItem<String>>((
-                              String value,
-                            ) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a position';
-                          }
-                          return null;
-                        },
                       ),
                     ),
                   ],
@@ -586,9 +337,9 @@ class UserProfileState extends State<UserProfilePage> {
                         );
 
                         if (id == null) {
-                          await addOrUpdateUserProfile(userProfile);
+                          await _userProfileService.createUser(userProfile);
                         } else {
-                          await updateUserProfile(userProfile);
+                          await _userProfileService.updateUser(userProfile);
                         }
                         // ignore: use_build_context_synchronously
                         Navigator.pop(context);
@@ -629,7 +380,8 @@ class UserProfileState extends State<UserProfilePage> {
     lastNameController.text = lastName ?? '';
     prefixController.text = prefix ?? '';
     suffixController.text = suffix ?? '';
-    selectedPosition = jobPositions.contains(position) ? position : null;
+    selectedPosition =
+        JobPositions.positions.contains(position) ? position : null;
 
     showDialog(
       context: context,
@@ -722,7 +474,18 @@ class UserProfileState extends State<UserProfilePage> {
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Please fill out this field';
+                          return validatePassword(value);
+                        }
+                        if (value.length < 6) {
+                          return validatePassword(value);
+                        }
+                        if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                          return validatePassword(value);
+                        }
+                        if (!RegExp(
+                          r'[!@#$%^&*(),.?":{}|<>]',
+                        ).hasMatch(value)) {
+                          return validatePassword(value);
                         }
                         return null;
                       },
@@ -870,7 +633,7 @@ class UserProfileState extends State<UserProfilePage> {
                         ),
                       ),
                     ),
-                    items: jobPositions,
+                    items: JobPositions.positions,
                     selectedItem: selectedPosition,
                     onChanged: (String? value) {
                       setState(() {
@@ -970,9 +733,15 @@ class UserProfileState extends State<UserProfilePage> {
                     );
 
                     if (id == null) {
-                      await addOrUpdateUserProfile(userProfile);
+                      await _userProfileService.createUser(userProfile);
+                      setState(() {
+                        fetchUserProfile();
+                      });
                     } else {
-                      await updateUserProfile(userProfile);
+                      await _userProfileService.updateUser(userProfile);
+                      setState(() {
+                        fetchUserProfile();
+                      });
                     }
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);

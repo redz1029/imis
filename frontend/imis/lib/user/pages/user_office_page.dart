@@ -1,14 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/user/models/user_office.dart';
+import 'package:imis/user/services/user_office_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import '../../utils/http_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 
 class UserOfficePage extends StatefulWidget {
   const UserOfficePage({super.key});
@@ -18,29 +20,24 @@ class UserOfficePage extends StatefulWidget {
 }
 
 class UserOfficePageState extends State<UserOfficePage> {
+  final _commonService = CommonService(Dio());
+  final _userOfficeService = UserOfficeService(Dio());
+  final _paginationUtils = PaginationUtil(Dio());
+  late FilterSearchResultUtil<UserOffice> userOfficeSearchUtil;
   final _formKey = GlobalKey<FormState>();
   List<UserOffice> userOfficeList = [];
   List<UserOffice> filteredList = [];
-  List<Office> officenameList = [];
-
-  List<Map<String, dynamic>> filteredListOffice = [];
-  List<Map<String, dynamic>> officeList = [];
-  String? _selectedOfficeId;
-
   List<User> userList = [];
   List<User> filteredListUser = [];
+  List<Office> officenameList = [];
+  String? _selectedOfficeId;
   String? _selectedUserId;
   String? officeName;
   String? userName;
-
-  final _paginationUtils = PaginationUtil(Dio());
-  late FilterSearchResultUtil<UserOffice> userOfficeSearchUtil;
-
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
@@ -51,19 +48,17 @@ class UserOfficePageState extends State<UserOfficePage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils.fetchPaginatedData<UserOffice>(
-        endpoint: ApiEndpoint().useroffice,
+      final pageList = await _userOfficeService.getPgsPeriod(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        fromJson: (json) => UserOffice.fromJson(json),
       );
 
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          userOfficeList = pageList.items.toList();
+          userOfficeList = pageList.items;
           filteredList = List.from(userOfficeList);
         });
       }
@@ -76,46 +71,46 @@ class UserOfficePageState extends State<UserOfficePage> {
     }
   }
 
-  Future<void> fetchOfficeList() async {
-    var url = ApiEndpoint().office;
+  @override
+  void initState() {
+    super.initState();
+    fetchUserOffice();
+    isSearchfocus.addListener(() {
+      setState(() {});
+    });
+    userOfficeSearchUtil = FilterSearchResultUtil<UserOffice>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().useroffice,
+      pageSize: _pageSize,
+      fromJson: (json) => UserOffice.fromJson(json),
+    );
+    isSearchfocus.addListener(() {
+      setState(() {});
+    });
 
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
+    () async {
+      final offices = await _commonService.fetchOffices();
+      final users = await _commonService.fetchUsers();
 
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List).map((e) => Office.fromJson(e)).toList();
+      if (!mounted) return;
 
-        setState(() {
-          officenameList = data;
-        });
+      setState(() {
+        officenameList = offices;
+        userList = users;
+        _selectedOfficeId =
+            offices.isNotEmpty ? offices[0].id.toString() : null;
+        _selectedUserId = users.isNotEmpty ? users[0].id : null;
+      });
 
-        printUserOfficeWithOfficeName();
-      }
-    } catch (e) {
-      if (mounted) {}
-    }
+      printUserOfficeWithOfficeName();
+      printUserNameWithUserName();
+    }();
   }
 
-  Future<void> fetchUserList() async {
-    var url = ApiEndpoint().users;
-
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<User> data =
-            (response.data as List).map((e) => User.fromJson(e)).toList();
-
-        setState(() {
-          userList = data;
-        });
-
-        printUserNameWithUserName();
-      }
-    } catch (e) {
-      if (mounted) {}
-    }
+  @override
+  void dispose() {
+    isSearchfocus.dispose();
+    super.dispose();
   }
 
   void printUserNameWithUserName() {
@@ -142,143 +137,6 @@ class UserOfficePageState extends State<UserOfficePage> {
             ),
       );
     }
-  }
-
-  Future<void> addOrUpdateUserOffice(UserOffice userOffice) async {
-    final url = ApiEndpoint().useroffice;
-    final isUpdating = userOffice.id != 0;
-
-    try {
-      final response =
-          isUpdating
-              ? await AuthenticatedRequest.put(
-                dio,
-                '$url/${userOffice.id}',
-                data: userOffice.toJson(),
-              )
-              : await AuthenticatedRequest.post(
-                dio,
-                url,
-                data: userOffice.toJson(),
-              );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        await fetchUserOffice();
-      } else {
-        if (mounted) {}
-      }
-    } catch (e) {
-      if (mounted) {}
-    }
-  }
-
-  Future<void> fetchOffice() async {
-    var url = ApiEndpoint().office;
-
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map((office) => Office.fromJson(office))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            officeList = data.map((office) => office.toJson()).toList();
-            filteredListOffice = List.from(officeList);
-
-            if (_selectedOfficeId == null && filteredListOffice.isNotEmpty) {
-              _selectedOfficeId = filteredListOffice[0]['id'].toString();
-            }
-          });
-        }
-      } else {
-        if (mounted) {}
-      }
-    } on DioException {
-      if (mounted) {}
-    } catch (e) {
-      if (mounted) {}
-    }
-  }
-
-  Future<void> fetchUser() async {
-    var url = ApiEndpoint().users;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-      if (response.statusCode == 200 && response.data is List) {
-        List<User> data =
-            (response.data as List)
-                .map((userJson) => User.fromJson(userJson))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            userList = data;
-            filteredListUser = List.from(userList);
-
-            if (filteredListUser.isNotEmpty) {
-              _selectedUserId = filteredListUser[0].id;
-            }
-          });
-        }
-      }
-    } catch (e) {
-      if (mounted) {}
-    }
-  }
-
-  Future<void> deleteUserOffice(String kraId) async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.delete(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchUserOffice();
-      }
-    } catch (e) {
-      if (mounted) {}
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUserOffice();
-    fetchOfficeList();
-    fetchOffice();
-    fetchUser();
-    printUserOfficeWithOfficeName();
-    fetchUserList();
-    printUserNameWithUserName();
-    if (filteredListOffice.isNotEmpty) {
-      _selectedOfficeId = filteredListOffice[0]['id'].toString();
-    }
-    if (filteredListUser.isNotEmpty) {
-      _selectedUserId = filteredListUser[0].id;
-    }
-    isSearchfocus.addListener(() {
-      setState(() {});
-    });
-    userOfficeSearchUtil = FilterSearchResultUtil<UserOffice>(
-      paginationUtils: _paginationUtils,
-      endpoint: ApiEndpoint().useroffice,
-      pageSize: _pageSize,
-      fromJson: (json) => UserOffice.fromJson(json),
-    );
-
-    fetchUserOffice();
-    isSearchfocus.addListener(() {
-      setState(() {});
-    });
-  }
-
-  @override
-  void dispose() {
-    isSearchfocus.dispose();
-    super.dispose();
   }
 
   Future<void> filterSearchResults(String query) async {
@@ -406,7 +264,7 @@ class UserOfficePageState extends State<UserOfficePage> {
 
                 SizedBox(
                   width: 480,
-                  child: DropdownSearch<Map<String, dynamic>>(
+                  child: DropdownSearch<Office>(
                     popupProps: PopupProps.menu(
                       showSearchBox: true,
                       searchFieldProps: TextFieldProps(
@@ -426,23 +284,31 @@ class UserOfficePageState extends State<UserOfficePage> {
                       itemBuilder:
                           (context, office, isSelected) => ListTile(
                             tileColor: mainBgColor,
-                            title: Text(office['name']),
+                            title: Text(office.name),
                           ),
                     ),
-                    items: filteredListOffice,
-                    itemAsString: (office) => office['name'],
+                    items: officenameList,
+                    itemAsString: (office) => office.name,
                     selectedItem:
                         _selectedOfficeId == null
                             ? null
-                            : filteredListOffice.firstWhere(
+                            : officenameList.firstWhere(
                               (office) =>
-                                  office['id'].toString() == _selectedOfficeId,
-                              orElse: () => <String, dynamic>{},
+                                  office.id.toString() == _selectedOfficeId,
+                              orElse:
+                                  () => Office(
+                                    id: 0,
+                                    name: 'Unknown',
+                                    officeTypeId: 0,
+                                    parentOfficeId: 0,
+                                    isActive: true,
+                                    isDeleted: false,
+                                  ),
                             ),
 
                     onChanged: (value) {
                       setState(() {
-                        _selectedOfficeId = value?['id'].toString();
+                        _selectedOfficeId = value?.id.toString();
                       });
                     },
                     validator: (value) {
@@ -552,7 +418,10 @@ class UserOfficePageState extends State<UserOfficePage> {
                       position: positionController.text,
                     );
 
-                    await addOrUpdateUserOffice(user);
+                    await _userOfficeService.addOrUpdateUserOffice(user);
+                    setState(() {
+                      fetchUserOffice();
+                    });
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
@@ -767,30 +636,20 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                 IconButton(
                                                   icon: Icon(Icons.edit),
                                                   onPressed: () {
-                                                    final selectedUser =
-                                                        userList.firstWhere(
-                                                          (user) =>
-                                                              user.id ==
-                                                              userOffice.userId,
-                                                          orElse:
-                                                              () => User(
-                                                                id: 'unknown',
-                                                                fullName:
-                                                                    'Unknown',
-                                                                position:
-                                                                    'position',
-                                                              ),
-                                                        );
-                                                    final selectedOfficeId =
-                                                        userOffice.officeId
-                                                            .toString();
-
-                                                    debugPrint(
-                                                      "Editing User: ${selectedUser.fullName} (ID: ${selectedUser.id})",
+                                                    userList.firstWhere(
+                                                      (user) =>
+                                                          user.id ==
+                                                          userOffice.userId,
+                                                      orElse:
+                                                          () => User(
+                                                            id: 'unknown',
+                                                            fullName: 'Unknown',
+                                                            position:
+                                                                'position',
+                                                          ),
                                                     );
-                                                    debugPrint(
-                                                      " Office ID: $selectedOfficeId",
-                                                    );
+                                                    userOffice.officeId
+                                                        .toString();
 
                                                     showFormDialog(
                                                       id:
@@ -884,7 +743,7 @@ class UserOfficePageState extends State<UserOfficePage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deleteUserOffice(id);
+                await _userOfficeService.deleteUserOffice(id);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,

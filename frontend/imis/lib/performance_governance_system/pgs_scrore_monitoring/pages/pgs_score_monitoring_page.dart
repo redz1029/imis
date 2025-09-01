@@ -677,7 +677,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
               ),
             ],
           ),
-          gap,
+          gap16px,
           Center(
             child: TextButton(
               onPressed: () {
@@ -1295,7 +1295,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 'Score Range',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              gap2,
+              gap4px,
               TextField(
                 controller: scoreRangeFromController,
                 keyboardType: TextInputType.number,
@@ -1314,7 +1314,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   ),
                 ),
               ),
-              gap,
+              gap16px,
               TextField(
                 controller: scoreRangeToController,
                 keyboardType: TextInputType.none,
@@ -1332,7 +1332,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   ),
                 ),
               ),
-              gap,
+              gap16px,
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -1406,7 +1406,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   ),
                 ),
               ),
-              gap,
+              gap16px,
               TextField(
                 controller: pageSizeController,
                 keyboardType: TextInputType.none,
@@ -1424,7 +1424,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   ),
                 ),
               ),
-              gap,
+              gap16px,
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
@@ -1512,7 +1512,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
               textAlign: TextAlign.center,
             ),
           ),
-          gap,
+          gap16px,
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

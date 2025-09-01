@@ -6,6 +6,7 @@ import 'package:imis/roles/services/roles_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class RolesPage extends StatefulWidget {
@@ -333,7 +334,7 @@ class RolesPageState extends State<RolesPage> {
                   ),
               ],
             ),
-            gap,
+            gap16px,
             Expanded(
               child: Column(
                 children: [

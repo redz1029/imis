@@ -2,12 +2,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/performance_governance_system/pgs_period/services/pgs_period_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 import 'package:intl/intl.dart';
-import '../../../utils/http_util.dart';
 
 class PgsPeriodPage extends StatefulWidget {
   const PgsPeriodPage({super.key});
@@ -18,6 +19,7 @@ class PgsPeriodPage extends StatefulWidget {
 
 class PgsPeriodPageState extends State<PgsPeriodPage> {
   final _paginationUtils = PaginationUtil(Dio());
+  final _pgsPeriodService = PgsPeriodService(Dio());
   late FilterSearchResultUtil<PgsPeriod> pgsPeriodSearchUtil;
   final _formKey = GlobalKey<FormState>();
   List<PgsPeriod> pgsPeriodList = [];
@@ -53,19 +55,16 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
     });
   }
 
-  //fetch PGS PERIOD list
   Future<void> fetchPGSPeriods({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils.fetchPaginatedData<PgsPeriod>(
-        endpoint: ApiEndpoint().pgsperiod,
+      final pageList = await _pgsPeriodService.getPgsPeriod(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        fromJson: (json) => PgsPeriod.fromJson(json),
       );
 
       if (mounted) {
@@ -82,38 +81,6 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  Future<void> addOrUpdatePGSPeriod(PgsPeriod period) async {
-    var url = ApiEndpoint().pgsperiod;
-    try {
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: period.toJson(),
-      );
-      if (response.statusCode == 200) {
-        await fetchPGSPeriods();
-        setState(() {
-          fetchPGSPeriods();
-        });
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating pgsPeriod: $e");
-    }
-  }
-
-  Future<void> deletePGSPeriod(String kraId) async {
-    var url = ApiEndpoint().pgsperiod;
-    try {
-      final response = await AuthenticatedRequest.delete(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchPGSPeriods();
-      }
-    } catch (e) {
-      debugPrint("Error deleting KRA: $e");
     }
   }
 
@@ -183,7 +150,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deletePGSPeriod(id);
+                // await deletePGSPeriod(id);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
@@ -303,7 +270,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                     },
                   ),
                 ),
-                gap2,
+                gap4px,
                 SizedBox(
                   width: 350,
                   height: 60,
@@ -432,15 +399,17 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                   );
 
                   if (confirmAction == true) {
-                    final pgs = PgsPeriod(
+                    final period = PgsPeriod(
                       int.tryParse(id ?? '0') ?? 0,
                       false,
                       DateTime.parse(startDateController.text),
                       DateTime.parse(endDateController.text),
                       remarksController.text,
                     );
-                    addOrUpdatePGSPeriod(pgs);
-
+                    await _pgsPeriodService.createOrUpdatePgsPeriod(period);
+                    setState(() {
+                      fetchPGSPeriods();
+                    });
                     // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
@@ -627,7 +596,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                   ),
               ],
             ),
-            gap,
+            gap16px,
             Expanded(
               child: Column(
                 children: [
