@@ -1,5 +1,8 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -28,6 +31,7 @@ import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class DashboardNavigationPanel extends StatefulWidget {
   const DashboardNavigationPanel({super.key});
@@ -37,8 +41,7 @@ class DashboardNavigationPanel extends StatefulWidget {
       DashboardNavigationPanelState();
 }
 
-class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
-    with WidgetsBindingObserver {
+class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   final GlobalKey _menuKey = GlobalKey();
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -55,31 +58,14 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
   List<String> roles = [];
   Widget _selectedScreen = HomePage();
   int _selectedIndex = -1;
+  String? selectedRole;
 
   final dio = Dio();
 
   @override
   void initState() {
     super.initState();
-
-    WidgetsBinding.instance.addObserver(this);
-    _loadUserName();
-    AuthUtil.fetchRoles().then((roles) {
-      if (roles != null) {
-        PermissionService().loadPermissions(roles);
-      }
-    });
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {}
-  }
-
-  @override
-  void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
-    super.dispose();
+    _initializeDashboard();
   }
 
   Future<void> _loadUserName() async {
@@ -107,10 +93,32 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
           ),
           toastDuration: Duration(seconds: 10),
           toastAlignment: Alignment.topCenter,
-          // ignore: use_build_context_synchronously
         ).show(context);
       }
     }
+  }
+
+  Future<void> _checkSelectedRole() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedRole = prefs.getString('selectedRole');
+
+    if (savedRole != null) {
+      final permissions = RolePermissions.getPermissionsForRoles([savedRole]);
+      PermissionService().loadPermissions(permissions);
+      setState(() {
+        selectedRole = savedRole;
+      });
+    } else {
+      // No role saved, show dialog
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showWelcomeDialog();
+      });
+    }
+  }
+
+  Future<void> _initializeDashboard() async {
+    await _loadUserName();
+    await _checkSelectedRole();
   }
 
   void _setScreen(Widget screen, int index) {
@@ -142,6 +150,8 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
               ),
               TextButton(
                 onPressed: () async {
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.remove('selectedRole');
                   await AuthUtil.logout(context);
                   if (!context.mounted) return;
                   Navigator.of(context).pushAndRemoveUntil(
@@ -157,6 +167,77 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
               ),
             ],
           ),
+    );
+  }
+
+  void _showWelcomeDialog() {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.1),
+      pageBuilder: (context, anim1, anim2) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Center(
+            child: AlertDialog(
+              backgroundColor: mainBgColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text(
+                "Welcome!",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    "Your account has multiple roles. Select one to continue.",
+                    style: TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 20),
+                  ...roles.map(
+                    (role) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: mainBgColor,
+
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(0.1),
+                          ),
+                          side: const BorderSide(
+                            color: primaryTextColor,
+                            width: 0.5, // border thickness
+                          ),
+                          minimumSize: const Size(double.infinity, 45),
+                        ),
+                        onPressed: () async {
+                          setState(() {
+                            selectedRole = role;
+                          });
+
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString('selectedRole', role);
+                          final permissions =
+                              RolePermissions.getPermissionsForRoles([role]);
+                          PermissionService().loadPermissions(permissions);
+
+                          Navigator.of(context).pop();
+                        },
+                        child: Text(
+                          role,
+                          style: TextStyle(color: primaryTextColor),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -785,7 +866,8 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel>
                                   ),
 
                                   Text(
-                                    roles.join(', '),
+                                    selectedRole ?? 'No role selected',
+
                                     style: TextStyle(fontSize: 12, color: grey),
                                   ),
                                 ],

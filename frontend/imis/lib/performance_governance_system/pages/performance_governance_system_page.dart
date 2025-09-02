@@ -572,7 +572,7 @@ class PerformanceGovernanceSystemPageState
         PerformanceGovernanceSystem
       >(
         endpoint:
-            "${ApiEndpoint().performancegovernancesystemUserId}/userId/$userId?userId=$userId",
+            "${ApiEndpoint().performancegovernancesystem}/userId/$userId?userId=$userId",
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
@@ -622,10 +622,11 @@ class PerformanceGovernanceSystemPageState
         return;
       }
 
-      final response = await Dio().get(
+      final response = await AuthenticatedRequest.get(
+        dio,
         "${ApiEndpoint().fetchPGSUserId}/${user.id}?pgsId=$pgsId",
 
-        options: Options(headers: {"Authorization": "Bearer $token"}),
+        // options: Options(headers: {"Authorization": "Bearer $token"}),
       );
       if (response.statusCode == 200 && mounted) {
         final data = response.data;
@@ -657,12 +658,7 @@ class PerformanceGovernanceSystemPageState
     setState(() => _isLoading = true);
 
     try {
-      final user = await AuthUtil.fetchLoggedUser();
-
-      setState(() => userId = user?.id ?? "UserId");
-
       final Map<String, dynamic> queryParams = {
-        'userId': userId,
         'Page': page.toString(),
         'PageSize': pageSize.toString(),
         if (selectedStartPeriod != null)
@@ -674,14 +670,15 @@ class PerformanceGovernanceSystemPageState
             'yyyy-MM-dd',
           ).format(DateTime.parse(selectedEndDate!)),
         if (_selectedOfficeId != null && _selectedOfficeId!.isNotEmpty)
-          'officeId': _selectedOfficeId,
+          'OfficeId': _selectedOfficeId,
       };
+
       final response = await AuthenticatedRequest.get(
         dio,
         ApiEndpoint().performancegovernancesystemFilter,
         queryParameters: queryParams,
       );
-
+      debugPrint('Query Params: $queryParams');
       if (response.statusCode == 200) {
         final data = response.data;
         final items =
@@ -700,10 +697,9 @@ class PerformanceGovernanceSystemPageState
         }
       }
     } on DioException catch (e) {
-      debugPrint("Dio error");
-      if (e.response != null) {}
+      debugPrint("Dio error: ${e.message}");
     } catch (e) {
-      debugPrint("Unexpected error");
+      debugPrint("Unexpected error: $e");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -1511,8 +1507,12 @@ class PerformanceGovernanceSystemPageState
                                               ),
 
                                               child: Text(
-                                                pgsgovernancesystem['startDate'],
-                                                style: TextStyle(
+                                                LongDateOnlyConverter().toJson(
+                                                  LongDateOnlyConverter().fromJson(
+                                                    pgsgovernancesystem['startDate'],
+                                                  ),
+                                                ),
+                                                style: const TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
                                               ),
@@ -1526,7 +1526,11 @@ class PerformanceGovernanceSystemPageState
                                               ),
 
                                               child: Text(
-                                                pgsgovernancesystem['endDate'],
+                                                LongDateOnlyConverter().toJson(
+                                                  LongDateOnlyConverter().fromJson(
+                                                    pgsgovernancesystem['endDate'],
+                                                  ),
+                                                ),
                                                 style: TextStyle(
                                                   fontWeight: FontWeight.normal,
                                                 ),
@@ -1560,23 +1564,6 @@ class PerformanceGovernanceSystemPageState
                                                   IconButton(
                                                     icon: Icon(Icons.edit),
                                                     onPressed: () async {
-                                                      // final id =
-                                                      //     pgsgovernancesystem['id'];
-                                                      // if (id != null) {
-                                                      //   setState(() {
-                                                      //     pgsIdHistory = id;
-                                                      //   });
-                                                      // } else {
-                                                      //   ScaffoldMessenger.of(
-                                                      //     context,
-                                                      //   ).showSnackBar(
-                                                      //     SnackBar(
-                                                      //       content: Text(
-                                                      //         'Invalid PGS ID',
-                                                      //       ),
-                                                      //     ),
-                                                      //   );
-                                                      // }
                                                       await AuthUtil.saveSelectedOfficeId(
                                                         pgsgovernancesystem['officeid']
                                                             .toString(),
@@ -2429,6 +2416,7 @@ class PerformanceGovernanceSystemPageState
                                     Column(
                                       children: [
                                         SizedBox(height: 20),
+
                                         Table(
                                           border: TableBorder.all(
                                             color: const Color.fromARGB(
@@ -2441,16 +2429,15 @@ class PerformanceGovernanceSystemPageState
                                           ),
                                           columnWidths: const {
                                             0: FlexColumnWidth(1.5),
-                                            1: FlexColumnWidth(1.0),
-                                            2: FlexColumnWidth(3.0),
-                                            3: FlexColumnWidth(1.7),
+                                            1: FlexColumnWidth(0.8),
+                                            2: FlexColumnWidth(1.9),
+                                            3: FlexColumnWidth(3.1),
                                           },
                                           children: [
                                             _PgsDeliverableHeader(
                                               officename:
                                                   officename ?? officeDisplay,
                                             ),
-                                            // _pgsBuildTableSubheader(),
                                           ],
                                         ),
                                         Table(
