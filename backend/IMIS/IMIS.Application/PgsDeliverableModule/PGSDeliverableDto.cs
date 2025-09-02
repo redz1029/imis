@@ -49,6 +49,8 @@ namespace IMIS.Application.PgsModule
                 Id = s.Id,
                 PgsDeliverableId = s.PgsDeliverableId,
                 Date = s.Date,
+                Status = s.Status,
+                Remarks = s.Remarks,
                 Score = s.Score,              
             }).ToList();
 
