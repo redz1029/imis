@@ -11,7 +11,9 @@ import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/services/home_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../performance_governance_system/enum/pgs_status.dart';
 
@@ -31,11 +33,11 @@ class HomePageState extends State<HomePage> {
 
   List<KeyResultArea> kraList = [];
   List<KeyResultArea> filteredKra = [];
+  List<String> roles = [];
 
   List<User> userList = [];
   List<User> filteredListUser = [];
   int totalUsers = 0;
-
   List<String> office = [];
 
   List<Office> officeList = [];
@@ -58,7 +60,13 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadUserName();
+
+    // AuthUtil.fetchRoles().then((roles) {
+    //   if (roles != null) {
+    //     PermissionService().loadPermissions(roles);
+    //   }
+    // });
+    loadUserNames();
     _fetchAllData();
     imageTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
       if (mounted) {
@@ -117,13 +125,16 @@ class HomePageState extends State<HomePage> {
     }
   }
 
-  Future<void> _loadUserName() async {
+  Future<void> loadUserNames() async {
     UserRegistration? user = await AuthUtil.fetchLoggedUser();
     List<String>? officeName = await AuthUtil.fetchOfficeNames();
-
+    List<String>? roleList = await AuthUtil.fetchRoles();
     if (user != null) {
+      RolePermissions.getPermissionsForRoles(roleList ?? []);
+
       setState(() {
         office = officeName ?? [];
+        roles = roleList ?? [];
       });
     }
   }
