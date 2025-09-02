@@ -60,12 +60,6 @@ class HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
-    // AuthUtil.fetchRoles().then((roles) {
-    //   if (roles != null) {
-    //     PermissionService().loadPermissions(roles);
-    //   }
-    // });
     loadUserNames();
     _fetchAllData();
     imageTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
