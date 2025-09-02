@@ -25,7 +25,6 @@ class ApiEndpoint {
   late String updateUser;
   late String auditSchedule;
   late String signatoryTemplate;
-  late String performancegovernancesystemUserId;
   late String generatePdf;
   late String refresh;
   late String filterBy;
@@ -61,7 +60,6 @@ class ApiEndpoint {
     updateUser = '$baseUrl/updateUser';
     auditSchedule = '$baseUrl/auditSchedule';
     signatoryTemplate = '$baseUrl/pgsSignatoryTemplate';
-    performancegovernancesystemUserId = '$baseUrl/pgs';
     pgsSaveAsDraft = "$baseUrl/pgs/draft";
     generatePdf = '$baseUrl/pgs/list-report/pdf';
     refresh = '$baseUrl/refresh';
