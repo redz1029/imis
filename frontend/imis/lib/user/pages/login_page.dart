@@ -149,9 +149,12 @@ class LoginPageState extends State<LoginPage> {
         body: Center(
           child:
               isSmallScreen
-                  ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [Logo(), buildLoginForm()],
+                  ? SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [Logo(), buildLoginForm()],
+                    ),
                   )
                   : Container(
                     padding: const EdgeInsets.all(32.0),
