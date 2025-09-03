@@ -14,6 +14,8 @@ PgsDeliverableScoreHistory _$PgsDeliverableScoreHistoryFromJson(
   (json['pgsDeliverableId'] as num).toInt(),
   DateTime.parse(json['date'] as String),
   (json['score'] as num).toInt(),
+  PgsDeliverableScoreHistory._statusFromJson((json['status'] as num).toInt()),
+  remarks: json['remarks'] as String?,
   rowVersion: json['rowVersion'] as String?,
 );
 
@@ -25,5 +27,7 @@ Map<String, dynamic> _$PgsDeliverableScoreHistoryToJson(
   'rowVersion': instance.rowVersion,
   'pgsDeliverableId': instance.pgsDeliverableId,
   'date': instance.date.toIso8601String(),
+  'status': PgsDeliverableScoreHistory._statusToJson(instance.status),
+  'remarks': instance.remarks,
   'score': instance.score,
 };
