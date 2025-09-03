@@ -157,7 +157,10 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 'isDirect': item['isDirect'],
                 'deliverableName': item['deliverable'],
                 'byWhen': formattedByWhen,
-                'status': item['status'],
+                'status':
+                    item['status'] is PgsStatus
+                        ? (item['status'] as PgsStatus).name
+                        : item['status'].toString(),
                 'remarks': item['remarks'],
                 'score': item['score'],
               };
@@ -233,7 +236,9 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       final deliverable = entry.value;
 
       final score = percentageValues[index] ?? deliverable['score'] ?? 0;
-      final status = selectedStatus[index]?.name ?? deliverable['status'] ?? '';
+
+      final status = selectedStatus[index]?.name ?? deliverable['status'] ?? 0;
+
       final remarks =
           remarkControllers[index]?.text ?? deliverable['remarks'] ?? '';
 
@@ -291,10 +296,10 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -313,7 +318,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
               return {'id': item['id'] as int, 'name': item['name'].toString()};
             }).toList();
       } else {
-        debugPrint("Failed to load data: ${response.statusCode}");
+        debugPrint("Failed to load data");
       }
     } catch (e) {
       debugPrint("Error fetching data: $e");
@@ -336,30 +341,23 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
           setState(() {
             officeList = data.map((office) => office.toJson()).toList();
             filteredListOffice = List.from(officeList);
-
-            debugPrint("Auto-selected office: $_selectedOfficeId");
           });
         }
       } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
+        debugPrint("Unexpected response format");
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
   }
 
-  void saveStatusToDb(int index, PgsStatus status) {
-    int statusIndex = status.index;
-
-    debugPrint('Saving status for index $index: $statusIndex');
-  }
+  void saveStatusToDb(int index, PgsStatus status) {}
 
   PgsStatus dynamicToPgsStatus(dynamic value) {
     if (value == null) return PgsStatus.notStarted;
 
-    // Handle integer index
     if (value is int) {
       if (value >= 0 && value < PgsStatus.values.length) {
         return PgsStatus.values[value];
@@ -373,7 +371,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
           orElse: () => PgsStatus.notStarted,
         );
       } catch (e) {
-        debugPrint("Failed to parse status string: $value");
+        debugPrint("Failed to parse status string");
       }
     }
 
@@ -452,9 +450,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       builder: (BuildContext context) {
         return AlertDialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              10.0,
-            ), // Set to 0 for sharp edges
+            borderRadius: BorderRadius.circular(10.0),
           ),
           backgroundColor: mainBgColor,
 
@@ -536,7 +532,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
         ...items.map((item) {
           final date = item.date;
-          final datePart = DateFormat('MMM, dd, yyyy').format(date);
+          final datePart = DateFormat('MMM. dd, yyyy').format(date);
           final timePart = DateFormat('hh:mm a').format(date);
 
           return Container(
@@ -568,13 +564,18 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                 Expanded(
                   flex: 2,
                   child: Text(
-                    'Not Started',
+                    item.status.name,
                     style: const TextStyle(fontSize: 14),
                   ),
                 ),
                 Expanded(
                   flex: 3,
-                  child: Text('Remarks', style: const TextStyle(fontSize: 14)),
+                  child: Text(
+                    (item.remarks == null || item.remarks!.trim().isEmpty)
+                        ? 'No Remarks'
+                        : item.remarks!,
+                    style: const TextStyle(fontSize: 14),
+                  ),
                 ),
                 Expanded(
                   flex: 1,
