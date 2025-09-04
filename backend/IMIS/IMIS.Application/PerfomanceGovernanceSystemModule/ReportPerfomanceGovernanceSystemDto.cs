@@ -47,10 +47,14 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
         ? PgsSignatories[3].PgsSignatoryTemplate!.SignatoryLabel
         : null;
 
+        public string? PgsSignatoryLabel5 =>
+        PgsSignatories != null && PgsSignatories.Count >= 5 && PgsSignatories[4].PgsSignatoryTemplate != null // -- Map Signatories: SignatoryLabel
+        ? PgsSignatories[4].PgsSignatoryTemplate!.SignatoryLabel
+        : null;
+
         public string? PgsSignatoryId1 =>
             PgsSignatories != null && PgsSignatories.Count >= 1 && PgsSignatories[0].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-             ? PgsSignatories[0].User!.Prefix + " " +
-            PgsSignatories[0].User!.FirstName + " " +
+             ? PgsSignatories[0].User!.FirstName + " " +
             PgsSignatories[0].User!.MiddleName + " " +
             PgsSignatories[0].User!.LastName +
             (PgsSignatories[0].User!.Suffix != null ? ", " + PgsSignatories[0].User!.Suffix : "")
@@ -64,8 +68,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
 
         public string? PgsSignatoryId2 =>
             PgsSignatories != null && PgsSignatories.Count >= 2 && PgsSignatories[1].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-             ? PgsSignatories[1].User!.Prefix + " " +
-            PgsSignatories[1].User!.FirstName + " " +
+             ? PgsSignatories[1].User!.FirstName + " " +
             PgsSignatories[1].User!.MiddleName + " " +
             PgsSignatories[1].User!.LastName +
             (PgsSignatories[1].User!.Suffix != null ? ", " + PgsSignatories[1].User!.Suffix : "")
@@ -79,8 +82,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
 
         public string? PgsSignatoryId3 =>
             PgsSignatories != null && PgsSignatories.Count >= 3 && PgsSignatories[2].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-            ? PgsSignatories[2].User!.Prefix + " " +
-            PgsSignatories[2].User!.FirstName + " " +
+            ? PgsSignatories[2].User!.FirstName + " " +
             PgsSignatories[2].User!.MiddleName + " " +
             PgsSignatories[2].User!.LastName +
             (PgsSignatories[2].User!.Suffix != null ? ", " + PgsSignatories[2].User!.Suffix : "")
@@ -94,8 +96,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
 
         public string? PgsSignatoryId4 =>
            PgsSignatories != null && PgsSignatories.Count >= 4 && PgsSignatories[3].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-           ? PgsSignatories[3].User!.Prefix + " " +
-           PgsSignatories[3].User!.FirstName + " " +
+           ? PgsSignatories[3].User!.FirstName + " " +
            PgsSignatories[3].User!.MiddleName + " " +
            PgsSignatories[3].User!.LastName +
            (PgsSignatories[3].User!.Suffix != null ? ", " + PgsSignatories[3].User!.Suffix : "")
@@ -105,6 +106,20 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
             PgsSignatories != null && PgsSignatories.Count >= 4 && PgsSignatories[3].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
             ?
             (PgsSignatories[3].User!.Position)
+            : null;
+
+        public string? PgsSignatoryId5 =>
+          PgsSignatories != null && PgsSignatories.Count >= 5 && PgsSignatories[4].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
+          ? PgsSignatories[4].User!.FirstName + " " +
+          PgsSignatories[4].User!.MiddleName + " " +
+          PgsSignatories[4].User!.LastName +
+          (PgsSignatories[4].User!.Suffix != null ? ", " + PgsSignatories[4].User!.Suffix : "")
+          : null;
+
+        public string? PgsSignatoryPosition5 =>
+            PgsSignatories != null && PgsSignatories.Count >= 5 && PgsSignatories[4].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
+            ?
+            (PgsSignatories[4].User!.Position)
             : null;
 
         public ReportPerfomanceGovernanceSystemDto() { }
