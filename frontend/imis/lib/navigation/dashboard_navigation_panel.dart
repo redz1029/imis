@@ -247,6 +247,64 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     );
   }
 
+  void _showRoleSwitchDialog(BuildContext context) {
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black.withValues(alpha: 0.1),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Center(
+            child: AlertDialog(
+              backgroundColor: mainBgColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: const Text("Switch Role"),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ...roles.map(
+                    (role) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 5),
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: mainBgColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(0.1),
+                          ),
+                          side: const BorderSide(
+                            color: primaryTextColor,
+                            width: 0.5,
+                          ),
+                          minimumSize: const Size(double.infinity, 45),
+                        ),
+                        onPressed: () async {
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString('selectedRole', role);
+                          final permissions =
+                              RolePermissions.getPermissionsForRoles([role]);
+                          PermissionService().loadPermissions(permissions);
+                          setState(() => selectedRole = role);
+                          Navigator.of(context).pop();
+                        },
+                        child: Text(
+                          role,
+                          style: TextStyle(color: primaryTextColor),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   void _viewProfile(BuildContext context) async {
     File? image;
     final picker = ImagePicker();
@@ -786,6 +844,16 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
           ),
         ),
         PopupMenuItem<String>(
+          value: "Switch Role",
+          child: Row(
+            children: const [
+              Icon(Icons.switch_account),
+              SizedBox(width: 30),
+              Text("Switch Role"),
+            ],
+          ),
+        ),
+        PopupMenuItem<String>(
           value: "change_password",
           child: Row(
             children: const [
@@ -810,6 +878,8 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
       if (value == "Profile") {
         if (!context.mounted) return;
         _viewProfile(context);
+      } else if (value == "Switch Role") {
+        _showRoleSwitchDialog(context);
       } else if (value == "change_password") {
         if (!context.mounted) return;
         Navigator.of(context).pushReplacement(
