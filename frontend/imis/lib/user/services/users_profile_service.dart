@@ -37,6 +37,25 @@ class UsersProfileService {
     }
   }
 
+  Future<bool> checkUsernameExists(String username) async {
+    try {
+      await dio.get(
+        ApiEndpoint().register,
+        queryParameters: {"username": username},
+      );
+
+      return false;
+    } on DioException catch (e) {
+      if (e.response != null && e.response?.statusCode == 400) {
+        final errors = e.response?.data["errors"];
+        if (errors != null && errors["DuplicateUserName"] != null) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
   Future<void> updateUser(UserRegistration userProfile) async {
     var url = ApiEndpoint().updateUser;
     final Map<String, dynamic> requestData = userProfile.toJson();
