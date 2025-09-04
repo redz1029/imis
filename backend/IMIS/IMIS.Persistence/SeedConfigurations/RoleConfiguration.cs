@@ -21,7 +21,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                 {
                     Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
                     Name = new PgsManagerRole().Name,
-                    NormalizedName = "PGS MANAGER",
+                    NormalizedName = "PGS CORE TEAM",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                    
                 },
@@ -38,7 +38,15 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                      Name = new PgsAuditorRole().Name,
                      NormalizedName = "PGS AUDITOR",
                      ConcurrencyStamp = Guid.NewGuid().ToString(),
+                 },
+                 new IdentityRole
+                 {
+                     Id = "95f224dd-3973-42ef-b350-7af30f67c2ca",
+                     Name = new PgsServiceHead().Name,
+                     NormalizedName = "PGS SERVICE HEAD",
+                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                  }
+
         );
     }
 }
