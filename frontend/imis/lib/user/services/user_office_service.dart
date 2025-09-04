@@ -43,8 +43,8 @@ class UserOfficeService {
     }
   }
 
-  Future<void> deleteUserOffice(String teamId) async {
-    final url = '${ApiEndpoint().team}/$teamId';
+  Future<void> deleteUserOffice(String userOffice) async {
+    final url = '${ApiEndpoint().team}/$userOffice';
     await AuthenticatedRequest.delete(dio, url);
   }
 }

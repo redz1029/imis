@@ -298,7 +298,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       } else {
         debugPrint("Unexpected response format");
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
@@ -346,7 +346,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       } else {
         debugPrint("Unexpected response format");
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");

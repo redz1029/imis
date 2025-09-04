@@ -72,11 +72,6 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     UserRegistration? user = await AuthUtil.fetchLoggedUser();
     List<String>? roleList = await AuthUtil.fetchRoles();
     if (user != null) {
-      final permissions = RolePermissions.getPermissionsForRoles(
-        roleList ?? [],
-      );
-
-      PermissionService().loadPermissions(permissions);
       setState(() {
         firstName = user.firstName ?? "firstName";
         middleName = user.middleName ?? "middleName";
@@ -109,10 +104,21 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
         selectedRole = savedRole;
       });
     } else {
-      // No role saved, show dialog
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showWelcomeDialog();
-      });
+      if (roles.length >= 2) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _showSwitchRole();
+        });
+      } else {
+        if (roles.isNotEmpty) {
+          setState(() {
+            selectedRole = roles.first;
+          });
+          final permissions = RolePermissions.getPermissionsForRoles([
+            roles.first,
+          ]);
+          PermissionService().loadPermissions(permissions);
+        }
+      }
     }
   }
 
@@ -170,7 +176,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     );
   }
 
-  void _showWelcomeDialog() {
+  void _showSwitchRole() {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
@@ -550,7 +556,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
               children: [
                 Image.asset('assets/CRMC.png', width: 100),
                 Text(
-                  'IMIS',
+                  'CPeMS',
                   style: TextStyle(color: primaryTextColor, fontSize: 18),
                 ),
               ],

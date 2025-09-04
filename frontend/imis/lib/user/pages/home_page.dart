@@ -11,9 +11,7 @@ import 'package:imis/user/models/user.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/services/home_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/permission_service.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../performance_governance_system/enum/pgs_status.dart';
 
@@ -122,13 +120,10 @@ class HomePageState extends State<HomePage> {
   Future<void> loadUserNames() async {
     UserRegistration? user = await AuthUtil.fetchLoggedUser();
     List<String>? officeName = await AuthUtil.fetchOfficeNames();
-    List<String>? roleList = await AuthUtil.fetchRoles();
-    if (user != null) {
-      RolePermissions.getPermissionsForRoles(roleList ?? []);
 
+    if (user != null) {
       setState(() {
         office = officeName ?? [];
-        roles = roleList ?? [];
       });
     }
   }
