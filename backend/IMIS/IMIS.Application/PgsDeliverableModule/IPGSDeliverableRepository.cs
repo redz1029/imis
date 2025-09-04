@@ -9,7 +9,18 @@ namespace IMIS.Application.PgsModule
     {     
         Task<EntityPageList<PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken); 
         Task<List<PgsDeliverable>?> GetAll(CancellationToken cancellationToken);
-        Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken);
+        //Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken);
+        //Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(
+        //PgsDeliverableMonitorFilter filter,
+        //string? userId,
+        //CancellationToken cancellationToken);
+
+        Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(
+        PgsDeliverableMonitorFilter filter,
+        string userId,
+        List<string> userRoles,
+        CancellationToken cancellationToken);
+
     }
 }
 

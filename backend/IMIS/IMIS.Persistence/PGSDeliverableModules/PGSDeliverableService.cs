@@ -1,10 +1,14 @@
-﻿using Base.Pagination;
+﻿using Base.Auths;
+using Base.Auths.Roles;
+using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,14 +19,16 @@ namespace IMIS.Persistence.PGSModules
         private readonly IPGSDeliverableRepository _repository;
         private readonly IKeyResultAreaRepository _kraRepository;
         private readonly IPgsDeliverableScoreHistoryRepository _scoreHistoryRepository;
+        private readonly UserManager<User> _userManager;    
 
         private const string PgsDeliverableScoreHistoryTag = "PgsDeliverableScoreHistory";
        
-        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, IPgsDeliverableScoreHistoryRepository scoreHistoryRepository)
+        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, IPgsDeliverableScoreHistoryRepository scoreHistoryRepository, UserManager<User> userManager)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _kraRepository = kraRepository ?? throw new ArgumentNullException(nameof(kraRepository));
             _scoreHistoryRepository = scoreHistoryRepository ?? throw new ArgumentNullException(nameof(scoreHistoryRepository));
+            _userManager = userManager;
 
         }      
         public async Task<DtoPageList<PGSDeliverableDto, PgsDeliverable, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
@@ -115,15 +121,38 @@ namespace IMIS.Persistence.PGSModules
                     Remarks = deliverable.Kra.Remarks ?? string.Empty
                 } : null
             };
-        }      
-        public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
-        {
-            var filteredDeliverables = await _repository.GetFilteredAsync(filter, cancellationToken).ConfigureAwait(false);
-            return PgsDeliverableMonitorPageList.Create(filteredDeliverables.Items, filter.Page, filter.PageSize, filteredDeliverables.TotalCount);
         }
 
-      
-         public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(
+        //public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
+        //{
+        //    var filteredDeliverables = await _repository.GetFilteredAsync(filter, cancellationToken).ConfigureAwait(false);
+        //    return PgsDeliverableMonitorPageList.Create(filteredDeliverables.Items, filter.Page, filter.PageSize, filteredDeliverables.TotalCount);
+        //}
+       
+        private async Task<User?> GetCurrentUserAsync()
+        {
+            var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
+            return await currentUserService!.GetCurrentUserAsync();
+        }
+    
+        public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(
+        PgsDeliverableMonitorFilter filter,
+        CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();        
+            var userRoles = await _userManager.GetRolesAsync(currentUser!); 
+
+            var filtered = await _repository.GetFilteredAsync(filter, currentUser!.Id, userRoles.ToList(), cancellationToken);
+
+            return PgsDeliverableMonitorPageList.Create(
+                filtered.Items,
+                filter.Page,
+                filter.PageSize,
+                filtered.TotalCount);
+        }
+
+
+        public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(
          PgsDeliverableMonitorPageList request,
          IOutputCacheStore cache,
          CancellationToken cancellationToken)

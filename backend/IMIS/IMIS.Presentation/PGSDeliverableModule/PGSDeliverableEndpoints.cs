@@ -17,6 +17,7 @@ namespace IMIS.Presentation.PGSModule
         private const string _pgsTag = "PGS Deliverable";
         public readonly PgsDeliverablePermission _pgsDeliverablePermission = new();
         public readonly PgsDeliverableAuditorPermission _pgsDeliverableAuditorPermission = new();
+        public readonly PgsDeliverableServiceHeadPermission _pgsDeliverableServiceHeadPermission = new();
         public PGSDeliverableEndpoints() : base("/deliverables")
         {
         }
@@ -98,12 +99,16 @@ namespace IMIS.Presentation.PGSModule
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.View))
+             PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.View, _pgsDeliverableServiceHeadPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-           
+
+
+
+
+
             app.MapPut("/filter/update", async ([FromBody] PgsDeliverableMonitorPageList request, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                var result = await service.UpdateDeliverablesAsync(request, cache, cancellationToken);               
+                var result = await service.UpdateDeliverablesAsync(request, cache, cancellationToken);
                 await cache.EvictByTagAsync(_pgsTag, cancellationToken);
 
                 return Results.Ok(result);
@@ -113,7 +118,7 @@ namespace IMIS.Presentation.PGSModule
             PermissionClaimType.Claim,
             _pgsDeliverableAuditorPermission.Score,
             _pgsDeliverableAuditorPermission.View));
-                
+
         }
     }
 }
