@@ -11,6 +11,7 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/string_extension.dart';
 import 'package:imis/validator/validator.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class UserProfilePage extends StatefulWidget {
   const UserProfilePage({super.key});
@@ -41,8 +42,6 @@ class UserProfileState extends State<UserProfilePage> {
   final FocusNode focusEmail = FocusNode();
   final FocusNode focusPrefix = FocusNode();
   final FocusNode focusSuffix = FocusNode();
-  final FocusNode focusPassword = FocusNode();
-  final FocusNode focusConfirmPassword = FocusNode();
   final FocusNode focusFullname = FocusNode();
   List<UserRegistration> userProfileList = [];
   List<UserRegistration> filteredList = [];
@@ -89,6 +88,25 @@ class UserProfileState extends State<UserProfilePage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<bool> isUsernameExists(String username, [String? userId]) async {
+    try {
+      final userList = await _userProfileService.getUsers(
+        page: 1,
+        pageSize: 100,
+        searchQuery: username,
+      );
+      return userList.items.any((user) {
+        final hasSameUsername = user.userName == username;
+        final isNotCurrent = userId == null || user.id != userId;
+
+        return hasSameUsername && isNotCurrent;
+      });
+    } catch (e) {
+      debugPrint('Error checking username exists: $e');
+      return false;
     }
   }
 
@@ -185,10 +203,7 @@ class UserProfileState extends State<UserProfilePage> {
                 ),
                 child: Text(
                   id == null ? 'Change Password' : 'Change Password',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                  style: TextStyle(color: Colors.white, fontSize: 18),
                 ),
               ),
               content: Form(
@@ -346,6 +361,7 @@ class UserProfileState extends State<UserProfilePage> {
                       }
                     }
                   },
+
                   child: Text(
                     id == null ? 'Save' : 'Update',
                     style: TextStyle(color: Colors.white),
@@ -387,373 +403,433 @@ class UserProfileState extends State<UserProfilePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            decoration: BoxDecoration(
-              color: primaryLightColor,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: mainBgColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
               ),
-            ),
-            child: Text(
-              id == null ? 'Create User' : ' Edit User',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.white,
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: primaryLightColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  id == null ? 'Create User' : ' Edit User',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
               ),
-            ),
-          ),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 450,
-                  height: 65,
-                  child: TextFormField(
-                    controller: userNameController,
-                    decoration: InputDecoration(
-                      labelText: 'User Name',
-                      focusColor: primaryColor,
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please fill out this field';
-                      }
-                      return null;
-                    },
-                  ),
+              content: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.8,
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
                 ),
-                SizedBox(
-                  width: 450,
-                  height: 65,
-                  child: TextFormField(
-                    controller: emailController,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      focusColor: primaryColor,
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                    validator: FormValidator.validateEmail,
-                  ),
-                ),
-                if (id == null)
-                  SizedBox(
-                    width: 450,
-                    height: 65,
-                    child: TextFormField(
-                      controller: passwordController,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        focusColor: primaryColor,
-                        floatingLabelStyle: TextStyle(color: primaryColor),
-                        border: OutlineInputBorder(),
-                        focusedBorder: const OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return validatePassword(value);
-                        }
-                        if (value.length < 6) {
-                          return validatePassword(value);
-                        }
-                        if (!RegExp(r'[A-Z]').hasMatch(value)) {
-                          return validatePassword(value);
-                        }
-                        if (!RegExp(
-                          r'[!@#$%^&*(),.?":{}|<>]',
-                        ).hasMatch(value)) {
-                          return validatePassword(value);
-                        }
-                        return null;
-                      },
-                      obscureText: true,
-                    ),
-                  ),
-
-                SizedBox(
-                  width: 450,
-                  height: 65,
-                  child: DropdownButtonFormField<String>(
-                    value:
-                        prefixController.text.isNotEmpty
-                            ? prefixController.text
-                            : null,
-                    onChanged: (value) {
-                      prefixController.text = value ?? '';
-                    },
-                    items: [
-                      DropdownMenuItem(value: '', child: Text('')),
-                      ...[
-                        'Mr.',
-                        'Ms.',
-                        'Mrs.',
-                        'Dr.',
-                        'Prof.',
-                        'Engr.',
-                        'Atty.',
-                        'Gen.',
-                      ].map(
-                        (prefix) => DropdownMenuItem(
-                          value: prefix,
-                          child: Text(prefix),
-                        ),
-                      ),
-                    ],
-                    decoration: InputDecoration(
-                      labelText: 'Prefix',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-
-                SizedBox(
-                  width: 450,
-                  height: 65,
-                  child: TextFormField(
-                    controller: firstNameController,
-                    decoration: InputDecoration(
-                      labelText: 'First Name',
-                      focusColor: primaryColor,
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please fill out this field';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                SizedBox(
-                  width: 450,
-                  height: 65,
-                  child: TextFormField(
-                    controller: middleNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Middle Name',
-                      focusColor: primaryColor,
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please fill out this field';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-                SizedBox(
-                  width: 450,
-                  height: 65,
-                  child: TextFormField(
-                    controller: lastNameController,
-                    decoration: InputDecoration(
-                      labelText: 'Last Name',
-                      focusColor: primaryColor,
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please fill out this field';
-                      }
-                      return null;
-                    },
-                  ),
-                ),
-
-                SizedBox(
-                  width: 450,
-                  height: 65,
-                  child: TextFormField(
-                    controller: suffixController,
-                    decoration: InputDecoration(
-                      labelText: 'Suffix',
-                      focusColor: primaryColor,
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(
-                  width: 450,
-                  child: DropdownSearch<String>(
-                    popupProps: PopupProps.menu(
-                      showSearchBox: true,
-                      searchFieldProps: TextFieldProps(
-                        decoration: InputDecoration(
-                          hintText: 'Search Position...',
-                          filled: true,
-                          fillColor: mainBgColor,
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
+                child: SingleChildScrollView(
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: DropdownButtonFormField<String>(
+                            value:
+                                prefixController.text.isNotEmpty
+                                    ? prefixController.text
+                                    : null,
+                            onChanged: (value) {
+                              prefixController.text = value ?? '';
+                            },
+                            items: [
+                              DropdownMenuItem(value: '', child: Text('')),
+                              ...[
+                                'Mr.',
+                                'Ms.',
+                                'Mrs.',
+                                'Dr.',
+                                'Prof.',
+                                'Engr.',
+                                'Atty.',
+                                'Gen.',
+                              ].map(
+                                (prefix) => DropdownMenuItem(
+                                  value: prefix,
+                                  child: Text(prefix),
+                                ),
+                              ),
+                            ],
+                            decoration: InputDecoration(
+                              labelText: 'Prefix',
+                              border: OutlineInputBorder(),
+                            ),
                           ),
                         ),
-                      ),
+
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: TextFormField(
+                            controller: firstNameController,
+                            decoration: InputDecoration(
+                              labelText: 'First Name',
+                              focusColor: primaryColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor,
+                              ),
+                              border: OutlineInputBorder(),
+                              focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
+
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please fill out this field';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: TextFormField(
+                            controller: middleNameController,
+                            decoration: InputDecoration(
+                              labelText: 'Middle Name',
+                              focusColor: primaryColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor,
+                              ),
+                              border: OutlineInputBorder(),
+                              focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please fill out this field';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: TextFormField(
+                            controller: lastNameController,
+                            decoration: InputDecoration(
+                              labelText: 'Last Name',
+                              focusColor: primaryColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor,
+                              ),
+                              border: OutlineInputBorder(),
+                              focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please fill out this field';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: TextFormField(
+                            controller: suffixController,
+                            decoration: InputDecoration(
+                              labelText: 'Suffix',
+                              focusColor: primaryColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor,
+                              ),
+                              border: OutlineInputBorder(),
+                              focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: TextFormField(
+                            controller: userNameController,
+                            decoration: InputDecoration(
+                              labelText: 'User Name',
+                              focusColor: primaryColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor,
+                              ),
+                              border: OutlineInputBorder(),
+                              focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please fill out this field';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        SizedBox(
+                          width: 450,
+                          height: 65,
+                          child: TextFormField(
+                            controller: emailController,
+                            decoration: InputDecoration(
+                              labelText: 'Email',
+                              focusColor: primaryColor,
+                              floatingLabelStyle: TextStyle(
+                                color: primaryColor,
+                              ),
+                              border: OutlineInputBorder(),
+                              focusedBorder: const OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
+                            validator: FormValidator.validateEmail,
+                          ),
+                        ),
+
+                        SizedBox(
+                          width: 450,
+                          child: DropdownSearch<String>(
+                            popupProps: PopupProps.menu(
+                              showSearchBox: true,
+                              searchFieldProps: TextFieldProps(
+                                decoration: InputDecoration(
+                                  hintText: 'Search Position...',
+                                  filled: true,
+                                  fillColor: mainBgColor,
+                                  prefixIcon: Icon(Icons.search),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: primaryColor),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            items: JobPositions.positions,
+                            selectedItem: selectedPosition,
+                            onChanged: (String? value) {
+                              setState(() {
+                                selectedPosition = value;
+                              });
+                            },
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Please select a position';
+                              }
+                              return null;
+                            },
+                            dropdownDecoratorProps: DropDownDecoratorProps(
+                              dropdownSearchDecoration: InputDecoration(
+                                labelText: 'Position',
+                                filled: true,
+                                fillColor: mainBgColor,
+                                floatingLabelStyle: TextStyle(
+                                  color: primaryColor,
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide: BorderSide(color: primaryColor),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        gap14px,
+                        if (id == null)
+                          SizedBox(
+                            width: 450,
+
+                            child: TextFormField(
+                              focusNode: focusNewPassword,
+                              controller: passwordController,
+                              onTap: () {
+                                FocusScope.of(
+                                  context,
+                                ).requestFocus(focusNewPassword);
+                              },
+                              obscureText: !_isNewPassVisible,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                focusColor: primaryColor,
+                                floatingLabelStyle: TextStyle(
+                                  color: primaryColor,
+                                ),
+                                border: OutlineInputBorder(),
+                                focusedBorder: const OutlineInputBorder(
+                                  borderSide: BorderSide(color: primaryColor),
+                                ),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _isNewPassVisible
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color:
+                                        focusNewPassword.hasFocus
+                                            ? primaryColor
+                                            : grey,
+                                  ),
+                                  onPressed: () {
+                                    setDialogState(() {
+                                      _isNewPassVisible = !_isNewPassVisible;
+                                    });
+                                  },
+                                ),
+                              ),
+
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return validatePassword(value);
+                                }
+                                if (value.length < 6) {
+                                  return validatePassword(value);
+                                }
+                                if (!RegExp(r'[A-Z]').hasMatch(value)) {
+                                  return validatePassword(value);
+                                }
+                                if (!RegExp(
+                                  r'[!@#$%^&*(),.?":{}|<>]',
+                                ).hasMatch(value)) {
+                                  return validatePassword(value);
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        gap48px,
+                      ],
                     ),
-                    items: JobPositions.positions,
-                    selectedItem: selectedPosition,
-                    onChanged: (String? value) {
-                      setState(() {
-                        selectedPosition = value;
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please select a position';
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      bool? confirmAction = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text(
+                              id == null ? "Confirm Save" : "Confirm Update",
+                            ),
+                            content: Text(
+                              id == null
+                                  ? "Are you sure you want to save this record?"
+                                  : "Are you sure you want to update this record?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(
+                                  "No",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text(
+                                  "Yes",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (confirmAction != true) {
+                        return;
                       }
-                      return null;
-                    },
-                    dropdownDecoratorProps: DropDownDecoratorProps(
-                      dropdownSearchDecoration: InputDecoration(
-                        labelText: 'Position',
-                        filled: true,
-                        fillColor: mainBgColor,
-                        floatingLabelStyle: TextStyle(color: primaryColor),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
-                        ),
-                      ),
-                    ),
+                      final username = userNameController.text;
+                      final exists = await isUsernameExists(username, id);
+                      if (exists) {
+                        MotionToast.warning(
+                          description: const Text('Username already exists'),
+                          toastAlignment: Alignment.topCenter,
+                          // ignore: use_build_context_synchronously
+                        ).show(context);
+                        return;
+                      }
+                      final userProfile = UserRegistration(
+                        id,
+                        userNameController.text,
+                        emailController.text,
+                        passwordController.text,
+                        firstNameController.text,
+                        middleNameController.text,
+                        lastNameController.text,
+                        prefixController.text,
+                        suffixController.text,
+                        selectedPosition ?? '',
+                        '',
+                        '',
+                      );
+                      if (id == null) {
+                        await _userProfileService.createUser(userProfile);
+                        setState(() {
+                          fetchUserProfile();
+                        });
+                      } else {
+                        await _userProfileService.updateUser(userProfile);
+                        setState(() {
+                          fetchUserProfile();
+                        });
+                      }
+                      // ignore: use_build_context_synchronously
+                      Navigator.pop(context);
+                    }
+                  },
+
+                  child: Text(
+                    id == null ? 'Save' : 'Update',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  bool? confirmAction = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text(
-                          id == null ? "Confirm Save" : "Confirm Update",
-                        ),
-                        content: Text(
-                          id == null
-                              ? "Are you sure you want to save this record?"
-                              : "Are you sure you want to update this record?",
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(
-                              "No",
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text(
-                              "Yes",
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-
-                  if (confirmAction == true) {
-                    final userProfile = UserRegistration(
-                      id,
-                      userNameController.text,
-                      emailController.text,
-                      passwordController.text,
-                      firstNameController.text,
-                      middleNameController.text,
-                      lastNameController.text,
-                      prefixController.text,
-                      suffixController.text,
-                      selectedPosition ?? '',
-                      '',
-                      '',
-                    );
-
-                    if (id == null) {
-                      await _userProfileService.createUser(userProfile);
-                      setState(() {
-                        fetchUserProfile();
-                      });
-                    } else {
-                      await _userProfileService.updateUser(userProfile);
-                      setState(() {
-                        fetchUserProfile();
-                      });
-                    }
-                    // ignore: use_build_context_synchronously
-                    Navigator.pop(context);
-                  }
-                }
-              },
-              child: Text(
-                id == null ? 'Save' : 'Update',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
+            );
+          },
         );
       },
     );
