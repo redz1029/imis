@@ -467,11 +467,16 @@ class PerformanceGovernanceSystemPageState
                     separatorBuilder: (_, __) => const SizedBox(height: 6),
                     itemBuilder: (context, index) {
                       return Card(
-                        elevation: 2,
                         color: mainBgColor,
+
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(0.1),
+                          side: const BorderSide(
+                            color: primaryTextColor,
+                            width: 0.5,
+                          ),
                         ),
+
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
