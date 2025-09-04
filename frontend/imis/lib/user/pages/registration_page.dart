@@ -678,7 +678,7 @@ class _Logo extends StatelessWidget {
             height: isSmallScreen ? 100 : 300,
           ),
           const Text(
-            'IMIS',
+            'CPeMS',
             style: TextStyle(fontSize: 32, color: primaryColor),
           ),
         ],
