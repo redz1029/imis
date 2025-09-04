@@ -47,7 +47,14 @@ namespace IMIS.Infrastructure.Auths
                 new PgsPeriodPermission(), 
                 new PerformanceGovernanceSystemPermission(), 
                 new PgsSignatoryTemplatePermission());
-
+            await PermissionSeeder.SeedPermissionForRole<PgsServiceHead, IdentityRole>(_roleManager,
+                new PerformanceGovernanceSystemPermission(),
+                new PgsDeliverableScoreHistoryPermission(),
+                new KeyResultAreaPermission(),
+                new PgsPeriodPermission(),
+                new OfficePermission());             
+                
+            
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
                  _roleManager, _userManager, "castillano.mrb", "rama.emg");
