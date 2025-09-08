@@ -967,6 +967,8 @@ class PerformanceGovernanceSystemPageState
   //Add rows-------------
   void _addRow() {
     setState(() {
+      // int newRowId = DateTime.now().millisecondsSinceEpoch;
+      // // rows.add(newRowId);
       rows.add(rows.length);
     });
   }
@@ -2269,7 +2271,7 @@ class PerformanceGovernanceSystemPageState
                                         title: Row(
                                           children: [
                                             Text(
-                                              'READINESS RATING - ${officename ?? officeDisplay}',
+                                              'READINESS RATING - ${(officename ?? officeDisplay).toUpperCase()}',
                                               style: TextStyle(
                                                 fontSize: 30,
                                                 fontWeight: FontWeight.normal,
@@ -2383,7 +2385,7 @@ class PerformanceGovernanceSystemPageState
                                                                           60.0,
                                                                     ),
                                                                 child: Text(
-                                                                  ('TOTAL SCORE:${totalScore.toStringAsFixed(1)}'),
+                                                                  ('TOTAL SCORE: ${totalScore.toStringAsFixed(1)}'),
 
                                                                   style: TextStyle(
                                                                     fontSize:
@@ -3040,7 +3042,7 @@ class PerformanceGovernanceSystemPageState
         GestureDetector(
           key: _menuKey,
           child: BuildHeaderCell(
-            text: officename ?? officeDisplay,
+            text: (officename ?? officeDisplay).toUpperCase(),
             color: Colors.white,
             fontSize: 20,
             fontStyle: FontStyle.normal,
@@ -3048,7 +3050,7 @@ class PerformanceGovernanceSystemPageState
         ),
 
         BuildHeaderCell(
-          text: 'Alignment',
+          text: 'ALIGNMENT',
           color: Colors.white,
           fontSize: 20,
           fontStyle: FontStyle.normal,
@@ -3377,11 +3379,11 @@ class PerformanceGovernanceSystemPageState
     return TableRow(
       children: [
         BuildHeaderCell(
-          text: 'Office: ${officename ?? officeDisplay}',
+          text: 'OFFICE: ${(officename ?? officeDisplay).toUpperCase()}',
           fontSize: 15,
           fontStyle: FontStyle.normal,
         ),
-        BuildHeaderCell(text: 'Alignment'),
+        BuildHeaderCell(text: 'ALIGNMENT'),
         BuildHeaderCell(
           text: 'STRATEGIC CONTRIBUTIONS',
           fontSize: 15,
