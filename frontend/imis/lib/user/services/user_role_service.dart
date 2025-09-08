@@ -2,41 +2,12 @@ import 'package:dio/dio.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_role.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/page_list.dart';
 import '../../utils/http_util.dart';
-import '../../utils/pagination_util.dart';
 
 class UserRoleService {
   final Dio dio;
 
   UserRoleService(this.dio);
-  Future<PageList<UserRoles>> getUserRoles({
-    int page = 1,
-    int pageSize = 50,
-    String? searchQuery,
-  }) async {
-    final paginationUtil = PaginationUtil(dio);
-
-    return await paginationUtil.fetchPaginatedData(
-      endpoint: ApiEndpoint().userRole,
-      page: page,
-      pageSize: pageSize,
-      searchQuery: searchQuery,
-      fromJson: (json) {
-        final List<UserRoles> roles = [];
-        final String userId = json['userId'];
-
-        if (json['roles'] != null && json['roles'] is List) {
-          for (var role in json['roles']) {
-            roles.add(UserRoles(userId: userId, roleId: role['roleId']));
-          }
-        }
-        return roles.isNotEmpty
-            ? roles.first
-            : UserRoles(userId: userId, roleId: "");
-      },
-    );
-  }
 
   Future<List<Roles>> fetchRoles() async {
     var url = ApiEndpoint().roles;

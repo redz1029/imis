@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -7,8 +9,11 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_role.dart';
 import 'package:imis/user/services/user_role_service.dart';
+import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:collection/collection.dart';
+import 'package:imis/utils/http_util.dart';
+// import 'package:imis/widgets/dotted_button.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 
 class UserRolePage extends StatefulWidget {
@@ -40,32 +45,60 @@ class UserRolePageState extends State<UserRolePage> {
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
 
-  Future<void> fetchUserRoles({int page = 1, String? searchQuery}) async {
+  Future<void> fetchUserRoles({int page = 1}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _userRoleService.getUserRoles(
-        page: page,
-        pageSize: _pageSize,
-        searchQuery: searchQuery,
+      final int usersPerFetch = 50;
+      final response = await AuthenticatedRequest.get(
+        dio,
+        '${ApiEndpoint().userRole}?page=1&pageSize=$usersPerFetch',
       );
 
-      if (mounted) {
-        setState(() {
-          _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
-          userRoleList = pageList.items;
-          filteredList = List.from(userRoleList);
-        });
+      if (response.statusCode == 200 && response.data is List) {
+        List<UserRoles> allRoles = [];
+
+        for (var userJson in response.data) {
+          String userId = userJson['userId'];
+          if (userJson['roles'] != null && userJson['roles'] is List) {
+            for (var role in userJson['roles']) {
+              allRoles.add(UserRoles(userId: userId, roleId: role['roleId']));
+            }
+          }
+        }
+
+        _totalCount = allRoles.length;
+
+        int start = (page - 1) * _pageSize;
+        int end = start + _pageSize;
+        if (start >= _totalCount) {
+          setState(() {
+            userRoleList = [];
+            filteredList = [];
+            _currentPage = page;
+          });
+          return;
+        }
+        if (end > _totalCount) end = _totalCount;
+
+        List<UserRoles> pageRoles = allRoles.sublist(start, end);
+
+        if (mounted) {
+          setState(() {
+            userRoleList = pageRoles;
+            filteredList = List.from(userRoleList);
+            _currentPage = page;
+          });
+        }
+      } else {
+        debugPrint("Unexpected response: ${response.data}");
       }
     } catch (e) {
-      debugPrint("Error fetching user roles: $e");
+      debugPrint("Fetch error: $e");
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -172,7 +205,7 @@ class UserRolePageState extends State<UserRolePage> {
               ),
             ),
             child: Text(
-              id == null ? 'Create User Role' : 'Edit User Role',
+              id == null ? 'Create User Role' : 'Manage User Role',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -189,6 +222,7 @@ class UserRolePageState extends State<UserRolePage> {
                 SizedBox(
                   width: 450,
                   child: DropdownSearch<User?>(
+                    enabled: id == null,
                     popupProps: PopupProps.menu(
                       showSearchBox: true,
                       searchFieldProps: TextFieldProps(
@@ -241,6 +275,7 @@ class UserRolePageState extends State<UserRolePage> {
                     ),
                   ),
                 ),
+
                 SizedBox(height: 15),
                 SizedBox(
                   width: 450,
@@ -352,7 +387,6 @@ class UserRolePageState extends State<UserRolePage> {
 
                   if (confirmAction == true) {
                     if (_selectedUserId == null || _selectedRoleId == null) {
-                      // ignore: use_build_context_synchronously
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text("User and role must both be selected."),
@@ -361,6 +395,26 @@ class UserRolePageState extends State<UserRolePage> {
                       return;
                     }
 
+                    // if (id == null) {
+                    //   final newUserRole = UserRoles(
+                    //     userId: _selectedUserId!,
+                    //     roleId: _selectedRoleId!,
+                    //   );
+
+                    //   await _userRoleService.addUserRoles(newUserRole);
+                    //   setState(() {
+                    //     fetchUserRoles();
+                    //   });
+                    // } else {
+                    //   await _userRoleService.updateRole(
+                    //     _selectedUserId!,
+                    //     _selectedRoleId!,
+                    //   );
+                    //   setState(() {
+                    //     fetchUserRoles();
+                    //   });
+                    // }
+                    // Navigator.pop(context);
                     if (id == null) {
                       final newUserRole = UserRoles(
                         userId: _selectedUserId!,
@@ -372,16 +426,17 @@ class UserRolePageState extends State<UserRolePage> {
                         fetchUserRoles();
                       });
                     } else {
-                      await _userRoleService.updateRole(
-                        _selectedUserId!,
-                        _selectedRoleId!,
+                      final newUserRole = UserRoles(
+                        userId: _selectedUserId!,
+                        roleId: _selectedRoleId!,
                       );
+
+                      await _userRoleService.addUserRoles(newUserRole);
                       setState(() {
                         fetchUserRoles();
                       });
+                      Navigator.pop(context);
                     }
-                    // ignore: use_build_context_synchronously
-                    Navigator.pop(context);
                   }
                 }
               },
@@ -428,7 +483,7 @@ class UserRolePageState extends State<UserRolePage> {
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search User Role',
+                      labelText: 'Search',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -468,230 +523,145 @@ class UserRolePageState extends State<UserRolePage> {
               ],
             ),
             SizedBox(height: 20),
+
             Expanded(
-              child: Column(
-                children: [
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'User Name',
-                            style: TextStyle(color: grey),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            'Role Name',
-                            style: TextStyle(color: grey),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Actions', style: TextStyle(color: grey)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: Column(
-                        children:
+              child: SingleChildScrollView(
+                scrollDirection: Axis.vertical,
+                child: Column(
+                  children:
+                      userList.map((user) {
+                        final userRolesForUser =
                             filteredList
-                                .asMap()
-                                .map((index, userRoles) {
-                                  int itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
+                                .where(
+                                  (userRoles) => userRoles.userId == user.id,
+                                )
+                                .toList();
 
-                                  final matchedRole = roleList.firstWhere(
-                                    (roles) => roles.id == userRoles.roleId,
-                                    orElse:
-                                        () =>
-                                            Roles('unknown', 'Unknown', '', ''),
-                                  );
-                                  final String roleName = matchedRole.name;
+                        if (userRolesForUser.isEmpty) return SizedBox();
 
-                                  final matchUserName = userList.firstWhere(
-                                    (user) => user.id == userRoles.userId,
-                                    orElse:
-                                        () => User(
-                                          id: 'unknown',
-                                          fullName: 'Unknown',
-                                          position: 'position',
+                        return Card(
+                          color: mainBgColor,
+                          elevation: 0,
+                          margin: EdgeInsets.symmetric(
+                            vertical: 4,
+                            horizontal: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Theme(
+                            data: Theme.of(
+                              context,
+                            ).copyWith(dividerColor: Colors.transparent),
+                            child: ExpansionTile(
+                              collapsedBackgroundColor: secondaryColor,
+                              backgroundColor: secondaryBgButton,
+                              tilePadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              childrenPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              title: Text(user.fullName),
+                              children: [
+                                // Roles
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children:
+                                      userRolesForUser.map((userRole) {
+                                        final matchedRole = roleList.firstWhere(
+                                          (role) => role.id == userRole.roleId,
+                                          orElse:
+                                              () => Roles(
+                                                'unknown',
+                                                'Unknown',
+                                                '',
+                                                '',
+                                              ),
+                                        );
+                                        return Container(
+                                          width: double.infinity,
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 4,
+                                            horizontal: 16,
+                                          ),
+                                          child: Text(
+                                            matchedRole.name,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.normal,
+                                            ),
+                                            textAlign: TextAlign.start,
+                                          ),
+                                        );
+                                      }).toList(),
+                                ),
+
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 16,
+                                    right: 16,
+                                    bottom: 8,
+                                  ),
+                                  child: Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        IconButton(
+                                          icon: Icon(Icons.edit, size: 20),
+                                          onPressed: () {
+                                            showFormDialog(
+                                              id: user.id,
+                                              selectedUserId: user.id,
+                                            );
+                                          },
                                         ),
-                                  );
-                                  final String userName =
-                                      matchUserName.fullName;
-
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade300,
+                                        IconButton(
+                                          icon: Icon(
+                                            Icons.delete,
+                                            color: primaryColor,
                                           ),
+                                          onPressed: () => {},
                                         ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                itemNumber.toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                userName,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 2,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                roleName,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed: () {
-                                                      userList.firstWhere(
-                                                        (user) =>
-                                                            user.id ==
-                                                            userRoles.userId,
-                                                        orElse:
-                                                            () => User(
-                                                              id: 'unknown',
-                                                              fullName:
-                                                                  'Unknown',
-                                                              position:
-                                                                  'position',
-                                                            ),
-                                                      );
-
-                                                      final selectedRoleId =
-                                                          userRoles.roleId;
-                                                      final selectedUserId =
-                                                          userRoles.userId;
-
-                                                      showFormDialog(
-                                                        id: selectedUserId,
-                                                        selectedUserId:
-                                                            selectedUserId,
-                                                        selectedOfficeId:
-                                                            selectedRoleId,
-                                                      );
-                                                    },
-                                                  ),
-                                                  SizedBox(width: 1),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: primaryColor,
-                                                    ),
-                                                    onPressed:
-                                                        () => showDeleteDialog(
-                                                          userRoles.userId
-                                                              .toString(),
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
+                                      ],
                                     ),
-                                  );
-                                })
-                                .values
-                                .toList(),
-                      ),
-                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                ),
+              ),
+            ),
+
+            Container(
+              padding: EdgeInsets.all(10),
+              color: secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
                   ),
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    color: secondaryColor,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        PaginationInfo(
-                          currentPage: _currentPage,
-                          totalItems: _totalCount,
-                          itemsPerPage: _pageSize,
-                        ),
-                        PaginationControls(
-                          currentPage: _currentPage,
-                          totalItems: _totalCount,
-                          itemsPerPage: _pageSize,
-                          isLoading: _isLoading,
-                          onPageChanged: (page) => fetchUserRoles(page: page),
-                        ),
-                        Container(width: 60),
-                      ],
-                    ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchUserRoles(page: page),
                   ),
+                  Container(width: 60),
                 ],
               ),
             ),
           ],
         ),
       ),
+
       floatingActionButton:
           isMinimized
               ? FloatingActionButton(
