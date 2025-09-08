@@ -202,7 +202,7 @@ class RolePermissions {
       AppPermission.editAuditor,
     ],
 
-    'Pgs Auditor': [
+    'PGS Auditor': [
       AppPermission.scorePgsDeliverable,
       AppPermission.scorePgsDeliverableMonitor,
 
