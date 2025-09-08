@@ -211,9 +211,18 @@ class RolePermissions {
       AppPermission.scorePgsDeliverableMonitor,
     ],
 
+    'PGS Service Head': [
+      AppPermission.scorePgsDeliverable,
+      AppPermission.scorePgsDeliverableMonitor,
+
+      // Deliverable Monitor
+      AppPermission.viewPgsDeliverableMonitor,
+      AppPermission.scorePgsDeliverableMonitor,
+    ],
+
     'Standard User': [AppPermission.viewPerformanceGovernanceSystem],
 
-    'Pgs Manager': [
+    'PGS Core Team': [
       // PGS
       AppPermission.addPerformanceGovernanceSystem,
       AppPermission.viewPerformanceGovernanceSystem,
