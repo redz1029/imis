@@ -967,8 +967,7 @@ class PerformanceGovernanceSystemPageState
   //Add rows-------------
   void _addRow() {
     setState(() {
-      int newRowId = DateTime.now().millisecondsSinceEpoch;
-      rows.add(newRowId);
+      rows.add(rows.length);
     });
   }
 
