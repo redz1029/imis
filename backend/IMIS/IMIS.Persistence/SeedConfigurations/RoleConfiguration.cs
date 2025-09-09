@@ -43,9 +43,30 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                  {
                      Id = "95f224dd-3973-42ef-b350-7af30f67c2ca",
                      Name = new PgsServiceHead().Name,
-                     NormalizedName = "PGS SERVICE HEAD",
+                     NormalizedName = "SERVICE HEAD",
                      ConcurrencyStamp = Guid.NewGuid().ToString(),
-                 }
+                 },
+                 new IdentityRole
+                 {
+                     Id = "b6b97a7d-23b0-4c2f-9f9a-54d4f67b1234",
+                     Name = new PgsHead().Name,
+                     NormalizedName = "PGS HEAD",
+                     ConcurrencyStamp = Guid.NewGuid().ToString(),
+                 },
+                new IdentityRole
+                {
+                    Id = "e2a6a3fc-1f3a-4e9e-9df0-5f4a6e1f8c21",
+                    Name = new MCC().Name,
+                    NormalizedName = "MCC",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "a3c8f0de-45d7-49ab-9c3f-8e25b5e7d421",
+                    Name = new OSM().Name,
+                    NormalizedName = "OSM",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                }
 
         );
     }
