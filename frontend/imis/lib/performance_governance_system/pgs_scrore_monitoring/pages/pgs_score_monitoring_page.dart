@@ -1238,9 +1238,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   children: [
                     // HEADER (Fixed)
                     Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16.0,
-                      ), // 👈 margin left + right
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Container(
                         color: primaryLightColor,
                         child: Table(

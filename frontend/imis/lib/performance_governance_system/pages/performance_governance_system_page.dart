@@ -450,7 +450,7 @@ class PerformanceGovernanceSystemPageState
                 ),
                 // Title
                 Text(
-                  "Select an Office",
+                  "Select Office",
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -771,7 +771,7 @@ class PerformanceGovernanceSystemPageState
     isSearchFocus.addListener(() {
       setState(() {});
     });
-    fetchDropdownData().then((_) {
+    fetchKraDropDown().then((_) {
       if (filteredListPeriod.isNotEmpty) {
         selectedPeriod = filteredListPeriod[0]['id'];
         selectedPeriodText =
@@ -817,7 +817,7 @@ class PerformanceGovernanceSystemPageState
     }
   }
 
-  Future<void> fetchDropdownData() async {
+  Future<void> fetchKraDropDown() async {
     var url = ApiEndpoint().keyresult;
     try {
       var response = await AuthenticatedRequest.get(dio, url);
@@ -967,8 +967,6 @@ class PerformanceGovernanceSystemPageState
   //Add rows-------------
   void _addRow() {
     setState(() {
-      // int newRowId = DateTime.now().millisecondsSinceEpoch;
-      // // rows.add(newRowId);
       rows.add(rows.length);
     });
   }
