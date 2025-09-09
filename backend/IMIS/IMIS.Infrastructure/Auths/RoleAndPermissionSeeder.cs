@@ -32,7 +32,7 @@ namespace IMIS.Infrastructure.Auths
 
             // This will specific permissions for a role
             await PermissionSeeder.SeedPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
-                new PerformanceGovernanceSystemPermission(), 
+                new PerformanceGovernanceSystemPermission(),             
                 new PgsSignatoryTemplatePermission(), 
                 new KeyResultAreaPermission(),
                 new PgsPeriodPermission());
@@ -43,18 +43,30 @@ namespace IMIS.Infrastructure.Auths
                 new PgsPeriodPermission(), 
                 new OfficePermission());
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
-                new KeyResultAreaPermission(), 
-                new PgsPeriodPermission(), 
-                new PerformanceGovernanceSystemPermission(), 
+                new KeyResultAreaPermission(),
+                new PgsDeliverableAuditorPermission(),
+                new PgsPeriodPermission(),                 
                 new PgsSignatoryTemplatePermission());
             await PermissionSeeder.SeedPermissionForRole<PgsServiceHead, IdentityRole>(_roleManager,
                 new PerformanceGovernanceSystemPermission(),
                 new PgsDeliverableScoreHistoryPermission(),
+                new PgsDeliverableAuditorPermission(),
                 new KeyResultAreaPermission(),
                 new PgsPeriodPermission(),
-                new OfficePermission());             
+                new OfficePermission());
+            await PermissionSeeder.SeedPermissionForRole<PgsHead, IdentityRole>(_roleManager, 
+                new PgsDeliverableAuditorPermission());
+            await PermissionSeeder.SeedPermissionForRole<MCC, IdentityRole>(_roleManager,
+                new PgsDeliverableAuditorPermission());
+            await PermissionSeeder.SeedPermissionForRole<OSM, IdentityRole>(_roleManager,
+                new PgsDeliverableAuditorPermission(),
+                new PerformanceGovernanceSystemPermission(),
+                new PgsDeliverableScoreHistoryPermission(),
+                new KeyResultAreaPermission(),
+                new PgsPeriodPermission(),
+                new OfficePermission());
                 
-            
+
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
                  _roleManager, _userManager, "castillano.mrb", "rama.emg");
