@@ -27,100 +27,74 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
         public required double PercentDeliverables { get; set; }
         public List<ReportPgsSignatoryDto>? PgsSignatories { get; set; }
 
+           
+        private IEnumerable<ReportPgsSignatoryDto> NonApprovedSignatories => PgsSignatories?.Where(s => s.PgsSignatoryTemplate?.SignatoryLabel != "Approved By") ?? Enumerable.Empty<ReportPgsSignatoryDto>();
+        
+        //Sigantory Label      
         public string? PgsSignatoryLabel1 =>
-            PgsSignatories != null && PgsSignatories.Count >= 1 && PgsSignatories[0].PgsSignatoryTemplate != null // -- Map Signatories: SignatoryLabel
-            ? PgsSignatories[0].PgsSignatoryTemplate!.SignatoryLabel
-            : null;
+            NonApprovedSignatories.ElementAtOrDefault(0)?.PgsSignatoryTemplate?.SignatoryLabel;
 
         public string? PgsSignatoryLabel2 =>
-            PgsSignatories != null && PgsSignatories.Count >= 2 && PgsSignatories[1].PgsSignatoryTemplate != null // -- Map Signatories: SignatoryLabel
-            ? PgsSignatories[1].PgsSignatoryTemplate!.SignatoryLabel
-            : null;
+            NonApprovedSignatories.ElementAtOrDefault(1)?.PgsSignatoryTemplate?.SignatoryLabel;
 
         public string? PgsSignatoryLabel3 =>
-            PgsSignatories != null && PgsSignatories.Count >= 3 && PgsSignatories[2].PgsSignatoryTemplate != null // -- Map Signatories: SignatoryLabel
-            ? PgsSignatories[2].PgsSignatoryTemplate!.SignatoryLabel
-            : null;
+            NonApprovedSignatories.ElementAtOrDefault(2)?.PgsSignatoryTemplate?.SignatoryLabel;
 
         public string? PgsSignatoryLabel4 =>
-        PgsSignatories != null && PgsSignatories.Count >= 4 && PgsSignatories[3].PgsSignatoryTemplate != null // -- Map Signatories: SignatoryLabel
-        ? PgsSignatories[3].PgsSignatoryTemplate!.SignatoryLabel
-        : null;
+            NonApprovedSignatories.ElementAtOrDefault(3)?.PgsSignatoryTemplate?.SignatoryLabel;
 
+        // Approved By: always last
         public string? PgsSignatoryLabel5 =>
-        PgsSignatories != null && PgsSignatories.Count >= 5 && PgsSignatories[4].PgsSignatoryTemplate != null // -- Map Signatories: SignatoryLabel
-        ? PgsSignatories[4].PgsSignatoryTemplate!.SignatoryLabel
-        : null;
+            PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == "Approved By")
+                ?.PgsSignatoryTemplate?.SignatoryLabel;
 
+        
+        // Get Full Names       
         public string? PgsSignatoryId1 =>
-            PgsSignatories != null && PgsSignatories.Count >= 1 && PgsSignatories[0].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-             ? PgsSignatories[0].User!.FirstName + " " +
-            PgsSignatories[0].User!.MiddleName + " " +
-            PgsSignatories[0].User!.LastName +
-            (PgsSignatories[0].User!.Suffix != null ? ", " + PgsSignatories[0].User!.Suffix : "")
-            : null;
-
-        public string? PgsSignatoryPosition1 =>
-            PgsSignatories != null && PgsSignatories.Count >= 1 && PgsSignatories[0].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-            ?
-            (PgsSignatories[0].User!.Position)
-            : null;
+            FormatUserFullName(NonApprovedSignatories.ElementAtOrDefault(0)?.User);
 
         public string? PgsSignatoryId2 =>
-            PgsSignatories != null && PgsSignatories.Count >= 2 && PgsSignatories[1].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-             ? PgsSignatories[1].User!.FirstName + " " +
-            PgsSignatories[1].User!.MiddleName + " " +
-            PgsSignatories[1].User!.LastName +
-            (PgsSignatories[1].User!.Suffix != null ? ", " + PgsSignatories[1].User!.Suffix : "")
-            : null;
-
-        public string? PgsSignatoryPosition2 =>
-            PgsSignatories != null && PgsSignatories.Count >= 2 && PgsSignatories[1].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-            ?
-            (PgsSignatories[1].User!.Position)
-            : null;
+            FormatUserFullName(NonApprovedSignatories.ElementAtOrDefault(1)?.User);
 
         public string? PgsSignatoryId3 =>
-            PgsSignatories != null && PgsSignatories.Count >= 3 && PgsSignatories[2].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-            ? PgsSignatories[2].User!.FirstName + " " +
-            PgsSignatories[2].User!.MiddleName + " " +
-            PgsSignatories[2].User!.LastName +
-            (PgsSignatories[2].User!.Suffix != null ? ", " + PgsSignatories[2].User!.Suffix : "")
-            : null;
-
-        public string? PgsSignatoryPosition3 =>
-            PgsSignatories != null && PgsSignatories.Count >= 3 && PgsSignatories[2].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-            ?
-            (PgsSignatories[2].User!.Position)
-            : null;
+            FormatUserFullName(NonApprovedSignatories.ElementAtOrDefault(2)?.User);
 
         public string? PgsSignatoryId4 =>
-           PgsSignatories != null && PgsSignatories.Count >= 4 && PgsSignatories[3].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-           ? PgsSignatories[3].User!.FirstName + " " +
-           PgsSignatories[3].User!.MiddleName + " " +
-           PgsSignatories[3].User!.LastName +
-           (PgsSignatories[3].User!.Suffix != null ? ", " + PgsSignatories[3].User!.Suffix : "")
-           : null;
+            FormatUserFullName(NonApprovedSignatories.ElementAtOrDefault(3)?.User);
+
+        // Approved By: always last
+        public string? PgsSignatoryId5 =>
+            FormatUserFullName(
+                PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == "Approved By")?.User
+            );
+       
+        // Sigantory Positions       
+        public string? PgsSignatoryPosition1 =>
+            NonApprovedSignatories.ElementAtOrDefault(0)?.User?.Position;
+
+        public string? PgsSignatoryPosition2 =>
+            NonApprovedSignatories.ElementAtOrDefault(1)?.User?.Position;
+
+        public string? PgsSignatoryPosition3 =>
+            NonApprovedSignatories.ElementAtOrDefault(2)?.User?.Position;
 
         public string? PgsSignatoryPosition4 =>
-            PgsSignatories != null && PgsSignatories.Count >= 4 && PgsSignatories[3].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-            ?
-            (PgsSignatories[3].User!.Position)
-            : null;
+            NonApprovedSignatories.ElementAtOrDefault(3)?.User?.Position;
 
-        public string? PgsSignatoryId5 =>
-          PgsSignatories != null && PgsSignatories.Count >= 5 && PgsSignatories[4].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-          ? PgsSignatories[4].User!.FirstName + " " +
-          PgsSignatories[4].User!.MiddleName + " " +
-          PgsSignatories[4].User!.LastName +
-          (PgsSignatories[4].User!.Suffix != null ? ", " + PgsSignatories[4].User!.Suffix : "")
-          : null;
-
+        // Approved By: always last
         public string? PgsSignatoryPosition5 =>
-            PgsSignatories != null && PgsSignatories.Count >= 5 && PgsSignatories[4].User != null // -- Map Signatories: User FirstName, MiddleName, LastName, Suffix
-            ?
-            (PgsSignatories[4].User!.Position)
-            : null;
+            PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == "Approved By")?.User?.Position;
+
+        
+       // Helper for name format
+        private static string? FormatUserFullName(User? user)
+        {
+            if (user == null) return null;
+            return $"{user.Prefix} {user.FirstName} {user.MiddleName} {user.LastName}".Trim();
+        }
+
+
+
 
         public ReportPerfomanceGovernanceSystemDto() { }
         [SetsRequiredMembers]
@@ -132,7 +106,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
             this.PercentDeliverables = perfomanceGovernanceSystem.PercentDeliverables;
             this.Office = new OfficeDto(perfomanceGovernanceSystem.Office);
             this.PgsDeliverables = perfomanceGovernanceSystem.PgsDeliverables?.Select(d => new ReportPGSDeliverableDto(d)).ToList();
-            this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;
+            this.PgsReadinessRating = perfomanceGovernanceSystem.PgsReadinessRating != null ? new PgsReadinessRatingDto(perfomanceGovernanceSystem.PgsReadinessRating) : null;            
             this.PgsSignatories = perfomanceGovernanceSystem.PgsSignatories?
             .Select(s =>
             {
@@ -164,7 +138,21 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
                         }
                         : null
                 };
-            }).ToList();
+            })
+            .ToList();
+
+            if (this.PgsSignatories != null)
+            {
+                var approved = this.PgsSignatories
+                    .FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == "Approved By");
+
+                if (approved != null)
+                {
+                    this.PgsSignatories.Remove(approved);
+                    this.PgsSignatories.Add(approved); // always last
+                }
+            }
+
         }
         public override PerfomanceGovernanceSystem ToEntity()
         {
