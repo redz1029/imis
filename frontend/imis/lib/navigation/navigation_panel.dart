@@ -10,6 +10,7 @@ import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/performance_governance_system/pgs_scrore_monitoring/pages/pgs_score_monitoring_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
+import 'package:imis/dashboard/standard_user_dashboard.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
@@ -33,17 +34,15 @@ import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class DashboardNavigationPanel extends StatefulWidget {
-  const DashboardNavigationPanel({super.key});
+class NavigationPanel extends StatefulWidget {
+  const NavigationPanel({super.key});
 
   @override
-  DashboardNavigationPanelState createState() =>
-      DashboardNavigationPanelState();
+  NavigationPanelState createState() => NavigationPanelState();
 }
 
-class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
+class NavigationPanelState extends State<NavigationPanel> {
   final GlobalKey _menuKey = GlobalKey();
-
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey<ScaffoldMessengerState> snackbarKey =
       GlobalKey<ScaffoldMessengerState>();
@@ -298,6 +297,9 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                             selectedRole = role;
                             _isSwitchingRole = false;
                           });
+                          if (homePageKey.currentState != null) {
+                            await homePageKey.currentState!.refreshUserRoles();
+                          }
                         },
                         child: Text(
                           role,
@@ -638,7 +640,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     Icons.dashboard,
                     'Dashboard',
                     0,
-                    () => _setScreen(HomePage(), 0),
+                    () => _setScreen(StandardUserDashboard(), 0),
                   ),
 
                   PermissionWidget(
@@ -950,9 +952,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.center,
                                         children: [
-                                          Text(
-                                            "Welcome, ${firstName.split(' ')[0]}",
-                                          ),
+                                          Text(firstName.split(' ')[0]),
                                         ],
                                       ),
                                       Text(

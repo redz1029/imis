@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:imis/navigation/dashboard_navigation_panel.dart';
+import 'package:imis/navigation/navigation_panel.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/user/models/user_login.dart';
 import 'package:imis/user/pages/registration_page.dart';
@@ -47,9 +47,7 @@ class LoginPageState extends State<LoginPage> {
           await AuthUtil.setIsLoggedIn(true);
           if (!context.mounted) return;
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (context) => const DashboardNavigationPanel(),
-            ),
+            MaterialPageRoute(builder: (context) => const NavigationPanel()),
             (route) => false,
           );
         } else {
@@ -106,9 +104,7 @@ class LoginPageState extends State<LoginPage> {
 
     if (isLoggedIn) {
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(
-          builder: (context) => const DashboardNavigationPanel(),
-        ),
+        MaterialPageRoute(builder: (context) => const NavigationPanel()),
         (route) => false,
       );
     } else {
