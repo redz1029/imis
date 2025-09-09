@@ -59,6 +59,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
   Widget _selectedScreen = HomePage();
   int _selectedIndex = -1;
   String? selectedRole;
+  bool _isSwitchingRole = false;
 
   final dio = Dio();
 
@@ -281,13 +282,22 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                           minimumSize: const Size(double.infinity, 45),
                         ),
                         onPressed: () async {
+                          Navigator.of(context).pop();
+
+                          setState(() => _isSwitchingRole = true);
+
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.setString('selectedRole', role);
                           final permissions =
                               RolePermissions.getPermissionsForRoles([role]);
                           PermissionService().loadPermissions(permissions);
-                          setState(() => selectedRole = role);
-                          Navigator.of(context).pop();
+
+                          await Future.delayed(Duration(milliseconds: 500));
+
+                          setState(() {
+                            selectedRole = role;
+                            _isSwitchingRole = false;
+                          });
                         },
                         child: Text(
                           role,
@@ -635,7 +645,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     permission: AppPermission.viewPerformanceGovernanceSystem,
                     child: _buildListTile(
                       Icons.insert_drive_file,
-                      'Performance Governance System',
+                      'Create PGS Deliverables',
                       2,
                       () => _setScreen(PerformanceGovernanceSystemPage(), 2),
                     ),
@@ -645,7 +655,7 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
                     permission: AppPermission.viewPgsDeliverableMonitor,
                     child: _buildListTile(
                       Icons.credit_score,
-                      'PGS Score Monitoring',
+                      'Deliverable Status Monitoring',
                       3,
                       () => _setScreen(PgsScoreMonitoringPage(), 3),
                     ),
@@ -897,81 +907,99 @@ class DashboardNavigationPanelState extends State<DashboardNavigationPanel> {
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isWideScreen = constraints.maxWidth > 800;
-        return Scaffold(
-          key: _scaffoldKey,
-          body: Row(
-            children: [
-              if (isWideScreen) _buildSidebar(),
-              Expanded(
-                child: Scaffold(
-                  appBar: AppBar(
-                    backgroundColor: secondaryColor,
-                    actions: [
-                      GestureDetector(
-                        key: _menuKey,
-                        onTap: () => _showProfileSetting(context),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              ClipOval(
-                                child: Image.asset(
-                                  'assets/iconprofile.png',
-                                  width: 40,
-                                  height: 40,
-                                  fit: BoxFit.cover,
-                                ),
+        return Stack(
+          children: [
+            Scaffold(
+              key: _scaffoldKey,
+              body: Row(
+                children: [
+                  if (isWideScreen) _buildSidebar(),
+                  Expanded(
+                    child: Scaffold(
+                      appBar: AppBar(
+                        backgroundColor: secondaryColor,
+                        actions: [
+                          GestureDetector(
+                            key: _menuKey,
+                            onTap: () => _showProfileSetting(context),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
                               ),
-                              const SizedBox(width: 8),
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
+                                  ClipOval(
+                                    child: Image.asset(
+                                      'assets/iconprofile.png',
+                                      width: 40,
+                                      height: 40,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:
                                         CrossAxisAlignment.center,
                                     children: [
+                                      const SizedBox(height: 4),
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            "Welcome, ${firstName.split(' ')[0]}",
+                                          ),
+                                        ],
+                                      ),
                                       Text(
-                                        "Welcome, ${firstName.split(' ')[0]}",
+                                        selectedRole ?? 'No role selected',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: grey,
+                                        ),
                                       ),
                                     ],
                                   ),
-
-                                  Text(
-                                    selectedRole ?? 'No role selected',
-
-                                    style: TextStyle(fontSize: 12, color: grey),
-                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(Icons.expand_more, size: 32),
                                 ],
                               ),
-                              const SizedBox(width: 8),
-                              Icon(Icons.expand_more, size: 32),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  drawer: isWideScreen ? null : Drawer(child: _buildSidebar()),
-                  body:
-                      _isLoading
-                          ? Container(
-                            color: mainBgColor,
-                            child: const Center(
-                              child: CircularProgressIndicator(
-                                color: primaryColor,
-                              ),
                             ),
-                          )
-                          : _selectedScreen,
+                          ),
+                        ],
+                      ),
+                      drawer:
+                          isWideScreen ? null : Drawer(child: _buildSidebar()),
+                      body:
+                          _isLoading
+                              ? Container(
+                                color: mainBgColor,
+                                child: const Center(
+                                  child: CircularProgressIndicator(
+                                    color: primaryColor,
+                                  ),
+                                ),
+                              )
+                              : _selectedScreen,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            if (_isSwitchingRole)
+              Container(
+                color: Colors.black.withValues(alpha: 0.5),
+                child: Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
+                  ),
                 ),
               ),
-            ],
-          ),
+          ],
         );
       },
     );
