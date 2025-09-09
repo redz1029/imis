@@ -14,6 +14,7 @@ import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../utils/http_util.dart';
+import '../../../utils/permission_service.dart';
 import '../models/pgs_filter.dart';
 
 class PgsScoreMonitoringPage extends StatefulWidget {
@@ -47,7 +48,8 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
   List<Map<String, dynamic>> filteredListPeriod = [];
   int? selectedPeriod;
   String? selectedPeriodText;
-
+  final PermissionService _permissionService = PermissionService();
+  bool _hasEditPermission = false;
   List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
   List<PgsDeliverableHistoryGrouped> deliverableHistoryGroupedfilteredList = [];
 
@@ -78,6 +80,15 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     fetchKra();
     fetchPGSPeriods();
     fetchScoreHistory();
+    _checkPermissions();
+  }
+
+  void _checkPermissions() {
+    setState(() {
+      _hasEditPermission = _permissionService.hasPermission(
+        AppPermission.scorePgsDeliverableMonitor,
+      );
+    });
   }
 
   Future<void> fetchFilteredPgsList() async {
@@ -382,7 +393,6 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     if (!selectedStatus.containsKey(index)) {
       final rawStatus = deliverableList[index]['status'];
       final parsedStatus = dynamicToPgsStatus(rawStatus);
-
       selectedStatus[index] = parsedStatus;
     }
 
@@ -408,33 +418,44 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: DropdownButtonFormField<PgsStatus>(
-        value: selectedStatus[index],
-        onChanged: (PgsStatus? newValue) {
-          if (newValue != null) {
-            setDialogState();
-            setState(() {
-              selectedStatus[index] = newValue;
-            });
-            saveStatusToDb(index, newValue);
-          }
-        },
-        isExpanded: true,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.all(8.0),
-        ),
-        items:
-            PgsStatus.values.map((PgsStatus value) {
-              return DropdownMenuItem<PgsStatus>(
-                value: value,
-                child: Tooltip(
-                  message: statusDescriptions[value] ?? value.name,
-                  child: Text(value.name, style: const TextStyle(fontSize: 13)),
+      child:
+          _hasEditPermission
+              ? DropdownButtonFormField<PgsStatus>(
+                value: selectedStatus[index],
+                onChanged: (PgsStatus? newValue) {
+                  if (newValue != null) {
+                    setDialogState();
+                    setState(() {
+                      selectedStatus[index] = newValue;
+                    });
+                    saveStatusToDb(index, newValue);
+                  }
+                },
+                isExpanded: true,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.all(8.0),
                 ),
-              );
-            }).toList(),
-      ),
+                items:
+                    PgsStatus.values.map((PgsStatus value) {
+                      return DropdownMenuItem<PgsStatus>(
+                        value: value,
+                        child: Tooltip(
+                          message: statusDescriptions[value] ?? value.name,
+                          child: Text(
+                            value.name,
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+              )
+              : Center(
+                child: Text(
+                  selectedStatus[index]?.name ?? 'Unknown',
+                  style: const TextStyle(fontSize: 13),
+                ),
+              ),
     );
   }
 
@@ -600,24 +621,31 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     }
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 50.0),
-        child: TextField(
-          controller: remarkControllers[index],
-          maxLines: null,
-          keyboardType: TextInputType.multiline,
-          style: TextStyle(fontSize: 14.0),
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.all(8.0),
-          ),
-          onChanged: (value) {
-            setState(() {
-              debugPrint("Updated TextField at index $index: $value");
-            });
-          },
-        ),
-      ),
+      child:
+          _hasEditPermission
+              ? ConstrainedBox(
+                constraints: BoxConstraints(minHeight: 50.0),
+                child: TextField(
+                  controller: remarkControllers[index],
+                  maxLines: null,
+                  keyboardType: TextInputType.multiline,
+                  style: TextStyle(fontSize: 14.0),
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.all(8.0),
+                  ),
+                  onChanged: (value) {
+                    setState(() {});
+                  },
+                ),
+              )
+              : Center(
+                child: Text(
+                  (remarkControllers[index]?.text.isEmpty ?? true)
+                      ? 'No remarks'
+                      : remarkControllers[index]!.text,
+                ),
+              ),
     );
   }
 
@@ -654,77 +682,138 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              SizedBox(
-                width: 60,
-                height: 60,
-                child: CircularProgressIndicator(
-                  value: progressFraction,
-                  strokeWidth: 6,
-                  backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(progressColor),
-                ),
-              ),
-              SizedBox(
-                width: 40,
-                height: 40,
-                child: Center(
-                  child: TextField(
-                    controller: percentageControllers[index],
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      suffixText: '%',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                      isDense: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.digitsOnly,
-                      LengthLimitingTextInputFormatter(3),
-                      RangeInputFormatter(1, 100),
+      child:
+          _hasEditPermission
+              ? Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: CircularProgressIndicator(
+                          value: progressFraction,
+                          strokeWidth: 6,
+                          backgroundColor: Colors.grey[300],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            progressColor,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Center(
+                          child: TextField(
+                            controller: percentageControllers[index],
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              suffixText: '%',
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.zero,
+                              isDense: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(3),
+                              RangeInputFormatter(1, 100),
+                            ],
+                          ),
+                        ),
+                      ),
                     ],
                   ),
-                ),
+                  gap16px,
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        final pgsDeliverableId =
+                            deliverableList[index]['pgsDeliverableId'];
+                        if (pgsDeliverableId != null) {
+                          showFormDialog(pgsDeliverableId);
+                          setState(() {
+                            fetchScoreHistory();
+                            fetchFilteredPgsList();
+                          });
+                        }
+                      },
+                      child: Text(
+                        textAlign: TextAlign.center,
+                        'View Score History',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: primaryLightColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              )
+              : Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      SizedBox(
+                        width: 60,
+                        height: 60,
+                        child: CircularProgressIndicator(
+                          value: progressFraction,
+                          strokeWidth: 6,
+                          backgroundColor: Colors.grey[300],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            progressColor,
+                          ),
+                        ),
+                      ),
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Center(
+                          child: Text(
+                            '$progress%',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  gap16px,
+                  Center(
+                    child: TextButton(
+                      onPressed: () {
+                        final pgsDeliverableId =
+                            deliverableList[index]['pgsDeliverableId'];
+                        if (pgsDeliverableId != null) {
+                          showFormDialog(pgsDeliverableId);
+                        }
+                      },
+                      child: Text(
+                        textAlign: TextAlign.center,
+                        'View Score History',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: primaryLightColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-          gap16px,
-          Center(
-            child: TextButton(
-              onPressed: () {
-                final pgsDeliverableId =
-                    deliverableList[index]['pgsDeliverableId'];
-                if (pgsDeliverableId != null) {
-                  showFormDialog(pgsDeliverableId);
-                  setState(() {
-                    fetchScoreHistory();
-                    fetchFilteredPgsList();
-                  });
-                }
-              },
-              child: Text(
-                textAlign: TextAlign.center,
-                'View Score History',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: primaryLightColor,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -1145,20 +1234,20 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
               ),
 
               Expanded(
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: ConstrainedBox(
-                    constraints: BoxConstraints(minWidth: constraints.maxWidth),
-                    child: SingleChildScrollView(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    // HEADER (Fixed)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                      ), // 👈 margin left + right
+                      child: Container(
+                        color: primaryLightColor,
                         child: Table(
                           border: TableBorder.all(
                             color: Colors.black,
                             width: 1.0,
                           ),
-                          defaultVerticalAlignment:
-                              TableCellVerticalAlignment.middle,
                           columnWidths: const {
                             0: FlexColumnWidth(2),
                             1: FlexColumnWidth(2),
@@ -1184,45 +1273,86 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                                 _buildTableHeaderCell('SCORE'),
                               ],
                             ),
-
-                            ...deliverableList.asMap().entries.map((entry) {
-                              final int index = entry.key;
-                              final deliverable = entry.value;
-
-                              return TableRow(
-                                children: [
-                                  _buildTableCell(
-                                    '${deliverable['Start Date']} - ${deliverable['End Date']}',
-                                  ),
-                                  _buildTableCell(
-                                    deliverable['officeName'] ?? '',
-                                  ),
-                                  _buildKRA(
-                                    deliverable['kra'] ?? ' ',
-                                    deliverable['kraDescription'],
-                                  ),
-
-                                  _buildTableCell(
-                                    '',
-                                    isDirect: deliverable['isDirect'],
-                                  ),
-
-                                  _buildTableCell(
-                                    deliverable['deliverableName'] ?? '',
-                                  ),
-                                  _buildTableCell(deliverable['byWhen'] ?? ''),
-
-                                  _buildStatusCell(index, () => (index)),
-                                  _buildRemarkCell(index),
-                                  _buildScoringCell(index),
-                                ],
-                              );
-                            }),
                           ],
                         ),
                       ),
                     ),
-                  ),
+
+                    // BODY (Scrollable)
+                    Expanded(
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minWidth: constraints.maxWidth,
+                          ),
+                          child: SingleChildScrollView(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16.0,
+                              ),
+                              child: Table(
+                                border: TableBorder.all(
+                                  color: Colors.black,
+                                  width: 1.0,
+                                ),
+                                defaultVerticalAlignment:
+                                    TableCellVerticalAlignment.middle,
+                                columnWidths: const {
+                                  0: FlexColumnWidth(2),
+                                  1: FlexColumnWidth(2),
+                                  2: FlexColumnWidth(2),
+                                  3: FlexColumnWidth(1.5),
+                                  4: FlexColumnWidth(4),
+                                  5: FlexColumnWidth(2),
+                                  6: FlexColumnWidth(2),
+                                  7: FlexColumnWidth(3),
+                                  8: FlexColumnWidth(2),
+                                },
+                                children: [
+                                  ...deliverableList.asMap().entries.map((
+                                    entry,
+                                  ) {
+                                    final int index = entry.key;
+                                    final deliverable = entry.value;
+
+                                    return TableRow(
+                                      children: [
+                                        _buildTableCell(
+                                          '${deliverable['Start Date']} - ${deliverable['End Date']}',
+                                        ),
+                                        _buildTableCell(
+                                          deliverable['officeName'] ?? '',
+                                        ),
+                                        _buildKRA(
+                                          deliverable['kra'] ?? ' ',
+                                          deliverable['kraDescription'],
+                                        ),
+                                        _buildTableCell(
+                                          '',
+                                          isDirect: deliverable['isDirect'],
+                                        ),
+                                        _buildTableCell(
+                                          deliverable['deliverableName'] ?? '',
+                                        ),
+                                        _buildTableCell(
+                                          deliverable['byWhen'] ?? '',
+                                        ),
+
+                                        _buildStatusCell(index, () => (index)),
+                                        _buildRemarkCell(index),
+                                        _buildScoringCell(index),
+                                      ],
+                                    );
+                                  }),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
@@ -1485,7 +1615,6 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
 
   Widget _buildTableHeaderCell(String text, {double fontSize = 12}) {
     return Container(
-      color: primaryLightColor,
       padding: const EdgeInsets.all(8),
       child: Center(
         child: Text(
