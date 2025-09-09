@@ -169,7 +169,6 @@ class RolePermissions {
 
       // Deliverable Monitor
       AppPermission.viewPgsDeliverableMonitor,
-      AppPermission.scorePgsDeliverableMonitor,
 
       // Deliverable Score History
       AppPermission.viewPgsDeliverableScoreHistory,
@@ -202,31 +201,30 @@ class RolePermissions {
       AppPermission.editAuditor,
     ],
 
-    'PGS Auditor': [
-      AppPermission.scorePgsDeliverable,
-      AppPermission.scorePgsDeliverableMonitor,
-
-      // Deliverable Monitor
-      AppPermission.viewPgsDeliverableMonitor,
-      AppPermission.scorePgsDeliverableMonitor,
-    ],
-
-    'PGS Service Head': [
-      AppPermission.scorePgsDeliverable,
-      AppPermission.scorePgsDeliverableMonitor,
-
-      // Deliverable Monitor
-      AppPermission.viewPgsDeliverableMonitor,
-      AppPermission.scorePgsDeliverableMonitor,
-    ],
-
     'Standard User': [AppPermission.viewPerformanceGovernanceSystem],
 
-    'PGS Core Team': [
-      // PGS
-      AppPermission.addPerformanceGovernanceSystem,
+    'PGS Core Team': [AppPermission.viewPgsDeliverableMonitor],
+
+    'PGS Service Head': [
+      AppPermission.viewPgsDeliverableMonitor,
       AppPermission.viewPerformanceGovernanceSystem,
-      AppPermission.editPerformanceGovernanceSystem,
+    ],
+
+    'PGS Auditor': [
+      AppPermission.editPgsDeliverable,
+      AppPermission.scorePgsDeliverable,
+      AppPermission.viewPgsDeliverableMonitor,
+      AppPermission.scorePgsDeliverableMonitor,
+    ],
+
+    'PGS Head': [AppPermission.viewPgsDeliverableMonitor],
+
+    'MCC': [AppPermission.viewPgsDeliverableMonitor],
+
+    'OSM': [
+      AppPermission.scorePgsDeliverable,
+      AppPermission.viewPgsDeliverableMonitor,
+      AppPermission.viewPerformanceGovernanceSystem,
     ],
   };
 
