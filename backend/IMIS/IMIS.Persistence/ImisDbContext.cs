@@ -37,21 +37,24 @@ namespace IMIS.Persistence
             
             base.OnModelCreating(builder);
         
-            builder.Entity<User>().ToTable("AspNetUsers");         
-
-            builder.Entity<AuditorOffices>()
-                .HasKey(ao => new { ao.AuditorId, ao.OfficeId });
-
-            builder.Entity<AuditorOffices>()
-                .HasOne(ao => ao.Auditor)
-                .WithMany(a => a.AuditorOffices)
-                .HasForeignKey(a => a.AuditorId);
-
-            builder.Entity<AuditorOffices>()
-                .HasOne(ao => ao.Office)
-                .WithMany(a => a.AuditorOffices)
-                .HasForeignKey(a => a.OfficeId);
+            builder.Entity<User>().ToTable("AspNetUsers");
            
+            builder.Entity<AuditorOffices>(ao =>
+            {                
+                ao.HasKey(x => x.Id);
+                
+                ao.HasIndex(x => new { x.AuditorId, x.OfficeId, x.PgsPeriodId })
+                  .IsUnique();
+                
+                ao.HasOne(x => x.Auditor)
+                  .WithMany(a => a.AuditorOffices)
+                  .HasForeignKey(x => x.AuditorId);
+
+                ao.HasOne(x => x.Office)
+                  .WithMany(o => o.AuditorOffices)
+                  .HasForeignKey(x => x.OfficeId);             
+            });
+
             builder.Entity<AuditorTeams>()
                 .HasKey(at => at.Id);
 
