@@ -7,10 +7,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
+import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/performance_governance_system/pgs_scrore_monitoring/pages/pgs_score_monitoring_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
-import 'package:imis/dashboard/standard_user_dashboard.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
@@ -640,7 +640,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                     Icons.dashboard,
                     'Dashboard',
                     0,
-                    () => _setScreen(StandardUserDashboard(), 0),
+                    () => _setScreen(HomePage(), 0),
                   ),
 
                   PermissionWidget(
@@ -695,6 +695,13 @@ class NavigationPanelState extends State<NavigationPanel> {
                                   'Auditor',
                                   5,
                                   () => _setScreen(AuditorPage(), 5),
+                                ),
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Auditor Offices',
+                                  19,
+                                  () => _setScreen(AuditorOfficesPage(), 19),
                                 ),
                                 _buildListTile(
                                   Icons.date_range,
@@ -944,13 +951,13 @@ class NavigationPanelState extends State<NavigationPanel> {
                                   Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     crossAxisAlignment:
-                                        CrossAxisAlignment.center,
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const SizedBox(height: 4),
                                       Row(
                                         mainAxisSize: MainAxisSize.min,
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(firstName.split(' ')[0]),
                                         ],
