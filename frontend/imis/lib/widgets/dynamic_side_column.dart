@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:table_calendar/table_calendar.dart';
 
-class DynamicSideColumn extends StatelessWidget {
+class DynamicSideColumn1 extends StatelessWidget {
   final DateTime focusedDay;
   final DateTime? selectedDay;
   final CalendarFormat calendarFormat;
@@ -11,7 +11,7 @@ class DynamicSideColumn extends StatelessWidget {
   final int currentImageIndex;
   final List<String> rotatingImages;
 
-  const DynamicSideColumn({
+  const DynamicSideColumn1({
     super.key,
     required this.focusedDay,
     required this.selectedDay,
@@ -58,7 +58,7 @@ class DynamicSideColumn extends StatelessWidget {
                         fontWeight: FontWeight.normal,
                       ),
                       selectedDecoration: BoxDecoration(
-                        color: Colors.blue,
+                        color: primaryTextColor,
                         shape: BoxShape.circle,
                       ),
                       todayDecoration: BoxDecoration(
