@@ -29,7 +29,8 @@ namespace IMIS.Application.AuditorTeamsModule
                             Id = at.Auditor!.Id,
                             Name = at.Auditor.Name,
                             IsTeamLeader = at.IsTeamLeader,
-                            IsActive = at.Auditor.IsActive
+                            IsActive = at.Auditor.IsActive,
+                            UserId = at.Auditor.UserId,
                         })
                         .ToList(),
                     IsActive = group.FirstOrDefault()?.IsActive ?? false
@@ -58,7 +59,8 @@ namespace IMIS.Application.AuditorTeamsModule
                             Id = at.Auditor!.Id,
                             Name = at.Auditor.Name,
                             IsTeamLeader = at.IsTeamLeader,
-                            IsActive = at.Auditor.IsActive
+                            IsActive = at.Auditor.IsActive,
+                            UserId= at.Auditor.UserId,
                         })
                         .ToList(),
                     IsActive = group.Any() ? group.First().IsActive : false
