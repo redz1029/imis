@@ -1,14 +1,14 @@
-import 'package:imis/roles/models/roles.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 part 'user_role.g.dart';
 
 @JsonSerializable()
 class UserRoles {
-  final String userId;
-  final String roleId;
+  String? userId;
 
-  UserRoles({required this.userId, required this.roleId});
+  @JsonKey()
+  List<RoleAssignment>? roles;
+  UserRoles(this.userId, this.roles);
 
   factory UserRoles.fromJson(Map<String, dynamic> json) =>
       _$UserRolesFromJson(json);
@@ -16,22 +16,12 @@ class UserRoles {
 }
 
 @JsonSerializable()
-class UserRolesGet {
-  String userId;
-  String userName;
-  String firstName;
-  String lastName;
-  List<Roles>? roles;
+class RoleAssignment {
+  final String roleId;
 
-  UserRolesGet(
-    this.userId,
-    this.userName,
-    this.firstName,
-    this.lastName,
-    this.roles,
-  );
+  RoleAssignment({required this.roleId});
 
-  factory UserRolesGet.fromJson(Map<String, dynamic> json) =>
-      _$UserRolesGetFromJson(json);
-  Map<String, dynamic> toJson() => _$UserRolesGetToJson(this);
+  factory RoleAssignment.fromJson(Map<String, dynamic> json) =>
+      _$RoleAssignmentFromJson(json);
+  Map<String, dynamic> toJson() => _$RoleAssignmentToJson(this);
 }

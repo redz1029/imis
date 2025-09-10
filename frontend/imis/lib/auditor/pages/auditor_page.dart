@@ -476,7 +476,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                       children: [
                         Expanded(
                           flex: 1,
-                          child: Text('ID', style: TextStyle(color: grey)),
+                          child: Text('#', style: TextStyle(color: grey)),
                         ),
                         Expanded(
                           flex: 3,
