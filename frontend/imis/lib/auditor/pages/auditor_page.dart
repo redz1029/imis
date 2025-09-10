@@ -1,7 +1,10 @@
 import 'package:dio/dio.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/auditor/models/auditor.dart';
+import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
@@ -19,11 +22,15 @@ class AuditorMainPageState extends State<AuditorPage> {
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Auditor> auditorSearchUtil;
   final _formKey = GlobalKey<FormState>();
+  final _commonService = CommonService(Dio());
 
   List<Auditor> auditorList = [];
   List<Auditor> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
+
+  List<User> userList = [];
+  String? _selectedUserId;
 
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -112,6 +119,17 @@ class AuditorMainPageState extends State<AuditorPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+
+    () async {
+      final users = await _commonService.fetchUsers();
+
+      if (!mounted) return;
+
+      setState(() {
+        userList = users;
+        _selectedUserId = users.isNotEmpty ? users[0].id : null;
+      });
+    }();
   }
 
   @override
@@ -165,7 +183,6 @@ class AuditorMainPageState extends State<AuditorPage> {
     );
   }
 
-  // Show the form to add or update auditor
   void showFormDialog({
     String? id,
     bool isDeleted = false,
@@ -174,8 +191,11 @@ class AuditorMainPageState extends State<AuditorPage> {
     bool isActive = false,
     bool isTeamLeader = false,
     bool isOfficeHead = false,
+    String? selectedUserId,
   }) {
     TextEditingController auditorController = TextEditingController(text: name);
+    _selectedUserId = selectedUserId;
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -197,7 +217,7 @@ class AuditorMainPageState extends State<AuditorPage> {
               ),
             ),
             child: Text(
-              id == null ? 'Create Auditor' : 'Edit Auditor',
+              id == null ? 'Create Auditor' : 'Manage Auditor',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontWeight: FontWeight.bold,
@@ -213,12 +233,11 @@ class AuditorMainPageState extends State<AuditorPage> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 SizedBox(
-                  width: 350,
-                  height: 65,
+                  width: 450,
                   child: TextFormField(
                     controller: auditorController,
                     decoration: InputDecoration(
-                      labelText: 'Name',
+                      labelText: 'Auditor Name',
                       focusColor: primaryColor,
                       floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
@@ -232,6 +251,62 @@ class AuditorMainPageState extends State<AuditorPage> {
                       }
                       return null;
                     },
+                  ),
+                ),
+                gap14px,
+                SizedBox(
+                  width: 450,
+                  child: DropdownSearch<User?>(
+                    popupProps: PopupProps.menu(
+                      showSearchBox: true,
+                      searchFieldProps: TextFieldProps(
+                        decoration: InputDecoration(
+                          hintText: 'Search User Name...',
+                          filled: true,
+                          fillColor: mainBgColor,
+                          prefixIcon: Icon(Icons.search),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                        ),
+                      ),
+                      itemBuilder:
+                          (context, user, isSelected) => ListTile(
+                            tileColor: mainBgColor,
+                            title: Text(user?.fullName ?? ''),
+                          ),
+                    ),
+                    items: userList,
+                    itemAsString: (u) => u?.fullName ?? '',
+                    selectedItem: userList.cast<User?>().firstWhere(
+                      (u) => u?.id == _selectedUserId,
+                      orElse: () => null,
+                    ),
+                    onChanged:
+                        (value) => setState(() => _selectedUserId = value?.id),
+                    validator: (value) {
+                      if (value == null) {
+                        return 'Please select a user';
+                      }
+                      return null;
+                    },
+                    dropdownDecoratorProps: DropDownDecoratorProps(
+                      dropdownSearchDecoration: InputDecoration(
+                        labelText: 'Assign User',
+                        filled: true,
+                        fillColor: mainBgColor,
+                        floatingLabelBehavior: FloatingLabelBehavior.never,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: primaryColor),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -300,6 +375,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                       isActive: isActive,
                       isTeamLeader: isTeamLeader,
                       isOfficeHead: isOfficeHead,
+                      userId: _selectedUserId,
                     );
                     addOrUpdateAuditor(auditor);
                     // ignore: use_build_context_synchronously
@@ -324,7 +400,7 @@ class AuditorMainPageState extends State<AuditorPage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: Text('Auditor Information'),
+        title: Text("Auditor's Information"),
         backgroundColor: mainBgColor,
       ),
       body: Padding(
@@ -410,6 +486,13 @@ class AuditorMainPageState extends State<AuditorPage> {
                           ),
                         ),
                         Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Assigned User',
+                            style: TextStyle(color: grey),
+                          ),
+                        ),
+                        Expanded(
                           flex: 1,
                           child: Text('Actions', style: TextStyle(color: grey)),
                         ),
@@ -428,6 +511,17 @@ class AuditorMainPageState extends State<AuditorPage> {
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
+
+                                  final matchUserName = userList.firstWhere(
+                                    (user) => user.id == auditor.userId,
+                                    orElse:
+                                        () => User(
+                                          id: 'unknown',
+                                          fullName: 'Unknown',
+                                          position: 'position',
+                                        ),
+                                  );
+                                  final userName = matchUserName.fullName;
                                   return MapEntry(
                                     index,
                                     Container(
@@ -477,6 +571,21 @@ class AuditorMainPageState extends State<AuditorPage> {
                                             ),
                                           ),
                                           Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                userName,
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
                                             flex: 1,
                                             child: Padding(
                                               padding: EdgeInsets.only(
@@ -495,6 +604,9 @@ class AuditorMainPageState extends State<AuditorPage> {
                                                                   .toString(),
                                                           name:
                                                               auditor.name ??
+                                                              '',
+                                                          selectedUserId:
+                                                              auditor.userId ??
                                                               '',
                                                         ),
                                                   ),
