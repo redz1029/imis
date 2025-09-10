@@ -30,7 +30,7 @@ namespace IMIS.Persistence.AuditorModule
         {
             var auditors = await _auditorRepository.GetAll(cancellationToken).ConfigureAwait(false);
             return auditors?.Select(a => new AuditorDto(a)).ToList();
-        }
+        }   
         public async Task<AuditorDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var auditor = await _auditorRepository
