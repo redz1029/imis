@@ -33,6 +33,39 @@ namespace IMIS.Persistence.OfficeModule
                 .ConfigureAwait(false);
         }
 
+
+        public async Task<List<Office>> GetAllForPgsAuditorAsync(CancellationToken cancellationToken)
+        {
+            // Admins can see all offices
+            return await _entities
+                .AsNoTracking()
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<Office>> GetOfficesForAuditorAsync(string userId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<AuditorOffices>()
+                .Where(ao => ao.Auditor != null
+                          && ao.Auditor.UserId == userId
+                          && ao.Auditor.IsActive)
+                .Select(ao => ao.Office!)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<List<int>> GetAuditorOfficeIdsAsync(string userId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<AuditorOffices>()
+                .Where(ao => ao.Auditor != null
+                          && ao.Auditor.UserId == userId
+                          && ao.Auditor.IsActive)
+                .Select(ao => ao.OfficeId)
+                .Distinct()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+
         public async Task<IEnumerable<Office>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {
             if (auditScheduleId.HasValue)
@@ -73,8 +106,8 @@ namespace IMIS.Persistence.OfficeModule
                     .ConfigureAwait(false);
         }
 
-        // Recursively find the root parent office with an OfficeTypeId of 1
-        // Office type ID with a value of 1 is a Service and is considered the root office of CRMC's Organizational Structure.
+        //// Recursively find the root parent office with an OfficeTypeId of 1
+        //// Office type ID with a value of 1 is a Service and is considered the root office of CRMC's Organizational Structure.
         public async Task<Office> GetRootParentOffice(Office childOffice, CancellationToken cancellationToken)
         {
             int serviceOfficeTypeId = 1;
@@ -101,6 +134,6 @@ namespace IMIS.Persistence.OfficeModule
 
                 return parentOffice;
             }
-        }
+        }       
     }
 }
