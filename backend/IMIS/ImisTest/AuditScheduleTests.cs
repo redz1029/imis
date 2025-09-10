@@ -286,7 +286,8 @@ namespace ImisTest
                     { 
                         Id = auditor.Id, 
                         Name = auditor.Name, 
-                        IsActive = auditor.IsActive 
+                        IsActive = auditor.IsActive ,
+                        UserId = auditor.UserId,
                     });
                     noOfAuditorsToGenerate--;
                 }
