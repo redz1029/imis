@@ -21,7 +21,9 @@ namespace IMIS.Persistence.TeamModule
                 {                    
                     Id = a.AuditorId ?? 0,
                     IsActive = a.Auditor!.IsActive,
-                    Name = a.Auditor!.Name
+                    Name = a.Auditor!.Name,
+                    UserId = a.Auditor!.UserId,
+                    
                 }).ToList(),
             };
         }
