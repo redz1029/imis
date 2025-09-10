@@ -42,8 +42,6 @@ namespace IMIS.Presentation.OfficeModule
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _officePermission.Add));
 
-
-
             app.MapGet("/", async (IOfficeService service, CancellationToken cancellationToken) =>
             {
                 var offices = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -53,8 +51,6 @@ namespace IMIS.Presentation.OfficeModule
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
 
-
-
             //// Get offices filtered for PGS Auditor
             app.MapGet("/pgs-auditor", async (IOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -62,10 +58,8 @@ namespace IMIS.Presentation.OfficeModule
                 return Results.Ok(offices);
             })
             .WithTags(_officeTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
-
-          
-
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true);
+         
             app.MapGet("/filter/{name}", async (string name, IOfficeService service, CancellationToken cancellationToken) =>
             {
                 int officeNoOfResults = 10;

@@ -1,5 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsModule;
 using Microsoft.AspNetCore.Builder;
@@ -100,10 +101,7 @@ namespace IMIS.Presentation.PGSModule
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.View, _pgsDeliverableServiceHeadPermission.View))
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
-
-
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
 
 
             app.MapPut("/filter/update", async ([FromBody] PgsDeliverableMonitorPageList request, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
