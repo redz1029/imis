@@ -368,7 +368,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                     if (confirmAction == true) {
                       List<Auditor> auditors =
                           selectedAuditors
-                              .map((a) => Auditor(id: a['id'], name: a['name']))
+                              .map((a) => Auditor(id: a['id'], name: a['name'], userId: a['userId']))
                               .toList();
 
                       final auditorTeam = AuditorTeam(
