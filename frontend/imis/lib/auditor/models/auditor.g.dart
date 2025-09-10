@@ -14,6 +14,7 @@ Auditor _$AuditorFromJson(Map<String, dynamic> json) => Auditor(
   isActive: json['isActive'] as bool? ?? true,
   isTeamLeader: json['isTeamLeader'] as bool? ?? false,
   isOfficeHead: json['isOfficeHead'] as bool? ?? false,
+  userId: json['userId'] as String?,
 );
 
 Map<String, dynamic> _$AuditorToJson(Auditor instance) => <String, dynamic>{
@@ -24,4 +25,5 @@ Map<String, dynamic> _$AuditorToJson(Auditor instance) => <String, dynamic>{
   'isActive': instance.isActive,
   'isTeamLeader': instance.isTeamLeader,
   'isOfficeHead': instance.isOfficeHead,
+  'userId': instance.userId,
 };

@@ -10,6 +10,7 @@ class Auditor {
   bool isActive;
   bool isTeamLeader;
   bool isOfficeHead;
+  String? userId;
 
   Auditor({
     required this.id,
@@ -19,6 +20,7 @@ class Auditor {
     this.isActive = true,
     this.isTeamLeader = false,
     this.isOfficeHead = false,
+    required this.userId,
   });
 
   factory Auditor.fromJson(Map<String, dynamic> json) =>
