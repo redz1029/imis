@@ -23,7 +23,10 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
 
   int _currentImageIndex = 0;
   late Timer imageTimer;
-  final List<String> rotatingImages = ['assets/pic1.jpg', 'assets/pic2.jpg'];
+  final List<String> rotatingImages = [
+    'assets/image3.png',
+    'assets/image4.png',
+  ];
 
   @override
   void initState() {
@@ -91,16 +94,11 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                 flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text("Analytical Overview", style: TextStyle(fontSize: 20)),
-                    gap16px,
-                    _buildStatssRow(),
-                    gap32px,
-                  ],
+                  children: [gap16px, _buildWelcome(), gap32px],
                 ),
               ),
               SizedBox(width: 20),
-              DynamicSideColumn(
+              DynamicSideColumn1(
                 focusedDay: _focusedDay,
                 selectedDay: _selectedDay,
                 calendarFormat: _calendarFormat,
@@ -132,66 +130,10 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text("Analytical Overview", style: TextStyle(fontSize: 20)),
               gap16px,
-              Padding(
-                padding: const EdgeInsets.only(bottom: 4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        office.join(', '),
-                        style: TextStyle(fontSize: 14, color: grey),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    SizedBox(width: 16),
-                    PopupMenuButton<String>(
-                      color: mainBgColor,
-                      onSelected: (String value) {
-                        // Handle selection here
-                      },
-                      itemBuilder:
-                          (BuildContext context) => <PopupMenuEntry<String>>[
-                            const PopupMenuItem<String>(
-                              value: 'Option 1',
-                              child: Text('Option 1'),
-                            ),
-                            const PopupMenuItem<String>(
-                              value: 'Option 2',
-                              child: Text('Option 2'),
-                            ),
-                          ],
-                      offset: Offset(0, 30),
-                      child: Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: mainBgColor,
-                          border: Border.all(color: Colors.grey.shade300),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(Icons.filter_list, size: 16, color: grey),
-                            SizedBox(width: 4),
-                            Text("Filter by", style: TextStyle(fontSize: 12)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildWelcome(),
               gap16px,
-              _buildStatssRow(),
-
-              gap16px,
-
-              DynamicSideColumn(
+              DynamicSideColumn1(
                 focusedDay: _focusedDay,
                 selectedDay: _selectedDay,
                 calendarFormat: _calendarFormat,
@@ -216,54 +158,111 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
     );
   }
 
-  Widget _buildStatssRow() {
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good Morning';
+    } else if (hour < 17) {
+      return 'Good Afternoon';
+    } else {
+      return 'Good Evening';
+    }
+  }
+
+  Widget _buildWelcome() {
+    final bool isMobile = MediaQuery.of(context).size.width < 600;
+
     return Container(
       width: double.infinity,
-      height: 200, // fixed banner height
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: const Color.fromARGB(255, 185, 123, 121),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Row(
-          children: [
-            // 📌 Left text
-            Expanded(
-              child: Column(
+      child:
+          isMobile
+              ? Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    "Hello, ${firstName.split(' ')[0]}",
-                    style: TextStyle(
+                    "${_getGreeting()}, ${firstName.split(' ')[0]}",
+                    style: const TextStyle(
                       color: Colors.white,
-                      fontSize: 32,
+                      fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(height: 8),
+                  gap8px,
                   Text(
-                    "Welcome to CPeMS! Together, we track progress and build \na culture of accountability and continuous improvement.",
+                    "Welcome to CPeMS - CRMC Performance Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
                     style: TextStyle(
-                      color: const Color.fromARGB(230, 255, 255, 255),
+                      color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
                     ),
                   ),
+                  gap16px,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Image.asset(
+                          'assets/image1.png',
+                          height: 120,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                      gap12px,
+                      Expanded(
+                        child: Image.asset(
+                          'assets/image2.png',
+                          height: 120,
+                          fit: BoxFit.contain,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              )
+              : Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "${_getGreeting()}, ${firstName.split(' ')[0]}",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        gap8px,
+                        Text(
+                          "Welcome to CPeMS - CRMC Performance Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.9),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  gap16px,
+                  Image.asset(
+                    'assets/image1.png',
+                    height: 180,
+                    fit: BoxFit.contain,
+                  ),
+                  gap12px,
+                  Image.asset(
+                    'assets/image2.png',
+                    height: 150,
+                    fit: BoxFit.contain,
+                  ),
                 ],
               ),
-            ),
-            SizedBox(
-              height: 350,
-              child: Image.asset('assets/image1.png', fit: BoxFit.contain),
-            ),
-            SizedBox(
-              height: 280,
-              child: Image.asset('assets/image2.png', fit: BoxFit.contain),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

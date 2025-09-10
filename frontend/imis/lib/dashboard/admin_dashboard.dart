@@ -171,7 +171,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               SizedBox(width: 20),
-              DynamicSideColumn(
+              DynamicSideColumn1(
                 focusedDay: _focusedDay,
                 selectedDay: _selectedDay,
                 calendarFormat: _calendarFormat,
@@ -269,7 +269,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               gap16px,
-              DynamicSideColumn(
+              DynamicSideColumn1(
                 focusedDay: _focusedDay,
                 selectedDay: _selectedDay,
                 calendarFormat: _calendarFormat,

@@ -17,12 +17,14 @@ const primaryTextColor = Color.fromRGBO(65, 65, 65, 1);
 const gap4px = SizedBox(height: 4);
 const gap6px = SizedBox(height: 6);
 const gap8px = SizedBox(height: 8);
+const gap12px = SizedBox(height: 12);
 const gap14px = SizedBox(height: 14);
 const gap16px = SizedBox(height: 16);
 const gap24px = SizedBox(height: 24);
 const gap32px = SizedBox(height: 32);
 const gap48px = SizedBox(height: 48);
 const gap60px = SizedBox(height: 60);
+const gap32w = SizedBox(width: 50);
 
 // Job Posiitons
 class JobPositions {
