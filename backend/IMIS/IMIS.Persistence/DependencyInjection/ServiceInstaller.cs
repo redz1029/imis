@@ -1,4 +1,5 @@
 ﻿using IMIS.Application.AuditorModule;
+using IMIS.Application.AuditorOfficesModule;
 using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.OfficeModule;
@@ -12,6 +13,7 @@ using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Persistence.AuditorModule;
+using IMIS.Persistence.AuditorOfficesModule;
 using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.KraModule;
@@ -78,7 +80,9 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IOfficeTypeRepository, OfficeTypeRepository>();
             services.AddScoped<IOfficeTypeService, OfficeTypeService>();
 
-       
+            services.AddScoped<IAuditorOfficesRepository, AuditorOfficesRepository>();
+            services.AddScoped<IAuditorOfficesService, AuditorOfficesService>();
+
             return services;
         }
     }
