@@ -38,15 +38,15 @@ namespace IMIS.Presentation.UserModule
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
             roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles"));
-            roleGroup.MapPost("/roles", CreateRole);
+            roleGroup.MapPost("/roles", CreateRole);          
             roleGroup.MapPut("/roles/{roleId}", EditRole);
             roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
          
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
             userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles")); 
-            userRoleGroup.MapPost("/userRoles", AssignUserRole);
-            userRoleGroup.MapPut("/updateUserRole", UpdateUserRole);
+            userRoleGroup.MapPost("/userRoles", AssignUserRoles);           
+            userRoleGroup.MapPut("/updateUserRole", UpdateUserRoles);
             userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);
 
             return authGroup;
@@ -288,11 +288,11 @@ namespace IMIS.Presentation.UserModule
             await signInManager.UserManager.RemoveAuthenticationTokenAsync(user, "IMIS_API", "refresh_token");          
             return Results.Ok("Refresh token revoked successfully.");
         }
-      
+
         private static async Task<IResult> CreateRole([FromBody] string roleName, IServiceProvider sp)
         {
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
-           
+
             if (await roleManager.RoleExistsAsync(roleName))
                 return Results.Conflict("Role already exists.");
 
@@ -312,6 +312,7 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok(role);
         }
+
         private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
         {
             var identity = (ClaimsIdentity)httpContext.User.Identity!;
@@ -396,61 +397,105 @@ namespace IMIS.Presentation.UserModule
                 });
             }
             return Results.Ok(userRolesList);
-        }     
-        private static async Task<IResult> AssignUserRole([FromBody] IdentityUserRole<string> userRole, IServiceProvider sp)
+        }
+     
+        private static async Task<IResult> AssignUserRoles([FromBody] List<AssignUserRolesRequest> requests, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
-
-            var user = await userManager.FindByIdAsync(userRole.UserId);
-            if (user == null)
-                return Results.NotFound("User not found.");
-
-            var role = await roleManager.FindByIdAsync(userRole.RoleId);
-            if (role == null)
-                return Results.NotFound("Role not found.");
-
-            var result = await userManager.AddToRoleAsync(user, role.Name);
-            if (!result.Succeeded)
-                return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
-
-            
             var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+
+            if (requests == null || !requests.Any())
+                return Results.BadRequest("No user-role data provided.");
+
+            var response = new List<object>();
+
+            foreach (var req in requests)
+            {
+                var user = await userManager.FindByIdAsync(req.UserId!);
+                if (user == null)
+                    return Results.NotFound($"User with ID {req.UserId} not found.");
+
+                var assignedRoles = new List<object>();
+
+                foreach (var roleDto in req.Roles!)
+                {
+                    var role = await roleManager.FindByIdAsync(roleDto.RoleId!);
+                    if (role == null)
+                        return Results.NotFound($"Role with ID {roleDto.RoleId} not found.");
+
+                    var alreadyInRole = await userManager.IsInRoleAsync(user, role.Name!);
+                    if (!alreadyInRole)
+                    {
+                        var result = await userManager.AddToRoleAsync(user, role.Name!);
+                        if (!result.Succeeded)
+                            return Results.ValidationProblem(result.Errors.ToDictionary(
+                                e => e.Code,
+                                e => new[] { e.Description }
+                            ));
+                    }
+
+                    assignedRoles.Add(new { roleId = roleDto.RoleId });
+                }
+
+                response.Add(new
+                {
+                    userId = user.Id,
+                    roles = assignedRoles
+                });
+            }
+
             await outputCacheStore.EvictByTagAsync("roles", default);
 
-            return Results.Ok("User assigned to role successfully.");
-        }
-        private static async Task<IResult> UpdateUserRole(string userId, string newRoleId, IServiceProvider sp)
+            return Results.Ok(response);
+        }      
+
+        private static async Task<IResult> UpdateUserRoles([FromBody] UpdateUserRolesRequest request, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
+            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
 
-            var user = await userManager.FindByIdAsync(userId);
+            var user = await userManager.FindByIdAsync(request.UserId!);
             if (user == null)
                 return Results.NotFound("User not found.");
-
+           
             var currentRoles = await userManager.GetRolesAsync(user);
+         
             if (currentRoles.Any())
             {
                 var removeResult = await userManager.RemoveFromRolesAsync(user, currentRoles);
                 if (!removeResult.Succeeded)
-                    return Results.ValidationProblem(removeResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
+                    return Results.ValidationProblem(removeResult.Errors.ToDictionary(
+                        e => e.Code, e => new[] { e.Description }));
+            }
+         
+            var newRoles = new List<string>();
+            foreach (var roleDto in request.Roles!)
+            {
+                var role = await roleManager.FindByIdAsync(roleDto.RoleId!);
+                if (role == null)
+                    return Results.NotFound($"Role with ID {roleDto.RoleId} not found.");
+                newRoles.Add(role.Name!);
+            }
+           
+            if (newRoles.Any())
+            {
+                var addResult = await userManager.AddToRolesAsync(user, newRoles);
+                if (!addResult.Succeeded)
+                    return Results.ValidationProblem(addResult.Errors.ToDictionary(
+                        e => e.Code, e => new[] { e.Description }));
             }
 
-            var newRole = await roleManager.FindByIdAsync(newRoleId);
-            if (newRole == null)
-                return Results.NotFound("New role not found.");
-
-            var addResult = await userManager.AddToRoleAsync(user, newRole.Name);
-            if (!addResult.Succeeded)
-                return Results.ValidationProblem(addResult.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
-
-           
-            var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
             await outputCacheStore.EvictByTagAsync("roles", default);
 
-            return Results.Ok($"User role updated to: {newRole.Name}");
+            return Results.Ok(new
+            {
+                userId = user.Id,
+                roles = request.Roles
+            });
         }
+
         private static async Task<IResult> DeleteUserRole(string userId, string roleId, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
@@ -464,10 +509,10 @@ namespace IMIS.Presentation.UserModule
             if (role == null)
                 return Results.NotFound("Role not found.");
 
-            if (!await userManager.IsInRoleAsync(user, role.Name))
+            if (!await userManager.IsInRoleAsync(user, role.Name!))
                 return Results.BadRequest("User is not assigned to this role.");
 
-            var result = await userManager.RemoveFromRoleAsync(user, role.Name);
+            var result = await userManager.RemoveFromRoleAsync(user, role.Name!);
             if (!result.Succeeded)
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
 
