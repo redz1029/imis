@@ -1,15 +1,26 @@
-﻿using Base.Pagination;
+﻿using Base.Auths;
+using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Identity;
 
-namespace IMIS.Persistence.OfficeModule
+namespace IMIS.Persistence.OfficeModule 
 {
-    public class OfficeService(IOfficeRepository repository, ImisDbContext _dbContext) : IOfficeService
+  
+    public class OfficeService : IOfficeService
     {
-        private readonly IOfficeRepository _repository = repository;
-        private readonly ImisDbContext _dbContext = _dbContext;
+        private readonly IOfficeRepository _repository;
+        private readonly ImisDbContext _dbContext;
+        private readonly UserManager<User> _userManager;
+
+        public OfficeService(IOfficeRepository repository, ImisDbContext dbContext, UserManager<User> userManager)
+        {
+            _repository = repository;
+            _dbContext = dbContext;
+            _userManager = userManager;
+        }
         public async Task<List<OfficeDto>?> FilterByName(string name, int officeNoOfResults, CancellationToken cancellationToken)
         {
             var offices = await _repository.FilterByName(name, officeNoOfResults, cancellationToken).ConfigureAwait(false);         
@@ -36,17 +47,58 @@ namespace IMIS.Persistence.OfficeModule
                     Id = a.AuditorId,
                     Name = a.Auditor!.Name,
                     IsActive = a.Auditor.IsActive,
-                    IsOfficeHead = a.IsOfficeHead,
+                    UserId = a.Auditor.UserId,
+                    IsOfficeHead = a.IsOfficeHead
+                                        
                 }).ToList(),
             };
         }
-      
-
         public async Task<List<OfficeDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
         }
+
+
+        private async Task<User?> GetCurrentUserAsync()
+        {
+            var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
+            return currentUserService != null
+                ? await currentUserService.GetCurrentUserAsync()
+                : null;
+        }
+       
+        public async Task<List<OfficeDto>> GetOfficesForPgsAuditorAsync(CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                return new List<OfficeDto>();
+
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
+
+            // Get all offices
+            var offices = await _repository.GetAllForPgsAuditorAsync(cancellationToken);
+
+            // Only admins see all offices, others are filtered by AuditorOffices
+            if (!userRoles.Any(r => r.Equals("Administrator", StringComparison.OrdinalIgnoreCase)))
+            {
+                // Get auditor-assigned offices
+                var auditorOfficeIds = await _repository.GetAuditorOfficeIdsAsync(currentUser.Id, cancellationToken);
+
+                if (auditorOfficeIds.Any())
+                {
+                    offices = offices.Where(o => auditorOfficeIds.Contains(o.Id)).ToList();
+                }
+                else
+                {
+                    offices = new List<Office>();
+                }
+            }
+
+            return offices.Select(o => ConvOfficeToDTO(o)).ToList();
+        }
+
+
         public async Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
