@@ -23,14 +23,18 @@ class UserRoleService {
 
   Future<void> addUserRoles(UserRoles userRole) async {
     final url = ApiEndpoint().userRole;
-    await AuthenticatedRequest.post(dio, url, data: userRole.toJson());
+    await AuthenticatedRequest.post(dio, url, data: [userRole.toJson()]);
   }
 
-  Future<void> updateRole(String userId, String roleId) async {
-    final url =
-        '${ApiEndpoint().updateUserRole}?userId=$userId&newRoleId=$roleId';
+  Future<void> updateRole(String userId, List<RoleAssignment> roles) async {
+    final url = ApiEndpoint().updateUserRole;
 
-    await AuthenticatedRequest.put(dio, url);
+    final body = {
+      "userId": userId,
+      "roles": roles.map((r) => r.toJson()).toList(),
+    };
+
+    await AuthenticatedRequest.put(dio, url, data: body);
   }
 
   Future<void> deleteUserRole(String userRole) async {
