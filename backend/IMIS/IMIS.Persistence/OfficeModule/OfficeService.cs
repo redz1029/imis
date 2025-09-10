@@ -5,6 +5,7 @@ using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace IMIS.Persistence.OfficeModule 
 {
@@ -14,6 +15,7 @@ namespace IMIS.Persistence.OfficeModule
         private readonly IOfficeRepository _repository;
         private readonly ImisDbContext _dbContext;
         private readonly UserManager<User> _userManager;
+  
 
         public OfficeService(IOfficeRepository repository, ImisDbContext dbContext, UserManager<User> userManager)
         {
@@ -75,13 +77,14 @@ namespace IMIS.Persistence.OfficeModule
                 return new List<OfficeDto>();
 
             var userRoles = await _userManager.GetRolesAsync(currentUser);
+       
 
             // Get all offices
             var offices = await _repository.GetAllForPgsAuditorAsync(cancellationToken);
 
             // Only admins see all offices, others are filtered by AuditorOffices
             if (!userRoles.Any(r => r.Equals("Administrator", StringComparison.OrdinalIgnoreCase)))
-            {
+            {               
                 // Get auditor-assigned offices
                 var auditorOfficeIds = await _repository.GetAuditorOfficeIdsAsync(currentUser.Id, cancellationToken);
 
