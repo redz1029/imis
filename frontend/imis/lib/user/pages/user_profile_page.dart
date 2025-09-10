@@ -914,8 +914,8 @@ class UserProfileState extends State<UserProfilePage> {
                     padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                     child: Row(
                       children: [
-                        Expanded(
-                          flex: 1,
+                        SizedBox(
+                          width: 80,
                           child: Text('#', style: TextStyle(color: grey)),
                         ),
                         Expanded(
@@ -940,14 +940,14 @@ class UserProfileState extends State<UserProfilePage> {
                           ),
                         ),
                         Expanded(
-                          flex: 1,
+                          flex: 2,
                           child: Text(
                             'Position',
                             style: TextStyle(color: grey),
                           ),
                         ),
-                        Expanded(
-                          flex: 1,
+                        SizedBox(
+                          width: 150,
                           child: Text('Actions', style: TextStyle(color: grey)),
                         ),
                       ],
@@ -982,68 +982,44 @@ class UserProfileState extends State<UserProfilePage> {
                                       ),
                                       child: Row(
                                         children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                itemNumber.toString(),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                          SizedBox(
+                                            width: 80,
+                                            child: Text(
+                                              itemNumber.toString(),
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                           Expanded(
                                             flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                userProfile.firstName ?? '',
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                            child: Text(
+                                              userProfile.firstName ?? '',
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                           Expanded(
                                             flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                userProfile.middleName ?? '',
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                            child: Text(
+                                              userProfile.middleName ?? '',
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                           Expanded(
                                             flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                userProfile.lastName ?? '',
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                            child: Text(
+                                              userProfile.lastName ?? '',
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
                                           Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                userProfile.position ?? '',
-                                              ),
+                                            flex: 2,
+                                            child: Text(
+                                              userProfile.position ?? '',
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ),
 
-                                          Expanded(
-                                            flex: 1,
+                                          SizedBox(
+                                            width: 160,
                                             child: Row(
                                               children: [
                                                 IconButton(
