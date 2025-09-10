@@ -205,7 +205,7 @@ class RolePermissions {
 
     'PGS Core Team': [AppPermission.viewPgsDeliverableMonitor],
 
-    'PGS Service Head': [
+    'Service Head': [
       AppPermission.viewPgsDeliverableMonitor,
       AppPermission.viewPerformanceGovernanceSystem,
     ],

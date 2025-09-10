@@ -276,7 +276,7 @@ class UserRolePageState extends State<UserRolePage> {
                   ),
                 ),
 
-                SizedBox(height: 15),
+                gap14px,
                 SizedBox(
                   width: 450,
                   child: DropdownSearch<Roles?>(
@@ -395,26 +395,6 @@ class UserRolePageState extends State<UserRolePage> {
                       return;
                     }
 
-                    // if (id == null) {
-                    //   final newUserRole = UserRoles(
-                    //     userId: _selectedUserId!,
-                    //     roleId: _selectedRoleId!,
-                    //   );
-
-                    //   await _userRoleService.addUserRoles(newUserRole);
-                    //   setState(() {
-                    //     fetchUserRoles();
-                    //   });
-                    // } else {
-                    //   await _userRoleService.updateRole(
-                    //     _selectedUserId!,
-                    //     _selectedRoleId!,
-                    //   );
-                    //   setState(() {
-                    //     fetchUserRoles();
-                    //   });
-                    // }
-                    // Navigator.pop(context);
                     if (id == null) {
                       final newUserRole = UserRoles(
                         userId: _selectedUserId!,
