@@ -4,18 +4,20 @@ part 'auditor_offices.g.dart';
 
 @JsonSerializable()
 class AuditorOffices {
-  int id;
-  int auditorId;
-  int officeId;
-  int pgsPeriodId;
-  bool? isDeleted;
-  String? rowVersion;
+  final int id;
+  final int auditorId;
+  final int officeId;
+  final int pgsPeriodId;
+  final bool? isOfficeHead;
+  final bool? isDeleted;
+  final String? rowVersion;
 
-  AuditorOffices(
-    this.id,
-    this.auditorId,
-    this.officeId,
-    this.pgsPeriodId, {
+  AuditorOffices({
+    required this.id,
+    required this.auditorId,
+    required this.officeId,
+    required this.pgsPeriodId,
+    this.isOfficeHead,
     this.isDeleted,
     this.rowVersion,
   });
