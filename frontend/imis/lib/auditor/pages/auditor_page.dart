@@ -10,6 +10,7 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import '../../utils/http_util.dart';
+import '../../widgets/custom_toggle.dart';
 
 class AuditorPage extends StatefulWidget {
   const AuditorPage({super.key});
@@ -200,195 +201,228 @@ class AuditorMainPageState extends State<AuditorPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            decoration: BoxDecoration(
-              color: primaryLightColor,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: mainBgColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
               ),
-            ),
-            child: Text(
-              id == null ? 'Create Auditor' : 'Manage Auditor',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-          ),
-
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 450,
-                  child: TextFormField(
-                    controller: auditorController,
-                    decoration: InputDecoration(
-                      labelText: 'Auditor Name',
-                      focusColor: primaryColor,
-                      floatingLabelStyle: TextStyle(color: primaryColor),
-                      border: OutlineInputBorder(),
-                      focusedBorder: const OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Please fill out this field';
-                      }
-                      return null;
-                    },
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: primaryLightColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
                   ),
                 ),
-                gap14px,
-                SizedBox(
-                  width: 450,
-                  child: DropdownSearch<User?>(
-                    popupProps: PopupProps.menu(
-                      showSearchBox: true,
-                      searchFieldProps: TextFieldProps(
+                child: Text(
+                  id == null ? 'Create Auditor' : 'Manage Auditor',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+
+              content: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 450,
+                      child: TextFormField(
+                        controller: auditorController,
                         decoration: InputDecoration(
-                          hintText: 'Search User Name...',
-                          filled: true,
-                          fillColor: mainBgColor,
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
+                          labelText: 'Auditor Name',
+                          focusColor: primaryColor,
+                          floatingLabelStyle: TextStyle(color: primaryColor),
+                          border: OutlineInputBorder(),
+                          focusedBorder: const OutlineInputBorder(
                             borderSide: BorderSide(color: primaryColor),
                           ),
                         ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please fill out this field';
+                          }
+                          return null;
+                        },
                       ),
-                      itemBuilder:
-                          (context, user, isSelected) => ListTile(
-                            tileColor: mainBgColor,
-                            title: Text(user?.fullName ?? ''),
+                    ),
+                    gap14px,
+                    SizedBox(
+                      width: 450,
+                      child: DropdownSearch<User?>(
+                        popupProps: PopupProps.menu(
+                          showSearchBox: true,
+                          searchFieldProps: TextFieldProps(
+                            decoration: InputDecoration(
+                              hintText: 'Search User Name...',
+                              filled: true,
+                              fillColor: mainBgColor,
+                              prefixIcon: Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
                           ),
-                    ),
-                    items: userList,
-                    itemAsString: (u) => u?.fullName ?? '',
-                    selectedItem: userList.cast<User?>().firstWhere(
-                      (u) => u?.id == _selectedUserId,
-                      orElse: () => null,
-                    ),
-                    onChanged:
-                        (value) => setState(() => _selectedUserId = value?.id),
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please select a user';
-                      }
-                      return null;
-                    },
-                    dropdownDecoratorProps: DropDownDecoratorProps(
-                      dropdownSearchDecoration: InputDecoration(
-                        labelText: 'Assign User',
-                        filled: true,
-                        fillColor: mainBgColor,
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          itemBuilder:
+                              (context, user, isSelected) => ListTile(
+                                tileColor: mainBgColor,
+                                title: Text(user?.fullName ?? ''),
+                              ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
+                        items: userList,
+                        itemAsString: (u) => u?.fullName ?? '',
+                        selectedItem: userList.cast<User?>().firstWhere(
+                          (u) => u?.id == _selectedUserId,
+                          orElse: () => null,
+                        ),
+                        onChanged:
+                            (value) =>
+                                setState(() => _selectedUserId = value?.id),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select a user';
+                          }
+                          return null;
+                        },
+                        dropdownDecoratorProps: DropDownDecoratorProps(
+                          dropdownSearchDecoration: InputDecoration(
+                            labelText: 'Assign User',
+                            filled: true,
+                            fillColor: mainBgColor,
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: primaryColor),
+                            ),
+                          ),
                         ),
                       ),
                     ),
+                    gap14px,
+
+                    CustomToggle(
+                      label: "Team Leader",
+                      value: isTeamLeader,
+                      activeColor: primaryColor,
+                      inactiveColor: Colors.grey,
+                      onChanged: (val) {
+                        setState(() {
+                          isTeamLeader = val;
+                        });
+                      },
+                    ),
+                    gap14px,
+                    CustomToggle(
+                      label: "Office Haed",
+                      value: isOfficeHead,
+                      activeColor: primaryColor,
+                      inactiveColor: Colors.grey,
+                      onChanged: (val) {
+                        setState(() {
+                          isOfficeHead = val;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      bool? confirmAction = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text(
+                              id == null ? "Confirm Save" : "Confirm Update",
+                            ),
+                            content: Text(
+                              id == null
+                                  ? "Are you sure you want to save this record?"
+                                  : "Are you sure you want to update this record?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(
+                                  "No",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  if (_formKey.currentState!.validate()) {
+                                    Navigator.pop(context, true);
+                                  }
+                                },
+                                child: Text(
+                                  "Yes",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                      if (confirmAction == true) {
+                        final auditor = Auditor(
+                          id: int.tryParse(id ?? '0') ?? 0,
+                          name: auditorController.text,
+                          isDeleted: isDeleted,
+                          rowVersion: rowVersion,
+                          isActive: isActive,
+                          isTeamLeader: isTeamLeader,
+                          isOfficeHead: isOfficeHead,
+                          userId: _selectedUserId,
+                        );
+                        addOrUpdateAuditor(auditor);
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      }
+                    }
+                  },
+                  child: Text(
+                    id == null ? 'Save' : 'Update',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  bool? confirmAction = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text(
-                          id == null ? "Confirm Save" : "Confirm Update",
-                        ),
-                        content: Text(
-                          id == null
-                              ? "Are you sure you want to save this record?"
-                              : "Are you sure you want to update this record?",
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(
-                              "No",
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              if (_formKey.currentState!.validate()) {
-                                Navigator.pop(context, true);
-                              }
-                            },
-                            child: Text(
-                              "Yes",
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                  if (confirmAction == true) {
-                    final auditor = Auditor(
-                      id: int.tryParse(id ?? '0') ?? 0,
-                      name: auditorController.text,
-                      isDeleted: isDeleted,
-                      rowVersion: rowVersion,
-                      isActive: isActive,
-                      isTeamLeader: isTeamLeader,
-                      isOfficeHead: isOfficeHead,
-                      userId: _selectedUserId,
-                    );
-                    addOrUpdateAuditor(auditor);
-                    // ignore: use_build_context_synchronously
-                    Navigator.pop(context);
-                  }
-                }
-              },
-              child: Text(
-                id == null ? 'Save' : 'Update',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -608,6 +642,12 @@ class AuditorMainPageState extends State<AuditorPage> {
                                                           selectedUserId:
                                                               auditor.userId ??
                                                               '',
+                                                          isTeamLeader:
+                                                              auditor
+                                                                  .isTeamLeader,
+                                                          isOfficeHead:
+                                                              auditor
+                                                                  .isOfficeHead,
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),
