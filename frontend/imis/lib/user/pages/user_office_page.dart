@@ -102,8 +102,8 @@ class UserOfficePageState extends State<UserOfficePage> {
         _selectedUserId = users.isNotEmpty ? users[0].id : null;
       });
 
-      printUserOfficeWithOfficeName();
-      printUserNameWithUserName();
+      displayFullName();
+      displayOfficeName();
     }();
   }
 
@@ -113,7 +113,7 @@ class UserOfficePageState extends State<UserOfficePage> {
     super.dispose();
   }
 
-  void printUserNameWithUserName() {
+  void displayFullName() {
     for (var userOffice in userOfficeList) {
       userList.firstWhere(
         (user) => user.id == userOffice.userId,
@@ -122,7 +122,7 @@ class UserOfficePageState extends State<UserOfficePage> {
     }
   }
 
-  void printUserOfficeWithOfficeName() {
+  void displayOfficeName() {
     for (var userOffice in userOfficeList) {
       officenameList.firstWhere(
         (office) => office.id == userOffice.officeId,
@@ -260,7 +260,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 15),
+                gap14px,
 
                 SizedBox(
                   width: 480,

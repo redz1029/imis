@@ -238,7 +238,7 @@ class UserRolePageState extends State<UserRolePage> {
                       ),
                     ),
                     SizedBox(height: 16),
-                    Text("Current Roles"),
+                    Text(id == null ? '' : 'Current Roles'),
                     SizedBox(height: 8),
                     ...currentRoles.map(
                       (roleName) => Padding(
