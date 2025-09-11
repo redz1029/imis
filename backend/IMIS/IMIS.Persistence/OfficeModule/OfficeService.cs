@@ -34,7 +34,7 @@ namespace IMIS.Persistence.OfficeModule
             if (useroffice.TotalCount == 0)
                 return null;
             return DtoPageList<OfficeDto, Office, int>.Create(useroffice.Items, page, pageSize, useroffice.TotalCount);
-        }
+        }      
         private static OfficeDto ConvOfficeToDTO(Office office)
         {
             return new OfficeDto()
@@ -44,15 +44,16 @@ namespace IMIS.Persistence.OfficeModule
                 IsActive = office.IsActive,
                 OfficeTypeId = office.OfficeTypeId,
                 ParentOfficeId = office.ParentOfficeId,
-                Auditors = office.AuditorOffices?.Select(a => new AuditorDto()
-                {
-                    Id = a.AuditorId,
-                    Name = a.Auditor!.Name,
-                    IsActive = a.Auditor.IsActive,
-                    UserId = a.Auditor.UserId,
-                    IsOfficeHead = a.IsOfficeHead
-                                        
-                }).ToList(),
+                Auditors = office.AuditorOffices?
+                    .Where(a => a.Auditor != null)
+                    .Select(a => new AuditorDto()
+                    {
+                        Id = a.AuditorId,
+                        Name = a.Auditor!.Name,
+                        IsActive = a.Auditor.IsActive,
+                        UserId = a.Auditor.UserId,
+                        IsOfficeHead = a.IsOfficeHead
+                    }).ToList()
             };
         }
         public async Task<List<OfficeDto>?> GetAllAsync(CancellationToken cancellationToken)
