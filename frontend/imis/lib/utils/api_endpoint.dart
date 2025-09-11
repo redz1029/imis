@@ -38,6 +38,7 @@ class ApiEndpoint {
   late String disapprovePgs;
   late String pgsDeliverableHistory;
   late String pgsSaveAsDraft;
+  late String auditorOffice;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -75,6 +76,7 @@ class ApiEndpoint {
     performancegovernancesystemFilter = '$baseUrl/pgs/filter';
     disapprovePgs = '$baseUrl/pgs/disapprove';
     pgsDeliverableHistory = '$baseUrl/pgsDeliverableHistory';
+    auditorOffice = '$baseUrl/auditorsOffices';
   }
 
   static Future<void> setBaseUrl() async {
