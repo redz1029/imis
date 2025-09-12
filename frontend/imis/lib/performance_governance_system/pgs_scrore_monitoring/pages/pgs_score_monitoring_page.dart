@@ -337,7 +337,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
   }
 
   Future<void> fetchOffice() async {
-    var url = ApiEndpoint().office;
+    var url = ApiEndpoint().officePgsAuditor;
 
     try {
       final response = await AuthenticatedRequest.get(dio, url);

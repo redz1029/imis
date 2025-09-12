@@ -39,6 +39,7 @@ class ApiEndpoint {
   late String pgsDeliverableHistory;
   late String pgsSaveAsDraft;
   late String auditorOffice;
+  late String officePgsAuditor;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -69,7 +70,6 @@ class ApiEndpoint {
     pgsDeliverableScoreHistory = '$baseUrl/pgsDeliverableScoreHistory';
     pgsDeliverableScoreHistoryGrouped =
         '$baseUrl/pgsDeliverableScoreHistory/grouped';
-
     officetype = '$baseUrl/officetype';
     pgsSubmit = '$baseUrl/pgs/submit';
     fetchPGSUserId = '$baseUrl/pgs/submit/userId';
@@ -77,6 +77,7 @@ class ApiEndpoint {
     disapprovePgs = '$baseUrl/pgs/disapprove';
     pgsDeliverableHistory = '$baseUrl/pgsDeliverableHistory';
     auditorOffice = '$baseUrl/auditorsOffices';
+    officePgsAuditor = '$baseUrl/office/pgs-auditor';
   }
 
   static Future<void> setBaseUrl() async {
