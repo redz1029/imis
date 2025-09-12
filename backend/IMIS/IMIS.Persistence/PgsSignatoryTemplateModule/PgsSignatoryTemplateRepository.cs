@@ -31,6 +31,6 @@ namespace IMIS.Persistence.PgsSignatoryTemplateModule
                 .OrderBy(e => e.OrderLevel)
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
-        }
+        }       
     }
 }
