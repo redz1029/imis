@@ -8,7 +8,7 @@ namespace IMIS.Domain
         public required long PgsId { get; set; }
         [ForeignKey("PgsId")]
         public virtual PerfomanceGovernanceSystem? PerfomanceGovernanceSystem { get; set; }
-        public required int PgsSignatoryTemplateId { get; set; }
+        public int? PgsSignatoryTemplateId { get; set; }
         [ForeignKey("PgsSignatoryTemplateId")]
         public virtual PgsSignatoryTemplate? PgsSignatoryTemplate { get; set; }
         public required string SignatoryId { get; set; }
