@@ -7,6 +7,7 @@ namespace IMIS.Domain
         public required string UserId { get; set; }
         public required int OfficeId { get; set; }       
         public required bool IsActive { get; set; }
+        public bool IsOfficeHead { get; set; }
     }
 }
 
