@@ -1,4 +1,4 @@
-﻿using Base.Abstractions;
+﻿ using Base.Abstractions;
 using Base.Pagination;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
@@ -24,6 +24,18 @@ namespace IMIS.Persistence.UserOfficeModule
             .AsNoTracking()
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
-        }           
+        }
+        public async Task<List<UserOffices>> GetByOfficeIdAsync(int officeId, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Where(u => u.OfficeId == officeId && u.IsActive)
+                .ToListAsync(cancellationToken);
+        }
+        public async Task<UserOffices?> GetOfficeHeadAsync(int officeId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<UserOffices>()
+                .Where(uo => uo.OfficeId == officeId && uo.IsOfficeHead && !uo.IsDeleted)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
     }
 }

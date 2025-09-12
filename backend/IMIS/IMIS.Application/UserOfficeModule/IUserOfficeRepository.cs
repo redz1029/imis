@@ -7,6 +7,8 @@ namespace IMIS.Application.UserOfficeModule
     public interface IUserOfficeRepository : IRepository<UserOffices, int>
     {
         Task<EntityPageList<UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);     
-        Task<IEnumerable<UserOffices>> GetAll(CancellationToken cancellationToken);       
+        Task<IEnumerable<UserOffices>> GetAll(CancellationToken cancellationToken);
+        Task<List<UserOffices>> GetByOfficeIdAsync(int officeId, CancellationToken cancellationToken);
+        Task<UserOffices?> GetOfficeHeadAsync(int officeId, CancellationToken cancellationToken);
     }
 }

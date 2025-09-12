@@ -15,6 +15,7 @@ namespace IMIS.Application.UserOfficeModule
         public string? Prefix { get; set; }
         public string? Suffix { get; set; }
         public string? Position { get; set; }
+        public bool IsOfficeHead { get; set; }
 
         public UserOfficeDto() { }
         [SetsRequiredMembers]
@@ -24,6 +25,7 @@ namespace IMIS.Application.UserOfficeModule
             this.UserId = userOffices.UserId;
             this.OfficeId = userOffices.OfficeId;
             this.IsActive = userOffices.IsActive;
+            this.IsOfficeHead = userOffices.IsOfficeHead;
         }
         public override UserOffices ToEntity()
         {
@@ -32,7 +34,8 @@ namespace IMIS.Application.UserOfficeModule
                 Id = Id,
                 UserId = UserId,  
                 OfficeId = OfficeId,                
-                IsActive = IsActive
+                IsActive = IsActive,
+                IsOfficeHead = IsOfficeHead
             };
         }
     }

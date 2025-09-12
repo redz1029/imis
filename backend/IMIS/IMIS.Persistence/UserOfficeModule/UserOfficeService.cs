@@ -19,8 +19,7 @@ namespace IMIS.Persistence.UserOfficeModule
         }
         private async Task<UserOfficeDto> ConvertToDTO(UserOffices userOffices, List<User> users, CancellationToken cancellationToken)
         {
-            if (userOffices == null) return null;
-
+           
             // Find the corresponding user based on UserId
             var user = users.FirstOrDefault(u => u.Id == userOffices.UserId);
          
@@ -31,7 +30,8 @@ namespace IMIS.Persistence.UserOfficeModule
                     Id = userOffices.Id,
                     UserId = userOffices.UserId,
                     OfficeId = userOffices.OfficeId,
-                    IsActive = userOffices.IsActive
+                    IsActive = userOffices.IsActive,
+                    IsOfficeHead = userOffices.IsOfficeHead
                 };
             }           
             return new UserOfficeDto
@@ -40,6 +40,7 @@ namespace IMIS.Persistence.UserOfficeModule
                 UserId = userOffices.UserId,
                 OfficeId = userOffices.OfficeId,
                 IsActive = userOffices.IsActive,
+                IsOfficeHead = userOffices.IsOfficeHead,
                 FirstName = user.FirstName,
                 MiddleName = user.MiddleName,
                 LastName = user.LastName,
@@ -73,7 +74,8 @@ namespace IMIS.Persistence.UserOfficeModule
                     Id = userOffice.Id,
                     UserId = userOffice.UserId,
                     OfficeId = userOffice.OfficeId,
-                    IsActive = userOffice.IsActive
+                    IsActive = userOffice.IsActive,
+                    IsOfficeHead = userOffice.IsOfficeHead
                 };
             }            
             return new UserOfficeDto
@@ -82,6 +84,7 @@ namespace IMIS.Persistence.UserOfficeModule
                 UserId = userOffice.UserId,
                 OfficeId = userOffice.OfficeId,
                 IsActive = userOffice.IsActive,
+                IsOfficeHead = userOffice.IsOfficeHead,
                 FirstName = user.FirstName,
                 MiddleName = user.MiddleName,
                 LastName = user.LastName,
@@ -98,8 +101,7 @@ namespace IMIS.Persistence.UserOfficeModule
             {
                 return null;
             }
-
-            // Fetch all users at once (instead of per UserOffice)
+            
             var userIds = userOffices.Select(o => o.UserId).Distinct().ToList();
             var users = await _userManager.Users.Where(u => userIds.Contains(u.Id)).ToListAsync(cancellationToken);            
             var userOfficeDtos = await Task.WhenAll(userOffices.Select(o => ConvertToDTO(o, users, cancellationToken)));       
@@ -108,8 +110,20 @@ namespace IMIS.Persistence.UserOfficeModule
         
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-           
+
             var ODto = dto as UserOfficeDto;
+            if (ODto == null) throw new ArgumentException("Invalid DTO type.");
+
+            // --- Validate only 1 Office Head per office
+            if (ODto.IsOfficeHead)
+            {
+                var existingHead = await _repository.GetAll(cancellationToken);
+                if (existingHead.Any(u => u.OfficeId == ODto.OfficeId && u.IsOfficeHead && u.Id != ODto.Id))
+                {
+                    throw new Exception("Only one Office Head is allowed per office.");
+                }
+            }
+
             var userOffice = ODto!.ToEntity();
 
             if (userOffice.Id == 0)
