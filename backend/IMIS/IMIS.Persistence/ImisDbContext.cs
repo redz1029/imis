@@ -122,6 +122,8 @@ namespace IMIS.Persistence
             builder.ApplyConfiguration(new OfficeTypeConfiguration());
             builder.ApplyConfiguration(new OfficeConfiguration());
             builder.ApplyConfiguration(new KeyResultAreaConfiguration());
+            builder.ApplyConfiguration(new PgsSignatoryTemplateConfiguration());
+            builder.ApplyConfiguration(new UserOfficeConfiguration()); 
 
             // Apply global query filter for soft deletion
             // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false

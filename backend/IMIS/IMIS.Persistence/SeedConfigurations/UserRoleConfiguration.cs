@@ -22,6 +22,51 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             {
                 UserId = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                 RoleId = "56996e97-9e8a-4d22-a693-c865144e9b96"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "537d9fcd-b505-4f93-afc6-17eb8eddff83",
+                RoleId = "6efeb4b8-8f63-4f75-b33a-37904ebdb409"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "743b9807-3441-47c1-9285-5ff8dfd7acb9",
+                RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "7acb06ae-c2de-4fa1-8b62-53c1d63121f0",
+                RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "7eee5b08-df0d-4ac0-a8db-39d924dd30b7",
+                RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "8fa3f3e4-b8a2-4375-9dc8-91b6fbc55e4a",
+                RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "a6866933-92a9-41e7-9100-8bee51ed0ada",
+                RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00",
+                RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "e1a3ac20-1d20-4f37-8826-242657a746c7",
+                RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
+            },
+            new IdentityUserRole<string> 
+            {
+                UserId = "e9bcc340-e63f-40e6-8326-8fe86cbef923",
+                RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
             }
        );
     }
