@@ -59,7 +59,7 @@ namespace IMIS.Application.PgsModule
                 PgsReadinessRating = PgsReadinessRating?.ToEntity(),
                 PercentDeliverables = PercentDeliverables,
                 PgsStatus = PgsStatus,
-                PgsSignatories = PgsSignatories?.Select(s => s.ToEntity()).ToList(),
+                PgsSignatories = PgsSignatories?.Where(s => s != null).Select(s => s.ToEntity()).ToList() ?? new List<PgsSignatory>(),
                 RowVersion = this.RowVersion
             };
         }
