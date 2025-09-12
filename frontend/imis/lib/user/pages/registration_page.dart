@@ -85,7 +85,6 @@ class RegistrationPageState extends State<RegistrationPage> {
       if (e.type == DioExceptionType.connectionError ||
           e.type == DioExceptionType.unknown ||
           e.type == DioExceptionType.receiveTimeout) {
-        // No internet or timeout
         MotionToast.warning(
           title: const Text("Network Error"),
           description: const Text(
@@ -203,9 +202,12 @@ class RegistrationPageState extends State<RegistrationPage> {
         body: Center(
           child:
               isSmallScreen
-                  ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [_Logo(), _buildRegistrationForm()],
+                  ? SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [_Logo(), _buildRegistrationForm()],
+                    ),
                   )
                   : Container(
                     padding: const EdgeInsets.all(32.0),
