@@ -592,6 +592,8 @@ class AdminDashboardState extends State<AdminDashboard> {
         return "Needs Improvement";
       case PgsStatus.completed:
         return "Completed";
+      case PgsStatus.completedBreakthrough:
+        return "Completed (Break Through)";
       case PgsStatus.exceeded:
         return "Exceeded";
       case PgsStatus.onHold:

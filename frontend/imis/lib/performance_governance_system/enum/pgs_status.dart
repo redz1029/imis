@@ -5,11 +5,8 @@ enum PgsStatus {
   delayed,
   needsImprovement,
   completed,
+  completedBreakthrough,
   exceeded,
   onHold,
-  cancelled
+  cancelled,
 }
-
-
-
-
