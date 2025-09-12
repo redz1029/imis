@@ -10,6 +10,7 @@ import 'package:imis/user/services/user_office_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/widgets/custom_toggle.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 
 class UserOfficePage extends StatefulWidget {
@@ -157,6 +158,7 @@ class UserOfficePageState extends State<UserOfficePage> {
     String? selectedUserId,
     String? selectedOfficeId,
     bool isActive = true,
+    bool isOfficeHead = false,
   }) {
     TextEditingController firstNameController = TextEditingController(text: '');
     TextEditingController middleNameController = TextEditingController(
@@ -174,265 +176,283 @@ class UserOfficePageState extends State<UserOfficePage> {
       context: context,
       barrierDismissible: false,
       builder: (context) {
-        return AlertDialog(
-          backgroundColor: mainBgColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12.0),
-          ),
-          titlePadding: EdgeInsets.zero,
-          title: Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
-            decoration: BoxDecoration(
-              color: primaryLightColor,
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              backgroundColor: mainBgColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
               ),
-            ),
-            child: Text(
-              id == null ? 'Create User Office' : 'Edit User Office',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-                color: Colors.white,
-              ),
-            ),
-          ),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: 480,
-                  child: DropdownSearch<User?>(
-                    popupProps: PopupProps.menu(
-                      showSearchBox: true,
-                      searchFieldProps: TextFieldProps(
-                        decoration: InputDecoration(
-                          hintText: 'Search User Name...',
-                          filled: true,
-                          fillColor: mainBgColor,
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                        ),
-                      ),
-                      itemBuilder:
-                          (context, user, isSelected) => ListTile(
-                            tileColor: mainBgColor,
-                            title: Text(user?.fullName ?? ''),
-                          ),
-                    ),
-                    items: userList,
-                    itemAsString: (u) => u?.fullName ?? '',
-                    selectedItem: userList.cast<User?>().firstWhere(
-                      (u) => u?.id == _selectedUserId,
-                      orElse: () => null,
-                    ),
-                    onChanged:
-                        (value) => setState(() => _selectedUserId = value?.id),
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please select a user';
-                      }
-                      return null;
-                    },
-                    dropdownDecoratorProps: DropDownDecoratorProps(
-                      dropdownSearchDecoration: InputDecoration(
-                        labelText: 'Select User',
-                        filled: true,
-                        fillColor: mainBgColor,
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
-                        ),
-                      ),
-                    ),
+              titlePadding: EdgeInsets.zero,
+              title: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+                decoration: BoxDecoration(
+                  color: primaryLightColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
                   ),
                 ),
-                gap14px,
-
-                SizedBox(
-                  width: 480,
-                  child: DropdownSearch<Office>(
-                    popupProps: PopupProps.menu(
-                      showSearchBox: true,
-                      searchFieldProps: TextFieldProps(
-                        decoration: InputDecoration(
-                          hintText: 'Search Office Name...',
-                          filled: true,
-                          fillColor: mainBgColor,
-                          prefixIcon: Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                        ),
-                      ),
-                      itemBuilder:
-                          (context, office, isSelected) => ListTile(
-                            tileColor: mainBgColor,
-                            title: Text(office.name),
-                          ),
-                    ),
-                    items: officenameList,
-                    itemAsString: (office) => office.name,
-                    selectedItem:
-                        _selectedOfficeId == null
-                            ? null
-                            : officenameList.firstWhere(
-                              (office) =>
-                                  office.id.toString() == _selectedOfficeId,
-                              orElse:
-                                  () => Office(
-                                    id: 0,
-                                    name: 'Unknown',
-                                    officeTypeId: 0,
-                                    parentOfficeId: 0,
-                                    isActive: true,
-                                    isDeleted: false,
-                                  ),
+                child: Text(
+                  id == null ? 'Create User Office' : 'Edit User Office',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              content: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      width: 480,
+                      child: DropdownSearch<User?>(
+                        popupProps: PopupProps.menu(
+                          showSearchBox: true,
+                          searchFieldProps: TextFieldProps(
+                            decoration: InputDecoration(
+                              hintText: 'Search User Name...',
+                              filled: true,
+                              fillColor: mainBgColor,
+                              prefixIcon: Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
                             ),
-
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedOfficeId = value?.id.toString();
-                      });
-                    },
-                    validator: (value) {
-                      if (value == null) {
-                        return 'Please select an office';
-                      }
-                      return null;
-                    },
-                    dropdownDecoratorProps: DropDownDecoratorProps(
-                      dropdownSearchDecoration: InputDecoration(
-                        labelText: 'Select Office',
-                        filled: true,
-                        fillColor: mainBgColor,
-                        floatingLabelBehavior: FloatingLabelBehavior.never,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          ),
+                          itemBuilder:
+                              (context, user, isSelected) => ListTile(
+                                tileColor: mainBgColor,
+                                title: Text(user?.fullName ?? ''),
+                              ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderSide: BorderSide(color: primaryColor),
+                        items: userList,
+                        itemAsString: (u) => u?.fullName ?? '',
+                        selectedItem: userList.cast<User?>().firstWhere(
+                          (u) => u?.id == _selectedUserId,
+                          orElse: () => null,
+                        ),
+                        onChanged:
+                            (value) =>
+                                setState(() => _selectedUserId = value?.id),
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select a user';
+                          }
+                          return null;
+                        },
+                        dropdownDecoratorProps: DropDownDecoratorProps(
+                          dropdownSearchDecoration: InputDecoration(
+                            labelText: 'Select User',
+                            filled: true,
+                            fillColor: mainBgColor,
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: primaryColor),
+                            ),
+                          ),
                         ),
                       ),
                     ),
+                    gap14px,
+
+                    SizedBox(
+                      width: 480,
+                      child: DropdownSearch<Office>(
+                        popupProps: PopupProps.menu(
+                          showSearchBox: true,
+                          searchFieldProps: TextFieldProps(
+                            decoration: InputDecoration(
+                              hintText: 'Search Office Name...',
+                              filled: true,
+                              fillColor: mainBgColor,
+                              prefixIcon: Icon(Icons.search),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                            ),
+                          ),
+                          itemBuilder:
+                              (context, office, isSelected) => ListTile(
+                                tileColor: mainBgColor,
+                                title: Text(office.name),
+                              ),
+                        ),
+                        items: officenameList,
+                        itemAsString: (office) => office.name,
+                        selectedItem:
+                            _selectedOfficeId == null
+                                ? null
+                                : officenameList.firstWhere(
+                                  (office) =>
+                                      office.id.toString() == _selectedOfficeId,
+                                  orElse:
+                                      () => Office(
+                                        id: 0,
+                                        name: 'Unknown',
+                                        officeTypeId: 0,
+                                        parentOfficeId: 0,
+                                        isActive: true,
+                                        isDeleted: false,
+                                      ),
+                                ),
+
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedOfficeId = value?.id.toString();
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null) {
+                            return 'Please select an office';
+                          }
+                          return null;
+                        },
+                        dropdownDecoratorProps: DropDownDecoratorProps(
+                          dropdownSearchDecoration: InputDecoration(
+                            labelText: 'Select Office',
+                            filled: true,
+                            fillColor: mainBgColor,
+                            floatingLabelBehavior: FloatingLabelBehavior.never,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(color: primaryColor),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    gap14px,
+                    CustomToggle(
+                      label: "Office Head",
+                      value: isOfficeHead,
+                      activeColor: primaryColor,
+                      inactiveColor: Colors.grey,
+                      onChanged: (val) {
+                        setState(() {
+                          isOfficeHead = val;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      bool? confirmAction = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: Text(
+                              id == null ? "Confirm Save" : "Confirm Update",
+                            ),
+                            content: Text(
+                              id == null
+                                  ? "Are you sure you want to save this record?"
+                                  : "Are you sure you want to update this record?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(
+                                  "No",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text(
+                                  "Yes",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (confirmAction == true) {
+                        final isDuplicate = userOfficeList.any(
+                          (u) =>
+                              u.userId == _selectedUserId &&
+                              u.officeId ==
+                                  int.tryParse(_selectedOfficeId ?? '0') &&
+                              u.id != int.tryParse(id ?? '0'),
+                        );
+
+                        if (isDuplicate) {
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'User already assigned to this office.',
+                              ),
+                            ),
+                          );
+                          return;
+                        }
+
+                        final user = UserOffice(
+                          id: int.tryParse(id ?? '0') ?? 0,
+                          isDeleted: isDeleted,
+                          rowVersion: '',
+                          userId: _selectedUserId ?? '',
+                          officeId: int.tryParse(_selectedOfficeId ?? '0') ?? 0,
+                          isActive: isActive,
+                          firstName: firstNameController.text,
+                          middleName: middleNameController.text,
+                          lastName: lastNameController.text,
+                          prefix: prefixController.text,
+                          suffix: suffixController.text,
+                          position: positionController.text,
+                          isOfficeHead: isOfficeHead,
+                        );
+
+                        await _userOfficeService.addOrUpdateUserOffice(user);
+                        setState(() {
+                          fetchUserOffice();
+                        });
+                        // ignore: use_build_context_synchronously
+                        Navigator.pop(context);
+                      }
+                    }
+                  },
+                  child: Text(
+                    id == null ? 'Save' : 'Update',
+                    style: TextStyle(color: Colors.white),
                   ),
                 ),
               ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  bool? confirmAction = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: Text(
-                          id == null ? "Confirm Save" : "Confirm Update",
-                        ),
-                        content: Text(
-                          id == null
-                              ? "Are you sure you want to save this record?"
-                              : "Are you sure you want to update this record?",
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(
-                              "No",
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: Text(
-                              "Yes",
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-
-                  if (confirmAction == true) {
-                    final isDuplicate = userOfficeList.any(
-                      (u) =>
-                          u.userId == _selectedUserId &&
-                          u.officeId ==
-                              int.tryParse(_selectedOfficeId ?? '0') &&
-                          u.id != int.tryParse(id ?? '0'),
-                    );
-
-                    if (isDuplicate) {
-                      // ignore: use_build_context_synchronously
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            'User already assigned to this office.',
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-
-                    final user = UserOffice(
-                      id: int.tryParse(id ?? '0') ?? 0,
-                      isDeleted: isDeleted,
-                      rowVersion: '',
-                      userId: _selectedUserId ?? '',
-                      officeId: int.tryParse(_selectedOfficeId ?? '0') ?? 0,
-                      isActive: isActive,
-                      firstName: firstNameController.text,
-                      middleName: middleNameController.text,
-                      lastName: lastNameController.text,
-                      prefix: prefixController.text,
-                      suffix: suffixController.text,
-                      position: positionController.text,
-                    );
-
-                    await _userOfficeService.addOrUpdateUserOffice(user);
-                    setState(() {
-                      fetchUserOffice();
-                    });
-                    // ignore: use_build_context_synchronously
-                    Navigator.pop(context);
-                  }
-                }
-              },
-              child: Text(
-                id == null ? 'Save' : 'Update',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-          ],
+            );
+          },
         );
       },
     );
@@ -660,6 +680,9 @@ class UserOfficePageState extends State<UserOfficePage> {
                                                       selectedOfficeId:
                                                           userOffice.officeId
                                                               .toString(),
+                                                      isOfficeHead:
+                                                          userOffice
+                                                              .isOfficeHead,
                                                     );
                                                   },
                                                 ),
