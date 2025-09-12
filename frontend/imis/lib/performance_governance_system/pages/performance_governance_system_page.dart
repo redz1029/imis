@@ -46,6 +46,8 @@ class PerformanceGovernanceSystemPageState
   // final _commonService = CommonService(Dio());
   final GlobalKey _menuKey = GlobalKey();
   final _formKey = GlobalKey<FormState>();
+  final _dateConverter = const LongDateOnlyConverter();
+
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> deliverablesControllersDisapproved = {};
   Map<int, bool> clearedOnDisapprove = {};
@@ -2032,28 +2034,34 @@ class PerformanceGovernanceSystemPageState
                                       ),
 
                                       Container(
-                                        width: 250,
+                                        width: 400,
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 8,
                                         ),
                                         child: Tooltip(
                                           message:
                                               'A defined timeframe (quarter, semester, or year) used to track, evaluate, and report performance deliverables.',
+
                                           child: DropdownButtonFormField<int>(
                                             autovalidateMode:
                                                 AutovalidateMode
                                                     .onUserInteraction,
-
                                             validator: (value) {
                                               if (value == null) {
                                                 return 'Please select a period date';
                                               }
                                               return null;
                                             },
-                                            hint: Text('Select a Period'),
+                                            hint: const Center(
+                                              child: Text(
+                                                'Select a Period',
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ),
+
                                             value: selectedPeriod,
                                             isExpanded: true,
-                                            decoration: InputDecoration(
+                                            decoration: const InputDecoration(
                                               border: OutlineInputBorder(
                                                 borderSide: BorderSide.none,
                                               ),
@@ -2074,20 +2082,83 @@ class PerformanceGovernanceSystemPageState
                                                                   orElse:
                                                                       () => {},
                                                                 );
-                                                        selectedPeriodText =
-                                                            "${selected['startDate']} - ${selected['endDate']}";
+                                                        if (selected
+                                                            .isNotEmpty) {
+                                                          final start =
+                                                              _dateConverter.toJson(
+                                                                _dateConverter
+                                                                    .fromJson(
+                                                                      selected['startDate'],
+                                                                    ),
+                                                              );
+                                                          final end = _dateConverter
+                                                              .toJson(
+                                                                _dateConverter
+                                                                    .fromJson(
+                                                                      selected['endDate'],
+                                                                    ),
+                                                              );
+                                                          selectedPeriodText =
+                                                              "$start to $end";
+                                                        }
                                                       });
                                                     },
+
+                                            // ✅ Selected item style
+                                            selectedItemBuilder: (
+                                              BuildContext context,
+                                            ) {
+                                              return filteredListPeriod.map<
+                                                Widget
+                                              >((period) {
+                                                final start = _dateConverter
+                                                    .toJson(
+                                                      _dateConverter.fromJson(
+                                                        period['startDate'],
+                                                      ),
+                                                    );
+                                                final end = _dateConverter
+                                                    .toJson(
+                                                      _dateConverter.fromJson(
+                                                        period['endDate'],
+                                                      ),
+                                                    );
+                                                return Center(
+                                                  child: Text(
+                                                    "$start to $end",
+                                                    softWrap: true,
+                                                    textAlign: TextAlign.center,
+                                                  ),
+                                                );
+                                              }).toList();
+                                            },
+
                                             items:
                                                 filteredListPeriod.map<
                                                   DropdownMenuItem<int>
                                                 >((period) {
+                                                  final start = _dateConverter
+                                                      .toJson(
+                                                        _dateConverter.fromJson(
+                                                          period['startDate'],
+                                                        ),
+                                                      );
+                                                  final end = _dateConverter
+                                                      .toJson(
+                                                        _dateConverter.fromJson(
+                                                          period['endDate'],
+                                                        ),
+                                                      );
                                                   return DropdownMenuItem<int>(
                                                     value: period['id'],
-                                                    child: Text(
-                                                      "${period['startDate']} - ${period['endDate']}",
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
+                                                    child: Center(
+                                                      // ✅ centers menu items
+                                                      child: Text(
+                                                        "$start to $end",
+                                                        softWrap: true,
+                                                        textAlign:
+                                                            TextAlign.center,
+                                                      ),
                                                     ),
                                                   );
                                                 }).toList(),
