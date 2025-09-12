@@ -39,6 +39,7 @@ namespace IMIS.Infrastructure.Auths
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new PgsDeliverableScoreHistoryPermission(),
                 new PgsDeliverableAuditorPermission(),
+                new PgsDeliverableAuditorPermission(),
                 new KeyResultAreaPermission(), 
                 new PgsPeriodPermission(), 
                 new OfficePermission());
