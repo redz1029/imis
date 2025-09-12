@@ -45,9 +45,7 @@ namespace IMIS.Persistence.OfficeModule
         public async Task<List<Office>> GetOfficesForAuditorAsync(string userId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditorOffices>()
-                .Where(ao => ao.Auditor != null
-                          && ao.Auditor.UserId == userId
-                          && ao.Auditor.IsActive)
+                .Where(ao => ao.Auditor != null && ao.Auditor.UserId == userId && ao.Auditor.IsActive)
                 .Select(ao => ao.Office!)
                 .Distinct()
                 .ToListAsync(cancellationToken);
@@ -56,9 +54,7 @@ namespace IMIS.Persistence.OfficeModule
         public async Task<List<int>> GetAuditorOfficeIdsAsync(string userId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditorOffices>()
-                .Where(ao => ao.Auditor != null
-                          && ao.Auditor.UserId == userId
-                          && ao.Auditor.IsActive)
+                .Where(ao => ao.Auditor != null && ao.Auditor.UserId == userId && ao.Auditor.IsActive)
                 .Select(ao => ao.OfficeId)
                 .Distinct()
                 .ToListAsync(cancellationToken)
