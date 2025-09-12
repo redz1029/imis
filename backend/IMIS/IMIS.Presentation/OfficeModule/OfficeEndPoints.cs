@@ -58,6 +58,7 @@ namespace IMIS.Presentation.OfficeModule
                 return Results.Ok(offices);
             })
             .WithTags(_officeTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_officeTag), true);
          
             app.MapGet("/filter/{name}", async (string name, IOfficeService service, CancellationToken cancellationToken) =>
