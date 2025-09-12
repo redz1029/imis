@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 
-namespace IMIS.Persistence.PGSModules
+namespace IMIS.Persistence.PGSModules 
 {
     public class PGSDeliverableService : IPGSDeliverableService
     {
