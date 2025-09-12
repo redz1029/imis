@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:imis/constant/constant.dart';
 import 'package:imis/dashboard/admin_dashboard.dart';
 import 'package:imis/dashboard/standard_user_dashboard.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // ← Add this import
+import 'package:shared_preferences/shared_preferences.dart';
 
 final GlobalKey<HomePageState> homePageKey = GlobalKey();
 
@@ -43,7 +44,11 @@ class HomePageState extends State<HomePage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    if (_userRoles?.contains("Administrator") ?? false) {
+    if (_userRoles == null || _userRoles!.isEmpty) {
+      return const Scaffold(backgroundColor: mainBgColor);
+    }
+
+    if (_userRoles!.contains("Administrator")) {
       return const AdminDashboard();
     }
 

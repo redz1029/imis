@@ -1,5 +1,4 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
@@ -30,6 +29,7 @@ import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_service.dart';
+import 'package:imis/widgets/circle_text_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -108,15 +108,21 @@ class NavigationPanelState extends State<NavigationPanel> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _showSwitchRole();
         });
-      } else {
-        if (roles.isNotEmpty) {
-          setState(() {
-            selectedRole = roles.first;
-          });
-          final permissions = RolePermissions.getPermissionsForRoles([
-            roles.first,
-          ]);
-          PermissionService().loadPermissions(permissions);
+      } else if (roles.isNotEmpty) {
+        final singleRole = roles.first;
+        await prefs.setString('selectedRole', singleRole);
+
+        final permissions = RolePermissions.getPermissionsForRoles([
+          singleRole,
+        ]);
+        PermissionService().loadPermissions(permissions);
+
+        setState(() {
+          selectedRole = singleRole;
+        });
+
+        if (homePageKey.currentState != null) {
+          await homePageKey.currentState!.refreshUserRoles();
         }
       }
     }
@@ -219,9 +225,9 @@ class NavigationPanelState extends State<NavigationPanel> {
                           minimumSize: const Size(double.infinity, 45),
                         ),
                         onPressed: () async {
-                          setState(() {
-                            selectedRole = role;
-                          });
+                          Navigator.of(context).pop();
+
+                          setState(() => _isSwitchingRole = true);
 
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.setString('selectedRole', role);
@@ -229,7 +235,15 @@ class NavigationPanelState extends State<NavigationPanel> {
                               RolePermissions.getPermissionsForRoles([role]);
                           PermissionService().loadPermissions(permissions);
 
-                          Navigator.of(context).pop();
+                          await Future.delayed(Duration(milliseconds: 500));
+
+                          setState(() {
+                            selectedRole = role;
+                            _isSwitchingRole = false;
+                          });
+                          if (homePageKey.currentState != null) {
+                            await homePageKey.currentState!.refreshUserRoles();
+                          }
                         },
                         child: Text(
                           role,
@@ -637,7 +651,7 @@ class NavigationPanelState extends State<NavigationPanel> {
               child: Column(
                 children: [
                   _buildListTile(
-                    Icons.dashboard,
+                    Icons.dashboard_outlined,
                     'Dashboard',
                     0,
                     () => _setScreen(HomePage(), 0),
@@ -646,7 +660,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                   PermissionWidget(
                     permission: AppPermission.viewPerformanceGovernanceSystem,
                     child: _buildListTile(
-                      Icons.insert_drive_file,
+                      Icons.insert_drive_file_outlined,
                       'Create PGS Deliverables',
                       2,
                       () => _setScreen(PerformanceGovernanceSystemPage(), 2),
@@ -656,7 +670,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                   PermissionWidget(
                     permission: AppPermission.viewPgsDeliverableMonitor,
                     child: _buildListTile(
-                      Icons.credit_score,
+                      Icons.credit_score_outlined,
                       'Deliverable Status Monitoring',
                       3,
                       () => _setScreen(PgsScoreMonitoringPage(), 3),
@@ -668,7 +682,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                       data: Theme.of(context).copyWith(dividerColor: lightGrey),
                       child: ExpansionTile(
                         leading: const Icon(
-                          Icons.settings,
+                          Icons.settings_outlined,
                           color: primaryTextColor,
                         ),
                         title: const Text(
@@ -788,7 +802,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                   ),
 
                   _buildListTile(
-                    Icons.folder,
+                    Icons.folder_outlined,
                     'Reports',
                     17,
                     () => _setScreen(PgsReportPage(), 17),
@@ -798,7 +812,7 @@ class NavigationPanelState extends State<NavigationPanel> {
             ),
           ),
           _buildListTile(
-            Icons.exit_to_app,
+            Icons.exit_to_app_outlined,
             'Logout',
             18,
             () => _logout(context),
@@ -856,7 +870,7 @@ class NavigationPanelState extends State<NavigationPanel> {
           value: "Profile",
           child: Row(
             children: const [
-              Icon(Icons.person),
+              Icon(Icons.person_outline),
               SizedBox(width: 30),
               Text("Profile"),
             ],
@@ -866,7 +880,7 @@ class NavigationPanelState extends State<NavigationPanel> {
           value: "Switch Role",
           child: Row(
             children: const [
-              Icon(Icons.switch_account),
+              Icon(Icons.switch_account_outlined),
               SizedBox(width: 30),
               Text("Switch Role"),
             ],
@@ -876,7 +890,7 @@ class NavigationPanelState extends State<NavigationPanel> {
           value: "change_password",
           child: Row(
             children: const [
-              Icon(Icons.lock),
+              Icon(Icons.lock_clock_outlined),
               SizedBox(width: 30),
               Text("Change Password"),
             ],
@@ -886,7 +900,7 @@ class NavigationPanelState extends State<NavigationPanel> {
           value: "logout",
           child: Row(
             children: const [
-              Icon(Icons.exit_to_app),
+              Icon(Icons.exit_to_app_outlined),
               SizedBox(width: 30),
               Text("Logout"),
             ],
@@ -928,52 +942,67 @@ class NavigationPanelState extends State<NavigationPanel> {
                       appBar: AppBar(
                         backgroundColor: secondaryColor,
                         actions: [
-                          GestureDetector(
-                            key: _menuKey,
-                            onTap: () => _showProfileSetting(context),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  ClipOval(
-                                    child: Image.asset(
-                                      'assets/iconprofile.png',
-                                      width: 40,
-                                      height: 40,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 4),
-                                      Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(firstName.split(' ')[0]),
-                                        ],
-                                      ),
-                                      Text(
-                                        selectedRole ?? 'No role selected',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: grey,
+                          MouseRegion(
+                            cursor: SystemMouseCursors.click,
+                            child: GestureDetector(
+                              key: _menuKey,
+                              onTap: () => _showProfileSetting(context),
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16.0,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  crossAxisAlignment: CrossAxisAlignment.center,
+                                  children: [
+                                    // IconButton(
+                                    //   onPressed: () {},
+                                    //   icon: Icon(
+                                    //     Icons.notifications_none_outlined,
+                                    //   ),
+                                    // ),
+                                    // Padding(
+                                    //   padding: EdgeInsets.symmetric(
+                                    //     vertical: 8,
+                                    //   ),
+                                    //   child: VerticalDivider(
+                                    //     color: grey,
+                                    //     thickness: 0.5,
+                                    //   ),
+                                    // ),
+                                    SizedBox(width: 4),
+                                    Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(firstName.split(' ')[0]),
+                                          ],
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Icon(Icons.expand_more, size: 32),
-                                ],
+                                        Text(
+                                          selectedRole ?? 'No role selected',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: grey,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 8),
+                                    CircleTextWidget(
+                                      text:
+                                          "${firstName.isNotEmpty ? firstName[0] : "A"}${lastName.isNotEmpty ? lastName[0] : "B"}",
+                                      color: primaryColor,
+                                      size: 45,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ),
