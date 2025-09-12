@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="09/08/2025 15:31:58" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="09/11/2025 14:45:15" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -56,6 +56,7 @@ namespace FastReport
 
         // Show the line
         SigLine1.Visible = true;
+        SigantoryLabel1.Visible = true;
       }
       else
       {
@@ -63,6 +64,7 @@ namespace FastReport
 
         // Hide the line if no signatory
         SigLine1.Visible = false;
+        SigantoryLabel1.Visible = false;
       }
     }
 
@@ -348,7 +350,7 @@ namespace FastReport
     </DataBand>
     <PageFooterBand Name="PageFooter1" Top="281.2" Width="1047.06" Height="251.75" CanBreak="true">
       <TextObject Name="Text14" Left="277.9" Top="3" Width="170.1" Height="19.8" Anchor="Bottom, Left" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel2]" VertAlign="Center" Font="Segoe UI, 8pt"/>
-      <TextObject Name="Text15" Left="23.3" Top="3" Width="170.1" Height="19.8" Anchor="Bottom, Left" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel1]&#13;&#10;" VertAlign="Center" Font="Segoe UI, 8pt"/>
+      <TextObject Name="SigantoryLabel1" Left="23.3" Top="3" Width="170.1" Height="19.8" Anchor="Bottom, Left" Text="Prepared By&#13;&#10;" VertAlign="Center" Font="Segoe UI, 8pt"/>
       <LineObject Name="SigLine1" Left="45.45" Top="48.8" Width="200.85" Anchor="Bottom, Left" Diagonal="true"/>
       <LineObject Name="SigLine2" Left="300.8" Top="49.25" Width="210.85" Anchor="Bottom, Left" Diagonal="true"/>
       <LineObject Name="SigLine4" Left="800.65" Top="51.15" Width="203.95" Anchor="Bottom, Left" Diagonal="true"/>
