@@ -11,39 +11,73 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 
+    public async Task<List<PerfomanceGovernanceSystem>> GetByOfficeIdsAsync(List<int> officeIds, CancellationToken cancellationToken)
+    {
+        return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
+            
+            .Include(p => p.Office)
+            .Include(p => p.PgsDeliverables)
+            .Include(p => p.PgsSignatories)
+             .Include(p => p.PgsPeriod)
+            .Where(p => officeIds.Contains(p.OfficeId))
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+    }
+
     public async Task<PerfomanceGovernanceSystem?> GetWithIncludesAsync(int id, CancellationToken cancellationToken)
     {
         return await _entities
             .Include(p => p.PgsDeliverables)
             .Include(p => p.PgsSignatories)
             .Include(p => p.PgsReadinessRating)
+               .Include(p => p.Office)
+               .Include(p => p.PgsPeriod)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
-
+   
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
-    {
-       
-        /// Get all office IDs where the user is assigned
+    {      
         var userOfficeIds = await ReadOnlyDbContext.Set<UserOffices>()
-        .Where(u => u.UserId == userId)
-        .Select(u => u.OfficeId)
-        .Distinct()
-        .ToListAsync(cancellationToken);
+            .Where(u => u.UserId == userId)
+            .Select(u => u.OfficeId)
+            .ToListAsync(cancellationToken);
 
-        // Fetch all PGS records for those offices
-        var pgs = await _entities
-            .Where(p => userOfficeIds.Contains(p.OfficeId))
+        if (!userOfficeIds.Any())
+            return Enumerable.Empty<PerfomanceGovernanceSystem>();
+       
+        var allOfficeIds = await GetAllChildOfficeIdsAsync(userOfficeIds, cancellationToken);
+       
+        var pgsRecords = await _entities
+            .Where(p => allOfficeIds.Contains(p.OfficeId))
             .Include(p => p.PgsPeriod)
             .Include(p => p.Office)
                 .ThenInclude(o => o.UserOffices)
             .Include(p => p.PgsReadinessRating)
             .Include(p => p.PgsSignatories)
             .Include(p => p.PgsDeliverables)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
-        return pgs;
+        return pgsRecords;
+    }
 
+    private async Task<List<int>> GetAllChildOfficeIdsAsync(List<int> officeIds, CancellationToken cancellationToken)
+    {
+        var allIds = new HashSet<int>(officeIds);
+
+        var childIds = await ReadOnlyDbContext.Set<Office>()
+            .Where(o => o.ParentOfficeId.HasValue && officeIds.Contains(o.ParentOfficeId.Value))
+            .Select(o => o.Id)
+            .ToListAsync(cancellationToken);
+
+        if (childIds.Any())
+        {
+            allIds.UnionWith(childIds);
+            var grandChildIds = await GetAllChildOfficeIdsAsync(childIds, cancellationToken);
+            allIds.UnionWith(grandChildIds);
+        }
+
+        return allIds.ToList();
     }
 
     public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
@@ -63,18 +97,32 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     public async Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
     {
         var pgs = await _entities
-       .Where(p => p.Id == pgsId && p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
-       .Include(p => p.PgsPeriod)
-       .Include(p => p.Office)
-       .Include(p => p.PgsDeliverables)
-       .ThenInclude(d => d.Kra)
-       .Include(p => p.PgsReadinessRating)
-       .Include(p => p.PgsSignatories)
-       .FirstOrDefaultAsync(cancellationToken)
-       .ConfigureAwait(false);
-        return pgs;       
+         .Where(p => p.Id == pgsId)
+         .Include(p => p.PgsPeriod)
+         .Include(p => p.PgsReadinessRating)
+         .Include(p => p.PgsSignatories)
+         .Include(p => p.PgsDeliverables)
+             .ThenInclude(d => d.Kra)
+         .Include(p => p.Office)
+             .ThenInclude(o => o.UserOffices)
+         .Include(p => p.Office)
+             .ThenInclude(o => o.ParentOffice)
+                 .ThenInclude(po => po!.UserOffices)
+         .FirstOrDefaultAsync(cancellationToken);
+        
+        if (pgs != null)
+        {
+            var inChildOffice = pgs.Office.UserOffices!.Any(u => u.UserId == userId);
+            var inParentOffice = pgs.Office.ParentOffice?.UserOffices!.Any(u => u.UserId == userId) == true;
+
+            if (!inChildOffice && !inParentOffice)
+                return null;
+        }
+
+        return pgs;
+
     }
-    
+
     //Get Pgs Report: Filter by Id
     public async Task<PerfomanceGovernanceSystem?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
     {
