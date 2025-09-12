@@ -19,6 +19,7 @@ UserOffice _$UserOfficeFromJson(Map<String, dynamic> json) => UserOffice(
   prefix: json['prefix'] as String?,
   suffix: json['suffix'] as String?,
   position: json['position'] as String,
+  isOfficeHead: json['isOfficeHead'] as bool,
 );
 
 Map<String, dynamic> _$UserOfficeToJson(UserOffice instance) =>
@@ -35,4 +36,5 @@ Map<String, dynamic> _$UserOfficeToJson(UserOffice instance) =>
       'prefix': instance.prefix,
       'suffix': instance.suffix,
       'position': instance.position,
+      'isOfficeHead': instance.isOfficeHead,
     };

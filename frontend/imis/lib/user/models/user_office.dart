@@ -16,6 +16,7 @@ class UserOffice {
   final String? prefix;
   final String? suffix;
   final String position;
+  final bool isOfficeHead;
 
   UserOffice({
     required this.id,
@@ -30,6 +31,7 @@ class UserOffice {
     required this.prefix,
     required this.suffix,
     required this.position,
+    required this.isOfficeHead,
   });
 
   factory UserOffice.fromJson(Map<String, dynamic> json) =>
