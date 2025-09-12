@@ -7,9 +7,7 @@ namespace IMIS.Persistence.AuditorTeamsModule
 {   
     public class AuditorTeamsRepository : BaseRepository<AuditorTeams, int, ImisDbContext>, IAuditorTeamsRepository
     {
-        //    [Obsolete("Do not inject Database Context here, inherit the BaseRepository and make use of _entities and ReadOnlyDbContext intead.", true)]
-        //    private readonly ImisDbContext _dbContext; 
-
+    
         public AuditorTeamsRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
