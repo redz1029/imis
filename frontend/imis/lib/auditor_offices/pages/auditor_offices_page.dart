@@ -28,6 +28,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
 
   final dio = Dio();
   TextEditingController searchController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
   String? _selectedAuditor;
   String? _selectedOffice;
   String? _selectedPeriod;
@@ -177,6 +178,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
             ),
           ),
           content: Form(
+            key: _formKey,
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -246,7 +248,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                             ),
                     validator: (value) {
                       if (value == null) {
-                        return 'required';
+                        return 'This field is required';
                       }
                       return null;
                     },
@@ -318,7 +320,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                     },
                     validator: (value) {
                       if (value == null) {
-                        return 'required';
+                        return 'This field is required';
                       }
                       return null;
                     },
@@ -394,7 +396,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                     },
                     validator: (value) {
                       if (value == null) {
-                        return 'required';
+                        return 'This field is required';
                       }
                       return null;
                     },
@@ -430,51 +432,53 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                 ),
               ),
               onPressed: () async {
-                bool? confirmAction = await showDialog<bool>(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      title: Text(
-                        id == null ? "Confirm Save" : "Confirm Update",
-                      ),
-                      content: Text(
-                        id == null
-                            ? "Are you sure you want to save this record?"
-                            : "Are you sure you want to update this record?",
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: Text(
-                            "No",
-                            style: TextStyle(color: primaryColor),
-                          ),
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: Text(
+                          id == null ? "Confirm Save" : "Confirm Update",
                         ),
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: Text(
-                            "Yes",
-                            style: TextStyle(color: primaryColor),
-                          ),
+                        content: Text(
+                          id == null
+                              ? "Are you sure you want to save this record?"
+                              : "Are you sure you want to update this record?",
                         ),
-                      ],
-                    );
-                  },
-                );
-                if (confirmAction == true) {
-                  final auditorOffice = AuditorOffices(
-                    id: int.tryParse(id ?? '0') ?? 0,
-                    auditorId: int.tryParse(_selectedAuditor ?? '0') ?? 0,
-                    officeId: int.tryParse(_selectedOffice ?? '0') ?? 0,
-                    pgsPeriodId: int.tryParse(_selectedPeriod ?? '0') ?? 0,
-                    isOfficeHead: false,
-                    isDeleted: false,
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   );
-                  await _auditorOfficeSevice.addAuditorOffice(auditorOffice);
-                  setState(() {
-                    fetchAuditorOffice();
-                  });
-                  Navigator.pop(context);
+                  if (confirmAction == true) {
+                    final auditorOffice = AuditorOffices(
+                      id: int.tryParse(id ?? '0') ?? 0,
+                      auditorId: int.tryParse(_selectedAuditor ?? '0') ?? 0,
+                      officeId: int.tryParse(_selectedOffice ?? '0') ?? 0,
+                      pgsPeriodId: int.tryParse(_selectedPeriod ?? '0') ?? 0,
+                      isOfficeHead: false,
+                      isDeleted: false,
+                    );
+                    await _auditorOfficeSevice.addAuditorOffice(auditorOffice);
+                    setState(() {
+                      fetchAuditorOffice();
+                    });
+                    Navigator.pop(context);
+                  }
                 }
               },
               child: Text(
