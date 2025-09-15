@@ -52,7 +52,7 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
   bool _hasEditPermission = false;
   List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
   List<PgsDeliverableHistoryGrouped> deliverableHistoryGroupedfilteredList = [];
-
+  bool hasSeenOnGoingTip = false;
   Map<int, PgsStatus> selectedStatus = {};
 
   TextEditingController scoreRangeToController = TextEditingController();
@@ -81,6 +81,11 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     fetchPGSPeriods();
     fetchScoreHistory();
     _checkPermissions();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   void _checkPermissions() {
@@ -399,21 +404,10 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
     final statusDescriptions = {
       PgsStatus.notStarted:
           "Deliverable has been defined but work has not yet begun",
-      PgsStatus.inProgress: "Deliverable is currently being worked on",
-      PgsStatus.onTrack:
-          "Deliverable is progressing according to the PGS timeline",
-      PgsStatus.delayed:
-          "Deliverable has fallen behind the expected PGS schedule",
-      PgsStatus.needsImprovement:
-          "Deliverable requires corrective action to align with PGS targets",
       PgsStatus.completed:
           "Deliverable has been finished and meets PGS requirements",
-      PgsStatus.exceeded:
-          "Deliverable has surpassed PGS performance expectations",
-      PgsStatus.onHold:
-          "Deliverable is temporarily paused pending decision or resources",
-      PgsStatus.cancelled:
-          "Deliverable has been discontinued and removed from the PGS pipeline",
+      PgsStatus.onGoing:
+          "Deliverable is in progress and may be on hold pending decisions or resources",
     };
 
     return Padding(
@@ -422,19 +416,38 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
           _hasEditPermission
               ? DropdownButtonFormField<PgsStatus>(
                 value: selectedStatus[index],
-                onChanged: (PgsStatus? newValue) {
+                onChanged: (PgsStatus? newValue) async {
                   if (newValue != null) {
                     setDialogState();
                     setState(() {
                       selectedStatus[index] = newValue;
                     });
-                    saveStatusToDb(index, newValue);
+
+                    if (newValue == PgsStatus.completed) {
+                      percentageValues[index] = 100;
+                      percentageControllers[index]?.text = '100';
+                      setState(() {});
+                    }
+
+                    if (newValue == PgsStatus.notStarted) {
+                      percentageValues[index] = 0;
+                      percentageControllers[index]?.text = '0';
+                      setState(() {});
+                    }
+
+                    if (newValue == PgsStatus.onGoing) {
+                      percentageValues[index] = 0;
+                      percentageControllers[index]?.text = '';
+                    }
                   }
                 },
                 isExpanded: true,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   contentPadding: EdgeInsets.all(8.0),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
                 ),
                 items:
                     PgsStatus.values.map((PgsStatus value) {
@@ -631,8 +644,13 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                   keyboardType: TextInputType.multiline,
                   style: TextStyle(fontSize: 14.0),
                   decoration: InputDecoration(
-                    border: OutlineInputBorder(),
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(color: grey),
+                    ),
                     contentPadding: EdgeInsets.all(8.0),
+                    focusedBorder: OutlineInputBorder(
+                      borderSide: BorderSide(color: primaryColor),
+                    ),
                   ),
                   onChanged: (value) {
                     setState(() {});
@@ -668,16 +686,25 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
       });
     }
 
+    final status = selectedStatus[index];
     final int progress = percentageValues[index] ?? 0;
-    final double progressFraction = progress / 100.0;
 
+    double progressFraction;
     Color progressColor;
-    if (progress < 50) {
-      progressColor = Colors.red;
-    } else if (progress < 80) {
-      progressColor = Colors.orange;
-    } else {
+
+    if (status == PgsStatus.onGoing &&
+        (percentageControllers[index]?.text.isEmpty ?? true)) {
+      progressFraction = 0.0;
+      progressColor = Colors.transparent;
+    } else if (progress == 100) {
+      progressFraction = 1.0;
       progressColor = Colors.green;
+    } else if (progress == 0) {
+      progressFraction = 1.0;
+      progressColor = Colors.red;
+    } else {
+      progressFraction = progress / 100.0;
+      progressColor = Colors.orange;
     }
 
     return Padding(
@@ -705,27 +732,92 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                       SizedBox(
                         width: 40,
                         height: 40,
-                        child: Center(
-                          child: TextField(
-                            controller: percentageControllers[index],
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // TextField(
+                            //   controller: percentageControllers[index],
+                            //   textAlign: TextAlign.center,
+                            //   style: const TextStyle(
+                            //     fontSize: 12,
+                            //     fontWeight: FontWeight.bold,
+                            //   ),
+                            //   keyboardType: TextInputType.number,
+                            //   readOnly:
+                            //       progress == 100 ||
+                            //       (progress == 0 &&
+                            //           selectedStatus[index] !=
+                            //               PgsStatus.onGoing),
+
+                            //   decoration: const InputDecoration(
+                            //     border: InputBorder.none,
+                            //     contentPadding: EdgeInsets.zero,
+                            //     isDense: true,
+                            //   ),
+                            //   inputFormatters: [
+                            //     FilteringTextInputFormatter.digitsOnly,
+                            //     LengthLimitingTextInputFormatter(3),
+                            //     if (selectedStatus[index] == PgsStatus.onGoing)
+                            //       RangeInputFormatter(1, 99)
+                            //     else
+                            //       RangeInputFormatter(0, 100),
+                            //   ],
+                            // ),
+                            TextField(
+                              onTap: () {
+                                if (selectedStatus[index] ==
+                                    PgsStatus.onGoing) {
+                                  MotionToast.info(
+                                    title: const Text("Ongoing Status"),
+                                    description: const Text(
+                                      "Enter a score between 1 to 99 only.",
+                                    ),
+                                    toastDuration: const Duration(seconds: 10),
+                                    toastAlignment: Alignment.center,
+                                    borderRadius: 10.0,
+                                  ).show(context);
+                                }
+                              },
+                              controller: percentageControllers[index],
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              keyboardType: TextInputType.number,
+                              readOnly:
+                                  progress == 100 ||
+                                  (progress == 0 &&
+                                      selectedStatus[index] !=
+                                          PgsStatus.onGoing),
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 12,
+                                ),
+                                isDense: true,
+                              ),
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                                LengthLimitingTextInputFormatter(3),
+                                if (selectedStatus[index] == PgsStatus.onGoing)
+                                  RangeInputFormatter(1, 99)
+                                else
+                                  RangeInputFormatter(0, 100),
+                              ],
                             ),
-                            keyboardType: TextInputType.number,
-                            decoration: const InputDecoration(
-                              suffixText: '%',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.zero,
-                              isDense: true,
+                            Positioned(
+                              right: 0.5,
+                              child: Text(
+                                '%',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                             ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                              LengthLimitingTextInputFormatter(3),
-                              RangeInputFormatter(1, 100),
-                            ],
-                          ),
+                          ],
                         ),
                       ),
                     ],
@@ -767,14 +859,18 @@ class PgsScoreMonitoringPageState extends State<PgsScoreMonitoringPage> {
                         width: 60,
                         height: 60,
                         child: CircularProgressIndicator(
-                          value: progressFraction,
+                          value:
+                              (progress == 0 || progress == 100)
+                                  ? 1.0
+                                  : progress / 100.0,
                           strokeWidth: 6,
                           backgroundColor: Colors.grey[300],
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            progressColor,
+                            progress == 100 ? Colors.green : Colors.red,
                           ),
                         ),
                       ),
+
                       SizedBox(
                         width: 40,
                         height: 40,
