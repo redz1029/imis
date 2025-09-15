@@ -660,7 +660,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
               ),
               content: Form(
                 key: _formKey,
-
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [

@@ -28,6 +28,7 @@ import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/app_permission.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/navigation_screen_factory.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/circle_text_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -117,9 +118,18 @@ class NavigationPanelState extends State<NavigationPanel> {
         ]);
         PermissionService().loadPermissions(permissions);
 
-        setState(() {
-          selectedRole = singleRole;
-        });
+        newState() {
+          setState(() => selectedRole = singleRole);
+        }
+
+        newState();
+
+        if (_selectedIndex != -1 && mounted) {
+          _selectedScreen = NavigationScreenFactory.getScreenByIndex(
+            _selectedIndex,
+            selectedRole!,
+          );
+        }
 
         if (homePageKey.currentState != null) {
           await homePageKey.currentState!.refreshUserRoles();
@@ -294,6 +304,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                           ),
                           minimumSize: const Size(double.infinity, 45),
                         ),
+
                         onPressed: () async {
                           Navigator.of(context).pop();
 
@@ -311,6 +322,17 @@ class NavigationPanelState extends State<NavigationPanel> {
                             selectedRole = role;
                             _isSwitchingRole = false;
                           });
+
+                          if (_selectedIndex != -1 && mounted) {
+                            _setScreen(
+                              NavigationScreenFactory.getScreenByIndex(
+                                _selectedIndex,
+                                selectedRole!,
+                              ),
+                              _selectedIndex,
+                            );
+                          }
+
                           if (homePageKey.currentState != null) {
                             await homePageKey.currentState!.refreshUserRoles();
                           }
@@ -661,7 +683,11 @@ class NavigationPanelState extends State<NavigationPanel> {
                     permission: AppPermission.viewPerformanceGovernanceSystem,
                     child: _buildListTile(
                       Icons.insert_drive_file_outlined,
-                      'Create PGS Deliverables',
+                      selectedRole == AppPermission.roleAdmin
+                          ? 'Create/View PGS Deliverables'
+                          : selectedRole == AppPermission.roleStandardUser
+                          ? 'Create PGS Deliverables'
+                          : 'View PGS Deliverables',
                       2,
                       () => _setScreen(PerformanceGovernanceSystemPage(), 2),
                     ),
@@ -672,8 +698,8 @@ class NavigationPanelState extends State<NavigationPanel> {
                     child: _buildListTile(
                       Icons.credit_score_outlined,
                       'Deliverable Status Monitoring',
-                      3,
-                      () => _setScreen(PgsScoreMonitoringPage(), 3),
+                      20,
+                      () => _setScreen(PgsScoreMonitoringPage(), 20),
                     ),
                   ),
                   PermissionWidget(

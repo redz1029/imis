@@ -1,4 +1,7 @@
 class AppPermission {
+  static const String roleAdmin = 'Administrator';
+  static const String roleStandardUser = 'Standard User';
+
   // Team
   static const String addTeam = 'AddTeam';
   static const String viewTeam = 'ViewTeam';
@@ -169,6 +172,7 @@ class RolePermissions {
 
       // Deliverable Monitor
       AppPermission.viewPgsDeliverableMonitor,
+      AppPermission.scorePgsDeliverableMonitor,
 
       // Deliverable Score History
       AppPermission.viewPgsDeliverableScoreHistory,
@@ -201,13 +205,18 @@ class RolePermissions {
       AppPermission.editAuditor,
     ],
 
-    'Standard User': [AppPermission.viewPerformanceGovernanceSystem],
+    'Standard User': [
+      AppPermission.viewPerformanceGovernanceSystem,
+      AppPermission.editPerformanceGovernanceSystem,
+      AppPermission.addPerformanceGovernanceSystem,
+    ],
 
     'PGS Core Team': [AppPermission.viewPgsDeliverableMonitor],
 
     'Service Head': [
       AppPermission.viewPgsDeliverableMonitor,
       AppPermission.viewPerformanceGovernanceSystem,
+      AppPermission.editPerformanceGovernanceSystem,
     ],
 
     'PGS Auditor': [
