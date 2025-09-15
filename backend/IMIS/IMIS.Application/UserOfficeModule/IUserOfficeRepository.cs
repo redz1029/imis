@@ -10,5 +10,6 @@ namespace IMIS.Application.UserOfficeModule
         Task<IEnumerable<UserOffices>> GetAll(CancellationToken cancellationToken);
         Task<List<UserOffices>> GetByOfficeIdAsync(int officeId, CancellationToken cancellationToken);
         Task<UserOffices?> GetOfficeHeadAsync(int officeId, CancellationToken cancellationToken);
+        Task<bool> IsUserOfficeHeadAsync(string userId, int officeId, CancellationToken cancellationToken);
     }
 }
