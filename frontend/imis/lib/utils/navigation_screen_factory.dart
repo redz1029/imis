@@ -21,7 +21,7 @@ class NavigationScreenFactory {
     final roleKey = ValueKey(selectedRole);
     switch (index) {
       case 0:
-        return HomePage(key: roleKey);
+        return HomePage();
       case 2:
         return PerformanceGovernanceSystemPage(key: roleKey);
       case 4:
@@ -53,7 +53,7 @@ class NavigationScreenFactory {
       case 18:
         return Container(key: roleKey);
       default:
-        return HomePage(key: roleKey);
+        return HomePage();
     }
   }
 }
