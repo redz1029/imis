@@ -85,7 +85,25 @@ namespace IMIS.Persistence.PgsModule
                 }
 
                 dto.PgsSignatories.Clear();
+               
+                var childOfficeHeadSig = pgs.Office.UserOffices?.FirstOrDefault(u => u.IsOfficeHead);
+                if (childOfficeHeadSig != null)
+                {
+                    dto.PgsSignatories.Add(new PgsSignatoryDto
+                    {
+                        Id = 0,
+                        PgsId = pgs.Id,
+                        PgsSignatoryTemplateId = null,
+                        SignatoryId = childOfficeHeadSig.UserId,
+                        Label = "Office Head",
+                        OrderLevel = 0,
+                        Status = PgsStatus.Pending,
+                        IsNextStatus = true
+                    });
+                }
                 return dto;
+
+                
             }
 
            
@@ -464,7 +482,7 @@ namespace IMIS.Persistence.PgsModule
                 {
                     
                     var currentUserorderLevel = await GetCurrentUserAsync();
-                    var isChildOfficeHead = await _userOfficeRepository.IsUserOfficeHeadAsync(currentUserorderLevel.Id, office.Id, cancellationToken);
+                    var isChildOfficeHead = await _userOfficeRepository.IsUserOfficeHeadAsync(currentUserorderLevel!.Id, office.Id, cancellationToken);
                   
 
                     if (isChildOfficeHead)
@@ -547,7 +565,7 @@ namespace IMIS.Persistence.PgsModule
             var anyDisapproved = pgs.PgsDeliverables?.Any(d => d.IsDisapproved && !d.IsDeleted) == true;
             if (anyDisapproved)
                 pgs.PgsSignatories = new List<PgsSignatoryDto>();
-
+          
             var processedPgsDto = await ProcessPGSSignatories(existing, userId, cancellationToken);
             pgs.PgsSignatories = processedPgsDto.PgsSignatories;
 
@@ -555,7 +573,7 @@ namespace IMIS.Persistence.PgsModule
             if (currentSignatory != null)
             {
                 currentSignatory.SignatoryId = userId;
-                currentSignatory.DateSigned = DateTime.UtcNow;          
+                currentSignatory.DateSigned = DateTime.UtcNow;
                 currentSignatory.Status = PgsStatus.Prepared;
                 currentSignatory.IsNextStatus = true;
 
@@ -583,8 +601,7 @@ namespace IMIS.Persistence.PgsModule
             return savedDto;
         }
 
-
-
+       
         public async Task<PerfomanceGovernanceSystemDto> Draft(PerfomanceGovernanceSystemDto pgs, string userId, CancellationToken cancellationToken)
         {
             pgs.PgsSignatories = new List<PgsSignatoryDto>();
