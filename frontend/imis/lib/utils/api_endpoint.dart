@@ -40,6 +40,7 @@ class ApiEndpoint {
   late String pgsSaveAsDraft;
   late String auditorOffice;
   late String officePgsAuditor;
+  late String rolesPermissions;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -78,6 +79,7 @@ class ApiEndpoint {
     pgsDeliverableHistory = '$baseUrl/pgsDeliverableHistory';
     auditorOffice = '$baseUrl/auditorsOffices';
     officePgsAuditor = '$baseUrl/office/pgs-auditor';
+    rolesPermissions = '$baseUrl/roles/permissions';
   }
 
   static Future<void> setBaseUrl() async {
