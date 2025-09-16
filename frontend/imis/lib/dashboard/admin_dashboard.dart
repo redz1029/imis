@@ -582,24 +582,10 @@ class AdminDashboardState extends State<AdminDashboard> {
     switch (status) {
       case PgsStatus.notStarted:
         return "Not Started";
-      case PgsStatus.inProgress:
-        return "In Progress";
-      case PgsStatus.onTrack:
-        return "On Track";
-      case PgsStatus.delayed:
-        return "Delayed";
-      case PgsStatus.needsImprovement:
-        return "Needs Improvement";
       case PgsStatus.completed:
         return "Completed";
-      case PgsStatus.completedBreakthrough:
-        return "Completed (Break Through)";
-      case PgsStatus.exceeded:
-        return "Exceeded";
-      case PgsStatus.onHold:
-        return "On Hold";
-      case PgsStatus.cancelled:
-        return "Cancelled";
+      case PgsStatus.onGoing:
+        return "On Going";
     }
   }
 
@@ -610,26 +596,15 @@ class AdminDashboardState extends State<AdminDashboard> {
 
     final List<PgsStatus> statusesToDisplay = [
       PgsStatus.notStarted,
-      PgsStatus.exceeded,
-      PgsStatus.inProgress,
-      PgsStatus.onHold,
-      PgsStatus.onTrack,
-      PgsStatus.cancelled,
-      PgsStatus.delayed,
-      PgsStatus.needsImprovement,
+
       PgsStatus.completed,
     ];
 
     final Map<PgsStatus, Color> statusColors = {
       PgsStatus.notStarted: Colors.grey,
-      PgsStatus.inProgress: const Color(0xFFC7A50B),
-      PgsStatus.onTrack: Colors.blue,
-      PgsStatus.delayed: Colors.orange,
-      PgsStatus.needsImprovement: Colors.deepOrange,
+
       PgsStatus.completed: Colors.green,
-      PgsStatus.exceeded: Colors.teal,
-      PgsStatus.onHold: Colors.purple,
-      PgsStatus.cancelled: Colors.redAccent,
+      PgsStatus.onGoing: Colors.yellow,
     };
 
     List<Widget> buildStatusRows() {
@@ -770,26 +745,14 @@ class AdminDashboardState extends State<AdminDashboard> {
 
     final Map<PgsStatus, Color> statusColors = {
       PgsStatus.notStarted: Colors.grey,
-      PgsStatus.inProgress: const Color(0xFFC7A50B),
-      PgsStatus.onTrack: Colors.blue,
-      PgsStatus.delayed: Colors.orange,
-      PgsStatus.needsImprovement: Colors.deepOrange,
+      PgsStatus.onGoing: const Color(0xFFC7A50B),
+
       PgsStatus.completed: Colors.green,
-      PgsStatus.exceeded: Colors.teal,
-      PgsStatus.onHold: Colors.purple,
-      PgsStatus.cancelled: Colors.redAccent,
     };
 
     final List<PgsStatus> statusesToDisplay = [
       PgsStatus.notStarted,
-      PgsStatus.exceeded,
-      PgsStatus.inProgress,
-      PgsStatus.onHold,
-      PgsStatus.onTrack,
-      PgsStatus.cancelled,
-      PgsStatus.delayed,
-      PgsStatus.needsImprovement,
-      PgsStatus.completed,
+      PgsStatus.onGoing,
     ];
 
     final int totalCount = statusesToDisplay.fold(
