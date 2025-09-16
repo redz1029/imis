@@ -533,6 +533,7 @@ class PerformanceGovernanceSystemPageState
                   'defaultSignatoryId': sig.signatoryId,
                   'officeId': pgs.office.id.toString(),
                   'isNextStatus': sig.isNextStatus,
+                  'status': sig.status,
                 },
               )
               .toList();
@@ -1339,43 +1340,50 @@ class PerformanceGovernanceSystemPageState
                   ],
                 ),
                 if (!isMinimized)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                  PermissionWidget(
+                    permission: AppPermission.addPerformanceGovernanceSystem,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                    ),
-                    onPressed: () async {
-                      clearAllSelections();
-                      selectedOffice = await AuthUtil.fetchSelectedOfficeId();
-
-                      if (selectedOffice == null || selectedOffice!.isEmpty) {
-                        await _selectOffice();
-
+                      onPressed: () async {
+                        clearAllSelections();
                         selectedOffice = await AuthUtil.fetchSelectedOfficeId();
 
-                        if (selectedOffice != null &&
-                            selectedOffice!.isNotEmpty) {
+                        if (selectedOffice == null || selectedOffice!.isEmpty) {
+                          await _selectOffice();
+
+                          selectedOffice =
+                              await AuthUtil.fetchSelectedOfficeId();
+
+                          if (selectedOffice != null &&
+                              selectedOffice!.isNotEmpty) {
+                            await _loadOfficeName();
+                            showFormDialog();
+                          } else {}
+                        } else {
                           await _loadOfficeName();
                           showFormDialog();
-                        } else {}
-                      } else {
-                        await _loadOfficeName();
-                        showFormDialog();
-                      }
+                        }
 
-                      setState(() {
-                        pgsIdHistory = null;
-                      });
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 5),
-                        Text('Add New', style: TextStyle(color: Colors.white)),
-                      ],
+                        setState(() {
+                          pgsIdHistory = null;
+                        });
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.add, color: Colors.white),
+                          SizedBox(width: 5),
+                          Text(
+                            'Add New',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
               ],
@@ -1428,16 +1436,16 @@ class PerformanceGovernanceSystemPageState
                             ),
                           ),
                         ),
-                        // Expanded(
-                        //   flex: 1,
-                        //   child: Padding(
-                        //     padding: EdgeInsets.only(right: 10),
-                        //     child: Text(
-                        //       'Status',
-                        //       style: TextStyle(color: grey),
-                        //     ),
-                        //   ),
-                        // ),
+                        Expanded(
+                          flex: 1,
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 10),
+                            child: Text(
+                              'Status',
+                              style: TextStyle(color: grey),
+                            ),
+                          ),
+                        ),
                         Expanded(
                           flex: 1,
                           child: Padding(
@@ -1567,72 +1575,78 @@ class PerformanceGovernanceSystemPageState
                                                 mainAxisAlignment:
                                                     MainAxisAlignment.center,
                                                 children: [
-                                                  IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed: () async {
-                                                      await AuthUtil.saveSelectedOfficeId(
-                                                        pgsgovernancesystem['officeid']
-                                                            .toString(),
-                                                      );
+                                                  PermissionWidget(
+                                                    permission:
+                                                        AppPermission
+                                                            .editPerformanceGovernanceSystem,
+                                                    child: IconButton(
+                                                      icon: Icon(Icons.edit),
+                                                      onPressed: () async {
+                                                        await AuthUtil.saveSelectedOfficeId(
+                                                          pgsgovernancesystem['officeid']
+                                                              .toString(),
+                                                        );
 
-                                                      selectedOffice =
-                                                          await AuthUtil.fetchSelectedOfficeId();
+                                                        selectedOffice =
+                                                            await AuthUtil.fetchSelectedOfficeId();
 
-                                                      List<PgsDeliverables>
-                                                      deliverables =
-                                                          await fetchDeliverables(
-                                                            pgsId:
-                                                                pgsgovernancesystem['id'],
-                                                          );
+                                                        List<PgsDeliverables>
+                                                        deliverables =
+                                                            await fetchDeliverables(
+                                                              pgsId:
+                                                                  pgsgovernancesystem['id'],
+                                                            );
 
-                                                      List<PgsSignatory>
-                                                      signatory =
-                                                          await fetchSignatoryList(
-                                                            pgsId:
-                                                                pgsgovernancesystem['id'],
-                                                          );
-                                                      fetchSubmitUserId(
-                                                        userId: userId,
-                                                        pgsId:
-                                                            pgsgovernancesystem['id'],
-                                                      );
-                                                      showFormDialog(
-                                                        userId:
-                                                            pgsgovernancesystem['userId'],
-                                                        id:
-                                                            pgsgovernancesystem['id'],
-                                                        officename:
-                                                            pgsgovernancesystem['name'],
-                                                        officenameid:
-                                                            pgsgovernancesystem['officeid'],
-                                                        competencescore:
-                                                            pgsgovernancesystem['competencescore'],
-                                                        confidencescore:
-                                                            pgsgovernancesystem['confidencescore'],
-                                                        resourcescore:
-                                                            pgsgovernancesystem['resourcescore'],
-                                                        startDate:
-                                                            pgsgovernancesystem['startDate'],
-                                                        endDate:
-                                                            pgsgovernancesystem['endDate'],
-                                                        percentDeliverables:
-                                                            pgsgovernancesystem['percentDeliverables'],
-                                                        deliverables:
-                                                            deliverables,
-                                                        signatories: signatory,
-                                                        pgsstatus:
-                                                            pgsgovernancesystem['pgsStatus'],
-                                                        remarks:
-                                                            pgsgovernancesystem['remarks'],
-                                                        // pgsDeliverableHistroy:
-                                                        //     pgsDeliverableHistory,
-                                                      );
-                                                      // fetchPgsList();
-                                                      // fetchSignatoryList(
-                                                      //   pgsId:
-                                                      //       pgsgovernancesystem['id'],
-                                                      // );
-                                                    },
+                                                        List<PgsSignatory>
+                                                        signatory =
+                                                            await fetchSignatoryList(
+                                                              pgsId:
+                                                                  pgsgovernancesystem['id'],
+                                                            );
+                                                        fetchSubmitUserId(
+                                                          userId: userId,
+                                                          pgsId:
+                                                              pgsgovernancesystem['id'],
+                                                        );
+                                                        showFormDialog(
+                                                          userId:
+                                                              pgsgovernancesystem['userId'],
+                                                          id:
+                                                              pgsgovernancesystem['id'],
+                                                          officename:
+                                                              pgsgovernancesystem['name'],
+                                                          officenameid:
+                                                              pgsgovernancesystem['officeid'],
+                                                          competencescore:
+                                                              pgsgovernancesystem['competencescore'],
+                                                          confidencescore:
+                                                              pgsgovernancesystem['confidencescore'],
+                                                          resourcescore:
+                                                              pgsgovernancesystem['resourcescore'],
+                                                          startDate:
+                                                              pgsgovernancesystem['startDate'],
+                                                          endDate:
+                                                              pgsgovernancesystem['endDate'],
+                                                          percentDeliverables:
+                                                              pgsgovernancesystem['percentDeliverables'],
+                                                          deliverables:
+                                                              deliverables,
+                                                          signatories:
+                                                              signatory,
+                                                          pgsstatus:
+                                                              pgsgovernancesystem['pgsStatus'],
+                                                          remarks:
+                                                              pgsgovernancesystem['remarks'],
+                                                          // pgsDeliverableHistroy:
+                                                          //     pgsDeliverableHistory,
+                                                        );
+                                                        // fetchPgsList();
+                                                        // fetchSignatoryList(
+                                                        //   pgsId:
+                                                        //       pgsgovernancesystem['id'],
+                                                        // );
+                                                      },
+                                                    ),
                                                   ),
                                                   Tooltip(
                                                     message: 'Print Preview',
@@ -1663,21 +1677,26 @@ class PerformanceGovernanceSystemPageState
                                                     ),
                                                   ),
 
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: Color.fromARGB(
-                                                        255,
-                                                        221,
-                                                        79,
-                                                        79,
-                                                      ),
-                                                    ),
-                                                    onPressed:
-                                                        () => showDeleteDialog(
-                                                          pgsgovernancesystem['id']
-                                                              .toString(),
+                                                  PermissionWidget(
+                                                    permission:
+                                                        AppPermission
+                                                            .editPerformanceGovernanceSystem,
+                                                    child: IconButton(
+                                                      icon: Icon(
+                                                        Icons.delete,
+                                                        color: Color.fromARGB(
+                                                          255,
+                                                          221,
+                                                          79,
+                                                          79,
                                                         ),
+                                                      ),
+                                                      onPressed:
+                                                          () => showDeleteDialog(
+                                                            pgsgovernancesystem['id']
+                                                                .toString(),
+                                                          ),
+                                                    ),
                                                   ),
                                                 ],
                                               ),
@@ -1959,15 +1978,16 @@ class PerformanceGovernanceSystemPageState
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
-            final orderLevel =
-                signatoryList.firstWhere(
-                  (signatory) => signatory['isNextStatus'] == true,
-                  orElse: () => {'orderLevel': 1},
-                )['orderLevel'] ??
-                1;
+            final currentSignatory = signatoryList.firstWhere(
+              (signatory) => signatory['signatoryId'] == userId,
+              orElse: () => {'orderLevel': 0},
+            );
+
+            final orderLevel = currentSignatory['orderLevel'] ?? 0;
 
             final isAnyDisapproved =
                 deliverables?.any((d) => d.isDisapproved == true) ?? false;
+
             return AlertDialog(
               backgroundColor: mainBgColor,
               shape: RoundedRectangleBorder(
@@ -2067,7 +2087,7 @@ class PerformanceGovernanceSystemPageState
                                               ),
                                             ),
                                             onChanged:
-                                                id != null && orderLevel >= 2
+                                                id != null && orderLevel >= 1
                                                     ? null
                                                     : (int? newValue) {
                                                       setState(() {
@@ -2299,8 +2319,8 @@ class PerformanceGovernanceSystemPageState
                                         ),
 
                                         gap16px,
-                                        if ((id == null && orderLevel == 1) ||
-                                            (id == null && orderLevel >= 2) ||
+                                        if ((id == null && orderLevel == 0) ||
+                                            (id == null && orderLevel >= 1) ||
                                             isAnyDisapproved ||
                                             (signatories == null ||
                                                 signatories.isEmpty))
@@ -2512,6 +2532,7 @@ class PerformanceGovernanceSystemPageState
                                             _PgsDeliverableHeader(
                                               officename:
                                                   officename ?? officeDisplay,
+                                              orderLevel: orderLevel,
                                             ),
                                           ],
                                         ),
@@ -2596,8 +2617,8 @@ class PerformanceGovernanceSystemPageState
               ),
 
               actions: [
-                if ((id == null && orderLevel == 1) ||
-                    (id == null && orderLevel >= 2) ||
+                if ((id == null && orderLevel == 0) ||
+                    (id == null && orderLevel >= 1) ||
                     isAnyDisapproved ||
                     (signatories == null || signatories.isEmpty))
                   ElevatedButton(
@@ -2694,7 +2715,7 @@ class PerformanceGovernanceSystemPageState
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
-                if (id != null && orderLevel >= 2)
+                if (id != null && orderLevel >= 1)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -2865,7 +2886,7 @@ class PerformanceGovernanceSystemPageState
           successMessage =
               isAnyDisapproved
                   ? "Saved successfully!"
-                  : (id != null && orderLevel >= 2)
+                  : (id != null && orderLevel >= 1)
                   ? "Confirm successfully!"
                   : "Saved successfully!";
           break;
@@ -2894,7 +2915,7 @@ class PerformanceGovernanceSystemPageState
           break;
         case ActionType.submit:
           errorMessage =
-              orderLevel >= 2 ? "Failed to Confirm!" : "Failed to submit!";
+              orderLevel >= 1 ? "Failed to Confirm!" : "Failed to submit!";
           break;
         case ActionType.approve:
           errorMessage = "Failed to approve!";
@@ -2951,7 +2972,7 @@ class PerformanceGovernanceSystemPageState
             suffixIcon: Icon(Icons.calendar_today),
           ),
           onTap:
-              id != null && orderLevel >= 2
+              id != null && orderLevel >= 0
                   ? null
                   : () async {
                     DateTime? pickedDate = await showDatePicker(
@@ -3029,7 +3050,7 @@ class PerformanceGovernanceSystemPageState
               isExpanded: true,
               value: selectedKRA[index],
               onChanged:
-                  id != null && orderLevel >= 2
+                  id != null && orderLevel >= 1
                       ? null
                       : (int? newValue) {
                         if (newValue == null) return;
@@ -3074,7 +3095,7 @@ class PerformanceGovernanceSystemPageState
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
             child: TextFormField(
-              readOnly: id != null && orderLevel >= 2,
+              readOnly: id != null && orderLevel >= 1,
               controller: kraDescriptionController[index],
               autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
@@ -3102,7 +3123,7 @@ class PerformanceGovernanceSystemPageState
     String? officename,
     String? id,
     String? percentDeliverables,
-    required int orderLevel,
+    int? orderLevel,
   }) {
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
@@ -3139,7 +3160,7 @@ class PerformanceGovernanceSystemPageState
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextFormField(
-                readOnly: id != null && orderLevel >= 2,
+                readOnly: id != null && orderLevel! >= 1,
                 controller: percentageDeliverables,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 textAlign: TextAlign.center,
@@ -3257,7 +3278,7 @@ class PerformanceGovernanceSystemPageState
         ),
         _buildExpandableTextAreaCell(index, id, orderLevel, setDialogState),
         _buildDatePickerCell(index, id, setDialogState, orderLevel),
-        (id == null || orderLevel < 2)
+        (id == null || orderLevel < 1)
             ? _buildRemoveButton(index, setDialogState)
             : _buildApprovedDisapprovedSignatory(index, setDialogState),
       ],
@@ -3283,7 +3304,7 @@ class PerformanceGovernanceSystemPageState
     required bool isDirect,
     required String? errorText,
   }) {
-    final enabled = id != null && orderLevel >= 2;
+    final enabled = id != null && orderLevel >= 1;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -3444,6 +3465,8 @@ class PerformanceGovernanceSystemPageState
   TableRow _PgsDeliverableHeader({
     String? officename,
     String? percentDeliverables,
+    required int orderLevel,
+    String? id,
   }) {
     return TableRow(
       children: [
@@ -3465,7 +3488,8 @@ class PerformanceGovernanceSystemPageState
             child: Tooltip(
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
-              child: TextField(
+              child: TextFormField(
+                readOnly: id != null && orderLevel >= 1,
                 controller: percentageDeliverables,
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.number,
@@ -3500,9 +3524,6 @@ class PerformanceGovernanceSystemPageState
             ),
           ),
         ),
-        // BuildHeaderCell(text: ''),
-        // BuildHeaderCell(text: ''),
-        // BuildHeaderCell(text: ''),
       ],
     );
   }
@@ -3566,7 +3587,12 @@ class PerformanceGovernanceSystemPageState
       decoration: BoxDecoration(color: rowColor),
       children: [
         _buildNumbering(index),
-        _buildDropdownKraCellPGSDeliverableStatus(index, setDialogState),
+        _buildDropdownKraCellPGSDeliverableStatus(
+          index,
+          id,
+          setDialogState,
+          orderLevel,
+        ),
         _buildCheckboxCell(
           index,
           id,
@@ -3589,8 +3615,18 @@ class PerformanceGovernanceSystemPageState
           isDirect: false,
           errorText: '',
         ),
-        _buildExpandableTextAreaCellPGSDeliverable(index),
-        _buildDatePickerCellPgsDeliverableStatus(index, setDialogState),
+        _buildExpandableTextAreaCellPGSDeliverable(
+          index,
+          id,
+          orderLevel,
+          setDialogState,
+        ),
+        _buildDatePickerCellPgsDeliverableStatus(
+          index,
+          id,
+          setDialogState,
+          orderLevel,
+        ),
         _buildDropdownCellStatusPgsDeliverableStatus(index, () => (index)),
         _buildExpandableTextAreaRemarksCell(index),
         _buildExpandableTextAreaPercentageCell(index),
@@ -3665,7 +3701,9 @@ class PerformanceGovernanceSystemPageState
 
   Widget _buildDropdownKraCellPGSDeliverableStatus(
     int index,
+    String? id,
     Function setDialogState,
+    int orderLevel,
   ) {
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
@@ -3695,23 +3733,26 @@ class PerformanceGovernanceSystemPageState
             child: DropdownButtonFormField<int>(
               isExpanded: true,
               value: selectedKRA[index],
-              onChanged: (int? newValue) {
-                if (newValue == null) return;
-                setDialogState(() {
-                  selectedKRA[index] = newValue;
-                  final selectedOption = options.firstWhere(
-                    (option) => option['id'] == newValue,
-                    orElse:
-                        () => {
-                          'id': -1,
-                          'name': 'Unknown',
-                          'remarks': 'Not found',
-                        },
-                  );
+              onChanged:
+                  id != null && orderLevel >= 1
+                      ? null
+                      : (int? newValue) {
+                        if (newValue == null) return;
+                        setDialogState(() {
+                          selectedKRA[index] = newValue;
+                          final selectedOption = options.firstWhere(
+                            (option) => option['id'] == newValue,
+                            orElse:
+                                () => {
+                                  'id': -1,
+                                  'name': 'Unknown',
+                                  'remarks': 'Not found',
+                                },
+                          );
 
-                  selectedKRAObjects[index] = selectedOption;
-                });
-              },
+                          selectedKRAObjects[index] = selectedOption;
+                        });
+                      },
               items:
                   options.map<DropdownMenuItem<int>>((option) {
                     return DropdownMenuItem<int>(
@@ -3737,7 +3778,8 @@ class PerformanceGovernanceSystemPageState
           Tooltip(
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
-            child: TextField(
+            child: TextFormField(
+              readOnly: id != null && orderLevel >= 1,
               controller: kraDescriptionController[index],
               decoration: const InputDecoration(
                 hintText: "Enter your description here...",
@@ -3753,7 +3795,9 @@ class PerformanceGovernanceSystemPageState
   //Start---------------------Pgs Deliverable datepicker status---------------------------------------
   Widget _buildDatePickerCellPgsDeliverableStatus(
     int index,
+    String? id,
     Function setDialogState,
+    int orderLevel,
   ) {
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
 
@@ -3784,41 +3828,44 @@ class PerformanceGovernanceSystemPageState
             contentPadding: EdgeInsets.all(8.0),
             suffixIcon: Icon(Icons.calendar_today),
           ),
-          onTap: () async {
-            DateTime? pickedDate = await showDatePicker(
-              context: context,
-              initialDate: DateTime.now(),
-              firstDate: DateTime(2000),
-              lastDate: DateTime(2100),
-              builder: (context, child) {
-                return Theme(
-                  data: Theme.of(context).copyWith(
-                    colorScheme: ColorScheme.light(
-                      primary: primaryColor,
-                      onPrimary: secondaryColor,
-                    ),
-                    textButtonTheme: TextButtonThemeData(
-                      style: TextButton.styleFrom(
-                        foregroundColor: primaryColor,
-                      ),
-                    ),
-                  ),
-                  child: child!,
-                );
-              },
-            );
-            if (pickedDate != null) {
-              String formattedDate = DateFormat(
-                'yyyy-MM-dd',
-              ).format(pickedDate);
-              setDialogState(() {
-                selectedByWhen[index] = formattedDate;
-                selectedByWhenControllers[index]?.text = DateFormat(
-                  'MMMM yyyy',
-                ).format(pickedDate);
-              });
-            }
-          },
+          onTap:
+              id != null && orderLevel >= 0
+                  ? null
+                  : () async {
+                    DateTime? pickedDate = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.now(),
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime(2100),
+                      builder: (context, child) {
+                        return Theme(
+                          data: Theme.of(context).copyWith(
+                            colorScheme: ColorScheme.light(
+                              primary: primaryColor,
+                              onPrimary: secondaryColor,
+                            ),
+                            textButtonTheme: TextButtonThemeData(
+                              style: TextButton.styleFrom(
+                                foregroundColor: primaryColor,
+                              ),
+                            ),
+                          ),
+                          child: child!,
+                        );
+                      },
+                    );
+                    if (pickedDate != null) {
+                      String formattedDate = DateFormat(
+                        'yyyy-MM-dd',
+                      ).format(pickedDate);
+                      setDialogState(() {
+                        selectedByWhen[index] = formattedDate;
+                        selectedByWhenControllers[index]?.text = DateFormat(
+                          'MMMM yyyy',
+                        ).format(pickedDate);
+                      });
+                    }
+                  },
         ),
       ),
     );
@@ -3855,10 +3902,16 @@ class PerformanceGovernanceSystemPageState
   // End-----------------------PGS Deliverable Status---------------------
 
   //Start------------Pgs Deliverables Status----------------------------------------------
-  Widget _buildExpandableTextAreaCellPGSDeliverable(int index) {
+  Widget _buildExpandableTextAreaCellPGSDeliverable(
+    int index,
+    String? id,
+    int orderLevel,
+    Function setDialogState,
+  ) {
     if (!deliverablesControllers.containsKey(index)) {
       deliverablesControllers[index] = TextEditingController();
     }
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ConstrainedBox(
@@ -3866,7 +3919,8 @@ class PerformanceGovernanceSystemPageState
         child: Tooltip(
           message:
               'Specify the tangible results or outcomes tied to this responsibility.',
-          child: TextField(
+          child: TextFormField(
+            readOnly: id != null && orderLevel >= 1,
             controller: deliverablesControllers[index],
             maxLines: null,
             keyboardType: TextInputType.multiline,
@@ -4189,8 +4243,8 @@ class PerformanceGovernanceSystemPageState
               message:
                   'Specify the tangible results or outcomes tied to this responsibility.',
               child: TextFormField(
-                readOnly: id != null && orderLevel >= 2,
-                focusNode: FocusNode(canRequestFocus: orderLevel == 1),
+                readOnly: id != null && orderLevel >= 1,
+                focusNode: FocusNode(canRequestFocus: orderLevel == 0),
                 controller: deliverablesControllers[index],
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 maxLines: null,
