@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Base.Auths.Permissions;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
 using IMIS.Persistence;
@@ -9,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Sprache;
 
@@ -37,14 +39,35 @@ namespace IMIS.Presentation.UserModule
              
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
-            roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles"));
+            roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
             roleGroup.MapPost("/roles", CreateRole);          
             roleGroup.MapPut("/roles/{roleId}", EditRole);
             roleGroup.MapDelete("/roles/{roleId}", DeleteRole);
-         
+            roleGroup.MapGet("/roles/permissions", async
+            ([FromServices] IServiceProvider sp) =>
+            {
+                var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
+                var roles = await roleManager.Roles.ToListAsync();
+                var rolePermissions = new List<object>();
+                foreach (var role in roles)
+                {
+                    var claims = await roleManager.GetClaimsAsync(role);
+                    var permissions = claims.Where(c => c.Type == PermissionClaimType.Claim).Select(c => c.Value).ToList();
+                    rolePermissions.Add(new
+                    {
+                        role.Id,
+                        role.Name,
+                        Permissions = permissions
+                    });
+                }
+                return roles == null ? Results.NoContent() : Results.Ok(rolePermissions);
+            }).WithTags(RoleGroup)
+            .RequireAuthorization()
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup), true);
+
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
-            userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles")); 
+            userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup)); 
             userRoleGroup.MapPost("/userRoles", AssignUserRoles);           
             userRoleGroup.MapPut("/updateUserRole", UpdateUserRoles);
             userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);
