@@ -9,8 +9,6 @@ final GlobalKey<HomePageState> homePageKey = GlobalKey();
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
-  // HomePage() : super(key: homePageKey);
-
   @override
   HomePageState createState() => HomePageState();
 }
