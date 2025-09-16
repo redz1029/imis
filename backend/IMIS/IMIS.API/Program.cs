@@ -63,7 +63,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = IMIS.Infrastructure.Auths.TokenUtils.Issuer,
         ValidAudience = IMIS.Infrastructure.Auths.TokenUtils.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(IMIS.Infrastructure.Auths.TokenUtils.SecretKey!)),       
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(IMIS.Infrastructure.Auths.TokenUtils.SecretKey!)),
     };
 });
 
@@ -72,7 +72,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(new PgsManagerRole().Name, policy => policy.RequireRole(new PgsManagerRole().Name))
     .AddPolicy(new StandardUserRole().Name, policy => policy.RequireRole(new StandardUserRole().Name));
 
-
+builder.Services.AddAntiforgery();
 builder.Services.AddScoped<IRoleAndPermissionSeeder, RoleAndPermissionSeeder>();
 builder.Services.AddAuthorization(options =>
 {
@@ -93,7 +93,7 @@ builder.Services.AddIdentityCore<User>()
     .AddDefaultTokenProviders()
     .AddApiEndpoints();
 
-builder.Services.AddDbContext<ImisDbContext>(options => 
+builder.Services.AddDbContext<ImisDbContext>(options =>
     options.UseSqlServer(DatabaseCredentials.SqlServerConnectionString));
 builder.Services.AddPersistence();
 
@@ -141,10 +141,9 @@ app.UseCors(allowedOrigins);
 if (app.Environment.IsProduction())
     app.UseHttpsRedirection();
 app.UseRouting();
-
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseAntiforgery();
 app.MapCustomIdentityApi<User>();
 app.MapCarter();
 

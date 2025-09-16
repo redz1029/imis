@@ -1,8 +1,10 @@
 ﻿using Base.Auths;
+using Base.Utilities;
 using DotNetEnv;
 using IMIS.Infrastructure.Auths;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Hosting;
+using TokenUtils = IMIS.Infrastructure.Auths.TokenUtils;
 
 namespace IMIS.Infrastructure
 {
@@ -15,8 +17,15 @@ namespace IMIS.Infrastructure
         public const string _jwtExpMinutes = "JWT_EXP_IN_MINUTES";
         public const string _jwtExpDays = "JWT_EXP_IN_DAYS";
 
+        public const string _ftpServerUrl = "FTP_SERVER_URL";
+        public const string _ftpRootFolderPath = "FTP_ROOT_FOLDER_PATH";
+        public const string _ftpServerUsername = "FTP_SERVER_USERNAME";
+        public const string _ftpServerPassword = "FTP_SERVER_PASSWORD";
+
         public static void SetupEnvironment(this WebApplicationBuilder builder)
         {
+            
+
             if (builder.Environment.IsDevelopment())
             {
                 Env.Load();
@@ -28,6 +37,11 @@ namespace IMIS.Infrastructure
                 TokenUtils.SecretKey = Environment.GetEnvironmentVariable(_jwtSecret);
                 TokenUtils.ExpInMinutes = Environment.GetEnvironmentVariable(_jwtExpMinutes);
                 TokenUtils.ExpInDays = Environment.GetEnvironmentVariable(_jwtExpDays);
+
+                FTPCredentials.FTPServerURL = Environment.GetEnvironmentVariable(_ftpServerUrl)!;
+                FTPCredentials.FTPRootFolderPath = Environment.GetEnvironmentVariable(_ftpRootFolderPath)!;
+                FTPCredentials.FTPServerUsername = Environment.GetEnvironmentVariable(_ftpServerUsername)!;
+                FTPCredentials.FTPServerPassword = Environment.GetEnvironmentVariable(_ftpServerPassword)!;
             }
             else
             {
