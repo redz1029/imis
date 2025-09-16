@@ -1,5 +1,4 @@
-﻿
-using System.ComponentModel;
+﻿using System.ComponentModel;
 
 namespace IMIS.Domain
 {
@@ -7,29 +6,11 @@ namespace IMIS.Domain
     {
         [Description("Not Started")]
         notStarted,
-
-        [Description("In Progress")]
-        inProgress,
-
-        [Description("On Track")]
-        onTrack,
-
-        [Description("Delayed")]
-        delayed,
-
-        [Description("Needs Improvement")]
-        needsImprovement,
-
+         
+        [Description("On Going")]
+        onGoing,
+   
         [Description("Completed")]
-        completed,
-
-        [Description("Exceeded")]
-        exceeded,
-
-        [Description("On Hold")]
-        onHold,
-
-        [Description("Cancelled")]
-        cancelled
+        completed,       
     }
 }
