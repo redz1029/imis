@@ -12,6 +12,7 @@ using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using PgsStatus = IMIS.Application.PerfomanceGovernanceSystemModule.PgsStatus;
 
 namespace IMIS.Persistence.PgsModule
 {
@@ -91,7 +92,7 @@ namespace IMIS.Persistence.PgsModule
             foreach (var s in pgs.PgsSignatories ?? Enumerable.Empty<PgsSignatory>())
             {
                 int orderLevel = 0;
-                string label = "Office Head AAAAA";
+                string label = "Office Head";
 
                 if (s.PgsSignatoryTemplateId != null)
                 {
@@ -111,7 +112,7 @@ namespace IMIS.Persistence.PgsModule
                     SignatoryId = s.SignatoryId,
                     Label = label,
                     OrderLevel = orderLevel,
-                    Status = s.DateSigned != default ? "Prepared" : "Pending",
+                    Status = s.DateSigned != default ? PgsStatus.Prepared : PgsStatus.Pending,
                     IsNextStatus = false,
                     DateSigned = s.DateSigned
                 });
@@ -130,9 +131,9 @@ namespace IMIS.Persistence.PgsModule
                     PgsId = pgs.Id,
                     PgsSignatoryTemplateId = null,
                     SignatoryId = childOfficeHead.UserId,
-                    Label = "Office Head BBBB",
+                    Label = "Office Head",
                     OrderLevel = 0,
-                    Status = "Pending",
+                    Status = PgsStatus.Pending,
                     IsNextStatus = false
                 });
             }
@@ -155,13 +156,13 @@ namespace IMIS.Persistence.PgsModule
                     SignatoryId = t.DefaultSignatoryId!,
                     Label = t.SignatoryLabel,
                     OrderLevel = t.OrderLevel,
-                    Status = "Pending",
+                    Status = PgsStatus.Pending,
                     IsNextStatus = false
                 });
             }
          
             var nextPending = dto.PgsSignatories
-                .Where(s => s.Status!.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                .Where(s => s.Status!.Equals(PgsStatus.Pending, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(s => s.OrderLevel)
                 .FirstOrDefault();
 
@@ -169,7 +170,7 @@ namespace IMIS.Persistence.PgsModule
                 nextPending.IsNextStatus = true;
            
             dto.PgsSignatories = dto.PgsSignatories
-                .Where(s => s.Status!.Equals("Prepared", StringComparison.OrdinalIgnoreCase) || s.IsNextStatus)
+                .Where(s => s.Status!.Equals(PgsStatus.Prepared, StringComparison.OrdinalIgnoreCase) || s.IsNextStatus)
                 .OrderBy(s => s.OrderLevel)
                 .ToList();
 
@@ -246,9 +247,9 @@ namespace IMIS.Persistence.PgsModule
                 }
                
                 var isNext = dto.PgsSignatories?.Any(s => s.SignatoryId == userId && s.IsNextStatus) ?? false;
-                var isSubmittedBy = dto.PgsSignatories?.Any(s => s.SignatoryId == userId && s.Status!.Equals("Prepared", StringComparison.OrdinalIgnoreCase)) ?? false;
+                var isSubmittedBy = dto.PgsSignatories?.Any(s => s.SignatoryId == userId && s.Status!.Equals(PgsStatus.Prepared, StringComparison.OrdinalIgnoreCase)) ?? false;
               
-                var lastSubmitted = dto.PgsSignatories!.Where(s => s.Status!.Equals("Prepared", StringComparison.OrdinalIgnoreCase))
+                var lastSubmitted = dto.PgsSignatories!.Where(s => s.Status!.Equals(PgsStatus.Prepared, StringComparison.OrdinalIgnoreCase))
                     .OrderByDescending(s => s.OrderLevel)
                     .FirstOrDefault();
 
@@ -301,7 +302,7 @@ namespace IMIS.Persistence.PgsModule
             {
                 Id = t.Id,
                 Status = t.Status,
-                SignatoryLabel = t.Status.Equals("Prepared", StringComparison.OrdinalIgnoreCase) ? "Prepared By" : t.SignatoryLabel,
+                SignatoryLabel = t.Status.Equals(PgsStatus.Prepared, StringComparison.OrdinalIgnoreCase) ? PgsStatus.PreparedBy : t.SignatoryLabel,
                 OrderLevel = t.OrderLevel,
                 DefaultSignatoryId = t.DefaultSignatoryId,
                 IsActive = t.IsActive,
@@ -554,12 +555,12 @@ namespace IMIS.Persistence.PgsModule
             if (currentSignatory != null)
             {
                 currentSignatory.SignatoryId = userId;
-                currentSignatory.DateSigned = DateTime.UtcNow;
-                currentSignatory.Status = "Prepared";
+                currentSignatory.DateSigned = DateTime.UtcNow;          
+                currentSignatory.Status = PgsStatus.Prepared;
                 currentSignatory.IsNextStatus = true;
 
                 var nextSignatory = processedPgsDto.PgsSignatories!
-                    .Where(s => s.Status == "Pending" && s.Id == 0)
+                    .Where(s => s.Status == PgsStatus.Pending && s.Id == 0)
                     .OrderBy(s => s.OrderLevel)
                     .FirstOrDefault();
 
