@@ -1,25 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:imis/utils/permission_service.dart';
 
-class PermissionWidget extends StatefulWidget {
-  final String permission;
+class PermissionWidget extends StatelessWidget {
+  final String? permission;
+  final List<String>? allowedRoles;
   final Widget child;
 
   const PermissionWidget({
     super.key,
-    required this.permission,
+    this.permission,
+    this.allowedRoles,
     required this.child,
   });
 
   @override
-  State<PermissionWidget> createState() => _PermissionWidgetState();
-}
-
-class _PermissionWidgetState extends State<PermissionWidget> {
-  @override
   Widget build(BuildContext context) {
-    final hasPermission = PermissionService().hasPermission(widget.permission);
+    final hasPermission =
+        permission != null
+            ? permissionService.hasPermission(permission!)
+            : true;
 
-    return hasPermission ? widget.child : const SizedBox.shrink();
+    final roleAllowed =
+        allowedRoles != null
+            ? permissionService.hasRoleIn(allowedRoles!)
+            : true;
+
+    return (hasPermission && roleAllowed) ? child : const SizedBox.shrink();
   }
 }
