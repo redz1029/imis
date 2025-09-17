@@ -26,7 +26,7 @@ import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
-import 'package:imis/utils/app_permission.dart';
+import 'package:imis/utils/permission_string.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/navigation_screen_factory.dart';
 import 'package:imis/utils/permission_service.dart';
@@ -36,8 +36,8 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class NavigationPanel extends StatefulWidget {
-  const NavigationPanel({super.key});
-
+  final int? initialScreenIndex;
+  const NavigationPanel({super.key, this.initialScreenIndex});
   @override
   NavigationPanelState createState() => NavigationPanelState();
 }
@@ -67,6 +67,10 @@ class NavigationPanelState extends State<NavigationPanel> {
   void initState() {
     super.initState();
     _initializeDashboard();
+    if (widget.initialScreenIndex != null) {
+      _selectedIndex = widget.initialScreenIndex!;
+      // We'll set the screen after roles are loaded in _checkSelectedRole
+    }
   }
 
   Future<void> _loadUserName() async {
@@ -99,10 +103,16 @@ class NavigationPanelState extends State<NavigationPanel> {
     final savedRole = prefs.getString('selectedRole');
 
     if (savedRole != null) {
-      final permissions = RolePermissions.getPermissionsForRoles([savedRole]);
-      PermissionService().loadPermissions(permissions);
+      await loadUserPermissions(savedRole);
       setState(() {
         selectedRole = savedRole;
+        if (widget.initialScreenIndex != null) {
+          _selectedIndex = widget.initialScreenIndex!;
+          _selectedScreen = NavigationScreenFactory.getScreenByIndex(
+            _selectedIndex,
+            selectedRole!,
+          );
+        }
       });
     } else {
       if (roles.length >= 2) {
@@ -113,16 +123,9 @@ class NavigationPanelState extends State<NavigationPanel> {
         final singleRole = roles.first;
         await prefs.setString('selectedRole', singleRole);
 
-        final permissions = RolePermissions.getPermissionsForRoles([
-          singleRole,
-        ]);
-        PermissionService().loadPermissions(permissions);
+        await loadUserPermissions(singleRole);
 
-        newState() {
-          setState(() => selectedRole = singleRole);
-        }
-
-        newState();
+        setState(() => selectedRole = singleRole);
 
         if (_selectedIndex != -1 && mounted) {
           _selectedScreen = NavigationScreenFactory.getScreenByIndex(
@@ -234,6 +237,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                           ),
                           minimumSize: const Size(double.infinity, 45),
                         ),
+
                         onPressed: () async {
                           Navigator.of(context).pop();
 
@@ -241,16 +245,14 @@ class NavigationPanelState extends State<NavigationPanel> {
 
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.setString('selectedRole', role);
-                          final permissions =
-                              RolePermissions.getPermissionsForRoles([role]);
-                          PermissionService().loadPermissions(permissions);
 
+                          await loadUserPermissions(role);
                           await Future.delayed(Duration(milliseconds: 500));
-
                           setState(() {
                             selectedRole = role;
                             _isSwitchingRole = false;
                           });
+
                           if (homePageKey.currentState != null) {
                             await homePageKey.currentState!.refreshUserRoles();
                           }
@@ -312,31 +314,19 @@ class NavigationPanelState extends State<NavigationPanel> {
 
                           final prefs = await SharedPreferences.getInstance();
                           await prefs.setString('selectedRole', role);
-                          final permissions =
-                              RolePermissions.getPermissionsForRoles([role]);
-                          PermissionService().loadPermissions(permissions);
 
+                          await loadUserPermissions(role);
                           await Future.delayed(Duration(milliseconds: 500));
-
                           setState(() {
                             selectedRole = role;
                             _isSwitchingRole = false;
                           });
 
-                          if (_selectedIndex != -1 && mounted) {
-                            _setScreen(
-                              NavigationScreenFactory.getScreenByIndex(
-                                _selectedIndex,
-                                selectedRole!,
-                              ),
-                              _selectedIndex,
-                            );
-                          }
-
                           if (homePageKey.currentState != null) {
                             await homePageKey.currentState!.refreshUserRoles();
                           }
                         },
+
                         child: Text(
                           role,
                           style: TextStyle(color: primaryTextColor),
@@ -680,12 +670,13 @@ class NavigationPanelState extends State<NavigationPanel> {
                   ),
 
                   PermissionWidget(
-                    permission: AppPermission.viewPerformanceGovernanceSystem,
+                    permission:
+                        PermissionString.viewPerformanceGovernanceSystem,
                     child: _buildListTile(
                       Icons.insert_drive_file_outlined,
-                      selectedRole == AppPermission.roleAdmin
+                      selectedRole == PermissionString.roleAdmin
                           ? 'Create/View PGS Deliverables'
-                          : selectedRole == AppPermission.roleStandardUser
+                          : selectedRole == PermissionString.roleStandardUser
                           ? 'Create PGS Deliverables'
                           : 'View PGS Deliverables',
                       2,
@@ -694,7 +685,15 @@ class NavigationPanelState extends State<NavigationPanel> {
                   ),
 
                   PermissionWidget(
-                    permission: AppPermission.viewPgsDeliverableMonitor,
+                    allowedRoles: [
+                      PermissionString.roleAdmin,
+                      PermissionString.serviceHead,
+                      PermissionString.mcc,
+                      PermissionString.osm,
+                      PermissionString.pgsAuditor,
+                      PermissionString.pgsHead,
+                      PermissionString.pgsHead,
+                    ],
                     child: _buildListTile(
                       Icons.credit_score_outlined,
                       'Deliverable Status Monitoring',
@@ -703,7 +702,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                     ),
                   ),
                   PermissionWidget(
-                    permission: AppPermission.editTeam,
+                    permission: PermissionString.editTeam,
                     child: Theme(
                       data: Theme.of(context).copyWith(dividerColor: lightGrey),
                       child: ExpansionTile(
@@ -953,6 +952,23 @@ class NavigationPanelState extends State<NavigationPanel> {
 
   @override
   Widget build(BuildContext context) {
+    // Get the screen index from arguments if provided
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is int && _selectedIndex != args) {
+      // Set the screen index if provided via arguments
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _selectedIndex = args;
+            _selectedScreen = NavigationScreenFactory.getScreenByIndex(
+              _selectedIndex,
+              selectedRole!,
+            );
+          });
+        }
+      });
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isWideScreen = constraints.maxWidth > 800;
