@@ -1,29 +1,44 @@
-import 'package:flutter/material.dart';
+import 'package:imis/user/services/roles_permission_service.dart';
 
 class PermissionService {
   static final PermissionService _instance = PermissionService._internal();
   factory PermissionService() => _instance;
-
   PermissionService._internal();
 
-  final ValueNotifier<Set<String>> _permissions = ValueNotifier<Set<String>>(
-    {},
-  );
+  Set<String> _permissions = {};
+  String? _roleName;
 
-  bool _initialized = false;
-
-  void loadPermissions(List<String> permissions) {
-    _permissions.value = Set.unmodifiable(permissions);
-    _initialized = true;
+  void loadPermissions(List<String> permissions, String roleName) {
+    _permissions = permissions.toSet();
+    _roleName = roleName;
   }
 
-  bool hasPermission(String permission) {
-    if (!_initialized) {
-      return false;
+  bool hasPermission(String permission, {List<String>? allowedRoles}) {
+    if (allowedRoles != null) {
+      return _permissions.contains(permission) &&
+          allowedRoles.contains(_roleName);
     }
-    final hasPerm = _permissions.value.contains(permission);
-    return hasPerm;
+    return _permissions.contains(permission);
   }
 
-  ValueNotifier<Set<String>> get permissionsNotifier => _permissions;
+  bool hasRoleIn(List<String> allowedRoles) {
+    return _roleName != null && allowedRoles.contains(_roleName);
+  }
+
+  String? get currentRole => _roleName;
+}
+
+final rolesPermissionsService = RolesPermissionsService();
+final permissionService = PermissionService();
+
+Future<void> loadUserPermissions(String roleName) async {
+  final roles = await rolesPermissionsService.fetchRolesPermissions();
+
+  final role = roles.where((r) => r.name == roleName).toList();
+
+  if (role.isNotEmpty) {
+    permissionService.loadPermissions(role.first.permissions, role.first.name);
+  } else {
+    permissionService.loadPermissions([], roleName);
+  }
 }
