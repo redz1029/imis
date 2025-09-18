@@ -1,6 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
-import 'package:imis/utils/app_permission.dart';
+import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/build_header_cell.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
 import 'package:imis/widgets/pagination_controls.dart';
@@ -1074,7 +1074,7 @@ class PerformanceGovernanceSystemPageState
                       ),
                     ),
                     PermissionWidget(
-                      permission: AppPermission.viewOffice,
+                      permission: PermissionString.viewOffice,
                       child: Padding(
                         padding: const EdgeInsets.only(right: 8.0),
                         child: Column(
@@ -1341,7 +1341,8 @@ class PerformanceGovernanceSystemPageState
                 ),
                 if (!isMinimized)
                   PermissionWidget(
-                    permission: AppPermission.addPerformanceGovernanceSystem,
+                    permission: PermissionString.addPerformanceGovernanceSystem,
+
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
@@ -1436,16 +1437,16 @@ class PerformanceGovernanceSystemPageState
                             ),
                           ),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 10),
-                            child: Text(
-                              'Status',
-                              style: TextStyle(color: grey),
-                            ),
-                          ),
-                        ),
+                        // Expanded(
+                        //   flex: 1,
+                        //   child: Padding(
+                        //     padding: EdgeInsets.only(right: 10),
+                        //     child: Text(
+                        //       'Status',
+                        //       style: TextStyle(color: grey),
+                        //     ),
+                        //   ),
+                        // ),
                         Expanded(
                           flex: 1,
                           child: Padding(
@@ -1577,7 +1578,7 @@ class PerformanceGovernanceSystemPageState
                                                 children: [
                                                   PermissionWidget(
                                                     permission:
-                                                        AppPermission
+                                                        PermissionString
                                                             .editPerformanceGovernanceSystem,
                                                     child: IconButton(
                                                       icon: Icon(Icons.edit),
@@ -1679,7 +1680,7 @@ class PerformanceGovernanceSystemPageState
 
                                                   PermissionWidget(
                                                     permission:
-                                                        AppPermission
+                                                        PermissionString
                                                             .editPerformanceGovernanceSystem,
                                                     child: IconButton(
                                                       icon: Icon(
@@ -1828,8 +1829,8 @@ class PerformanceGovernanceSystemPageState
       } else {
         debugPrint("Failed to fetch signatories");
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
+    } on DioException {
+      debugPrint("Dio error");
     } catch (e) {
       debugPrint("Unexpected error: $e");
     }
@@ -4209,7 +4210,7 @@ class PerformanceGovernanceSystemPageState
     }
 
     bool showDisapproveControls = false;
-    if (selectedDisapproved[index] == true && orderLevel == 1) {
+    if (selectedDisapproved[index] == true && orderLevel == 0) {
       showDisapproveControls = true;
     } else if (deliverablesList.isNotEmpty) {
       showDisapproveControls = deliverablesList.any(
