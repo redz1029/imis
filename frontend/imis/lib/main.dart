@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/navigation_utils.dart';
 
 void main() async {
   await ApiEndpoint.setBaseUrl();
@@ -12,6 +13,10 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: LoginPage());
+    return MaterialApp(
+      navigatorKey: navigatorKey,
+      debugShowCheckedModeBanner: false,
+      home: LoginPage(),
+    );
   }
 }

@@ -596,15 +596,15 @@ class AdminDashboardState extends State<AdminDashboard> {
 
     final List<PgsStatus> statusesToDisplay = [
       PgsStatus.notStarted,
-
+      PgsStatus.onGoing,
       PgsStatus.completed,
     ];
 
     final Map<PgsStatus, Color> statusColors = {
-      PgsStatus.notStarted: Colors.grey,
+      PgsStatus.notStarted: const Color.fromARGB(255, 179, 95, 95),
 
       PgsStatus.completed: Colors.green,
-      PgsStatus.onGoing: Colors.yellow,
+      PgsStatus.onGoing: Colors.deepOrange,
     };
 
     List<Widget> buildStatusRows() {
@@ -744,8 +744,9 @@ class AdminDashboardState extends State<AdminDashboard> {
     final statusCounts = _countStatuses(deliverablesList);
 
     final Map<PgsStatus, Color> statusColors = {
-      PgsStatus.notStarted: Colors.grey,
-      PgsStatus.onGoing: const Color(0xFFC7A50B),
+      PgsStatus.notStarted: const Color.fromARGB(255, 179, 95, 95),
+
+      PgsStatus.onGoing: Colors.deepOrange,
 
       PgsStatus.completed: Colors.green,
     };
@@ -753,6 +754,7 @@ class AdminDashboardState extends State<AdminDashboard> {
     final List<PgsStatus> statusesToDisplay = [
       PgsStatus.notStarted,
       PgsStatus.onGoing,
+      PgsStatus.completed,
     ];
 
     final int totalCount = statusesToDisplay.fold(
