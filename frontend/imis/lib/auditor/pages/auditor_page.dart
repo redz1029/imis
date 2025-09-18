@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/auditor/services/auditor_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/auditor/models/auditor.dart';
@@ -9,7 +10,6 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
-import '../../utils/http_util.dart';
 import '../../widgets/custom_toggle.dart';
 
 class AuditorPage extends StatefulWidget {
@@ -20,6 +20,7 @@ class AuditorPage extends StatefulWidget {
 }
 
 class AuditorMainPageState extends State<AuditorPage> {
+  final _auditorService = AuditorService(Dio());
   final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<Auditor> auditorSearchUtil;
   final _formKey = GlobalKey<FormState>();
@@ -40,19 +41,16 @@ class AuditorMainPageState extends State<AuditorPage> {
 
   final dio = Dio();
 
-  //fetchAuditors with pagination
   Future<void> fetchAuditors({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils.fetchPaginatedData<Auditor>(
-        endpoint: ApiEndpoint().auditor,
+      final pageList = await _auditorService.getAuditor(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        fromJson: (json) => Auditor.fromJson(json),
       );
 
       if (mounted) {
@@ -69,41 +67,6 @@ class AuditorMainPageState extends State<AuditorPage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  // Add or update auditor
-  Future<void> addOrUpdateAuditor(Auditor auditors) async {
-    var url = ApiEndpoint().auditor;
-    try {
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: auditors.toJson(),
-      );
-
-      if (response.statusCode == 200) {
-        await fetchAuditors();
-        setState(() {
-          fetchAuditors();
-        });
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating Auditor: $e");
-    }
-  }
-
-  //delete
-  Future<void> deleteAuditor(String kraId) async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.delete(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchAuditors();
-      }
-    } catch (e) {
-      debugPrint("Error deleting Auditor: $e");
     }
   }
 
@@ -168,7 +131,7 @@ class AuditorMainPageState extends State<AuditorPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deleteAuditor(id);
+                await _auditorService.deleteAuditor(id);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
@@ -409,7 +372,10 @@ class AuditorMainPageState extends State<AuditorPage> {
                           isOfficeHead: isOfficeHead,
                           userId: _selectedUserId,
                         );
-                        addOrUpdateAuditor(auditor);
+                        await _auditorService.addOrUpdateAuditor(auditor);
+                        setState(() {
+                          fetchAuditors();
+                        });
                         // ignore: use_build_context_synchronously
                         Navigator.pop(context);
                       }
