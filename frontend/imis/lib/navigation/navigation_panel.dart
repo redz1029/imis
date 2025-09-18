@@ -69,7 +69,6 @@ class NavigationPanelState extends State<NavigationPanel> {
     _initializeDashboard();
     if (widget.initialScreenIndex != null) {
       _selectedIndex = widget.initialScreenIndex!;
-      // We'll set the screen after roles are loaded in _checkSelectedRole
     }
   }
 
@@ -692,7 +691,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                       PermissionString.osm,
                       PermissionString.pgsAuditor,
                       PermissionString.pgsHead,
-                      PermissionString.pgsHead,
+                      PermissionString.coreTeam,
                     ],
                     child: _buildListTile(
                       Icons.credit_score_outlined,
@@ -826,11 +825,19 @@ class NavigationPanelState extends State<NavigationPanel> {
                     ),
                   ),
 
-                  _buildListTile(
-                    Icons.folder_outlined,
-                    'Reports',
-                    17,
-                    () => _setScreen(PgsReportPage(), 17),
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionString.roleAdmin,
+                      PermissionString.serviceHead,
+
+                      PermissionString.coreTeam,
+                    ],
+                    child: _buildListTile(
+                      Icons.folder_outlined,
+                      'Reports',
+                      17,
+                      () => _setScreen(PgsReportPage(), 17),
+                    ),
                   ),
                 ],
               ),
