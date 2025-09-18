@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/navigation_utils.dart';
+import 'package:imis/user/pages/no_connection_page.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class AuthenticatedRequest {
@@ -11,11 +13,37 @@ class AuthenticatedRequest {
     DioException e, {
     BuildContext? context,
   }) {
-    MotionToast.error(
-      title: const Text("Invalid credentials!"),
-      description: const Text("Please check your username and password."),
-      toastAlignment: Alignment.center,
-    ).show;
+    if (e.type == DioExceptionType.connectionError ||
+        e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.unknown) {
+      if (context != null) {
+        MotionToast.warning(
+          title: const Text("No Connection!"),
+          description: const Text("Please check your internet connection."),
+          toastAlignment: Alignment.center,
+        ).show(context);
+      }
+
+      navigatorKey.currentState?.pushReplacement(
+        MaterialPageRoute(builder: (context) => const NoConnectionPage()),
+      );
+
+      return Response<dynamic>(
+        data: {'error': 'no_connection'},
+        statusCode: 503,
+        statusMessage: 'Service Unavailable',
+        requestOptions: e.requestOptions,
+      );
+    }
+
+    if (context != null) {
+      MotionToast.error(
+        title: const Text("Invalid Credentials!"),
+        description: const Text("Please check your username and password."),
+        toastAlignment: Alignment.center,
+      ).show(context);
+    }
+
     return e.response!;
   }
 

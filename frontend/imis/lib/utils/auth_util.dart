@@ -1,3 +1,5 @@
+// ignore_for_file: deprecated_member_use
+
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
@@ -197,7 +199,6 @@ class AuthUtil {
       barrierDismissible: false,
       context: context,
       builder:
-          // ignore: deprecated_member_use
           (context) => WillPopScope(
             onWillPop: () async => false,
             child: AlertDialog(
