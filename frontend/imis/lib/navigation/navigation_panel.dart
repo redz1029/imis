@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
-import 'package:imis/performance_governance_system/pgs_scrore_monitoring/pages/pgs_score_monitoring_page.dart';
+import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
@@ -232,7 +232,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                           ),
                           side: const BorderSide(
                             color: primaryTextColor,
-                            width: 0.5, // border thickness
+                            width: 0.5,
                           ),
                           minimumSize: const Size(double.infinity, 45),
                         ),
@@ -697,7 +697,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                       Icons.credit_score_outlined,
                       'Deliverable Status Monitoring',
                       20,
-                      () => _setScreen(PgsScoreMonitoringPage(), 20),
+                      () => _setScreen(DeliverableStatusMonitoringPage(), 20),
                     ),
                   ),
                   PermissionWidget(
@@ -832,11 +832,43 @@ class NavigationPanelState extends State<NavigationPanel> {
 
                       PermissionString.coreTeam,
                     ],
-                    child: _buildListTile(
-                      Icons.folder_outlined,
-                      'Reports',
-                      17,
-                      () => _setScreen(PgsReportPage(), 17),
+                    child: Theme(
+                      data: Theme.of(context).copyWith(dividerColor: lightGrey),
+                      child: ExpansionTile(
+                        leading: const Icon(
+                          Icons.folder_outlined,
+                          color: primaryTextColor,
+                        ),
+                        title: const Text(
+                          'Reports',
+                          style: TextStyle(color: primaryTextColor),
+                        ),
+
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 40),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildListTile(
+                                  Icons.folder_outlined,
+                                  'Create Report',
+                                  hideIcon: true,
+                                  17,
+                                  () => _setScreen(PgsReportPage(), 17),
+                                ),
+                                _buildListTile(
+                                  Icons.folder_outlined,
+                                  'View Report',
+                                  hideIcon: true,
+                                  21,
+                                  () => _setScreen(PgsReportPage(), 21),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
