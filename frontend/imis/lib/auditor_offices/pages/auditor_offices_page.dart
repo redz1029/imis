@@ -498,7 +498,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: Text("Auditor Office"),
+        title: Text("Auditor's Office Information"),
         backgroundColor: mainBgColor,
       ),
       body: Padding(
