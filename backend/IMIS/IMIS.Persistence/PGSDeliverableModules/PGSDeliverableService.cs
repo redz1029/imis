@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
 
-namespace IMIS.Persistence.PGSModules 
+namespace IMIS.Persistence.PGSModules
 {
     public class PGSDeliverableService : IPGSDeliverableService
     {
@@ -34,7 +34,7 @@ namespace IMIS.Persistence.PGSModules
             var pgsDeliverable = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
             if(pgsDeliverable.TotalCount == 0)
             {
-                return null;
+                return null!;
             }
             return DtoPageList<PGSDeliverableDto, PgsDeliverable, long>.Create(pgsDeliverable.Items, page, pageSize, pgsDeliverable.TotalCount);
         }
@@ -166,8 +166,7 @@ namespace IMIS.Persistence.PGSModules
                 filter.Page,
                 filter.PageSize,
                 filtered.TotalCount);
-        }
-
+        }             
 
         public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(
          PgsDeliverableMonitorPageList request,

@@ -6,10 +6,10 @@ using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PGSModules
-{   
+{
     public class PGSDeliverableRepository(ImisDbContext dbContext)
     : BaseRepository<PgsDeliverable, long, ImisDbContext>(dbContext), IPGSDeliverableRepository
-    {
+    {       
         public async Task<List<int>> GetUserOfficeIdsAsync(string userId, CancellationToken cancellationToken)
         {           
             return await ReadOnlyDbContext.Set<AuditorOffices>()
