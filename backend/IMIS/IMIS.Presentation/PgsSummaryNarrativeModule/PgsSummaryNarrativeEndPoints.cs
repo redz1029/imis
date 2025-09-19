@@ -3,7 +3,7 @@ using Carter;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
 using IMIS.Infrastructure.Reports;
-using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Builder; 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
@@ -47,7 +47,7 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
                 await cache.EvictByTagAsync(_pgsSummaryNarrativeTag, cancellationToken);
                 return Results.Ok(pgsSummaryNarrativeDto);
             })
-            .WithTags(_pgsSummaryNarrativeTag)
+            .WithTags(_pgsSummaryNarrativeTag) 
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.Edit));   
 
             app.MapGet("/{pgsPeriodId:int}", async (int pgsPeriodId, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
