@@ -2,6 +2,7 @@
 using Carter;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsModule;
+using IMIS.Application.PgsSummaryNarrativeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -101,8 +102,7 @@ namespace IMIS.Presentation.PGSModule
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _pgsDeliverableAuditorPermission.View, _pgsDeliverableServiceHeadPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
-
-
+           
             app.MapPut("/filter/update", async ([FromBody] PgsDeliverableMonitorPageList request, IPGSDeliverableService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var result = await service.UpdateDeliverablesAsync(request, cache, cancellationToken);
