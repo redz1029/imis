@@ -41,6 +41,7 @@ class ApiEndpoint {
   late String auditorOffice;
   late String officePgsAuditor;
   late String rolesPermissions;
+  late String summaryNarrative;
 
   ApiEndpoint() {
     login = '$baseUrl/login';
@@ -80,6 +81,7 @@ class ApiEndpoint {
     auditorOffice = '$baseUrl/auditorsOffices';
     officePgsAuditor = '$baseUrl/office/pgs-auditor';
     rolesPermissions = '$baseUrl/roles/permissions';
+    summaryNarrative = '$baseUrl/pgsSummaryNarrative';
   }
 
   static Future<void> setBaseUrl() async {
