@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/office/models/office.dart';
+import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -55,7 +56,21 @@ class CommonService {
     if (response.statusCode == 200 && response.data is List) {
       return (response.data as List).map((e) => PgsPeriod.fromJson(e)).toList();
     } else {
-      throw Exception('Failed to fetch auditor');
+      throw Exception('Failed to fetch period');
+    }
+  }
+
+  Future<List<KeyResultArea>> fetchKra() async {
+    var url = ApiEndpoint().keyresult;
+
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode == 200 && response.data is List) {
+      return (response.data as List)
+          .map((e) => KeyResultArea.fromJson(e))
+          .toList();
+    } else {
+      throw Exception('Failed to fetch key result area');
     }
   }
 }
