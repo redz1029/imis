@@ -1,6 +1,4 @@
-﻿using Base.Auths.Permissions;
-using Carter;
-using IMIS.Application.OfficeModule;
+﻿using Carter;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
 using IMIS.Infrastructure.Reports;
