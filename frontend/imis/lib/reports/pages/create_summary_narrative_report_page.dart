@@ -1,9 +1,15 @@
+// ignore_for_file: use_build_context_synchronously
+
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/navigation/navigation_panel.dart';
+import 'package:imis/reports/models/pgs_summary_narrative.dart';
+import 'package:imis/reports/services/summary_narrative_service.dart';
 
 class CreateSummaryNarrativeReportPage extends StatefulWidget {
-  const CreateSummaryNarrativeReportPage({super.key});
+  final int periodId;
+  const CreateSummaryNarrativeReportPage({super.key, required this.periodId});
 
   @override
   CreateSummaryNarrativeReportPageState createState() =>
@@ -12,10 +18,19 @@ class CreateSummaryNarrativeReportPage extends StatefulWidget {
 
 class CreateSummaryNarrativeReportPageState
     extends State<CreateSummaryNarrativeReportPage> {
+  final _summaryNarrativeService = SummaryNarrativeService(Dio());
+  final _formKey = GlobalKey<FormState>();
   final TextEditingController _findingsController = TextEditingController();
   final TextEditingController _conclusionsController = TextEditingController();
   final TextEditingController _recommendationsController =
       TextEditingController();
+  final dio = Dio();
+  late final int _periodId;
+  @override
+  void initState() {
+    super.initState();
+    _periodId = widget.periodId;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,7 +103,54 @@ class CreateSummaryNarrativeReportPageState
                 ),
 
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () async {
+                    bool? confirmAction = await showDialog<bool>(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text("Confirm Save"),
+                          content: Text(
+                            "Are you sure you want to save this record?",
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(
+                                "No",
+                                style: TextStyle(color: primaryColor),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context, true);
+                              },
+
+                              child: Text(
+                                "Yes",
+                                style: TextStyle(color: primaryColor),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+
+                    if (confirmAction == true) {
+                      final summaryNarrative = PgsSummaryNarrative(
+                        0,
+                        _periodId,
+                        _findingsController.text,
+                        _recommendationsController.text,
+                        _conclusionsController.text,
+                        isDeleted: false,
+                        rowVersion: '',
+                      );
+                      await _summaryNarrativeService.addSummaryNarrative(
+                        summaryNarrative,
+                      );
+                      Navigator.pop(context);
+                    }
+                  },
                   icon: const Icon(Icons.save_outlined, size: 18),
                   label: const Text("Save Report"),
                   style: ElevatedButton.styleFrom(
@@ -217,17 +279,19 @@ class CreateSummaryNarrativeReportPageState
           decoration: BoxDecoration(
             color: Colors.grey.shade100,
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade400),
+            border: Border.all(color: Colors.transparent),
           ),
           child: Scrollbar(
             thumbVisibility: true,
             child: SingleChildScrollView(
               child: TextField(
+                style: TextStyle(fontSize: 14),
                 controller: controller,
                 maxLines: null,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: "Type here...",
+                  hintStyle: TextStyle(color: grey),
                 ),
               ),
             ),
