@@ -66,7 +66,14 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     Name = new OSM().Name,
                     NormalizedName = "OSM",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
-                }
+                },
+                 new IdentityRole
+                 {
+                     Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
+                     Name = new PgsAuditorHead().Name,
+                     NormalizedName = "PGS AUDITOR HEAD",
+                     ConcurrencyStamp = Guid.NewGuid().ToString(),
+                 }
 
         );
     }
