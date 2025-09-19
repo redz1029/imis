@@ -181,6 +181,20 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                          FirstName = "Precious Love",
                          MiddleName = "Y.",
                          PhoneNumber = "",
+                     },
+                     new User
+                     {
+                         Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
+                         UserName = "Singgon",
+                         NormalizedUserName = "SINGGON",
+                         Email = "Singgon1234@gmail.com",
+                         NormalizedEmail = "SINGGON1234@GMAIL.COM",
+                         PasswordHash = hasher.HashPassword(null, defaultPassword),
+                         ConcurrencyStamp = Guid.NewGuid().ToString(),
+                         LastName = "Singgon",
+                         FirstName = "Bai Samirah",
+                         MiddleName = "A.",
+                         PhoneNumber = "",
                      }
         );
     }
