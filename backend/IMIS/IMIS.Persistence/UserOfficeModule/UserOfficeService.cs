@@ -53,7 +53,7 @@ namespace IMIS.Persistence.UserOfficeModule
         {
             var userOffice = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
             if (userOffice.TotalCount == 0)
-                return null;
+                return null!;
             return DtoPageList<UserOfficeDto, UserOffices, int>.Create(userOffice.Items, page, pageSize, userOffice.TotalCount);
         }
         public async Task<UserOfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
