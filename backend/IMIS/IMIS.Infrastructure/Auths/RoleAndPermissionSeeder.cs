@@ -32,10 +32,11 @@ namespace IMIS.Infrastructure.Auths
 
             // This will specific permissions for a role
             await PermissionSeeder.SeedPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
-                new PerformanceGovernanceSystemPermission(),             
-                new PgsSignatoryTemplatePermission(), 
+                new PerformanceGovernanceSystemPermission(),
+                new PgsSignatoryTemplatePermission(),
                 new KeyResultAreaPermission(),
-                new PgsPeriodPermission());
+                new PgsPeriodPermission(),
+                new OfficePermission());
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new PgsDeliverableScoreHistoryPermission(),
                 new PgsDeliverableAuditorPermission(),
