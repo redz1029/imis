@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="09/17/2025 08:19:47" ReportInfo.Modified="09/18/2025 16:06:00" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="09/17/2025 08:19:47" ReportInfo.Modified="09/19/2025 14:48:45" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,6 +29,52 @@ namespace FastReport
         bool isDirect = value != null &amp;&amp; Convert.ToBoolean(value);
 
         txt.Text = isDirect ? &quot;Direct&quot; : &quot;Indirect&quot;;
+      }
+    }
+
+    private void txtOfficeName_BeforePrint(object sender, EventArgs e)
+    {
+                      
+      TextObject txt = sender as TextObject;
+      object value = Report.GetColumnValue(&quot;ReportPGSSummaryNarrativeDto.OfficeName&quot;);
+     
+      if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
+      {
+        txt.Text = &quot;All&quot;;
+      }
+      else
+      {
+        txt.Text = value.ToString();
+      }
+    }    
+
+    private void KraName_BeforePrint(object sender, EventArgs e)
+    {
+      TextObject txt = sender as TextObject;
+      object value = Report.GetColumnValue(&quot;ReportPGSSummaryNarrativeDto.KraName&quot;);
+     
+      if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
+      {
+        txt.Text = &quot;All&quot;;
+      }
+      else
+      {
+        txt.Text = value.ToString();
+      }
+    }
+
+    private void txtPeriodRange_BeforePrint(object sender, EventArgs e)
+    {
+      TextObject txt = sender as TextObject;
+      object value = Report.GetColumnValue(&quot;ReportPGSSummaryNarrativeDto.PeriodRange&quot;);
+
+      if (value == null || string.IsNullOrWhiteSpace(value.ToString()))
+      {
+        txt.Text = &quot;All&quot;;
+      }
+      else
+      {
+        txt.Text = value.ToString();
       }
     }
   }
@@ -66,16 +112,14 @@ namespace FastReport
       <TextObject Name="Text12" Left="94.5" Top="151.2" Width="160.65" Height="18.9" Text="Office:" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text13" Left="94.5" Top="179.55" Width="160.65" Height="18.9" Text="Key Result Area:" Font="Segoe UI, 10pt"/>
       <ShapeObject Name="Shape1" Left="94.5" Top="222.7" Width="885.1" Height="31.45" Fill.Color="192, 80, 77"/>
-      <LineObject Name="Line1" Left="189" Top="223.45" Height="29.7"/>
-      <TextObject Name="Text37" Left="96.4" Top="224.8" Width="90.7" Height="27.9" Border.Color="White" Text="PERIOD" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
-      <LineObject Name="Line2" Left="282.5" Top="222.8" Height="30.7"/>
-      <TextObject Name="Text38" Left="190.45" Top="224.8" Width="90.7" Height="27.9" Border.Color="White" Text="OFFICE" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
-      <LineObject Name="Line3" Left="372.1" Top="223.35" Height="29.7"/>
-      <TextObject Name="Text39" Left="284.95" Top="224.8" Width="85.7" Height="27.9" Border.Color="White" Text="KRA" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
-      <LineObject Name="Line4" Left="440.6" Top="223.35" Height="29.7"/>
-      <TextObject Name="Text40" Left="374" Top="224.8" Width="64.7" Height="27.9" Border.Color="White" Text="DIRECT" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
+      <LineObject Name="Line2" Left="210.9" Top="222.8" Height="30.7"/>
+      <TextObject Name="Text38" Left="95.95" Top="224.8" Width="113.6" Height="27.9" Border.Color="White" Text="OFFICE" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
+      <LineObject Name="Line3" Left="328.3" Top="223.35" Height="29.7"/>
+      <TextObject Name="Text39" Left="212.8" Top="224.8" Width="113.7" Height="27.9" Border.Color="White" Text="KRA" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
+      <LineObject Name="Line4" Left="396.6" Top="223.35" Height="29.7"/>
+      <TextObject Name="Text40" Left="329.2" Top="224.8" Width="65.7" Height="27.9" Border.Color="White" Text="DIRECT" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
       <LineObject Name="Line5" Left="586" Top="223.35" Height="29.7"/>
-      <TextObject Name="Text41" Left="442.15" Top="224.8" Width="142.7" Height="27.9" Border.Color="White" Text="DELIVERABLES" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
+      <TextObject Name="Text41" Left="400.15" Top="224.8" Width="183.7" Height="27.9" Border.Color="White" Text="DELIVERABLES" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
       <LineObject Name="Line6" Left="670.5" Top="223.35" Height="29.7"/>
       <TextObject Name="Text42" Left="587.35" Top="224.8" Width="80.7" Height="27.9" Border.Color="White" Text="BY WHEN" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
       <LineObject Name="Line7" Left="767.45" Top="223.35" Height="29.7"/>
@@ -83,43 +127,41 @@ namespace FastReport
       <LineObject Name="Line8" Left="888.95" Top="223.35" Height="29.7"/>
       <TextObject Name="Text44" Left="769.9" Top="224.8" Width="116.7" Height="27.9" Border.Color="White" Text="REMARKS" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
       <TextObject Name="Text45" Left="890.75" Top="224.8" Width="85.7" Height="27.9" Border.Color="White" Text="SCORE" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 10pt" TextFill.Color="White"/>
-      <TextObject Name="Text55" Left="256.05" Top="122.85" Width="538.75" Height="18.9" Text="[ReportPGSSummaryNarrativeDto.PeriodRange]" Format="Date" Format.Format="d" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text56" Left="255.15" Top="151.2" Width="538.65" Height="18.9" Text="[ReportPGSSummaryNarrativeDto.OfficeName]" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text57" Left="255.6" Top="179.55" Width="538.65" Height="18.9" Text="[ReportPGSSummaryNarrativeDto.KraName]" Font="Segoe UI, 10pt"/>
+      <TextObject Name="txtPeriodRange" Left="256.05" Top="122.85" Width="538.75" Height="18.9" BeforePrintEvent="txtPeriodRange_BeforePrint" Text="[ReportPGSSummaryNarrativeDto.PeriodRange]" Format="Date" Format.Format="d" Font="Segoe UI, 10pt"/>
+      <TextObject Name="txtOfficeName" Left="255.15" Top="151.2" Width="538.65" Height="18.9" BeforePrintEvent="txtOfficeName_BeforePrint" Text="[ReportPGSSummaryNarrativeDto.OfficeName]" Font="Segoe UI, 10pt"/>
+      <TextObject Name="KraName" Left="255.6" Top="179.55" Width="538.65" Height="18.9" BeforePrintEvent="KraName_BeforePrint" Text="[ReportPGSSummaryNarrativeDto.KraName]" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text58" Left="332.2" Top="42.25" Width="395.45" Height="18.9" Text="Sinsuat Avenue, Rosary Heights X, Cotabato City, 9600" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 9pt"/>
     </PageHeaderBand>
-    <DataBand Name="Data1" Top="258.15" Width="1047.06">
-      <DataBand Name="Data2" Top="262.15" Width="1047.06" Height="16.9" CanGrow="true" DataSource="PgsDeliverables">
-        <TextObject Name="Text46" Left="190.45" Width="90.5" Height="15.9" Border.Color="White" CanGrow="true" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Office]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-        <TextObject Name="Text47" Left="284.5" Width="85.5" Height="15.9" Border.Color="White" CanGrow="true" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.KeyResultArea]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-        <LineObject Name="Line9" Left="95.05" Top="-1" Height="17.7" GrowToBottom="true"/>
-        <LineObject Name="Line11" Left="978.8" Height="16.7" GrowToBottom="true"/>
-        <LineObject Name="Line12" Left="282.5" Top="-1" Height="17.7" GrowToBottom="true"/>
-        <LineObject Name="Line13" Left="189" Top="-1" Height="17.7" GrowToBottom="true"/>
-        <LineObject Name="Line14" Left="440.7" Top="-0.8" Height="17.7" GrowToBottom="true"/>
-        <LineObject Name="Line15" Left="372" Top="-0.8" Height="17.7" GrowToBottom="true"/>
-        <LineObject Name="Line16" Left="585.9" Top="-0.8" Height="17.7" GrowToBottom="true"/>
-        <LineObject Name="Line17" Left="670.5" Top="-1" Height="17.7" GrowToBottom="true"/>
-        <LineObject Name="Line18" Left="767.45" Top="-1" Height="17.7" GrowToBottom="true"/>
-        <LineObject Name="Line19" Left="888.85" Top="-0.8" Height="17.7" GrowToBottom="true"/>
-        <TextObject Name="Text48" Left="96.4" Width="91.25" Height="16.45" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.PgsPeriod]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-        <TextObject Name="txtDirectAndInDirect" Left="374" Width="64.7" Height="16.45" GrowToBottom="true" BeforePrintEvent="txtDirectAndInDirect_BeforePrint" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.IsDirect]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-        <TextObject Name="Text50" Left="442.15" Width="142.5" Height="16.45" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-        <TextObject Name="Text51" Left="587.35" Width="82.15" Height="16.45" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.ByWhen]" Format="Date" Format.Format="MMMM yyyy" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-        <TextObject Name="Text52" Left="672.4" Width="93.5" Height="15.9" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Status]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-        <TextObject Name="Text53" Left="769.35" Width="117.5" Height="16.45" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Remarks]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-        <TextObject Name="Text54" Left="891.2" Width="86.5" Height="16.9" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Score]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Center" VertAlign="Center" WordWrap="false" Font="Segoe UI, 8pt" Trimming="EllipsisCharacter"/>
-        <LineObject Name="Line10" Left="94.5" Top="16.9" Width="884.85"/>
+    <DataBand Name="Data1" Top="255.29" Width="1047.06">
+      <DataBand Name="Data2" Top="256.44" Width="1047.06" Height="19" CanGrow="true" DataSource="PgsDeliverables">
+        <TextObject Name="Text46" Left="98.85" Top="2" Width="107.5" Height="13.9" Border.Color="White" CanGrow="true" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Office]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
+        <TextObject Name="Text47" Left="215.35" Top="2" Width="108.5" Height="13.9" Border.Color="White" CanGrow="true" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.KeyResultArea]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
+        <LineObject Name="Line9" Left="95.05" Top="-1" Height="19.7" GrowToBottom="true"/>
+        <LineObject Name="Line11" Left="978.8" Height="18.7" GrowToBottom="true"/>
+        <LineObject Name="Line12" Left="210.9" Top="-1" Height="19.7" GrowToBottom="true"/>
+        <LineObject Name="Line14" Left="396.35" Top="-0.8" Height="19.7" GrowToBottom="true"/>
+        <LineObject Name="Line15" Left="328.2" Top="-0.8" Height="19.7" GrowToBottom="true"/>
+        <LineObject Name="Line16" Left="585.9" Top="-0.8" Height="19.7" GrowToBottom="true"/>
+        <LineObject Name="Line17" Left="670.5" Top="-1" Height="19.7" GrowToBottom="true"/>
+        <LineObject Name="Line18" Left="767.45" Top="-1" Height="19.7" GrowToBottom="true"/>
+        <LineObject Name="Line19" Left="888.85" Top="-0.8" Height="19.7" GrowToBottom="true"/>
+        <TextObject Name="txtDirectAndInDirect" Left="332.2" Top="2" Width="60.7" Height="13.45" GrowToBottom="true" BeforePrintEvent="txtDirectAndInDirect_BeforePrint" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.IsDirect]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
+        <TextObject Name="Text50" Left="401.6" Top="2" Width="179.05" Height="13.45" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
+        <TextObject Name="Text51" Left="590.35" Top="2" Width="76.15" Height="13.45" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.ByWhen]" Format="Date" Format.Format="MMMM yyyy" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
+        <TextObject Name="Text52" Left="674.4" Top="2" Width="89.5" Height="13.9" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Status]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
+        <TextObject Name="Text53" Left="771.35" Top="2" Width="113.5" Height="13.45" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Remarks]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
+        <TextObject Name="Text54" Left="893.2" Top="2" Width="81.5" Height="13.9" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Score]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="2" HorzAlign="Center" VertAlign="Center" WordWrap="false" Font="Segoe UI, 8pt" Trimming="EllipsisCharacter"/>
+        <LineObject Name="Line10" Left="94.5" Top="19" Width="884.85"/>
       </DataBand>
     </DataBand>
-    <PageFooterBand Name="PageFooter1" Top="283.05" Width="1047.06" Height="141.1" CanGrow="true">
-      <TextObject Name="Text29" Left="352.2" Top="124.95" Width="317.8" Height="14.35" CanGrow="true" GrowToBottom="true" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
-      <TextObject Name="Text30" Left="94.5" Top="8.45" Width="160.65" Height="22.9" CanGrow="true" Text="Findings:" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text31" Left="94.5" Top="42.7" Width="160.65" Height="22.9" CanGrow="true" Text="Recommendations:" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text32" Left="94.5" Top="77.05" Width="160.65" Height="22.9" CanGrow="true" Text="Conclusion:" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text35" Left="255.6" Top="76.6" Width="718.2" Height="22.9" CanGrow="true" Text="[ReportPGSSummaryNarrativeDto.Conclusion]" HorzAlign="Justify" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text34" Left="255.6" Top="43.25" Width="718.2" Height="22.9" CanGrow="true" Text="[ReportPGSSummaryNarrativeDto.Recommendation]" HorzAlign="Justify" Font="Segoe UI, 10pt"/>
-      <TextObject Name="Text33" Left="255.6" Top="8.45" Width="718.2" Height="22.35" CanGrow="true" Text="[ReportPGSSummaryNarrativeDto.Findings]" HorzAlign="Justify" Font="Segoe UI, 10pt"/>
+    <PageFooterBand Name="PageFooter1" Top="276.58" Width="1047.06" Height="197.8" CanGrow="true" Guides="0">
+      <TextObject Name="Text29" Left="352.2" Top="180.2" Width="317.8" Height="14.35" CanGrow="true" GrowToBottom="true" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
+      <TextObject Name="Text30" Left="94.5" Top="8.45" Width="160.65" Height="22.9" CanGrow="true" Text="Findings" Font="Segoe UI, 11pt, style=Bold"/>
+      <TextObject Name="Text31" Left="94.5" Top="62.6" Width="160.65" Height="22.9" CanGrow="true" Text="Recommendations" Font="Segoe UI, 11pt, style=Bold"/>
+      <TextObject Name="Text32" Left="94.5" Top="117.85" Width="160.65" Height="22.9" CanGrow="true" Text="Conclusion" Font="Segoe UI, 11pt, style=Bold"/>
+      <TextObject Name="Text35" Left="94.5" Top="145.3" Width="888.3" Height="22.9" CanGrow="true" Text="[ReportPGSSummaryNarrativeDto.Conclusion]" HorzAlign="Justify" Font="Segoe UI, 10pt"/>
+      <TextObject Name="Text34" Left="94.5" Top="89.05" Width="888.3" Height="22.9" CanGrow="true" Text="[ReportPGSSummaryNarrativeDto.Recommendation]" HorzAlign="Justify" Font="Segoe UI, 10pt"/>
+      <TextObject Name="Text33" Left="94.5" Top="34.8" Width="888.3" Height="22.35" CanGrow="true" Text="[ReportPGSSummaryNarrativeDto.Findings]" HorzAlign="Justify" Font="Segoe UI, 10pt"/>
     </PageFooterBand>
   </ReportPage>
 </Report>
