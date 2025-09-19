@@ -1,8 +1,11 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
+using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
+using IMIS.Domain;
 using Sprache;
 
 
@@ -77,7 +80,15 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
             return pgsNarrativeSummary
                 .Select(x => new PGSSummaryNarrativeDto(x))
                 .ToList();
-        }       
+        }
+
+        public async Task<DtoPageList<PGSSummaryNarrativeDto, PgsSummaryNarrative, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var pgsSignatoryTemplateDto = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (pgsSignatoryTemplateDto.TotalCount == 0)
+                return null;
+            return DtoPageList<PGSSummaryNarrativeDto, PgsSummaryNarrative, int>.Create(pgsSignatoryTemplateDto.Items, page, pageSize, pgsSignatoryTemplateDto.TotalCount);
+        }
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {

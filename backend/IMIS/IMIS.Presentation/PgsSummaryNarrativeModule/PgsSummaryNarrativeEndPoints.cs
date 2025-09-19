@@ -78,6 +78,16 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
             .WithTags(_pgsSummaryNarrativeTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View));
+
+            app.MapGet("/page", async (int page, int pageSize, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
+            {
+                var pgsSummaryNarrativeDto = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(pgsSummaryNarrativeDto);
+            })
+            .WithTags(_pgsSummaryNarrativeTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View));
         }
     }
 }

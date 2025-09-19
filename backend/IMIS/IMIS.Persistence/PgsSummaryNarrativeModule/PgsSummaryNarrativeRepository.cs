@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,13 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
         {
 
         }
-              
+
+        public async Task<EntityPageList<PgsSummaryNarrative, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+
+            return await EntityPageList<PgsSummaryNarrative, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
+
+        }
         public async Task<IEnumerable<PgsSummaryNarrative>> GetAll(CancellationToken cancellationToken)
         {
             return await _entities
