@@ -5,7 +5,7 @@ part 'pgs_summary_narrative.g.dart';
 @JsonSerializable()
 class PgsSummaryNarrative {
   int id;
-  int pgsPeriodId;
+  final int pgsPeriodId;
   String? findings;
   String? recommendation;
   String? conclusion;
