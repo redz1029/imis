@@ -6,7 +6,7 @@ part 'user.g.dart';
 class User {
   final String id;
   final String fullName;
-  final String position;
+  final String? position;
 
   User({required this.id, required this.fullName, required this.position});
 
