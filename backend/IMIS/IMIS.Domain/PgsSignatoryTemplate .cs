@@ -12,5 +12,6 @@ namespace IMIS.Domain
         public bool IsActive { get; set; }
         public int OfficeId { get; set; }
         public Office? Office { get; set; }
+        public string? Position { get; set; }
     }
 }
