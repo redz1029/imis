@@ -112,7 +112,7 @@ namespace IMIS.Persistence.PgsModule
                 {
                     var template = await _signatoryTemplateRepository.GetByIdAsync(s.PgsSignatoryTemplateId.Value, cancellationToken);
                     if (template != null)
-                    {
+                    {                        
                         orderLevel = template.OrderLevel;
                         PgsStatus.OfficeHead = template.SignatoryLabel;
                     }
@@ -128,7 +128,8 @@ namespace IMIS.Persistence.PgsModule
                     OrderLevel = orderLevel,
                     Status = s.DateSigned != default ? PgsStatus.Prepared : PgsStatus.Pending,
                     IsNextStatus = false,
-                    DateSigned = s.DateSigned
+                    DateSigned = s.DateSigned                    
+                    
                 });
             }
 
@@ -149,6 +150,7 @@ namespace IMIS.Persistence.PgsModule
                     OrderLevel = 0,
                     Status = PgsStatus.Pending,
                     IsNextStatus = false
+                                        
                 });
             }
 
@@ -171,7 +173,8 @@ namespace IMIS.Persistence.PgsModule
                     Label = t.SignatoryLabel,
                     OrderLevel = t.OrderLevel,
                     Status = PgsStatus.Pending,
-                    IsNextStatus = false
+                    IsNextStatus = false,
+                                        
                 });
             }
          
@@ -217,7 +220,7 @@ namespace IMIS.Persistence.PgsModule
                 IsActive = t.IsActive,
                 IsDeleted = t.IsDeleted,
                 RowVersion = t.RowVersion,
-                Status = t.Status
+                Status = t.Status                
                
             }).ToList();
 
