@@ -72,12 +72,13 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
                     cancellationToken
                 ).ConfigureAwait(false);
 
-                return Results.File(file, "application/pdf", $"ReportPgsSummaryNarrative_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
 
             })
             .WithTags(_pgsSummaryNarrativeTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true);           
 
             app.MapGet("/page", async (int page, int pageSize, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
             {
