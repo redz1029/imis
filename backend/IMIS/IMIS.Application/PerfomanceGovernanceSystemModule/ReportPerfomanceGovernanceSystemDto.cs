@@ -28,7 +28,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
         public List<ReportPgsSignatoryDto>? PgsSignatories { get; set; }
 
            
-        private IEnumerable<ReportPgsSignatoryDto> NonApprovedSignatories => PgsSignatories?.Where(s => s.PgsSignatoryTemplate?.SignatoryLabel != "Approved By") ?? Enumerable.Empty<ReportPgsSignatoryDto>();
+        private IEnumerable<ReportPgsSignatoryDto> NonApprovedSignatories => PgsSignatories?.Where(s => s.PgsSignatoryTemplate?.SignatoryLabel != PgsStatus.ApprovedBy) ?? Enumerable.Empty<ReportPgsSignatoryDto>();
         
         //Sigantory Label      
         public string? PgsSignatoryLabel1 =>
@@ -45,7 +45,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
 
         // Approved By: always last
         public string? PgsSignatoryLabel5 =>
-            PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == "Approved By")
+            PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == PgsStatus.ApprovedBy)
                 ?.PgsSignatoryTemplate?.SignatoryLabel;
 
         
@@ -65,36 +65,38 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
         // Approved By: always last
         public string? PgsSignatoryId5 =>
             FormatUserFullName(
-                PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == "Approved By")?.User
+                PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == PgsStatus.ApprovedBy)?.User
             );
-       
-        // Sigantory Positions       
+      
+        // Signatory Positions       
         public string? PgsSignatoryPosition1 =>
-            NonApprovedSignatories.ElementAtOrDefault(0)?.User?.Position;
+            NonApprovedSignatories.ElementAtOrDefault(0)?.PgsSignatoryTemplate?.Position
+            ?? NonApprovedSignatories.ElementAtOrDefault(0)?.User?.Position;
 
         public string? PgsSignatoryPosition2 =>
-            NonApprovedSignatories.ElementAtOrDefault(1)?.User?.Position;
+            NonApprovedSignatories.ElementAtOrDefault(1)?.PgsSignatoryTemplate?.Position
+            ?? NonApprovedSignatories.ElementAtOrDefault(1)?.User?.Position;
 
         public string? PgsSignatoryPosition3 =>
-            NonApprovedSignatories.ElementAtOrDefault(2)?.User?.Position;
+            NonApprovedSignatories.ElementAtOrDefault(2)?.PgsSignatoryTemplate?.Position
+            ?? NonApprovedSignatories.ElementAtOrDefault(2)?.User?.Position;
 
         public string? PgsSignatoryPosition4 =>
-            NonApprovedSignatories.ElementAtOrDefault(3)?.User?.Position;
+            NonApprovedSignatories.ElementAtOrDefault(3)?.PgsSignatoryTemplate?.Position
+            ?? NonApprovedSignatories.ElementAtOrDefault(3)?.User?.Position;
 
         // Approved By: always last
         public string? PgsSignatoryPosition5 =>
-            PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == "Approved By")?.User?.Position;
+            PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == PgsStatus.ApprovedBy)?.PgsSignatoryTemplate?.Position
+            ?? PgsSignatories?.FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == PgsStatus.ApprovedBy)?.User?.Position;
 
-        
-       // Helper for name format
+
+        // Helper for name format
         private static string? FormatUserFullName(User? user)
         {
             if (user == null) return null;
             return $"{user.Prefix} {user.FirstName} {user.MiddleName} {user.LastName}".Trim();
         }
-
-
-
 
         public ReportPerfomanceGovernanceSystemDto() { }
         [SetsRequiredMembers]
@@ -123,6 +125,7 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
                         {
                             Id = s.PgsSignatoryTemplate.Id,
                             SignatoryLabel = s.PgsSignatoryTemplate.SignatoryLabel,
+                            Position = s.PgsSignatoryTemplate.Position
                         }
                         : null,
                     User = user != null
@@ -144,12 +147,12 @@ namespace IMIS.Application.PerfomanceGovernanceSystemModule
             if (this.PgsSignatories != null)
             {
                 var approved = this.PgsSignatories
-                    .FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == "Approved By");
+                    .FirstOrDefault(s => s.PgsSignatoryTemplate?.SignatoryLabel == PgsStatus.ApprovedBy);
 
                 if (approved != null)
                 {
                     this.PgsSignatories.Remove(approved);
-                    this.PgsSignatories.Add(approved); // always last
+                    this.PgsSignatories.Add(approved); 
                 }
             }
 
