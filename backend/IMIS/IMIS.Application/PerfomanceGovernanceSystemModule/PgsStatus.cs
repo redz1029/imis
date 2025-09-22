@@ -7,5 +7,6 @@
         public const string Approved = "Approved";
         public const string Disapproved = "Disapproved";
         public const string PreparedBy = "Prepared By";
+        public static string OfficeHead { get; set; } = "Office Head";
     }
 }
