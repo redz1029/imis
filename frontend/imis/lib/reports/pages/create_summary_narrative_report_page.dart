@@ -6,6 +6,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/navigation/navigation_panel.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
+import 'package:imis/utils/date_time_converter.dart';
 
 class CreateSummaryNarrativeReportPage extends StatefulWidget {
   final int periodId;
@@ -19,17 +20,43 @@ class CreateSummaryNarrativeReportPage extends StatefulWidget {
 class CreateSummaryNarrativeReportPageState
     extends State<CreateSummaryNarrativeReportPage> {
   final _summaryNarrativeService = SummaryNarrativeService(Dio());
+  final _dateConverter = const LongDateOnlyConverter();
   final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _findingsController = TextEditingController();
   final TextEditingController _conclusionsController = TextEditingController();
   final TextEditingController _recommendationsController =
       TextEditingController();
+
   final dio = Dio();
   late final int _periodId;
+  String _periodStartDate = '';
+  String _periodEndDate = '';
   @override
   void initState() {
     super.initState();
     _periodId = widget.periodId;
+    _fetchPeriodDates();
+  }
+
+  Future<void> _fetchPeriodDates() async {
+    try {
+      final periodDates = await _summaryNarrativeService.getPeriodDates(
+        _periodId,
+      );
+      setState(() {
+        _periodStartDate = _dateConverter.toJson(periodDates.startDate);
+        _periodEndDate = _dateConverter.toJson(periodDates.endDate);
+      });
+      // ignore: empty_catches
+    } catch (e) {}
+  }
+
+  String get periodDateString {
+    if (_periodStartDate.isNotEmpty && _periodEndDate.isNotEmpty) {
+      return '$_periodStartDate to $_periodEndDate';
+    }
+    return '$_periodId';
   }
 
   @override
@@ -86,7 +113,7 @@ class CreateSummaryNarrativeReportPageState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: const [
                         Text(
-                          'Create Report - Q2 2024',
+                          'Create Report',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w600,
@@ -194,8 +221,8 @@ class CreateSummaryNarrativeReportPageState
                             color: Colors.grey[700],
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            'Report Details - Q2 2024',
+                          Text(
+                            'Report Details -  $periodDateString',
                             style: TextStyle(fontSize: 16),
                           ),
                         ],
