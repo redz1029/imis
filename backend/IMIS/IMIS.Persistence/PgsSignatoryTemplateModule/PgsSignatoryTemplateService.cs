@@ -24,7 +24,9 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                 OrderLevel = signatoryTemplate.OrderLevel,
                 DefaultSignatoryId = signatoryTemplate.DefaultSignatoryId,
                 IsActive = signatoryTemplate.IsActive,
-                OfficeId = signatoryTemplate.OfficeId 
+                OfficeId = signatoryTemplate.OfficeId,
+                Position = signatoryTemplate.Position,
+                
             };
         }
         public async Task<DtoPageList<PgsSignatoryTemplateDto, PgsSignatoryTemplate, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
@@ -82,6 +84,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                         existing.DefaultSignatoryId = entity.DefaultSignatoryId;
                         existing.IsActive = entity.IsActive;
                         existing.OfficeId = entity.OfficeId;
+                        existing.Position = entity.Position;    
                         
                         await _repository.UpdateAsync(existing, existing.Id, cancellationToken).ConfigureAwait(false); ;
                     }
@@ -100,7 +103,8 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                 OrderLevel = x.OrderLevel,
                 DefaultSignatoryId = x.DefaultSignatoryId,
                 IsActive = x.IsActive,
-                OfficeId = x.OfficeId
+                OfficeId = x.OfficeId,
+                Position = x.Position,
             }).ToList();
         }   
 
