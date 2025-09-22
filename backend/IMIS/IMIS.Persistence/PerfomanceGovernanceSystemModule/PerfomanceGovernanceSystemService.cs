@@ -93,7 +93,7 @@ namespace IMIS.Persistence.PgsModule
                         PgsId = pgs.Id,
                         PgsSignatoryTemplateId = null,
                         SignatoryId = childOfficeHeadSig.UserId,
-                        Label = "Office Head",
+                        Label = PgsStatus.OfficeHead,
                         OrderLevel = 0,
                         Status = PgsStatus.Pending,
                         IsNextStatus = true
@@ -104,19 +104,17 @@ namespace IMIS.Persistence.PgsModule
 
             }
 
-
             foreach (var s in pgs.PgsSignatories ?? Enumerable.Empty<PgsSignatory>())
             {
                 int orderLevel = 0;
-                string label = "Office Head";
-
+              
                 if (s.PgsSignatoryTemplateId != null)
                 {
                     var template = await _signatoryTemplateRepository.GetByIdAsync(s.PgsSignatoryTemplateId.Value, cancellationToken);
                     if (template != null)
                     {
                         orderLevel = template.OrderLevel;
-                        label = template.SignatoryLabel;
+                        PgsStatus.OfficeHead = template.SignatoryLabel;
                     }
                 }
 
@@ -126,7 +124,7 @@ namespace IMIS.Persistence.PgsModule
                     PgsId = pgs.Id,
                     PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
                     SignatoryId = s.SignatoryId,
-                    Label = label,
+                    Label = PgsStatus.OfficeHead,
                     OrderLevel = orderLevel,
                     Status = s.DateSigned != default ? PgsStatus.Prepared : PgsStatus.Pending,
                     IsNextStatus = false,
@@ -147,7 +145,7 @@ namespace IMIS.Persistence.PgsModule
                     PgsId = pgs.Id,
                     PgsSignatoryTemplateId = null,
                     SignatoryId = childOfficeHead.UserId,
-                    Label = "Office Head",
+                    Label = PgsStatus.OfficeHead,
                     OrderLevel = 0,
                     Status = PgsStatus.Pending,
                     IsNextStatus = false
@@ -192,8 +190,6 @@ namespace IMIS.Persistence.PgsModule
 
             return dto;
         }
-
-
 
         private async Task<IEnumerable<PgsSignatoryTemplate>> GetInheritedSignatoryTemplatesAsync(Office office, CancellationToken cancellationToken)
         {
