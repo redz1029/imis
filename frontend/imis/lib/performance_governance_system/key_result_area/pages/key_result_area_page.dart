@@ -194,12 +194,6 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                     ),
-                    // validator: (value) {
-                    //   if (value == null || value.trim().isEmpty) {
-                    //     return 'Please fill out this field';
-                    //   }
-                    //   return null;
-                    // },
                   ),
                 ),
               ],

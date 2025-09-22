@@ -10,6 +10,7 @@ import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
+import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
@@ -700,8 +701,54 @@ class NavigationPanelState extends State<NavigationPanel> {
                       () => _setScreen(DeliverableStatusMonitoringPage(), 20),
                     ),
                   ),
+
                   PermissionWidget(
-                    permission: PermissionString.editTeam,
+                    allowedRoles: [PermissionString.roleAdmin],
+                    child: Theme(
+                      data: Theme.of(context).copyWith(dividerColor: lightGrey),
+                      child: ExpansionTile(
+                        leading: const Icon(
+                          Icons.folder_outlined,
+                          color: primaryTextColor,
+                        ),
+                        title: const Text(
+                          'Report',
+                          style: TextStyle(color: primaryTextColor),
+                        ),
+
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 40),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _buildListTile(
+                                  Icons.folder_outlined,
+                                  'Create Report',
+                                  hideIcon: true,
+                                  17,
+                                  () => _setScreen(PgsReportPage(), 17),
+                                ),
+                                _buildListTile(
+                                  Icons.folder_outlined,
+                                  'View Report',
+                                  hideIcon: true,
+                                  21,
+                                  () => _setScreen(
+                                    ViewSummaryNarrativeReportPage(),
+                                    21,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  PermissionWidget(
+                    allowedRoles: [PermissionString.roleAdmin],
                     child: Theme(
                       data: Theme.of(context).copyWith(dividerColor: lightGrey),
                       child: ExpansionTile(
@@ -816,53 +863,6 @@ class NavigationPanelState extends State<NavigationPanel> {
                                   'User Role',
                                   16,
                                   () => _setScreen(UserRolePage(), 16),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  PermissionWidget(
-                    allowedRoles: [
-                      PermissionString.roleAdmin,
-                      PermissionString.serviceHead,
-
-                      PermissionString.coreTeam,
-                    ],
-                    child: Theme(
-                      data: Theme.of(context).copyWith(dividerColor: lightGrey),
-                      child: ExpansionTile(
-                        leading: const Icon(
-                          Icons.folder_outlined,
-                          color: primaryTextColor,
-                        ),
-                        title: const Text(
-                          'Reports',
-                          style: TextStyle(color: primaryTextColor),
-                        ),
-
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 40),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildListTile(
-                                  Icons.folder_outlined,
-                                  'Create Report',
-                                  hideIcon: true,
-                                  17,
-                                  () => _setScreen(PgsReportPage(), 17),
-                                ),
-                                _buildListTile(
-                                  Icons.folder_outlined,
-                                  'View Report',
-                                  hideIcon: true,
-                                  21,
-                                  () => _setScreen(PgsReportPage(), 21),
                                 ),
                               ],
                             ),
