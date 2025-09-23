@@ -43,17 +43,42 @@ class SummaryNarrativeService {
 
   Future<PgsPeriod> getPeriodDates(int periodId) async {
     final url = ApiEndpoint().pgsperiod;
-    final response = await AuthenticatedRequest.get(
-      dio,
-      url,
-    ); // Adjust API path accordingly
 
-    if (response.statusCode == 200) {
-      final data = response.data;
-      return PgsPeriod(0, false, DateTime.now(), DateTime.now(), 'remarks');
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode == 200 && response.data is List) {
+      final periods =
+          (response.data as List).map((e) => PgsPeriod.fromJson(e)).toList();
+
+      return periods.firstWhere(
+        (p) => p.id == periodId,
+        orElse: () => throw Exception('Period not found'),
+      );
     } else {
-      throw Exception('Failed to fetch period dates');
+      throw Exception('Failed to fetch period list');
     }
+  }
+
+  Future<PgsSummaryNarrative?> checkIfPeriodHasNarrative(int periodId) async {
+    final url = ApiEndpoint().summaryNarrative;
+
+    try {
+      final response = await AuthenticatedRequest.get(
+        dio,
+        url,
+        queryParameters: {'pgsPeriodId': periodId},
+      );
+
+      if (response.data is List && response.data.isNotEmpty) {
+        final item = response.data.first;
+        final existingPeriodId = item['pgsPeriodId'] as int?;
+        if (existingPeriodId == periodId) {
+          return PgsSummaryNarrative.fromJson(item);
+        }
+      }
+    } catch (e) {}
+
+    return null;
   }
 
   Future<List<dynamic>> getSummaryNarratives() async {
@@ -62,7 +87,6 @@ class SummaryNarrativeService {
     final response = await AuthenticatedRequest.get(dio, url);
 
     if (response.statusCode == 200) {
-      // Assuming API returns a JSON array
       return response.data;
     } else {
       throw Exception('Failed to fetch summary narratives');
