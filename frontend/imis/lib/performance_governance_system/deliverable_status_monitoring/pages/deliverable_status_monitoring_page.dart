@@ -1,5 +1,4 @@
 // ignore_for_file: use_build_context_synchronously
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -8,6 +7,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
+import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -49,8 +49,7 @@ class DeliverableStatusMonitoringPageState
   Map<int, TextEditingController> percentageControllers = {};
   Map<int, int> percentageValues = {};
 
-  List<Map<String, dynamic>> kraListOptions = [];
-  Map<int, int?> selectedKRA = {};
+  List<KeyResultArea> kraListOptions = [];
   int? selectedKra;
 
   List<Office> officeList = [];
@@ -87,18 +86,19 @@ class DeliverableStatusMonitoringPageState
   void initState() {
     super.initState();
     fetchFilteredPgsList();
-    fetchKra();
+    // fetchKra();
     fetchScoreHistory();
     _checkPermissions();
     () async {
       final offices = await _deliverableStatusMonitoring.fetchOffices();
       final period = await _commonService.fetchPgsPeriod();
-
+      final kra = await _commonService.fetchKra();
       if (!mounted) return;
 
       setState(() {
         officeList = offices;
         periodList = period;
+        kraListOptions = kra;
       });
     }();
   }
@@ -282,26 +282,6 @@ class DeliverableStatusMonitoringPageState
         'byWhen': formattedByWhen,
       };
     }).toList();
-  }
-
-  Future<void> fetchKra() async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200) {
-        List<dynamic> data = response.data;
-
-        kraListOptions =
-            data.map<Map<String, dynamic>>((item) {
-              return {'id': item['id'] as int, 'name': item['name'].toString()};
-            }).toList();
-      } else {
-        debugPrint("Failed to load data");
-      }
-    } catch (e) {
-      debugPrint("Error fetching data: $e");
-    }
   }
 
   PgsStatus dynamicToPgsStatus(dynamic value) {
@@ -999,7 +979,7 @@ class DeliverableStatusMonitoringPageState
                                     ],
                                   ),
                                 ),
-                                // Scrollable office list
+
                                 PopupMenuItem<String>(
                                   enabled: false,
                                   child: ValueListenableBuilder<String>(
@@ -1116,7 +1096,13 @@ class DeliverableStatusMonitoringPageState
                             itemBuilder: (BuildContext context) {
                               final updatedKraList = [
                                 {'id': -1, 'name': 'All KRA'},
-                                ...kraListOptions,
+                                ...kraListOptions.map(
+                                  (k) => {
+                                    'id': k.id,
+                                    'name': k.name,
+                                    'remakrs': k.remarks,
+                                  },
+                                ),
                               ];
 
                               return updatedKraList.map<PopupMenuItem<int>>((
@@ -1124,7 +1110,7 @@ class DeliverableStatusMonitoringPageState
                               ) {
                                 return PopupMenuItem<int>(
                                   value: kra['id'] as int,
-                                  child: Text(kra['name']),
+                                  child: Text(kra['name'].toString()),
                                 );
                               }).toList();
                             },
@@ -1132,10 +1118,18 @@ class DeliverableStatusMonitoringPageState
                               label:
                                   selectedKra == null
                                       ? 'All KRA'
-                                      : kraListOptions.firstWhere(
-                                        (kra) => kra['id'] == selectedKra,
-                                        orElse: () => {'name': 'Unknown'},
-                                      )['name'],
+                                      : kraListOptions
+                                          .firstWhere(
+                                            (kra) => kra.id == selectedKra,
+                                            orElse:
+                                                () => KeyResultArea(
+                                                  0,
+                                                  'name',
+                                                  'remarks',
+                                                  false,
+                                                ),
+                                          )
+                                          .name,
                               isActive: isMenuOpenKra,
                             ),
                           ),
