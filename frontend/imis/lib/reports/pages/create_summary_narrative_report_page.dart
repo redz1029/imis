@@ -7,6 +7,7 @@ import 'package:imis/navigation/navigation_panel.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class CreateSummaryNarrativeReportPage extends StatefulWidget {
   final int periodId;
@@ -63,7 +64,7 @@ class CreateSummaryNarrativeReportPageState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: mainBgColor,
-      body: SingleChildScrollView(
+      body: Padding(
         padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,54 +129,66 @@ class CreateSummaryNarrativeReportPageState
                     ),
                   ],
                 ),
-
                 ElevatedButton.icon(
                   onPressed: () async {
-                    bool? confirmAction = await showDialog<bool>(
-                      context: context,
-                      builder: (context) {
-                        return AlertDialog(
-                          title: Text("Confirm Save"),
-                          content: Text(
-                            "Are you sure you want to save this record?",
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: Text(
-                                "No",
-                                style: TextStyle(color: primaryColor),
-                              ),
+                    if (_formKey.currentState!.validate()) {
+                      bool? confirmAction = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("Confirm Save"),
+                            content: const Text(
+                              "Are you sure you want to save this record?",
                             ),
-                            TextButton(
-                              onPressed: () {
-                                Navigator.pop(context, true);
-                              },
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(
+                                  "No",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context, true);
+                                },
+                                child: Text(
+                                  "Yes",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
 
-                              child: Text(
-                                "Yes",
-                                style: TextStyle(color: primaryColor),
-                              ),
-                            ),
-                          ],
+                      if (confirmAction == true) {
+                        final summaryNarrative = PgsSummaryNarrative(
+                          0,
+                          _periodId,
+                          _findingsController.text,
+                          _recommendationsController.text,
+                          _conclusionsController.text,
+                          isDeleted: false,
+                          rowVersion: '',
                         );
-                      },
-                    );
-
-                    if (confirmAction == true) {
-                      final summaryNarrative = PgsSummaryNarrative(
-                        0,
-                        _periodId,
-                        _findingsController.text,
-                        _recommendationsController.text,
-                        _conclusionsController.text,
-                        isDeleted: false,
-                        rowVersion: '',
-                      );
-                      await _summaryNarrativeService.addSummaryNarrative(
-                        summaryNarrative,
-                      );
-                      Navigator.pop(context);
+                        await _summaryNarrativeService.addSummaryNarrative(
+                          summaryNarrative,
+                        );
+                        MotionToast.success(
+                          description: Text("Save Successfully"),
+                          toastAlignment: Alignment.topCenter,
+                        ).show(context);
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => const NavigationPanel(
+                                  initialScreenIndex: 17,
+                                ),
+                          ),
+                          (route) => false,
+                        );
+                      }
                     }
                   },
                   icon: const Icon(Icons.save_outlined, size: 18),
@@ -196,66 +209,71 @@ class CreateSummaryNarrativeReportPageState
             ),
 
             gap32px,
-
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 900,
-                  maxHeight: 1000,
-                ),
-                child: Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey.shade400),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.description_outlined,
-                            color: Colors.grey[700],
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Report Details -  $periodDateString',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ],
+            Expanded(
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: SingleChildScrollView(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: 900,
+                      maxHeight: 1000,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade400),
                       ),
-
-                      gap48px,
-                      _buildReportSection(
-                        icon: Icons.error_outline_rounded,
-                        iconColor: Colors.blue,
-                        title: "Key Findings",
-                        description:
-                            "These will be displayed as separate points in the report.",
-                        controller: _findingsController,
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.description_outlined,
+                                  color: Colors.grey[700],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Report Details -  $periodDateString',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                              ],
+                            ),
+                            gap48px,
+                            _buildReportSection(
+                              icon: Icons.error_outline_rounded,
+                              iconColor: Colors.blue,
+                              title: "Key Findings",
+                              description:
+                                  "These will be displayed as separate points in the report.",
+                              controller: _findingsController,
+                            ),
+                            gap24px,
+                            _buildReportSection(
+                              icon: Icons.check_circle_outline,
+                              iconColor: Colors.green,
+                              title: "Conclusions",
+                              description:
+                                  "These should summarize your analysis and insights.",
+                              controller: _conclusionsController,
+                            ),
+                            gap24px,
+                            _buildReportSection(
+                              title: "Recommendations",
+                              icon: Icons.trending_up,
+                              iconColor: Colors.deepOrangeAccent,
+                              description:
+                                  "These should be actionable steps for improvement.",
+                              controller: _recommendationsController,
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 24),
-                      _buildReportSection(
-                        icon: Icons.check_circle_outline,
-                        iconColor: Colors.green,
-                        title: "Conclusions",
-                        description:
-                            "These should summarize your analysis and insights.",
-                        controller: _conclusionsController,
-                      ),
-                      const SizedBox(height: 24),
-                      _buildReportSection(
-                        title: "Recommendations",
-                        icon: Icons.trending_up,
-                        iconColor: Colors.deepOrangeAccent,
-                        description:
-                            "These should be actionable steps for improvement.",
-                        controller: _recommendationsController,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -276,7 +294,6 @@ class CreateSummaryNarrativeReportPageState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Section Title with Icon
         Row(
           children: [
             Icon(icon, color: iconColor, size: 20),
@@ -291,15 +308,12 @@ class CreateSummaryNarrativeReportPageState
             ),
           ],
         ),
-        const SizedBox(height: 6),
-
-        // Section Description
+        gap6px,
         Text(
           description,
           style: const TextStyle(fontSize: 13, color: Colors.black54),
         ),
-        const SizedBox(height: 12),
-
+        gap12px,
         Container(
           height: 200,
           padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -311,15 +325,22 @@ class CreateSummaryNarrativeReportPageState
           child: Scrollbar(
             thumbVisibility: true,
             child: SingleChildScrollView(
-              child: TextField(
+              child: TextFormField(
                 style: TextStyle(fontSize: 14),
                 controller: controller,
                 maxLines: null,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: "Type here...",
                   hintStyle: TextStyle(color: grey),
                 ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Required';
+                  }
+                  return null;
+                },
               ),
             ),
           ),
