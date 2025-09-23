@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
@@ -9,9 +11,16 @@ import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class ManageSummaryNarrativeReportPage extends StatefulWidget {
-  const ManageSummaryNarrativeReportPage({super.key});
+  // final PgsSummaryNarrative summaryNarrative;
+
+  const ManageSummaryNarrativeReportPage({
+    super.key,
+
+    // required this.summaryNarrative,
+  });
 
   @override
   ManageSummaryNarrativeReportPageState createState() =>
@@ -21,12 +30,16 @@ class ManageSummaryNarrativeReportPage extends StatefulWidget {
 class ManageSummaryNarrativeReportPageState
     extends State<ManageSummaryNarrativeReportPage> {
   final _commonService = CommonService(Dio());
+
   final _dateConverter = const LongDateOnlyConverter();
   final _summaryNarrativeService = SummaryNarrativeService(Dio());
+  final _formKey = GlobalKey<FormState>();
   List<PgsSummaryNarrative> reports = [];
-  List<TextEditingController> _findingsControllers = [];
-  List<TextEditingController> _conclusionControllers = [];
-  List<TextEditingController> _recommendationControllers = [];
+  final TextEditingController _findingsController = TextEditingController();
+  final TextEditingController _conclusionsController = TextEditingController();
+  final TextEditingController _recommendationsController =
+      TextEditingController();
+  late final int _periodId;
   List<PgsPeriod> _periods = [];
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
@@ -39,7 +52,7 @@ class ManageSummaryNarrativeReportPageState
   @override
   void initState() {
     super.initState();
-    _fetchReports();
+    // _fetchReports();
     () async {
       final period = await _commonService.fetchPgsPeriod();
 
@@ -81,42 +94,6 @@ class ManageSummaryNarrativeReportPageState
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  Future<void> _fetchReports() async {
-    try {
-      final List rawNarratives =
-          await _summaryNarrativeService.getSummaryNarratives();
-      final List<PgsSummaryNarrative> narratives =
-          rawNarratives.map((n) => PgsSummaryNarrative.fromJson(n)).toList();
-
-      setState(() {
-        reports = narratives;
-        _findingsControllers =
-            narratives
-                .map(
-                  (report) =>
-                      TextEditingController(text: report.findings ?? ''),
-                )
-                .toList();
-        _conclusionControllers =
-            narratives
-                .map(
-                  (report) =>
-                      TextEditingController(text: report.conclusion ?? ''),
-                )
-                .toList();
-        _recommendationControllers =
-            narratives
-                .map(
-                  (report) =>
-                      TextEditingController(text: report.recommendation ?? ''),
-                )
-                .toList();
-      });
-    } catch (e) {
-      debugPrint("Error fetching narratives: $e");
     }
   }
 
@@ -414,6 +391,10 @@ class ManageSummaryNarrativeReportPageState
     int index,
     int pgsPeriodId,
   ) {
+    _findingsController.text = report.findings ?? '';
+    _conclusionsController.text = report.conclusion ?? '';
+    _recommendationsController.text = report.recommendation ?? '';
+    _periodId = pgsPeriodId;
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -436,8 +417,61 @@ class ManageSummaryNarrativeReportPageState
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
-              onPressed: () {
-                // update logic here
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text("Confirm Save"),
+                        content: const Text(
+                          "Are you sure you want to save this record?",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            },
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirmAction == true) {
+                    final summaryNarrative = PgsSummaryNarrative(
+                      report.id,
+                      _periodId,
+                      _findingsController.text,
+                      _recommendationsController.text,
+                      _conclusionsController.text,
+                      isDeleted: false,
+                      rowVersion: '',
+                    );
+
+                    await _summaryNarrativeService.updateSummaryNarrative(
+                      summaryNarrative.id,
+                      summaryNarrative,
+                    );
+
+                    MotionToast.success(
+                      description: const Text("Updated Successfully"),
+                      toastAlignment: Alignment.topCenter,
+                    ).show(context);
+                    Navigator.pop(context);
+                  }
+                }
               },
               child: const Text(
                 'Update',
@@ -476,70 +510,76 @@ class ManageSummaryNarrativeReportPageState
                     top: Radius.circular(12),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.close, color: Colors.black87),
-                          onPressed: () => Navigator.of(context).pop(),
-                        ),
-                      ],
-                    ),
-                    gap16px,
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.insert_drive_file_outlined,
-                          color: Colors.grey[700],
-                        ),
-                        const SizedBox(width: 8),
-
-                        Text(
-                          'Performance Report - ${getPeriodLabel(report.pgsPeriodId)}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors.black87,
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.black87,
+                            ),
+                            onPressed: () => Navigator.of(context).pop(),
                           ),
-                        ),
+                        ],
+                      ),
+                      gap16px,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.insert_drive_file_outlined,
+                            color: Colors.grey[700],
+                          ),
+                          const SizedBox(width: 8),
 
-                        const Spacer(),
+                          Text(
+                            'Performance Report - ${getPeriodLabel(report.pgsPeriodId)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
 
-                        ElevatedButton.icon(
-                          onPressed: () async {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => ViewPdfSummary(
-                                      pgsPeriodId:
-                                          report.pgsPeriodId.toString(),
-                                    ),
+                          const Spacer(),
+
+                          ElevatedButton.icon(
+                            onPressed: () async {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => ViewPdfSummary(
+                                        pgsPeriodId:
+                                            report.pgsPeriodId.toString(),
+                                      ),
+                                ),
+                              );
+                            },
+                            icon: const Icon(
+                              Icons.description_outlined,
+                              size: 18,
+                            ),
+                            label: const Text("View PDF"),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: primaryTextColor,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
                               ),
-                            );
-                          },
-                          icon: const Icon(
-                            Icons.description_outlined,
-                            size: 18,
-                          ),
-                          label: const Text("View PDF"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: primaryTextColor,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 10,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ],
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               Padding(
@@ -588,7 +628,7 @@ class ManageSummaryNarrativeReportPageState
                       icon: Icons.error_outline_rounded,
                       iconColor: primaryTextColor,
                       title: "Key Findings",
-                      controller: _findingsControllers[index],
+                      controller: _findingsController,
                       decorationColor: Color(0xFFF5FBFF),
                       borderColor: Colors.blue[100],
                     ),
@@ -597,7 +637,7 @@ class ManageSummaryNarrativeReportPageState
                       icon: Icons.check_circle_outline,
                       iconColor: primaryTextColor,
                       title: "Conclusions",
-                      controller: _conclusionControllers[index],
+                      controller: _conclusionsController,
                       decorationColor: Color(0xFFF6FFF8),
                       borderColor: Colors.green[100],
                     ),
@@ -606,7 +646,7 @@ class ManageSummaryNarrativeReportPageState
                       title: "Recommendations",
                       icon: Icons.trending_up,
                       iconColor: primaryTextColor,
-                      controller: _recommendationControllers[index],
+                      controller: _recommendationsController,
                       decorationColor: Color(0xFFFFFAF3),
                       borderColor: Colors.orange[100],
                     ),
