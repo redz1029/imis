@@ -308,7 +308,6 @@ class NavigationPanelState extends State<NavigationPanel> {
                           ),
                           minimumSize: const Size(double.infinity, 45),
                         ),
-
                         onPressed: () async {
                           Navigator.of(context).pop();
 
@@ -318,12 +317,6 @@ class NavigationPanelState extends State<NavigationPanel> {
                           await prefs.setString('selectedRole', role);
 
                           await loadUserPermissions(role);
-                          // await Future.delayed(Duration(milliseconds: 500));
-                          // setState(() {
-                          //   selectedRole = role;
-                          //   _isSwitchingRole = false;
-                          //   _selectedIndex = 0;
-                          // });
                           await Future.delayed(
                             Duration(milliseconds: 500),
                             () async {
