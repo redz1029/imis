@@ -2,11 +2,11 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/navigation/navigation_panel.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/widgets/pagination_controls.dart';
 
 class ViewSummaryNarrativeReportPage extends StatefulWidget {
   const ViewSummaryNarrativeReportPage({super.key});
@@ -21,12 +21,19 @@ class ViewSummaryNarrativeReportPageState
   final _commonService = CommonService(Dio());
   final _dateConverter = const LongDateOnlyConverter();
   final _summaryNarrativeService = SummaryNarrativeService(Dio());
-  List<PgsSummaryNarrative> _reports = [];
+  List<PgsSummaryNarrative> reports = [];
   List<TextEditingController> _findingsControllers = [];
   List<TextEditingController> _conclusionControllers = [];
   List<TextEditingController> _recommendationControllers = [];
   List<PgsPeriod> _periods = [];
-
+  final TextEditingController searchController = TextEditingController();
+  final FocusNode isSearchfocus = FocusNode();
+  int _currentPage = 1;
+  final int _pageSize = 15;
+  int _totalCount = 0;
+  bool _isLoading = false;
+  List<PgsSummaryNarrative> summaryList = [];
+  List<PgsSummaryNarrative> filteredList = [];
   @override
   void initState() {
     super.initState();
@@ -40,6 +47,39 @@ class ViewSummaryNarrativeReportPageState
         _periods = period;
       });
     }();
+    fetchSummaryNarrative();
+  }
+
+  Future<void> fetchSummaryNarrative({
+    int page = 1,
+    String? searchQuery,
+  }) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final pageList = await _summaryNarrativeService.getSummaryNarrative(
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          summaryList = pageList.items;
+          filteredList = List.from(summaryList);
+        });
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
   Future<void> _fetchReports() async {
@@ -50,7 +90,7 @@ class ViewSummaryNarrativeReportPageState
           rawNarratives.map((n) => PgsSummaryNarrative.fromJson(n)).toList();
 
       setState(() {
-        _reports = narratives;
+        reports = narratives;
         _findingsControllers =
             narratives
                 .map(
@@ -92,70 +132,248 @@ class ViewSummaryNarrativeReportPageState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: mainBgColor,
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 40),
+      appBar: AppBar(title: Text('View Report'), backgroundColor: mainBgColor),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                ElevatedButton.icon(
-                  onPressed:
-                      () => Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(
-                          builder:
-                              (context) =>
-                                  const NavigationPanel(initialScreenIndex: 17),
-                        ),
-                        (route) => false,
+                // Search Bar
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    focusNode: isSearchfocus,
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: lightGrey),
                       ),
-                  icon: const Icon(Icons.arrow_back, size: 18),
-                  label: const Text(
-                    "Back",
-                    style: TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: mainBgColor,
-                    foregroundColor: primaryTextColor,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    side: BorderSide(color: Colors.grey.shade400, width: 0.8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    elevation: 0,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'View Reports',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w600,
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      labelText: 'Search...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isSearchfocus.hasFocus ? primaryColor : grey,
+                        size: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      filled: true,
+                      fillColor: secondaryColor,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 5,
+                        horizontal: 5,
                       ),
                     ),
-                  ],
+                    // onChanged: filterSearchResults,
+                  ),
                 ),
+
+                Spacer(),
               ],
             ),
-            gap32px,
-            ..._reports.asMap().entries.map((entry) {
-              final index = entry.key;
-              final report = entry.value;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 32),
-                child: _buildReportCard(report, index),
-              );
-            }),
+            gap24px,
+
+            Expanded(
+              child: Column(
+                children: [
+                  Container(
+                    color: secondaryColor,
+                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          flex: 1,
+                          child: Text('#', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text(
+                            'Performance Report',
+                            style: TextStyle(color: grey),
+                          ),
+                        ),
+                        Expanded(
+                          flex: 3,
+                          child: Text('Period', style: TextStyle(color: grey)),
+                        ),
+                        Expanded(
+                          flex: 1,
+                          child: Text('Actions', style: TextStyle(color: grey)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.vertical,
+                      child: Column(
+                        children:
+                            filteredList
+                                .asMap()
+                                .map((index, summary) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  return MapEntry(
+                                    index,
+                                    Container(
+                                      padding: EdgeInsets.symmetric(
+                                        vertical: 1,
+                                        horizontal: 10,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade300,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                itemNumber.toString(),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                'Performance Report',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Text(
+                                                getPeriodLabel(
+                                                  summary.pgsPeriodId,
+                                                ),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.normal,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+
+                                          Expanded(
+                                            flex: 1,
+                                            child: Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 1,
+                                              ),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  IconButton(
+                                                    icon: Icon(Icons.edit),
+                                                    onPressed: () {
+                                                      showReportDialog(
+                                                        summary,
+                                                        index,
+                                                      );
+                                                    },
+                                                  ),
+
+                                                  SizedBox(width: 1),
+                                                  IconButton(
+                                                    icon: Icon(
+                                                      Icons.delete,
+                                                      color: primaryColor,
+                                                    ),
+                                                    onPressed: () => {},
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                })
+                                .values
+                                .toList(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            Container(
+              padding: EdgeInsets.all(10),
+              color: secondaryColor,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  PaginationInfo(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                  ),
+                  PaginationControls(
+                    currentPage: _currentPage,
+                    totalItems: _totalCount,
+                    itemsPerPage: _pageSize,
+                    isLoading: _isLoading,
+                    onPageChanged: (page) => fetchSummaryNarrative(page: page),
+                  ),
+                  Container(width: 60),
+                ],
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  void showReportDialog(PgsSummaryNarrative report, int index) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return Dialog(
+          insetPadding: EdgeInsets.all(20),
+          backgroundColor: Colors.transparent,
+          child: SingleChildScrollView(child: _buildReportCard(report, index)),
+        );
+      },
     );
   }
 
@@ -173,11 +391,10 @@ class ViewSummaryNarrativeReportPageState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Gray header
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
-                  vertical: 12,
+                  vertical: 8,
                   horizontal: 16,
                 ),
                 decoration: BoxDecoration(
@@ -186,44 +403,61 @@ class ViewSummaryNarrativeReportPageState
                     top: Radius.circular(12),
                   ),
                 ),
-                child: Row(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      Icons.insert_drive_file_outlined,
-                      color: Colors.grey[700],
-                    ),
-                    const SizedBox(width: 8),
-
-                    Text(
-                      'Performance Report - ${getPeriodLabel(report.pgsPeriodId)}',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.black87,
-                      ),
-                    ),
-
-                    Flexible(fit: FlexFit.tight, child: Container()),
-
-                    ElevatedButton.icon(
-                      onPressed: () async {},
-                      icon: const Icon(Icons.description_outlined, size: 18),
-                      label: const Text("View PDF"),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: primaryTextColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.black87),
+                          onPressed: () => Navigator.of(context).pop(),
                         ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                      ],
+                    ),
+                    gap16px,
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.insert_drive_file_outlined,
+                          color: Colors.grey[700],
                         ),
-                      ),
+                        const SizedBox(width: 8),
+
+                        Text(
+                          'Performance Report - ${getPeriodLabel(report.pgsPeriodId)}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+
+                        const Spacer(),
+
+                        ElevatedButton.icon(
+                          onPressed: () async {},
+                          icon: const Icon(
+                            Icons.description_outlined,
+                            size: 18,
+                          ),
+                          label: const Text("View PDF"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: primaryTextColor,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-
               Padding(
                 padding: const EdgeInsets.all(24),
                 child: Column(

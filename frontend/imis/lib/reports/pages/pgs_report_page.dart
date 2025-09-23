@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,9 +8,12 @@ import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/pages/create_summary_narrative_report_page.dart';
-import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
+import 'package:imis/reports/pages/manage_summary_narrative_report_page.dart';
+import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/utils/range_input_formatter.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
@@ -30,10 +35,10 @@ class PgsReportPageState extends State<PgsReportPage> {
   List<Map<String, dynamic>> deliverableList = [];
   List<Map<String, dynamic>> filteredList = [];
   Map<int, String> selectedByWhen = {};
-
+  final _summaryNarrativeSerice = SummaryNarrativeService(Dio());
   Map<int, TextEditingController> percentageControllers = {};
   Map<int, int> percentageValues = {};
-
+  final _dateConverter = const LongDateOnlyConverter();
   List<Map<String, dynamic>> kraListOptions = [];
   Map<int, int?> selectedKRA = {};
   int? selectedKra;
@@ -846,7 +851,7 @@ class PgsReportPageState extends State<PgsReportPage> {
                         Navigator.of(context).pushAndRemoveUntil(
                           MaterialPageRoute(
                             builder:
-                                (context) => ViewSummaryNarrativeReportPage(),
+                                (context) => ManageSummaryNarrativeReportPage(),
                           ),
                           (route) => false,
                         );
@@ -860,7 +865,7 @@ class PgsReportPageState extends State<PgsReportPage> {
                           ),
                           SizedBox(width: 5),
                           Text(
-                            'View Reports',
+                            'Manage Reports',
                             style: TextStyle(color: primaryTextColor),
                           ),
                         ],
@@ -888,10 +893,22 @@ class PgsReportPageState extends State<PgsReportPage> {
                                     isMenuOpenPeriod = true;
                                   });
                                 },
+
                                 onSelected: (String value) {
                                   setState(() {
-                                    selectedPeriod = int.tryParse(value);
-
+                                    selectedPeriod =
+                                        value.isEmpty
+                                            ? null
+                                            : int.tryParse(value);
+                                    filteredListPeriod.firstWhere(
+                                      (period) =>
+                                          period['id'] == selectedPeriod,
+                                      orElse:
+                                          () => {
+                                            'startDate': '',
+                                            'endDate': '',
+                                          },
+                                    );
                                     final selected = filteredListPeriod
                                         .firstWhere(
                                           (period) =>
@@ -903,35 +920,49 @@ class PgsReportPageState extends State<PgsReportPage> {
                                               },
                                         );
 
+                                    final startDate =
+                                        DateTime.tryParse(
+                                          selected['startDate'] as String,
+                                        ) ??
+                                        DateTime.now();
+                                    final endDate =
+                                        DateTime.tryParse(
+                                          selected['endDate'] as String,
+                                        ) ??
+                                        DateTime.now();
+
                                     selectedPeriodText =
-                                        "${selected['startDate']} - ${selected['endDate']}";
+                                        "${_dateConverter.toJson(startDate)} - ${_dateConverter.toJson(endDate)}";
 
                                     fetchFilteredPgsList();
                                   });
                                 },
-
                                 itemBuilder: (BuildContext context) {
-                                  final updatedPeriodList =
-                                      filteredListPeriod
-                                          .map(
-                                            (period) => {
-                                              'id': period['id'].toString(),
-                                              'name':
-                                                  "${period['startDate']} - ${period['endDate']}",
-                                            },
-                                          )
-                                          .toList();
-
-                                  return updatedPeriodList
+                                  return filteredListPeriod
                                       .map<PopupMenuItem<String>>((period) {
+                                        final startDate =
+                                            DateTime.tryParse(
+                                              period['startDate'] as String,
+                                            ) ??
+                                            DateTime.now();
+                                        final endDate =
+                                            DateTime.tryParse(
+                                              period['endDate'] as String,
+                                            ) ??
+                                            DateTime.now();
+                                        final formattedStart = _dateConverter
+                                            .toJson(startDate);
+                                        final formattedEnd = _dateConverter
+                                            .toJson(endDate);
                                         return PopupMenuItem<String>(
-                                          value: period['id'],
-                                          child: Text(period['name']!),
+                                          value: period['id'].toString(),
+                                          child: Text(
+                                            '$formattedStart - $formattedEnd',
+                                          ),
                                         );
                                       })
                                       .toList();
                                 },
-
                                 child: FilterButton(
                                   label: selectedPeriodText,
                                   isActive: isMenuOpenPeriod,
@@ -950,6 +981,38 @@ class PgsReportPageState extends State<PgsReportPage> {
                           onPressed:
                               selectedPeriod != null
                                   ? () async {
+                                    PgsSummaryNarrative? existing;
+
+                                    try {
+                                      existing = await _summaryNarrativeSerice
+                                          .checkIfPeriodHasNarrative(
+                                            selectedPeriod!,
+                                          );
+                                    } catch (e) {
+                                      MotionToast.error(
+                                        description: const Text(
+                                          "Error while checking report status",
+                                        ),
+                                        toastDuration: const Duration(
+                                          seconds: 3,
+                                        ),
+                                      ).show(context);
+                                      return;
+                                    }
+
+                                    if (existing != null) {
+                                      MotionToast.warning(
+                                        description: const Text(
+                                          "This pgsPeriod has already data",
+                                        ),
+                                        toastDuration: const Duration(
+                                          seconds: 3,
+                                        ),
+                                      ).show(context);
+                                      return;
+                                    }
+
+                                    // Proceed if no existing report is found
                                     Navigator.of(context).pushAndRemoveUntil(
                                       MaterialPageRoute(
                                         builder:
@@ -962,6 +1025,7 @@ class PgsReportPageState extends State<PgsReportPage> {
                                     );
                                   }
                                   : null,
+
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
