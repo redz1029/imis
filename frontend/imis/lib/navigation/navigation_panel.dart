@@ -251,6 +251,8 @@ class NavigationPanelState extends State<NavigationPanel> {
                           setState(() {
                             selectedRole = role;
                             _isSwitchingRole = false;
+                            _selectedIndex = 0;
+                            _selectedScreen = HomePage();
                           });
 
                           if (homePageKey.currentState != null) {
@@ -316,11 +318,24 @@ class NavigationPanelState extends State<NavigationPanel> {
                           await prefs.setString('selectedRole', role);
 
                           await loadUserPermissions(role);
-                          await Future.delayed(Duration(milliseconds: 500));
-                          setState(() {
-                            selectedRole = role;
-                            _isSwitchingRole = false;
-                          });
+                          // await Future.delayed(Duration(milliseconds: 500));
+                          // setState(() {
+                          //   selectedRole = role;
+                          //   _isSwitchingRole = false;
+                          //   _selectedIndex = 0;
+                          // });
+                          await Future.delayed(
+                            Duration(milliseconds: 500),
+                            () async {
+                              setState(() {
+                                selectedRole = role;
+                                _isSwitchingRole = false;
+                                _selectedIndex = 0;
+                                _selectedScreen = HomePage();
+                              });
+                              await _checkSelectedRole();
+                            },
+                          );
 
                           if (homePageKey.currentState != null) {
                             await homePageKey.currentState!.refreshUserRoles();
@@ -994,7 +1009,6 @@ class NavigationPanelState extends State<NavigationPanel> {
     // Get the screen index from arguments if provided
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is int && _selectedIndex != args) {
-      // Set the screen index if provided via arguments
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {

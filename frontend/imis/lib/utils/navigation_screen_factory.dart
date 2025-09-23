@@ -8,7 +8,10 @@ import 'package:imis/performance_governance_system/key_result_area/pages/key_res
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
+import 'package:imis/reports/pages/create_summary_narrative_report_page.dart';
+import 'package:imis/reports/pages/manage_summary_narrative_report_page.dart';
 import 'package:imis/reports/pages/pgs_report_page.dart';
+import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/home_page.dart';
@@ -51,6 +54,12 @@ class NavigationScreenFactory {
       case 17:
         return PgsReportPage(key: roleKey);
       case 18:
+        return ManageSummaryNarrativeReportPage(key: roleKey);
+      case 19:
+        return ViewSummaryNarrativeReportPage(key: roleKey);
+      case 20:
+        return CreateSummaryNarrativeReportPage(key: roleKey, periodId: 0);
+      case 22:
         return Container(key: roleKey);
       default:
         return HomePage();
