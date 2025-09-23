@@ -23,7 +23,7 @@ class ManageSummaryNarrativeReportPageState
   final _commonService = CommonService(Dio());
   final _dateConverter = const LongDateOnlyConverter();
   final _summaryNarrativeService = SummaryNarrativeService(Dio());
-  List<PgsSummaryNarrative> _reports = [];
+  List<PgsSummaryNarrative> reports = [];
   List<TextEditingController> _findingsControllers = [];
   List<TextEditingController> _conclusionControllers = [];
   List<TextEditingController> _recommendationControllers = [];
@@ -92,7 +92,7 @@ class ManageSummaryNarrativeReportPageState
           rawNarratives.map((n) => PgsSummaryNarrative.fromJson(n)).toList();
 
       setState(() {
-        _reports = narratives;
+        reports = narratives;
         _findingsControllers =
             narratives
                 .map(
@@ -181,12 +181,42 @@ class ManageSummaryNarrativeReportPageState
                     const SizedBox(width: 16),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'Manage Report',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        gap12px,
+                        SizedBox(
+                          height: 30,
+                          width: 300,
+                          child: TextField(
+                            decoration: InputDecoration(
+                              enabledBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: lightGrey),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderSide: BorderSide(color: primaryColor),
+                              ),
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.never,
+                              labelText: 'Search...',
+                              labelStyle: TextStyle(color: grey, fontSize: 14),
+                              prefixIcon: Icon(Icons.search, size: 20),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              filled: true,
+                              fillColor: secondaryColor,
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 5,
+                                horizontal: 5,
+                              ),
+                            ),
+                            // onChanged: filterSearchResults,
                           ),
                         ),
                       ],
@@ -196,7 +226,6 @@ class ManageSummaryNarrativeReportPageState
               ],
             ),
             gap24px,
-
             Expanded(
               child: Column(
                 children: [
