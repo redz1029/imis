@@ -41,6 +41,35 @@ class SummaryNarrativeService {
     }
   }
 
+  Future<dynamic> getSummaryNarrativeById(int id) async {
+    final url = "${ApiEndpoint().summaryNarrative}/$id";
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode == 200) {
+      return response.data;
+    } else {
+      throw Exception("Failed to fetch summary narrative by ID");
+    }
+  }
+
+  Future<void> updateSummaryNarrative(
+    int id,
+    PgsSummaryNarrative pgsSummaryNarrative,
+  ) async {
+    final url = "${ApiEndpoint().summaryNarrative}/$id";
+    final Map<String, dynamic> requestData = pgsSummaryNarrative.toJson();
+
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: requestData,
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to update summary narrative');
+    }
+  }
+
   Future<PgsPeriod> getPeriodDates(int periodId) async {
     final url = ApiEndpoint().pgsperiod;
 
@@ -76,6 +105,7 @@ class SummaryNarrativeService {
           return PgsSummaryNarrative.fromJson(item);
         }
       }
+      // ignore: empty_catches
     } catch (e) {}
 
     return null;
