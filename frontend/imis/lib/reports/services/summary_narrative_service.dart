@@ -99,9 +99,14 @@ class SummaryNarrativeService {
       );
 
       if (response.data is List && response.data.isNotEmpty) {
-        final item = response.data.first;
-        final existingPeriodId = item['pgsPeriodId'] as int?;
-        if (existingPeriodId == periodId) {
+        final item = (response.data as List)
+            .cast<Map<String, dynamic>>()
+            .firstWhere(
+              (element) => element['pgsPeriodId'] == periodId,
+              orElse: () => {},
+            );
+
+        if (item.isNotEmpty) {
           return PgsSummaryNarrative.fromJson(item);
         }
       }
