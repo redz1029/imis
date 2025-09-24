@@ -3,6 +3,7 @@ using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
+using IMIS.Application.PgsPeriodModule;
 using IMIS.Persistence.PgsDeliverableAccomplishmentModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -148,6 +149,16 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                 }
             })
             .WithTags(_pgsDeliverableAccomplishmentTag);
+
+            app.MapGet("/page", async (int page, int pageSize, IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedAccomplishment = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(paginatedAccomplishment);
+            })
+           .WithTags(_pgsDeliverableAccomplishmentTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsDeliverableAccomplishmentTag), true)
+           .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
         }
     }
 }

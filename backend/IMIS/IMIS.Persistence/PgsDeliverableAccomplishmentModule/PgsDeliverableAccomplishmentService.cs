@@ -1,5 +1,7 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
+using IMIS.Application.PgsPeriodModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
@@ -15,6 +17,15 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
+        }
+        public async Task<DtoPageList<PgsDeliverableAccomplishmentDto, PgsDeliverableAccomplishment, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var pgsDeliverableAccomplishmentDto = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (pgsDeliverableAccomplishmentDto.TotalCount == 0)
+            {
+                return null;
+            }
+            return DtoPageList<PgsDeliverableAccomplishmentDto, PgsDeliverableAccomplishment, long>.Create(pgsDeliverableAccomplishmentDto.Items, page, pageSize, pgsDeliverableAccomplishmentDto.TotalCount);
         }
 
         public async Task<List<PgsDeliverableAccomplishmentDto>> GetByDeliverableIdAsync(long deliverableId, CancellationToken cancellationToken)
