@@ -7,6 +7,7 @@ class PermissionString {
   static const String mcc = 'MCC';
   static const String osm = 'OSM';
   static const String coreTeam = 'PGS Core Team';
+  static const String headAuditor = ' PGS Auditor Head';
   // Team
   static const String addTeam = 'AddTeam';
   static const String viewTeam = 'ViewTeam';
