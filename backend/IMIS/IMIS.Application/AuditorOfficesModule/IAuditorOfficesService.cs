@@ -1,6 +1,5 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.AuditorModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.AuditorOfficesModule
