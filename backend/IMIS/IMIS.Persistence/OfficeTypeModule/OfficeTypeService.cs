@@ -1,7 +1,6 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.OfficeTypeModule;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.OfficeTypeModule
