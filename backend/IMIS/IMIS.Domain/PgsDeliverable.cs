@@ -27,6 +27,8 @@ namespace IMIS.Domain
         [ForeignKey("PerfomanceGovernanceSystemId")]
         [InverseProperty("PgsDeliverables")]
         public virtual PerfomanceGovernanceSystem? PerfomanceGovernanceSystem { get; set; }
+       
+        public virtual ICollection<PgsDeliverableAccomplishment>? PgsDeliverableAccomplishments { get; set; }          
     }
 }
 
