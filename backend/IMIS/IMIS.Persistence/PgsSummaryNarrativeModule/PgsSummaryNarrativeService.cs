@@ -2,7 +2,6 @@
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
-using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
 using IMIS.Domain;
