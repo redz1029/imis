@@ -1,12 +1,8 @@
-﻿using System.Text.Json;
-using Base.Auths.Permissions;
+﻿using Base.Auths.Permissions;
 using Base.Utilities;
 using Carter;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
-using IMIS.Application.PgsPeriodModule;
-using IMIS.Persistence.PgsDeliverableAccomplishmentModule;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
