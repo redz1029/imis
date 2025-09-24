@@ -29,6 +29,7 @@ import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/http_util.dart';
+
 import '../enum/pgs_action_type.dart';
 import 'pgs_reports.dart';
 
@@ -64,7 +65,6 @@ class PerformanceGovernanceSystemPageState
   Map<int, String> selectedStatusOptions = {};
   Map<int, bool> selectedDirect = {};
   Map<int, bool> selectedIndirect = {};
-
   Map<int, bool> tempSelectedDirect = {};
   Map<int, bool> tempSelectedIndirect = {};
   Map<int, int?> selectedKRA = {};
@@ -765,6 +765,7 @@ class PerformanceGovernanceSystemPageState
   @override
   void initState() {
     super.initState();
+
     fetchOffice();
     _loadOfficeName();
     _loadCurrentUserId();
@@ -1341,8 +1342,12 @@ class PerformanceGovernanceSystemPageState
                 ),
                 if (!isMinimized)
                   PermissionWidget(
-                    permission: PermissionString.addPerformanceGovernanceSystem,
-
+                    allowedRoles: [
+                      PermissionString.roleAdmin,
+                      PermissionString.roleStandardUser,
+                      PermissionString.serviceHead,
+                      PermissionString.osm,
+                    ],
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
@@ -1953,7 +1958,14 @@ class PerformanceGovernanceSystemPageState
             );
             selectedStatus[i] = item.status;
             deliverableIds[i] = item.id ?? 0;
+            // selectedKRA[i] = item.kra!.id;
             selectedKRA[i] = item.kra!.id;
+            final selectedKraId = item.kra!.id;
+            final kraOption = options.firstWhere(
+              (option) => option['id'] == selectedKraId,
+              orElse: () => {'id': 0, 'name': 'Unknown', 'remarks': ''},
+            );
+            selectedKRAObjects[i] = kraOption; // ✅ Solution
             remarksControllers[i] = TextEditingController(text: item.remarks);
             percentageControllers[i] = TextEditingController(
               text: item.percentDeliverables.toString(),
@@ -2527,7 +2539,8 @@ class PerformanceGovernanceSystemPageState
                                             0: FlexColumnWidth(1.5),
                                             1: FlexColumnWidth(0.8),
                                             2: FlexColumnWidth(1.9),
-                                            3: FlexColumnWidth(3.1),
+                                            3: FlexColumnWidth(0.7),
+                                            4: FlexColumnWidth(2.9),
                                           },
                                           children: [
                                             _PgsDeliverableHeader(
@@ -2557,6 +2570,7 @@ class PerformanceGovernanceSystemPageState
                                             6: FlexColumnWidth(0.6),
                                             7: FlexColumnWidth(1.30),
                                             8: FlexColumnWidth(0.5),
+                                            9: FlexColumnWidth(0.5),
                                           },
                                           children: [_pgsBuildTableSubheader()],
                                         ),
@@ -2582,6 +2596,7 @@ class PerformanceGovernanceSystemPageState
                                                 6: FlexColumnWidth(0.6),
                                                 7: FlexColumnWidth(1.30),
                                                 8: FlexColumnWidth(0.5),
+                                                9: FlexColumnWidth(0.5),
                                               },
                                               children: [
                                                 ...rows.map(
@@ -2593,7 +2608,9 @@ class PerformanceGovernanceSystemPageState
                                                         setState,
                                                         orderLevel,
                                                         id,
+
                                                         setDialogState,
+
                                                         showErrors:
                                                             rowErrors[rowId] ??
                                                             false,
@@ -3525,6 +3542,11 @@ class PerformanceGovernanceSystemPageState
             ),
           ),
         ),
+        BuildHeaderCell(
+          text: 'ACCOMPLISHMENT',
+          fontSize: 15,
+          fontStyle: FontStyle.normal,
+        ),
       ],
     );
   }
@@ -3544,6 +3566,7 @@ class PerformanceGovernanceSystemPageState
         _buildSizedHeaderCell('STATUS', width: 100),
         _buildSizedHeaderCell('REMARKS', width: 120),
         _buildSizedHeaderCell('SCORE', width: 100),
+        _buildSizedHeaderCell('ACTION', width: 100),
       ],
     );
   }
@@ -3631,10 +3654,38 @@ class PerformanceGovernanceSystemPageState
         _buildDropdownCellStatusPgsDeliverableStatus(index, () => (index)),
         _buildExpandableTextAreaRemarksCell(index),
         _buildExpandableTextAreaPercentageCell(index),
+        _buildCreateAccomplishmentCell(index),
       ],
     );
   }
-  // end-----------------------PGS Deliverable Status---------------------
+
+  Widget _buildCreateAccomplishmentCell(
+    int index,
+    // PerformanceGovernanceSystem pgs,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: SizedBox(
+        height: 45, // taller height
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            textStyle: const TextStyle(fontSize: 13),
+            minimumSize: Size.zero,
+          ),
+          onPressed: () => {},
+          child: const Text(
+            'Create Accomplishment',
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      ),
+    );
+  }
 
   //Start------------Pgs Deliverables Remark ----------------------------------------------
   Widget _buildExpandableTextAreaRemarksCell(int index) {
