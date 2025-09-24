@@ -4,6 +4,7 @@ import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
+import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/widgets/pagination_controls.dart';
@@ -435,7 +436,18 @@ class ViewSummaryNarrativeReportPageState
                         const Spacer(),
 
                         ElevatedButton.icon(
-                          onPressed: () async {},
+                          onPressed: () async {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => ViewPdfSummary(
+                                      pgsPeriodId:
+                                          report.pgsPeriodId.toString(),
+                                    ),
+                              ),
+                            );
+                          },
                           icon: const Icon(
                             Icons.description_outlined,
                             size: 18,
