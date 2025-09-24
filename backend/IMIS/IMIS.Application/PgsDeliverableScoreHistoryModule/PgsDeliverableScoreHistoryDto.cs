@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Base.Primitives;
+﻿using Base.Primitives;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsDeliverableScoreHistoryModule
