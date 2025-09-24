@@ -1,7 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
 using IMIS.Application.AuditableOfficesModule;
-using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.AuditScheduleModule
