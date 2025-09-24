@@ -1,6 +1,5 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsDeliverableAccomplishmentModule

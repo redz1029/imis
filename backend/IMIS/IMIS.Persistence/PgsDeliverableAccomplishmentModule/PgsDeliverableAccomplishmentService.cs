@@ -1,7 +1,6 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
