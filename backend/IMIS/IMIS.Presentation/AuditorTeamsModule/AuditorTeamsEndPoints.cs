@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AuditorTeamsModule;
+using IMIS.Application.PgsPeriodModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -54,6 +55,16 @@ namespace IMIS.Presentation.AuditorTeamsModule
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
            .RequireAuthorization(e => e.RequireClaim(
             PermissionClaimType.Claim, _auditorTeamPermission.View));
+
+            app.MapGet("/page", async (int page, int pageSize, IAuditorTeamsService service, CancellationToken cancellationToken) =>
+            {
+                var auditorTeamsDto = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(auditorTeamsDto);
+            })
+            .WithTags(_AuditorTeamTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _auditorTeamPermission.View));
         }
     }
 }
