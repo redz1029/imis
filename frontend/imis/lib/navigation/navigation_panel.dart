@@ -711,50 +711,32 @@ class NavigationPanelState extends State<NavigationPanel> {
                   ),
 
                   PermissionWidget(
-                    allowedRoles: [PermissionString.roleAdmin],
-                    child: Theme(
-                      data: Theme.of(context).copyWith(dividerColor: lightGrey),
-                      child: ExpansionTile(
-                        leading: const Icon(
-                          Icons.folder_outlined,
-                          color: primaryTextColor,
-                        ),
-                        title: const Text(
-                          'Report',
-                          style: TextStyle(color: primaryTextColor),
-                        ),
-
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 40),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _buildListTile(
-                                  Icons.folder_outlined,
-                                  'Create Report',
-                                  hideIcon: true,
-                                  17,
-                                  () => _setScreen(PgsReportPage(), 17),
-                                ),
-                                _buildListTile(
-                                  Icons.folder_outlined,
-                                  'View Report',
-                                  hideIcon: true,
-                                  21,
-                                  () => _setScreen(
-                                    ViewSummaryNarrativeReportPage(),
-                                    21,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
+                    allowedRoles: [
+                      PermissionString.headAuditor,
+                      PermissionString.roleAdmin,
+                    ],
+                    child: _buildListTile(
+                      Icons.folder_outlined,
+                      'Report',
+                      hideIcon: false,
+                      17,
+                      () => _setScreen(PgsReportPage(), 17),
                     ),
                   ),
-
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionString.serviceHead,
+                      PermissionString.coreTeam,
+                      PermissionString.pgsAuditor,
+                    ],
+                    child: _buildListTile(
+                      Icons.folder_outlined,
+                      'Report',
+                      hideIcon: false,
+                      21,
+                      () => _setScreen(ViewSummaryNarrativeReportPage(), 21),
+                    ),
+                  ),
                   PermissionWidget(
                     allowedRoles: [PermissionString.roleAdmin],
                     child: Theme(
