@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.OfficeTypeModule;
+using IMIS.Application.PgsPeriodModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -29,15 +30,25 @@ namespace IMIS.Presentation.OfficeTypeModule
             })
             .WithTags(_officeType)
             .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _officeTypePermission.Add));
+                PermissionClaimType.Claim, _officeTypePermission.Add));
             app.MapGet("/", async (IOfficeTypeService service, CancellationToken cancellationToken) =>
             {
                 var officeTypeDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(officeTypeDto);
             })
-          .WithTags(_officeType)
-          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officeTypePermission.View))
-          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeType), true);
+            .WithTags(_officeType)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officeTypePermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeType), true);
+
+            app.MapGet("/page", async (int page, int pageSize, IOfficeTypeService service, CancellationToken cancellationToken) =>
+            {
+                var officeTypeDto = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(officeTypeDto);
+            })
+            .WithTags(_officeType)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeType), true)
+            .RequireAuthorization(e => e.RequireClaim(
+            PermissionClaimType.Claim, _officeTypePermission.View));
         }
     }
 
