@@ -4,26 +4,26 @@ import 'package:flutter/material.dart';
 Color getStatusColor(String status) {
   switch (status) {
     case 'NotStarted':
-      return Colors.red;
+      return const Color.fromARGB(255, 151, 70, 64);
     case 'Ongoing':
       return Colors.orange;
     case 'Completed':
       return Colors.green;
     default:
-      return Colors.grey;
+      return const Color.fromARGB(255, 151, 70, 64);
   }
 }
 
 Color getStatusTextColor(String status) {
   switch (status) {
     case 'NotStarted':
-      return Colors.red[900]!;
+      return Colors.white;
     case 'Ongoing':
-      return Colors.orange[900]!;
+      return Colors.white;
     case 'Completed':
-      return Colors.green[900]!;
+      return Colors.white;
     default:
-      return Colors.grey[900]!;
+      return Colors.white;
   }
 }
 
