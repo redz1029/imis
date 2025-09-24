@@ -28,6 +28,7 @@ namespace IMIS.Persistence
         public DbSet<PgsDeliverableScoreHistory> PgsDeliverableScoreHistories { get; set; }
         public DbSet<OfficeType> OfficeType { get; set; }
         public DbSet<PgsSummaryNarrative> PgsSummaryNarrative { get; set; }
+        public DbSet<PgsDeliverableAccomplishment> PgsDeliverableAccomplishment { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
