@@ -1,7 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
 using IMIS.Application.PgsDeliverableModule;
-using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsModule

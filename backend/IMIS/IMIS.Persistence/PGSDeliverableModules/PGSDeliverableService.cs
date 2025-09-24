@@ -7,7 +7,6 @@ using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
-using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;

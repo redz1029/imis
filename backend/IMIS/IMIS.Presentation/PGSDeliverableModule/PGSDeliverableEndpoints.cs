@@ -2,7 +2,6 @@
 using Carter;
 using IMIS.Application.PgsDeliverableModule;
 using IMIS.Application.PgsModule;
-using IMIS.Application.PgsSummaryNarrativeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
