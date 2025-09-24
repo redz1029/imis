@@ -1,4 +1,5 @@
 ﻿using Base.Auths;
+using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.PgsDeliverableModule;
@@ -6,6 +7,7 @@ using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
@@ -135,9 +137,8 @@ namespace IMIS.Persistence.PGSModules
 
             var userRoles = await _userManager.GetRolesAsync(currentUser);            
             var filtered = await _repository.GetFilteredAsync(filter, cancellationToken);
-
-            // apply filtering by office if not Admin
-            if (!userRoles.Any(r => r.Equals("Administrator", StringComparison.OrdinalIgnoreCase)))
+            
+            if (!userRoles.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase)))
             {
                 var userOfficeIds = await _repository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
 
