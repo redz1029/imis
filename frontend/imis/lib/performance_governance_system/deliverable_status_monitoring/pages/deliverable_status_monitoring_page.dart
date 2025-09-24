@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -20,6 +20,7 @@ import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../utils/http_util.dart';
 import '../../../utils/permission_service.dart';
+import '../../../widgets/accomplishment_widget.dart';
 import '../models/pgs_filter.dart';
 
 class DeliverableStatusMonitoringPage extends StatefulWidget {
@@ -49,6 +50,7 @@ class DeliverableStatusMonitoringPageState
   Map<int, TextEditingController> percentageControllers = {};
   Map<int, int> percentageValues = {};
 
+  int accomplishmentCount = 3;
   List<KeyResultArea> kraListOptions = [];
   int? selectedKra;
 
@@ -67,7 +69,6 @@ class DeliverableStatusMonitoringPageState
 
   TextEditingController scoreRangeToController = TextEditingController();
   TextEditingController scoreRangeFromController = TextEditingController();
-
   TextEditingController pageController = TextEditingController();
   TextEditingController pageSizeController = TextEditingController();
 
@@ -86,7 +87,6 @@ class DeliverableStatusMonitoringPageState
   void initState() {
     super.initState();
     fetchFilteredPgsList();
-    // fetchKra();
     fetchScoreHistory();
     _checkPermissions();
     () async {
@@ -112,6 +112,7 @@ class DeliverableStatusMonitoringPageState
     setState(() {
       _hasEditPermission = _permissionService.hasPermission(
         PermissionString.scorePgsDeliverableMonitor,
+        allowedRoles: [PermissionString.pgsAuditor, PermissionString.roleAdmin],
       );
     });
   }
@@ -539,6 +540,52 @@ class DeliverableStatusMonitoringPageState
     );
   }
 
+  Widget _buildCreateAccomplishmentCell(int index, VoidCallback onPressed) {
+    final deliverable = deliverableList[index];
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: SizedBox(
+        height: 30,
+        child: ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+              side: const BorderSide(color: Colors.black, width: 1),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            textStyle: const TextStyle(fontSize: 13),
+            minimumSize: Size.zero,
+          ).copyWith(
+            overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(MaterialState.hovered)) {
+                return const Color.fromARGB(255, 221, 221, 221);
+              }
+              if (states.contains(MaterialState.pressed)) {
+                return const Color.fromARGB(255, 221, 221, 221);
+              }
+              return null; // default
+            }),
+          ),
+
+          onPressed: () {
+            showAccomplishmentFormDialog(context, deliverable);
+          },
+          icon: const Icon(
+            Icons.bar_chart_outlined,
+            size: 14,
+            color: primaryTextColor,
+          ),
+          label: const Text(
+            'Accomplishment',
+            style: TextStyle(color: primaryTextColor, fontSize: 10),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildRemarkCell(int index) {
     if (!remarkControllers.containsKey(index)) {
       final remarks = deliverableList[index]['remarks'];
@@ -657,7 +704,7 @@ class DeliverableStatusMonitoringPageState
                                     description: const Text(
                                       "Enter a score between 1 to 99 only.",
                                     ),
-                                    toastDuration: const Duration(seconds: 10),
+                                    toastDuration: const Duration(seconds: 2),
                                     toastAlignment: Alignment.center,
                                     borderRadius: 10.0,
                                   ).show(context);
@@ -1259,13 +1306,15 @@ class DeliverableStatusMonitoringPageState
                             0: FlexColumnWidth(0.5),
                             1: FlexColumnWidth(2),
                             2: FlexColumnWidth(2),
-                            3: FlexColumnWidth(2),
+                            3: FlexColumnWidth(3),
                             4: FlexColumnWidth(1.5),
                             5: FlexColumnWidth(4),
                             6: FlexColumnWidth(2),
+                            // 7: FlexColumnWidth(7),
                             7: FlexColumnWidth(2),
-                            8: FlexColumnWidth(3),
+                            8: FlexColumnWidth(2),
                             9: FlexColumnWidth(2),
+                            10: FlexColumnWidth(2.5),
                           },
                           children: [
                             TableRow(
@@ -1280,6 +1329,7 @@ class DeliverableStatusMonitoringPageState
                                 _buildTableHeaderCell('STATUS'),
                                 _buildTableHeaderCell('REMARKS'),
                                 _buildTableHeaderCell('SCORE'),
+                                _buildTableHeaderCell('ACTIONS'),
                               ],
                             ),
                           ],
@@ -1287,7 +1337,6 @@ class DeliverableStatusMonitoringPageState
                       ),
                     ),
 
-                    // BODY (Scrollable)
                     Expanded(
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -1311,14 +1360,19 @@ class DeliverableStatusMonitoringPageState
                                   0: FlexColumnWidth(0.5),
                                   1: FlexColumnWidth(2),
                                   2: FlexColumnWidth(2),
-                                  3: FlexColumnWidth(2),
+                                  3: FlexColumnWidth(3),
                                   4: FlexColumnWidth(1.5),
                                   5: FlexColumnWidth(4),
                                   6: FlexColumnWidth(2),
+                                  // 7: FlexColumnWidth(2),
+                                  // 7: FlexColumnWidth(2),
+                                  // 9: FlexColumnWidth(2),
                                   7: FlexColumnWidth(2),
-                                  8: FlexColumnWidth(3),
+                                  8: FlexColumnWidth(2),
                                   9: FlexColumnWidth(2),
+                                  10: FlexColumnWidth(2.5),
                                 },
+
                                 children: [
                                   ...deliverableList.asMap().entries.map((
                                     entry,
@@ -1349,10 +1403,13 @@ class DeliverableStatusMonitoringPageState
                                         _buildTableCell(
                                           deliverable['byWhen'] ?? '',
                                         ),
-
                                         _buildStatusCell(index, () => (index)),
                                         _buildRemarkCell(index),
                                         _buildScoringCell(index),
+                                        _buildCreateAccomplishmentCell(
+                                          index,
+                                          () {},
+                                        ),
                                       ],
                                     );
                                   }),
@@ -1368,7 +1425,10 @@ class DeliverableStatusMonitoringPageState
               ),
 
               PermissionWidget(
-                permission: PermissionString.scorePgsDeliverableMonitor,
+                allowedRoles: [
+                  PermissionString.pgsAuditor,
+                  PermissionString.roleAdmin,
+                ],
                 child: Padding(
                   padding: const EdgeInsets.all(32.0),
                   child: Row(
@@ -1673,7 +1733,7 @@ class DeliverableStatusMonitoringPageState
       decoration: BoxDecoration(),
       child: Center(
         child: Text(
-          displayText, // Use the computed text
+          displayText,
           style: const TextStyle(fontSize: 14),
           textAlign: TextAlign.center,
         ),
@@ -1717,6 +1777,269 @@ class DeliverableStatusMonitoringPageState
       ),
     );
   }
+}
+
+void showAccomplishmentFormDialog(
+  BuildContext context,
+  Map<String, dynamic> deliverable,
+) {
+  final startDateStr = deliverable['Start Date'];
+  final endDateStr = deliverable['End Date'];
+
+  final startDate = DateFormat('MMM dd, yyyy').parse(startDateStr);
+  final endDate = DateFormat('MMM dd, yyyy').parse(endDateStr);
+
+  List<Map<String, dynamic>> monthlyPeriods = [];
+
+  DateTime current = DateTime(startDate.year, startDate.month);
+  DateTime end = DateTime(endDate.year, endDate.month);
+
+  while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
+    monthlyPeriods.add({
+      'period': DateFormat('MMMM yyyy').format(current),
+      'month': current.month,
+      'year': current.year,
+    });
+
+    current = DateTime(current.year, current.month + 1);
+  }
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      return Dialog(
+        backgroundColor: mainBgColor,
+        insetPadding: const EdgeInsets.all(20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1200),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Scrollable Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Accomplishment Form - ${deliverable['Start Date']} to ${deliverable['End Date']}",
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Info section
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Office: ${deliverable['officeName'] ?? 'N/A'}",
+                                  ),
+                                  Text(
+                                    "Monthly Tracking Periods: ${monthlyPeriods.length} month(s)",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text("KRA: ${deliverable['kra'] ?? 'N/A'}"),
+                                  Text(
+                                    "Due: ${deliverable['byWhen'] ?? 'N/A'}",
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Section title
+                        const Row(
+                          children: [
+                            Icon(Icons.bar_chart_outlined, size: 18),
+                            SizedBox(width: 8),
+                            Text(
+                              "Monthly Accomplishment Tracking",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Dynamic table
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: [
+                              // Headers
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                  horizontal: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(8),
+                                    topRight: Radius.circular(8),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: const [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Center(
+                                        child: Text(
+                                          "Period",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Center(
+                                        child: Text(
+                                          "Percent Accomplishment",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Center(
+                                        child: Text(
+                                          "Remarks",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Center(
+                                        child: Text(
+                                          "Status",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Center(
+                                        child: Text(
+                                          "Upload",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              ...monthlyPeriods.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final period = entry.value;
+
+                                return Column(
+                                  children: [
+                                    const Divider(height: 1),
+                                    buildTrackingRow(
+                                      period: period['period'],
+                                      periodIndex: index,
+                                      totalPeriods: monthlyPeriods.length,
+                                      deliverableId:
+                                          deliverable['pgsDeliverableId'],
+                                    ),
+                                  ],
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Fixed Action Buttons (outside scroll)
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        "Cancel",
+                        style: TextStyle(color: primaryColor),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      onPressed: () {
+                        saveAccomplishmentData();
+                        Navigator.pop(context);
+                      },
+                      child: Text(
+                        "Save Accomplishments",
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class PgsDeliverableHistoryGrouped {
