@@ -7,6 +7,7 @@ using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.EntityFrameworkCore;
@@ -137,7 +138,8 @@ namespace IMIS.Persistence.PGSModules
             var userRoles = await _userManager.GetRolesAsync(currentUser);            
             var filtered = await _repository.GetFilteredAsync(filter, cancellationToken);
             
-            if (!userRoles.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase)))
+            if (!userRoles.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) || 
+                                    r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase)))
             {
                 var userOfficeIds = await _repository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
 
