@@ -5,6 +5,7 @@ using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Persistence.OfficeModule 
@@ -84,7 +85,8 @@ namespace IMIS.Persistence.OfficeModule
             var offices = await _repository.GetAllForPgsAuditorAsync(cancellationToken);
 
             // Only admins see all offices, others are filtered by AuditorOffices
-            if (!userRoles.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase)))
+            if (!userRoles.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                                    r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase)))
             {               
                 // Get auditor-assigned offices
                 var auditorOfficeIds = await _repository.GetAuditorOfficeIdsAsync(currentUser.Id, cancellationToken);
