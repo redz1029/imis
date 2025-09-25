@@ -39,7 +39,7 @@ class ManageSummaryNarrativeReportPageState
   final TextEditingController _conclusionsController = TextEditingController();
   final TextEditingController _recommendationsController =
       TextEditingController();
-  late final int _periodId;
+  int _periodId = 0;
   List<PgsPeriod> _periods = [];
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
@@ -391,6 +391,7 @@ class ManageSummaryNarrativeReportPageState
     int index,
     int pgsPeriodId,
   ) {
+    _periodId = pgsPeriodId;
     _findingsController.text = report.findings ?? '';
     _conclusionsController.text = report.conclusion ?? '';
     _recommendationsController.text = report.recommendation ?? '';
@@ -464,7 +465,9 @@ class ManageSummaryNarrativeReportPageState
                       summaryNarrative.id,
                       summaryNarrative,
                     );
-
+                    setState(() {
+                      fetchSummaryNarrative();
+                    });
                     MotionToast.success(
                       description: const Text("Updated Successfully"),
                       toastAlignment: Alignment.topCenter,
