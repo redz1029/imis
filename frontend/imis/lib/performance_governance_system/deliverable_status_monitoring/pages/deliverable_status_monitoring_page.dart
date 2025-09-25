@@ -238,53 +238,6 @@ class DeliverableStatusMonitoringPageState
     }
   }
 
-  List<Map<String, dynamic>> _prepareSaveData() {
-    return deliverableList.asMap().entries.map((entry) {
-      final int index = entry.key;
-      final deliverable = entry.value;
-
-      final score = percentageValues[index] ?? deliverable['score'] ?? 0;
-
-      final status = selectedStatus[index]?.name ?? deliverable['status'] ?? 0;
-
-      final remarks =
-          remarkControllers[index]?.text ?? deliverable['remarks'] ?? '';
-
-      DateTime? byWhenDate;
-      String formattedByWhen = '';
-
-      try {
-        if (deliverable['byWhen'] != null &&
-            deliverable['byWhen'].toString().isNotEmpty) {
-          if (deliverable['byWhen'] is String) {
-            byWhenDate = DateTime.tryParse(deliverable['byWhen']);
-          }
-
-          byWhenDate ??= DateFormat('MMMM, yyyy').parse(deliverable['byWhen']);
-
-          formattedByWhen = byWhenDate.toIso8601String();
-        }
-      } catch (e) {
-        debugPrint("Error parsing byWhen date: $e");
-      }
-
-      return {
-        'pgsDeliverableId': deliverable['pgsDeliverableId'] ?? 0,
-        'pgsPeriod':
-            '${deliverable['Start Date']} - ${deliverable['End Date']}',
-        'office': deliverable['officeName'] ?? '',
-        'keyResultArea': deliverable['kra'] ?? '',
-        'kraDescription': deliverable['kraDescription'] ?? '',
-        'isDirect': deliverable['isDirect'] ?? false,
-        'deliverable': deliverable['deliverableName'] ?? '',
-        'score': score,
-        'status': status,
-        'remarks': remarks,
-        'byWhen': formattedByWhen,
-      };
-    }).toList();
-  }
-
   PgsStatus dynamicToPgsStatus(dynamic value) {
     if (value == null) return PgsStatus.notStarted;
 
@@ -1424,94 +1377,94 @@ class DeliverableStatusMonitoringPageState
                 ),
               ),
 
-              PermissionWidget(
-                allowedRoles: [
-                  PermissionString.pgsAuditor,
-                  PermissionString.roleAdmin,
-                ],
-                child: Padding(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () async {
-                          bool? confirmAction = await showDialog<bool>(
-                            context: context,
-                            builder: (context) {
-                              return AlertDialog(
-                                title: Text("Confirm Save"),
-                                content: Text(
-                                  "Are you sure you want to save this record?",
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed:
-                                        () => Navigator.pop(context, false),
-                                    child: Text(
-                                      "No",
-                                      style: TextStyle(color: primaryColor),
-                                    ),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      {
-                                        Navigator.pop(context, true);
-                                      }
-                                    },
-                                    child: Text(
-                                      "Yes",
-                                      style: TextStyle(color: primaryColor),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                          if (confirmAction == true) {
-                            final dataToSave = _prepareSaveData();
+              // PermissionWidget(
+              //   allowedRoles: [
+              //     PermissionString.pgsAuditor,
+              //     PermissionString.roleAdmin,
+              //   ],
+              //   child: Padding(
+              //     padding: const EdgeInsets.all(32.0),
+              //     child: Row(
+              //       mainAxisAlignment: MainAxisAlignment.end,
+              //       children: [
+              //         ElevatedButton(
+              //           onPressed: () async {
+              //             bool? confirmAction = await showDialog<bool>(
+              //               context: context,
+              //               builder: (context) {
+              //                 return AlertDialog(
+              //                   title: Text("Confirm Save"),
+              //                   content: Text(
+              //                     "Are you sure you want to save this record?",
+              //                   ),
+              //                   actions: [
+              //                     TextButton(
+              //                       onPressed:
+              //                           () => Navigator.pop(context, false),
+              //                       child: Text(
+              //                         "No",
+              //                         style: TextStyle(color: primaryColor),
+              //                       ),
+              //                     ),
+              //                     TextButton(
+              //                       onPressed: () {
+              //                         {
+              //                           Navigator.pop(context, true);
+              //                         }
+              //                       },
+              //                       child: Text(
+              //                         "Yes",
+              //                         style: TextStyle(color: primaryColor),
+              //                       ),
+              //                     ),
+              //                   ],
+              //                 );
+              //               },
+              //             );
+              //             if (confirmAction == true) {
+              //               final dataToSave = _prepareSaveData();
 
-                            try {
-                              await _deliverableStatusMonitoring.saveData(
-                                dataToSave,
-                              );
+              //               try {
+              //                 await _deliverableStatusMonitoring.saveData(
+              //                   dataToSave,
+              //                 );
 
-                              if (mounted) {
-                                MotionToast.success(
-                                  title: const Text("Success"),
-                                  description: const Text(
-                                    "Data saved successfully!",
-                                  ),
-                                  toastAlignment: Alignment.topCenter,
-                                ).show(context);
-                              }
-                            } catch (e) {
-                              debugPrint("Error saving data: $e");
-                              if (mounted) {
-                                MotionToast.error(
-                                  title: const Text("Failed"),
-                                  description: Text("Error: $e"),
-                                  toastAlignment: Alignment.topCenter,
-                                ).show(context);
-                              }
-                            }
-                          }
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        child: Text(
-                          'Save',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              //                 if (mounted) {
+              //                   MotionToast.success(
+              //                     title: const Text("Success"),
+              //                     description: const Text(
+              //                       "Data saved successfully!",
+              //                     ),
+              //                     toastAlignment: Alignment.topCenter,
+              //                   ).show(context);
+              //                 }
+              //               } catch (e) {
+              //                 debugPrint("Error saving data: $e");
+              //                 if (mounted) {
+              //                   MotionToast.error(
+              //                     title: const Text("Failed"),
+              //                     description: Text("Error: $e"),
+              //                     toastAlignment: Alignment.topCenter,
+              //                   ).show(context);
+              //                 }
+              //               }
+              //             }
+              //           },
+              //           style: ElevatedButton.styleFrom(
+              //             backgroundColor: primaryColor,
+              //             shape: RoundedRectangleBorder(
+              //               borderRadius: BorderRadius.circular(4),
+              //             ),
+              //           ),
+              //           child: Text(
+              //             'Save',
+              //             style: TextStyle(color: Colors.white),
+              //           ),
+              //         ),
+              //       ],
+              //     ),
+              //   ),
+              // ),
             ],
           );
         },
@@ -1941,6 +1894,15 @@ void showAccomplishmentFormDialog(
                                       flex: 2,
                                       child: Center(
                                         child: Text(
+                                          "Status",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Center(
+                                        child: Text(
                                           "Percent Accomplishment",
                                           style: TextStyle(color: grey),
                                         ),
@@ -1955,15 +1917,7 @@ void showAccomplishmentFormDialog(
                                         ),
                                       ),
                                     ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Status",
-                                          style: TextStyle(color: grey),
-                                        ),
-                                      ),
-                                    ),
+
                                     Expanded(
                                       flex: 2,
                                       child: Center(
@@ -2002,36 +1956,43 @@ void showAccomplishmentFormDialog(
                   ),
                 ),
 
-                // Fixed Action Buttons (outside scroll)
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(color: primaryColor),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                SizedBox(height: 20),
+                PermissionWidget(
+                  allowedRoles: [
+                    PermissionString.pgsAuditor,
+                    PermissionString.roleAdmin,
+                  ],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(color: primaryColor),
                         ),
                       ),
-                      onPressed: () {
-                        saveAccomplishmentData();
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        "Save Accomplishments",
-                        style: TextStyle(color: Colors.white),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        onPressed: () {
+                          saveAccomplishmentData(
+                            deliverable['pgsDeliverableId'],
+                          );
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          "Save Accomplishments",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
