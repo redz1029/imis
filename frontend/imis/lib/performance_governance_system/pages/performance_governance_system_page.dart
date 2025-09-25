@@ -2539,8 +2539,7 @@ class PerformanceGovernanceSystemPageState
                                             0: FlexColumnWidth(1.5),
                                             1: FlexColumnWidth(0.8),
                                             2: FlexColumnWidth(1.9),
-                                            3: FlexColumnWidth(0.7),
-                                            4: FlexColumnWidth(2.9),
+                                            3: FlexColumnWidth(3.1),
                                           },
                                           children: [
                                             _PgsDeliverableHeader(
@@ -2570,7 +2569,6 @@ class PerformanceGovernanceSystemPageState
                                             6: FlexColumnWidth(0.6),
                                             7: FlexColumnWidth(1.30),
                                             8: FlexColumnWidth(0.5),
-                                            9: FlexColumnWidth(0.5),
                                           },
                                           children: [_pgsBuildTableSubheader()],
                                         ),
@@ -2596,7 +2594,6 @@ class PerformanceGovernanceSystemPageState
                                                 6: FlexColumnWidth(0.6),
                                                 7: FlexColumnWidth(1.30),
                                                 8: FlexColumnWidth(0.5),
-                                                9: FlexColumnWidth(0.5),
                                               },
                                               children: [
                                                 ...rows.map(
@@ -3542,11 +3539,11 @@ class PerformanceGovernanceSystemPageState
             ),
           ),
         ),
-        BuildHeaderCell(
-          text: 'ACCOMPLISHMENT',
-          fontSize: 15,
-          fontStyle: FontStyle.normal,
-        ),
+        // BuildHeaderCell(
+        //   text: 'ACCOMPLISHMENT',
+        //   fontSize: 15,
+        //   fontStyle: FontStyle.normal,
+        // ),
       ],
     );
   }
@@ -3566,7 +3563,7 @@ class PerformanceGovernanceSystemPageState
         _buildSizedHeaderCell('STATUS', width: 100),
         _buildSizedHeaderCell('REMARKS', width: 120),
         _buildSizedHeaderCell('SCORE', width: 100),
-        _buildSizedHeaderCell('ACTION', width: 100),
+        // _buildSizedHeaderCell('ACTION', width: 100),
       ],
     );
   }
@@ -3654,7 +3651,7 @@ class PerformanceGovernanceSystemPageState
         _buildDropdownCellStatusPgsDeliverableStatus(index, () => (index)),
         _buildExpandableTextAreaRemarksCell(index),
         _buildExpandableTextAreaPercentageCell(index),
-        _buildCreateAccomplishmentCell(index),
+        // _buildCreateAccomplishmentCell(index),
       ],
     );
   }
