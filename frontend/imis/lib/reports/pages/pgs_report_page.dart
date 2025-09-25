@@ -17,6 +17,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/utils/range_input_formatter.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
+import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../utils/http_util.dart';
@@ -1529,36 +1530,41 @@ void showAccomplishmentFormDialog(
                   ),
                 ),
 
-                // Fixed Action Buttons (outside scroll)
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text(
-                        "Cancel",
-                        style: TextStyle(color: primaryColor),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
+                SizedBox(height: 20),
+                PermissionWidget(
+                  allowedRoles: [
+                    PermissionString.pgsAuditor,
+                    PermissionString.roleAdmin,
+                  ],
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(color: primaryColor),
                         ),
                       ),
-                      onPressed: () {
-                        saveAccomplishmentData();
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        "Save Accomplishments",
-                        style: TextStyle(color: Colors.white),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        onPressed: () {
+                          // saveAccomplishmentData();
+                          Navigator.pop(context);
+                        },
+                        child: Text(
+                          "Save Accomplishments",
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
