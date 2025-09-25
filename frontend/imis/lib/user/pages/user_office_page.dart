@@ -421,19 +421,19 @@ class UserOfficePageState extends State<UserOfficePage> {
                         }
 
                         final user = UserOffice(
-                          id: int.tryParse(id ?? '0') ?? 0,
-                          isDeleted: isDeleted,
-                          rowVersion: '',
-                          userId: _selectedUserId ?? '',
-                          officeId: int.tryParse(_selectedOfficeId ?? '0') ?? 0,
-                          isActive: isActive,
-                          firstName: firstNameController.text,
-                          middleName: middleNameController.text,
-                          lastName: lastNameController.text,
-                          prefix: prefixController.text,
-                          suffix: suffixController.text,
-                          position: positionController.text,
-                          isOfficeHead: isOfficeHead,
+                          int.tryParse(id ?? '0') ?? 0,
+                          isDeleted,
+                          '',
+                          _selectedUserId ?? '',
+                          int.tryParse(_selectedOfficeId ?? '0') ?? 0,
+                          isActive,
+                          firstNameController.text,
+                          middleNameController.text,
+                          lastNameController.text,
+                          prefixController.text,
+                          suffixController.text,
+                          positionController.text,
+                          isOfficeHead,
                         );
 
                         await _userOfficeService.addOrUpdateUserOffice(user);

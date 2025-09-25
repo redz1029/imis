@@ -15,24 +15,24 @@ class UserOffice {
   final String lastName;
   final String? prefix;
   final String? suffix;
-  final String position;
+  final String? position;
   final bool isOfficeHead;
 
-  UserOffice({
-    required this.id,
-    required this.isDeleted,
-    required this.rowVersion,
-    required this.userId,
-    required this.officeId,
-    required this.isActive,
-    required this.firstName,
-    required this.middleName,
-    required this.lastName,
-    required this.prefix,
-    required this.suffix,
-    required this.position,
-    required this.isOfficeHead,
-  });
+  UserOffice(
+    this.id,
+    this.isDeleted,
+    this.rowVersion,
+    this.userId,
+    this.officeId,
+    this.isActive,
+    this.firstName,
+    this.middleName,
+    this.lastName,
+    this.prefix,
+    this.suffix,
+    this.position,
+    this.isOfficeHead,
+  );
 
   factory UserOffice.fromJson(Map<String, dynamic> json) =>
       _$UserOfficeFromJson(json);
