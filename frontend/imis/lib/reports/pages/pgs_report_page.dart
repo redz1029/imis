@@ -1512,7 +1512,7 @@ void showAccomplishmentFormDialog(
                                 return Column(
                                   children: [
                                     const Divider(height: 1),
-                                    buildTrackingRow(
+                                    TrackingRowWidget(
                                       period: period['period'],
                                       periodIndex: index,
                                       totalPeriods: monthlyPeriods.length,

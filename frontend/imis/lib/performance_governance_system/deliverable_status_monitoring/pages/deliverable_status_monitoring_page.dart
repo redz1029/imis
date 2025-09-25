@@ -18,6 +18,8 @@ import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
+import '../../../user/models/user_registration.dart';
+import '../../../utils/auth_util.dart';
 import '../../../utils/http_util.dart';
 import '../../../utils/permission_service.dart';
 import '../../../widgets/accomplishment_widget.dart';
@@ -71,7 +73,7 @@ class DeliverableStatusMonitoringPageState
   TextEditingController scoreRangeFromController = TextEditingController();
   TextEditingController pageController = TextEditingController();
   TextEditingController pageSizeController = TextEditingController();
-
+  String userId = "";
   bool? isDirect;
 
   bool isMenuOpenOffice = false;
@@ -101,6 +103,7 @@ class DeliverableStatusMonitoringPageState
         kraListOptions = kra;
       });
     }();
+    _loadCurrentUserId();
   }
 
   @override
@@ -115,6 +118,18 @@ class DeliverableStatusMonitoringPageState
         allowedRoles: [PermissionString.pgsAuditor, PermissionString.roleAdmin],
       );
     });
+  }
+
+  Future<void> _loadCurrentUserId() async {
+    UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
+
+    setState(() {
+      userId = user!.id ?? "UserId";
+    });
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> fetchFilteredPgsList() async {
@@ -523,7 +538,7 @@ class DeliverableStatusMonitoringPageState
           ),
 
           onPressed: () {
-            showAccomplishmentFormDialog(context, deliverable);
+            showAccomplishmentFormDialog(context, deliverable, userId);
           },
           icon: const Icon(
             Icons.bar_chart_outlined,
@@ -1735,6 +1750,7 @@ class DeliverableStatusMonitoringPageState
 void showAccomplishmentFormDialog(
   BuildContext context,
   Map<String, dynamic> deliverable,
+  String userId,
 ) {
   final startDateStr = deliverable['Start Date'];
   final endDateStr = deliverable['End Date'];
@@ -1922,7 +1938,7 @@ void showAccomplishmentFormDialog(
                                       flex: 2,
                                       child: Center(
                                         child: Text(
-                                          "Upload",
+                                          "Upload Proof Photo",
                                           style: TextStyle(color: grey),
                                         ),
                                       ),
@@ -1938,7 +1954,7 @@ void showAccomplishmentFormDialog(
                                 return Column(
                                   children: [
                                     const Divider(height: 1),
-                                    buildTrackingRow(
+                                    TrackingRowWidget(
                                       period: period['period'],
                                       periodIndex: index,
                                       totalPeriods: monthlyPeriods.length,
@@ -1983,6 +1999,7 @@ void showAccomplishmentFormDialog(
                         onPressed: () {
                           saveAccomplishmentData(
                             deliverable['pgsDeliverableId'],
+                            userId,
                           );
                           Navigator.pop(context);
                         },
