@@ -682,7 +682,9 @@ class NavigationPanelState extends State<NavigationPanel> {
                         PermissionString.viewPerformanceGovernanceSystem,
                     child: _buildListTile(
                       Icons.insert_drive_file_outlined,
-                      selectedRole == PermissionString.roleAdmin
+                      (selectedRole == PermissionString.roleAdmin ||
+                              selectedRole == PermissionString.serviceHead ||
+                              selectedRole == PermissionString.osm)
                           ? 'Create/View PGS Deliverables'
                           : selectedRole == PermissionString.roleStandardUser
                           ? 'Create PGS Deliverables'
@@ -1025,21 +1027,6 @@ class NavigationPanelState extends State<NavigationPanel> {
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    // IconButton(
-                                    //   onPressed: () {},
-                                    //   icon: Icon(
-                                    //     Icons.notifications_none_outlined,
-                                    //   ),
-                                    // ),
-                                    // Padding(
-                                    //   padding: EdgeInsets.symmetric(
-                                    //     vertical: 8,
-                                    //   ),
-                                    //   child: VerticalDivider(
-                                    //     color: grey,
-                                    //     thickness: 0.5,
-                                    //   ),
-                                    // ),
                                     SizedBox(width: 4),
                                     Column(
                                       mainAxisAlignment:
