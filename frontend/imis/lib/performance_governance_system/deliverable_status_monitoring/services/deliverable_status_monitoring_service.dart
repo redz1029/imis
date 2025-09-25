@@ -23,4 +23,14 @@ class DeliverableStatusMonitoringService {
       throw Exception('Failed to fetch offices');
     }
   }
+
+  Future<void> saveAccomplishment(List<Map<String, dynamic>> data) async {
+    final url = ApiEndpoint().pgsDeliverableAccomplishment;
+
+    final response = await AuthenticatedRequest.post(dio, url, data: data);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to create/update PGS accomplishment');
+    }
+  }
 }
