@@ -26,7 +26,7 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             new IdentityUserRole<string>
             {
                 UserId = "537d9fcd-b505-4f93-afc6-17eb8eddff83",
-                RoleId = "6efeb4b8-8f63-4f75-b33a-37904ebdb409"
+                RoleId = "56996e97-9e8a-4d22-a693-c865144e9b96"
             },
             new IdentityUserRole<string>
             {
@@ -71,7 +71,7 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             new IdentityUserRole<string>
             {
                 UserId = "18b4151f-bff9-4525-b787-7a7e009757c3",
-                RoleId = "18b4151f-bff9-4525-b787-7a7e009757c3"
+                RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
             }
        );
     }
