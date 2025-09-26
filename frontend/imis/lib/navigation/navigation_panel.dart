@@ -289,7 +289,19 @@ class NavigationPanelState extends State<NavigationPanel> {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
-              title: const Text("Switch Role"),
+              title: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text("Switch Role"),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    color: primaryTextColor,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
