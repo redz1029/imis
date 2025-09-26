@@ -148,7 +148,7 @@ class NavigationPanelState extends State<NavigationPanel> {
 
   void _setScreen(Widget screen, int index) {
     setState(() => _isLoading = true);
-    Future.delayed(const Duration(milliseconds: 500), () {
+    Future.delayed(const Duration(milliseconds: 300), () {
       setState(() {
         _selectedScreen = screen;
         _selectedIndex = index;

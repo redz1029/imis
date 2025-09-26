@@ -14,6 +14,7 @@ class ViewPdfSummary extends StatelessWidget {
         "${ApiEndpoint().pgsSummaryNarrativeListReport}?PgsPeriodId=$pgsPeriodId&Page=1&PageSize=25";
 
     return Scaffold(
+      backgroundColor: mainBgColor,
       appBar: AppBar(
         title: const Text("Summary Narrative Report"),
         backgroundColor: mainBgColor,

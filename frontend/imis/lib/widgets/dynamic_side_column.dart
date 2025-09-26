@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/widgets/announcement_widget.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class DynamicSideColumn1 extends StatelessWidget {
@@ -92,10 +93,7 @@ class DynamicSideColumn1 extends StatelessWidget {
             child: SizedBox(
               width: 280,
               height: 350,
-              child: Image.asset(
-                rotatingImages[currentImageIndex],
-                fit: BoxFit.cover,
-              ),
+              child: SingleChildScrollView(child: AnnouncementList()),
             ),
           ),
         ),

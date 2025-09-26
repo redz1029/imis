@@ -13,6 +13,7 @@ class ReportViewerPage extends StatelessWidget {
     final pdfUrl = "${ApiEndpoint().generatePdf}/$pgsId";
 
     return Scaffold(
+      backgroundColor: mainBgColor,
       appBar: AppBar(
         title: const Text("Performance Governance Report"),
         backgroundColor: mainBgColor,
