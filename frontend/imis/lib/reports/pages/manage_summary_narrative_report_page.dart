@@ -424,9 +424,9 @@ class ManageSummaryNarrativeReportPageState
                     context: context,
                     builder: (context) {
                       return AlertDialog(
-                        title: const Text("Confirm Save"),
+                        title: const Text("Confirm Update"),
                         content: const Text(
-                          "Are you sure you want to save this record?",
+                          "Are you sure you want to update this record?",
                         ),
                         actions: [
                           TextButton(
