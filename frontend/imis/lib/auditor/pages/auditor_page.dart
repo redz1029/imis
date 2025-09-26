@@ -153,8 +153,6 @@ class AuditorMainPageState extends State<AuditorPage> {
     String rowVersion = "",
     String? name,
     bool isActive = false,
-    bool isTeamLeader = false,
-    bool isOfficeHead = false,
     String? selectedUserId,
   }) {
     TextEditingController auditorController = TextEditingController(text: name);
@@ -282,25 +280,13 @@ class AuditorMainPageState extends State<AuditorPage> {
                     gap14px,
 
                     CustomToggle(
-                      label: "Team Leader",
-                      value: isTeamLeader,
+                      label: "Active",
+                      value: isActive,
                       activeColor: primaryColor,
                       inactiveColor: Colors.grey,
                       onChanged: (val) {
                         setState(() {
-                          isTeamLeader = val;
-                        });
-                      },
-                    ),
-                    gap14px,
-                    CustomToggle(
-                      label: "Office Haed",
-                      value: isOfficeHead,
-                      activeColor: primaryColor,
-                      inactiveColor: Colors.grey,
-                      onChanged: (val) {
-                        setState(() {
-                          isOfficeHead = val;
+                          isActive = val;
                         });
                       },
                     ),
@@ -368,8 +354,6 @@ class AuditorMainPageState extends State<AuditorPage> {
                           isDeleted: isDeleted,
                           rowVersion: rowVersion,
                           isActive: isActive,
-                          isTeamLeader: isTeamLeader,
-                          isOfficeHead: isOfficeHead,
                           userId: _selectedUserId,
                         );
                         await _auditorService.addOrUpdateAuditor(auditor);
@@ -608,12 +592,8 @@ class AuditorMainPageState extends State<AuditorPage> {
                                                           selectedUserId:
                                                               auditor.userId ??
                                                               '',
-                                                          isTeamLeader:
-                                                              auditor
-                                                                  .isTeamLeader,
-                                                          isOfficeHead:
-                                                              auditor
-                                                                  .isOfficeHead,
+                                                          isActive:
+                                                              auditor.isActive,
                                                         ),
                                                   ),
                                                   SizedBox(width: 1),

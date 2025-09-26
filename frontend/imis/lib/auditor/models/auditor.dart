@@ -8,8 +8,6 @@ class Auditor {
   String? rowVersion;
   String? name;
   bool isActive;
-  bool isTeamLeader;
-  bool isOfficeHead;
   String? userId;
 
   Auditor({
@@ -18,8 +16,6 @@ class Auditor {
     this.rowVersion,
     required this.name,
     this.isActive = true,
-    this.isTeamLeader = false,
-    this.isOfficeHead = false,
     required this.userId,
   });
 
