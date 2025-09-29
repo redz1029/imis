@@ -1,5 +1,6 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
+using Base.Utilities;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
@@ -11,7 +12,8 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
     {
         private readonly IPgsDeliverableAccomplishmentRepository _repository;
         private readonly UserManager<User> _userManager;
-      
+        private readonly string _ftpBasePath = $"{FTPCredentials.FTPRootFolderPath}/sample";
+
         public PgsDeliverableAccomplishmentService(IPgsDeliverableAccomplishmentRepository repository, UserManager<User> userManager)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
@@ -57,11 +59,12 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
             await _repository.SaveOrUpdateAsync(entity, cancellationToken);
         }
 
-        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
+        
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
+        where TEntity : Entity<TId>
         {
             var ODto = dto as PgsDeliverableAccomplishmentDto;
             var accomplishment = ODto!.ToEntity();
-
 
             var user = await _userManager.FindByIdAsync(accomplishment.UserId);
             if (user == null)
@@ -77,6 +80,6 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                 await _repository.UpdateAsync(accomplishment, accomplishment.Id, cancellationToken);
 
             await _repository.SaveOrUpdateAsync(accomplishment, cancellationToken);
-        }    
+        }       
     }
 }

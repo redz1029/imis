@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Http;
 
 namespace IMIS.Application.PgsDeliverableAccomplishmentModule
 {
@@ -11,8 +12,8 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
         public required string UserId { get; set; }
         public required double PercentAccomplished { get; set; }
         public string? Remarks { get; set; }       
-        public string? AttachmentPath { get; set; }       
-
+        public string? AttachmentPath { get; set; }
+       
         public PgsDeliverableAccomplishmentDto() { }
         [SetsRequiredMembers]
         public PgsDeliverableAccomplishmentDto(PgsDeliverableAccomplishment pgsDeliverableAccomplishment)
@@ -36,9 +37,10 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
                 UserId = UserId,
                 PercentAccomplished = PercentAccomplished,
                 Remarks = Remarks,
-                AttachmentPath = AttachmentPath
+                AttachmentPath = AttachmentPath,
+               
             };
 
-        }
+        }    
     }
 }
