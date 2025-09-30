@@ -3743,6 +3743,10 @@ class PerformanceGovernanceSystemPageState
     final String deliverableName = deliverablesControllers[index]?.text ?? '';
     final bool isDirect = selectedDirect[index] ?? false;
     final String byWhen = selectedByWhen[index] ?? '';
+
+    final parsedByWhen = DateTime.parse(byWhen);
+    final String formattedByWhen = DateFormat('MMMM yyyy').format(parsedByWhen);
+
     final String officeName = officeDisplay;
 
     final startDate = DateTime.parse(selectedPeriodData['startDate']);
@@ -3820,7 +3824,7 @@ class PerformanceGovernanceSystemPageState
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text("KRA: $kraName"),
-                                    Text("Due: $byWhen"),
+                                    Text("Due: $formattedByWhen"),
                                   ],
                                 ),
                                 const SizedBox(height: 4),

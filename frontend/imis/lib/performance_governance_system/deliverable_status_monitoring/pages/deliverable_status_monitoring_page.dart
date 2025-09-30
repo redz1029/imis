@@ -1800,7 +1800,7 @@ Future<bool?> showAccomplishmentFormDialog(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              "Accomplishment Form - ${deliverable['Start Date']} to ${deliverable['End Date']}",
+                              "Accomplishment Form - ${DateFormat('MMMM dd, yyyy').format(startDate)} to ${DateFormat('MMMM dd, yyyy').format(endDate)}",
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
