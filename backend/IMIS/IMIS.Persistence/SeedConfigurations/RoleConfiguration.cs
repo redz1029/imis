@@ -36,7 +36,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                  {
                      Id = "af7b586c7ee6490bbd878f46f6a47831",
                      Name = new PgsAuditorRole().Name,
-                     NormalizedName = "PGS AUDITOR",
+                     NormalizedName = "AUDITOR",
                      ConcurrencyStamp = Guid.NewGuid().ToString(),
                  },
                  new IdentityRole

@@ -4,6 +4,6 @@ namespace IMIS.Infrastructure.Auths.Roles
 {
     public class PgsAuditorRole : BaseRole
     {
-        public override string Name => "PGS Auditor";
+        public override string Name => "Auditor";
     }
 }
