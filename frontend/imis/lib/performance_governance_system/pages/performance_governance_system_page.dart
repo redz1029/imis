@@ -924,9 +924,10 @@ class PerformanceGovernanceSystemPageState
       final isDirect = selectedDirect[index] ?? false;
       final byWhen =
           DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
-
-      final percentperDeliverables =
-          double.tryParse(percentageControllers[index]!.text) ?? 0.0;
+      double percentDeliverables =
+          (percentageControllers[index]?.text.isNotEmpty ?? false)
+              ? double.tryParse(percentageControllers[index]!.text) ?? 0.0
+              : 0.0;
       final disapprovalRemarksText = reasonController[index]?.text ?? '';
       final isDisapproved = selectedDisapproved[index] ?? false;
       final statusIndex =
@@ -936,7 +937,7 @@ class PerformanceGovernanceSystemPageState
         orElse: () => PgsStatus.notStarted,
       );
       final remarks = remarksControllers[index]?.text ?? '';
-
+      final rowVersion = kraData['rowVersion'] ?? '';
       updatedDeliverables.add(
         PgsDeliverables(
           existingId,
@@ -946,14 +947,14 @@ class PerformanceGovernanceSystemPageState
             kraData['remarks'] ?? '',
             true,
 
-            rowVersion: kraData[''],
+            rowVersion: rowVersion,
           ),
           kraId,
           deliverableText,
           kraDescriptionText,
           isDirect,
           byWhen,
-          percentperDeliverables,
+          percentDeliverables,
           disapprovalRemarksText,
           isDisapproved,
           status,
@@ -1964,7 +1965,7 @@ class PerformanceGovernanceSystemPageState
               (option) => option['id'] == selectedKraId,
               orElse: () => {'id': 0, 'name': 'Unknown', 'remarks': ''},
             );
-            selectedKRAObjects[i] = kraOption; // ✅ Solution
+            selectedKRAObjects[i] = kraOption;
             remarksControllers[i] = TextEditingController(text: item.remarks);
             percentageControllers[i] = TextEditingController(
               text: item.percentDeliverables.toString(),
@@ -2537,8 +2538,8 @@ class PerformanceGovernanceSystemPageState
                                           columnWidths: const {
                                             0: FlexColumnWidth(1.5),
                                             1: FlexColumnWidth(0.8),
-                                            2: FlexColumnWidth(1.9),
-                                            3: FlexColumnWidth(3.1),
+                                            2: FlexColumnWidth(2.6),
+                                            3: FlexColumnWidth(1),
                                           },
                                           children: [
                                             _PgsDeliverableHeader(
@@ -2563,12 +2564,12 @@ class PerformanceGovernanceSystemPageState
                                             1: FlexColumnWidth(1.3),
                                             2: FlexColumnWidth(0.4),
                                             3: FlexColumnWidth(0.4),
-                                            4: FlexColumnWidth(1.90),
+                                            4: FlexColumnWidth(1.9),
                                             5: FlexColumnWidth(0.7),
-                                            6: FlexColumnWidth(0.6),
-                                            7: FlexColumnWidth(1.30),
-                                            8: FlexColumnWidth(0.5),
-                                            9: FlexColumnWidth(1),
+                                            // 6: FlexColumnWidth(0.6),
+                                            // 7: FlexColumnWidth(1.30),
+                                            // 8: FlexColumnWidth(0.5),
+                                            6: FlexColumnWidth(1),
                                           },
                                           children: [_pgsBuildTableSubheader()],
                                         ),
@@ -2591,10 +2592,10 @@ class PerformanceGovernanceSystemPageState
                                                 3: FlexColumnWidth(0.4),
                                                 4: FlexColumnWidth(1.90),
                                                 5: FlexColumnWidth(0.7),
-                                                6: FlexColumnWidth(0.6),
-                                                7: FlexColumnWidth(1.30),
-                                                8: FlexColumnWidth(0.5),
-                                                9: FlexColumnWidth(1),
+                                                // 6: FlexColumnWidth(0.6),
+                                                // 7: FlexColumnWidth(1.30),
+                                                // 8: FlexColumnWidth(0.5),
+                                                6: FlexColumnWidth(1),
                                               },
                                               children: [
                                                 ...rows.map(
@@ -2707,7 +2708,7 @@ class PerformanceGovernanceSystemPageState
                       );
 
                       if (_formKey.currentState!.validate() && !hasRowErrors) {
-                        if (deliverablesControllers.length != 5) {
+                        if (deliverablesControllers.length < 5) {
                           MotionToast.warning(
                             title: const Text("Insufficient Deliverables"),
                             description: const Text(
@@ -2740,7 +2741,6 @@ class PerformanceGovernanceSystemPageState
                       ),
                     ),
                     onPressed:
-                        // () => handleSubmitOrConfirm(context, id, orderLevel),
                         () => handlePgsAction(
                           context,
                           id,
@@ -3561,9 +3561,9 @@ class PerformanceGovernanceSystemPageState
         _buildSizedHeaderCell('INDIRECT', width: 80),
         _buildSizedHeaderCell('DELIVERABLES', width: 200),
         _buildSizedHeaderCell('WHEN', width: 90),
-        _buildSizedHeaderCell('STATUS', width: 100),
-        _buildSizedHeaderCell('REMARKS', width: 120),
-        _buildSizedHeaderCell('SCORE', width: 100),
+        // _buildSizedHeaderCell('STATUS', width: 100),
+        // _buildSizedHeaderCell('REMARKS', width: 120),
+        // _buildSizedHeaderCell('SCORE', width: 100),
         _buildSizedHeaderCell('ACTION', width: 100),
         // _buildSizedHeaderCell('ACTION', width: 100),
       ],
@@ -3602,7 +3602,7 @@ class PerformanceGovernanceSystemPageState
     selectedDirect.putIfAbsent(index, () => false);
     selectedIndirect.putIfAbsent(index, () => false);
     selectedByWhen.putIfAbsent(index, () => '');
-
+    int deliverableId = int.tryParse(id ?? '') ?? 0;
     // Define alternating row colors
     Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
 
@@ -3650,10 +3650,11 @@ class PerformanceGovernanceSystemPageState
           setDialogState,
           orderLevel,
         ),
-        _buildDropdownCellStatusPgsDeliverableStatus(index, () => (index)),
-        _buildExpandableTextAreaRemarksCell(index),
-        _buildExpandableTextAreaPercentageCell(index),
-        _buildCreateAccomplishmentCell(index, int.parse(id!)),
+
+        // _buildDropdownCellStatusPgsDeliverableStatus(index, () => (index)),
+        // _buildExpandableTextAreaRemarksCell(index),
+        // _buildExpandableTextAreaPercentageCell(index),
+        _buildCreateAccomplishmentCell(index, deliverableId),
         // _buildCreateAccomplishmentCell(index),
       ],
     );
@@ -3809,7 +3810,7 @@ class PerformanceGovernanceSystemPageState
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text("Office: $officeName"),
+                                    Text("Office: $officeDisplay"),
                                     Text(
                                       "Monthly Tracking Periods: ${startAndEndDates.length} month(s)",
                                       style: const TextStyle(
