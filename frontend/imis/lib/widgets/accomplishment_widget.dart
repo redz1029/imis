@@ -1,14 +1,17 @@
+// ignore_for_file: unused_local_variable
+
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart'
-    show ImagePicker, ImageSource, XFile;
 import 'package:imis/constant/constant.dart';
 import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
-
-import '../performance_governance_system/deliverable_status_monitoring/models/pgs_deliverable_accomplishment.dart';
+import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
+import 'package:open_file/open_file.dart';
+import 'package:universal_html/html.dart' as html;
 import '../performance_governance_system/enum/pgs_status.dart';
 
 final Dio dio = Dio();
@@ -26,12 +29,16 @@ class TrackingRowData {
   final TextEditingController percentageController;
   final ValueNotifier<PgsStatus> status;
   String? attachmentPath;
+  Uint8List? attachmentBytes;
+  int? accomplishmentId;
 
   TrackingRowData({
     required this.remarksController,
     required this.percentageController,
     required this.status,
     this.attachmentPath,
+    this.attachmentBytes,
+    this.accomplishmentId,
   });
 }
 
@@ -74,46 +81,52 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   File? mobileImage;
   Uint8List? webImage;
   String? fileName;
-  bool _isHovering = false;
   bool isLoading = false;
 
-  Future<void> pickPhoto() async {
+  Future<void> pickFile() async {
     setState(() {
       isLoading = true;
     });
 
-    final XFile? pickedFile = await ImagePicker().pickImage(
-      source: ImageSource.gallery,
-    );
-
-    if (pickedFile == null) {
-      setState(() {
-        isLoading = false;
-      });
-      return;
-    }
-
     try {
-      if (kIsWeb) {
-        Uint8List bytes = await pickedFile.readAsBytes();
-        setState(() {
-          webImage = bytes;
-          fileName = pickedFile.name;
-          isLoading = false;
-        });
-      } else {
-        File file = File(pickedFile.path);
-        setState(() {
-          mobileImage = file;
-          fileName = file.path.split('/').last;
-          isLoading = false;
-        });
+      FilePickerResult? result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+        allowMultiple: false,
+        withData: kIsWeb,
+      );
+
+      if (result != null) {
+        if (kIsWeb) {
+          Uint8List? bytes = result.files.first.bytes;
+          setState(() {
+            webImage = bytes;
+            fileName = result.files.first.name;
+            final row =
+                achievementsList[widget.deliverableId]!.rows[widget
+                    .periodIndex];
+            row.attachmentPath = result.files.first.name;
+            row.attachmentBytes = bytes; // <-- store the bytes
+          });
+        } else {
+          File file = File(result.files.first.path!);
+          setState(() async {
+            mobileImage = file;
+            fileName = result.files.first.name;
+            final row =
+                achievementsList[widget.deliverableId]!.rows[widget
+                    .periodIndex];
+            row.attachmentPath = file.path;
+            row.attachmentBytes = await file.readAsBytes();
+          });
+        }
       }
     } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
+      debugPrint("File picking failed: $e");
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -173,20 +186,23 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                 builder: (context, status, _) {
                   return DropdownButtonFormField<PgsStatus>(
                     value: status,
+
                     onChanged: (PgsStatus? newValue) {
                       if (newValue != null) {
                         selectedStatus.value = newValue;
+
                         if (newValue == PgsStatus.completed) {
                           percentageController.text = '100';
                         } else if (newValue == PgsStatus.notStarted) {
                           percentageController.text = '0';
-                        } else if (newValue == PgsStatus.onGoing &&
-                            (percentageController.text.isEmpty ||
-                                percentageController.text == '0')) {
-                          percentageController.text = '0';
+                        } else if (newValue == PgsStatus.onGoing) {
+                          if (percentageController.text == '100') {
+                            percentageController.text = '0';
+                          }
                         }
                       }
                     },
+
                     isExpanded: true,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
@@ -345,107 +361,126 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 6),
               child:
-                  webImage != null || mobileImage != null
-                      ? MouseRegion(
-                        onEnter: (_) => setState(() => _isHovering = true),
-                        onExit: (_) => setState(() => _isHovering = false),
-                        child: Stack(
-                          children: [
-                            AnimatedOpacity(
-                              opacity: _isHovering ? 0.6 : 1.0,
-                              duration: const Duration(milliseconds: 200),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(8),
-                                child:
-                                    kIsWeb
-                                        ? Image.memory(
-                                          webImage!,
-                                          fit: BoxFit.contain,
-                                          height: 200,
-                                          width: 200,
-                                        )
-                                        : Image.file(
-                                          mobileImage!,
-                                          fit: BoxFit.contain,
-                                          height: 200,
-                                          width: 200,
-                                        ),
-                              ),
-                            ),
-                            if (_isHovering)
-                              Positioned(
-                                top: 0,
-                                right: 0,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.remove_red_eye),
-                                      onPressed: () {
-                                        showDialog(
-                                          
-                                          context: context,
-                                          builder:
-                                              (context) => Dialog(
-                                                backgroundColor: mainBgColor,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                                child: SizedBox(
-                                                  width: 400,
-                                                  height: 400,
-                                                  child: Center(
-                                                    child:
-                                                        kIsWeb
-                                                            ? Image.memory(
-                                                              webImage!,
-                                                              fit:
-                                                                  BoxFit
-                                                                      .contain,
-                                                            )
-                                                            : Image.file(
-                                                              mobileImage!,
-                                                              fit:
-                                                                  BoxFit
-                                                                      .contain,
-                                                            ),
-                                                  ),
-                                                ),
-                                              ),
-                                        );
-                                      },
-                                      tooltip: "View",
-                                      color: grey,
-                                    ),
+                  row.attachmentPath != null ||
+                          webImage != null ||
+                          mobileImage != null
+                      ? Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () async {
+                                final loggedUser =
+                                    await AuthUtil.processTokenValidity(
+                                      dio,
+                                      context,
+                                    );
+                                final token = loggedUser?.accessToken;
+                                if (token == null) return;
 
-                                    IconButton(
-                                      icon: const Icon(Icons.delete),
-                                      onPressed: () {
-                                        setState(() {
-                                          if (kIsWeb) {
-                                            webImage = null;
-                                          } else {
-                                            mobileImage = null;
-                                          }
-                                          fileName = null;
-                                        });
-                                      },
-                                      tooltip: "Delete",
-                                      color: grey,
-                                    ),
-                                  ],
+                                final fileNameToUse =
+                                    fileName ??
+                                    row.attachmentPath?.split("/").last ??
+                                    "download.bin";
+
+                                if (kIsWeb) {
+                                  Uint8List? bytes;
+
+                                  if (webImage != null) {
+                                    bytes = webImage!;
+                                  } else if (row.accomplishmentId != null) {
+                                    final downloadUrl =
+                                        "${ApiEndpoint.baseUrl}/${row.accomplishmentId}/download";
+                                    final response = await dio.get<List<int>>(
+                                      downloadUrl,
+                                      options: Options(
+                                        responseType: ResponseType.bytes,
+                                        headers: {
+                                          "Authorization": "Bearer $token",
+                                        },
+                                      ),
+                                    );
+                                    bytes = Uint8List.fromList(response.data!);
+                                  }
+
+                                  if (bytes != null) {
+                                    final blob = html.Blob([bytes]);
+                                    final url = html
+                                        .Url.createObjectUrlFromBlob(blob);
+                                    final anchor =
+                                        html.AnchorElement(href: url)
+                                          ..setAttribute(
+                                            "download",
+                                            fileNameToUse,
+                                          )
+                                          ..click();
+                                    html.Url.revokeObjectUrl(url);
+                                  }
+                                } else {
+                                  File? fileToOpen;
+
+                                  if (mobileImage != null) {
+                                    fileToOpen = File(mobileImage!.path);
+                                  } else if (row.accomplishmentId != null) {
+                                    final downloadUrl =
+                                        "${ApiEndpoint.baseUrl}/${row.accomplishmentId}/download";
+                                    final tempDir = Directory.systemTemp;
+                                    final tempFile = File(
+                                      '${tempDir.path}/$fileNameToUse',
+                                    );
+
+                                    await dio.download(
+                                      downloadUrl,
+                                      tempFile.path,
+                                      options: Options(
+                                        headers: {
+                                          "Authorization": "Bearer $token",
+                                        },
+                                      ),
+                                    );
+
+                                    if (await tempFile.exists()) {
+                                      fileToOpen = tempFile;
+                                    }
+                                  }
+
+                                  if (fileToOpen != null) {
+                                    await OpenFile.open(fileToOpen.path);
+                                  }
+                                }
+                              },
+                              child: Text(
+                                fileName ??
+                                    row.attachmentPath?.split("/").last ??
+                                    "Attachment",
+                                style: const TextStyle(
+                                  color: Colors.blue,
+                                  decoration: TextDecoration.underline,
                                 ),
                               ),
-                          ],
-                        ),
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              setState(() {
+                                if (kIsWeb) webImage = null;
+                                if (!kIsWeb) mobileImage = null;
+                                fileName = null;
+                                row.attachmentPath = null;
+                                row.attachmentBytes = null;
+                              });
+                            },
+                            tooltip: "Delete",
+                            color: grey,
+                          ),
+                        ],
                       )
                       : IconButton(
                         icon: const Icon(
                           Icons.image_outlined,
                           color: Colors.blue,
                         ),
-                        onPressed: pickPhoto,
+                        onPressed: pickFile,
                       ),
             ),
           ),
@@ -455,31 +490,83 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   }
 }
 
+Future<void> loadAccomplishments(int deliverableId) async {
+  final accomplishments = await _accomplishmentService.fetchAccomplishments(
+    deliverableId,
+  );
+
+  achievementsList[deliverableId] = AchievementPeriodData(
+    rows:
+        accomplishments.map((acc) {
+          final percent = acc.percentAccomplished ?? 0;
+          return TrackingRowData(
+            remarksController: TextEditingController(text: acc.remarks),
+            percentageController: TextEditingController(
+              text: percent.toString(),
+            ),
+            status: ValueNotifier<PgsStatus>(_deriveStatusFromPercent(percent)),
+            attachmentPath: acc.attachmentPath,
+            attachmentBytes: null,
+            accomplishmentId: acc.id,
+          );
+        }).toList(),
+  );
+}
+
+PgsStatus _deriveStatusFromPercent(int percent) {
+  if (percent >= 100) return PgsStatus.completed;
+  if (percent > 0) return PgsStatus.onGoing;
+  return PgsStatus.notStarted;
+}
+
 Future<void> saveAccomplishmentData(
   int currentDeliverableId,
   String userId,
 ) async {
-  final accomplishments = <PgsDeliverableAccomplishment>[];
-
   final periodData = achievementsList[currentDeliverableId];
   if (periodData != null) {
     for (var row in periodData.rows) {
-      accomplishments.add(
-        PgsDeliverableAccomplishment(
-          0,
-          currentDeliverableId,
-          DateTime.now(),
-          userId,
-          int.tryParse(row.percentageController.text) ?? 0,
-          row.remarksController.text,
-          row.attachmentPath,
-          isDeleted: false,
-          rowVersion: '',
-        ),
-      );
+      File? file =
+          (!kIsWeb && row.attachmentPath != null)
+              ? File(row.attachmentPath!)
+              : null;
+      Uint8List? bytes = row.attachmentBytes;
+      final data = {
+        if (row.accomplishmentId != null) "id": row.accomplishmentId,
+        "pgsDeliverableId": currentDeliverableId,
+        "postingDate": DateTime.now().toIso8601String(),
+        "userId": userId,
+        "percentAccomplished":
+            double.tryParse(row.percentageController.text) ?? 0,
+        "remarks": row.remarksController.text,
+      };
+      final formData = FormData.fromMap({
+        ...data,
+        if (bytes != null)
+          "file": MultipartFile.fromBytes(
+            bytes,
+            filename: row.attachmentPath?.split("/").last ?? "upload.bin",
+          ),
+        if (file != null)
+          "file": await MultipartFile.fromFile(
+            file.path,
+            filename: row.attachmentPath?.split("/").last,
+          ),
+      });
+
+      await _accomplishmentService.saveAccomplishment(formData);
     }
   }
+}
 
-  final jsonList = accomplishments.map((e) => e.toJson()).toList();
-  await _accomplishmentService.saveAccomplishment(jsonList);
+class AccomplishmentRowData {
+  final DateTime date;
+  PgsStatus status;
+  String remarks;
+
+  AccomplishmentRowData({
+    required this.date,
+    this.status = PgsStatus.notStarted,
+    this.remarks = "",
+  });
 }

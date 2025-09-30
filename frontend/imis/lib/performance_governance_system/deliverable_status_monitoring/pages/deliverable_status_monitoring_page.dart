@@ -537,9 +537,11 @@ class DeliverableStatusMonitoringPageState
             }),
           ),
 
-          onPressed: () {
+          onPressed: () async {
+            await loadAccomplishments(deliverable['pgsDeliverableId']);
             showAccomplishmentFormDialog(context, deliverable, userId);
           },
+
           icon: const Icon(
             Icons.bar_chart_outlined,
             size: 14,
@@ -1747,7 +1749,7 @@ class DeliverableStatusMonitoringPageState
   }
 }
 
-void showAccomplishmentFormDialog(
+Future<bool?> showAccomplishmentFormDialog(
   BuildContext context,
   Map<String, dynamic> deliverable,
   String userId,
@@ -1773,7 +1775,7 @@ void showAccomplishmentFormDialog(
     current = DateTime(current.year, current.month + 1);
   }
 
-  showDialog(
+  return showDialog<bool>(
     context: context,
     builder: (context) {
       return Dialog(
@@ -1996,12 +1998,42 @@ void showAccomplishmentFormDialog(
                             borderRadius: BorderRadius.circular(4),
                           ),
                         ),
-                        onPressed: () {
-                          saveAccomplishmentData(
+                        onPressed: () async {
+                          final shouldSave = await showDialog<bool>(
+                            context: context,
+                            builder:
+                                (ctx) => AlertDialog(
+                                  title: Text("Confirm Save"),
+                                  content: Text(
+                                    "Are you sure you want to save this data?",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(ctx).pop(false),
+                                      child: Text(
+                                        "No",
+                                        style: TextStyle(color: primaryColor),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(ctx).pop(true),
+                                      child: Text(
+                                        "Yes",
+                                        style: TextStyle(color: primaryColor),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                          );
+
+                          if (shouldSave != true) return;
+                          await saveAccomplishmentData(
                             deliverable['pgsDeliverableId'],
                             userId,
                           );
-                          Navigator.pop(context);
+                          Navigator.of(context).pop(true);
                         },
                         child: Text(
                           "Save Accomplishments",
