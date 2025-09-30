@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="09/17/2025 08:19:47" ReportInfo.Modified="09/19/2025 14:48:45" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="09/17/2025 08:19:47" ReportInfo.Modified="09/29/2025 14:54:48" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -131,9 +131,10 @@ namespace FastReport
       <TextObject Name="txtOfficeName" Left="255.15" Top="151.2" Width="538.65" Height="18.9" BeforePrintEvent="txtOfficeName_BeforePrint" Text="[ReportPGSSummaryNarrativeDto.OfficeName]" Font="Segoe UI, 10pt"/>
       <TextObject Name="KraName" Left="255.6" Top="179.55" Width="538.65" Height="18.9" BeforePrintEvent="KraName_BeforePrint" Text="[ReportPGSSummaryNarrativeDto.KraName]" Font="Segoe UI, 10pt"/>
       <TextObject Name="Text58" Left="332.2" Top="42.25" Width="395.45" Height="18.9" Text="Sinsuat Avenue, Rosary Heights X, Cotabato City, 9600" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 9pt"/>
+      <TextObject Name="Text59" Left="94.5" Top="85.05" Width="850.5" Height="18.9" Text="PGS Auditor's Report" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 13pt, style=Bold"/>
     </PageHeaderBand>
-    <DataBand Name="Data1" Top="255.29" Width="1047.06">
-      <DataBand Name="Data2" Top="256.44" Width="1047.06" Height="19" CanGrow="true" DataSource="PgsDeliverables">
+    <DataBand Name="Data1" Top="258.15" Width="1047.06">
+      <DataBand Name="Data2" Top="262.15" Width="1047.06" Height="19" CanGrow="true" DataSource="PgsDeliverables">
         <TextObject Name="Text46" Left="98.85" Top="2" Width="107.5" Height="13.9" Border.Color="White" CanGrow="true" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.Office]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
         <TextObject Name="Text47" Left="215.35" Top="2" Width="108.5" Height="13.9" Border.Color="White" CanGrow="true" GrowToBottom="true" Text="[ReportPGSSummaryNarrativeDto.PgsDeliverables.KeyResultArea]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
         <LineObject Name="Line9" Left="95.05" Top="-1" Height="19.7" GrowToBottom="true"/>
@@ -154,7 +155,7 @@ namespace FastReport
         <LineObject Name="Line10" Left="94.5" Top="19" Width="884.85"/>
       </DataBand>
     </DataBand>
-    <PageFooterBand Name="PageFooter1" Top="276.58" Width="1047.06" Height="197.8" CanGrow="true" Guides="0">
+    <PageFooterBand Name="PageFooter1" Top="285.15" Width="1047.06" Height="197.8" CanGrow="true" Guides="0">
       <TextObject Name="Text29" Left="352.2" Top="180.2" Width="317.8" Height="14.35" CanGrow="true" GrowToBottom="true" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Segoe UI, 8pt"/>
       <TextObject Name="Text30" Left="94.5" Top="8.45" Width="160.65" Height="22.9" CanGrow="true" Text="Findings" Font="Segoe UI, 11pt, style=Bold"/>
       <TextObject Name="Text31" Left="94.5" Top="62.6" Width="160.65" Height="22.9" CanGrow="true" Text="Recommendations" Font="Segoe UI, 11pt, style=Bold"/>
