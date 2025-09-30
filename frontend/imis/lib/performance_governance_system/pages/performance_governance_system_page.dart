@@ -3689,6 +3689,16 @@ class PerformanceGovernanceSystemPageState
           ),
 
           onPressed: () async {
+            if (deliverableId == 0) {
+              MotionToast.warning(
+                title: const Text("Deliverable Not Saved"),
+                description: const Text(
+                  "Please save your deliverable first before creating an accomplishment.",
+                ),
+                toastAlignment: Alignment.center,
+              ).show(context);
+              return;
+            }
             await loadAccomplishments(deliverableId);
             _showAccomplishmentDialog(index);
           },
