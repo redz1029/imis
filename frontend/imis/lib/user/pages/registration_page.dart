@@ -569,12 +569,6 @@ class RegistrationPageState extends State<RegistrationPage> {
                         child: Text(value),
                       );
                     }).toList(),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please select a position';
-                  }
-                  return null;
-                },
               ),
             ],
             gap24px,

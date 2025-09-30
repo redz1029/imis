@@ -1,88 +1,45 @@
 // ignore_for_file: unused_local_variable
 
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
+import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:open_file/open_file.dart';
+import 'package:imis/widgets/accomplishment_widget.dart';
+import 'package:intl/intl.dart';
 import 'package:universal_html/html.dart' as html;
-import '../performance_governance_system/enum/pgs_status.dart';
+import 'package:open_file/open_file.dart';
 
-final Dio dio = Dio();
 final _accomplishmentService = DeliverableStatusMonitoringService(dio);
-final Map<int, AchievementPeriodData> achievementsList = {};
 
-class AchievementPeriodData {
-  final List<TrackingRowData> rows;
+class AccomplishmentRowWidget extends StatefulWidget {
+  final DateTime date;
+  final TrackingRowData row;
 
-  AchievementPeriodData({required this.rows});
-}
-
-class TrackingRowData {
-  final TextEditingController remarksController;
-  final TextEditingController percentageController;
-  final ValueNotifier<PgsStatus> status;
-  String? attachmentPath;
-  Uint8List? attachmentBytes;
-  int? accomplishmentId;
-
-  TrackingRowData({
-    required this.remarksController,
-    required this.percentageController,
-    required this.status,
-    this.attachmentPath,
-    this.attachmentBytes,
-    this.accomplishmentId,
-  });
-}
-
-Color getStatusColor(String status) {
-  switch (status) {
-    case 'NotStarted':
-      return const Color.fromARGB(255, 151, 70, 64);
-    case 'Ongoing':
-      return Colors.orange;
-    case 'Completed':
-      return Colors.green;
-    default:
-      return const Color.fromARGB(255, 151, 70, 64);
-  }
-}
-
-Color getStatusTextColor(String status) {
-  return Colors.white;
-}
-
-class TrackingRowWidget extends StatefulWidget {
-  final String period;
-  final int periodIndex;
-  final int totalPeriods;
-  final int deliverableId;
-
-  const TrackingRowWidget({
+  const AccomplishmentRowWidget({
     super.key,
-    required this.period,
-    required this.periodIndex,
-    required this.totalPeriods,
-    required this.deliverableId,
+    required this.date,
+    required this.row,
   });
 
   @override
-  State<TrackingRowWidget> createState() => _TrackingRowWidgetState();
+  State<AccomplishmentRowWidget> createState() =>
+      _AccomplishmentRowWidgetState();
 }
 
-class _TrackingRowWidgetState extends State<TrackingRowWidget> {
-  File? mobileImage;
+class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
   Uint8List? webImage;
+  File? mobileImage;
   String? fileName;
-  bool isLoading = false;
+  final Dio dio = Dio();
 
+  bool isLoading = false;
   Future<void> pickFile() async {
     setState(() {
       isLoading = true;
@@ -96,62 +53,44 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
       );
 
       if (result != null) {
+        final pickedFile = result.files.first;
+
         if (kIsWeb) {
-          Uint8List? bytes = result.files.first.bytes;
-          setState(() {
-            webImage = bytes;
-            fileName = result.files.first.name;
-            final row =
-                achievementsList[widget.deliverableId]!.rows[widget
-                    .periodIndex];
-            row.attachmentPath = result.files.first.name;
-            row.attachmentBytes = bytes; // <-- store the bytes
-          });
+          Uint8List? bytes = pickedFile.bytes;
+          if (bytes != null) {
+            setState(() {
+              webImage = bytes;
+              fileName = pickedFile.name;
+              widget.row.attachmentPath = pickedFile.name;
+              widget.row.attachmentBytes = bytes;
+            });
+          }
         } else {
-          File file = File(result.files.first.path!);
-          setState(() async {
+          File file = File(pickedFile.path!);
+          Uint8List bytes = await file.readAsBytes();
+
+          setState(() {
             mobileImage = file;
-            fileName = result.files.first.name;
-            final row =
-                achievementsList[widget.deliverableId]!.rows[widget
-                    .periodIndex];
-            row.attachmentPath = file.path;
-            row.attachmentBytes = await file.readAsBytes();
+            fileName = pickedFile.name;
+            widget.row.attachmentPath = file.path;
+            widget.row.attachmentBytes = bytes;
           });
         }
       }
     } catch (e) {
       debugPrint("File picking failed: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override
   Widget build(BuildContext context) {
-    achievementsList.putIfAbsent(
-      widget.deliverableId,
-      () => AchievementPeriodData(rows: []),
-    );
-
-    if (achievementsList[widget.deliverableId]!.rows.length <=
-        widget.periodIndex) {
-      achievementsList[widget.deliverableId]!.rows.add(
-        TrackingRowData(
-          remarksController: TextEditingController(),
-          percentageController: TextEditingController(text: '0'),
-          status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
-        ),
-      );
-    }
-
-    final row =
-        achievementsList[widget.deliverableId]!.rows[widget.periodIndex];
-    final remarksController = row.remarksController;
-    final percentageController = row.percentageController;
-    final selectedStatus = row.status;
+    final remarksController = widget.row.remarksController;
+    final percentageController = widget.row.percentageController;
+    final selectedStatus = widget.row.status;
 
     final statusDescriptions = {
       PgsStatus.notStarted:
@@ -166,66 +105,61 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       child: Row(
         children: [
+          // PERIOD
           Expanded(
             flex: 2,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 6),
-              child: Text(
-                widget.period,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.w500),
-              ),
+            child: Text(
+              DateFormat("MMMM yyyy").format(widget.date),
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.w500),
             ),
           ),
           Expanded(
             flex: 2,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 6),
-              child: ValueListenableBuilder<PgsStatus>(
-                valueListenable: selectedStatus,
-                builder: (context, status, _) {
-                  return DropdownButtonFormField<PgsStatus>(
-                    value: status,
+            child: ValueListenableBuilder<PgsStatus>(
+              valueListenable: selectedStatus,
+              builder: (context, status, _) {
+                return DropdownButtonFormField<PgsStatus>(
+                  value: status,
+                  onChanged: (PgsStatus? newValue) {
+                    if (newValue != null) {
+                      selectedStatus.value = newValue;
 
-                    onChanged: (PgsStatus? newValue) {
-                      if (newValue != null) {
-                        selectedStatus.value = newValue;
-
-                        if (newValue == PgsStatus.completed) {
-                          percentageController.text = '100';
-                        } else if (newValue == PgsStatus.notStarted) {
+                      if (newValue == PgsStatus.completed) {
+                        percentageController.text = '100';
+                      } else if (newValue == PgsStatus.notStarted) {
+                        percentageController.text = '0';
+                      } else if (newValue == PgsStatus.onGoing) {
+                        if (percentageController.text == '100') {
                           percentageController.text = '0';
-                        } else if (newValue == PgsStatus.onGoing) {
-                          if (percentageController.text == '100') {
-                            percentageController.text = '0';
-                          }
                         }
                       }
-                    },
-
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.all(8.0),
-                    ),
-                    items:
-                        PgsStatus.values.map((value) {
-                          return DropdownMenuItem<PgsStatus>(
-                            value: value,
-                            child: Tooltip(
-                              message: statusDescriptions[value] ?? value.name,
-                              child: Text(
-                                value.name,
-                                style: const TextStyle(fontSize: 13),
-                              ),
+                    }
+                  },
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.all(8.0),
+                  ),
+                  items:
+                      PgsStatus.values.map((value) {
+                        return DropdownMenuItem<PgsStatus>(
+                          value: value,
+                          child: Tooltip(
+                            message: statusDescriptions[value] ?? value.name,
+                            child: Text(
+                              value.name,
+                              style: const TextStyle(fontSize: 13),
                             ),
-                          );
-                        }).toList(),
-                  );
-                },
-              ),
+                          ),
+                        );
+                      }).toList(),
+                );
+              },
             ),
           ),
+
+          // PROGRESS CIRCLE
           Expanded(
             flex: 2,
             child: ValueListenableBuilder<PgsStatus>(
@@ -251,7 +185,6 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                       progressFraction = progress / 100.0;
                       progressColor = Colors.orange;
                     }
-
                     return Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -334,6 +267,8 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
               },
             ),
           ),
+
+          // REMARKS
           Expanded(
             flex: 3,
             child: ConstrainedBox(
@@ -361,7 +296,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 6),
               child:
-                  row.attachmentPath != null ||
+                  widget.row.attachmentPath != null ||
                           webImage != null ||
                           mobileImage != null
                       ? Row(
@@ -379,17 +314,19 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
 
                                 final fileNameToUse =
                                     fileName ??
-                                    row.attachmentPath?.split("/").last ??
+                                    widget.row.attachmentPath
+                                        ?.split("/")
+                                        .last ??
                                     "download.bin";
 
                                 if (kIsWeb) {
                                   Uint8List? bytes;
-
                                   if (webImage != null) {
                                     bytes = webImage!;
-                                  } else if (row.accomplishmentId != null) {
+                                  } else if (widget.row.accomplishmentId !=
+                                      null) {
                                     final downloadUrl =
-                                        "${ApiEndpoint.baseUrl}/${row.accomplishmentId}/download";
+                                        "${ApiEndpoint.baseUrl}/${widget.row.accomplishmentId}/download";
                                     final response = await dio.get<List<int>>(
                                       downloadUrl,
                                       options: Options(
@@ -417,12 +354,12 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                                   }
                                 } else {
                                   File? fileToOpen;
-
                                   if (mobileImage != null) {
                                     fileToOpen = File(mobileImage!.path);
-                                  } else if (row.accomplishmentId != null) {
+                                  } else if (widget.row.accomplishmentId !=
+                                      null) {
                                     final downloadUrl =
-                                        "${ApiEndpoint.baseUrl}/${row.accomplishmentId}/download";
+                                        "${ApiEndpoint.baseUrl}/${widget.row.accomplishmentId}/download";
                                     final tempDir = Directory.systemTemp;
                                     final tempFile = File(
                                       '${tempDir.path}/$fileNameToUse',
@@ -450,7 +387,9 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                               },
                               child: Text(
                                 fileName ??
-                                    row.attachmentPath?.split("/").last ??
+                                    widget.row.attachmentPath
+                                        ?.split("/")
+                                        .last ??
                                     "Attachment",
                                 style: const TextStyle(
                                   color: Colors.blue,
@@ -466,8 +405,8 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                                 if (kIsWeb) webImage = null;
                                 if (!kIsWeb) mobileImage = null;
                                 fileName = null;
-                                row.attachmentPath = null;
-                                row.attachmentBytes = null;
+                                widget.row.attachmentPath = null;
+                                widget.row.attachmentBytes = null;
                               });
                             },
                             tooltip: "Delete",
@@ -490,33 +429,63 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   }
 }
 
-Future<void> loadAccomplishments(int deliverableId) async {
-  final accomplishments = await _accomplishmentService.fetchAccomplishments(
-    deliverableId,
-  );
+class AccomplishmentListView extends StatefulWidget {
+  final int index;
+  final int deliverableId;
+  final List<DateTime> startAndEndDates;
 
-  achievementsList[deliverableId] = AchievementPeriodData(
-    rows:
-        accomplishments.map((acc) {
-          final percent = acc.percentAccomplished ?? 0;
-          return TrackingRowData(
-            remarksController: TextEditingController(text: acc.remarks),
-            percentageController: TextEditingController(
-              text: percent.toString(),
-            ),
-            status: ValueNotifier<PgsStatus>(_deriveStatusFromPercent(percent)),
-            attachmentPath: acc.attachmentPath,
-            attachmentBytes: null,
-            accomplishmentId: acc.id,
-          );
-        }).toList(),
-  );
+  const AccomplishmentListView({
+    super.key,
+    required this.index,
+    required this.startAndEndDates,
+    required this.deliverableId,
+  });
+
+  @override
+  State<AccomplishmentListView> createState() => _AccomplishmentListViewState();
 }
 
-PgsStatus _deriveStatusFromPercent(int percent) {
-  if (percent >= 100) return PgsStatus.completed;
-  if (percent > 0) return PgsStatus.onGoing;
-  return PgsStatus.notStarted;
+class _AccomplishmentListViewState extends State<AccomplishmentListView> {
+  @override
+  void initState() {
+    super.initState();
+    loadAccomplishments(widget.deliverableId).then((_) {
+      setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    achievementsList.putIfAbsent(
+      widget.deliverableId,
+      () => AchievementPeriodData(rows: []),
+    );
+
+    while (achievementsList[widget.deliverableId]!.rows.length <
+        widget.startAndEndDates.length) {
+      achievementsList[widget.deliverableId]!.rows.add(
+        TrackingRowData(
+          remarksController: TextEditingController(),
+          percentageController: TextEditingController(text: '0'),
+          status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
+        ),
+      );
+    }
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: widget.startAndEndDates.length,
+      itemBuilder: (context, i) {
+        final row = achievementsList[widget.deliverableId]!.rows[i];
+        return Column(
+          children: [
+            AccomplishmentRowWidget(date: widget.startAndEndDates[i], row: row),
+            if (i != widget.startAndEndDates.length - 1)
+              const Divider(height: 1),
+          ],
+        );
+      },
+    );
+  }
 }
 
 Future<void> saveAccomplishmentData(
@@ -524,49 +493,80 @@ Future<void> saveAccomplishmentData(
   String userId,
 ) async {
   final periodData = achievementsList[currentDeliverableId];
-  if (periodData != null) {
-    for (var row in periodData.rows) {
-      File? file =
-          (!kIsWeb && row.attachmentPath != null)
-              ? File(row.attachmentPath!)
-              : null;
-      Uint8List? bytes = row.attachmentBytes;
-      final data = {
-        if (row.accomplishmentId != null) "id": row.accomplishmentId,
-        "pgsDeliverableId": currentDeliverableId,
-        "postingDate": DateTime.now().toIso8601String(),
-        "userId": userId,
-        "percentAccomplished":
-            double.tryParse(row.percentageController.text) ?? 0,
-        "remarks": row.remarksController.text,
-      };
-      final formData = FormData.fromMap({
-        ...data,
-        if (bytes != null)
-          "file": MultipartFile.fromBytes(
-            bytes,
-            filename: row.attachmentPath?.split("/").last ?? "upload.bin",
-          ),
-        if (file != null)
-          "file": await MultipartFile.fromFile(
-            file.path,
-            filename: row.attachmentPath?.split("/").last,
-          ),
-      });
 
+  if (periodData == null) return;
+
+  for (var row in periodData.rows) {
+    MultipartFile? attachment;
+    if (!kIsWeb && row.attachmentPath != null) {
+      attachment = await MultipartFile.fromFile(
+        row.attachmentPath!,
+        filename: row.attachmentPath!.split("/").last,
+      );
+    } else if (row.attachmentBytes != null) {
+      attachment = MultipartFile.fromBytes(
+        row.attachmentBytes!,
+        filename: row.attachmentPath?.split("/").last ?? "upload.bin",
+      );
+    }
+
+    final data = {
+      if (row.accomplishmentId != null) "id": row.accomplishmentId,
+      "pgsDeliverableId": currentDeliverableId,
+      "postingDate": DateTime.now().toIso8601String(),
+      "userId": userId,
+      "percentAccomplished":
+          double.tryParse(row.percentageController.text) ?? 0,
+      "remarks": row.remarksController.text,
+    };
+
+    final formData = FormData.fromMap({
+      ...data,
+      if (attachment != null) "file": attachment,
+    });
+
+    try {
       await _accomplishmentService.saveAccomplishment(formData);
+    } catch (e) {
+      debugPrint("Failed to save accomplishment: $e");
     }
   }
 }
 
-class AccomplishmentRowData {
-  final DateTime date;
-  PgsStatus status;
-  String remarks;
+Future<void> loadAccomplishments(int deliverableId) async {
+  try {
+    final accomplishments = await _accomplishmentService.fetchAccomplishments(
+      deliverableId,
+    );
 
-  AccomplishmentRowData({
-    required this.date,
-    this.status = PgsStatus.notStarted,
-    this.remarks = "",
-  });
+    achievementsList[deliverableId] = AchievementPeriodData(
+      rows:
+          accomplishments.map((acc) {
+            final percent = acc.percentAccomplished ?? 0;
+
+            return TrackingRowData(
+              remarksController: TextEditingController(text: acc.remarks),
+              percentageController: TextEditingController(
+                text: percent.toString(),
+              ),
+              status: ValueNotifier<PgsStatus>(
+                _deriveStatusFromPercent(percent),
+              ),
+              attachmentPath: acc.attachmentPath,
+              attachmentBytes: null,
+              accomplishmentId: acc.id,
+            );
+          }).toList(),
+    );
+  } catch (e) {
+    debugPrint(
+      "Failed to load accomplishments for deliverable $deliverableId: $e",
+    );
+  }
+}
+
+PgsStatus _deriveStatusFromPercent(int percent) {
+  if (percent >= 100) return PgsStatus.completed;
+  if (percent > 0) return PgsStatus.onGoing;
+  return PgsStatus.notStarted;
 }

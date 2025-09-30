@@ -1,6 +1,7 @@
-// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/utils/permission_string.dart';
+import 'package:imis/widgets/accomplishment_widget_modal.dart';
 import 'package:imis/widgets/build_header_cell.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
 import 'package:imis/widgets/pagination_controls.dart';
@@ -29,7 +30,6 @@ import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/http_util.dart';
-
 import '../enum/pgs_action_type.dart';
 import 'pgs_reports.dart';
 
@@ -2568,6 +2568,7 @@ class PerformanceGovernanceSystemPageState
                                             6: FlexColumnWidth(0.6),
                                             7: FlexColumnWidth(1.30),
                                             8: FlexColumnWidth(0.5),
+                                            9: FlexColumnWidth(1),
                                           },
                                           children: [_pgsBuildTableSubheader()],
                                         ),
@@ -2593,6 +2594,7 @@ class PerformanceGovernanceSystemPageState
                                                 6: FlexColumnWidth(0.6),
                                                 7: FlexColumnWidth(1.30),
                                                 8: FlexColumnWidth(0.5),
+                                                9: FlexColumnWidth(1),
                                               },
                                               children: [
                                                 ...rows.map(
@@ -3562,6 +3564,7 @@ class PerformanceGovernanceSystemPageState
         _buildSizedHeaderCell('STATUS', width: 100),
         _buildSizedHeaderCell('REMARKS', width: 120),
         _buildSizedHeaderCell('SCORE', width: 100),
+        _buildSizedHeaderCell('ACTION', width: 100),
         // _buildSizedHeaderCell('ACTION', width: 100),
       ],
     );
@@ -3650,36 +3653,356 @@ class PerformanceGovernanceSystemPageState
         _buildDropdownCellStatusPgsDeliverableStatus(index, () => (index)),
         _buildExpandableTextAreaRemarksCell(index),
         _buildExpandableTextAreaPercentageCell(index),
+        _buildCreateAccomplishmentCell(index, int.parse(id!)),
         // _buildCreateAccomplishmentCell(index),
       ],
     );
   }
 
-  Widget _buildCreateAccomplishmentCell(
-    int index,
-    // PerformanceGovernanceSystem pgs,
-  ) {
+  Widget _buildCreateAccomplishmentCell(int index, int deliverableId) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: SizedBox(
-        height: 45, // taller height
-        child: ElevatedButton(
+        height: 30,
+        child: ElevatedButton.icon(
           style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(4),
+              side: const BorderSide(color: Colors.black, width: 1),
             ),
             padding: const EdgeInsets.symmetric(horizontal: 8.0),
             textStyle: const TextStyle(fontSize: 13),
             minimumSize: Size.zero,
+          ).copyWith(
+            overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(MaterialState.hovered)) {
+                return const Color.fromARGB(255, 221, 221, 221);
+              }
+              if (states.contains(MaterialState.pressed)) {
+                return const Color.fromARGB(255, 221, 221, 221);
+              }
+              return null; // default
+            }),
           ),
-          onPressed: () => {},
-          child: const Text(
-            'Create Accomplishment',
-            style: TextStyle(color: Colors.white),
+
+          onPressed: () async {
+            await loadAccomplishments(deliverableId);
+            _showAccomplishmentDialog(index);
+          },
+          icon: const Icon(
+            Icons.bar_chart_outlined,
+            size: 14,
+            color: primaryTextColor,
+          ),
+          label: const Text(
+            'Accomplishment',
+            style: TextStyle(color: primaryTextColor, fontSize: 10),
           ),
         ),
       ),
+    );
+  }
+
+  List<DateTime> getPeriodMonths(dynamic period) {
+    final startDate = DateTime.parse(period['startDate']);
+    final endDate = DateTime.parse(period['endDate']);
+
+    List<DateTime> months = [];
+    DateTime currentDate = DateTime(startDate.year, startDate.month);
+
+    while (currentDate.isBefore(endDate) ||
+        currentDate.isAtSameMomentAs(DateTime(endDate.year, endDate.month))) {
+      months.add(currentDate);
+      currentDate = DateTime(currentDate.year, currentDate.month + 1);
+    }
+
+    return months;
+  }
+
+  void _showAccomplishmentDialog(int index) async {
+    final selectedPeriodData = filteredListPeriod.firstWhere(
+      (p) => p['id'] == selectedPeriod,
+    );
+    final startAndEndDates = getPeriodMonths(selectedPeriodData);
+    final int? kraId = selectedKRA[index];
+    final String kraName =
+        options.firstWhere(
+          (o) => o['id'] == kraId,
+          orElse:
+              () => {
+                'id': 1,
+                'name': 'Unknown',
+                'remarks': '',
+                'isDeleted': false,
+                'rowVersion': '',
+              },
+        )['name'];
+    final int deliverableId = deliverableIds[index] ?? 0;
+    final String deliverableName = deliverablesControllers[index]?.text ?? '';
+    final bool isDirect = selectedDirect[index] ?? false;
+    final String byWhen = selectedByWhen[index] ?? '';
+    final String officeName = officeDisplay;
+
+    final startDate = DateTime.parse(selectedPeriodData['startDate']);
+    final endDate = DateTime.parse(selectedPeriodData['endDate']);
+    final formattedStart = DateFormat.yMMMMd().format(startDate);
+    final formattedEnd = DateFormat.yMMMMd().format(endDate);
+
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: mainBgColor,
+          insetPadding: const EdgeInsets.all(20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Scrollable content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Accomplishment Form - $formattedStart to $formattedEnd",
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Info section
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text("Office: $officeName"),
+                                    Text(
+                                      "Monthly Tracking Periods: ${startAndEndDates.length} month(s)",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text("KRA: $kraName"),
+                                    Text("Due: $byWhen"),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Text("Deliverable: $deliverableName"),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Type: ${isDirect ? 'Direct' : 'Indirect'}",
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          // Section title
+                          const Row(
+                            children: [
+                              Icon(Icons.bar_chart_outlined, size: 18),
+                              SizedBox(width: 8),
+                              Text(
+                                "Monthly Accomplishment Tracking",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Dynamic table
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              children: [
+                                // Table headers
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(8),
+                                      topRight: Radius.circular(8),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Period",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Status",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Percent Accomplishment",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Center(
+                                          child: Text(
+                                            "Remarks",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Attach Proof File",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                // Table rows
+                                Column(
+                                  children: [
+                                    const Divider(height: 1),
+                                    AccomplishmentListView(
+                                      index: index,
+                                      startAndEndDates: startAndEndDates,
+                                      deliverableId: deliverableId,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(color: primaryColor),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final shouldSave = await showDialog<bool>(
+                            context: context,
+                            builder:
+                                (ctx) => AlertDialog(
+                                  title: const Text("Confirm Save"),
+                                  content: const Text(
+                                    "Are you sure you want to save this data?",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(ctx).pop(false),
+                                      child: Text(
+                                        "No",
+                                        style: TextStyle(color: primaryColor),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(ctx).pop(true),
+                                      child: Text(
+                                        "Yes",
+                                        style: TextStyle(color: primaryColor),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                          );
+                          if (shouldSave != true) return;
+                          await saveAccomplishmentData(deliverableId, userId);
+                          Navigator.of(context).pop(true);
+                        },
+                        child: const Text(
+                          "Save Accomplishment",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

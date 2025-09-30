@@ -637,12 +637,7 @@ class UserProfileState extends State<UserProfilePage> {
                                 selectedPosition = value;
                               });
                             },
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please select a position';
-                              }
-                              return null;
-                            },
+
                             dropdownDecoratorProps: DropDownDecoratorProps(
                               dropdownSearchDecoration: InputDecoration(
                                 labelText: 'Position',

@@ -1940,7 +1940,7 @@ Future<bool?> showAccomplishmentFormDialog(
                                       flex: 2,
                                       child: Center(
                                         child: Text(
-                                          "Upload Proof Photo",
+                                          "Attach Proof File",
                                           style: TextStyle(color: grey),
                                         ),
                                       ),
@@ -2036,7 +2036,7 @@ Future<bool?> showAccomplishmentFormDialog(
                           Navigator.of(context).pop(true);
                         },
                         child: Text(
-                          "Save Accomplishments",
+                          "Save Accomplishment",
                           style: TextStyle(color: Colors.white),
                         ),
                       ),
