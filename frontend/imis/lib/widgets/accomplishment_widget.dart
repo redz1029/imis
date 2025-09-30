@@ -477,7 +477,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                       )
                       : IconButton(
                         icon: const Icon(
-                          Icons.image_outlined,
+                          Icons.attach_file_outlined,
                           color: Colors.blue,
                         ),
                         onPressed: pickFile,

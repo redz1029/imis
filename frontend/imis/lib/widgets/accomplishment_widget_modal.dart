@@ -416,7 +416,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                       )
                       : IconButton(
                         icon: const Icon(
-                          Icons.image_outlined,
+                          Icons.attach_file_outlined,
                           color: Colors.blue,
                         ),
                         onPressed: pickFile,
