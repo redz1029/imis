@@ -140,7 +140,31 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             .WithTags(_pgsDeliverableAccomplishmentTag)
             .DisableAntiforgery()
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.Edit));
-            
+
+            app.MapGet("/{id:long}/download", async (long id, IPgsDeliverableAcomplishmentService service, CancellationToken token) =>
+            {
+                var accomplishment = await service.GetByIdAsync(id, token);
+                if (accomplishment == null || string.IsNullOrWhiteSpace(accomplishment.AttachmentPath))
+                    return Results.NotFound("File not found.");
+
+                var fileName = Path.GetFileName(accomplishment.AttachmentPath);
+
+                byte[] fileBytes;
+                try
+                {
+                    fileBytes = await FTPHelper.DownloadAsync(_ftpBasePath, fileName, token).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    return Results.NotFound(ex.Message);
+                }
+
+                var contentType = FTPHelper.GetContentType(fileName);
+                return Results.File(fileBytes, contentType, fileName);
+            })
+           .WithTags(_pgsDeliverableAccomplishmentTag);
+
+
             app.MapGet("/page", async (int page, int pageSize, IPgsDeliverableAcomplishmentService service, CancellationToken cancellationToken) =>
             {
                 var paginatedAccomplishment = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
