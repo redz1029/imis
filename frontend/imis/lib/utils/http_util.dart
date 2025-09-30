@@ -83,6 +83,7 @@ class AuthenticatedRequest {
     CancelToken? cancelToken,
     ProgressCallback? onSendProgress,
     ProgressCallback? onReceiveProgress,
+    String contentType = Headers.jsonContentType,
   }) async {
     try {
       final loggedUser = await AuthUtil.processTokenValidity(dio, context);
@@ -92,7 +93,7 @@ class AuthenticatedRequest {
         options: Options(
           headers: {
             "Authorization": "Bearer ${loggedUser!.accessToken}",
-            Headers.contentTypeHeader: 'application/json',
+            Headers.contentTypeHeader: contentType,
           },
         ),
         data: data,

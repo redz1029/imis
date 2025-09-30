@@ -4,6 +4,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/navigation_utils.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await ApiEndpoint.setBaseUrl();
   runApp(const MainApp());
 }
