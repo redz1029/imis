@@ -1071,10 +1071,10 @@ class PgsReportPageState extends State<PgsReportPage> {
                             // 7: FlexColumnWidth(2),
                             // 8: FlexColumnWidth(3),
                             // 9: FlexColumnWidth(2),
+                            // 7: FlexColumnWidth(2),
+                            // 8: FlexColumnWidth(2),
+                            // 9: FlexColumnWidth(2),
                             7: FlexColumnWidth(2),
-                            8: FlexColumnWidth(2),
-                            9: FlexColumnWidth(2),
-                            10: FlexColumnWidth(2.5),
                           },
                           children: [
                             TableRow(
@@ -1086,9 +1086,9 @@ class PgsReportPageState extends State<PgsReportPage> {
                                 _buildTableHeaderCell('DIRECT'),
                                 _buildTableHeaderCell('DELIVERABLES'),
                                 _buildTableHeaderCell('BY WHEN'),
-                                _buildTableHeaderCell('STATUS'),
-                                _buildTableHeaderCell('REMARKS'),
-                                _buildTableHeaderCell('SCORE'),
+                                // _buildTableHeaderCell('STATUS'),
+                                // _buildTableHeaderCell('REMARKS'),
+                                // _buildTableHeaderCell('SCORE'),
                                 _buildTableHeaderCell('ACTIONS'),
                               ],
                             ),
@@ -1128,10 +1128,10 @@ class PgsReportPageState extends State<PgsReportPage> {
                                   // 7: FlexColumnWidth(2),
                                   // 8: FlexColumnWidth(3),
                                   // 9: FlexColumnWidth(2),
+                                  // 7: FlexColumnWidth(2),
+                                  // 8: FlexColumnWidth(2),
+                                  // 9: FlexColumnWidth(2),
                                   7: FlexColumnWidth(2),
-                                  8: FlexColumnWidth(2),
-                                  9: FlexColumnWidth(2),
-                                  10: FlexColumnWidth(2.5),
                                 },
                                 children: [
                                   ...deliverableList.asMap().entries.map((
@@ -1164,9 +1164,9 @@ class PgsReportPageState extends State<PgsReportPage> {
                                           deliverable['byWhen'] ?? '',
                                         ),
 
-                                        _buildStatusCell(index, () => (index)),
-                                        _buildRemarkCell(index),
-                                        _buildScoringCell(index),
+                                        // _buildStatusCell(index, () => (index)),
+                                        // _buildRemarkCell(index),
+                                        // _buildScoringCell(index),
                                         _buildCreateAccomplishmentCell(
                                           index,
                                           () {},

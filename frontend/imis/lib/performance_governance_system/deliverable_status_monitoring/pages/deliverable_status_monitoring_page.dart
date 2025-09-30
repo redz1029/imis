@@ -1281,10 +1281,10 @@ class DeliverableStatusMonitoringPageState
                             5: FlexColumnWidth(4),
                             6: FlexColumnWidth(2),
                             // 7: FlexColumnWidth(7),
+                            // 7: FlexColumnWidth(2),
+                            // 8: FlexColumnWidth(2),
+                            // 9: FlexColumnWidth(2),
                             7: FlexColumnWidth(2),
-                            8: FlexColumnWidth(2),
-                            9: FlexColumnWidth(2),
-                            10: FlexColumnWidth(2.5),
                           },
                           children: [
                             TableRow(
@@ -1296,9 +1296,9 @@ class DeliverableStatusMonitoringPageState
                                 _buildTableHeaderCell('DIRECT'),
                                 _buildTableHeaderCell('DELIVERABLES'),
                                 _buildTableHeaderCell('BY WHEN'),
-                                _buildTableHeaderCell('STATUS'),
-                                _buildTableHeaderCell('REMARKS'),
-                                _buildTableHeaderCell('SCORE'),
+                                // _buildTableHeaderCell('STATUS'),
+                                // _buildTableHeaderCell('REMARKS'),
+                                // _buildTableHeaderCell('SCORE'),
                                 _buildTableHeaderCell('ACTIONS'),
                               ],
                             ),
@@ -1334,13 +1334,11 @@ class DeliverableStatusMonitoringPageState
                                   4: FlexColumnWidth(1.5),
                                   5: FlexColumnWidth(4),
                                   6: FlexColumnWidth(2),
+
                                   // 7: FlexColumnWidth(2),
                                   // 7: FlexColumnWidth(2),
                                   // 9: FlexColumnWidth(2),
                                   7: FlexColumnWidth(2),
-                                  8: FlexColumnWidth(2),
-                                  9: FlexColumnWidth(2),
-                                  10: FlexColumnWidth(2.5),
                                 },
 
                                 children: [
@@ -1373,9 +1371,9 @@ class DeliverableStatusMonitoringPageState
                                         _buildTableCell(
                                           deliverable['byWhen'] ?? '',
                                         ),
-                                        _buildStatusCell(index, () => (index)),
-                                        _buildRemarkCell(index),
-                                        _buildScoringCell(index),
+                                        // _buildStatusCell(index, () => (index)),
+                                        // _buildRemarkCell(index),
+                                        // _buildScoringCell(index),
                                         _buildCreateAccomplishmentCell(
                                           index,
                                           () {},
