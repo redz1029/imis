@@ -695,8 +695,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                       Icons.insert_drive_file_outlined,
                       (selectedRole == PermissionString.roleAdmin ||
                               selectedRole == PermissionString.serviceHead ||
-                              selectedRole == PermissionString.osm ||
-                              selectedRole == PermissionString.mcc)
+                              selectedRole == PermissionString.osm)
                           ? 'Create/View PGS Deliverables'
                           : selectedRole == PermissionString.roleStandardUser
                           ? 'Create PGS Deliverables'

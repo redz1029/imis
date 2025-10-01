@@ -2638,118 +2638,145 @@ class PerformanceGovernanceSystemPageState
                     (id == null && orderLevel >= 1) ||
                     isAnyDisapproved ||
                     (signatories == null || signatories.isEmpty))
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      shadowColor: Colors.transparent,
-                      elevation: 0,
-                      backgroundColor: secondaryBgButton,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionString.roleAdmin,
+                      PermissionString.roleStandardUser,
+                      PermissionString.serviceHead,
+                      PermissionString.osm,
+                    ],
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        shadowColor: Colors.transparent,
+                        elevation: 0,
+                        backgroundColor: secondaryBgButton,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                    ),
-                    onPressed: () {
-                      setDialogState(() {
-                        rowErrors.clear();
-                        for (final index in rows) {
-                          final isDirectSelected =
-                              selectedDirect[index] ?? false;
-                          final isIndirectSelected =
-                              selectedIndirect[index] ?? false;
+                      onPressed: () {
+                        setDialogState(() {
+                          rowErrors.clear();
+                          for (final index in rows) {
+                            final isDirectSelected =
+                                selectedDirect[index] ?? false;
+                            final isIndirectSelected =
+                                selectedIndirect[index] ?? false;
 
-                          rowErrors[index] =
-                              !(isDirectSelected || isIndirectSelected);
-                        }
-                      });
+                            rowErrors[index] =
+                                !(isDirectSelected || isIndirectSelected);
+                          }
+                        });
 
-                      final hasRowErrors = rowErrors.values.any(
-                        (error) => error == true,
-                      );
-
-                      if (_formKey.currentState!.validate() && !hasRowErrors) {
-                        handlePgsAction(
-                          context,
-                          id,
-                          orderLevel,
-                          actionType: ActionType.draft,
+                        final hasRowErrors = rowErrors.values.any(
+                          (error) => error == true,
                         );
-                      }
-                    },
-                    child: Text(
-                      'Save as Draft',
-                      style: TextStyle(color: primaryColor),
+
+                        if (_formKey.currentState!.validate() &&
+                            !hasRowErrors) {
+                          handlePgsAction(
+                            context,
+                            id,
+                            orderLevel,
+                            actionType: ActionType.draft,
+                          );
+                        }
+                      },
+                      child: Text(
+                        'Save as Draft',
+                        style: TextStyle(color: primaryColor),
+                      ),
                     ),
                   ),
 
                 if ((isAnyDisapproved || id != null) &&
                     (signatories == null || signatories.isEmpty))
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionString.roleAdmin,
+                      PermissionString.roleStandardUser,
+                      PermissionString.serviceHead,
+                      PermissionString.osm,
+                    ],
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
-                    ),
 
-                    onPressed: () {
-                      setDialogState(() {
-                        rowErrors.clear();
-                        for (final index in rows) {
-                          final isDirectSelected =
-                              selectedDirect[index] ?? false;
-                          final isIndirectSelected =
-                              selectedIndirect[index] ?? false;
+                      onPressed: () {
+                        setDialogState(() {
+                          rowErrors.clear();
+                          for (final index in rows) {
+                            final isDirectSelected =
+                                selectedDirect[index] ?? false;
+                            final isIndirectSelected =
+                                selectedIndirect[index] ?? false;
 
-                          rowErrors[index] =
-                              !(isDirectSelected || isIndirectSelected);
-                        }
-                      });
-                      final hasRowErrors = rowErrors.values.any(
-                        (error) => error == true,
-                      );
-
-                      if (_formKey.currentState!.validate() && !hasRowErrors) {
-                        if (deliverablesControllers.length < 5) {
-                          MotionToast.warning(
-                            title: const Text("Insufficient Deliverables"),
-                            description: const Text(
-                              "Please provide at least 5 deliverables.",
-                            ),
-                            toastAlignment: Alignment.center,
-                          ).show(context);
-                          return;
-                        }
-
-                        handlePgsAction(
-                          context,
-                          id,
-                          orderLevel,
-                          actionType: ActionType.submit,
+                            rowErrors[index] =
+                                !(isDirectSelected || isIndirectSelected);
+                          }
+                        });
+                        final hasRowErrors = rowErrors.values.any(
+                          (error) => error == true,
                         );
-                      }
-                    },
-                    child: Text(
-                      'Submit',
-                      style: TextStyle(color: Colors.white),
+
+                        if (_formKey.currentState!.validate() &&
+                            !hasRowErrors) {
+                          if (deliverablesControllers.length < 5) {
+                            MotionToast.warning(
+                              title: const Text("Insufficient Deliverables"),
+                              description: const Text(
+                                "Please provide at least 5 deliverables.",
+                              ),
+                              toastAlignment: Alignment.center,
+                            ).show(context);
+                            return;
+                          }
+
+                          handlePgsAction(
+                            context,
+                            id,
+                            orderLevel,
+                            actionType: ActionType.submit,
+                          );
+                        }
+                      },
+                      child: Text(
+                        'Submit',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
                 if (id != null && orderLevel >= 1)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    onPressed:
-                        () => handlePgsAction(
-                          context,
-                          id,
-                          orderLevel,
-                          actionType: ActionType.approve,
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionString.roleAdmin,
+                      PermissionString.coreTeam,
+                      PermissionString.serviceHead,
+                      PermissionString.mcc,
+                      PermissionString.osm,
+                    ],
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
                         ),
-                    child: Text(
-                      'Confirm',
-                      style: TextStyle(color: Colors.white),
+                      ),
+                      onPressed:
+                          () => handlePgsAction(
+                            context,
+                            id,
+                            orderLevel,
+                            actionType: ActionType.approve,
+                          ),
+                      child: Text(
+                        'Confirm',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
                   ),
               ],
@@ -4002,7 +4029,12 @@ class PerformanceGovernanceSystemPageState
                                 ),
                           );
                           if (shouldSave != true) return;
+
                           await saveAccomplishmentData(deliverableId, userId);
+                          MotionToast.success(
+                            description: Text('Save Successfully'),
+                            toastAlignment: Alignment.topCenter,
+                          ).show(context);
                           Navigator.of(context).pop(true);
                         },
                         child: const Text(

@@ -29,9 +29,10 @@ class DynamicSideColumn1 extends StatelessWidget {
       children: [
         Card(
           color: const Color(0xFFeeeeee),
-          elevation: 4,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
+            side: BorderSide(color: Colors.grey.shade300, width: 1),
           ),
           child: Padding(
             padding: const EdgeInsets.all(10.0),
@@ -84,9 +85,10 @@ class DynamicSideColumn1 extends StatelessWidget {
         const SizedBox(height: 20),
         Card(
           color: const Color(0xFFeeeeee),
-          elevation: 4,
+          elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
+            side: BorderSide(color: Colors.grey.shade300, width: 1),
           ),
           child: Padding(
             padding: const EdgeInsets.all(10.0),
