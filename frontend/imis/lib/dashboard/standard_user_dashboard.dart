@@ -58,7 +58,12 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
 
     if (user != null) {
       setState(() {
-        firstName = user.firstName ?? "firstName";
+        final rawName = (user.firstName ?? "firstName").trim();
+
+        firstName = rawName.toLowerCase().replaceFirstMapped(
+          RegExp(r'^[a-z]'),
+          (m) => m.group(0)!.toUpperCase(),
+        );
       });
     }
   }
@@ -200,13 +205,14 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "${_getGreeting()}, ${firstName.split(' ')[0]}",
+                    "${_getGreeting()}, ${firstName.trim().split(' ')[0].toLowerCase().replaceFirstMapped(RegExp(r'^[a-z]'), (m) => m.group(0)!.toUpperCase())}",
                     style: const TextStyle(
-                      color: Colors.white,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
                   ),
+
                   gap8px,
                   Text(
                     "Welcome to CPeMS - CRMC Performance Management System! Together, we track progress and build a culture of accountability and continuous improvement.",

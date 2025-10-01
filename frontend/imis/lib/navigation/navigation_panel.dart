@@ -1050,7 +1050,18 @@ class NavigationPanelState extends State<NavigationPanel> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.end,
                                           children: [
-                                            Text(firstName.split(' ')[0]),
+                                            Text(
+                                              firstName
+                                                  .split(' ')[0]
+                                                  .toLowerCase()
+                                                  .replaceFirstMapped(
+                                                    RegExp(r'^[a-z]'),
+                                                    (m) =>
+                                                        m
+                                                            .group(0)!
+                                                            .toUpperCase(),
+                                                  ),
+                                            ),
                                           ],
                                         ),
                                         Text(
