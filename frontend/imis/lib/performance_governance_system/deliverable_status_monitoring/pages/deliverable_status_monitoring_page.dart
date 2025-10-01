@@ -1436,6 +1436,17 @@ class DeliverableStatusMonitoringPageState
                                           ),
                                         ).show(context);
                                         return;
+                                      } else if (deliverableList.isEmpty) {
+                                        MotionToast.info(
+                                          description: const Text(
+                                            "No deliverables selected for this period.",
+                                          ),
+                                          toastAlignment: Alignment.topCenter,
+                                          toastDuration: const Duration(
+                                            seconds: 4,
+                                          ),
+                                        ).show(context);
+                                        return;
                                       }
 
                                       Navigator.of(context).pushAndRemoveUntil(
