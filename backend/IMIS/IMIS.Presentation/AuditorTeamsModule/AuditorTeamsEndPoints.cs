@@ -54,7 +54,7 @@ namespace IMIS.Presentation.AuditorTeamsModule
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
            .RequireAuthorization(e => e.RequireClaim(
             PermissionClaimType.Claim, _auditorTeamPermission.View));
-
+            
             app.MapGet("/page", async (int page, int pageSize, IAuditorTeamsService service, CancellationToken cancellationToken) =>
             {
                 var auditorTeamsDto = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
