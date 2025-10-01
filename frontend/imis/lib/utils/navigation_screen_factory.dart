@@ -25,41 +25,42 @@ class NavigationScreenFactory {
     switch (index) {
       case 0:
         return HomePage();
-      case 2:
+
+      case 1:
         return PerformanceGovernanceSystemPage(key: roleKey);
-      case 4:
+      case 2:
         return AuditSchedulesPage(key: roleKey);
-      case 5:
+      case 3:
         return AuditorPage(key: roleKey);
-      case 6:
+      case 4:
         return AuditorTeamPage(key: roleKey);
-      case 7:
+      case 5:
         return KeyResultAreaPage(key: roleKey);
-      case 8:
+      case 6:
         return OfficePage(key: roleKey);
-      case 9:
+      case 7:
         return PgsSignatoryTemplatePage(key: roleKey);
-      case 10:
+      case 8:
         return PgsPeriodPage(key: roleKey);
-      case 12:
+      case 9:
         return RolesPage(key: roleKey);
-      case 13:
+      case 10:
         return TeamPage(key: roleKey);
-      case 14:
+      case 11:
         return UserProfilePage(key: roleKey);
-      case 15:
+      case 12:
         return UserOfficePage(key: roleKey);
-      case 16:
+      case 13:
         return UserRolePage(key: roleKey);
-      case 18:
+      case 14:
         return ManageSummaryNarrativeReportPage(key: roleKey);
-      case 19:
+      case 15:
         return ViewSummaryNarrativeReportPage(key: roleKey);
-      case 20:
+      case 16:
         return CreateSummaryNarrativeReportPage(key: roleKey, periodId: 0);
-      case 21:
+      case 17:
         return DeliverableStatusMonitoringPage(key: roleKey);
-      case 22:
+      case 18:
         return Container(key: roleKey);
       default:
         return HomePage();

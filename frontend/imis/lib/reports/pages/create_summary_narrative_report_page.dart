@@ -99,7 +99,7 @@ class CreateSummaryNarrativeReportPageState
                             MaterialPageRoute(
                               builder:
                                   (context) => const NavigationPanel(
-                                    initialScreenIndex: 21,
+                                    initialScreenIndex: 17,
                                   ),
                             ),
                             (route) => false,
@@ -200,7 +200,7 @@ class CreateSummaryNarrativeReportPageState
                           MaterialPageRoute(
                             builder:
                                 (context) => const NavigationPanel(
-                                  initialScreenIndex: 21,
+                                  initialScreenIndex: 17,
                                 ),
                           ),
                           (route) => false,
