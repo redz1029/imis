@@ -1,8 +1,8 @@
 class PermissionString {
   static const String roleAdmin = 'Administrator';
   static const String roleStandardUser = 'Standard User';
-  static const String pgsAuditor = 'PGS Auditor';
-  static const String pgsHead = 'PGS Auditor';
+  static const String pgsAuditor = 'Auditor';
+  static const String pgsHead = 'PGS Head';
   static const String serviceHead = 'Service Head';
   static const String mcc = 'MCC';
   static const String osm = 'OSM';
