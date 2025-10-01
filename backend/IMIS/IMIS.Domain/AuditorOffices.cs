@@ -8,7 +8,7 @@ namespace IMIS.Domain
         public Auditor? Auditor { get; set; }
         public int OfficeId { get; set; }
         public Office? Office { get; set; }
-        public int PgsPeriodId { get; set; }
+        public int? PgsPeriodId { get; set; }
         public PgsPeriod? PgsPeriod { get; set; }
         public bool IsOfficeHead { get; set; }
     }
