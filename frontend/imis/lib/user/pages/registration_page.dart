@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/user/pages/login_page.dart';
@@ -543,32 +544,49 @@ class RegistrationPageState extends State<RegistrationPage> {
                 ),
               ),
               gap16px,
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Position',
-                  labelStyle: TextStyle(color: grey, fontSize: 14),
-                  border: const OutlineInputBorder(),
-                  focusedBorder: const OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
+              SizedBox(
+                width: 450,
+                child: DropdownSearch<String>(
+                  popupProps: PopupProps.menu(
+                    showSearchBox: true,
+                    searchFieldProps: TextFieldProps(
+                      decoration: InputDecoration(
+                        hintText: 'Search Position...',
+                        filled: true,
+                        fillColor: mainBgColor,
+                        prefixIcon: Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderSide: BorderSide(color: primaryColor),
+                        ),
+                      ),
+                    ),
                   ),
-                  floatingLabelStyle: const TextStyle(color: primaryColor),
+                  items: JobPositions.positions,
+                  selectedItem: selectedPosition,
+                  onChanged: (String? value) {
+                    setState(() {
+                      selectedPosition = value;
+                    });
+                  },
+
+                  dropdownDecoratorProps: DropDownDecoratorProps(
+                    dropdownSearchDecoration: InputDecoration(
+                      labelText: 'Position',
+                      filled: true,
+                      fillColor: mainBgColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                  ),
                 ),
-                value: selectedPosition,
-                onChanged: (String? newValue) {
-                  setState(() {
-                    selectedPosition = newValue;
-                  });
-                },
-                style: const TextStyle(fontSize: 12, color: Colors.black),
-                items:
-                    JobPositions.positions.map<DropdownMenuItem<String>>((
-                      String value,
-                    ) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value),
-                      );
-                    }).toList(),
               ),
             ],
             gap24px,
