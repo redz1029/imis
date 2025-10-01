@@ -39,7 +39,8 @@ namespace IMIS.Infrastructure.Auths
                 new KeyResultAreaPermission(),
                 new PgsPeriodPermission(),
                 new OfficePermission(),
-                new PgsDeliverableAccomplishmentPermission());
+                new PgsDeliverableAccomplishmentPermission(),
+                new PgsSummaryNarrativePermissions());
 
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new PgsDeliverableScoreHistoryPermission(),
@@ -49,13 +50,18 @@ namespace IMIS.Infrastructure.Auths
                 new OfficePermission(),
                 new PgsSummaryNarrativePermissions(),
                 new PgsDeliverableAccomplishmentPermission());
+        
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
                 new PgsDeliverableAuditorPermission(),
                 new PgsPeriodPermission(),                 
                 new PgsSignatoryTemplatePermission(),
-                new PgsSummaryNarrativePermissions());
+                new PgsSummaryNarrativePermissions(),
+                new PerformanceGovernanceSystemPermission(),              
+                new KeyResultAreaPermission(),                
+                new OfficePermission(),
+                new PgsDeliverableAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsServiceHead, IdentityRole>(_roleManager,
                 new PerformanceGovernanceSystemPermission(),
@@ -64,13 +70,18 @@ namespace IMIS.Infrastructure.Auths
                 new KeyResultAreaPermission(),
                 new PgsPeriodPermission(),
                 new OfficePermission(),
-                new PgsSummaryNarrativePermissions());
+                new PgsSummaryNarrativePermissions(),
+                new PgsDeliverableAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsHead, IdentityRole>(_roleManager, 
                 new PgsDeliverableAuditorPermission(),
                 new PgsDeliverableScoreHistoryPermission(),
                 new KeyResultAreaPermission(),
-                new PgsPeriodPermission());
+                new PgsPeriodPermission(),
+                new PerformanceGovernanceSystemPermission(),               
+                new OfficePermission(),
+                new PgsSummaryNarrativePermissions(),
+                new PgsDeliverableAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<MCC, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
