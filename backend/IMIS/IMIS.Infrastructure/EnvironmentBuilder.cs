@@ -59,6 +59,12 @@ namespace IMIS.Infrastructure
                 TokenUtils.SecretKey = vaultService.GetSecretValue(secretJwtCreds, _jwtSecret);
                 TokenUtils.ExpInMinutes = vaultService.GetSecretValue(secretJwtCreds, _jwtExpMinutes);
                 TokenUtils.ExpInDays = vaultService.GetSecretValue(secretJwtCreds, _jwtExpDays);
+
+                var secretFtpCreds = vaultService.GetSecret(mounthPath, "ftp_config");
+                FTPCredentials.FTPServerURL = vaultService.GetSecretValue(secretFtpCreds, _ftpServerUrl);
+                FTPCredentials.FTPRootFolderPath = vaultService.GetSecretValue(secretFtpCreds, _ftpRootFolderPath);
+                FTPCredentials.FTPServerUsername = vaultService.GetSecretValue(secretFtpCreds, _ftpServerUsername);
+                FTPCredentials.FTPServerPassword = vaultService.GetSecretValue(secretFtpCreds, _ftpServerPassword);
             }
         }
     }
