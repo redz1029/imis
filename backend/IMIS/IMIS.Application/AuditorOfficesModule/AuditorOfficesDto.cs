@@ -8,7 +8,7 @@ namespace IMIS.Application.AuditorOfficesModule
     {
         public int AuditorId { get; set; }       
         public int OfficeId { get; set; }      
-        public int PgsPeriodId { get; set; }      
+        public int? PgsPeriodId { get; set; }      
         public bool IsOfficeHead { get; set; }
         public AuditorOfficesDto() { }
         [SetsRequiredMembers]

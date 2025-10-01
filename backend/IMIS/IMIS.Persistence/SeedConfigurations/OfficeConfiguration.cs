@@ -182,7 +182,21 @@ namespace IMIS.Persistence.SeedConfigurations
                 new Office { Id = 161, Name = "Toxicology Unit", OfficeTypeId = 4, ParentOfficeId = 64, IsActive = true, IsDeleted = false },
                 new Office { Id = 162, Name = "New Born Screening", OfficeTypeId = 4, ParentOfficeId = 24, IsActive = true, IsDeleted = false },
                 new Office { Id = 163, Name = "Patient and Safety Unit", OfficeTypeId = 4, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
-                new Office { Id = 164, Name = "Credit and Collection Section", OfficeTypeId = 4, ParentOfficeId = 5, IsActive = true, IsDeleted = false }
+                new Office { Id = 164, Name = "Credit and Collection Section", OfficeTypeId = 4, ParentOfficeId = 5, IsActive = true, IsDeleted = false },
+                new Office { Id = 165, Name = "EFMD - Mechanical Works Section", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false },
+                new Office { Id = 166, Name = "Health Emergency Management Staff", OfficeTypeId = 2, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
+                new Office { Id = 167, Name = "Mechanical Works Department - Elevator Unit", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false },
+                new Office { Id = 168, Name = "Health Information Management Department - Out-Patient Department", OfficeTypeId = 2, ParentOfficeId = 7, IsActive = true, IsDeleted = false },
+                new Office { Id = 169, Name = "Pay Admitting Unit", OfficeTypeId = 2, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
+                new Office { Id = 170, Name = "Emergency Department - Medical/Nursing", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
+                new Office { Id = 171, Name = "Mechanical Works Section - Medical Oxygen Plant Unit", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false },
+                new Office { Id = 172, Name = "Physical Plant Section - Housekeeping Unit", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false },
+                new Office { Id = 173, Name = "Out-Patient Department - Medical/Nursing", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
+                new Office { Id = 174, Name = "Surgery Wing", OfficeTypeId = 2, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
+                new Office { Id = 175, Name = "Physical Plant - Laundry and Linen unit", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false },
+                new Office { Id = 176, Name = "Family and Community Medicine Department", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
+                new Office { Id = 177, Name = "Operating Room & Post-Anesthesia Care Unit", OfficeTypeId = 2, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
+                new Office { Id = 178, Name = "Material and Supply Management Department", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false }
             );
         }
     }
