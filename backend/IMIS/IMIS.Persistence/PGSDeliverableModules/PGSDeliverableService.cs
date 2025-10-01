@@ -139,7 +139,8 @@ namespace IMIS.Persistence.PGSModules
             var filtered = await _repository.GetFilteredAsync(filter, cancellationToken);
             
             if (!userRoles.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) || 
-                                    r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase)))
+                                    r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                                    r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase)))
             {
                 var userOfficeIds = await _repository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
 
