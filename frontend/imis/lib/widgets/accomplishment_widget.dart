@@ -105,7 +105,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                 achievementsList[widget.deliverableId]!.rows[widget
                     .periodIndex];
             row.attachmentPath = result.files.first.name;
-            row.attachmentBytes = bytes; // <-- store the bytes
+            row.attachmentBytes = bytes;
           });
         } else {
           File file = File(result.files.first.path!);

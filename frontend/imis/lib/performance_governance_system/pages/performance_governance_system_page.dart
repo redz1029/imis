@@ -3015,7 +3015,7 @@ class PerformanceGovernanceSystemPageState
             suffixIcon: Icon(Icons.calendar_today),
           ),
           onTap:
-              id != null && orderLevel >= 0
+              id != null && orderLevel >= 1
                   ? null
                   : () async {
                     DateTime? pickedDate = await showDatePicker(
