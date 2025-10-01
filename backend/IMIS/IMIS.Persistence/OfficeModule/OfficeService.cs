@@ -71,7 +71,7 @@ namespace IMIS.Persistence.OfficeModule
                 ? await currentUserService.GetCurrentUserAsync()
                 : null;
         }
-       
+        
         public async Task<List<OfficeDto>> GetOfficesForPgsAuditorAsync(CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
@@ -79,30 +79,31 @@ namespace IMIS.Persistence.OfficeModule
                 return new List<OfficeDto>();
 
             var userRoles = await _userManager.GetRolesAsync(currentUser);
-       
 
-            // Get all offices
-            var offices = await _repository.GetAllForPgsAuditorAsync(cancellationToken);
+            List<Office> offices;
 
-            // Only admins see all offices, others are filtered by AuditorOffices
-            if (!userRoles.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                                    r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase)))
-            {               
-                // Get auditor-assigned offices
-                var auditorOfficeIds = await _repository.GetAuditorOfficeIdsAsync(currentUser.Id, cancellationToken);
+            // Admins, Service Heads, Auditor Heads → see all offices
+            if (userRoles.Any(r =>
+                    r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                    r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                    r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                offices = await _repository.GetAllForPgsAuditorAsync(cancellationToken);
+            }
+            else
+            {
+                // Regular Auditor → only assigned offices
+                offices = await _repository.GetOfficesForAuditorAsync(currentUser.Id, cancellationToken);
 
-                if (auditorOfficeIds.Any())
+                if (offices == null || !offices.Any())
                 {
-                    offices = offices.Where(o => auditorOfficeIds.Contains(o.Id)).ToList();
-                }
-                else
-                {
-                    offices = new List<Office>();
+                    return new List<OfficeDto>(); // no assigned offices → return empty
                 }
             }
 
             return offices.Select(o => ConvOfficeToDTO(o)).ToList();
         }
+
 
 
         public async Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
