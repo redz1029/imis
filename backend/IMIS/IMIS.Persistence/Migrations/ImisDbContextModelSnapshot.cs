@@ -62,7 +62,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditTrails", (string)null);
+                    b.ToTable("AuditTrails");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
@@ -96,7 +96,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditSchedules", (string)null);
+                    b.ToTable("AuditSchedules");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
@@ -138,7 +138,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("AuditScheduleDetails", (string)null);
+                    b.ToTable("AuditScheduleDetails");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -153,7 +153,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("AuditableOffices", (string)null);
+                    b.ToTable("AuditableOffices");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Auditor", b =>
@@ -187,7 +187,681 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Auditors", (string)null);
+                    b.ToTable("Auditors");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 1",
+                            UserId = "399f5e43-93d8-4a28-b113-d23eccd2ea15"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 2",
+                            UserId = "e765e1f5-bc17-49b1-9c3f-8c5c2c18b420"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 3",
+                            UserId = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 4",
+                            UserId = "f8a17354-91b3-4c0e-9b71-d6af05f4e11e"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 5",
+                            UserId = "9b6d73e5-ff27-44bb-a9d0-f7c58b31c4a1"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 6",
+                            UserId = "a1f6d353-df11-4a17-b2be-49371b8c223d"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 7",
+                            UserId = "f2b28c8e-58cf-47b2-8245-33a7a98a7344"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 8",
+                            UserId = "6db39f4a-9d19-4fc2-b3ab-2aa37851bb71"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 9",
+                            UserId = "c54d18f2-9a21-4f72-92eb-1f5d6e8f58de"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 10",
+                            UserId = "a1a6e8f1-4749-4a8e-8f9b-0b6b2f05f38b"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 11",
+                            UserId = "f79e34aa-f6a2-4ff1-b2e0-4a7c8194e61c"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 12",
+                            UserId = "1b8a5144-b8a6-4df5-bb98-0136d7ebdf24"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 13",
+                            UserId = "6c8454ef-fd19-4db5-9f88-dcd7b13e5c55"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 14",
+                            UserId = "4f5b9c31-d406-4036-b8cd-37cb92d6b211"
+                        },
+                        new
+                        {
+                            Id = 15,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 15",
+                            UserId = "0b91d20a-0ab3-4820-b3f2-fbcf01c0af26"
+                        },
+                        new
+                        {
+                            Id = 16,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 16",
+                            UserId = "2489fce0-858f-43af-b82a-65ee42cb2e33"
+                        },
+                        new
+                        {
+                            Id = 17,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 17",
+                            UserId = "5ff58cb5-9d0c-44b2-bc2a-5f96a3c9d621"
+                        },
+                        new
+                        {
+                            Id = 18,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 18",
+                            UserId = "cc505df2-3586-41a1-9d44-b5fc8f28e3a9"
+                        },
+                        new
+                        {
+                            Id = 19,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 19",
+                            UserId = "8ea08a3f-066a-41ac-9ef0-ffb47d3657d9"
+                        },
+                        new
+                        {
+                            Id = 20,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 20",
+                            UserId = "c79be729-47b3-4907-88e1-0a67dd4e48b1"
+                        },
+                        new
+                        {
+                            Id = 21,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 21",
+                            UserId = "de17cb47-83e7-4a6b-b97c-13808e14a7ff"
+                        },
+                        new
+                        {
+                            Id = 22,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 22",
+                            UserId = "0ed1f88a-8859-4d6c-9a1f-84aaf19cc45c"
+                        },
+                        new
+                        {
+                            Id = 23,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 23",
+                            UserId = "74c35794-54d9-44a4-baf0-b8fa23e2d481"
+                        },
+                        new
+                        {
+                            Id = 24,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 24",
+                            UserId = "53a2b071-d36f-4f1f-bf8e-3f7dbf7b8c7b"
+                        },
+                        new
+                        {
+                            Id = 25,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 25",
+                            UserId = "28a2a313-bc8e-4225-b8c2-85c2935b315e"
+                        },
+                        new
+                        {
+                            Id = 26,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 26",
+                            UserId = "35159a7c-2120-46f6-9135-8a8469b9c7b1"
+                        },
+                        new
+                        {
+                            Id = 27,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 27",
+                            UserId = "ec4219b7-dfc6-4966-bf2a-3f1eecf17391"
+                        },
+                        new
+                        {
+                            Id = 28,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 28",
+                            UserId = "1a9d8654-1c19-4b60-9491-4e33c176cc64"
+                        },
+                        new
+                        {
+                            Id = 29,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 29",
+                            UserId = "1a9d8654-1c19-4b50-9431-4e23c174cc60"
+                        },
+                        new
+                        {
+                            Id = 30,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 30",
+                            UserId = "2z9f8451-1n19-4b50-8432-4e23c164cs51"
+                        },
+                        new
+                        {
+                            Id = 31,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 31",
+                            UserId = "9c49e0f2-4cb0-45b1-9f0e-4fbd24d25368"
+                        },
+                        new
+                        {
+                            Id = 32,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 32",
+                            UserId = "33a13c76-041f-4d68-8f67-41b7dd60c408"
+                        },
+                        new
+                        {
+                            Id = 33,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 33",
+                            UserId = "43cd6e17-9d86-4cb9-8d84-298e43a23450"
+                        },
+                        new
+                        {
+                            Id = 34,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 34",
+                            UserId = "c77b5df0-836a-4f9e-9f29-d2f6c6cf4074"
+                        },
+                        new
+                        {
+                            Id = 35,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 35",
+                            UserId = "5d8a2197-b38b-40b2-940a-845e2a44b622"
+                        },
+                        new
+                        {
+                            Id = 36,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 36",
+                            UserId = "c79c6433-d1ad-46a3-ae87-84edb44476de"
+                        },
+                        new
+                        {
+                            Id = 37,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 37",
+                            UserId = "f03cf528-c2a5-4820-91a5-6821dc5350f8"
+                        },
+                        new
+                        {
+                            Id = 38,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 38",
+                            UserId = "5f33b779-c424-4e4d-89a9-7b8e5ac3e98d"
+                        },
+                        new
+                        {
+                            Id = 39,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 39",
+                            UserId = "baf0a172-7e0a-4999-8c03-8f9bfb62150b"
+                        },
+                        new
+                        {
+                            Id = 40,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 40",
+                            UserId = "88a1a0b3-943d-47a2-b0bb-f1c8763acaf4"
+                        },
+                        new
+                        {
+                            Id = 41,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 41",
+                            UserId = "0ff9af54-f57a-4d1b-a2d6-679b3a4b8c30"
+                        },
+                        new
+                        {
+                            Id = 42,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 42",
+                            UserId = "59b4a3e6-30c2-4a8c-8851-78b95cf11f5b"
+                        },
+                        new
+                        {
+                            Id = 43,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 43",
+                            UserId = "3db6b5af-4b42-4747-a3f0-3a60b3e36a56"
+                        },
+                        new
+                        {
+                            Id = 44,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 44",
+                            UserId = "7gf2b7zj-4b42-2476-f3f3-1x72b3e34aq68"
+                        },
+                        new
+                        {
+                            Id = 45,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 45",
+                            UserId = "b83670e3-3d7c-40a4-8d07-5a3c3f6bde91"
+                        },
+                        new
+                        {
+                            Id = 46,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 46",
+                            UserId = "3a4c88b0-5f73-41f0-82e7-255e19e8d9d1"
+                        },
+                        new
+                        {
+                            Id = 47,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 47",
+                            UserId = "c0b41f2c-0f8d-4a53-b0a9-5cfa02b6a851"
+                        },
+                        new
+                        {
+                            Id = 48,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 48",
+                            UserId = "c171e56e-b2e0-43f2-91f1-8f258417bc3d"
+                        },
+                        new
+                        {
+                            Id = 49,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 49",
+                            UserId = "43f6a708-995c-4a07-9e90-6d0a5efc32d5"
+                        },
+                        new
+                        {
+                            Id = 50,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 50",
+                            UserId = "21d7b7dc-3425-464f-96d5-f6784b19b4cf"
+                        },
+                        new
+                        {
+                            Id = 51,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 51",
+                            UserId = "c8dc080e-2c5f-4a8e-b0e0-9c29dc45a31f"
+                        },
+                        new
+                        {
+                            Id = 52,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 52",
+                            UserId = "13ab0a0e-5d9a-4e53-a5f0-5cb11a775fe3"
+                        },
+                        new
+                        {
+                            Id = 53,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 53",
+                            UserId = "a2a9b64b-1b54-4c49-90e2-4dbf1e59a98e"
+                        },
+                        new
+                        {
+                            Id = 54,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 54",
+                            UserId = "49180f4a-cbe7-489b-8fd1-901e79dfe2f5"
+                        },
+                        new
+                        {
+                            Id = 55,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 55",
+                            UserId = "dcf663a4-36f5-4fd6-b124-bae31e0c9e2e"
+                        },
+                        new
+                        {
+                            Id = 56,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 56",
+                            UserId = "17793347-1bfa-4526-a0af-0ffcf374aa9a"
+                        },
+                        new
+                        {
+                            Id = 57,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 57",
+                            UserId = "6f34a16a-6e68-4d8b-9f6a-0e0c07a09ed8"
+                        },
+                        new
+                        {
+                            Id = 58,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 58",
+                            UserId = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d"
+                        },
+                        new
+                        {
+                            Id = 59,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 59",
+                            UserId = "53ac9d08-f52f-4a25-92d7-10de53f612fa"
+                        },
+                        new
+                        {
+                            Id = 60,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 60",
+                            UserId = "827e71e5-479c-47a7-8f91-16327825a02d"
+                        },
+                        new
+                        {
+                            Id = 61,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 61",
+                            UserId = "dfb15a5f-9f4e-48e6-b781-f4a62c5bfb0a"
+                        },
+                        new
+                        {
+                            Id = 62,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 62",
+                            UserId = "12183b62-26ee-459b-a859-88a94e86c117"
+                        },
+                        new
+                        {
+                            Id = 63,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 63",
+                            UserId = "ef529a6b-b381-4db1-a204-913ba73a6721"
+                        },
+                        new
+                        {
+                            Id = 64,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 64",
+                            UserId = "969fb51f-26aa-4637-8a8a-96247c7a67a4"
+                        },
+                        new
+                        {
+                            Id = 65,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 65",
+                            UserId = "b5870b06-0240-4d35-a6b1-54a76c1e09fc"
+                        },
+                        new
+                        {
+                            Id = 66,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 66",
+                            UserId = "bb22c692-bc14-44db-9a6e-5b0196c9a8c2"
+                        },
+                        new
+                        {
+                            Id = 67,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 67",
+                            UserId = "5b7ff0c8-b6f9-489c-9f1d-9faadf9e6c6f"
+                        },
+                        new
+                        {
+                            Id = 68,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 68",
+                            UserId = "d65e3f58-b23d-4b83-8b15-15e66565d29f"
+                        },
+                        new
+                        {
+                            Id = 69,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 69",
+                            UserId = "a1e10c26-4d1d-4f9e-9378-1382457c82ad"
+                        },
+                        new
+                        {
+                            Id = 70,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 70",
+                            UserId = "dfc40941-0cfb-46ed-8991-e285aa08c20e"
+                        },
+                        new
+                        {
+                            Id = 71,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 71",
+                            UserId = "f23ac0c6-68ac-41c8-94ff-383acbfc3e41"
+                        },
+                        new
+                        {
+                            Id = 72,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 72",
+                            UserId = "50e3ff41-8195-4d52-805a-d55efb68f08a"
+                        },
+                        new
+                        {
+                            Id = 73,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 73",
+                            UserId = "55c79a0c-4f48-472f-9d13-1801e2e5c167"
+                        },
+                        new
+                        {
+                            Id = 74,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 74",
+                            UserId = "2e889d55-159e-44a0-b9c9-44cc9f25c66b"
+                        },
+                        new
+                        {
+                            Id = 75,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 75",
+                            UserId = "2ec1e24b-50c6-48b7-8e9c-18c64a42e172"
+                        },
+                        new
+                        {
+                            Id = 76,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 76",
+                            UserId = "87234d0c-41c3-44e5-8cb7-5d7a7a9209c8"
+                        },
+                        new
+                        {
+                            Id = 77,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 77",
+                            UserId = "39987409-6b12-4a73-a9a3-61c7f117dcab"
+                        },
+                        new
+                        {
+                            Id = 78,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 78",
+                            UserId = "56731842-6b12-9a46-k9h2-61c7f212hyex"
+                        },
+                        new
+                        {
+                            Id = 79,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 79",
+                            UserId = "c8463e9f-8ac6-40c3-91b1-2385f6a91eb4"
+                        },
+                        new
+                        {
+                            Id = 80,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 80",
+                            UserId = "abfc1b6f-9f29-44dd-9c45-cdcddaa6eb83"
+                        },
+                        new
+                        {
+                            Id = 81,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 81",
+                            UserId = "db7fba3d-88fc-47cf-b119-f868d9196f02"
+                        },
+                        new
+                        {
+                            Id = 82,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 82",
+                            UserId = "7cfd0766-f3d3-47aa-9a48-53d437d6c232"
+                        },
+                        new
+                        {
+                            Id = 83,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 83",
+                            UserId = "9821dbf5-0f70-4630-8c68-f2077a3abf08"
+                        },
+                        new
+                        {
+                            Id = 84,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Auditor 84",
+                            UserId = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00"
+                        });
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditorOffices", b =>
@@ -210,7 +884,7 @@ namespace IMIS.Persistence.Migrations
                     b.Property<int>("OfficeId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PgsPeriodId")
+                    b.Property<int?>("PgsPeriodId")
                         .HasColumnType("int");
 
                     b.Property<byte[]>("RowVersion")
@@ -225,9 +899,4197 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("PgsPeriodId");
 
                     b.HasIndex("AuditorId", "OfficeId", "PgsPeriodId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[PgsPeriodId] IS NOT NULL");
 
-                    b.ToTable("AuditorOffices", (string)null);
+                    b.ToTable("AuditorOffices");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            AuditorId = 19,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            AuditorId = 34,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            AuditorId = 26,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            AuditorId = 54,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 5,
+                            AuditorId = 15,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 6,
+                            AuditorId = 31,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 7,
+                            AuditorId = 14,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 8,
+                            AuditorId = 61,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 9,
+                            AuditorId = 41,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 10,
+                            AuditorId = 58,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 11,
+                            AuditorId = 16,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 12,
+                            AuditorId = 8,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 14,
+                            AuditorId = 17,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 15,
+                            AuditorId = 28,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 16,
+                            AuditorId = 60,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 17,
+                            AuditorId = 11,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 18,
+                            AuditorId = 78,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 19,
+                            AuditorId = 39,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 20,
+                            AuditorId = 27,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 21,
+                            AuditorId = 49,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 22,
+                            AuditorId = 69,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 23,
+                            AuditorId = 74,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 24,
+                            AuditorId = 29,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 25,
+                            AuditorId = 57,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 26,
+                            AuditorId = 9,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 27,
+                            AuditorId = 53,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 28,
+                            AuditorId = 84,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 29,
+                            AuditorId = 82,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 30,
+                            AuditorId = 40,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 31,
+                            AuditorId = 33,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 32,
+                            AuditorId = 20,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 33,
+                            AuditorId = 66,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 34,
+                            AuditorId = 71,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 35,
+                            AuditorId = 75,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 36,
+                            AuditorId = 18,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 37,
+                            AuditorId = 79,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 39,
+                            AuditorId = 30,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 40,
+                            AuditorId = 48,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 41,
+                            AuditorId = 46,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 42,
+                            AuditorId = 47,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 43,
+                            AuditorId = 38,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 44,
+                            AuditorId = 42,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 45,
+                            AuditorId = 24,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 46,
+                            AuditorId = 62,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 47,
+                            AuditorId = 76,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 48,
+                            AuditorId = 36,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 49,
+                            AuditorId = 3,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 50,
+                            AuditorId = 72,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 51,
+                            AuditorId = 55,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 52,
+                            AuditorId = 59,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 53,
+                            AuditorId = 37,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 54,
+                            AuditorId = 12,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 55,
+                            AuditorId = 10,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 56,
+                            AuditorId = 68,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 57,
+                            AuditorId = 52,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 58,
+                            AuditorId = 65,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 59,
+                            AuditorId = 80,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 60,
+                            AuditorId = 21,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 61,
+                            AuditorId = 43,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 62,
+                            AuditorId = 77,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 63,
+                            AuditorId = 63,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 64,
+                            AuditorId = 73,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 65,
+                            AuditorId = 6,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 66,
+                            AuditorId = 64,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 67,
+                            AuditorId = 44,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 68,
+                            AuditorId = 7,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 69,
+                            AuditorId = 45,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 70,
+                            AuditorId = 56,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 71,
+                            AuditorId = 13,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 72,
+                            AuditorId = 25,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 73,
+                            AuditorId = 23,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 74,
+                            AuditorId = 51,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 75,
+                            AuditorId = 50,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 76,
+                            AuditorId = 81,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 77,
+                            AuditorId = 22,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 78,
+                            AuditorId = 70,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 79,
+                            AuditorId = 32,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 80,
+                            AuditorId = 19,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 81,
+                            AuditorId = 34,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 82,
+                            AuditorId = 26,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 83,
+                            AuditorId = 54,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 84,
+                            AuditorId = 15,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 85,
+                            AuditorId = 31,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 86,
+                            AuditorId = 14,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 87,
+                            AuditorId = 61,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 89,
+                            AuditorId = 41,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 90,
+                            AuditorId = 58,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 91,
+                            AuditorId = 16,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 92,
+                            AuditorId = 8,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 93,
+                            AuditorId = 17,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 94,
+                            AuditorId = 28,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 95,
+                            AuditorId = 60,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 96,
+                            AuditorId = 11,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 97,
+                            AuditorId = 78,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 98,
+                            AuditorId = 39,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 99,
+                            AuditorId = 27,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 100,
+                            AuditorId = 49,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 101,
+                            AuditorId = 69,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 102,
+                            AuditorId = 74,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 103,
+                            AuditorId = 29,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 104,
+                            AuditorId = 57,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 105,
+                            AuditorId = 9,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 106,
+                            AuditorId = 53,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 107,
+                            AuditorId = 84,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 108,
+                            AuditorId = 82,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 109,
+                            AuditorId = 40,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 110,
+                            AuditorId = 33,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 111,
+                            AuditorId = 20,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 112,
+                            AuditorId = 66,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 113,
+                            AuditorId = 71,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 114,
+                            AuditorId = 75,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 115,
+                            AuditorId = 18,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 116,
+                            AuditorId = 79,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 117,
+                            AuditorId = 30,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 118,
+                            AuditorId = 48,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 119,
+                            AuditorId = 46,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 120,
+                            AuditorId = 47,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 121,
+                            AuditorId = 38,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 122,
+                            AuditorId = 42,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 123,
+                            AuditorId = 24,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 124,
+                            AuditorId = 62,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 125,
+                            AuditorId = 76,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 126,
+                            AuditorId = 36,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 127,
+                            AuditorId = 3,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 128,
+                            AuditorId = 72,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 129,
+                            AuditorId = 55,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 130,
+                            AuditorId = 59,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 131,
+                            AuditorId = 37,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 132,
+                            AuditorId = 12,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 133,
+                            AuditorId = 10,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 134,
+                            AuditorId = 68,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 135,
+                            AuditorId = 52,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 136,
+                            AuditorId = 65,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 137,
+                            AuditorId = 80,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 138,
+                            AuditorId = 21,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 139,
+                            AuditorId = 43,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 140,
+                            AuditorId = 77,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 141,
+                            AuditorId = 63,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 142,
+                            AuditorId = 73,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 143,
+                            AuditorId = 6,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 144,
+                            AuditorId = 64,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 145,
+                            AuditorId = 44,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 146,
+                            AuditorId = 7,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 147,
+                            AuditorId = 45,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 148,
+                            AuditorId = 56,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 149,
+                            AuditorId = 13,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 150,
+                            AuditorId = 25,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 151,
+                            AuditorId = 23,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 152,
+                            AuditorId = 51,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 153,
+                            AuditorId = 50,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 154,
+                            AuditorId = 81,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 155,
+                            AuditorId = 22,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 156,
+                            AuditorId = 70,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 157,
+                            AuditorId = 32,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 158,
+                            AuditorId = 19,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 159,
+                            AuditorId = 34,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 160,
+                            AuditorId = 26,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 161,
+                            AuditorId = 54,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 162,
+                            AuditorId = 15,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 163,
+                            AuditorId = 31,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 164,
+                            AuditorId = 14,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 165,
+                            AuditorId = 61,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 166,
+                            AuditorId = 41,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 167,
+                            AuditorId = 58,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 168,
+                            AuditorId = 16,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 169,
+                            AuditorId = 8,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 170,
+                            AuditorId = 17,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 171,
+                            AuditorId = 28,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 172,
+                            AuditorId = 60,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 173,
+                            AuditorId = 11,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 174,
+                            AuditorId = 78,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 175,
+                            AuditorId = 39,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 176,
+                            AuditorId = 27,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 177,
+                            AuditorId = 49,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 178,
+                            AuditorId = 69,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 179,
+                            AuditorId = 74,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 180,
+                            AuditorId = 29,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 181,
+                            AuditorId = 57,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 182,
+                            AuditorId = 9,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 183,
+                            AuditorId = 53,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 184,
+                            AuditorId = 84,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 185,
+                            AuditorId = 82,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 186,
+                            AuditorId = 40,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 187,
+                            AuditorId = 33,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 188,
+                            AuditorId = 20,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 189,
+                            AuditorId = 66,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 190,
+                            AuditorId = 71,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 191,
+                            AuditorId = 75,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 192,
+                            AuditorId = 18,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 193,
+                            AuditorId = 79,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 194,
+                            AuditorId = 30,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 195,
+                            AuditorId = 48,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 196,
+                            AuditorId = 46,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 197,
+                            AuditorId = 47,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 198,
+                            AuditorId = 38,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 199,
+                            AuditorId = 42,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 200,
+                            AuditorId = 24,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 201,
+                            AuditorId = 62,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 202,
+                            AuditorId = 76,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 203,
+                            AuditorId = 36,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 204,
+                            AuditorId = 3,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 205,
+                            AuditorId = 72,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 206,
+                            AuditorId = 55,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 207,
+                            AuditorId = 59,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 208,
+                            AuditorId = 37,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 209,
+                            AuditorId = 12,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 210,
+                            AuditorId = 10,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 211,
+                            AuditorId = 68,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 212,
+                            AuditorId = 52,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 213,
+                            AuditorId = 65,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 214,
+                            AuditorId = 80,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 215,
+                            AuditorId = 21,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 216,
+                            AuditorId = 43,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 217,
+                            AuditorId = 77,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 218,
+                            AuditorId = 63,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 219,
+                            AuditorId = 73,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 220,
+                            AuditorId = 6,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 221,
+                            AuditorId = 64,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 222,
+                            AuditorId = 44,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 223,
+                            AuditorId = 7,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 224,
+                            AuditorId = 45,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 225,
+                            AuditorId = 56,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 226,
+                            AuditorId = 13,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 227,
+                            AuditorId = 25,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 228,
+                            AuditorId = 23,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 229,
+                            AuditorId = 51,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 230,
+                            AuditorId = 50,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 231,
+                            AuditorId = 81,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 232,
+                            AuditorId = 22,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 233,
+                            AuditorId = 70,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 234,
+                            AuditorId = 32,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 235,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 236,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 237,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 238,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 239,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 240,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 241,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 242,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 243,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 244,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 245,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 246,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 247,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 248,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 249,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 250,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 251,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 252,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 253,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 254,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 255,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 256,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 257,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 258,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 259,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 260,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 261,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 262,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 263,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 264,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 265,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 266,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 267,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 268,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 269,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 270,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 271,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 272,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 273,
+                            AuditorId = 2,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 274,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 275,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 276,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 277,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 278,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 279,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 280,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 281,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 282,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 283,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 284,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 285,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 286,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 287,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 288,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 289,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 290,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 291,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 292,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 293,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 294,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 295,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 296,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 297,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 298,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 299,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 300,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 301,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 302,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 303,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 304,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 305,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 306,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 307,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 308,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 309,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 310,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 311,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 312,
+                            AuditorId = 35,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 313,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 314,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 315,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 316,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 317,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 318,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 319,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 320,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 321,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 322,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 323,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 324,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 325,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 326,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 327,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 328,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 329,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 330,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 331,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 332,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 333,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 334,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 335,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 336,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 337,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 338,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 339,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 340,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 341,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 342,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 343,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 344,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 345,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 346,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 347,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 348,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 349,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 350,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 351,
+                            AuditorId = 67,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 352,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 353,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 354,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 355,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 356,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 357,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 358,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 359,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 360,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 361,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 362,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 363,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 364,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 365,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 366,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 367,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 368,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 369,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 370,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 371,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 372,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 373,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 374,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 375,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 376,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 377,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 378,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 379,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 380,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 381,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 382,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 383,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 384,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 385,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 386,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 387,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 388,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 389,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 390,
+                            AuditorId = 83,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 391,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 392,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 393,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 394,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 395,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 396,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 397,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 398,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 399,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 400,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 401,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 402,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 403,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 404,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 405,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 406,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 407,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 408,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 409,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 410,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 411,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 412,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 413,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 414,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 415,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 416,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 417,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 418,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 419,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 420,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 421,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 422,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 423,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 424,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 425,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 426,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 427,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 428,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 429,
+                            AuditorId = 5,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 430,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 9,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 431,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 165,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 432,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 159,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 433,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 166,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 434,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 19,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 435,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 116,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 436,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 8,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 437,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 29,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 438,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 169,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 439,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 18,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 440,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 170,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 441,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 10,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 442,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 41,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 443,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 33,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 444,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 171,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 445,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 34,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 446,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 127,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 447,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 125,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 448,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 172,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 449,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 23,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 450,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 173,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 451,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 28,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 452,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 17,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 453,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 16,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 454,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 26,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 455,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 38,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 456,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 174,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 457,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 120,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 458,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 83,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 459,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 156,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 460,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 158,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 461,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 175,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 462,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 58,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 463,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 176,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 464,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 177,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 465,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 87,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 466,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 99,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 467,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 11,
+                            PgsPeriodId = 1
+                        },
+                        new
+                        {
+                            Id = 468,
+                            AuditorId = 4,
+                            IsDeleted = false,
+                            IsOfficeHead = true,
+                            OfficeId = 178,
+                            PgsPeriodId = 1
+                        });
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditorTeams", b =>
@@ -266,7 +5128,7 @@ namespace IMIS.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[AuditorId] IS NOT NULL");
 
-                    b.ToTable("AuditorTeams", (string)null);
+                    b.ToTable("AuditorTeams");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KeyResultArea", b =>
@@ -295,7 +5157,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KeyResultArea", (string)null);
+                    b.ToTable("KeyResultArea");
 
                     b.HasData(
                         new
@@ -398,7 +5260,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ParentOfficeId");
 
-                    b.ToTable("Offices", (string)null);
+                    b.ToTable("Offices");
 
                     b.HasData(
                         new
@@ -1869,6 +6731,132 @@ namespace IMIS.Persistence.Migrations
                             Name = "Credit and Collection Section",
                             OfficeTypeId = 4,
                             ParentOfficeId = 5
+                        },
+                        new
+                        {
+                            Id = 165,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "EFMD - Mechanical Works Section",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 4
+                        },
+                        new
+                        {
+                            Id = 166,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Health Emergency Management Staff",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 1
+                        },
+                        new
+                        {
+                            Id = 167,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Mechanical Works Department - Elevator Unit",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 4
+                        },
+                        new
+                        {
+                            Id = 168,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Health Information Management Department - Out-Patient Department",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 7
+                        },
+                        new
+                        {
+                            Id = 169,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Pay Admitting Unit",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 3
+                        },
+                        new
+                        {
+                            Id = 170,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Emergency Department - Medical/Nursing",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 2
+                        },
+                        new
+                        {
+                            Id = 171,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Mechanical Works Section - Medical Oxygen Plant Unit",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 4
+                        },
+                        new
+                        {
+                            Id = 172,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Physical Plant Section - Housekeeping Unit",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 4
+                        },
+                        new
+                        {
+                            Id = 173,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Out-Patient Department - Medical/Nursing",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 2
+                        },
+                        new
+                        {
+                            Id = 174,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Surgery Wing",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 3
+                        },
+                        new
+                        {
+                            Id = 175,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Physical Plant - Laundry and Linen unit",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 4
+                        },
+                        new
+                        {
+                            Id = 176,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Family and Community Medicine Department",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 2
+                        },
+                        new
+                        {
+                            Id = 177,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Operating Room & Post-Anesthesia Care Unit",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 3
+                        },
+                        new
+                        {
+                            Id = 178,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Material and Supply Management Department",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 4
                         });
                 });
 
@@ -1897,7 +6885,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OfficeType", (string)null);
+                    b.ToTable("OfficeType");
 
                     b.HasData(
                         new
@@ -1972,7 +6960,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsReadinessRatingId");
 
-                    b.ToTable("PerformanceGovernanceSystem", (string)null);
+                    b.ToTable("PerformanceGovernanceSystem");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
@@ -2037,7 +7025,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PerfomanceGovernanceSystemId");
 
-                    b.ToTable("Deliverable", (string)null);
+                    b.ToTable("Deliverable");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverableAccomplishment", b =>
@@ -2081,7 +7069,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PgsDeliverableAccomplishment", (string)null);
+                    b.ToTable("PgsDeliverableAccomplishment");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverableScoreHistory", b =>
@@ -2119,7 +7107,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsDeliverableId");
 
-                    b.ToTable("PgsDeliverableScoreHistories", (string)null);
+                    b.ToTable("PgsDeliverableScoreHistories");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsPeriod", b =>
@@ -2149,7 +7137,17 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsPeriod", (string)null);
+                    b.ToTable("PgsPeriod");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            EndDate = new DateOnly(2025, 12, 31),
+                            IsDeleted = false,
+                            Remarks = "2nd Half of 2025",
+                            StartDate = new DateOnly(2025, 7, 1)
+                        });
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsReadinessRating", b =>
@@ -2179,7 +7177,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsReadiness", (string)null);
+                    b.ToTable("PgsReadiness");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsSignatory", b =>
@@ -2219,7 +7217,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SignatoryId");
 
-                    b.ToTable("PgsSignatory", (string)null);
+                    b.ToTable("PgsSignatory");
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsSignatoryTemplate", b =>
@@ -2267,7 +7265,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("PgsSignatoryTemplate", (string)null);
+                    b.ToTable("PgsSignatoryTemplate");
 
                     b.HasData(
                         new
@@ -2578,7 +7576,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsPeriodId");
 
-                    b.ToTable("PgsSummaryNarrative", (string)null);
+                    b.ToTable("PgsSummaryNarrative");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Team", b =>
@@ -2606,7 +7604,107 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams", (string)null);
+                    b.ToTable("Teams");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 1"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 2"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 3"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 4"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 5"
+                        },
+                        new
+                        {
+                            Id = 6,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 6"
+                        },
+                        new
+                        {
+                            Id = 7,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 7"
+                        },
+                        new
+                        {
+                            Id = 8,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 8"
+                        },
+                        new
+                        {
+                            Id = 9,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 9"
+                        },
+                        new
+                        {
+                            Id = 10,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 10"
+                        },
+                        new
+                        {
+                            Id = 11,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 11"
+                        },
+                        new
+                        {
+                            Id = 12,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 12"
+                        },
+                        new
+                        {
+                            Id = 13,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 13"
+                        },
+                        new
+                        {
+                            Id = 14,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Team 14"
+                        });
                 });
 
             modelBuilder.Entity("IMIS.Domain.UserOffices", b =>
@@ -2642,7 +7740,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("UserOffices", (string)null);
+                    b.ToTable("UserOffices");
 
                     b.HasData(
                         new
@@ -2884,63 +7982,63 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
-                            ConcurrencyStamp = "af47bda5-83be-496b-9343-47d11506b1c8",
+                            ConcurrencyStamp = "4013a80d-3255-4060-87ae-d9acdfd4efb2",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                            ConcurrencyStamp = "7413fd04-eae0-42ff-9957-73adf8a70eb1",
+                            ConcurrencyStamp = "3e9add73-a8f2-4f92-9240-c472c52950e3",
                             Name = "PGS Core Team",
                             NormalizedName = "PGS CORE TEAM"
                         },
                         new
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            ConcurrencyStamp = "a0625d7a-5545-45e8-9696-53820a1109e4",
+                            ConcurrencyStamp = "a897a1ff-d4a5-48f7-ae4e-f97b6df928d6",
                             Name = "Standard User",
                             NormalizedName = "PGS USER"
                         },
                         new
                         {
                             Id = "af7b586c7ee6490bbd878f46f6a47831",
-                            ConcurrencyStamp = "2ce6c50b-2c05-41b5-af3b-753109daea9b",
-                            Name = "PGS Auditor",
-                            NormalizedName = "PGS AUDITOR"
+                            ConcurrencyStamp = "89643740-2924-45e5-9d8c-58d808a22b28",
+                            Name = "Auditor",
+                            NormalizedName = "AUDITOR"
                         },
                         new
                         {
                             Id = "95f224dd-3973-42ef-b350-7af30f67c2ca",
-                            ConcurrencyStamp = "ace3d0b3-f4cb-418c-bfa0-f392150434cd",
+                            ConcurrencyStamp = "d2d9cb76-d101-458d-918b-930a8ca68e71",
                             Name = "Service Head",
                             NormalizedName = "SERVICE HEAD"
                         },
                         new
                         {
                             Id = "b6b97a7d-23b0-4c2f-9f9a-54d4f67b1234",
-                            ConcurrencyStamp = "5bb7f2cf-02f4-4244-b5ca-cd34982c215e",
+                            ConcurrencyStamp = "dc259817-bcf9-47d3-9c39-1f0bc0ea87cd",
                             Name = "PGS Head",
                             NormalizedName = "PGS HEAD"
                         },
                         new
                         {
                             Id = "e2a6a3fc-1f3a-4e9e-9df0-5f4a6e1f8c21",
-                            ConcurrencyStamp = "f5473dfa-5c97-48c3-b4a5-bf87699db9f3",
+                            ConcurrencyStamp = "106441d4-ae45-41ce-9ce9-41c6730e9766",
                             Name = "MCC",
                             NormalizedName = "MCC"
                         },
                         new
                         {
                             Id = "a3c8f0de-45d7-49ab-9c3f-8e25b5e7d421",
-                            ConcurrencyStamp = "4a1216f9-94c9-4bb4-a72a-3cd4c1a49618",
+                            ConcurrencyStamp = "41b11f20-fbf3-41b8-b195-d580ccf144fa",
                             Name = "OSM",
                             NormalizedName = "OSM"
                         },
                         new
                         {
                             Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
-                            ConcurrencyStamp = "324e9832-31c6-4746-b7df-0e1b773dfc32",
+                            ConcurrencyStamp = "a5054804-d8df-4e32-a4fd-6c58fa61fbda",
                             Name = "PGS Auditor Head",
                             NormalizedName = "PGS AUDITOR HEAD"
                         });
@@ -3171,6 +8269,421 @@ namespace IMIS.Persistence.Migrations
                         {
                             UserId = "18b4151f-bff9-4525-b787-7a7e009757c3",
                             RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
+                        },
+                        new
+                        {
+                            UserId = "399f5e43-93d8-4a28-b113-d23eccd2ea15",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "e765e1f5-bc17-49b1-9c3f-8c5c2c18b420",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "f8a17354-91b3-4c0e-9b71-d6af05f4e11e",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "9b6d73e5-ff27-44bb-a9d0-f7c58b31c4a1",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "a1f6d353-df11-4a17-b2be-49371b8c223d",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "f2b28c8e-58cf-47b2-8245-33a7a98a7344",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "6db39f4a-9d19-4fc2-b3ab-2aa37851bb71",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "c54d18f2-9a21-4f72-92eb-1f5d6e8f58de",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "a1a6e8f1-4749-4a8e-8f9b-0b6b2f05f38b",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "f79e34aa-f6a2-4ff1-b2e0-4a7c8194e61c",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "1b8a5144-b8a6-4df5-bb98-0136d7ebdf24",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "6c8454ef-fd19-4db5-9f88-dcd7b13e5c55",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "4f5b9c31-d406-4036-b8cd-37cb92d6b211",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "0b91d20a-0ab3-4820-b3f2-fbcf01c0af26",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "2489fce0-858f-43af-b82a-65ee42cb2e33",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "5ff58cb5-9d0c-44b2-bc2a-5f96a3c9d621",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "cc505df2-3586-41a1-9d44-b5fc8f28e3a9",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "8ea08a3f-066a-41ac-9ef0-ffb47d3657d9",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "c79be729-47b3-4907-88e1-0a67dd4e48b1",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "de17cb47-83e7-4a6b-b97c-13808e14a7ff",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "0ed1f88a-8859-4d6c-9a1f-84aaf19cc45c",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "74c35794-54d9-44a4-baf0-b8fa23e2d481",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "53a2b071-d36f-4f1f-bf8e-3f7dbf7b8c7b",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "28a2a313-bc8e-4225-b8c2-85c2935b315e",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "35159a7c-2120-46f6-9135-8a8469b9c7b1",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "ec4219b7-dfc6-4966-bf2a-3f1eecf17391",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "1a9d8654-1c19-4b60-9491-4e33c176cc64",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "1a9d8654-1c19-4b50-9431-4e23c174cc60",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "2z9f8451-1n19-4b50-8432-4e23c164cs51",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "9c49e0f2-4cb0-45b1-9f0e-4fbd24d25368",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "33a13c76-041f-4d68-8f67-41b7dd60c408",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "43cd6e17-9d86-4cb9-8d84-298e43a23450",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "c77b5df0-836a-4f9e-9f29-d2f6c6cf4074",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "5d8a2197-b38b-40b2-940a-845e2a44b622",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "c79c6433-d1ad-46a3-ae87-84edb44476de",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "f03cf528-c2a5-4820-91a5-6821dc5350f8",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "5f33b779-c424-4e4d-89a9-7b8e5ac3e98d",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "baf0a172-7e0a-4999-8c03-8f9bfb62150b",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "88a1a0b3-943d-47a2-b0bb-f1c8763acaf4",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "0ff9af54-f57a-4d1b-a2d6-679b3a4b8c30",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "59b4a3e6-30c2-4a8c-8851-78b95cf11f5b",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "3db6b5af-4b42-4747-a3f0-3a60b3e36a56",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "7gf2b7zj-4b42-2476-f3f3-1x72b3e34aq68",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "b83670e3-3d7c-40a4-8d07-5a3c3f6bde91",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "3a4c88b0-5f73-41f0-82e7-255e19e8d9d1",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "c0b41f2c-0f8d-4a53-b0a9-5cfa02b6a851",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "c171e56e-b2e0-43f2-91f1-8f258417bc3d",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "43f6a708-995c-4a07-9e90-6d0a5efc32d5",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "21d7b7dc-3425-464f-96d5-f6784b19b4cf",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "c8dc080e-2c5f-4a8e-b0e0-9c29dc45a31f",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "13ab0a0e-5d9a-4e53-a5f0-5cb11a775fe3",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "a2a9b64b-1b54-4c49-90e2-4dbf1e59a98e",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "49180f4a-cbe7-489b-8fd1-901e79dfe2f5",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "dcf663a4-36f5-4fd6-b124-bae31e0c9e2e",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "17793347-1bfa-4526-a0af-0ffcf374aa9a",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "6f34a16a-6e68-4d8b-9f6a-0e0c07a09ed8",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "53ac9d08-f52f-4a25-92d7-10de53f612fa",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "827e71e5-479c-47a7-8f91-16327825a02d",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "dfb15a5f-9f4e-48e6-b781-f4a62c5bfb0a",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "12183b62-26ee-459b-a859-88a94e86c117",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "ef529a6b-b381-4db1-a204-913ba73a6721",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "969fb51f-26aa-4637-8a8a-96247c7a67a4",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "b5870b06-0240-4d35-a6b1-54a76c1e09fc",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "bb22c692-bc14-44db-9a6e-5b0196c9a8c2",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "5b7ff0c8-b6f9-489c-9f1d-9faadf9e6c6f",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "d65e3f58-b23d-4b83-8b15-15e66565d29f",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "a1e10c26-4d1d-4f9e-9378-1382457c82ad",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "dfc40941-0cfb-46ed-8991-e285aa08c20e",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "f23ac0c6-68ac-41c8-94ff-383acbfc3e41",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "50e3ff41-8195-4d52-805a-d55efb68f08a",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "55c79a0c-4f48-472f-9d13-1801e2e5c167",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "2e889d55-159e-44a0-b9c9-44cc9f25c66b",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "2ec1e24b-50c6-48b7-8e9c-18c64a42e172",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "87234d0c-41c3-44e5-8cb7-5d7a7a9209c8",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "39987409-6b12-4a73-a9a3-61c7f117dcab",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "56731842-6b12-9a46-k9h2-61c7f212hyex",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "c8463e9f-8ac6-40c3-91b1-2385f6a91eb4",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "abfc1b6f-9f29-44dd-9c45-cdcddaa6eb83",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "db7fba3d-88fc-47cf-b119-f868d9196f02",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "7cfd0766-f3d3-47aa-9a48-53d437d6c232",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+                        },
+                        new
+                        {
+                            UserId = "9821dbf5-0f70-4630-8c68-f2077a3abf08",
+                            RoleId = "af7b586c7ee6490bbd878f46f6a47831"
                         });
                 });
 
@@ -3224,16 +8737,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fe9a8381-e4f7-488a-88b6-5271125b39af",
+                            ConcurrencyStamp = "ba9ff4c0-2bc6-44cd-aed8-29f1f5c589be",
                             Email = "marcrejohncastillano@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
                             NormalizedUserName = "CASTILLANO.MRB",
-                            PasswordHash = "AQAAAAIAAYagAAAAEE0aCz3oVNW0avcdFmhR6Qyqffyy98MOJMiYjzQ6bFWnym4fiLGVAkj0+pDOBCO1kw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIWOPtdTarWn3VfkenHJNM6hd4irbKx8ry305wUUV25nbdlbcSI8K0ApMcY/6lKGIA==",
                             PhoneNumber = "09959283775",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "f17548ca-3b67-4516-b7e9-54ee375c798a",
+                            SecurityStamp = "c370bed0-bb1e-41ff-a037-cee7b89a964c",
                             TwoFactorEnabled = false,
                             UserName = "castillano.mrb",
                             FirstName = "Marc Rejohn",
@@ -3244,16 +8757,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7166dcda-1301-4a6d-8aa8-45b1902bded6",
+                            ConcurrencyStamp = "48afae5c-4276-4b02-bd81-24c9a6c70c28",
                             Email = "earlmaerama@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "EARLMAERAMA@GMAIL.COM",
                             NormalizedUserName = "RAMA.EMG",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPgipKIiEoeJ5g5MuTV4INUldPmuPJNQCbmP4RtvPyUfSYWWX2MSR2bcyL8Y0GDWYw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPQ6welPbbNobw/2510siM0YgcFZxXjaM2W57Em6GAn/7fnsjO3XS2L/HNhB89aK8w==",
                             PhoneNumber = "09128293036",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "d928f776-d709-4390-ada8-54596107ed6c",
+                            SecurityStamp = "87db7a90-26e6-4665-a9cf-0b0582d8b6f2",
                             TwoFactorEnabled = false,
                             UserName = "rama.emg",
                             FirstName = "Earlene Mae",
@@ -3264,16 +8777,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "cd02bcb6-0dfd-4389-8b25-3028a6535652",
+                            ConcurrencyStamp = "3f0b21b5-ead2-4e72-9469-8e4655836283",
                             Email = "wilburpimentel09@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "WILBURPIMENTEL09@GMAIL.COM",
                             NormalizedUserName = "PIMENTEL.WB",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFKAJNhzbVygXF884FfbplQTCmGPjwfc88l7zxfincMI9wXzRYwACzqeEUCgQlm5gw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKsyLJmk9qdkQi0V6sIGhH47+ni3NUz0ja8aEGJWh1/SCJ4a/k3UCJ6jTaVUh+pkLA==",
                             PhoneNumber = "09069043375",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6d3f43b9-7621-439b-b8b7-8947f9138e56",
+                            SecurityStamp = "1a3f9224-f0cd-4e8a-ae22-9aefe8f9ea6e",
                             TwoFactorEnabled = false,
                             UserName = "pimentel.wb",
                             FirstName = "Wilbur",
@@ -3284,16 +8797,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "537d9fcd-b505-4f93-afc6-17eb8eddff83",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b92231cc-0b7c-40bb-947a-373aefd2d006",
+                            ConcurrencyStamp = "ac516d59-a078-41f9-ab8e-003c22dc6f21",
                             Email = "Nolan1234@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "NOLAN1234@GMAIL.COM",
                             NormalizedUserName = "NOLAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOJ4U4wUoG70U59XOeraRiQEixKujiMgnXa/vYqcVPHnI8pp6IdpNoZWai/DS24Fyw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGFKd6+gBscYgyN2hBJfd2ofM6JNEG4VMEtAMRW6ixJHU9sW/DpJmtOxWfsDXWeZPQ==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "a4abfc23-b16e-4c7e-8d2b-8f5592091d88",
+                            SecurityStamp = "318961ce-f0df-47b3-a38a-0350f4aeb38e",
                             TwoFactorEnabled = false,
                             UserName = "Nolan",
                             FirstName = "Nolan",
@@ -3304,16 +8817,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "743b9807-3441-47c1-9285-5ff8dfd7acb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8bb7a7c8-a3ae-4a1b-80bf-3588628e7b16",
+                            ConcurrencyStamp = "964f1295-d315-4431-bc44-d4ae52a95b46",
                             Email = "Sheila1234@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "SHEILA1234@GMAIL.COM",
                             NormalizedUserName = "SHEILA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFKmT7Jp5TRw1XbS9hU96UIgw52O1RfZivDO9RU32/2RpCM0zC8zF6c44pGsv+teXA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHctiL6QpYeDSzssdmL0Z75A23k7B6QDhoArOqUsSvT0Z+1Q5y4fTXuM61mwUnmBlQ==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "865d3dba-eef6-4846-9607-e555c5f72c47",
+                            SecurityStamp = "1f238416-37e1-4277-815a-e0f3a382db61",
                             TwoFactorEnabled = false,
                             UserName = "Sheila",
                             FirstName = "Sheila farish",
@@ -3324,16 +8837,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7acb06ae-c2de-4fa1-8b62-53c1d63121f0",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "479d8c70-3927-4ad9-9b49-84aa0dd5bb21",
+                            ConcurrencyStamp = "b6b9dbae-071e-4452-bb03-bc475cfcf148",
                             Email = "Johari1234@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "JOHARI1234@GMAIL.COM",
                             NormalizedUserName = "JOHARI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEG9scQ4pcOs/3DcQ5v7hc81Q0uHJDj2RcSpTXBBqtMyn+Bu4aASb9Ewp/TBa2ofG7A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMRlj4Q+a3mJQBpEegLhiaY70F1PwBVElufBPQwSPhxH5N5x2uqXuqTRfDhd/+ynIA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "760a1ec8-18b9-4010-a91c-5378f0ac70bc",
+                            SecurityStamp = "cf4dc13a-0a32-4f20-a083-c8214b3f45a5",
                             TwoFactorEnabled = false,
                             UserName = "Johari",
                             FirstName = "Johari",
@@ -3344,16 +8857,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7eee5b08-df0d-4ac0-a8db-39d924dd30b7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "3a2adab2-1ede-45f5-8043-8856c547a3b3",
+                            ConcurrencyStamp = "41c11328-454d-453d-b312-e1e4c1729d9f",
                             Email = "Linda1234@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "LINDA1234@GMAIL.COM",
                             NormalizedUserName = "LINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEYfKywyBZcXDHhEF1jGAAmGYdhFfq+DRqyVNwXm0Eg335VZ9kphXMX8GsRVkBYa0g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHrjTHggvlTqaGaqsjiwsE1kctLUt1KD9J1Cpls5huIIpBUAvn3A18unEhVSOKLF7A==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "9990c41b-7c5f-46f6-8310-0cab210a5c0d",
+                            SecurityStamp = "6ccfc0f3-db6f-4c69-ab17-5829fba62b00",
                             TwoFactorEnabled = false,
                             UserName = "Linda",
                             FirstName = "Linda",
@@ -3364,16 +8877,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8fa3f3e4-b8a2-4375-9dc8-91b6fbc55e4a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "37f8b2dd-54e9-4fd5-9242-29074a23053f",
+                            ConcurrencyStamp = "98ca4fae-d53f-4a46-8541-c0df678f913a",
                             Email = "Java1234@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "JAVA1234@GMAIL.COM",
                             NormalizedUserName = "JAVA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOX9cj+35zvbCnumy5cAZKpLXfSOPKZcLvbQOw7FTrQKigWAQ9mj2RGPi5iAeb2LKg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDfgwBAfcWGLrE5uKVaJabLFA7yD55/OR82op/xHJSjl73X1HinUJjv++bKMQqTivg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "9d635169-d933-4601-babd-3ed01258f8a8",
+                            SecurityStamp = "03dc0826-0140-480b-85cf-99b104154262",
                             TwoFactorEnabled = false,
                             UserName = "Java",
                             FirstName = "Sergio",
@@ -3384,16 +8897,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a6866933-92a9-41e7-9100-8bee51ed0ada",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "36d5d3ef-f3be-4eb1-8471-9f5f60cf67c7",
+                            ConcurrencyStamp = "d64f20b7-39bd-4236-982c-3667a1df9a34",
                             Email = "John1234@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "JOHN1234@GMAIL.COM",
                             NormalizedUserName = "JOHN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOiHgO9peI9htILa+GqtocjikMmtmulODaL+gq6NPULP9B+Bm0VRMdDRGW4hP4+mIg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHJsRczUQ1Yddif8UIG3k8L/mFhsnStlMWobS+ra2EdytRHfHhKKDUZMSaYeNAgVOA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6838f1aa-5e0d-4a37-a6df-f6c08a1f9302",
+                            SecurityStamp = "066dc476-5036-4666-a621-b3c2bb5f4051",
                             TwoFactorEnabled = false,
                             UserName = "John",
                             FirstName = "John",
@@ -3404,36 +8917,36 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e4a9dee0-3168-43ed-a49e-81121810d9cd",
-                            Email = "Ibrahim1234@gmail.com",
+                            ConcurrencyStamp = "b3e54bea-18fa-4ef7-8f28-b476b775da0f",
+                            Email = "scibrahimtan@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
-                            NormalizedEmail = "IBRAHIM1234@GMAIL.COM",
-                            NormalizedUserName = "IBRAHIM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAdWt8yegRwIYFkcBA6T+6iEL9UDR07bOsvMOkSOCN7y7sMsqXQZOoMaiehX1PrnGQ==",
-                            PhoneNumber = "",
+                            NormalizedEmail = "SCRIBRAHIMTAN@GMAIL.COM",
+                            NormalizedUserName = "TAN.SI",
+                            PasswordHash = "AQAAAAIAAYagAAAAEB2d9qlheERXZs0A+6H+f4yx5R+cU/GKSqPGOaneV+W8GToYaHFJLVMdha9jAuDK8A==",
+                            PhoneNumber = "09178663037",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ab7b1dbc-d56a-4953-b280-8606b8adcdaf",
+                            SecurityStamp = "ad2b6683-e0b2-4bfe-8d1a-c18710888b17",
                             TwoFactorEnabled = false,
-                            UserName = "Ibrahim",
+                            UserName = "tan.si",
                             FirstName = "Scheherazade",
-                            LastName = "Ibrahim",
-                            MiddleName = "E."
+                            LastName = "TAN",
+                            MiddleName = "I."
                         },
                         new
                         {
                             Id = "e1a3ac20-1d20-4f37-8826-242657a746c7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "453ff5bb-10f7-42cb-be0a-320e3e02d8e3",
+                            ConcurrencyStamp = "76a634a2-2eb7-45e3-a357-e32584231ecf",
                             Email = "Dimaren1234@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "DIMAREN1234@GMAIL.COM",
                             NormalizedUserName = "DIMAREN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEH0t4VbU0H/w9VY3aIIwuwFPh0C3QPCf5Oxn28RmVFY+9qyXwfNxwJ2JCX2gIPMHLQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPL4iTZJ9voIqK2Q20kJ9JT0dxaJIc8Uz0u8Ejv+HTIrNEXKj1JAGhpi8UwZ13EgUQ==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "f17ccef4-0259-47af-a658-d5b947738778",
+                            SecurityStamp = "19b06242-2567-456f-9471-fc940af464d3",
                             TwoFactorEnabled = false,
                             UserName = "Dimaren",
                             FirstName = "Ishmael",
@@ -3444,16 +8957,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "e9bcc340-e63f-40e6-8326-8fe86cbef923",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ecb3b809-d68b-4ed1-8bbd-3afb8eca5bdd",
+                            ConcurrencyStamp = "32e40c2d-81cf-47de-a930-d51fa7b41872",
                             Email = "Precious1234@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "PRECIOUS1234@GMAIL.COM",
                             NormalizedUserName = "PRECIOUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAypA4GXlXe6pdDQL4ntHXHwwAJX78sXA3Prf3w6Z6kc+NidzF6hmhXtaTnhdkV1FA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKgXPdQ4w3dSS6v+6Lrz6E7FOfW0ZdW9auv4mEmIh6UZLlMEjxTbtO0cVcOc1vtRrA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "3bcaaa57-b4b9-4cb8-bf7a-8ad51677bc01",
+                            SecurityStamp = "20d2cd97-f669-4a24-93be-77c770bb4358",
                             TwoFactorEnabled = false,
                             UserName = "Precious",
                             FirstName = "Precious Love",
@@ -3464,21 +8977,1674 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9897fd33-9f7b-4a43-8f2b-c13d4bc51fc7",
+                            ConcurrencyStamp = "3b3521f1-5823-4bd8-9a36-7d24c4bb61a6",
                             Email = "Singgon1234@gmail.com",
                             EmailConfirmed = false,
                             LockoutEnabled = false,
                             NormalizedEmail = "SINGGON1234@GMAIL.COM",
                             NormalizedUserName = "SINGGON",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOQbaCnGBzgfSSgvkJYxvr6uFmBv1buVNB2V7J/djmh2sB9dmmW1crxBRiLqCmK5Yw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHjiOOmy1/hBv4aH4jSc2dRG1OEF6W2CiyxTkBEWyoNIvZzHo3b/G25R/OWQc4Qpzg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "3f89e5c6-fa14-4014-9f95-fffc18386661",
+                            SecurityStamp = "cd2d9ca7-dca3-4b65-aab5-848bc7e34f43",
                             TwoFactorEnabled = false,
                             UserName = "Singgon",
                             FirstName = "Bai Samirah",
                             LastName = "Singgon",
                             MiddleName = "A."
+                        },
+                        new
+                        {
+                            Id = "399f5e43-93d8-4a28-b113-d23eccd2ea15",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "520aa89d-0d18-489d-ad4e-fa122d14d036",
+                            Email = "npmangansakan@rocketmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "NPMANGANSAKAN@ROCKETMAIL.COM",
+                            NormalizedUserName = "MANGANSAKAN.NORHAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIYQ2rwybiKZEKZxBUzNlSdD+l+Pa4wKEkaemLVUiwwpsSDXIUQZXn9ADZglWvWeAw==",
+                            PhoneNumber = "09166629909",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "f77486a9-96b0-4438-8a98-8c85b2bc9b17",
+                            TwoFactorEnabled = false,
+                            UserName = "mangansakan.norhan",
+                            FirstName = "NORHAN",
+                            LastName = "MANGANSAKAN",
+                            MiddleName = "PIANG"
+                        },
+                        new
+                        {
+                            Id = "e765e1f5-bc17-49b1-9c3f-8c5c2c18b420",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "8923b210-7e32-42f1-a56a-a94c2eba2ac3",
+                            Email = "nurlinda_06@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "NURLINDA_06@YAHOO.COM",
+                            NormalizedUserName = "ARUMPAC.NURLINDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAVmIXIvvB7VdAOCkajpMgQ1g1+4bvjzvwFi/LEjE8XTtKIhm+FmpXtVEJB7n1L+ZQ==",
+                            PhoneNumber = "09177266885",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "daa792d4-016d-43a0-b112-d2a271a07ded",
+                            TwoFactorEnabled = false,
+                            UserName = "arumpac.nurlinda",
+                            FirstName = "NURLINDA",
+                            LastName = "ARUMPAC",
+                            MiddleName = "PANGILAN"
+                        },
+                        new
+                        {
+                            Id = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "caf32372-7ca7-4d78-8b2e-52c7f778f120",
+                            Email = "jrbedol@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "JRBEDOL@GMAIL.COM",
+                            NormalizedUserName = "BEDOL.LINTANG",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKM9qmTfZMHQ5Ovj2iGL5uoPOcPbX7fzlra51bS+iyNyvavKlvl2ZjimMS6IW8elsQ==",
+                            PhoneNumber = "09226218394",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7cba97eb-053d-440b-ad0b-96df7ab500ef",
+                            TwoFactorEnabled = false,
+                            UserName = "bedol.lintang",
+                            FirstName = "LINTANG",
+                            LastName = "BEDOL",
+                            MiddleName = "BUAN"
+                        },
+                        new
+                        {
+                            Id = "f8a17354-91b3-4c0e-9b71-d6af05f4e11e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "abf43361-5373-47e1-8d94-20453ec7a0fc",
+                            Email = "rhkadil@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "RHKADIL@GMAIL.COM",
+                            NormalizedUserName = "KADIL.RONALD",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK04YC6sN7oZ4i4J5PbQq50kBQZq8o/AhdfwH7NQEQkrL92Qm+QgqlerlKB/tfF+FQ==",
+                            PhoneNumber = "09175333922",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "081fc88f-2041-4d87-8f73-28b04557217c",
+                            TwoFactorEnabled = false,
+                            UserName = "kadil.ronald",
+                            FirstName = "RONALD",
+                            LastName = "KADIL",
+                            MiddleName = "HIPONIA"
+                        },
+                        new
+                        {
+                            Id = "9b6d73e5-ff27-44bb-a9d0-f7c58b31c4a1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "1f2650e1-1236-4ce4-98b2-c3b73bbce753",
+                            Email = "madz.karao@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "MADZ.KARAO@GMAIL.COM",
+                            NormalizedUserName = "KARAO.MOHAMAD",
+                            PasswordHash = "AQAAAAIAAYagAAAAELEyc9CWK/QrXsBfytVnlDe0UbjNierKzCp5KhmZmRzJGCh1qPJprGchrBlbtaBWRg==",
+                            PhoneNumber = "09363769315",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "a210b7ce-e98d-4a19-8af2-f013cd06d96e",
+                            TwoFactorEnabled = false,
+                            UserName = "karao.mohamad",
+                            FirstName = "MOHAMAD",
+                            LastName = "KARAO",
+                            MiddleName = "DUMBI"
+                        },
+                        new
+                        {
+                            Id = "a1f6d353-df11-4a17-b2be-49371b8c223d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "431457e9-c26d-44d3-a59f-9436283628f8",
+                            Email = "don_astillero@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "DON_ASTILLERO@YAHOO.COM",
+                            NormalizedUserName = "ASTILLERO.ADONIS",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOOCkGHUv/m8zdbHpYPEAw6OEIJOMy7nGiJttCgIjbPdq16PxfDPRw1Ul3vYIZsvnA==",
+                            PhoneNumber = "09176261812",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "3baaef42-f1ab-4e37-90ff-bd746902712d",
+                            TwoFactorEnabled = false,
+                            UserName = "astillero.adonis",
+                            FirstName = "ADONIS",
+                            LastName = "ASTILLERO",
+                            MiddleName = "CHAN"
+                        },
+                        new
+                        {
+                            Id = "f2b28c8e-58cf-47b2-8245-33a7a98a7344",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d62b9948-5a00-47a0-aba6-65afb140139e",
+                            Email = "abantasfaizah@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ABANTASFAIZAH@GMAIL.COM",
+                            NormalizedUserName = "ABANTAS.BBGIRL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA9RUp6m6xxlqVQGs0/rcfYmMnVFQNV/+9Ciwc5MwjzH96AGVGozoBUqpeMjC+ssFQ==",
+                            PhoneNumber = "09618235949",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "b43ff372-31b5-4994-ac67-e074bed49c90",
+                            TwoFactorEnabled = false,
+                            UserName = "abantas.bbgirl",
+                            FirstName = "BBGIRL FAIZAH",
+                            LastName = "ABANTAS",
+                            MiddleName = "SHARIF"
+                        },
+                        new
+                        {
+                            Id = "6db39f4a-9d19-4fc2-b3ab-2aa37851bb71",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "74114540-ead3-49cc-8095-1238e5054fe4",
+                            Email = "anidaabubakar5@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ANIDAABUBAKAR5@GMAIL.COM",
+                            NormalizedUserName = "ABUBAKAR.ANIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH1tnFIadQLFMjpCUqzYAEp/ASaxwEJwXsax6F6dSSzmMODb+pB1aSH9ZenM6GH+xw==",
+                            PhoneNumber = "09177234338",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "07295d23-a5c1-45f5-91c4-8163e4dde41d",
+                            TwoFactorEnabled = false,
+                            UserName = "abubakar.anida",
+                            FirstName = "ANIDA",
+                            LastName = "ABUBAKAR",
+                            MiddleName = "PENDALIDAY"
+                        },
+                        new
+                        {
+                            Id = "c54d18f2-9a21-4f72-92eb-1f5d6e8f58de",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d1238a0d-5a34-4670-beaa-75f01011499f",
+                            Email = "bashegal23@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "BASHEGAL23@GMAIL.COM",
+                            NormalizedUserName = "ADANG.ALIBASHER",
+                            PasswordHash = "AQAAAAIAAYagAAAAEE7NdjRkELFK+W1T7vYRzmXGuZWNiu/I/4ke+wHR2VdjjiOdrhlLN0EEk0f7k9Ilhg==",
+                            PhoneNumber = "09369833653",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "5944c5d0-5846-4174-b337-d255f078b85b",
+                            TwoFactorEnabled = false,
+                            UserName = "adang.alibasher",
+                            FirstName = "ALIBASHER",
+                            LastName = "ADANG",
+                            MiddleName = "ABO"
+                        },
+                        new
+                        {
+                            Id = "a1a6e8f1-4749-4a8e-8f9b-0b6b2f05f38b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "14a5b791-51c8-4493-be4f-4bb299181069",
+                            Email = "lailakaliaagting@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "LAILAKALIAAGTING@GMAIL.COM",
+                            NormalizedUserName = "AGTING.LAILA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOwCz+DCyA1lwsLSQlpXakHnLPCQTj1RNzaPEflv9a4BbqbdBp+z5T9Dt0cAPvOCsQ==",
+                            PhoneNumber = "09177124579",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "27daad22-ecb0-4d5b-9c94-bd87cd9cf845",
+                            TwoFactorEnabled = false,
+                            UserName = "agting.laila",
+                            FirstName = "LAILA",
+                            LastName = "AGTING",
+                            MiddleName = "KALI"
+                        },
+                        new
+                        {
+                            Id = "f79e34aa-f6a2-4ff1-b2e0-4a7c8194e61c",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9c355d66-0e51-45b4-8934-f8e01d802acc",
+                            Email = "miemarandakan@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "MIEMARANDAKAN@GMAIL.COM",
+                            NormalizedUserName = "AKMAD.AMERA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEfi0qgl7LeR93zY9WCjjJpRikOZCTnV2ZqeKbVFYY1duYgzs2dv7qo3ysNB7IDySA==",
+                            PhoneNumber = "09560537326",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "b89ba5e2-70cb-4b0d-9cde-14592aac6825",
+                            TwoFactorEnabled = false,
+                            UserName = "akmad.amera",
+                            FirstName = "AMERA",
+                            LastName = "AKMAD",
+                            MiddleName = "MARANDACAN"
+                        },
+                        new
+                        {
+                            Id = "1b8a5144-b8a6-4df5-bb98-0136d7ebdf24",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "5937ef4e-cc3f-4041-998e-f64edbe51dde",
+                            Email = "maraguia44@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "MARAGUIA44@GMAIL.COM",
+                            NormalizedUserName = "AKMAD.ABDUL",
+                            PasswordHash = "AQAAAAIAAYagAAAAECPxx1ru/9v6d+rm79aiVHnypJN8dsfKCMWuVB+cVzBMJ/G8r1IcDTs7JCgd2OS4Eg==",
+                            PhoneNumber = "09209177429",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "cccf4f9e-ca39-41fe-bfa8-bd82d8d1e52c",
+                            TwoFactorEnabled = false,
+                            UserName = "akmad.abdul",
+                            FirstName = "ABDUL",
+                            LastName = "AKMAD",
+                            MiddleName = "MARAGUIAL"
+                        },
+                        new
+                        {
+                            Id = "6c8454ef-fd19-4db5-9f88-dcd7b13e5c55",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "2bfec6f8-a0dc-479f-9e28-81f3235ca014",
+                            Email = "rosarioalojipan@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ROSARIOALOJIPAN@GMAIL.COM",
+                            NormalizedUserName = "ALOJIPAN.ROSARIO",
+                            PasswordHash = "AQAAAAIAAYagAAAAEF+4e3RpoGW5rIJ8cFGpnaHeKhfjoApx6oz6kTonUoEOzuFWK1RDmNvookOKAEpDsQ==",
+                            PhoneNumber = "09178202970",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "409225a2-fab7-4c6b-b96c-a1d18300ca3c",
+                            TwoFactorEnabled = false,
+                            UserName = "alojipan.rosario",
+                            FirstName = "ROSARIO",
+                            LastName = "ALOJIPAN",
+                            MiddleName = "DELA CRUZ"
+                        },
+                        new
+                        {
+                            Id = "4f5b9c31-d406-4036-b8cd-37cb92d6b211",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "17ce3c36-31f8-435f-bde7-3d4b7b6b7ecd",
+                            Email = "yashou_07@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "YASHOU_07@YAHOO.COM",
+                            NormalizedUserName = "ANDAL.YASSER",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHd20hxBI8vQZzWIVvUMuo/mh0AmwkfAdoA+LZy6NHfarc+DUI75sT4v5ZNzuWc6qg==",
+                            PhoneNumber = "09173085559",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "2814be41-c3fd-47b4-8487-5dce72de7fae",
+                            TwoFactorEnabled = false,
+                            UserName = "andal.yasser",
+                            FirstName = "YASSER FARID",
+                            LastName = "ANDAL",
+                            MiddleName = "MAMA"
+                        },
+                        new
+                        {
+                            Id = "0b91d20a-0ab3-4820-b3f2-fbcf01c0af26",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a33d9613-6aec-4f6c-bc56-861a0758101f",
+                            Email = "racsandamen13@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "RACSANDAMEN13@GMAIL.COM",
+                            NormalizedUserName = "ANDAMEN.RAHMA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDOny+TWvn3Wk6wXhaOYh3SATcAleCMe6bFrtj2MVv9b3Kc7+kM8PJzxqI+rcrFX/Q==",
+                            PhoneNumber = "09456829380",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "0ff64a50-b7b5-41ec-bc30-44b990dfa1e6",
+                            TwoFactorEnabled = false,
+                            UserName = "andamen.rahma",
+                            FirstName = "RAHMA",
+                            LastName = "ANDAMEN",
+                            MiddleName = "KALID"
+                        },
+                        new
+                        {
+                            Id = "2489fce0-858f-43af-b82a-65ee42cb2e33",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "5fd9eacc-bb04-4751-98c0-91899f9dfc28",
+                            Email = "aljazzerangas@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ALJAZZERANGAS@YAHOO.COM",
+                            NormalizedUserName = "ANGAS.AL-JAZZER",
+                            PasswordHash = "AQAAAAIAAYagAAAAEB/AxOqake4Um3O4c5Jqil3SM5lJzuY3rc+fYwVHgZFa1Unpx8IcgLKlYEEkbBqpxA==",
+                            PhoneNumber = "09179755770",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "c1a35059-3cb8-4ce6-b5fc-0e9a8fb5a075",
+                            TwoFactorEnabled = false,
+                            UserName = "angas.al-jazzer",
+                            FirstName = "AL-JAZZER",
+                            LastName = "ANGAS",
+                            MiddleName = "MAULANA"
+                        },
+                        new
+                        {
+                            Id = "5ff58cb5-9d0c-44b2-bc2a-5f96a3c9d621",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "35522446-a0dc-4a56-85ad-7593816e71ff",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedUserName = "ARIAS.RENANTE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEApV42szs9EDtvjdqex2lDGzPbyEcg/3xvuFf4711VURtA+a2SQ0kOeVTxfavAXLIw==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d1bc0b28-fca5-407c-80e9-d7e0819c007e",
+                            TwoFactorEnabled = false,
+                            UserName = "arias.renante",
+                            FirstName = "RENANTE",
+                            LastName = "ARIAS",
+                            MiddleName = "ZIA"
+                        },
+                        new
+                        {
+                            Id = "cc505df2-3586-41a1-9d44-b5fc8f28e3a9",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "2007fec7-d969-4fbb-a44b-2d6476a18563",
+                            Email = "shiedhe@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SHIEDHE@YAHOO.COM",
+                            NormalizedUserName = "BANGEN.SHIEDHE",
+                            PasswordHash = "AQAAAAIAAYagAAAAENfb8WL4vARNxldJoB75/xViSA+fcl/Nr0em2L+sUBef+F9KieyvItLEqi/FMChtOw==",
+                            PhoneNumber = "09396526665",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "e4d1f946-555a-4e02-b967-4a530f3fda1c",
+                            TwoFactorEnabled = false,
+                            UserName = "bangen.shiedhe",
+                            FirstName = "SHIEDHE",
+                            LastName = "BANGEN",
+                            MiddleName = "KEMBUAN"
+                        },
+                        new
+                        {
+                            Id = "8ea08a3f-066a-41ac-9ef0-ffb47d3657d9",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "52428933-fcb8-4bbc-92f3-c59ada71b844",
+                            Email = "dannyfherbantilan@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "DANNYFHERBANTILAN@YAHOO.COM",
+                            NormalizedUserName = "BANTILAN.DANNY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDcSlv1ZCXxlJ1TfkWk9S9tKt7h8A76mxHj5HJVrI5CBGKL5yFyxobGNCoiH+FMOPw==",
+                            PhoneNumber = "09272727645",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "1c26abf5-5c1b-47e4-a2d9-182ce33e51ee",
+                            TwoFactorEnabled = false,
+                            UserName = "bantilan.danny",
+                            FirstName = "DANNY FHER",
+                            LastName = "BANTILAN",
+                            MiddleName = "BANQUIAO"
+                        },
+                        new
+                        {
+                            Id = "c79be729-47b3-4907-88e1-0a67dd4e48b1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "7b820925-d1e0-4f20-81b0-5e7fe9b5f1bc",
+                            Email = "zahidabationgbassal2018@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ZAHIDABATIONGBASSAL2018@GMAIL.COM",
+                            NormalizedUserName = "BASSAL.ZAHIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDu/AXIYAOKTeNU3nP4PlSy+AepUJmibeBBT/DZOSKOUpvp5yVhJJs38ZeNaz5b2KA==",
+                            PhoneNumber = "09161012599",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9e0044bd-4fda-409d-805c-78fb302e3fd4",
+                            TwoFactorEnabled = false,
+                            UserName = "bassal.zahida",
+                            FirstName = "ZAHIDA",
+                            LastName = "BASSAL",
+                            MiddleName = "BATIONG"
+                        },
+                        new
+                        {
+                            Id = "de17cb47-83e7-4a6b-b97c-13808e14a7ff",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "db946cfe-0c50-45c1-af59-381e33d870d5",
+                            Email = "acocalbo@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ACOCALBO@YAHOO.COM",
+                            NormalizedUserName = "BONES.ANABELLE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEC/uCRun7pFh+DEJ7YZuTf39Jsn+6AA7jodahp7eklpIzl0sqGA5hXxzWKj2jlUsmg==",
+                            PhoneNumber = "09483207824",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "8dcbbb13-1bd0-4584-9349-2d5ff5ae13c8",
+                            TwoFactorEnabled = false,
+                            UserName = "bones.anabelle",
+                            FirstName = "ANABELLE",
+                            LastName = "BONES",
+                            MiddleName = "COCAL"
+                        },
+                        new
+                        {
+                            Id = "0ed1f88a-8859-4d6c-9a1f-84aaf19cc45c",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "055e814e-6b64-4b8c-a4a4-f068e901aa6e",
+                            Email = "amybonite09@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "AMYBONITE09@YAHOO.COM",
+                            NormalizedUserName = "BONITE.EMELIA",
+                            PasswordHash = "AQAAAAIAAYagAAAAECE6NZSs8K8Y8TLjMdx+H0EMkjfynHrNH83I6B3dEJlF6q4E+Js2cBcCrmZSGF6tWA==",
+                            PhoneNumber = "09055207141",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4bf44905-3dd2-48a9-8910-904cdec212aa",
+                            TwoFactorEnabled = false,
+                            UserName = "bonite.emelia",
+                            FirstName = "EMELIA",
+                            LastName = "BONITE",
+                            MiddleName = "YU"
+                        },
+                        new
+                        {
+                            Id = "74c35794-54d9-44a4-baf0-b8fa23e2d481",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "3d14eb37-d5da-4a12-8b38-b134ba4dfeab",
+                            Email = "Mulcaldea@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "MULCALDEA@GMAIL.COM",
+                            NormalizedUserName = "CALDEA.MAYLENE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN13GSU4ELPnliiJqov8DuCZ8a7W35LOqxTCp1TsOnWzSPRCSvtrDW3aAy6ja5l6/A==",
+                            PhoneNumber = "09953048269",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7e030451-c045-4d04-9867-af2c98ef2d49",
+                            TwoFactorEnabled = false,
+                            UserName = "caldea.maylene",
+                            FirstName = "MAYLENE",
+                            LastName = "CALDEA",
+                            MiddleName = "ULOG"
+                        },
+                        new
+                        {
+                            Id = "53a2b071-d36f-4f1f-bf8e-3f7dbf7b8c7b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "60e937c6-7ee7-43e2-aab2-c55f559188ec",
+                            Email = "naughty_candao@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "NAUGHTY_CANDAO@YAHOO.COM",
+                            NormalizedUserName = "CANDÃO.ABDULBAYAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEF65t0cWoRVCvWV27KOusKUj5hmGV4OEJ8ZhHKsyp52+jVhPkKX1fK7sIzGWaH+jlA==",
+                            PhoneNumber = "09564021897",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "ef2ee307-c2e1-4893-af69-60ee794d059b",
+                            TwoFactorEnabled = false,
+                            UserName = "candao.abdulbayan",
+                            FirstName = "ABDULBAYAN",
+                            LastName = "CANDAO",
+                            MiddleName = "BAYAO"
+                        },
+                        new
+                        {
+                            Id = "28a2a313-bc8e-4225-b8c2-85c2935b315e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "bc6d4f68-f743-40fa-8f83-7457c5b17c63",
+                            Email = "marcrejohncastillano@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
+                            NormalizedUserName = "CASTILLANO.MARC",
+                            PasswordHash = "AQAAAAIAAYagAAAAEETm3Ym9+s3VaLY68jv7sYhewK072kl4Y7TM1UnkIlYHkr/cQHY5Kir3GzvnLUSRNg==",
+                            PhoneNumber = "09959283775",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4f317610-e737-4d44-ac15-7279844db002",
+                            TwoFactorEnabled = false,
+                            UserName = "castillano.marc",
+                            FirstName = "MARC REJOHN",
+                            LastName = "CASTILLANO",
+                            MiddleName = "BALLARES"
+                        },
+                        new
+                        {
+                            Id = "35159a7c-2120-46f6-9135-8a8469b9c7b1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "fef9dd5f-8ca9-410f-9e96-f5f5f7413bc0",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedUserName = "CASTILLON.JOBERT",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAvWKtvvuJMneB6+TYr/KN0FBOSwK6WUFFJDxb6Y2UgoSAxvHe/18h31/QFDoSMhRg==",
+                            PhoneNumber = "09395055897",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "db681504-cd17-48be-909a-cfb3b9999ee0",
+                            TwoFactorEnabled = false,
+                            UserName = "castillon.jobert",
+                            FirstName = "JOBERT",
+                            LastName = "CASTILLON",
+                            MiddleName = "ARMADA"
+                        },
+                        new
+                        {
+                            Id = "ec4219b7-dfc6-4966-bf2a-3f1eecf17391",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "596ce6b0-ec1e-48a5-8b9d-96dc86497ce6",
+                            Email = "rndmpa@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "RNDMPA@GMAIL.COM",
+                            NormalizedUserName = "CUYONG.ANTHONY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEM3HtR95P25jjomfQz7L0VVqrFuIfsiCxHfny905CFOGyBLA4Jxixujka+zJPn4jhQ==",
+                            PhoneNumber = "09453040405",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "fb5ef0e5-434e-4dc7-b70d-116a9f348362",
+                            TwoFactorEnabled = false,
+                            UserName = "cuyong.anthony",
+                            FirstName = "ANTHONY",
+                            LastName = "CUYONG",
+                            MiddleName = "CULAB"
+                        },
+                        new
+                        {
+                            Id = "1a9d8654-1c19-4b60-9491-4e33c176cc64",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ccbdd104-d5a5-4b8a-88df-05869e349d94",
+                            Email = "gloriacalubiran79@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "GLORIACALUBIRAN79@GMAIL.COM",
+                            NormalizedUserName = "DELOSREYES.GLORIA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHI3Ow6Xj6dfXVhqyDUf1WBak7F3J115SQInNnSR05aWhSMClFi5OFwLnIPpiWWxKg==",
+                            PhoneNumber = "09363304534",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9695e25e-9e93-4118-bf92-bcdb35510b78",
+                            TwoFactorEnabled = false,
+                            UserName = "delosreyes.gloria",
+                            FirstName = "GLORIA",
+                            LastName = "DE LOS REYES",
+                            MiddleName = "CALUBIRAN"
+                        },
+                        new
+                        {
+                            Id = "1a9d8654-1c19-4b50-9431-4e23c174cc60",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "5d0c559e-9fa9-4be0-814e-f150a49ca80a",
+                            Email = "Biloa1234@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "BILAO1234@GMAIL.COM",
+                            NormalizedUserName = "BILAO.ABDULHANIF",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPUAX0w4RXPSM7DlOslGQJGRvQYKVZvdJ5ej/95QrbGRq4a4gN2F7c2CoMIsDHg/Gg==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "0ac47ca7-dfc3-4e12-8a76-14b7322f4294",
+                            TwoFactorEnabled = false,
+                            UserName = "bilao.abdulhanif",
+                            FirstName = "Andul Hanif",
+                            LastName = "Bilao",
+                            MiddleName = "B."
+                        },
+                        new
+                        {
+                            Id = "2z9f8451-1n19-4b50-8432-4e23c164cs51",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "5571a29d-b99f-4c7a-a901-6fa141578e06",
+                            Email = "Caoagdan1234@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "CAOAGDAN1234@GMAIL.COM",
+                            NormalizedUserName = "CAOAGDAN.SOCORRO",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBdmTO9jkC8kpLxvs+CXb9pLmfOPKP33PGkdGnNAKxOOENHGWYjHhjMuZ9Mxf11BKA==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9dbab92f-4f7c-4502-9233-962be87c5140",
+                            TwoFactorEnabled = false,
+                            UserName = "caoagdan.socorro",
+                            FirstName = "Socorro",
+                            LastName = "Caoagdan",
+                            MiddleName = "A."
+                        },
+                        new
+                        {
+                            Id = "9c49e0f2-4cb0-45b1-9f0e-4fbd24d25368",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "0e6b4054-7c32-490c-9628-a62259f3bcf3",
+                            Email = "graceenlayo@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "GRACEENLAYO@GMAIL.COM",
+                            NormalizedUserName = "ENLAYOAPAAP.HONEYGRACE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFVp4rjKHFwWfI2AmG9ta2TE/nS2415ng85vwD4KxIcGqSorSgYVXPG/y38aXDbF8Q==",
+                            PhoneNumber = "09754948544",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "21c3d400-aa52-44ac-ba85-9e7a8c07a960",
+                            TwoFactorEnabled = false,
+                            UserName = "enlayoapaap.honeygrace",
+                            FirstName = "HONEY GRACE",
+                            LastName = "ENLAYO-APA-AP",
+                            MiddleName = "ROMASANTA"
+                        },
+                        new
+                        {
+                            Id = "33a13c76-041f-4d68-8f67-41b7dd60c408",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "731ce25d-5acf-44e7-ba41-9927cd986281",
+                            Email = "henesijesmundo27@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "HENESIJESMUNDO27@GMAIL.COM",
+                            NormalizedUserName = "ESMUNDO.HENESIJEM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEOmNoQJzH+wMDg72NRocD+Jm+0NAdUtIIUFD4DqJ5hbrjMLHfKebPiNHe9bncFOBA==",
+                            PhoneNumber = "09354975202",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "6d10ef22-7173-4968-97fd-3ed83fef955c",
+                            TwoFactorEnabled = false,
+                            UserName = "esmundo.henesijem",
+                            FirstName = "HENESI JEM",
+                            LastName = "ESMUNDO",
+                            MiddleName = "GAUDIANO"
+                        },
+                        new
+                        {
+                            Id = "43cd6e17-9d86-4cb9-8d84-298e43a23450",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "de4c13fa-6ad5-45bf-98b0-4d135d86598a",
+                            Email = "jesryll.tupas@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "JESRYLL.TUPAS@YAHOO.COM",
+                            NormalizedUserName = "FACTORA.JESRYLLLEANA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIX03iHmFE6Tx2tBnw+BnhMiPKGMZOkcA6fNprL1nGTklz1XAGVxx/2h1OR+DO1N9w==",
+                            PhoneNumber = "09176111210",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9099abe7-9845-4f9a-a4fb-e0d6b374ffcd",
+                            TwoFactorEnabled = false,
+                            UserName = "factora.jesryllleana",
+                            FirstName = "JESRYLL LEANA",
+                            LastName = "FACTORA",
+                            MiddleName = "TUPAS"
+                        },
+                        new
+                        {
+                            Id = "c77b5df0-836a-4f9e-9f29-d2f6c6cf4074",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "265fb239-cb3a-4431-8053-089040e0fbeb",
+                            Email = "cherfer22@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "CHERFER22@YAHOO.COM",
+                            NormalizedUserName = "FERRER.CHERYL",
+                            PasswordHash = "AQAAAAIAAYagAAAAELJ+ayDKabx/I4FlqK6lQ+5lSNcb46KmkTqTrr8mrAH6V6PdjEaoR7PCQbAE+wpQsg==",
+                            PhoneNumber = "09276048113",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "e530124a-6e2c-42e5-b733-79591203db02",
+                            TwoFactorEnabled = false,
+                            UserName = "ferrer.cheryl",
+                            FirstName = "CHERYL",
+                            LastName = "FERRER",
+                            MiddleName = "MAGBANUA"
+                        },
+                        new
+                        {
+                            Id = "5d8a2197-b38b-40b2-940a-845e2a44b622",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "bc2fd631-8062-4ede-8d95-4bf5fc4a23ce",
+                            Email = "resildago1212@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "RESILDAGO1212@GMAIL.COM",
+                            NormalizedUserName = "GO.RESILDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPIVhI+CZvzurKDWs4GXRVt0Vw6HJDAfMXtWPquD+sO3QwkU8TR4G54Ot7cfH0gh4A==",
+                            PhoneNumber = "09062249400",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "828458fe-022f-47b3-af5d-7b7d7c90be2c",
+                            TwoFactorEnabled = false,
+                            UserName = "go.resilda",
+                            FirstName = "RESILDA",
+                            LastName = "GO",
+                            MiddleName = "BAGGAYAN"
+                        },
+                        new
+                        {
+                            Id = "c79c6433-d1ad-46a3-ae87-84edb44476de",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ab82c8df-2834-4a1c-bd27-b3b6c988a00d",
+                            Email = "rendtesy0620@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "RENDTSEY0620@GMAIL.COM",
+                            NormalizedUserName = "GONZALES.RENETTE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKE2mwXC4AVyZQKME8KpYD4yO0s5r/K0CvvleJIPSGCrRpF841HhJbDxMEnaibFmuw==",
+                            PhoneNumber = "09166248783",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "6b1dd1e0-86b8-476f-a4be-6c294031127f",
+                            TwoFactorEnabled = false,
+                            UserName = "gonzales.renette",
+                            FirstName = "RENETTE",
+                            LastName = "GONZALES",
+                            MiddleName = "SUDARIO"
+                        },
+                        new
+                        {
+                            Id = "f03cf528-c2a5-4820-91a5-6821dc5350f8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "b02c9fe9-2d4e-47fb-9905-b1d7673aa6c7",
+                            Email = "espurakoy@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ESPURAKOY@YAHOO.COM",
+                            NormalizedUserName = "SERO.GABRIEL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPit0Qsb/EGrAi+6Dz03QJtNhTRQAqQbGPejPEgIjB6tcKz1Te4+9IhTNseZ8i0/lg==",
+                            PhoneNumber = "09177239443",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "b4496fe5-a9b5-494b-ac18-e8a8ca8d6715",
+                            TwoFactorEnabled = false,
+                            UserName = "sero.gabriel",
+                            FirstName = "GABRIEL",
+                            LastName = "SERO",
+                            MiddleName = "BLANCO"
+                        },
+                        new
+                        {
+                            Id = "5f33b779-c424-4e4d-89a9-7b8e5ac3e98d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "eae09f49-a82a-41d5-93d4-d2065ade3703",
+                            Email = "jettFTS@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "JETTFTS@GMAIL.COM",
+                            NormalizedUserName = "SABRINE.JARRETT",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDpgPCshJd10d/vPYoOoGyAeB0lAv0Svd3suGNdJwMXuWrMpJFW0rRGG5AaL89iSJQ==",
+                            PhoneNumber = "09162012248",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4cf65d29-64a6-494f-8247-aef6c4fd6891",
+                            TwoFactorEnabled = false,
+                            UserName = "sabrine.jarrett",
+                            FirstName = "JARRETT",
+                            LastName = "SABRINE",
+                            MiddleName = "DORONILLA"
+                        },
+                        new
+                        {
+                            Id = "baf0a172-7e0a-4999-8c03-8f9bfb62150b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ce2375b7-852b-4afc-a4e3-d51274af5d56",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedUserName = "SALIK.FAISAL",
+                            PasswordHash = "AQAAAAIAAYagAAAAENvjXThS6kVyhCCMw6Tdg03zSk6XPkHbAoDm/EoiHmH0rtAHvIeZkPvDkUOsB6Djdg==",
+                            PhoneNumber = "09773262708",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4f15e70e-1db2-4c73-bc45-db99a0db9558",
+                            TwoFactorEnabled = false,
+                            UserName = "salik.faisal",
+                            FirstName = "FAISAL",
+                            LastName = "SALIK",
+                            MiddleName = "ONG"
+                        },
+                        new
+                        {
+                            Id = "88a1a0b3-943d-47a2-b0bb-f1c8763acaf4",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a8ae92a9-b0c2-41e9-b11b-8c0151ae98ed",
+                            Email = "tardz03@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "TARDZ03@YAHOO.COM",
+                            NormalizedUserName = "SORIANO.GERALD",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHUuCKeNz3jpYH2TbfPw2ILdOs0UVrEcQ8N4txAy2WdHQYcz6wCUv1mhdKY7BfKv3w==",
+                            PhoneNumber = "09224339675",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "bdad01a3-8c1b-46cb-9e8a-f90c74b675d5",
+                            TwoFactorEnabled = false,
+                            UserName = "soriano.gerald",
+                            FirstName = "GERALD",
+                            LastName = "SORIANO",
+                            MiddleName = "VEN"
+                        },
+                        new
+                        {
+                            Id = "0ff9af54-f57a-4d1b-a2d6-679b3a4b8c30",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "4b394f3a-1f6c-4286-a52f-943afd5dcea7",
+                            Email = "abigailsaveland@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ABIGAILSAVELAND@GMAIL.COM",
+                            NormalizedUserName = "SALVATIERRA.MA.ABIGAIL",
+                            PasswordHash = "AQAAAAIAAYagAAAAENWnzrZrDuGCm9K+4Drcq8jpJZO7Hl7H5G6UNg5zAoU0h2kBptvi55CLu+4DQBe+yQ==",
+                            PhoneNumber = "09088931724",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "da37e11d-c60c-4f21-864f-bfe45972caa3",
+                            TwoFactorEnabled = false,
+                            UserName = "salvatierra.ma.abigail",
+                            FirstName = "MA. ABIGAIL",
+                            LastName = "SALVATIERRA",
+                            MiddleName = "YU"
+                        },
+                        new
+                        {
+                            Id = "59b4a3e6-30c2-4a8c-8851-78b95cf11f5b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "abea6181-7f7c-4af5-9aa3-4e32910991ec",
+                            Email = "jomedellesampulna13@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "JOMEDELLESAMPULNA13@GMAIL.COM",
+                            NormalizedUserName = "SAMPULNA.JOMEDELLE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDlcgtfV3bg03tstkEuKFhx6X+2wr9z3a3LRCeGxKZvEF2l5PBz7KMsvGCQOMXZPEw==",
+                            PhoneNumber = "09673774366",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "dce71510-d725-4ad4-822b-9221d72cf89c",
+                            TwoFactorEnabled = false,
+                            UserName = "sampulna.jomedelle",
+                            FirstName = "JOMEDELLE",
+                            LastName = "SAMPULNA",
+                            MiddleName = "CHIO"
+                        },
+                        new
+                        {
+                            Id = "3db6b5af-4b42-4747-a3f0-3a60b3e36a56",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "55056ee0-8273-4989-b8ab-9bab8287bba7",
+                            Email = "omaldetj9@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "OMALDETJ9@YAHOO.COM",
+                            NormalizedUserName = "SAPI.TERRYJANE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAG2fxGN/2nO/K3DTiK4kj9XeBJsx2Aexvl+QGz7eEWsielWY23YsoScgGpjsUSDOA==",
+                            PhoneNumber = "09458244916",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d4e1f341-b72e-4a1a-aa03-72c4851d930c",
+                            TwoFactorEnabled = false,
+                            UserName = "sapi.terryjane",
+                            FirstName = "TERRY JANE",
+                            LastName = "SAPI",
+                            MiddleName = "OMALDE"
+                        },
+                        new
+                        {
+                            Id = "7gf2b7zj-4b42-2476-f3f3-1x72b3e34aq68",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "924d43d4-ec96-4d60-a8f0-625cf7ca42f4",
+                            Email = "saliling1234@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SALILING@YAHOO.COM",
+                            NormalizedUserName = "SALILING.FLOREDLIZA",
+                            PasswordHash = "AQAAAAIAAYagAAAAENslvUsRh0GStipydndXSejcbngk+NM75m55+Fl8CMNYV313w+EY4HmdGX3r2bWBhQ==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "a52bc0aa-a24c-40ef-a647-fbce5529c807",
+                            TwoFactorEnabled = false,
+                            UserName = "saliling.floredliza",
+                            FirstName = "Floredliza",
+                            LastName = "Saliling-Alta",
+                            MiddleName = "J."
+                        },
+                        new
+                        {
+                            Id = "b83670e3-3d7c-40a4-8d07-5a3c3f6bde91",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "582dda93-a701-4d1e-8ee6-6c087af3b604",
+                            Email = "paogratuito@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "PAOGRATUITO@GMAIL.COM",
+                            NormalizedUserName = "GRATUITO.JOHNPAUL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFAWBkvxLYdgM/tDqF81Ee4NEUu1z5WRvZY3fmPWpcNEUT6LUipJdxg0V+KGzV2cTw==",
+                            PhoneNumber = "09177027392",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7bde5686-4086-44dc-b3e0-6672b32928ea",
+                            TwoFactorEnabled = false,
+                            UserName = "gratuito.johnpaul",
+                            FirstName = "JOHN PAUL",
+                            LastName = "GRATUITO",
+                            MiddleName = "CHOA KHAO UY"
+                        },
+                        new
+                        {
+                            Id = "3a4c88b0-5f73-41f0-82e7-255e19e8d9d1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "4845e4cc-5ca0-4113-930d-d4910f3fd31c",
+                            Email = "leyn0426@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "LEYN0426@YAHOO.COM",
+                            NormalizedUserName = "GUMAPAC.AILEEN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEF4BIJOAuhxx+HiBtyFjsotICy+5MSTWmSFXwbgT9x3ND27VEfXeZijHGreYTrPBUg==",
+                            PhoneNumber = "09274449665",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "57ae3f56-3668-4712-8a21-43141271d315",
+                            TwoFactorEnabled = false,
+                            UserName = "gumapac.aileen",
+                            FirstName = "AILEEN",
+                            LastName = "GUMAPAC",
+                            MiddleName = "SANTIAGO"
+                        },
+                        new
+                        {
+                            Id = "c0b41f2c-0f8d-4a53-b0a9-5cfa02b6a851",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "fcd61f58-f22d-42f0-b5fe-9deae9f1e803",
+                            Email = "jaheerhusseinismael@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "JAHEERHUSSEINISMAEL@GMAIL.COM",
+                            NormalizedUserName = "ISMAEL.AMIRHUSSEIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAN0esYYtFF0/uc/Ic308vufqtVIZ+hm+FnhEl185JFATouydfvLBpgn0QEMs45Hkw==",
+                            PhoneNumber = "09564020491",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9da18360-6047-48e2-8c49-18690a966b17",
+                            TwoFactorEnabled = false,
+                            UserName = "ismael.amirhussein",
+                            FirstName = "AMIR HUSSEIN",
+                            LastName = "ISMAEL",
+                            MiddleName = "MACAPENDENG"
+                        },
+                        new
+                        {
+                            Id = "c171e56e-b2e0-43f2-91f1-8f258417bc3d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "1cfe1835-0139-45ed-899a-b6e6bdcd92a3",
+                            Email = "shingdumama@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SHINGDUMAMA@GMAIL.COM",
+                            NormalizedUserName = "IBRAHIMDUMAMA.SHARINAH",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEvQBtplrJAciDogdpqyvSsVDzbBdSyJCJ39m4WVsfcjpr/27HoTs4wAuKrHwONVdw==",
+                            PhoneNumber = "09177263399",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "3f9c1212-c2a2-4ed8-a34b-6f4282e70bdb",
+                            TwoFactorEnabled = false,
+                            UserName = "ibrahimdumama.sharinah",
+                            FirstName = "SHARINAH",
+                            LastName = "IBRAHIM-DUMAMA",
+                            MiddleName = "CATALAN"
+                        },
+                        new
+                        {
+                            Id = "43f6a708-995c-4a07-9e90-6d0a5efc32d5",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "3a7c1dab-7b29-472f-8c9f-b836aef792d1",
+                            Email = "baiyasminjaynonjuanday@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "BAIYASMINJAYNONJUANDAY@GMAIL.COM",
+                            NormalizedUserName = "JUANDAY.BAIYASMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEERFB60oQcVDU7FGzvDrHmgD0VcSh7WVhyT668tyGrnQFEMPVrtxT8glrzC9ZNqLRA==",
+                            PhoneNumber = "09260474812",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "95e8d9d0-bcbc-4127-b3e8-dbc55d738c84",
+                            TwoFactorEnabled = false,
+                            UserName = "juanday.baiyasmin",
+                            FirstName = "BAI YASMIN",
+                            LastName = "JUANDAY",
+                            MiddleName = "JAYNON"
+                        },
+                        new
+                        {
+                            Id = "21d7b7dc-3425-464f-96d5-f6784b19b4cf",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "913c8826-08ac-427b-a5c3-488d453e6303",
+                            Email = "lenzkylu@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "LENZKYLU@GMAIL.COM",
+                            NormalizedUserName = "LU.LEONITA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDhO3uAFb7twdV+JB30/tD5LIKiCjRKNouGfDf9sgSOL+O8u4IfjJnp4KE6s6Y4qeA==",
+                            PhoneNumber = "09178732580",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7f2165a4-8b21-4e5e-be1e-60177dc62c4b",
+                            TwoFactorEnabled = false,
+                            UserName = "lu.leonita",
+                            FirstName = "LEONITA",
+                            LastName = "LU",
+                            MiddleName = "CHUA"
+                        },
+                        new
+                        {
+                            Id = "c8dc080e-2c5f-4a8e-b0e0-9c29dc45a31f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "fcaab8f3-6af9-4311-9e5e-29e19010f98a",
+                            Email = "rbmaputi@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "RBMAPUTI@GMAIL.COM",
+                            NormalizedUserName = "LU.ROWENA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGabOWw62lr59pjzw+Whbax2zlwNp4Q/DdckjYPXiLQBBK8owfMiVR0t5ngme/Yv7g==",
+                            PhoneNumber = "09173000155",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "ae29daaf-9bd2-4492-933a-20a11c701e54",
+                            TwoFactorEnabled = false,
+                            UserName = "lu.rowena",
+                            FirstName = "ROWENA",
+                            LastName = "LU",
+                            MiddleName = "MAPUTI"
+                        },
+                        new
+                        {
+                            Id = "13ab0a0e-5d9a-4e53-a5f0-5cb11a775fe3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "1fa3ee5e-6bd2-40e0-ba33-1eac23a4892f",
+                            Email = "rosalieluces05@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ROSALIELUCES05@GMAIL.COM",
+                            NormalizedUserName = "LUCES.ROSALIE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGlxY2NcnGa1inmIa8NSgLdiWUKfSzZzfZPg7VOF8zPxQ497waiSnePYxhzkdSKh/A==",
+                            PhoneNumber = "09109099656",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "1741b821-514d-47e4-af6e-c6c7dbf01481",
+                            TwoFactorEnabled = false,
+                            UserName = "luces.rosalie",
+                            FirstName = "ROSALIE",
+                            LastName = "LUCES",
+                            MiddleName = "OREJUDOS"
+                        },
+                        new
+                        {
+                            Id = "a2a9b64b-1b54-4c49-90e2-4dbf1e59a98e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c969259a-262d-4637-9984-d46c80074aac",
+                            Email = "mabangsigrid@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "MABANGSIGRID@GMAIL.COM",
+                            NormalizedUserName = "MABANG.SIGRID",
+                            PasswordHash = "AQAAAAIAAYagAAAAED+PQcD3G3cY9DifUdItLjxXVAOCs+RYC1l/2g5ipz93Z7kanEIMcFd7s7DAgg1SRQ==",
+                            PhoneNumber = "09351488175",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "acdd3ff6-9968-4f96-aacf-aaf1deec0e8d",
+                            TwoFactorEnabled = false,
+                            UserName = "mabang.sigrid",
+                            FirstName = "SIGRID",
+                            LastName = "MABANG",
+                            MiddleName = "BARAGUIR"
+                        },
+                        new
+                        {
+                            Id = "49180f4a-cbe7-489b-8fd1-901e79dfe2f5",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9e0c8f8c-ef83-4d9a-bbc4-ee912fc2b782",
+                            Email = "sacamaglangit.md@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SACAMAGLANGIT.MD@GMAIL.COM",
+                            NormalizedUserName = "MAGLANGIT.SITTIEANEZA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPZBar8HEobCZdOkKo4oOWuV3fmsgu+zhj5q3pAR4Mzmo24BaHzQ5ck8RmNImvQYEA==",
+                            PhoneNumber = "09989913196",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "e701695b-4798-4107-b4eb-021124147f73",
+                            TwoFactorEnabled = false,
+                            UserName = "maglangit.sittieaneza",
+                            FirstName = "SITTIE ANEZA CAMILLE",
+                            LastName = "MAGLANGIT",
+                            MiddleName = "AMAD"
+                        },
+                        new
+                        {
+                            Id = "dcf663a4-36f5-4fd6-b124-bae31e0c9e2e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "7f7943b2-676e-489b-a681-b73c0f286d0e",
+                            Email = "jayjay_malana@hotmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "JAYJAY_MALANA@HOTMAIL.COM",
+                            NormalizedUserName = "MALANA.JAYJAY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKpjEWZlR2EI2SCDXJhdYxaCF7aPlnvc1tWRkSyzDVJaJByBhichUXxj5hQAWO/h3A==",
+                            PhoneNumber = "09274171288",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "2b3776a8-90fd-4e2d-8980-7010f3cc23cb",
+                            TwoFactorEnabled = false,
+                            UserName = "malana.jayjay",
+                            FirstName = "JAY-JAY",
+                            LastName = "MALANA",
+                            MiddleName = "MALANNAG"
+                        },
+                        new
+                        {
+                            Id = "17793347-1bfa-4526-a0af-0ffcf374aa9a",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "4cdd32cb-02e6-4b82-b3ce-2d5c87ca1ee7",
+                            Email = "marjorenecorpuz@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "MARJORENECORPUZ@YAHOO.COM",
+                            NormalizedUserName = "MANAOIS.MARJORENE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEId7th9LLIcO5A1MdVm/ZZymkCTZu9Pt2o2dMmaRUfmEymrcPHP1lDtwUEL/k0ht4g==",
+                            PhoneNumber = "09072856158",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d30ead5c-0fa9-4971-a87f-20e008dafed0",
+                            TwoFactorEnabled = false,
+                            UserName = "manaois.marjorene",
+                            FirstName = "MARJORENE",
+                            LastName = "MANAOIS",
+                            MiddleName = "CORPUZ"
+                        },
+                        new
+                        {
+                            Id = "6f34a16a-6e68-4d8b-9f6a-0e0c07a09ed8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a027489f-cf17-4d35-a8da-15917f0fa37d",
+                            Email = "farizahm@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "FARIZAHM@YAHOO.COM",
+                            NormalizedUserName = "MAMALUBA.FARIZAH",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAajbUsgztaUPgKqMqm1arSw5XpcBfJRCvz5Si9y3iF4lXjqo9Tbip8BPK6tZyEsmw==",
+                            PhoneNumber = "09168372024",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "a98515df-9ee6-4947-a93d-a9cb947e1bd9",
+                            TwoFactorEnabled = false,
+                            UserName = "mamaluba.farizah",
+                            FirstName = "FARIZAH",
+                            LastName = "MAMALUBA",
+                            MiddleName = "MODIARAT"
+                        },
+                        new
+                        {
+                            Id = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c7214324-f430-419e-ac5f-466114cc5356",
+                            Email = "hunnyresquites88@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "HUNNYRESQUITES88@YAHOO.COM",
+                            NormalizedUserName = "MANGULAMAS.HONEYLET",
+                            PasswordHash = "AQAAAAIAAYagAAAAELwS7Mr7tzdWjPGT29gDj9Pz2X1cdEwyVTnLhrMWoDeP6aGIwP8Hd0Ik7vE9RIacgw==",
+                            PhoneNumber = "09776146365",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7dfa1320-1bae-48b5-9341-8e0cba25edb8",
+                            TwoFactorEnabled = false,
+                            UserName = "mangulamas.honeylet",
+                            FirstName = "HONEYLET",
+                            LastName = "MANGULAMAS",
+                            MiddleName = "RESQUITES"
+                        },
+                        new
+                        {
+                            Id = "53ac9d08-f52f-4a25-92d7-10de53f612fa",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a4c0e441-c7ce-4fe7-880f-a89979526d0b",
+                            Email = "rodelynmartinez619@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "RODELYNMARTINEZ619@GMAIL.COM",
+                            NormalizedUserName = "MARTINEZ.RODELYN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEO9V2efd5wcr1p/E1zClDcqLTtrnljpWDSQX64ZghDqGTUQz6/4oP/BQufU4x64v/w==",
+                            PhoneNumber = "09177188038",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "daba5c95-de7a-497e-be28-7457eaef34e0",
+                            TwoFactorEnabled = false,
+                            UserName = "martinez.rodelyn",
+                            FirstName = "RODELYN",
+                            LastName = "MARTINEZ",
+                            MiddleName = "CORTEZ"
+                        },
+                        new
+                        {
+                            Id = "827e71e5-479c-47a7-8f91-16327825a02d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "215cc88f-44fb-4efd-b743-19599b8009c3",
+                            Email = "faridaolama@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "FARIDAOLAMA@GMAIL.COM",
+                            NormalizedUserName = "MEDITAR.FARIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKGALiomVRJDrZmo2F+V63/8al8NcKuIaQzjYZILv2Ply7AF7n4EDxhifE8MJU9oNQ==",
+                            PhoneNumber = "09606059079",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d42a4f00-aa93-4dc5-b85a-e24517674296",
+                            TwoFactorEnabled = false,
+                            UserName = "meditar.farida",
+                            FirstName = "FARIDA",
+                            LastName = "MEDITAR",
+                            MiddleName = "OLAMA"
+                        },
+                        new
+                        {
+                            Id = "dfb15a5f-9f4e-48e6-b781-f4a62c5bfb0a",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ecd7127a-7b7a-4f9f-a7a1-25ece9e49781",
+                            Email = "midtimbangbebot@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "MIDTIMBANGBEBOT@GMAIL.COM",
+                            NormalizedUserName = "MIDTIMBANG.BEBOT",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDKlD4QoBjiYvffqqw9oD46uh0Tdh6MgBTyWbl8FNPx87ONXDxm62bMAStBHOn6uOw==",
+                            PhoneNumber = "09755272044",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "a05a5077-0a60-4632-add9-05a902981b34",
+                            TwoFactorEnabled = false,
+                            UserName = "midtimbang.bebot",
+                            FirstName = "BEBOT",
+                            LastName = "MIDTIMBANG",
+                            MiddleName = "USOP"
+                        },
+                        new
+                        {
+                            Id = "12183b62-26ee-459b-a859-88a94e86c117",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c75aecb7-c5c5-42bb-9342-555915cec492",
+                            Email = "NA",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "NA",
+                            NormalizedUserName = "MOJADO.JOCELYN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFmgUnbXrdhi7HQTNh48XmH9cRirwnTKlOUSSj2ElGiV0y/Y2+ivC/IQnBoxja3Tyg==",
+                            PhoneNumber = "NA",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "245211e3-fb96-4f57-9bb9-94eb781bf8da",
+                            TwoFactorEnabled = false,
+                            UserName = "mojado.jocelyn",
+                            FirstName = "JOCELYN",
+                            LastName = "MOJADO",
+                            MiddleName = "BAJAO"
+                        },
+                        new
+                        {
+                            Id = "ef529a6b-b381-4db1-a204-913ba73a6721",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "0e1d9d4b-b1ea-4eb5-ae91-1ae9a6104538",
+                            Email = "iamarielolivo@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "IAMARIELOLIVO@GMAIL.COM",
+                            NormalizedUserName = "OLIVO.ARIEL",
+                            PasswordHash = "AQAAAAIAAYagAAAAENnpPpvE0237iz4HH2s0A5EbpnyYlKQ+53gCONCMD90evTCIKWkG02bXYznxwk2kFw==",
+                            PhoneNumber = "09084724708",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "af1844a6-1660-4dce-97f9-9bf63c91d901",
+                            TwoFactorEnabled = false,
+                            UserName = "olivo.ariel",
+                            FirstName = "ARIEL",
+                            LastName = "OLIVO",
+                            MiddleName = "MELOCOTON"
+                        },
+                        new
+                        {
+                            Id = "969fb51f-26aa-4637-8a8a-96247c7a67a4",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "64b90161-ccda-4ede-b949-345ec26eb746",
+                            Email = "hasmiamdo@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "HASMIAMDO@GMAIL.COM",
+                            NormalizedUserName = "OMAR.HASMIA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN+sErV1xZP/9W+rWFw1d6vSXZ7Q1dvDIMWn9Z57J7XVuIUBTofgYnmBKkjTbae4Mw==",
+                            PhoneNumber = "09365268695",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "c93af9ca-dde9-4ac4-a4be-b82659013c12",
+                            TwoFactorEnabled = false,
+                            UserName = "omar.hasmia",
+                            FirstName = "HASMIA",
+                            LastName = "OMAR",
+                            MiddleName = "DATUMANONG"
+                        },
+                        new
+                        {
+                            Id = "b5870b06-0240-4d35-a6b1-54a76c1e09fc",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "92bbd922-20ce-4a83-8100-a64f9092bead",
+                            Email = "apple_foj@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "APPLE_FOJ@YAHOO.COM",
+                            NormalizedUserName = "ONDOY.MARIVETTE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPEK31Hqt/JQ82Q77+nRMtrlRBgDvjfeTezfKEX/xgZDYYyEF/2xFhF1vSA1Resb9Q==",
+                            PhoneNumber = "09177228527",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "f0a591e3-c2e5-4b3f-94ef-85d1e7041315",
+                            TwoFactorEnabled = false,
+                            UserName = "ondoy.marivette",
+                            FirstName = "MARIVETTE",
+                            LastName = "ONDOY",
+                            MiddleName = "TABUGO"
+                        },
+                        new
+                        {
+                            Id = "bb22c692-bc14-44db-9a6e-5b0196c9a8c2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ac84bcb1-40f1-4e73-81a8-5130a85f2c53",
+                            Email = "origmonaliza@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ORIGMONALIZA@GMAIL.COM",
+                            NormalizedUserName = "ORIG.MONALIZA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGVi2q01mdxM/9Ast1EO1twj307hH5EpPQPd+dJCIX7Q1y5Oqy3UVBamEU5iQHzx+g==",
+                            PhoneNumber = "09274704538",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "95149dab-f9a2-4267-a7ed-e3084ee7aceb",
+                            TwoFactorEnabled = false,
+                            UserName = "orig.monaliza",
+                            FirstName = "MONALIZA",
+                            LastName = "ORIG",
+                            MiddleName = "NOR"
+                        },
+                        new
+                        {
+                            Id = "5b7ff0c8-b6f9-489c-9f1d-9faadf9e6c6f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "f4d2e8d9-83c3-46a3-a818-b88797016330",
+                            Email = "hor_he@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "HOR_HE@YAHOO.COM",
+                            NormalizedUserName = "PADILLA.JORGE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEG7/WwhYdrxKEKe3UAQ2OVaEk2eVV1aTNg3AIga6yc2ya5Nn74/r8LuHPihq5cOm9Q==",
+                            PhoneNumber = "09177900470",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "53794646-ded0-4a7e-a8e1-8f21ba960d03",
+                            TwoFactorEnabled = false,
+                            UserName = "padilla.jorge",
+                            FirstName = "JORGE",
+                            LastName = "PADILLA",
+                            MiddleName = "LAMPITOC"
+                        },
+                        new
+                        {
+                            Id = "d65e3f58-b23d-4b83-8b15-15e66565d29f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "2388438b-fe42-4b48-afa3-c974eb078355",
+                            Email = "shpagayao@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SHPAGAYAO@GMAIL.COM",
+                            NormalizedUserName = "PANTARAN.SANDRA",
+                            PasswordHash = "AQAAAAIAAYagAAAAELV2NtpSyFWpay469sHNr/bB+MeX9U4OcGow+miBYdGkrP6PJQV/Rtk3NRGyQr6pgw==",
+                            PhoneNumber = "09163771505",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "3852cdf2-5606-4057-8504-89bc0efc756e",
+                            TwoFactorEnabled = false,
+                            UserName = "pantaran.sandra",
+                            FirstName = "SANDRA",
+                            LastName = "PANTARAN",
+                            MiddleName = "PAGAYAO"
+                        },
+                        new
+                        {
+                            Id = "a1e10c26-4d1d-4f9e-9378-1382457c82ad",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "59db4c9f-bbe5-465e-b009-b636a16cd774",
+                            Email = "beeyoupee@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "BEEYOUPEE@GMAIL.COM",
+                            NormalizedUserName = "PINGUIAMAN.BAITAYAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIZnI/EPNAco3RzCsTv7fQpT7PtVYQ8S5D2Q202hqhnWcCZGqhxUyA16vZgPo1H1RQ==",
+                            PhoneNumber = "09056377715",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "31390028-15bd-4c28-a7e3-9fb6744e5a66",
+                            TwoFactorEnabled = false,
+                            UserName = "pinguiaman.baitayan",
+                            FirstName = "BAITAYAN",
+                            LastName = "PINGUIAMAN",
+                            MiddleName = "UNTONG"
+                        },
+                        new
+                        {
+                            Id = "dfc40941-0cfb-46ed-8991-e285aa08c20e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "be86a555-e60c-4fc4-b499-143f3fafd8e9",
+                            Email = "quinto.jennifer82@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "QUINTO.JENNIFER82@GMAIL.COM",
+                            NormalizedUserName = "QUINTO.JENNIFER",
+                            PasswordHash = "AQAAAAIAAYagAAAAENw7Av04gEMD7XZUVAU0gSWGS3PJ+1KnVE+bajLiYcjf1cUhkmMMae9k44OuLxCeRg==",
+                            PhoneNumber = "09272708149",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "2c3ab32e-b33d-4be9-9b4b-76868b42397d",
+                            TwoFactorEnabled = false,
+                            UserName = "quinto.jennifer",
+                            FirstName = "JENNIFER",
+                            LastName = "QUINTO",
+                            MiddleName = "CATBAGAN"
+                        },
+                        new
+                        {
+                            Id = "f23ac0c6-68ac-41c8-94ff-383acbfc3e41",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "282e7d36-930b-4033-a531-f0d952d6daba",
+                            Email = "estrellavsreal@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ESTRELLAVSREAL@YAHOO.COM",
+                            NormalizedUserName = "REAL.VIVIAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA5lpYtCilIYhG51c0jX0zIaXP+swyZ8Wj6/Kc4KIbdpDMexclKPM9+Ln8kWPMIexA==",
+                            PhoneNumber = "09171027173",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "a4094ae8-e936-40b6-b4a5-a565c253ef5b",
+                            TwoFactorEnabled = false,
+                            UserName = "real.vivian",
+                            FirstName = "VIVIAN",
+                            LastName = "REAL",
+                            MiddleName = "SARATAO"
+                        },
+                        new
+                        {
+                            Id = "50e3ff41-8195-4d52-805a-d55efb68f08a",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "663a25f3-d273-40ea-a8eb-129b7095482f",
+                            Email = "lienocius@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "LIENOCIUS@GMAIL.COM",
+                            NormalizedUserName = "SUICO.NEILALFONSO",
+                            PasswordHash = "AQAAAAIAAYagAAAAENICAoKtp1oeANUgHKcQs507A6/6CXVmtL1LW+4C4F1fPy9EvdVm4AGnrhkmjAC/kg==",
+                            PhoneNumber = "09260398619",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "6214f527-d41f-4894-bf90-e3ecafe095d6",
+                            TwoFactorEnabled = false,
+                            UserName = "suico.neilalfonso",
+                            FirstName = "NEIL ALFONSO",
+                            LastName = "SUICO",
+                            MiddleName = "VIRAY"
+                        },
+                        new
+                        {
+                            Id = "55c79a0c-4f48-472f-9d13-1801e2e5c167",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "547d1320-2ebf-47dd-8433-f93d906af1a2",
+                            Email = "janesuperales27@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "JANESUPERALES27@GMAIL.COM",
+                            NormalizedUserName = "SUPERALES.MARYJANE",
+                            PasswordHash = "AQAAAAIAAYagAAAAED+oq8F3JVrzpPTSZvuX7URME1WRCOfbxlQ8dKvizgGo80iOJOrMo0FRy9yCvSHfJg==",
+                            PhoneNumber = "09162424748",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "3d881684-6399-4130-956d-317ccacafde0",
+                            TwoFactorEnabled = false,
+                            UserName = "superales.maryjane",
+                            FirstName = "MARY JANE",
+                            LastName = "SUPERALES",
+                            MiddleName = "ORTEGA"
+                        },
+                        new
+                        {
+                            Id = "2e889d55-159e-44a0-b9c9-44cc9f25c66b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "e52c9010-d001-4835-8332-0edb363e3672",
+                            Email = "suzettetocao@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SUZETTE TOCAO@GMAIL.COM",
+                            NormalizedUserName = "TOCAO.SUZETTE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEO9ydNBgsNVBkInv2UIXKbeRAn0ok3+lXTfVZmVmj0QVmZRfuk2yAGUaMcWFRIeYrw==",
+                            PhoneNumber = "09219908520",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "456dc71e-7b88-43f5-aacc-58ddcc2aee73",
+                            TwoFactorEnabled = false,
+                            UserName = "tocao.suzette",
+                            FirstName = "SUZETTE",
+                            LastName = "TOCAO",
+                            MiddleName = "COMPLETANO"
+                        },
+                        new
+                        {
+                            Id = "2ec1e24b-50c6-48b7-8e9c-18c64a42e172",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "17540920-5eda-4eb2-b6dd-673f0f9fd7e8",
+                            Email = "ashmatik23@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ASHMATIK23@GMAIL.COM",
+                            NormalizedUserName = "USMAN.ASWARFY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOz5zqi7ROdE/j4LTin+jGFnbsdRShC1D7V75RTHyX8q9Mu3AaQyk3TSNoqmKeVwsw==",
+                            PhoneNumber = "09173383890",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "f36ee4c0-7bda-4b47-a1f7-a2c6861e0ac7",
+                            TwoFactorEnabled = false,
+                            UserName = "usman.aswarfy",
+                            FirstName = "ASWARFY",
+                            LastName = "USMAN",
+                            MiddleName = "MOHAMAD"
+                        },
+                        new
+                        {
+                            Id = "87234d0c-41c3-44e5-8cb7-5d7a7a9209c8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d1c149fa-ed93-498c-9949-824531f54161",
+                            Email = "hamidadubali@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "HAMIDADUBALI@GMAIL.COM",
+                            NormalizedUserName = "USMANBALI.HAMIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAENJW5KTvRjK+mc2L2mAgIbRXfDEyEJzG8zP9QAC5OBsGAEpAkhr2KHC6fJtmw928gA==",
+                            PhoneNumber = "09368159393",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "551c0148-42b9-456f-92e4-dfb37a560cf0",
+                            TwoFactorEnabled = false,
+                            UserName = "usmanbali.hamida",
+                            FirstName = "HAMIDA",
+                            LastName = "USMAN-BALI",
+                            MiddleName = "DATUMANONG"
+                        },
+                        new
+                        {
+                            Id = "39987409-6b12-4a73-a9a3-61c7f117dcab",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "84076ee5-fe22-4f58-8190-501ec64f4c24",
+                            Email = "claurencevasay@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "CLAURENCEVASAY@GMAIL.COM",
+                            NormalizedUserName = "VASAY.CLAURENCE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKPUkT/mn2CGLWiwvqd3PgvRlvcDlMF/HoX9Y06cIpwQxRmbdVqoqLCenCTghdZ0lQ==",
+                            PhoneNumber = "09555765345",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "ad9445c8-1ee7-428b-95d8-170123bb7174",
+                            TwoFactorEnabled = false,
+                            UserName = "vasay.claurence",
+                            FirstName = "CLAURENCE",
+                            LastName = "VASAY",
+                            MiddleName = "ACHAS"
+                        },
+                        new
+                        {
+                            Id = "56731842-6b12-9a46-k9h2-61c7f212hyex",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "49c3f03a-2080-42e2-837d-0a62959638ab",
+                            Email = "Silvestre1234@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "SILVESTRE1234@GMAIL.COM",
+                            NormalizedUserName = "SILVESTRE.CHRISLENLEE",
+                            PasswordHash = "AQAAAAIAAYagAAAAECG6xiS+d0ltmUH432gne984BCix+BmVttqhEcbUylPlcFqq9w/76Rdk2B9JSzlOrA==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "69ea6ac6-89f7-4c05-a0ad-ec11fb292384",
+                            TwoFactorEnabled = false,
+                            UserName = "silvestre.chrislenlee",
+                            FirstName = "Chrislen Lee",
+                            LastName = "Silvestre",
+                            MiddleName = "C."
+                        },
+                        new
+                        {
+                            Id = "c8463e9f-8ac6-40c3-91b1-2385f6a91eb4",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "af62ee3d-3a5e-46fb-b137-3c27b1b93c61",
+                            Email = "holy_voltz771989@yahoo.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "HOLY_VOLTZ771989@YAHOO.COM",
+                            NormalizedUserName = "VILLA.RUSSELKIRK",
+                            PasswordHash = "AQAAAAIAAYagAAAAEB57EJEk8hJ5WD7aaQOjDkva1IcSzcMgD+DZcSTbqh8kzemYn+YZpDgikOMG7Ajn8A==",
+                            PhoneNumber = "09095412351",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "b2a12042-2f1b-4cf2-92ea-fa40439e3fd6",
+                            TwoFactorEnabled = false,
+                            UserName = "villa.russelkirk",
+                            FirstName = "RUSSEL KIRK",
+                            LastName = "VILLA",
+                            MiddleName = "GUALINGCO"
+                        },
+                        new
+                        {
+                            Id = "abfc1b6f-9f29-44dd-9c45-cdcddaa6eb83",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "e7afd4f2-a279-4c71-ba3e-2814fe359f86",
+                            Email = "ruby012770@outlook.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "RUBY012770@OUTLOOK.COM",
+                            NormalizedUserName = "VILLANUEVA.RUBY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAlGTw97o0703x5KirP4e6wFgTglVNU+0DOca++0utI+BF3BbBQ9QMiSvexKTR/0pA==",
+                            PhoneNumber = "09173510613",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9b8d95c9-2c8c-4e50-8f6a-9ea74c2d05a2",
+                            TwoFactorEnabled = false,
+                            UserName = "villanueva.ruby",
+                            FirstName = "RUBY",
+                            LastName = "VILLANUEVA",
+                            MiddleName = "ELEVAZO"
+                        },
+                        new
+                        {
+                            Id = "db7fba3d-88fc-47cf-b119-f868d9196f02",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "27de1169-293f-4ce7-80bf-df15ff7a06f8",
+                            Email = "ronfaith2003@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "RONFAITH2003@GMAIL.COM",
+                            NormalizedUserName = "VILLAROSA.RONNIE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHAj2z/GOslo1RmL8Cm53JbQXuMZcZg4QJFDFOpxfU57R6pQl4yhUv/tHEvsNhWjeQ==",
+                            PhoneNumber = "09956598896",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "f6e99346-6139-4daa-847a-26de46223d72",
+                            TwoFactorEnabled = false,
+                            UserName = "villarosa.ronnie",
+                            FirstName = "RONNIE",
+                            LastName = "VILLAROSA",
+                            MiddleName = "GREGORIO"
+                        },
+                        new
+                        {
+                            Id = "7cfd0766-f3d3-47aa-9a48-53d437d6c232",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "37c7ade3-76b7-4889-aef4-79d216fb95ff",
+                            Email = "wahidamaniala@gmail.com",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "WAHIDAMANIALA@GMAIL.COM",
+                            NormalizedUserName = "ZAMAN.WAHIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDiP7vYtkrw0rPXdvRZd1oHqv5PPdo3GBFvtHQZrCKAMPUjFtb5EO4L2F7/q75EPyA==",
+                            PhoneNumber = "09065830887",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "fb9f337e-649a-4a5d-87cd-4361d2021277",
+                            TwoFactorEnabled = false,
+                            UserName = "zaman.wahida",
+                            FirstName = "WAHIDA",
+                            LastName = "ZAMAN",
+                            MiddleName = "MANIALA"
+                        },
+                        new
+                        {
+                            Id = "9821dbf5-0f70-4630-8c68-f2077a3abf08",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "b0a801a1-7169-4c7e-9b39-63d1d0b3d693",
+                            Email = "ZAMBRANO.REHABMD@GMAIL.COM",
+                            EmailConfirmed = false,
+                            LockoutEnabled = false,
+                            NormalizedEmail = "ZAMBRANO.REHABMD@GMAIL.COM",
+                            NormalizedUserName = "ZAMBRANO.JHOANAMARIE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHLuuneVtIdJwsFQGTqNVM4ppt/Dq0E5Zk/gPlY+a7TICjnbtSa6qt4ZoRF43d4zhQ==",
+                            PhoneNumber = "09178470437",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "99c72529-697e-4901-af26-37dbc5089775",
+                            TwoFactorEnabled = false,
+                            UserName = "zambrano.jhoanamarie",
+                            FirstName = "JHOANA MARIE",
+                            LastName = "ZAMBRANO",
+                            MiddleName = "JUANEZA"
                         });
                 });
 
@@ -3555,9 +10721,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasOne("IMIS.Domain.PgsPeriod", "PgsPeriod")
                         .WithMany()
-                        .HasForeignKey("PgsPeriodId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PgsPeriodId");
 
                     b.Navigation("Auditor");
 
