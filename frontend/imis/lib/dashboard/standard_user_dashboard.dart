@@ -1,6 +1,10 @@
 import 'dart:async';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/dashboard/admin_dashboard.dart';
+import 'package:imis/performance_governance_system/enum/pgs_status.dart';
+import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/widgets/dynamic_side_column.dart';
@@ -17,7 +21,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-
+  List<PgsDeliverables> deliverablesList = [];
   List<String> office = [];
   String firstName = "firstName";
 
@@ -94,7 +98,14 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                 flex: 2,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [gap16px, _buildWelcome(), gap32px],
+                  children: [
+                    gap16px,
+                    _buildWelcome(),
+                    gap32px,
+                    _buildStatsRow(),
+                    gap32px,
+                    _buildStatusWidget(deliverablesList),
+                  ],
                 ),
               ),
               SizedBox(width: 20),
@@ -132,6 +143,10 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
             children: [
               gap16px,
               _buildWelcome(),
+              gap32px,
+              _buildStatsRow(),
+              gap12px,
+              _buildStatusWidget(deliverablesList),
               gap16px,
               DynamicSideColumn1(
                 focusedDay: _focusedDay,
@@ -265,4 +280,384 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
               ),
     );
   }
+}
+
+Widget _buildStatsRow() {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final bool isNarrow = constraints.maxWidth < 400;
+
+      if (isNarrow) {
+        return Column(
+          children: [
+            buildDashboardBox(
+              title: "Total Deliverables",
+              subtitle: "Across all offices & periods",
+              count: "14",
+              color: Colors.black,
+              icon: Icons.show_chart,
+            ),
+
+            buildDashboardBox(
+              title: "Direct Deliverables",
+              count: "8",
+              color: primaryColor,
+              icon: Icons.people_outline,
+              progress: 0.571,
+            ),
+            buildDashboardBox(
+              title: "Indirect Deliverables",
+              count: "8",
+
+              color: Colors.orange,
+              icon: Icons.alt_route,
+              progress: 0.571,
+            ),
+            buildDashboardBox(
+              title: "Total Deliverables",
+              subtitle: "2 of 14 completed",
+              count: "14%",
+              color: Colors.green,
+              icon: Icons.check_circle_outline,
+            ),
+          ],
+        );
+      } else {
+        return Row(
+          children: [
+            Expanded(
+              child: buildDashboardBox(
+                title: "Total Deliverables",
+                subtitle: "Across all offices & periods",
+                count: "14",
+                color: Colors.black,
+                icon: Icons.show_chart,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: buildDashboardBox(
+                title: "Direct Deliverables",
+                count: "8",
+                color: primaryColor,
+                icon: Icons.people_outline,
+                progress: 0.571,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: buildDashboardBox(
+                title: "Indirect Deliverables",
+                count: "8",
+                color: Colors.orange,
+                icon: Icons.alt_route,
+                progress: 0.571,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: buildDashboardBox(
+                title: "Completion Rate",
+                subtitle: "2 of 14 completed",
+                count: "14%",
+                color: Colors.green,
+                icon: Icons.check_circle_outline,
+              ),
+            ),
+          ],
+        );
+      }
+    },
+  );
+}
+
+Widget buildDashboardBox({
+  required String title,
+  required String count,
+  String? subtitle,
+  required Color color,
+  required IconData icon,
+  double? progress,
+}) {
+  return Card(
+    color: mainBgColor,
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: BorderSide(color: Colors.grey.shade300, width: 1),
+    ),
+    child: Container(
+      width: 317,
+      height: 170,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: Color.fromARGB(129, 0, 0, 0),
+                ),
+              ),
+              Icon(icon, color: color, size: 20),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          Text(
+            count,
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+
+          if (progress != null) ...[
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey.shade300,
+                    color: color,
+                    minHeight: 6,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "${(progress * 100).toStringAsFixed(1)}%",
+                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                ),
+              ],
+            ),
+          ],
+
+          if (subtitle != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ],
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildPieChart(List<PgsDeliverables> deliverablesList) {
+  final statusCounts = countStatuses(deliverablesList);
+
+  final Map<PgsStatus, Color> statusColors = {
+    PgsStatus.notStarted: const Color.fromARGB(255, 179, 95, 95),
+
+    PgsStatus.onGoing: Colors.deepOrange,
+
+    PgsStatus.completed: Colors.green,
+  };
+
+  final List<PgsStatus> statusesToDisplay = [
+    PgsStatus.notStarted,
+    PgsStatus.onGoing,
+    PgsStatus.completed,
+  ];
+
+  final int totalCount = statusesToDisplay.fold(
+    0,
+    (sum, status) => sum + (statusCounts[status] ?? 0),
+  );
+
+  final sections =
+      statusesToDisplay
+          .map((status) {
+            final count = statusCounts[status] ?? 0;
+            final percentage =
+                totalCount > 0 ? (count / totalCount) * 100 : 0.0;
+            if (count == 0) return null;
+
+            return PieChartSectionData(
+              color: statusColors[status],
+              value: percentage,
+              title: '${percentage.toStringAsFixed(0)}%',
+              radius: 40,
+              titleStyle: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            );
+          })
+          .where((section) => section != null)
+          .toList();
+
+  return SizedBox(
+    width: 200,
+    height: 200,
+    child: PieChart(
+      PieChartData(
+        centerSpaceRadius: 45,
+        sectionsSpace: 3,
+        sections: sections.cast<PieChartSectionData>(),
+      ),
+    ),
+  );
+}
+
+Widget _buildStatusWidget(List<PgsDeliverables> deliverablesList) {
+  final statusCounts = countStatuses(deliverablesList);
+
+  int getCount(PgsStatus status) => statusCounts[status] ?? 0;
+
+  final List<PgsStatus> statusesToDisplay = [
+    PgsStatus.notStarted,
+    PgsStatus.onGoing,
+    PgsStatus.completed,
+  ];
+
+  final Map<PgsStatus, Color> statusColors = {
+    PgsStatus.notStarted: const Color.fromARGB(255, 179, 95, 95),
+
+    PgsStatus.completed: Colors.green,
+    PgsStatus.onGoing: Colors.deepOrange,
+  };
+
+  List<Widget> buildStatusRows() {
+    List<Widget> rows = [];
+    for (int i = 0; i < statusesToDisplay.length; i += 3) {
+      final status1 = statusesToDisplay[i];
+      final status2 =
+          (i + 1 < statusesToDisplay.length) ? statusesToDisplay[i + 1] : null;
+      final status3 =
+          (i + 2 < statusesToDisplay.length) ? statusesToDisplay[i + 2] : null;
+      final int totalCount = statusesToDisplay.fold(
+        0,
+        (sum, status) => sum + getCount(status),
+      );
+
+      rows.add(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    getStatusLabel(status1),
+                    style: TextStyle(
+                      fontWeight: FontWeight.w500,
+                      color: statusColors[status1] ?? Colors.black,
+                    ),
+                  ),
+
+                  Text(
+                    totalCount > 0
+                        ? "${((getCount(status1) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status1)})"
+                        : "0% (0)",
+                    style: const TextStyle(color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+            // Status 2
+            Expanded(
+              child:
+                  status2 != null
+                      ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            getStatusLabel(status2),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: statusColors[status2] ?? Colors.black,
+                            ),
+                          ),
+                          Text(
+                            totalCount > 0
+                                ? "${((getCount(status2) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status2)})"
+                                : "0% (0)",
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                        ],
+                      )
+                      : Container(),
+            ),
+
+            Expanded(
+              child:
+                  status3 != null
+                      ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            getStatusLabel(status3),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w500,
+                              color: statusColors[status3] ?? Colors.black,
+                            ),
+                          ),
+                          Text(
+                            totalCount > 0
+                                ? "${((getCount(status3) / totalCount) * 100).toStringAsFixed(0)}% (${getCount(status3)})"
+                                : "0% (0)",
+                            style: const TextStyle(color: Colors.black54),
+                          ),
+                        ],
+                      )
+                      : Container(),
+            ),
+          ],
+        ),
+      );
+      rows.add(const SizedBox(height: 16));
+    }
+    return rows;
+  }
+
+  return Card(
+    elevation: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+      side: BorderSide(color: Colors.grey.shade300, width: 1),
+    ),
+    child: Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: mainBgColor,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "PGS Status",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                ...buildStatusRows(),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+
+          _buildPieChart(deliverablesList),
+        ],
+      ),
+    ),
+  );
 }

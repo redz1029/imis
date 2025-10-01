@@ -302,28 +302,28 @@ class AdminDashboardState extends State<AdminDashboard> {
         if (isNarrow) {
           return Column(
             children: [
-              _buildDashboardBox(
+              buildDashboardBox(
                 "Total Users",
                 Colors.blue,
                 totalUsers.toString(),
                 'assets/users.png',
               ),
               SizedBox(height: 10),
-              _buildDashboardBox(
+              buildDashboardBox(
                 "Total Auditors",
                 Colors.green,
                 totalAuditor.toString(),
                 'assets/auditor.png',
               ),
               SizedBox(height: 10),
-              _buildDashboardBox(
+              buildDashboardBox(
                 "Total Teams",
                 Colors.purple,
                 totalTeam.toString(),
                 'assets/team.png',
               ),
               SizedBox(height: 10),
-              _buildDashboardBox(
+              buildDashboardBox(
                 "Total Offices",
                 const Color.fromARGB(255, 194, 106, 47),
                 totalOffices.toString(),
@@ -335,7 +335,7 @@ class AdminDashboardState extends State<AdminDashboard> {
           return Row(
             children: [
               Expanded(
-                child: _buildDashboardBox(
+                child: buildDashboardBox(
                   "Total Users",
                   Colors.blue,
                   totalUsers.toString(),
@@ -343,7 +343,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               Expanded(
-                child: _buildDashboardBox(
+                child: buildDashboardBox(
                   "Total Auditors",
                   Colors.green,
                   totalAuditor.toString(),
@@ -351,7 +351,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               Expanded(
-                child: _buildDashboardBox(
+                child: buildDashboardBox(
                   "Total Teams",
                   Colors.purple,
                   totalTeam.toString(),
@@ -359,7 +359,7 @@ class AdminDashboardState extends State<AdminDashboard> {
                 ),
               ),
               Expanded(
-                child: _buildDashboardBox(
+                child: buildDashboardBox(
                   "Total Offices",
                   const Color.fromARGB(255, 194, 106, 47),
                   totalOffices.toString(),
@@ -514,83 +514,8 @@ class AdminDashboardState extends State<AdminDashboard> {
     );
   }
 
-  Widget _buildDashboardBox(
-    String title,
-    Color color,
-    String count,
-    String iconAsset,
-  ) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      child: Container(
-        height: 130,
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 2,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    count,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    title,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              flex: 1,
-              child: FittedBox(
-                fit: BoxFit.contain,
-                child: Image.asset(iconAsset),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Map<PgsStatus, int> _countStatuses(List<PgsDeliverables> deliverablesList) {
-    final Map<PgsStatus, int> statusCounts = {};
-
-    for (var deliverable in deliverablesList) {
-      final status = deliverable.status;
-      statusCounts[status] = (statusCounts[status] ?? 0) + 1;
-    }
-
-    return statusCounts;
-  }
-
-  String getStatusLabel(PgsStatus status) {
-    switch (status) {
-      case PgsStatus.notStarted:
-        return "Not Started";
-      case PgsStatus.completed:
-        return "Completed";
-      case PgsStatus.onGoing:
-        return "On Going";
-    }
-  }
-
   Widget _buildStatusWidget(List<PgsDeliverables> deliverablesList) {
-    final statusCounts = _countStatuses(deliverablesList);
+    final statusCounts = countStatuses(deliverablesList);
 
     int getCount(PgsStatus status) => statusCounts[status] ?? 0;
 
@@ -741,7 +666,7 @@ class AdminDashboardState extends State<AdminDashboard> {
   }
 
   Widget _buildPieChart(List<PgsDeliverables> deliverablesList) {
-    final statusCounts = _countStatuses(deliverablesList);
+    final statusCounts = countStatuses(deliverablesList);
 
     final Map<PgsStatus, Color> statusColors = {
       PgsStatus.notStarted: const Color.fromARGB(255, 179, 95, 95),
@@ -796,5 +721,80 @@ class AdminDashboardState extends State<AdminDashboard> {
         ),
       ),
     );
+  }
+}
+
+Widget buildDashboardBox(
+  String title,
+  Color color,
+  String count,
+  String iconAsset,
+) {
+  return Card(
+    elevation: 4,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    child: Container(
+      height: 130,
+      padding: EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  count,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  title,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: FittedBox(
+              fit: BoxFit.contain,
+              child: Image.asset(iconAsset),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Map<PgsStatus, int> countStatuses(List<PgsDeliverables> deliverablesList) {
+  final Map<PgsStatus, int> statusCounts = {};
+
+  for (var deliverable in deliverablesList) {
+    final status = deliverable.status;
+    statusCounts[status] = (statusCounts[status] ?? 0) + 1;
+  }
+
+  return statusCounts;
+}
+
+String getStatusLabel(PgsStatus status) {
+  switch (status) {
+    case PgsStatus.notStarted:
+      return "Not Started";
+    case PgsStatus.completed:
+      return "Completed";
+    case PgsStatus.onGoing:
+      return "On Going";
   }
 }
