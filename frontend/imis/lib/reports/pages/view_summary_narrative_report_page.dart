@@ -207,7 +207,15 @@ class ViewSummaryNarrativeReportPageState
                         ),
                         Expanded(
                           flex: 1,
-                          child: Text('Actions', style: TextStyle(color: grey)),
+                          child: Padding(
+                            padding: EdgeInsets.only(right: 1),
+                            child: Center(
+                              child: Text(
+                                'Actions',
+                                style: TextStyle(color: grey),
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -298,7 +306,7 @@ class ViewSummaryNarrativeReportPageState
                                               ),
                                               child: Row(
                                                 mainAxisAlignment:
-                                                    MainAxisAlignment.start,
+                                                    MainAxisAlignment.center,
                                                 children: [
                                                   IconButton(
                                                     icon: Icon(Icons.edit),
@@ -310,7 +318,34 @@ class ViewSummaryNarrativeReportPageState
                                                     },
                                                   ),
 
-                                                  SizedBox(width: 1),
+                                                  Tooltip(
+                                                    message: 'Print Preview',
+
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons
+                                                            .description_outlined,
+                                                      ),
+
+                                                      onPressed: () async {
+                                                        Navigator.push(
+                                                          context,
+                                                          MaterialPageRoute(
+                                                            builder:
+                                                                (
+                                                                  context,
+                                                                ) => ViewPdfSummary(
+                                                                  pgsPeriodId:
+                                                                      summary
+                                                                          .pgsPeriodId
+                                                                          .toString(),
+                                                                ),
+                                                          ),
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+
                                                   IconButton(
                                                     icon: Icon(
                                                       Icons.delete,

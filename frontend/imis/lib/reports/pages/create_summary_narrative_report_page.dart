@@ -28,7 +28,10 @@ class CreateSummaryNarrativeReportPageState
   final TextEditingController _conclusionsController = TextEditingController();
   final TextEditingController _recommendationsController =
       TextEditingController();
-
+  // Add these to the state class
+  final ScrollController findingsScrollController = ScrollController();
+  final ScrollController conclusionsScrollController = ScrollController();
+  final ScrollController recommendationsScrollController = ScrollController();
   final dio = Dio();
   late final int _periodId;
   String _periodStartDate = '';
@@ -38,6 +41,17 @@ class CreateSummaryNarrativeReportPageState
     super.initState();
     _periodId = widget.periodId;
     _fetchPeriodDates();
+  }
+
+  @override
+  void dispose() {
+    findingsScrollController.dispose();
+    conclusionsScrollController.dispose();
+    recommendationsScrollController.dispose();
+    _findingsController.dispose();
+    _conclusionsController.dispose();
+    _recommendationsController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchPeriodDates() async {
@@ -78,11 +92,14 @@ class CreateSummaryNarrativeReportPageState
                   children: [
                     ElevatedButton.icon(
                       onPressed:
-                          () => Navigator.of(context).pushAndRemoveUntil(
+                          () => Navigator.of(
+                            context,
+                            rootNavigator: true,
+                          ).pushAndRemoveUntil(
                             MaterialPageRoute(
                               builder:
                                   (context) => const NavigationPanel(
-                                    initialScreenIndex: 17,
+                                    initialScreenIndex: 21,
                                   ),
                             ),
                             (route) => false,
@@ -183,7 +200,7 @@ class CreateSummaryNarrativeReportPageState
                           MaterialPageRoute(
                             builder:
                                 (context) => const NavigationPanel(
-                                  initialScreenIndex: 17,
+                                  initialScreenIndex: 21,
                                 ),
                           ),
                           (route) => false,
@@ -251,6 +268,7 @@ class CreateSummaryNarrativeReportPageState
                               description:
                                   "These will be displayed as separate points in the report.",
                               controller: _findingsController,
+                              scrollController: findingsScrollController,
                             ),
                             gap24px,
                             _buildReportSection(
@@ -260,6 +278,7 @@ class CreateSummaryNarrativeReportPageState
                               description:
                                   "These should summarize your analysis and insights.",
                               controller: _conclusionsController,
+                              scrollController: conclusionsScrollController,
                             ),
                             gap24px,
                             _buildReportSection(
@@ -269,6 +288,7 @@ class CreateSummaryNarrativeReportPageState
                               description:
                                   "These should be actionable steps for improvement.",
                               controller: _recommendationsController,
+                              scrollController: recommendationsScrollController,
                             ),
                           ],
                         ),
@@ -288,6 +308,7 @@ class CreateSummaryNarrativeReportPageState
     required String title,
     required String description,
     required TextEditingController controller,
+    ScrollController? scrollController,
     IconData icon = Icons.description_outlined,
     Color iconColor = Colors.black54,
   }) {
@@ -324,7 +345,9 @@ class CreateSummaryNarrativeReportPageState
           ),
           child: Scrollbar(
             thumbVisibility: true,
+            controller: scrollController,
             child: SingleChildScrollView(
+              controller: scrollController,
               child: TextFormField(
                 style: TextStyle(fontSize: 14),
                 controller: controller,

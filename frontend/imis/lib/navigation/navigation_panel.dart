@@ -9,7 +9,6 @@ import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
-import 'package:imis/reports/pages/pgs_report_page.dart';
 import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
@@ -735,7 +734,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                       'Report',
                       hideIcon: false,
                       17,
-                      () => _setScreen(PgsReportPage(), 17),
+                      () => _setScreen(ViewSummaryNarrativeReportPage(), 17),
                     ),
                   ),
                   PermissionWidget(

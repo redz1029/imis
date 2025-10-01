@@ -10,6 +10,10 @@ import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/reports/models/pgs_summary_narrative.dart';
+import 'package:imis/reports/pages/create_summary_narrative_report_page.dart';
+import 'package:imis/reports/pages/manage_summary_narrative_report_page.dart';
+import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/permission_string.dart';
@@ -40,7 +44,7 @@ class DeliverableStatusMonitoringPageState
     Dio(),
   );
   final _dateConverter = const LongDateOnlyConverter();
-
+  final _summaryNarrativeSerice = SummaryNarrativeService(Dio());
   final GlobalKey _menuScoreRangeKey = GlobalKey();
   final GlobalKey _menuPageKey = GlobalKey();
   Map<int, TextEditingController> remarkControllers = {};
@@ -61,7 +65,9 @@ class DeliverableStatusMonitoringPageState
 
   List<PgsPeriod> periodList = [];
   int? selectedPeriod;
+  int? selectedPeriodCreateReport;
   String? selectedPeriodText;
+  String? selectedPeriodTextCreateReport;
   final PermissionService _permissionService = PermissionService();
   bool _hasEditPermission = false;
   List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
@@ -78,6 +84,7 @@ class DeliverableStatusMonitoringPageState
 
   bool isMenuOpenOffice = false;
   bool isMenuOpenPeriod = false;
+  bool isMenuOpenPeriodCreateReport = false;
   bool isMenuOpenKra = false;
   bool isMenuOpenType = false;
   bool isMenuScoreRange = false;
@@ -820,7 +827,51 @@ class DeliverableStatusMonitoringPageState
     return Scaffold(
       appBar: AppBar(
         backgroundColor: mainBgColor,
-        title: const Text('Deliverables Status Monitoring'),
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              'Deliverables Status Monitoring',
+              style: TextStyle(fontSize: 20),
+            ),
+            PermissionWidget(
+              allowedRoles: [
+                PermissionString.pgsAuditor,
+                PermissionString.roleAdmin,
+              ],
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: mainBgColor,
+
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  side: BorderSide(color: Colors.grey.shade400, width: 0.8),
+                  elevation: 0,
+                ),
+                onPressed: () {
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(
+                      builder: (context) => ManageSummaryNarrativeReportPage(),
+                    ),
+                    (route) => false,
+                  );
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.description_outlined, color: primaryTextColor),
+                    SizedBox(width: 5),
+                    Text(
+                      'Manage Reports',
+                      style: TextStyle(color: primaryTextColor),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       backgroundColor: mainBgColor,
       body: LayoutBuilder(
@@ -1250,6 +1301,168 @@ class DeliverableStatusMonitoringPageState
                                           pageSizeController.text.isEmpty)
                                       ? 'Page'
                                       : 'From ${pageController.text} to ${pageSizeController.text}',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Flexible(fit: FlexFit.tight, child: Container()),
+                    PermissionWidget(
+                      allowedRoles: [
+                        PermissionString.pgsAuditor,
+                        PermissionString.roleAdmin,
+                      ],
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                PopupMenuButton<String>(
+                                  color: mainBgColor,
+                                  offset: const Offset(0, 30),
+                                  onCanceled: () {
+                                    setState(() {
+                                      isMenuOpenPeriodCreateReport = false;
+                                    });
+                                  },
+                                  onOpened: () {
+                                    setState(() {
+                                      isMenuOpenPeriodCreateReport = true;
+                                    });
+                                  },
+                                  onSelected: (String value) {
+                                    setState(() {
+                                      selectedPeriodCreateReport = int.tryParse(
+                                        value,
+                                      );
+
+                                      if (selectedPeriodCreateReport != null) {
+                                        final selected = periodList.firstWhere(
+                                          (period) =>
+                                              period.id ==
+                                              selectedPeriodCreateReport,
+                                          orElse:
+                                              () => PgsPeriod(
+                                                0,
+                                                false,
+                                                DateTime.now(),
+                                                DateTime.now(),
+                                                'remarks',
+                                              ),
+                                        );
+                                        selectedPeriodTextCreateReport =
+                                            "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
+                                      } else {
+                                        selectedPeriodTextCreateReport =
+                                            "Select Period";
+                                      }
+
+                                      isMenuOpenPeriodCreateReport = true;
+                                      fetchFilteredPgsList();
+                                    });
+                                  },
+                                  itemBuilder: (BuildContext context) {
+                                    final updatedPeriodList = periodList.map(
+                                      (period) => {
+                                        'id': period.id,
+                                        'name':
+                                            "${_dateConverter.toJson(period.startDate)} - ${_dateConverter.toJson(period.endDate)}",
+                                      },
+                                    );
+
+                                    return updatedPeriodList
+                                        .map<PopupMenuItem<String>>((period) {
+                                          return PopupMenuItem<String>(
+                                            value: period['id'].toString(),
+                                            child: Text(
+                                              period['name']!.toString(),
+                                            ),
+                                          );
+                                        })
+                                        .toList();
+                                  },
+                                  child: FilterButton(
+                                    label:
+                                        selectedPeriodTextCreateReport ??
+                                        "Select Period",
+                                    isActive: isMenuOpenPeriodCreateReport,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            onPressed:
+                                selectedPeriodCreateReport != null
+                                    ? () async {
+                                      PgsSummaryNarrative? existing;
+
+                                      try {
+                                        existing = await _summaryNarrativeSerice
+                                            .checkIfPeriodHasNarrative(
+                                              selectedPeriodCreateReport!,
+                                            );
+                                      } catch (e) {
+                                        MotionToast.error(
+                                          description: const Text(
+                                            "Error while checking report status",
+                                          ),
+                                          toastAlignment: Alignment.topCenter,
+                                          toastDuration: const Duration(
+                                            seconds: 3,
+                                          ),
+                                        ).show(context);
+                                        return;
+                                      }
+
+                                      if (existing != null) {
+                                        MotionToast.warning(
+                                          description: const Text(
+                                            "Looks like we already have data for this period. You can review or update it.",
+                                          ),
+                                          toastAlignment: Alignment.topCenter,
+                                          toastDuration: const Duration(
+                                            seconds: 4,
+                                          ),
+                                        ).show(context);
+                                        return;
+                                      }
+
+                                      Navigator.of(context).pushAndRemoveUntil(
+                                        MaterialPageRoute(
+                                          builder:
+                                              (
+                                                context,
+                                              ) => CreateSummaryNarrativeReportPage(
+                                                periodId:
+                                                    selectedPeriodCreateReport!,
+                                              ),
+                                        ),
+                                        (route) => false,
+                                      );
+                                    }
+                                    : null,
+
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.add, color: Colors.white),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Create Report',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
                             ),
                           ),
                         ],
