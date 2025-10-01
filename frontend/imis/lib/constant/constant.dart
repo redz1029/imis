@@ -49,7 +49,6 @@ class JobPositions {
     'Head, OPD',
     'Head, OR (Cath. Lab)',
     'Head, OSM',
-    'Head, PACD',
     'Head, Department of Pathology',
     'Head, Department of Pediatrics',
     'Head, PETRU',
@@ -66,7 +65,7 @@ class JobPositions {
     'OIC-Chief Health Program Officer',
     'Head, Cancer Care',
     'Social Welfare Officer IV',
-
+    'Head, HIPCU',
     'Head, Department of Internal Medicine',
     'Head, Department of Surgery',
     'Head, Department of Obstetrics-Gynecology',
@@ -146,5 +145,6 @@ class JobPositions {
     'Head, Toxicology Unit',
     'Head, Patient and Safety Unit',
     'Head, Credit and Collection Section',
+    'Head, PACD',
   ];
 }
