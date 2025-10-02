@@ -1872,6 +1872,7 @@ class PerformanceGovernanceSystemPageState
     String? remarks,
     int? index,
   }) {
+    officeDisplay = officename ?? 'No Office';
     setState(() {
       if (rows.isEmpty) {
         rows = [0];
@@ -3785,8 +3786,6 @@ class PerformanceGovernanceSystemPageState
     final parsedByWhen = DateTime.parse(byWhen);
     final String formattedByWhen = DateFormat('MMMM yyyy').format(parsedByWhen);
 
-    final String officeName = officeDisplay;
-
     final startDate = DateTime.parse(selectedPeriodData['startDate']);
     final endDate = DateTime.parse(selectedPeriodData['endDate']);
     final formattedStart = DateFormat.yMMMMd().format(startDate);
@@ -4247,7 +4246,7 @@ class PerformanceGovernanceSystemPageState
             suffixIcon: Icon(Icons.calendar_today),
           ),
           onTap:
-              id != null && orderLevel >= 0
+              id != null && orderLevel >= 1
                   ? null
                   : () async {
                     DateTime? pickedDate = await showDatePicker(
