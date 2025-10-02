@@ -66,13 +66,13 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
             var ODto = dto as PgsDeliverableAccomplishmentDto;
             var accomplishment = ODto!.ToEntity();
 
-            var user = await _userManager.FindByIdAsync(accomplishment.UserId);
-            if (user == null)
-                throw new InvalidOperationException("User not found.");
+            //var user = await _userManager.FindByIdAsync(accomplishment.UserId);
+            //if (user == null)
+            //    throw new InvalidOperationException("User not found.");
 
-            var roles = await _userManager.GetRolesAsync(user);
-            if (!roles.Any(r => r.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase)))
-                throw new UnauthorizedAccessException("Only PGS Auditors are allowed to submit accomplishments.");
+            //var roles = await _userManager.GetRolesAsync(user);
+            //if (!roles.Any(r => r.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase)))
+            //    throw new UnauthorizedAccessException("Only PGS Auditors are allowed to submit accomplishments.");
 
             if (accomplishment.Id == 0)
                 _repository.Add(accomplishment);
