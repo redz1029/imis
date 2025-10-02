@@ -31,7 +31,7 @@ class UserRolePageState extends State<UserRolePage> {
   List<Roles> roleList = [];
   List<User> userList = [];
   String? _selectedUserId;
-
+  List<UserRoles> _allUserRoles = [];
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
@@ -81,7 +81,7 @@ class UserRolePageState extends State<UserRolePage> {
                 .map((json) => UserRoles.fromJson(json))
                 .where((ur) => ur.roles!.isNotEmpty)
                 .toList();
-
+        _allUserRoles = allRoles;
         _totalCount = allRoles.length;
 
         int start = (page - 1) * _pageSize;
@@ -104,29 +104,23 @@ class UserRolePageState extends State<UserRolePage> {
   }
 
   void filterSearchResults(String query) {
-    final lowerQuery = query.toLowerCase();
+    final lowerQuery = query.toLowerCase().trim();
 
     setState(() {
-      filteredList =
-          userRoleList.where((userRole) {
-            final user = userList.firstWhereOrNull(
-              (u) => u.id == userRole.userId,
-            );
-            final roles = userRole.roles!
-                .map(
-                  (r) =>
-                      roleList
-                          .firstWhereOrNull((role) => role.id == r.roleId)
-                          ?.name ??
-                      '',
-                )
-                .join(', ');
+      if (lowerQuery.isEmpty) {
+        filteredList = List.from(userRoleList);
+      } else {
+        filteredList =
+            _allUserRoles.where((userRole) {
+              final user = userList.firstWhereOrNull(
+                (u) => u.id == userRole.userId,
+              );
 
-            if (user == null) return false;
+              if (user == null) return false;
 
-            return user.fullName.toLowerCase().contains(lowerQuery) ||
-                roles.toLowerCase().contains(lowerQuery);
-          }).toList();
+              return user.fullName.toLowerCase().contains(lowerQuery);
+            }).toList();
+      }
     });
   }
 
