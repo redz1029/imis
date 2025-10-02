@@ -1052,15 +1052,19 @@ class NavigationPanelState extends State<NavigationPanel> {
                                           children: [
                                             Text(
                                               firstName
-                                                  .split(' ')[0]
                                                   .toLowerCase()
-                                                  .replaceFirstMapped(
-                                                    RegExp(r'^[a-z]'),
-                                                    (m) =>
-                                                        m
-                                                            .group(0)!
-                                                            .toUpperCase(),
-                                                  ),
+                                                  .split(' ')
+                                                  .map(
+                                                    (word) =>
+                                                        word.isNotEmpty
+                                                            ? word[0]
+                                                                    .toUpperCase() +
+                                                                word.substring(
+                                                                  1,
+                                                                )
+                                                            : '',
+                                                  )
+                                                  .join(' '),
                                             ),
                                           ],
                                         ),

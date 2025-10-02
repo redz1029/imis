@@ -297,7 +297,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "${_getGreeting()}, ${firstName.split(' ')[0]}",
+                          "${_getGreeting()}, ${firstName.toLowerCase().split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '').join(' ')}",
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 32,
