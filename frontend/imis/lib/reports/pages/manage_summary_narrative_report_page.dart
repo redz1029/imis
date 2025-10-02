@@ -128,7 +128,7 @@ class ManageSummaryNarrativeReportPageState
                             MaterialPageRoute(
                               builder:
                                   (context) => const NavigationPanel(
-                                    initialScreenIndex: 21,
+                                    initialScreenIndex: 17,
                                   ),
                             ),
                             (route) => false,

@@ -526,7 +526,7 @@ class AdminDashboardState extends State<AdminDashboard> {
     ];
 
     final Map<PgsStatus, Color> statusColors = {
-      PgsStatus.notStarted: const Color.fromARGB(255, 179, 95, 95),
+      PgsStatus.notStarted: Colors.grey.shade700,
 
       PgsStatus.completed: Colors.green,
       PgsStatus.onGoing: Colors.deepOrange,
@@ -631,8 +631,11 @@ class AdminDashboardState extends State<AdminDashboard> {
     }
 
     return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.shade300, width: 1),
+      ),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -669,7 +672,7 @@ class AdminDashboardState extends State<AdminDashboard> {
     final statusCounts = countStatuses(deliverablesList);
 
     final Map<PgsStatus, Color> statusColors = {
-      PgsStatus.notStarted: const Color.fromARGB(255, 179, 95, 95),
+      PgsStatus.notStarted: Colors.grey.shade300,
 
       PgsStatus.onGoing: Colors.deepOrange,
 

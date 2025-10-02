@@ -391,7 +391,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                   icon: Icons.show_chart,
                 ),
               ),
-              const SizedBox(width: 12),
+
               Expanded(
                 child: buildDashboardBox(
                   title: "Direct Deliverables",
@@ -401,7 +401,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                   progress: total > 0 ? direct / total : 0,
                 ),
               ),
-              const SizedBox(width: 12),
+
               Expanded(
                 child: buildDashboardBox(
                   title: "Indirect Deliverables",
@@ -411,7 +411,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                   progress: total > 0 ? indirect / total : 0,
                 ),
               ),
-              const SizedBox(width: 12),
+
               Expanded(
                 child: buildDashboardBox(
                   title: "Completion Rate",
@@ -519,7 +519,7 @@ Widget _buildPieChart(List<PgsDeliverables> deliverablesList) {
   final statusCounts = countStatuses(deliverablesList);
 
   final Map<PgsStatus, Color> statusColors = {
-    PgsStatus.notStarted: const Color.fromARGB(255, 179, 95, 95),
+    PgsStatus.notStarted: Colors.grey.shade300,
 
     PgsStatus.onGoing: Colors.deepOrange,
 
@@ -585,7 +585,7 @@ Widget _buildStatusWidget(List<PgsDeliverables> deliverablesList) {
   ];
 
   final Map<PgsStatus, Color> statusColors = {
-    PgsStatus.notStarted: const Color.fromARGB(255, 179, 95, 95),
+    PgsStatus.notStarted: Colors.grey.shade700,
 
     PgsStatus.completed: Colors.green,
     PgsStatus.onGoing: Colors.deepOrange,
