@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
@@ -6,7 +7,9 @@ import 'package:imis/dashboard/admin_dashboard.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
 import 'package:imis/user/models/user_registration.dart';
+import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/dynamic_side_column.dart';
 import 'package:table_calendar/table_calendar.dart';
 
@@ -24,7 +27,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
   List<PgsDeliverables> deliverablesList = [];
   List<String> office = [];
   String firstName = "firstName";
-
+  final dio = Dio();
   int _currentImageIndex = 0;
   late Timer imageTimer;
   final List<String> rotatingImages = [
@@ -36,7 +39,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
   void initState() {
     super.initState();
     loadUserNames();
-
+    loadDeliverables();
     imageTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
       if (mounted) {
         setState(() {
@@ -45,12 +48,54 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
       }
     });
     _loadUserName();
+    _loadOffice();
   }
 
   @override
   void dispose() {
     imageTimer.cancel();
     super.dispose();
+  }
+
+  Future<void> _loadOffice() async {
+    UserRegistration? user = await AuthUtil.fetchLoggedUser();
+    List<String>? officeName = await AuthUtil.fetchOfficeNames();
+
+    if (user != null) {
+      setState(() {
+        office = officeName ?? [];
+      });
+    }
+  }
+
+  Future<void> loadDeliverables() async {
+    setState(() => deliverablesList = []);
+
+    try {
+      UserRegistration? user = await AuthUtil.fetchLoggedUser();
+      if (user == null) return;
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        "${ApiEndpoint().performancegovernancesystem}/userId/${user.id}?userId=${user.id}",
+      );
+
+      if (response.statusCode == 200) {
+        final List data = response.data;
+
+        final List<PgsDeliverables> allDeliverables =
+            data
+                .expand((item) => (item['pgsDeliverables'] as List))
+                .map((d) => PgsDeliverables.fromJson(d))
+                .toList();
+
+        setState(() {
+          deliverablesList = allDeliverables;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading deliverables: $e");
+    }
   }
 
   Future<void> _loadUserName() async {
@@ -286,95 +331,105 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
               ),
     );
   }
-}
 
-Widget _buildStatsRow() {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final bool isNarrow = constraints.maxWidth < 400;
+  Widget _buildStatsRow() {
+    int total = deliverablesList.length;
+    int direct = deliverablesList.where((d) => d.isDirect).length;
+    int indirect = deliverablesList.where((d) => !d.isDirect).length;
+    int completed =
+        deliverablesList.where((d) => d.status == PgsStatus.completed).length;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isNarrow = constraints.maxWidth < 400;
 
-      if (isNarrow) {
-        return Column(
-          children: [
-            buildDashboardBox(
-              title: "Total Deliverables",
-              subtitle: "Across all offices & periods",
-              count: "14",
-              color: Colors.black,
-              icon: Icons.show_chart,
-            ),
-
-            buildDashboardBox(
-              title: "Direct Deliverables",
-              count: "8",
-              color: primaryColor,
-              icon: Icons.people_outline,
-              progress: 0.571,
-            ),
-            buildDashboardBox(
-              title: "Indirect Deliverables",
-              count: "8",
-
-              color: Colors.orange,
-              icon: Icons.alt_route,
-              progress: 0.571,
-            ),
-            buildDashboardBox(
-              title: "Total Deliverables",
-              subtitle: "2 of 14 completed",
-              count: "14%",
-              color: Colors.green,
-              icon: Icons.check_circle_outline,
-            ),
-          ],
-        );
-      } else {
-        return Row(
-          children: [
-            Expanded(
-              child: buildDashboardBox(
+        if (isNarrow) {
+          return Column(
+            children: [
+              buildDashboardBox(
                 title: "Total Deliverables",
-                subtitle: "Across all offices & periods",
-                count: "14",
+                subtitle: office.join(', '),
+                count: "$total",
                 color: Colors.black,
                 icon: Icons.show_chart,
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: buildDashboardBox(
+
+              buildDashboardBox(
                 title: "Direct Deliverables",
-                count: "8",
+                count: "$direct",
                 color: primaryColor,
                 icon: Icons.people_outline,
-                progress: 0.571,
+                progress: total > 0 ? direct / total : 0,
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: buildDashboardBox(
+              buildDashboardBox(
                 title: "Indirect Deliverables",
-                count: "8",
+                count: "$indirect",
                 color: Colors.orange,
                 icon: Icons.alt_route,
-                progress: 0.571,
+                progress: total > 0 ? indirect / total : 0,
               ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: buildDashboardBox(
-                title: "Completion Rate",
-                subtitle: "2 of 14 completed",
-                count: "14%",
+              buildDashboardBox(
+                title: "Total Deliverables",
+                subtitle: "$completed of $total completed",
+                count:
+                    total > 0
+                        ? "${((completed / total) * 100).toStringAsFixed(0)}%"
+                        : "0%",
                 color: Colors.green,
                 icon: Icons.check_circle_outline,
               ),
-            ),
-          ],
-        );
-      }
-    },
-  );
+            ],
+          );
+        } else {
+          return Row(
+            children: [
+              Expanded(
+                child: buildDashboardBox(
+                  title: "Total Deliverables",
+                  subtitle: office.join(', '),
+                  count: "$total",
+                  color: Colors.black,
+                  icon: Icons.show_chart,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: buildDashboardBox(
+                  title: "Direct Deliverables",
+                  count: "$direct",
+                  color: primaryColor,
+                  icon: Icons.people_outline,
+                  progress: total > 0 ? direct / total : 0,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: buildDashboardBox(
+                  title: "Indirect Deliverables",
+                  count: "$indirect",
+                  color: Colors.orange,
+                  icon: Icons.alt_route,
+                  progress: total > 0 ? indirect / total : 0,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: buildDashboardBox(
+                  title: "Completion Rate",
+                  subtitle: "$completed of $total completed",
+                  count:
+                      total > 0
+                          ? "${((completed / total) * 100).toStringAsFixed(0)}%"
+                          : "0%",
+                  color: Colors.green,
+                  icon: Icons.check_circle_outline,
+                ),
+              ),
+            ],
+          );
+        }
+      },
+    );
+  }
 }
 
 Widget buildDashboardBox({
