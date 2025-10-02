@@ -4053,67 +4053,67 @@ class PerformanceGovernanceSystemPageState
   }
 
   //Start------------Pgs Deliverables Remark ----------------------------------------------
-  Widget _buildExpandableTextAreaRemarksCell(int index) {
-    if (!remarksControllers.containsKey(index)) {
-      remarksControllers[index] = TextEditingController();
-    }
+  // Widget _buildExpandableTextAreaRemarksCell(int index) {
+  //   if (!remarksControllers.containsKey(index)) {
+  //     remarksControllers[index] = TextEditingController();
+  //   }
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 50.0),
-        child: TextField(
-          controller: remarksControllers[index],
-          maxLines: null,
-          keyboardType: TextInputType.multiline,
-          style: const TextStyle(fontSize: 13.0),
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            contentPadding: EdgeInsets.all(8.0),
-          ),
-          enabled: false,
-          onChanged: (value) {
-            setState(() {});
-          },
-        ),
-      ),
-    );
-  }
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: ConstrainedBox(
+  //       constraints: BoxConstraints(minHeight: 50.0),
+  //       child: TextField(
+  //         controller: remarksControllers[index],
+  //         maxLines: null,
+  //         keyboardType: TextInputType.multiline,
+  //         style: const TextStyle(fontSize: 13.0),
+  //         decoration: InputDecoration(
+  //           border: OutlineInputBorder(),
+  //           contentPadding: EdgeInsets.all(8.0),
+  //         ),
+  //         enabled: false,
+  //         onChanged: (value) {
+  //           setState(() {});
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
   //End------------Pgs Deliverables Remarks----------------------------------------------
 
   //Start------------Pgs Deliverables Remark ----------------------------------------------
-  Widget _buildExpandableTextAreaPercentageCell(int index) {
-    if (!percentageControllers.containsKey(index)) {
-      percentageControllers[index] = TextEditingController();
-    }
+  // Widget _buildExpandableTextAreaPercentageCell(int index) {
+  //   if (!percentageControllers.containsKey(index)) {
+  //     percentageControllers[index] = TextEditingController();
+  //   }
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 50.0),
-        child: TextField(
-          controller: percentageControllers[index],
-          maxLines: null,
-          keyboardType: TextInputType.multiline,
-          style: const TextStyle(fontSize: 13.0),
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-            LengthLimitingTextInputFormatter(3),
-          ],
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: ConstrainedBox(
+  //       constraints: BoxConstraints(minHeight: 50.0),
+  //       child: TextField(
+  //         controller: percentageControllers[index],
+  //         maxLines: null,
+  //         keyboardType: TextInputType.multiline,
+  //         style: const TextStyle(fontSize: 13.0),
+  //         inputFormatters: [
+  //           FilteringTextInputFormatter.digitsOnly,
+  //           LengthLimitingTextInputFormatter(3),
+  //         ],
 
-          decoration: InputDecoration(
-            border: OutlineInputBorder(),
-            suffixText: '%',
-            contentPadding: EdgeInsets.all(8.0),
-          ),
-          enabled: false,
-          onChanged: (value) {
-            setState(() {});
-          },
-        ),
-      ),
-    );
-  }
+  //         decoration: InputDecoration(
+  //           border: OutlineInputBorder(),
+  //           suffixText: '%',
+  //           contentPadding: EdgeInsets.all(8.0),
+  //         ),
+  //         enabled: false,
+  //         onChanged: (value) {
+  //           setState(() {});
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
   //End------------Pgs Deliverables Status----------------------------------------------
 
   Widget _buildDropdownKraCellPGSDeliverableStatus(
@@ -4291,31 +4291,31 @@ class PerformanceGovernanceSystemPageState
 
   // Start-----------------------PGS Deliverable Status---------------------
   // Dropdown field that allows changing PgsStatus for each row
-  Widget _buildDropdownCellStatusPgsDeliverableStatus(
-    int index,
-    VoidCallback setDialogState,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: DropdownButtonFormField<PgsStatus>(
-        value: selectedStatus[index] ?? PgsStatus.notStarted,
-        onChanged: null,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.all(8.0),
-        ),
+  // Widget _buildDropdownCellStatusPgsDeliverableStatus(
+  //   int index,
+  //   VoidCallback setDialogState,
+  // ) {
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: DropdownButtonFormField<PgsStatus>(
+  //       value: selectedStatus[index] ?? PgsStatus.notStarted,
+  //       onChanged: null,
+  //       isExpanded: true,
+  //       decoration: const InputDecoration(
+  //         border: OutlineInputBorder(),
+  //         contentPadding: EdgeInsets.all(8.0),
+  //       ),
 
-        items:
-            PgsStatus.values.map((PgsStatus value) {
-              return DropdownMenuItem<PgsStatus>(
-                value: value,
-                child: Text(value.name, style: const TextStyle(fontSize: 13)),
-              );
-            }).toList(),
-      ),
-    );
-  }
+  //       items:
+  //           PgsStatus.values.map((PgsStatus value) {
+  //             return DropdownMenuItem<PgsStatus>(
+  //               value: value,
+  //               child: Text(value.name, style: const TextStyle(fontSize: 13)),
+  //             );
+  //           }).toList(),
+  //     ),
+  //   );
+  // }
   // End-----------------------PGS Deliverable Status---------------------
 
   //Start------------Pgs Deliverables Status----------------------------------------------
