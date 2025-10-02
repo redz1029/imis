@@ -10,6 +10,7 @@ import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/range_input_formatter.dart';
 import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
 import '../performance_governance_system/enum/pgs_status.dart';
@@ -197,7 +198,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                           percentageController.text = '0';
                         } else if (newValue == PgsStatus.onGoing) {
                           if (percentageController.text == '100') {
-                            percentageController.text = '0';
+                            percentageController.text = '1';
                           }
                         }
                       }
@@ -304,7 +305,8 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                                         inputFormatters: [
                                           FilteringTextInputFormatter
                                               .digitsOnly,
-                                          LengthLimitingTextInputFormatter(3),
+                                          LengthLimitingTextInputFormatter(2),
+                                          RangeInputFormatter(1, 99),
                                         ],
                                         onChanged: (val) {
                                           int parsed = int.tryParse(val) ?? 0;

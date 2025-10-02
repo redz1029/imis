@@ -11,6 +11,7 @@ import 'package:imis/performance_governance_system/deliverable_status_monitoring
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/range_input_formatter.dart';
 import 'package:imis/widgets/accomplishment_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:universal_html/html.dart' as html;
@@ -131,7 +132,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                         percentageController.text = '0';
                       } else if (newValue == PgsStatus.onGoing) {
                         if (percentageController.text == '100') {
-                          percentageController.text = '0';
+                          percentageController.text = '1';
                         }
                       }
                     }
@@ -237,7 +238,9 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                                         inputFormatters: [
                                           FilteringTextInputFormatter
                                               .digitsOnly,
-                                          LengthLimitingTextInputFormatter(3),
+
+                                          LengthLimitingTextInputFormatter(2),
+                                          RangeInputFormatter(1, 99),
                                         ],
                                         onChanged: (val) {
                                           int parsed = int.tryParse(val) ?? 0;
