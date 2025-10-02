@@ -27,8 +27,14 @@ class NoConnectionPage extends StatelessWidget {
             const SizedBox(height: 10),
             TextButton(
               onPressed: () {
-                // Retry connection
-                (context as Element).reassemble();
+                Navigator.pushReplacement(
+                  context,
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => const NoConnectionPage(),
+                    transitionDuration: Duration.zero,
+                    reverseTransitionDuration: Duration.zero,
+                  ),
+                );
               },
               child: const Text("RETRY", style: TextStyle(color: primaryColor)),
             ),

@@ -99,10 +99,12 @@ class LoginPageState extends State<LoginPage> {
   }
 
   void _checkLoginStatus() async {
-    bool isLoggedIn = await AuthUtil.isLoggedIn();
+    final dio = Dio();
+    final loggedUser = await AuthUtil.processTokenValidity(dio, context);
+
     if (!mounted) return;
 
-    if (isLoggedIn) {
+    if (loggedUser != null) {
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (context) => const NavigationPanel()),
         (route) => false,
