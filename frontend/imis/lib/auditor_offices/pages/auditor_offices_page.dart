@@ -1,5 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +11,10 @@ import 'package:imis/auditor_offices/services/auditor_offices_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
+import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import '../../common_services/common_service.dart';
 import '../../user/models/user.dart';
@@ -25,7 +30,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
   final FocusNode isSearchfocus = FocusNode();
   final _commonService = CommonService(Dio());
   final _auditorOfficeSevice = AuditorOfficesService(Dio());
-
+  final _paginationUtils = PaginationUtil(Dio());
   final dio = Dio();
   TextEditingController searchController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -41,16 +46,22 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
-
+  late FilterSearchResultUtil<AuditorOffices> auditorOfficeSearchUtil;
   bool _isLoading = false;
-
+  Timer? _debounce;
   @override
   void initState() {
     super.initState();
     isSearchfocus.addListener(() {
       setState(() {});
     });
-
+    fetchAuditorOffice();
+    auditorOfficeSearchUtil = FilterSearchResultUtil<AuditorOffices>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().auditorOffice,
+      pageSize: _pageSize,
+      fromJson: (json) => AuditorOffices.fromJson(json),
+    );
     () async {
       final auditor = await _commonService.fetchAuditors();
       final users = await _commonService.fetchUsers();
@@ -73,11 +84,11 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
       displayFullName();
       displayOfficeName();
     }();
-    fetchAuditorOffice();
   }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     isSearchfocus.dispose();
     super.dispose();
   }
@@ -89,6 +100,14 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
         orElse: () => User(id: '', fullName: 'Unknown', position: 'position'),
       );
     }
+  }
+
+  void _onSearchChanged(String query) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      filterSearchResults(query);
+    });
   }
 
   Future<void> fetchAuditorOffice({int page = 1, String? searchQuery}) async {
@@ -118,6 +137,44 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> filterSearchResults(String query) async {
+    final results = await auditorOfficeSearchUtil.filter(query, (
+      auditorOffice,
+      search,
+    ) {
+      final auditor = auditorList.firstWhere(
+        (a) => a.id.toString() == auditorOffice.auditorId.toString(),
+        orElse: () => Auditor(id: 0, name: 'Unknown', userId: ''),
+      );
+
+      final user = userList.firstWhere(
+        (u) => u.id.toString() == auditor.userId.toString(),
+        orElse: () => User(id: '', fullName: 'Unknown', position: ''),
+      );
+
+      final office = officenameList.firstWhere(
+        (o) => o.id == auditorOffice.officeId,
+        orElse:
+            () => Office(
+              id: 0,
+              name: 'Unknown',
+              officeTypeId: 0,
+              parentOfficeId: 0,
+              isActive: true,
+              isDeleted: false,
+            ),
+      );
+
+      final lowerSearch = search.toLowerCase().trim();
+      return user.fullName.toLowerCase().contains(lowerSearch) ||
+          office.name.toLowerCase().contains(lowerSearch);
+    });
+
+    setState(() {
+      filteredList = results;
+    });
   }
 
   void displayOfficeName() {
@@ -539,6 +596,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                         horizontal: 5,
                       ),
                     ),
+                    onChanged: _onSearchChanged,
                   ),
                 ),
                 if (!isMinimized)

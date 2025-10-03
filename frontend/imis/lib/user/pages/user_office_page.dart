@@ -85,9 +85,6 @@ class UserOfficePageState extends State<UserOfficePage> {
       pageSize: _pageSize,
       fromJson: (json) => UserOffice.fromJson(json),
     );
-    isSearchfocus.addListener(() {
-      setState(() {});
-    });
 
     () async {
       final offices = await _commonService.fetchOffices();
@@ -144,7 +141,8 @@ class UserOfficePageState extends State<UserOfficePage> {
     final results = await userOfficeSearchUtil.filter(
       query,
       (useroffice, search) =>
-          (useroffice.firstName).toLowerCase().contains(search.toLowerCase()),
+          (useroffice.firstName.toLowerCase().contains(search.toLowerCase())) ||
+          (useroffice.lastName.toLowerCase().contains(search.toLowerCase())),
     );
 
     setState(() {
