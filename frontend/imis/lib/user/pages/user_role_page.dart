@@ -128,7 +128,7 @@ class UserRolePageState extends State<UserRolePage> {
     _selectedUserId = selectedUserId;
 
     final List<String> currentRoles =
-        userRoleList
+        _allUserRoles
             .where((ur) => ur.userId == _selectedUserId)
             .expand(
               (ur) => ur.roles!.map(
