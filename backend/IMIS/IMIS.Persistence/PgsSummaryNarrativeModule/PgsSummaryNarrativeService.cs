@@ -1,10 +1,14 @@
-﻿using Base.Pagination;
+﻿using Base.Auths;
+using Base.Auths.Roles;
+using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
+using Microsoft.AspNetCore.Identity;
 using Sprache;
 
 
@@ -15,16 +19,67 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
         private readonly IPGSSummaryNarrativeRepository _repository;
         private readonly IOfficeRepository _officeRepository;
         private readonly IKeyResultAreaRepository _keyResulktAreaRepository;
+        private readonly UserManager<User> _userManager;
 
-        public PgsSummaryNarrativeService(
-            IPGSSummaryNarrativeRepository repository,
-            IOfficeRepository officeRepository,
-            IKeyResultAreaRepository keyResulktAreaRepository)
+        public PgsSummaryNarrativeService(IPGSSummaryNarrativeRepository repository, IOfficeRepository officeRepository, IKeyResultAreaRepository keyResulktAreaRepository, UserManager<User> userManager)
         {
             _repository = repository;
             _officeRepository = officeRepository;
             _keyResulktAreaRepository = keyResulktAreaRepository;
-        }       
+            _userManager = userManager;
+        }
+        private async Task<User?> GetCurrentUserAsync()
+        {
+            var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
+            return await currentUserService!.GetCurrentUserAsync();
+        }
+       
+        public async Task<IEnumerable<PGSSummaryNarrativeDto>> GetNarrativesForAuditorAsync(
+        string userId,
+        int? periodId,
+        CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                return Enumerable.Empty<PGSSummaryNarrativeDto>();
+
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
+
+            IEnumerable<PgsSummaryNarrative> entities;
+            
+            if (userRoles.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                                   r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                                   r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                var query = await _repository.GetAll(cancellationToken);
+
+                if (periodId.HasValue)
+                    query = query.Where(n => n.PgsPeriodId == periodId.Value);
+
+                entities = query
+                    .Where(n => !n.IsDeleted)
+                    .ToList(); 
+            }
+            else
+            {
+                entities = await _repository.GetNarrativesByAuditorAsync(
+                 userId,
+                 periodId,
+                 cancellationToken
+             );
+            }           
+            return entities.Select(n => new PGSSummaryNarrativeDto
+            {
+                Id = n.Id,
+                Findings = n.Findings,
+                Recommendation = n.Recommendation,
+                Conclusion = n.Conclusion,
+                PgsPeriodId = n.PgsPeriodId
+            });
+        }
+
+
+
         public async Task<List<ReportPGSSummaryNarrativeDto>> ReportGetByFilterAsync(PgsDeliverableSummaryNarrativeFilter filter, CancellationToken cancellationToken)
         {
             var narratives = await _repository.GetNarrativesByFilterAsync(filter, cancellationToken);

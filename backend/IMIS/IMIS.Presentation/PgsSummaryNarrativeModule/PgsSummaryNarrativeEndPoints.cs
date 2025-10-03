@@ -3,6 +3,7 @@ using Carter;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
 using IMIS.Infrastructure.Reports;
+using IMIS.Persistence.PgsSummaryNarrativeModule;
 using Microsoft.AspNetCore.Builder; 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -40,6 +41,16 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
            .WithTags(_pgsSummaryNarrativeTag)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View))
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true);
+   
+            app.MapGet("/byAuditor/{userId}", async (string userId, int? periodId, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
+            {            
+                var narratives = await service.GetNarrativesForAuditorAsync(userId, periodId, cancellationToken);
+
+                return Results.Ok(narratives);
+            })
+            .WithTags(_pgsSummaryNarrativeTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsSummaryNarrativeTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] PGSSummaryNarrativeDto pgsSummaryNarrativeDto, IPGSSummaryNarrativeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {               
@@ -75,6 +86,8 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
                 var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
                 return Results.File(file, "application/pdf");
+
+                //return Results.File(file, "application/pdf", $"ReportPgsSummaryNarrative_{DateTime.Now:yyyyMMddHHmmss}.pdf");    
 
             })
             .WithTags(_pgsSummaryNarrativeTag)
