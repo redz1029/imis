@@ -103,11 +103,17 @@ class AuditorMainPageState extends State<AuditorPage> {
   }
 
   Future<void> filterSearchResults(String query) async {
-    final results = await auditorSearchUtil.filter(
-      query,
-      (auditor, search) =>
-          (auditor.name ?? '').toLowerCase().contains(search.toLowerCase()),
-    );
+    final results = await auditorSearchUtil.filter(query, (auditor, search) {
+      final user = userList.firstWhere(
+        (u) => u.id.toString() == auditor.userId.toString(),
+        orElse: () => User(id: '', fullName: 'Unknown', position: ''),
+      );
+
+      return (auditor.name ?? '').toLowerCase().contains(
+            search.toLowerCase(),
+          ) ||
+          (user.fullName).toLowerCase().contains(search.toLowerCase());
+    });
 
     setState(() {
       filteredList = results;
