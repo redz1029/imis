@@ -114,6 +114,7 @@ class NavigationPanelState extends State<NavigationPanel> {
         }
       });
     } else {
+      await prefs.remove('selectedRole');
       if (roles.length >= 2) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _showSwitchRole();
