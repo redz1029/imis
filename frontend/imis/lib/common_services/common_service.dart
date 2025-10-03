@@ -12,65 +12,49 @@ class CommonService {
 
   CommonService(this.dio);
 
-  Future<List<Office>> fetchOffices() async {
-    var url = ApiEndpoint().office;
-
-    final response = await AuthenticatedRequest.get(dio, url);
-
-    if (response.statusCode == 200 && response.data is List) {
-      return (response.data as List).map((e) => Office.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to fetch offices');
-    }
-  }
-
-  Future<List<User>> fetchUsers() async {
-    var url = ApiEndpoint().users;
-
-    final response = await AuthenticatedRequest.get(dio, url);
-
-    if (response.statusCode == 200 && response.data is List) {
-      return (response.data as List).map((e) => User.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to fetch users');
-    }
-  }
-
-  Future<List<Auditor>> fetchAuditors() async {
-    var url = ApiEndpoint().auditor;
-
-    final response = await AuthenticatedRequest.get(dio, url);
-
-    if (response.statusCode == 200 && response.data is List) {
-      return (response.data as List).map((e) => Auditor.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to fetch auditor');
-    }
-  }
-
-  Future<List<PgsPeriod>> fetchPgsPeriod() async {
-    var url = ApiEndpoint().pgsperiod;
-
-    final response = await AuthenticatedRequest.get(dio, url);
-
-    if (response.statusCode == 200 && response.data is List) {
-      return (response.data as List).map((e) => PgsPeriod.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to fetch period');
-    }
-  }
-
-  Future<List<KeyResultArea>> fetchKra() async {
-    var url = ApiEndpoint().keyresult;
-
+  Future<List<T>> _fetchList<T>(
+    String url,
+    T Function(Map<String, dynamic>) fromJson,
+    String errorMessage,
+  ) async {
     final response = await AuthenticatedRequest.get(dio, url);
 
     if (response.statusCode == 200 && response.data is List) {
       return (response.data as List)
-          .map((e) => KeyResultArea.fromJson(e))
+          .map((e) => fromJson(e as Map<String, dynamic>))
           .toList();
     } else {
-      throw Exception('Failed to fetch key result area');
+      throw Exception(errorMessage);
     }
   }
+
+  Future<List<Office>> fetchOffices() => _fetchList(
+    ApiEndpoint().office,
+    (e) => Office.fromJson(e),
+    'Failed to fetch offices',
+  );
+
+  Future<List<User>> fetchUsers() => _fetchList(
+    ApiEndpoint().users,
+    (e) => User.fromJson(e),
+    'Failed to fetch users',
+  );
+
+  Future<List<Auditor>> fetchAuditors() => _fetchList(
+    ApiEndpoint().auditor,
+    (e) => Auditor.fromJson(e),
+    'Failed to fetch auditors',
+  );
+
+  Future<List<PgsPeriod>> fetchPgsPeriod() => _fetchList(
+    ApiEndpoint().pgsperiod,
+    (e) => PgsPeriod.fromJson(e),
+    'Failed to fetch periods',
+  );
+
+  Future<List<KeyResultArea>> fetchKra() => _fetchList(
+    ApiEndpoint().keyresult,
+    (e) => KeyResultArea.fromJson(e),
+    'Failed to fetch key result areas',
+  );
 }
