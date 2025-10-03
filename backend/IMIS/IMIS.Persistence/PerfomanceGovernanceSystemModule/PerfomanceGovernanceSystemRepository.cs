@@ -1,6 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
-using IMIS.Application.PerfomanceGovernanceSystemModule;
+using IMIS.Application.PerfomanceGovernanceSystemModule; 
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using IMIS.Persistence;
@@ -150,14 +150,18 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     // Get all Pgs
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetAll(CancellationToken cancellationToken)
     {
-        return await _entities        
-        .Include(pgs => pgs.PgsPeriod)
-        .Include(pgs => pgs.Office)      
-        .Include(pgs => pgs.PgsReadinessRating)
-        .Include(pgs => pgs.PgsSignatories)
+        return await _entities
+        .Include(p => p.PgsPeriod)
+        .Include(p => p.Office)
+        .Include(p => p.PgsDeliverables)
+        .ThenInclude(d => d.Kra)
+        .Include(p => p.PgsReadinessRating)
+        .Include(p => p.PgsSignatories)
+        .ThenInclude(d => d.PgsSignatoryTemplate)
         .AsNoTracking()
         .ToListAsync(cancellationToken);
-    } 
+    }
+
     // Get Pgs, Filter by all Paginated
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
