@@ -19,6 +19,7 @@ namespace IMIS.Application.PgsModule
         public string? PgsStatus { get; set; }
         public List<PgsSignatoryDto>? PgsSignatories { get; set; }  
         public bool ForSignature { get; set; }
+        public bool IsDraft { get; set; }
 
         public PerfomanceGovernanceSystemDto() { }
         [SetsRequiredMembers]
@@ -41,7 +42,7 @@ namespace IMIS.Application.PgsModule
                 DateSigned = s.DateSigned,
             }).ToList();
 
-            this.ForSignature = false;
+            this.ForSignature = false;                
             this.IsDeleted = perfomanceGovernanceSystem.IsDeleted;
             this.RowVersion = perfomanceGovernanceSystem.RowVersion;
         }

@@ -62,8 +62,8 @@ namespace IMIS.Persistence.PgsModule
             return dto;
         }
 
-        
 
+    
         private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(
         PerfomanceGovernanceSystem pgs,
         string userId,
@@ -74,12 +74,16 @@ namespace IMIS.Persistence.PgsModule
                 PgsDeliverables = pgs.PgsDeliverables?.Select(d => new PGSDeliverableDto(d)).ToList()
                                   ?? new List<PGSDeliverableDto>(),
                 PgsSignatories = new List<PgsSignatoryDto>()
-            };           
+            };
+
+            bool hasSavedSignatories = pgs.PgsSignatories != null && pgs.PgsSignatories.Any(s => s.Id > 0);
+
+            dto.IsDraft = !hasSavedSignatories;
 
             if (dto.PgsDeliverables.Any(d => d.IsDisapproved))
             {
                 if (pgs.PgsSignatories?.Any() == true)
-                {                   
+                {
                     _repository.GetDbContext().RemoveRange(pgs.PgsSignatories);
                     await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
                 }
@@ -101,22 +105,24 @@ namespace IMIS.Persistence.PgsModule
                         IsNextStatus = true
                     });
                 }
+
+                dto.IsDraft = true;
                 return dto;
-
-
             }
 
             foreach (var s in pgs.PgsSignatories ?? Enumerable.Empty<PgsSignatory>())
             {
                 int orderLevel = 0;
-              
+                string label = PgsStatus.OfficeHead;
+
                 if (s.PgsSignatoryTemplateId != null)
                 {
-                    var template = await _signatoryTemplateRepository.GetByIdAsync(s.PgsSignatoryTemplateId.Value, cancellationToken);
+                    var template = await _signatoryTemplateRepository
+                        .GetByIdAsync(s.PgsSignatoryTemplateId.Value, cancellationToken);
                     if (template != null)
-                    {                        
+                    {
                         orderLevel = template.OrderLevel;
-                        PgsStatus.OfficeHead = template.SignatoryLabel;
+                        label = template.SignatoryLabel;
                     }
                 }
 
@@ -126,21 +132,19 @@ namespace IMIS.Persistence.PgsModule
                     PgsId = pgs.Id,
                     PgsSignatoryTemplateId = s.PgsSignatoryTemplateId,
                     SignatoryId = s.SignatoryId,
-                    Label = PgsStatus.OfficeHead,
+                    Label = label,
                     OrderLevel = orderLevel,
                     Status = s.DateSigned != default ? PgsStatus.Prepared : PgsStatus.Pending,
                     IsNextStatus = false,
-                    DateSigned = s.DateSigned                    
-                    
+                    DateSigned = s.DateSigned
                 });
             }
 
-          
             var childOfficeHead = pgs.Office.UserOffices?.FirstOrDefault(u => u.IsOfficeHead);
-            bool hasSignatory = dto.PgsSignatories.Any();
-            var officeTemplates = await _signatoryTemplateRepository.GetSignatoryTemplateByOfficeIdAsync(pgs.Office.Id, cancellationToken);
+            var officeTemplates = await _signatoryTemplateRepository
+                .GetSignatoryTemplateByOfficeIdAsync(pgs.Office.Id, cancellationToken);
 
-            if (!hasSignatory && (officeTemplates == null || !officeTemplates.Any()) && childOfficeHead != null)
+            if (!hasSavedSignatories && (officeTemplates == null || !officeTemplates.Any()) && childOfficeHead != null)
             {
                 dto.PgsSignatories.Add(new PgsSignatoryDto
                 {
@@ -152,11 +156,9 @@ namespace IMIS.Persistence.PgsModule
                     OrderLevel = 0,
                     Status = PgsStatus.Pending,
                     IsNextStatus = false
-                                        
                 });
             }
 
-            // Add inherited templates for the office hierarchy
             var templates = await GetInheritedSignatoryTemplatesAsync(pgs.Office, cancellationToken);
             foreach (var t in templates.OrderBy(t => t.OrderLevel))
             {
@@ -175,11 +177,10 @@ namespace IMIS.Persistence.PgsModule
                     Label = t.SignatoryLabel,
                     OrderLevel = t.OrderLevel,
                     Status = PgsStatus.Pending,
-                    IsNextStatus = false,
-                                        
+                    IsNextStatus = false
                 });
             }
-         
+
             var nextPending = dto.PgsSignatories
                 .Where(s => s.Status!.Equals(PgsStatus.Pending, StringComparison.OrdinalIgnoreCase))
                 .OrderBy(s => s.OrderLevel)
@@ -187,7 +188,7 @@ namespace IMIS.Persistence.PgsModule
 
             if (nextPending != null)
                 nextPending.IsNextStatus = true;
-           
+
             dto.PgsSignatories = dto.PgsSignatories
                 .Where(s => s.Status!.Equals(PgsStatus.Prepared, StringComparison.OrdinalIgnoreCase) || s.IsNextStatus)
                 .OrderBy(s => s.OrderLevel)
@@ -195,6 +196,7 @@ namespace IMIS.Persistence.PgsModule
 
             return dto;
         }
+
 
         private async Task<IEnumerable<PgsSignatoryTemplate>> GetInheritedSignatoryTemplatesAsync(Office office, CancellationToken cancellationToken)
         {
@@ -287,8 +289,9 @@ namespace IMIS.Persistence.PgsModule
                     .ToList() ?? new List<PGSDeliverableDto>();
 
                 var isUserAssignedToOffice = pgs.Office.UserOffices?.Any(u => u.UserId == userId) ?? false;
-
-                var isDraft = dto.PgsSignatories == null || !dto.PgsSignatories.Any();
+                
+                var isDraft = dto.PgsSignatories == null || !dto.PgsSignatories.Any(s => s.Id > 0);
+                dto.IsDraft = isDraft;
                 if (isDraft)
                 {
                     var templates = (await GetInheritedSignatoryTemplatesAsync(pgs.Office, cancellationToken))
