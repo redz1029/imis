@@ -3,7 +3,6 @@ using Carter;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
 using IMIS.Infrastructure.Reports;
-using IMIS.Persistence.PgsSummaryNarrativeModule;
 using Microsoft.AspNetCore.Builder; 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -42,9 +41,9 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View))
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true);
    
-            app.MapGet("/byAuditor/{userId}", async (string userId, int? periodId, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
+            app.MapGet("/byAuditor", async(int ? periodId, int ? office, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
             {            
-                var narratives = await service.GetNarrativesForAuditorAsync(userId, periodId, cancellationToken);
+                var narratives = await service.GetNarrativesForAuditorAsync(periodId, office, cancellationToken);
 
                 return Results.Ok(narratives);
             })
