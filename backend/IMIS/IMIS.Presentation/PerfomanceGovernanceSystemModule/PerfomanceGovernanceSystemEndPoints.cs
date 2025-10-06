@@ -99,7 +99,7 @@ namespace IMIS.Presentation.PgsModuleAPIs
            .WithTags(_pgsTag)
            .RequireAuthorization(e => e.RequireClaim(
             PermissionClaimType.Claim, _performanceGovernanceSystem.View))
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -130,6 +130,7 @@ namespace IMIS.Presentation.PgsModuleAPIs
                 //Force inline rendering in browser with dynamic timestamp filename
                 var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
 
                 //return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
             })
@@ -180,8 +181,8 @@ namespace IMIS.Presentation.PgsModuleAPIs
             app.MapDelete("deliverable/{id:int}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
                 var result = await service.SoftDeleteDeliverableAsync(id, cancellationToken);
-                return result ? Results.Ok(new { message = "Deliverable soft deleted successfully." })
-                              : Results.NotFound(new { message = "Deliverable not found." });
+                return result ? Results.Ok(new { message = "PGS soft deleted successfully." })
+                              : Results.NotFound(new { message = "PGS not found." });
             })
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(
