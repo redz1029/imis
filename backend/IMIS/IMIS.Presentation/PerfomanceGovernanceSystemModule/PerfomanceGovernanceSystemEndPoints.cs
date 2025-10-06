@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
 
-namespace IMIS.Presentation.PgsModuleAPI
+namespace IMIS.Presentation.PgsModuleAPIs
 {
     public class PerfomanceGovernanceSystemEndPoints : CarterModule
     {
@@ -127,11 +127,11 @@ namespace IMIS.Presentation.PgsModuleAPI
                     cancellationToken
                 ).ConfigureAwait(false);
 
-                // Force inline rendering in browser with dynamic timestamp filename
+                //Force inline rendering in browser with dynamic timestamp filename
                 var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
 
-                return Results.File(file, "application/pdf");
+                //return Results.File(file, "application/pdf", $"ReportPerfomanceGovernanceSystem_{DateTime.Now:yyyyMMddHHmmss}.pdf");
             })
             .WithTags(_pgsTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
@@ -176,6 +176,16 @@ namespace IMIS.Presentation.PgsModuleAPI
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _performanceGovernanceSystem.View));
+
+            app.MapDelete("deliverable/{id:int}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteDeliverableAsync(id, cancellationToken);
+                return result ? Results.Ok(new { message = "Deliverable soft deleted successfully." })
+                              : Results.NotFound(new { message = "Deliverable not found." });
+            })
+            .WithTags(_pgsTag)
+            .RequireAuthorization(e => e.RequireClaim(
+             PermissionClaimType.Claim, _performanceGovernanceSystem.Edit));
         }
     }
 }
