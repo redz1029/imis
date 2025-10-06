@@ -10,7 +10,8 @@ namespace IMIS.Application.PgsSummaryNarrativeModule
         public required string Recommendation { get; set; }
         public required string Conclusion { get; set; }
         public int? PgsPeriodId { get; set; }
-       
+        public int? OfficeId { get; set; }
+
         public PGSSummaryNarrativeDto()
         {
         }
@@ -23,6 +24,7 @@ namespace IMIS.Application.PgsSummaryNarrativeModule
             this.Recommendation = pgsSummaryNarrative.Recommendation;
             this.Conclusion = pgsSummaryNarrative.Conclusion;
             this.PgsPeriodId = pgsSummaryNarrative.PgsPeriodId;
+            this.OfficeId = pgsSummaryNarrative.OfficeId;
         }
 
         public override PgsSummaryNarrative ToEntity()
@@ -34,6 +36,7 @@ namespace IMIS.Application.PgsSummaryNarrativeModule
                 Recommendation = Recommendation,
                 Conclusion = Conclusion,
                 PgsPeriodId = PgsPeriodId,
+                OfficeId = OfficeId
             };
         }
     }

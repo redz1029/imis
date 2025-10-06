@@ -12,39 +12,36 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
         {
 
         }
-        
-        public async Task<IEnumerable<PgsSummaryNarrative>> GetNarrativesByAuditorAsync(
-        string userId,
-        int? periodId,
-        CancellationToken cancellationToken)
+
+        public async Task<IEnumerable<PgsSummaryNarrative>> GetNarrativesByAuditorAsync(string userId, int? periodId, int? office, CancellationToken cancellationToken)
         {
             var auditor = await ReadOnlyDbContext.Set<Auditor>()
                 .FirstOrDefaultAsync(a => a.UserId == userId && !a.IsDeleted, cancellationToken);
 
             if (auditor == null)
                 return Enumerable.Empty<PgsSummaryNarrative>();
-           
-            var auditorOffices = await ReadOnlyDbContext.Set<AuditorOffices>()
+
+            var assignedOfficeIds = await ReadOnlyDbContext.Set<AuditorOffices>()
                 .Where(o => o.AuditorId == auditor.Id && !o.IsDeleted)
+                .Select(o => o.OfficeId)
+                .Distinct()
                 .ToListAsync(cancellationToken);
 
-            if (!auditorOffices.Any())
+            if (!assignedOfficeIds.Any())
                 return Enumerable.Empty<PgsSummaryNarrative>();
-            
-            var assignedPeriodIds = auditorOffices
-                .Select(o => o.PgsPeriodId)
-                .Distinct()
-                .ToList();
 
             var query = ReadOnlyDbContext.Set<PgsSummaryNarrative>()
-                .Where(n => !n.IsDeleted && assignedPeriodIds.Contains(n.PgsPeriodId));
+                .Where(n => !n.IsDeleted && n.OfficeId.HasValue && assignedOfficeIds.Contains(n.OfficeId.Value));
 
             if (periodId.HasValue)
                 query = query.Where(n => n.PgsPeriodId == periodId.Value);
 
+            if (office.HasValue)
+                query = query.Where(n => n.OfficeId == office.Value);
+
             return await query.ToListAsync(cancellationToken);
         }
-   
+
         public async Task<EntityPageList<PgsSummaryNarrative, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
 

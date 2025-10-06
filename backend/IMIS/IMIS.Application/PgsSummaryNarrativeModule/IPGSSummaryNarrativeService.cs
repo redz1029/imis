@@ -11,6 +11,6 @@ namespace IMIS.Application.PgsSummaryNarrativeModule
         Task<PGSSummaryNarrativeDto?> GetByPeriodIdAsync(int pgsPeriodId, CancellationToken cancellationToken);       
         Task<List<ReportPGSSummaryNarrativeDto>> ReportGetByFilterAsync(PgsDeliverableSummaryNarrativeFilter filter, CancellationToken cancellationToken);
         Task<DtoPageList<PGSSummaryNarrativeDto, PgsSummaryNarrative, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
-        Task<IEnumerable<PGSSummaryNarrativeDto>> GetNarrativesForAuditorAsync(string userId, int? periodId, CancellationToken cancellationToken);
+        Task<IEnumerable<PGSSummaryNarrativeDto>> GetNarrativesForAuditorAsync(int? periodId, int? office, CancellationToken cancellationToken);
     }
 }

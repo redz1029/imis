@@ -9,6 +9,8 @@ namespace IMIS.Domain
         public required string Conclusion { get; set; }
         public int? PgsPeriodId { get; set; }
         public PgsPeriod? PgsPeriod { get; set; }
+        public int? OfficeId { get; set; }
+        public Office? Office { get; set; }
 
     }
 }
