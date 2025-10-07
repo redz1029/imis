@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
+import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/page_list.dart';
 import 'package:imis/utils/pagination_util.dart';
@@ -15,10 +17,28 @@ class SummaryNarrativeService {
     int page = 1,
     int pageSize = 15,
     String? searchQuery,
+    int? periodId,
+    int? officeId,
   }) async {
     final paginationUtil = PaginationUtil(dio);
+    UserRegistration? user = await AuthUtil.fetchLoggedUser();
+    if (user == null) {
+      throw Exception("User not logged in");
+    }
+
+    final queryParams = <String, String>{};
+    if (periodId != null) queryParams['periodId'] = periodId.toString();
+    if (officeId != null) queryParams['office'] = officeId.toString();
+
+    final queryString = queryParams.entries
+        .map((e) => '${e.key}=${e.value}')
+        .join('&');
+
+    final endpoint =
+        "${ApiEndpoint().summaryNarrative}/byAuditor${queryString.isNotEmpty ? '?$queryString' : ''}";
+
     return await paginationUtil.fetchPaginatedData<PgsSummaryNarrative>(
-      endpoint: ApiEndpoint().summaryNarrative,
+      endpoint: endpoint,
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
@@ -126,5 +146,31 @@ class SummaryNarrativeService {
     } else {
       throw Exception('Failed to fetch summary narratives');
     }
+  }
+
+  Future<bool> checkExistingSummaryNarrative(int periodId, int officeId) async {
+    final response = await AuthenticatedRequest.get(
+      dio,
+      '${ApiEndpoint().summaryNarrative}?periodId=$periodId&officeId=$officeId',
+    );
+
+    final data = response.data;
+
+    if (data == null) return false;
+
+    if (data is List) {
+      return data.any((item) {
+        final p = int.tryParse(item['periodId'].toString()) ?? 0;
+        final o = int.tryParse(item['officeId'].toString()) ?? 0;
+
+        return p == periodId && o == officeId;
+      });
+    } else if (data is Map) {
+      final p = int.tryParse(data['periodId'].toString()) ?? 0;
+      final o = int.tryParse(data['officeId'].toString()) ?? 0;
+      return p == periodId && o == officeId;
+    }
+
+    return false;
   }
 }
