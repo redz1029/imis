@@ -1,10 +1,14 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/navigation/navigation_panel.dart';
+import 'package:imis/office/models/office.dart';
+import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/pages/view_pdf_summary.dart';
@@ -27,14 +31,18 @@ class ManageSummaryNarrativeReportPageState
 
   final _dateConverter = const LongDateOnlyConverter();
   final _summaryNarrativeService = SummaryNarrativeService(Dio());
+  final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
+    Dio(),
+  );
   final _formKey = GlobalKey<FormState>();
   List<PgsSummaryNarrative> reports = [];
   final TextEditingController _findingsController = TextEditingController();
   final TextEditingController _conclusionsController = TextEditingController();
   final TextEditingController _recommendationsController =
       TextEditingController();
-  int _periodId = 0;
-  List<PgsPeriod> _periods = [];
+  int periodId = 0;
+
+  List<PgsPeriod> periodList = [];
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
   int _currentPage = 1;
@@ -43,17 +51,23 @@ class ManageSummaryNarrativeReportPageState
   bool _isLoading = false;
   List<PgsSummaryNarrative> summaryList = [];
   List<PgsSummaryNarrative> filteredList = [];
+  List<Office> officeList = [];
+  String? _selectedPeriod;
+  String? _selectedOffice;
+  Map<int, String> officeMap = {};
   @override
   void initState() {
     super.initState();
     // _fetchReports();
     () async {
       final period = await _commonService.fetchPgsPeriod();
-
+      final offices = await _deliverableStatusMonitoring.fetchOffices();
       if (!mounted) return;
 
       setState(() {
-        _periods = period;
+        officeList = offices;
+        periodList = period;
+        officeMap = {for (var office in offices) office.id: office.name};
       });
     }();
     fetchSummaryNarrative();
@@ -92,7 +106,7 @@ class ManageSummaryNarrativeReportPageState
   }
 
   String getPeriodLabel(int periodId) {
-    final period = _periods.firstWhere(
+    final period = periodList.firstWhere(
       (p) => p.id == periodId,
       orElse:
           () => PgsPeriod(0, false, DateTime.now(), DateTime.now(), 'remarks'),
@@ -105,291 +119,239 @@ class ManageSummaryNarrativeReportPageState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: mainBgColor,
-
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          bool isMobile = constraints.maxWidth < 600;
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    ElevatedButton.icon(
-                      onPressed:
-                          () => Navigator.of(context).pushAndRemoveUntil(
-                            MaterialPageRoute(
-                              builder:
-                                  (context) => const NavigationPanel(
-                                    initialScreenIndex: 16,
-                                  ),
-                            ),
-                            (route) => false,
-                          ),
-                      icon: const Icon(Icons.arrow_back, size: 18),
-                      label: const Text(
-                        "Back",
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: mainBgColor,
-                        foregroundColor: primaryTextColor,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 10,
-                        ),
-                        side: BorderSide(
-                          color: Colors.grey.shade400,
-                          width: 0.8,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        elevation: 0,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Column(
+                    Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'Manage Report',
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w600,
+                        ElevatedButton.icon(
+                          onPressed:
+                              () => Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => const NavigationPanel(
+                                        initialScreenIndex: 16,
+                                      ),
+                                ),
+                                (route) => false,
+                              ),
+                          icon: const Icon(Icons.arrow_back, size: 18),
+                          label: const Text(
+                            "Back",
+                            style: TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: mainBgColor,
+                            foregroundColor: primaryTextColor,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 10,
+                            ),
+                            side: BorderSide(
+                              color: Colors.grey.shade400,
+                              width: 0.8,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            elevation: 0,
                           ),
                         ),
-                        gap12px,
-                        SizedBox(
-                          height: 30,
-                          width: 300,
-                          child: TextField(
-                            decoration: InputDecoration(
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: lightGrey),
-                              ),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.never,
-                              labelText: 'Search...',
-                              labelStyle: TextStyle(color: grey, fontSize: 14),
-                              prefixIcon: Icon(Icons.search, size: 20),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              filled: true,
-                              fillColor: secondaryColor,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 5,
-                                horizontal: 5,
+                        const SizedBox(width: 16),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Manage Report',
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w600,
                               ),
                             ),
-                            // onChanged: filterSearchResults,
-                          ),
+                            gap12px,
+                            SizedBox(
+                              height: 30,
+                              width: 300,
+                              child: TextField(
+                                decoration: InputDecoration(
+                                  enabledBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: lightGrey),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderSide: BorderSide(color: primaryColor),
+                                  ),
+                                  floatingLabelBehavior:
+                                      FloatingLabelBehavior.never,
+                                  labelText: 'Search...',
+                                  labelStyle: TextStyle(
+                                    color: grey,
+                                    fontSize: 14,
+                                  ),
+                                  prefixIcon: Icon(Icons.search, size: 20),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  filled: true,
+                                  fillColor: secondaryColor,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 5,
+                                    horizontal: 5,
+                                  ),
+                                ),
+                                // onChanged: filterSearchResults,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
                   ],
                 ),
-              ],
-            ),
-            gap24px,
-            Expanded(
-              child: Column(
-                children: [
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Performance Report',
-                            style: TextStyle(color: grey),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text('Period', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Actions', style: TextStyle(color: grey)),
-                        ),
-                      ],
+                const SizedBox(height: 20),
+                Expanded(
+                  child: DataTable2(
+                    columnSpacing: isMobile ? 8 : 12,
+                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
+                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                    headingTextStyle: const TextStyle(color: grey),
+                    horizontalMargin: 12,
+                    minWidth: 700,
+                    fixedTopRows: 1,
+                    border: TableBorder(
+                      horizontalInside: BorderSide(color: Colors.grey.shade100),
                     ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: Column(
-                        children:
-                            filteredList
-                                .asMap()
-                                .map((index, summary) {
-                                  int itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade300,
-                                          ),
+                    columns: [
+                      DataColumn2(label: const Text('#'), fixedWidth: 40),
+                      DataColumn2(
+                        label: const Text('Office'),
+                        size: ColumnSize.L,
+                      ),
+                      DataColumn2(
+                        label: const Text('Period'),
+                        size: ColumnSize.L,
+                      ),
+                      const DataColumn(label: Text('Actions')),
+                    ],
+                    rows:
+                        filteredList.asMap().entries.map((entry) {
+                          int index = entry.key;
+                          var summary = entry.value;
+                          int itemNumber =
+                              ((_currentPage - 1) * _pageSize) + index + 1;
+
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(itemNumber.toString())),
+                              DataCell(
+                                Container(
+                                  constraints: BoxConstraints(
+                                    // minWidth: 100,
+                                    maxWidth: constraints.maxWidth * 0.4,
+                                  ),
+                                  child: Text(
+                                    officeMap[summary.officeId] ??
+                                        'Unknown Office',
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: true,
+                                    maxLines: 2,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(getPeriodLabel(summary.pgsPeriodId)),
+                              ),
+                              DataCell(
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit),
+                                      onPressed: () {
+                                        showReportDialog(summary, index);
+                                      },
+                                    ),
+                                    Tooltip(
+                                      message: 'Print Preview',
+
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.description_outlined,
                                         ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                itemNumber.toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                'Performance Report',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                getPeriodLabel(
-                                                  summary.pgsPeriodId,
-                                                ),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
 
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed: () {
-                                                      showReportDialog(
-                                                        summary,
-                                                        index,
-                                                        summary.pgsPeriodId,
-                                                      );
-                                                    },
+                                        onPressed: () async {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => ViewPdfSummary(
+                                                    pgsPeriodId:
+                                                        summary.pgsPeriodId
+                                                            .toString(),
+                                                    officeId:
+                                                        summary.officeId
+                                                            .toString(),
                                                   ),
-
-                                                  SizedBox(width: 1),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: primaryColor,
-                                                    ),
-                                                    onPressed: () => {},
-                                                  ),
-                                                ],
-                                              ),
                                             ),
-                                          ),
-                                        ],
+                                          );
+                                        },
                                       ),
                                     ),
-                                  );
-                                })
-                                .values
-                                .toList(),
-                      ),
-                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
                   ),
-                ],
-              ),
-            ),
+                ),
 
-            Container(
-              padding: EdgeInsets.all(10),
-              color: secondaryColor,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PaginationInfo(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
+                Container(
+                  padding: EdgeInsets.all(10),
+                  color: secondaryColor,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      PaginationInfo(
+                        currentPage: _currentPage,
+                        totalItems: _totalCount,
+                        itemsPerPage: _pageSize,
+                      ),
+                      PaginationControls(
+                        currentPage: _currentPage,
+                        totalItems: _totalCount,
+                        itemsPerPage: _pageSize,
+                        isLoading: _isLoading,
+                        onPageChanged:
+                            (page) => fetchSummaryNarrative(page: page),
+                      ),
+                      Container(width: 60),
+                    ],
                   ),
-                  PaginationControls(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                    isLoading: _isLoading,
-                    onPageChanged: (page) => fetchSummaryNarrative(page: page),
-                  ),
-                  Container(width: 60),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  void showReportDialog(
-    PgsSummaryNarrative report,
-    int index,
-    int pgsPeriodId,
-  ) {
-    _periodId = pgsPeriodId;
+  void showReportDialog(PgsSummaryNarrative report, int index) {
+    periodId = report.pgsPeriodId;
     _findingsController.text = report.findings ?? '';
     _conclusionsController.text = report.conclusion ?? '';
     _recommendationsController.text = report.recommendation ?? '';
-    _periodId = pgsPeriodId;
+
+    _selectedPeriod = report.pgsPeriodId.toString();
+    _selectedOffice = report.officeId?.toString();
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -401,8 +363,11 @@ class ManageSummaryNarrativeReportPageState
             borderRadius: BorderRadius.circular(12),
           ),
           contentPadding: EdgeInsets.zero,
-          content: SingleChildScrollView(
-            child: _buildReportCard(report, index),
+          content: SizedBox(
+            width: 900,
+            child: SingleChildScrollView(
+              child: _buildReportCard(report, index),
+            ),
           ),
           actions: [
             ElevatedButton(
@@ -447,11 +412,11 @@ class ManageSummaryNarrativeReportPageState
                   if (confirmAction == true) {
                     final summaryNarrative = PgsSummaryNarrative(
                       report.id,
-                      _periodId,
+                      int.tryParse(_selectedPeriod ?? '0') ?? 0,
                       _findingsController.text,
                       _recommendationsController.text,
                       _conclusionsController.text,
-                      0,
+                      int.tryParse(_selectedOffice ?? '0') ?? 0,
                       isDeleted: false,
                       rowVersion: '',
                     );
@@ -535,7 +500,7 @@ class ManageSummaryNarrativeReportPageState
                           const SizedBox(width: 8),
 
                           Text(
-                            'Performance Report - ${getPeriodLabel(report.pgsPeriodId)}',
+                            'Summary Narative Report - ${getPeriodLabel(report.pgsPeriodId)}',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.black87,
@@ -551,8 +516,8 @@ class ManageSummaryNarrativeReportPageState
                                 MaterialPageRoute(
                                   builder:
                                       (context) => ViewPdfSummary(
-                                        pgsPeriodId:
-                                            report.pgsPeriodId.toString(),
+                                        pgsPeriodId: _selectedPeriod.toString(),
+                                        officeId: _selectedOffice.toString(),
                                       ),
                                 ),
                               );
@@ -589,33 +554,258 @@ class ManageSummaryNarrativeReportPageState
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.trending_up,
-                              color: primaryTextColor,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Executive Summary',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black87,
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text.rich(
+                                      TextSpan(
+                                        text: 'Period ',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: '*',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    DropdownSearch<PgsPeriod>(
+                                      popupProps: PopupProps.menu(
+                                        showSearchBox: true,
+                                        fit: FlexFit.loose,
+                                        menuProps: const MenuProps(
+                                          backgroundColor: Colors.white,
+                                          elevation: 2,
+                                        ),
+                                        searchFieldProps: TextFieldProps(
+                                          decoration: InputDecoration(
+                                            hintText: 'Search Period...',
+                                            hintStyle: TextStyle(fontSize: 13),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            prefixIcon: Icon(Icons.search),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: primaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        itemBuilder:
+                                            (
+                                              context,
+                                              period,
+                                              isSelected,
+                                            ) => ListTile(
+                                              tileColor: Colors.white,
+                                              title: Text(
+                                                "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
+                                                style: const TextStyle(
+                                                  fontSize: 13,
+                                                ),
+                                              ),
+                                            ),
+                                      ),
+
+                                      items: periodList,
+                                      itemAsString:
+                                          (period) =>
+                                              "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
+                                      selectedItem:
+                                          _selectedPeriod == null
+                                              ? null
+                                              : periodList.firstWhere(
+                                                (office) =>
+                                                    office.id.toString() ==
+                                                    _selectedPeriod,
+                                                orElse:
+                                                    () => PgsPeriod(
+                                                      0,
+                                                      false,
+                                                      DateTime.now(),
+                                                      DateTime.now(),
+                                                      'remarks',
+                                                    ),
+                                              ),
+
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedPeriod =
+                                              value?.id.toString();
+                                        });
+                                      },
+                                      validator: (value) {
+                                        if (value == null) {
+                                          return 'Required';
+                                        }
+                                        return null;
+                                      },
+                                      dropdownDecoratorProps:
+                                          DropDownDecoratorProps(
+                                            dropdownSearchDecoration:
+                                                InputDecoration(
+                                                  labelText: 'Select Period',
+                                                  labelStyle: TextStyle(
+                                                    fontSize: 13,
+                                                  ),
+                                                  filled: true,
+                                                  fillColor: Colors.transparent,
+                                                  floatingLabelBehavior:
+                                                      FloatingLabelBehavior
+                                                          .never,
+                                                  border: InputBorder.none,
+                                                  enabledBorder:
+                                                      InputBorder.none,
+                                                  focusedBorder:
+                                                      InputBorder.none,
+                                                  contentPadding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 8,
+                                                      ),
+                                                ),
+                                          ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 900),
-                          child: const Text(
-                            'This report analyzes the implementation and progress of the Performance Governance System (PGS) '
-                            'for Q2 2024. It highlights key governance indicators, institutional performance, and alignment with '
-                            'strategic objectives. The analysis covers leadership commitment, strategy execution, stakeholder '
-                            'engagement, and overall organizational impact in driving sustainable reforms and improvements.',
-                            style: TextStyle(color: Colors.black87),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text.rich(
+                                      TextSpan(
+                                        text: 'Office ',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: '*',
+                                            style: TextStyle(color: Colors.red),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    DropdownSearch<Office>(
+                                      popupProps: PopupProps.menu(
+                                        showSearchBox: true,
+                                        fit: FlexFit.loose,
+                                        menuProps: const MenuProps(
+                                          backgroundColor: Colors.white,
+                                          elevation: 2,
+                                        ),
+                                        searchFieldProps: TextFieldProps(
+                                          decoration: InputDecoration(
+                                            hintText: 'Search Office Name...',
+                                            hintStyle: TextStyle(fontSize: 13),
+                                            filled: true,
+                                            fillColor: Colors.white,
+                                            prefixIcon: Icon(Icons.search),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderSide: BorderSide(
+                                                color: primaryColor,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        itemBuilder:
+                                            (context, office, isSelected) =>
+                                                ListTile(
+                                                  tileColor: Colors.white,
+                                                  title: Text(
+                                                    office.name,
+                                                    style: TextStyle(
+                                                      fontSize: 13,
+                                                    ),
+                                                  ),
+                                                ),
+                                      ),
+                                      items: officeList,
+                                      itemAsString: (office) => office.name,
+                                      selectedItem:
+                                          _selectedOffice == null
+                                              ? null
+                                              : officeList.firstWhere(
+                                                (office) =>
+                                                    office.id.toString() ==
+                                                    _selectedOffice,
+                                                orElse:
+                                                    () => Office(
+                                                      id: 0,
+                                                      name: 'Unknown',
+                                                      officeTypeId: 0,
+                                                      parentOfficeId: 0,
+                                                      isActive: true,
+                                                      isDeleted: false,
+                                                    ),
+                                              ),
+
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _selectedOffice =
+                                              value?.id.toString();
+                                        });
+                                      },
+                                      validator: (value) {
+                                        if (value == null) {
+                                          return 'Required';
+                                        }
+                                        return null;
+                                      },
+                                      dropdownDecoratorProps:
+                                          DropDownDecoratorProps(
+                                            dropdownSearchDecoration:
+                                                InputDecoration(
+                                                  labelText: 'Select Office',
+                                                  labelStyle: TextStyle(
+                                                    fontSize: 13,
+                                                  ),
+                                                  filled: true,
+                                                  fillColor: Colors.transparent,
+                                                  floatingLabelBehavior:
+                                                      FloatingLabelBehavior
+                                                          .never,
+                                                  border: InputBorder.none,
+                                                  enabledBorder:
+                                                      InputBorder.none,
+                                                  focusedBorder:
+                                                      InputBorder.none,
+                                                  contentPadding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 8,
+                                                      ),
+                                                ),
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -660,7 +850,6 @@ class ManageSummaryNarrativeReportPageState
 
   Widget _buildReportSection({
     required String title,
-
     required TextEditingController controller,
     IconData icon = Icons.description_outlined,
     Color iconColor = Colors.black54,

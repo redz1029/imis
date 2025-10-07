@@ -171,7 +171,7 @@ class ViewSummaryNarrativeReportPageState
                           ),
                           floatingLabelBehavior: FloatingLabelBehavior.never,
                           labelStyle: TextStyle(color: grey, fontSize: 14),
-                          labelText: 'Search Team',
+                          labelText: 'Search...',
                           prefixIcon: Icon(
                             Icons.search,
                             color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -194,21 +194,27 @@ class ViewSummaryNarrativeReportPageState
                 const SizedBox(height: 20),
                 Expanded(
                   child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
+                    columnSpacing: isMobile ? 8 : 12,
                     headingRowColor: WidgetStatePropertyAll(secondaryColor),
                     dataRowColor: WidgetStatePropertyAll(mainBgColor),
                     headingTextStyle: const TextStyle(color: grey),
                     horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
+                    minWidth: 700,
                     fixedTopRows: 1,
                     border: TableBorder(
                       horizontalInside: BorderSide(color: Colors.grey.shade100),
                     ),
-                    columns: const [
-                      DataColumn(label: Text('#')),
-                      DataColumn2(label: Text('Office'), size: ColumnSize.L),
-                      DataColumn(label: Text('Period')),
-                      DataColumn(label: Text('Actions')),
+                    columns: [
+                      DataColumn2(label: const Text('#'), fixedWidth: 40),
+                      DataColumn2(
+                        label: const Text('Office'),
+                        size: ColumnSize.L,
+                      ),
+                      DataColumn2(
+                        label: const Text('Period'),
+                        size: ColumnSize.L,
+                      ),
+                      const DataColumn(label: Text('Actions')),
                     ],
                     rows:
                         filteredList.asMap().entries.map((entry) {
@@ -221,9 +227,18 @@ class ViewSummaryNarrativeReportPageState
                             cells: [
                               DataCell(Text(itemNumber.toString())),
                               DataCell(
-                                Text(
-                                  officeMap[summary.officeId] ??
-                                      'Unknown Office',
+                                Container(
+                                  constraints: BoxConstraints(
+                                    minWidth: 100,
+                                    maxWidth: constraints.maxWidth * 0.4,
+                                  ),
+                                  child: Text(
+                                    officeMap[summary.officeId] ??
+                                        'Unknown Office',
+                                    overflow: TextOverflow.ellipsis,
+                                    softWrap: true,
+                                    maxLines: 2,
+                                  ),
                                 ),
                               ),
                               DataCell(
