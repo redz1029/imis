@@ -1,3 +1,4 @@
+import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
@@ -133,268 +134,160 @@ class ViewSummaryNarrativeReportPageState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: mainBgColor,
-      appBar: AppBar(title: Text('View Report'), backgroundColor: mainBgColor),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      appBar: AppBar(
+        title: const Text('Team Information'),
+        backgroundColor: mainBgColor,
+        elevation: 0,
+      ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          bool isMobile = constraints.maxWidth < 600;
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Search Bar
-                SizedBox(
-                  height: 30,
-                  width: 300,
-                  child: TextField(
-                    focusNode: isSearchfocus,
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: lightGrey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search...',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: isSearchfocus.hasFocus ? primaryColor : grey,
-                        size: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      filled: true,
-                      fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 5,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      height: 30,
+                      width: 300,
+                      child: TextField(
+                        focusNode: isSearchfocus,
+                        controller: searchController,
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          labelText: 'Search Team',
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: isSearchfocus.hasFocus ? primaryColor : grey,
+                            size: 20,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 5,
+                            horizontal: 5,
+                          ),
+                        ),
                       ),
                     ),
-                    // onChanged: filterSearchResults,
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: DataTable2(
+                    columnSpacing: isMobile ? 16 : 40,
+                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
+                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                    headingTextStyle: const TextStyle(color: grey),
+                    horizontalMargin: 12,
+                    minWidth: constraints.maxWidth,
+                    fixedTopRows: 1,
+                    border: TableBorder(
+                      horizontalInside: BorderSide(color: Colors.grey.shade100),
+                    ),
+                    columns: const [
+                      DataColumn(label: Text('#')),
+                      DataColumn2(
+                        label: Text('View Report'),
+                        size: ColumnSize.L,
+                      ),
+                      DataColumn(label: Text('Actions')),
+                    ],
+                    rows:
+                        filteredList.asMap().entries.map((entry) {
+                          int index = entry.key;
+                          var summary = entry.value;
+                          int itemNumber =
+                              ((_currentPage - 1) * _pageSize) + index + 1;
+
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(itemNumber.toString())),
+                              DataCell(
+                                Text(getPeriodLabel(summary.pgsPeriodId)),
+                              ),
+                              DataCell(
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit),
+                                      onPressed: () {
+                                        showReportDialog(summary, index);
+                                      },
+                                    ),
+                                    Tooltip(
+                                      message: 'Print Preview',
+
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.description_outlined,
+                                        ),
+
+                                        onPressed: () async {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => ViewPdfSummary(
+                                                    pgsPeriodId:
+                                                        summary.pgsPeriodId
+                                                            .toString(),
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
                   ),
                 ),
 
-                Spacer(),
+                Container(
+                  padding: EdgeInsets.all(10),
+                  color: secondaryColor,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      PaginationInfo(
+                        currentPage: _currentPage,
+                        totalItems: _totalCount,
+                        itemsPerPage: _pageSize,
+                      ),
+                      PaginationControls(
+                        currentPage: _currentPage,
+                        totalItems: _totalCount,
+                        itemsPerPage: _pageSize,
+                        isLoading: _isLoading,
+                        onPageChanged:
+                            (page) => fetchSummaryNarrative(page: page),
+                      ),
+                      Container(width: 60),
+                    ],
+                  ),
+                ),
               ],
             ),
-            gap24px,
-
-            Expanded(
-              child: Column(
-                children: [
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Performance Report',
-                            style: TextStyle(color: grey),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text('Period', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Padding(
-                            padding: EdgeInsets.only(right: 1),
-                            child: Center(
-                              child: Text(
-                                'Actions',
-                                style: TextStyle(color: grey),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: Column(
-                        children:
-                            filteredList
-                                .asMap()
-                                .map((index, summary) {
-                                  int itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                itemNumber.toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                'Performance Report',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                getPeriodLabel(
-                                                  summary.pgsPeriodId,
-                                                ),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.center,
-                                                children: [
-                                                  IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed: () {
-                                                      showReportDialog(
-                                                        summary,
-                                                        index,
-                                                      );
-                                                    },
-                                                  ),
-
-                                                  Tooltip(
-                                                    message: 'Print Preview',
-
-                                                    child: IconButton(
-                                                      icon: const Icon(
-                                                        Icons
-                                                            .description_outlined,
-                                                      ),
-
-                                                      onPressed: () async {
-                                                        Navigator.push(
-                                                          context,
-                                                          MaterialPageRoute(
-                                                            builder:
-                                                                (
-                                                                  context,
-                                                                ) => ViewPdfSummary(
-                                                                  pgsPeriodId:
-                                                                      summary
-                                                                          .pgsPeriodId
-                                                                          .toString(),
-                                                                ),
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                                  ),
-
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: primaryColor,
-                                                    ),
-                                                    onPressed: () => {},
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                })
-                                .values
-                                .toList(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            Container(
-              padding: EdgeInsets.all(10),
-              color: secondaryColor,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PaginationInfo(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                  ),
-                  PaginationControls(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                    isLoading: _isLoading,
-                    onPageChanged: (page) => fetchSummaryNarrative(page: page),
-                  ),
-                  Container(width: 60),
-                ],
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -535,12 +428,12 @@ class ViewSummaryNarrativeReportPageState
                         const SizedBox(height: 8),
                         ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 900),
-                          child: const Text(
+                          child: Text(
                             'This report analyzes the implementation and progress of the Performance Governance System (PGS) '
-                            'for Q2 2024. It highlights key governance indicators, institutional performance, and alignment with '
+                            'for ${getPeriodLabel(report.pgsPeriodId)}. It highlights key governance indicators, institutional performance, and alignment with '
                             'strategic objectives. The analysis covers leadership commitment, strategy execution, stakeholder '
                             'engagement, and overall organizational impact in driving sustainable reforms and improvements.',
-                            style: TextStyle(color: Colors.black87),
+                            style: const TextStyle(color: Colors.black87),
                           ),
                         ),
                       ],
