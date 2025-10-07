@@ -15,5 +15,6 @@ namespace IMIS.Application.OfficeModule
         Task<List<OfficeDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
         Task<bool> HasCircularReferenceAsync(int? parentId, int childId, CancellationToken cancellationToken);
         Task<OfficeDto> GetRootParentOfficeAsync(int officeId, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

@@ -14,7 +14,11 @@ namespace IMIS.Persistence.OfficeModule
                 .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
         }
-
+        public async Task<Office?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<Office>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
         public async Task<IEnumerable<Office>?> FilterByName(string name, int officeNoOfResults, CancellationToken cancellationToken)
         {
             return await _entities

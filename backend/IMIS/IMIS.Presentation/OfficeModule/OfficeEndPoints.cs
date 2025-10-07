@@ -1,6 +1,8 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.OfficeModule;
+using IMIS.Application.PgsKeyResultAreaModule;
+using IMIS.Application.PgsKraModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -107,6 +109,18 @@ namespace IMIS.Presentation.OfficeModule
             .WithTags(_officeTag)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_officeTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Office deleted successfully." })
+                              : Results.NotFound(new { message = "Office not found." });
+            })
+            .WithTags(_officeTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.Edit));
         }
     }
 }

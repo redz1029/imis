@@ -24,6 +24,20 @@ namespace IMIS.Persistence.OfficeModule
             _dbContext = dbContext;
             _userManager = userManager;
         }
+
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var office = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (office == null)
+                return false;
+
+            office.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         public async Task<List<OfficeDto>?> FilterByName(string name, int officeNoOfResults, CancellationToken cancellationToken)
         {
             var offices = await _repository.FilterByName(name, officeNoOfResults, cancellationToken).ConfigureAwait(false);         

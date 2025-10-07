@@ -14,6 +14,7 @@ namespace IMIS.Application.OfficeModule
         Task<IEnumerable<Office>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
         Task<IEnumerable<Office>?> GetNonAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken);
         Task<IEnumerable<Office>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
-        Task<Office> GetRootParentOffice(Office childOffice, CancellationToken cancellationToken);    
+        Task<Office> GetRootParentOffice(Office childOffice, CancellationToken cancellationToken);
+        Task<Office?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }
