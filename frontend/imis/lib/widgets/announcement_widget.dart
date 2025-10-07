@@ -5,22 +5,32 @@ import 'package:imis/constant/constant.dart';
 class AnnouncementList extends StatelessWidget {
   static final List<Announcement> _staticAnnouncements = [
     Announcement(
+      id: 0,
       title: 'Annual Performance Review Schedule',
-      date: DateTime(2025, 5, 1),
+      toDate: DateTime(2025, 5, 1),
+      fromDateDate: DateTime(2025, 4, 10),
       description:
           'All staff are advised to review their 2025 performance goals and prepare for review discussions by May 30th.',
+      isActive: true,
     ),
     Announcement(
+      id: 0,
       title: 'New Policy Effective Next Month',
-      date: DateTime(2025, 4, 10),
+      toDate: DateTime(2025, 4, 10),
+      fromDateDate: DateTime(2025, 4, 10),
+
       description:
-          'Please review the updated attendance policy in the company portal.',
+          'Please review the udated attendance policy in the company portal.',
+      isActive: true,
     ),
     Announcement(
+      id: 0,
       title: 'Workshop: Leadership Training',
-      date: DateTime(2025, 4, 25),
+      toDate: DateTime(2025, 4, 25),
+      fromDateDate: DateTime(2025, 4, 10),
       description:
           'Participate in our upcoming CRMC Leadership Development session.',
+      isActive: true,
     ),
   ];
 
@@ -103,7 +113,7 @@ class _AnnouncementCard extends StatelessWidget {
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           Text(
-            announcement.date.toLocal().toString().split(' ')[0],
+            announcement.toDate.toLocal().toString().split(' ')[0],
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           gap6px,
