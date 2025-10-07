@@ -1,5 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.TeamModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -86,6 +87,18 @@ namespace IMIS.Presentation.TeamModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _teamPermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, ITeamService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_teamTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Team deleted successfully." })
+                              : Results.NotFound(new { message = "Team Template not found." });
+            })
+            .WithTags(_teamTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.Edit));
         }
     }
 }

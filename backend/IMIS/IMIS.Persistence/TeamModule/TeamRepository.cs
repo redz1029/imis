@@ -14,6 +14,11 @@ namespace IMIS.Persistence.TeamModule
             return await EntityPageList<Team, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
             
         }
+        public async Task<Team?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<Team>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
         public async Task<IEnumerable<Team>?> FilterByName(string name, int teamNoOfResults, CancellationToken cancellationToken)
         {
             return await _entities

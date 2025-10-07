@@ -3,6 +3,7 @@ using IMIS.Application.TeamModule;
 using IMIS.Domain;
 using IMIS.Application.AuditorModule;
 using Base.Pagination;
+using Base.Abstractions;
 
 
 namespace IMIS.Persistence.TeamModule
@@ -53,6 +54,19 @@ namespace IMIS.Persistence.TeamModule
         {
             var teams = await _teamRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
             return teams?.Select(t => ConvTeamToDto(t)).ToList();
+        }
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var teams = await _teamRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (teams == null)
+                return false;
+
+            teams.IsDeleted = true;
+
+            var context = _teamRepository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
