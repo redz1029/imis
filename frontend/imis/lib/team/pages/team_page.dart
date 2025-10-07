@@ -234,7 +234,7 @@ class TeamPageState extends State<TeamPage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: const Text('Team Management'),
+        title: const Text('Team Information'),
         backgroundColor: mainBgColor,
         elevation: 0,
       ),
@@ -351,7 +351,7 @@ class TeamPageState extends State<TeamPage> {
                                     ),
                                     IconButton(
                                       icon: const Icon(
-                                        Icons.delete_outline,
+                                        Icons.delete,
                                         color: primaryColor,
                                       ),
                                       onPressed: () {

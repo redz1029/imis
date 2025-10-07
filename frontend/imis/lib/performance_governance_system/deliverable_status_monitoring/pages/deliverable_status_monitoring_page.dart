@@ -1,4 +1,4 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use
+// ignore_for_file: use_build_context_synchronously, deprecated_member_use, unnecessary_null_comparison
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -93,8 +93,6 @@ class DeliverableStatusMonitoringPageState
   bool isMenuOpenType = false;
   bool isMenuScoreRange = false;
   bool isMenuOpenPage = false;
-  String? selectedPeriods;
-  String? selectedOffice;
   final dio = Dio();
   String? _selectedPeriod;
   String? _selectedOffice;
@@ -1883,6 +1881,79 @@ class DeliverableStatusMonitoringPageState
               ),
               onPressed: () async {
                 if (_formKey.currentState!.validate()) {
+                  final filter = PgsFilter(
+                    int.tryParse(_selectedPeriod ?? '0') ?? 0,
+                    int.tryParse(_selectedOffice ?? '0') ?? 0,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                  );
+
+                  final queryParams =
+                      filter.toJson()
+                        ..removeWhere((key, value) => value == null);
+
+                  try {
+                    final response = await AuthenticatedRequest.get(
+                      dio,
+                      ApiEndpoint().filterBy,
+                      queryParameters: queryParams,
+                    );
+
+                    if (response.statusCode == 200) {
+                      final data = response.data;
+                      final items = data["items"] as List<dynamic>? ?? [];
+
+                      if (items.isEmpty) {
+                        MotionToast.warning(
+                          title: const Text("Warning"),
+                          description: const Text(
+                            "No deliverables found for the selected Period and Office. Cannot create report.",
+                          ),
+                          toastAlignment: Alignment.topCenter,
+                        ).show(context);
+                        return;
+                      }
+                    }
+                  } catch (e) {
+                    debugPrint("Error checking deliverables: $e");
+                    MotionToast.error(
+                      title: const Text("Error"),
+                      description: Text("Failed to check deliverables: $e"),
+                      toastAlignment: Alignment.topCenter,
+                    ).show(context);
+                    return;
+                  }
+                  try {
+                    final existingReport = await _summaryNarrativeService
+                        .checkExistingSummaryNarrative(
+                          int.tryParse(_selectedPeriod ?? '0') ?? 0,
+                          int.tryParse(_selectedOffice ?? '0') ?? 0,
+                        );
+
+                    if (existingReport != null) {
+                      MotionToast.warning(
+                        title: const Text("Warning"),
+                        description: const Text(
+                          "Report for this Office and Period already exists. Please update if needed.",
+                        ),
+                        toastAlignment: Alignment.topCenter,
+                      ).show(context);
+                      return;
+                    }
+                  } catch (e) {
+                    debugPrint("Error checking existing report: $e");
+                    MotionToast.error(
+                      title: const Text("Error"),
+                      description: Text("Failed to check existing report: $e"),
+                      toastAlignment: Alignment.topCenter,
+                    ).show(context);
+                    return;
+                  }
+
                   bool? confirmAction = await showDialog<bool>(
                     context: context,
                     builder: (context) {
@@ -1925,11 +1996,14 @@ class DeliverableStatusMonitoringPageState
                       rowVersion: '',
                     );
 
-                    await _summaryNarrativeService.updateSummaryNarrative(
-                      summaryNarrative.id,
+                    await _summaryNarrativeService.addSummaryNarrative(
                       summaryNarrative,
                     );
-
+                    _findingsController.clear();
+                    _recommendationsController.clear();
+                    _conclusionsController.clear();
+                    _selectedOffice = null;
+                    _selectedPeriod = null;
                     MotionToast.success(
                       description: const Text("Saved Successfully"),
                       toastAlignment: Alignment.topCenter,
@@ -1960,7 +2034,6 @@ class DeliverableStatusMonitoringPageState
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(
@@ -1981,15 +2054,7 @@ class DeliverableStatusMonitoringPageState
                       children: [
                         IconButton(
                           icon: const Icon(Icons.close, color: Colors.black87),
-                          onPressed: () {
-                            _findingsController.clear();
-                            _recommendationsController.clear();
-                            _conclusionsController.clear();
-                            _selectedOffice = null;
-                            _selectedPeriod = null;
-
-                            Navigator.pop(context);
-                          },
+                          onPressed: () => Navigator.of(context).pop(),
                         ),
                       ],
                     ),
