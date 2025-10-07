@@ -14,6 +14,20 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
           
         }
 
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var signatoryTemplate = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (signatoryTemplate == null)
+                return false;
+
+            signatoryTemplate.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+
         private static PgsSignatoryTemplateDto ConvSignatoryTemplateToDTO(PgsSignatoryTemplate signatoryTemplate)
         {
             return new PgsSignatoryTemplateDto()

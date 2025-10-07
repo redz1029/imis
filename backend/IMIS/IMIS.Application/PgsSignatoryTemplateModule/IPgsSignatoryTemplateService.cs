@@ -11,5 +11,6 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
         Task<PgsSignatoryTemplateDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<DtoPageList<PgsSignatoryTemplateDto, PgsSignatoryTemplate, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<List<PgsSignatoryTemplateDto>> GetSignatoryTemplateByOfficeIdAsync(int officeId, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

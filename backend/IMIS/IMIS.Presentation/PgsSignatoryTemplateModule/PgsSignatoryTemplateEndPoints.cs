@@ -1,5 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -78,6 +79,18 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
            .RequireAuthorization(e => e.RequireClaim(
             PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_PgsSignatoryTemplate, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Signatory Template deleted successfully." })
+                              : Results.NotFound(new { message = "Signatory Template not found." });
+            })
+           .WithTags(_PgsSignatoryTemplate)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Edit));
         }
     }
 }

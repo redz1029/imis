@@ -9,6 +9,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
         Task<IEnumerable<PgsSignatoryTemplate>> GetAllAsync(CancellationToken cancellationToken);
         Task<EntityPageList<PgsSignatoryTemplate, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<List<PgsSignatoryTemplate>> GetSignatoryTemplateByOfficeIdAsync(int officeId, CancellationToken cancellationToken);
+        Task<PgsSignatoryTemplate?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
 
     }
 }
