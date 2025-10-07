@@ -73,6 +73,18 @@ namespace IMIS.Presentation.PgsPeriodModuleAPI
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsPeriodTag), true)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _pgsPeriodPermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, IPgsPeriodService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_pgsPeriodTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Period deleted successfully." })
+                              : Results.NotFound(new { message = "Period not found." });
+            })
+            .WithTags(_pgsPeriodTag)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsPeriodPermission.Edit));
         }
     }
 }

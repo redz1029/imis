@@ -11,6 +11,11 @@ namespace IMIS.Persistence.PgsPeriodModule
         public PgsPeriodRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+        public async Task<PgsPeriod?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<PgsPeriod>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
         public async Task<EntityPageList<PgsPeriod, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             

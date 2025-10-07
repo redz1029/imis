@@ -7,7 +7,8 @@ namespace IMIS.Application.PgsPeriodModule
     public interface IPgsPeriodRepository : IRepository<PgsPeriod, int>
     {
         Task<EntityPageList<PgsPeriod, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
-        Task<IEnumerable<PgsPeriod>> GetAll(CancellationToken cancellationToken);     
+        Task<IEnumerable<PgsPeriod>> GetAll(CancellationToken cancellationToken);
+        Task<PgsPeriod?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }
 

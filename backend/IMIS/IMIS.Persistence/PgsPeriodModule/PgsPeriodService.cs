@@ -13,6 +13,19 @@ namespace IMIS.Persistence.PgsPeriodModule
         {
             _repository = repository;
         }
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var period = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (period == null)
+                return false;
+
+            period.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         public async Task<DtoPageList<PgsPeriodDto, PgsPeriod, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var pgsPeriod = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
