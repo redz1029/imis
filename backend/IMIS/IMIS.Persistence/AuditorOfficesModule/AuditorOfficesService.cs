@@ -12,6 +12,20 @@ namespace IMIS.Persistence.AuditorOfficesModule
         {
             _auditorOfficeRepository = auditorOfficeRepository;
         }
+
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var auditorOffices = await _auditorOfficeRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (auditorOffices == null)
+                return false;
+
+            auditorOffices.IsDeleted = true;
+
+            var context = _auditorOfficeRepository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         public async Task<List<AuditorOfficesDto>?> GetAll(CancellationToken cancellationToken)
         {
             var auditorOffices = await _auditorOfficeRepository.GetAll(cancellationToken).ConfigureAwait(false);

@@ -36,8 +36,7 @@ namespace IMIS.Presentation.AuditorOfficesModule
                 var auditorsOffices = await service.GetAll(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(auditorsOffices);
             })
-            .WithTags(_auditorOfficesTag).RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _auditorOfficePermission.View))
+            .WithTags(_auditorOfficesTag).RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorOfficePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorOfficesTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] AuditorOfficesDto auditorOffice, IAuditorOfficesService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
@@ -63,7 +62,19 @@ namespace IMIS.Presentation.AuditorOfficesModule
             .WithTags(_auditorOfficesTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorOfficesTag), true)
             .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _auditorOfficePermission.View)); ;
+             PermissionClaimType.Claim, _auditorOfficePermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, IAuditorOfficesService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_auditorOfficesTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Auditor Office deleted successfully." })
+                              : Results.NotFound(new { message = "Auditor Office not found." });
+            })
+            .WithTags(_auditorOfficesTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorOfficePermission.Edit));
         }
     }
 }

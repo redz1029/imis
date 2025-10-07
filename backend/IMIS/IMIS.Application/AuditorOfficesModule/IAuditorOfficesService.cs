@@ -9,5 +9,6 @@ namespace IMIS.Application.AuditorOfficesModule
         Task<List<AuditorOfficesDto>?> GetAll(CancellationToken cancellationToken);
         Task<AuditorOfficesDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         public Task<DtoPageList<AuditorOfficesDto, AuditorOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }
