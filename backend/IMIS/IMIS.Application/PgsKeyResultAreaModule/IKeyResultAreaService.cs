@@ -11,6 +11,7 @@ namespace IMIS.Application.PgsKraModule
         Task<List<KeyResultAreaDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<KeyResultAreaDto?> GetByIdAsync(int id, CancellationToken cancellationToken);    
         Task<List<KeyResultAreaDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }
 

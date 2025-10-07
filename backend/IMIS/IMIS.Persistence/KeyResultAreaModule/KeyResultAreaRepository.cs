@@ -1,7 +1,7 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
 using IMIS.Application.PgsKraModule;
-using IMIS.Domain;
+using IMIS.Domain;  
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.KraModule
@@ -15,7 +15,11 @@ namespace IMIS.Persistence.KraModule
              .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken)
              .ConfigureAwait(false);
         }
-
+        public async Task<KeyResultArea?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<KeyResultArea>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
         public async Task<IEnumerable<KeyResultArea>?> FilterByName(string name, int keyResultAreaNoOfResults, CancellationToken cancellationToken)
         {
             return await _entities

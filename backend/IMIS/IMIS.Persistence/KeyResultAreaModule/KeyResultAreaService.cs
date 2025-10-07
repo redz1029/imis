@@ -12,6 +12,19 @@ namespace IMIS.Persistence.KraModule
         {
             _repository = repository;
         }
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var kra = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (kra == null)
+                return false;
+
+            kra.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         public async Task<List<KeyResultAreaDto>?> FilterByName(string name, int keyResultAreaNoOfResults, CancellationToken cancellationToken)
         {
             var keyResultArea = await _repository.FilterByName(name, keyResultAreaNoOfResults, cancellationToken).ConfigureAwait(false);

@@ -84,7 +84,19 @@ namespace IMIS.Presentation.KraModuleAPI
             .WithTags(_keyAreaResultTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
             .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _keyResultAreaPermission.View)); ;            
+             PermissionClaimType.Claim, _keyResultAreaPermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, IKeyResultAreaService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_keyAreaResultTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Kra deleted successfully." })
+                              : Results.NotFound(new { message = "Kra not found." });
+            })
+            .WithTags(_keyAreaResultTag)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.Edit));
         }
     }
 }

@@ -9,7 +9,8 @@ namespace IMIS.Application.PgsKraModule
         Task<EntityPageList<KeyResultArea, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<IEnumerable<KeyResultArea>> GetAll(CancellationToken cancellationToken);      
         Task<IEnumerable<KeyResultArea>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
-       
+        Task<KeyResultArea?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+
 
     }   
 }
