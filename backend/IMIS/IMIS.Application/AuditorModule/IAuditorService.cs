@@ -10,5 +10,6 @@ namespace IMIS.Application.AuditorModule
         Task<List<AuditorDto>?> GetAll(CancellationToken cancellationToken);
         Task<AuditorDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<List<AuditorDto>?> FilteByName(string name, int noOfResults, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

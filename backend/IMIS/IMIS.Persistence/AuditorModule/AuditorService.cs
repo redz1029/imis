@@ -11,7 +11,21 @@ namespace IMIS.Persistence.AuditorModule
         public AuditorService(IAuditorRepository auditorRepository)
         {
             _auditorRepository = auditorRepository;
-        }   
+        }
+
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var auditor = await _auditorRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (auditor == null)
+                return false;
+
+            auditor.IsDeleted = true;
+
+            var context = _auditorRepository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         public async Task<DtoPageList<AuditorDto, Auditor, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var auditor = await _auditorRepository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);

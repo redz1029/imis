@@ -9,5 +9,7 @@ namespace IMIS.Application.AuditorModule
         Task<EntityPageList<Auditor, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<IEnumerable<Auditor>?> GetAll(CancellationToken cancellationToken);
         Task<IEnumerable<Auditor>?> FilteByName(string name, int noOfResults, CancellationToken cancellationToken);
+        Task<Auditor?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+
     }
 }

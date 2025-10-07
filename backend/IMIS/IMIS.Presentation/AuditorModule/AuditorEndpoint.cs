@@ -36,9 +36,8 @@ namespace IMIS.Presentation.AuditorModule
                 return Results.Ok(auditors);
             })
             .WithTags(_auditorTag)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _auditorPermission.View));
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true)            
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.View));
 
             app.MapGet("/filter/{name}", async (string name, IAuditorService service, CancellationToken cancellationToken) =>
             {
@@ -79,8 +78,19 @@ namespace IMIS.Presentation.AuditorModule
             })
           .WithTags(_auditorTag)
           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true)
-          .RequireAuthorization(e => e.RequireClaim(
-           PermissionClaimType.Claim, _auditorPermission.View)); ;
+          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, IAuditorService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_auditorTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Auditor deleted successfully." })
+                              : Results.NotFound(new { message = "Auditor not found." });
+            })
+           .WithTags(_auditorTag)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.Edit));
         }
     }
 }
