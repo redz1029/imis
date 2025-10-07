@@ -18,5 +18,8 @@ namespace IMIS.Application.PgsModule
         Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, CancellationToken cancellationToken);
         Task<PerfomanceGovernanceSystem?> GetWithIncludesAsync(int id, CancellationToken cancellationToken);
         Task<List<PerfomanceGovernanceSystem>> GetByOfficeIdsAsync(List<int> officeIds, CancellationToken cancellationToken);
+        Task<PerfomanceGovernanceSystem?> GetByIdForSoftDeleteAsync(int deliverableId, CancellationToken cancellationToken);
+
+
     }
 }

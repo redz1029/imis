@@ -99,7 +99,7 @@ namespace IMIS.Presentation.PgsModuleAPIs
            .WithTags(_pgsTag)
            .RequireAuthorization(e => e.RequireClaim(
             PermissionClaimType.Claim, _performanceGovernanceSystem.View))
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_pgsTag), true);
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
             app.MapPut("/{id}", async (int id, [FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -124,7 +124,7 @@ namespace IMIS.Presentation.PgsModuleAPIs
                     "PerfomanceGovernanceSystem",
                     new List<ReportPerfomanceGovernanceSystemDto> { performanceGovernanceSystem! },
                     "PerfomanceGovernanceSystem",
-                    cancellationToken
+                    cancellationToken   
                 ).ConfigureAwait(false);
 
                 //Force inline rendering in browser with dynamic timestamp filename
@@ -178,9 +178,12 @@ namespace IMIS.Presentation.PgsModuleAPIs
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _performanceGovernanceSystem.View));
 
-            app.MapDelete("deliverable/{id:int}", async (int id, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            app.MapDelete("deliverable/{id:int}", async (int id, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var result = await service.SoftDeleteDeliverableAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_pgsTag, cancellationToken);
+
                 return result ? Results.Ok(new { message = "PGS soft deleted successfully." })
                               : Results.NotFound(new { message = "PGS not found." });
             })

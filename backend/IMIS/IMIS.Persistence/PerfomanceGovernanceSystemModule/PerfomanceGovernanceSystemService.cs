@@ -39,18 +39,16 @@ namespace IMIS.Persistence.PgsModule
             _signatoryTemplateRepository = signatoryTemplateRepository;
             _userOfficeRepository = userOfficeRepository;
            
-        }
+        }        
         public async Task<bool> SoftDeleteDeliverableAsync(int deliverableId, CancellationToken cancellationToken)
         {
-            var context = _repository.GetDbContext();
-            
-            var deliverable = await context.Set<PerfomanceGovernanceSystem>()
-                .FirstOrDefaultAsync(d => d.Id == deliverableId, cancellationToken);
-
+            var deliverable = await _repository.GetByIdForSoftDeleteAsync(deliverableId, cancellationToken);
             if (deliverable == null)
                 return false;
 
             deliverable.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
             await context.SaveChangesAsync(cancellationToken);
 
             return true;
