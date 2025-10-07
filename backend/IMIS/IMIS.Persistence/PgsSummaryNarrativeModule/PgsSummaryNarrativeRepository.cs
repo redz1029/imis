@@ -12,7 +12,11 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
         {
 
         }
-
+        public async Task<PgsSummaryNarrative?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<PgsSummaryNarrative>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
         public async Task<IEnumerable<PgsSummaryNarrative>> GetNarrativesByAuditorAsync(string userId, int? periodId, int? office, CancellationToken cancellationToken)
         {
             var auditor = await ReadOnlyDbContext.Set<Auditor>()

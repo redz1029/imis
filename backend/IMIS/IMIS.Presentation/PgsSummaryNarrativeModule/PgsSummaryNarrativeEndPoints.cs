@@ -1,7 +1,9 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
+using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder; 
 using Microsoft.AspNetCore.Http;
@@ -101,6 +103,18 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true)
             .RequireAuthorization(e => e.RequireClaim(
              PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View));
+
+            app.MapDelete("/{id:int}", async (int id, IPGSSummaryNarrativeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_pgsSummaryNarrativeTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Narrative deleted successfully." })
+                              : Results.NotFound(new { message = "Narrative Template not found." });
+            })
+            .WithTags(_pgsSummaryNarrativeTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.Edit));
         }
     }
 }

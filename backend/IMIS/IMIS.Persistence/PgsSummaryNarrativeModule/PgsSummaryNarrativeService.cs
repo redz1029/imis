@@ -28,6 +28,19 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
             _keyResulktAreaRepository = keyResulktAreaRepository;
             _userManager = userManager;
         }
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var narrative = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (narrative == null)
+                return false;
+
+            narrative.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         private async Task<User?> GetCurrentUserAsync()
         {
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
