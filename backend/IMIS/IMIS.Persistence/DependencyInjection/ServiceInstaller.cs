@@ -1,4 +1,5 @@
-﻿using IMIS.Application.AuditorModule;
+﻿using IMIS.Application.AnnouncementModule;
+using IMIS.Application.AuditorModule;
 using IMIS.Application.AuditorOfficesModule;
 using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
@@ -14,6 +15,7 @@ using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
+using IMIS.Persistence.AnnouncementModule;
 using IMIS.Persistence.AuditorModule;
 using IMIS.Persistence.AuditorOfficesModule;
 using IMIS.Persistence.AuditorTeamsModule;
@@ -92,6 +94,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IPgsDeliverableAccomplishmentRepository, PgsDeliverableAccomplishmentRepository>();
             services.AddScoped<IPgsDeliverableAcomplishmentService, PgsDeliverableAccomplishmentService>();
+
+            services.AddScoped<IAnnouncementRepository, AnnouncementRepository>();
+            services.AddScoped<IAnnouncementService, AnnouncementService>();
 
             return services;
         }
