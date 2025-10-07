@@ -11,13 +11,15 @@ class PgsSummaryNarrative {
   String? conclusion;
   bool? isDeleted;
   String? rowVersion;
+  int? officeId;
 
   PgsSummaryNarrative(
     this.id,
     this.pgsPeriodId,
     this.findings,
     this.recommendation,
-    this.conclusion, {
+    this.conclusion,
+    this.officeId, {
     this.isDeleted,
     this.rowVersion,
   });
