@@ -8,6 +8,7 @@ namespace IMIS.Application.UserOfficeModule
     {
         public Task<DtoPageList<UserOfficeDto, UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<UserOfficeDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<List<UserOfficeDto>?> GetAllAsync(CancellationToken cancellationToken);        
+        Task<List<UserOfficeDto>?> GetAllAsync(CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

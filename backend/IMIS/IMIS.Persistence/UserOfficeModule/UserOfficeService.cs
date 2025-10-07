@@ -17,6 +17,19 @@ namespace IMIS.Persistence.UserOfficeModule
             _repository = repository;
             _userManager = userManager;
         }
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var userOffice = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (userOffice == null)
+                return false;
+
+            userOffice.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         private async Task<UserOfficeDto> ConvertToDTO(UserOffices userOffices, List<User> users, CancellationToken cancellationToken)
         {
            

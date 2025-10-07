@@ -1,5 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -77,6 +78,18 @@ namespace IMIS.Presentation.UserOfficeModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true)
             .RequireAuthorization(e => e.RequireClaim(
             PermissionClaimType.Claim, _userOfficePermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, IUserOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_userOffice, cancellationToken);
+
+                return result ? Results.Ok(new { message = "User Office deleted successfully." })
+                              : Results.NotFound(new { message = "User Office Template not found." });
+            })
+            .WithTags(_userOffice)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.Edit));
         }
     }
 }

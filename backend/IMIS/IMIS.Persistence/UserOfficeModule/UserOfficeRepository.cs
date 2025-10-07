@@ -4,13 +4,18 @@ using IMIS.Application.UserOfficeModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 
-namespace IMIS.Persistence.UserOfficeModule
+namespace IMIS.Persistence.UserOfficeModule  
 {
     public class UserOfficeRepository : BaseRepository<UserOffices, int, ImisDbContext>, IUserOfficeRepository
     {       
         public UserOfficeRepository(ImisDbContext dbContext) : base(dbContext)
         {
           
+        }
+        public async Task<UserOffices?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<UserOffices>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
         public async Task<EntityPageList<UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
