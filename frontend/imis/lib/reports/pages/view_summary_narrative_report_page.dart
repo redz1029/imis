@@ -3,6 +3,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/pages/view_pdf_summary.dart';
@@ -36,17 +37,21 @@ class ViewSummaryNarrativeReportPageState
   bool _isLoading = false;
   List<PgsSummaryNarrative> summaryList = [];
   List<PgsSummaryNarrative> filteredList = [];
+  List<Office> officeList = [];
+  Map<int, String> officeMap = {};
   @override
   void initState() {
     super.initState();
     _fetchReports();
     () async {
       final period = await _commonService.fetchPgsPeriod();
-
+      final offices = await _commonService.fetchOffices();
       if (!mounted) return;
 
       setState(() {
         _periods = period;
+        officeList = offices;
+        officeMap = {for (var office in offices) office.id: office.name};
       });
     }();
     fetchSummaryNarrative();
@@ -135,7 +140,7 @@ class ViewSummaryNarrativeReportPageState
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: const Text('Team Information'),
+        title: const Text('View Report'),
         backgroundColor: mainBgColor,
         elevation: 0,
       ),
@@ -201,10 +206,8 @@ class ViewSummaryNarrativeReportPageState
                     ),
                     columns: const [
                       DataColumn(label: Text('#')),
-                      DataColumn2(
-                        label: Text('View Report'),
-                        size: ColumnSize.L,
-                      ),
+                      DataColumn2(label: Text('Office'), size: ColumnSize.L),
+                      DataColumn(label: Text('Period')),
                       DataColumn(label: Text('Actions')),
                     ],
                     rows:
@@ -217,6 +220,12 @@ class ViewSummaryNarrativeReportPageState
                           return DataRow(
                             cells: [
                               DataCell(Text(itemNumber.toString())),
+                              DataCell(
+                                Text(
+                                  officeMap[summary.officeId] ??
+                                      'Unknown Office',
+                                ),
+                              ),
                               DataCell(
                                 Text(getPeriodLabel(summary.pgsPeriodId)),
                               ),
@@ -245,6 +254,9 @@ class ViewSummaryNarrativeReportPageState
                                                   (context) => ViewPdfSummary(
                                                     pgsPeriodId:
                                                         summary.pgsPeriodId
+                                                            .toString(),
+                                                    officeId:
+                                                        summary.officeId
                                                             .toString(),
                                                   ),
                                             ),
@@ -354,7 +366,7 @@ class ViewSummaryNarrativeReportPageState
                         const SizedBox(width: 8),
 
                         Text(
-                          'Performance Report - ${getPeriodLabel(report.pgsPeriodId)}',
+                          'Summary Narrative Report - ${getPeriodLabel(report.pgsPeriodId)}',
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.black87,
@@ -372,6 +384,7 @@ class ViewSummaryNarrativeReportPageState
                                     (context) => ViewPdfSummary(
                                       pgsPeriodId:
                                           report.pgsPeriodId.toString(),
+                                      officeId: report.officeId.toString(),
                                     ),
                               ),
                             );
@@ -403,6 +416,10 @@ class ViewSummaryNarrativeReportPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      officeMap[report.officeId] ?? 'Unknown Office',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     gap48px,
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -478,7 +495,6 @@ class ViewSummaryNarrativeReportPageState
 
   Widget _buildReportSection({
     required String title,
-
     required TextEditingController controller,
     IconData icon = Icons.description_outlined,
     Color iconColor = Colors.black54,
