@@ -14,7 +14,6 @@ class UniversalWebView extends StatefulWidget {
 class _UniversalWebViewState extends State<UniversalWebView> {
   late final String viewType;
   bool isLoading = true;
-
   @override
   void initState() {
     super.initState();
@@ -32,6 +31,7 @@ class _UniversalWebViewState extends State<UniversalWebView> {
             ..style.overflow = 'hidden';
 
       iframe.onLoad.listen((event) {
+        if (!mounted) return;
         setState(() => isLoading = false);
       });
 
