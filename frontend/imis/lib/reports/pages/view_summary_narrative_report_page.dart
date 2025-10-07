@@ -147,7 +147,6 @@ class ViewSummaryNarrativeReportPageState
       body: LayoutBuilder(
         builder: (context, constraints) {
           bool isMobile = constraints.maxWidth < 600;
-
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
