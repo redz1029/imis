@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 import 'package:dio/dio.dart';
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -10,7 +11,6 @@ import 'package:imis/performance_governance_system/key_result_area/models/key_re
 import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
-import 'package:imis/reports/pages/create_summary_narrative_report_page.dart';
 import 'package:imis/reports/pages/manage_summary_narrative_report_page.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -42,7 +42,7 @@ class DeliverableStatusMonitoringPageState
     Dio(),
   );
   final _dateConverter = const LongDateOnlyConverter();
-  final _summaryNarrativeSerice = SummaryNarrativeService(Dio());
+  final _summaryNarrativeService = SummaryNarrativeService(Dio());
   final GlobalKey _menuScoreRangeKey = GlobalKey();
   final GlobalKey _menuPageKey = GlobalKey();
   Map<int, TextEditingController> remarkControllers = {};
@@ -80,6 +80,12 @@ class DeliverableStatusMonitoringPageState
   String userId = "";
   bool? isDirect;
 
+  final TextEditingController _findingsController = TextEditingController();
+  final TextEditingController _conclusionsController = TextEditingController();
+  final TextEditingController _recommendationsController =
+      TextEditingController();
+
+  final _formKey = GlobalKey<FormState>();
   bool isMenuOpenOffice = false;
   bool isMenuOpenPeriod = false;
   bool isMenuOpenPeriodCreateReport = false;
@@ -87,9 +93,12 @@ class DeliverableStatusMonitoringPageState
   bool isMenuOpenType = false;
   bool isMenuScoreRange = false;
   bool isMenuOpenPage = false;
-
+  String? selectedPeriods;
+  String? selectedOffice;
   final dio = Dio();
-
+  String? _selectedPeriod;
+  String? _selectedOffice;
+  final List<String> officeLists = ['Office 1', 'Office 2', 'Office 3'];
   @override
   void initState() {
     super.initState();
@@ -1313,86 +1322,6 @@ class DeliverableStatusMonitoringPageState
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                PopupMenuButton<String>(
-                                  color: mainBgColor,
-                                  offset: const Offset(0, 30),
-                                  onCanceled: () {
-                                    setState(() {
-                                      isMenuOpenPeriodCreateReport = false;
-                                    });
-                                  },
-                                  onOpened: () {
-                                    setState(() {
-                                      isMenuOpenPeriodCreateReport = true;
-                                    });
-                                  },
-                                  onSelected: (String value) {
-                                    setState(() {
-                                      selectedPeriodCreateReport = int.tryParse(
-                                        value,
-                                      );
-
-                                      if (selectedPeriodCreateReport != null) {
-                                        final selected = periodList.firstWhere(
-                                          (period) =>
-                                              period.id ==
-                                              selectedPeriodCreateReport,
-                                          orElse:
-                                              () => PgsPeriod(
-                                                0,
-                                                false,
-                                                DateTime.now(),
-                                                DateTime.now(),
-                                                'remarks',
-                                              ),
-                                        );
-                                        selectedPeriodTextCreateReport =
-                                            "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
-                                      } else {
-                                        selectedPeriodTextCreateReport =
-                                            "Select Period";
-                                      }
-
-                                      isMenuOpenPeriodCreateReport = true;
-                                      fetchFilteredPgsList();
-                                    });
-                                  },
-                                  itemBuilder: (BuildContext context) {
-                                    final updatedPeriodList = periodList.map(
-                                      (period) => {
-                                        'id': period.id,
-                                        'name':
-                                            "${_dateConverter.toJson(period.startDate)} - ${_dateConverter.toJson(period.endDate)}",
-                                      },
-                                    );
-
-                                    return updatedPeriodList
-                                        .map<PopupMenuItem<String>>((period) {
-                                          return PopupMenuItem<String>(
-                                            value: period['id'].toString(),
-                                            child: Text(
-                                              period['name']!.toString(),
-                                            ),
-                                          );
-                                        })
-                                        .toList();
-                                  },
-                                  child: FilterButton(
-                                    label:
-                                        selectedPeriodTextCreateReport ??
-                                        "Select Period",
-                                    isActive: isMenuOpenPeriodCreateReport,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-
                           ElevatedButton(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryColor,
@@ -1400,67 +1329,9 @@ class DeliverableStatusMonitoringPageState
                                 borderRadius: BorderRadius.circular(4),
                               ),
                             ),
-                            onPressed:
-                                selectedPeriodCreateReport != null
-                                    ? () async {
-                                      PgsSummaryNarrative? existing;
-
-                                      try {
-                                        existing = await _summaryNarrativeSerice
-                                            .checkIfPeriodHasNarrative(
-                                              selectedPeriodCreateReport!,
-                                            );
-                                      } catch (e) {
-                                        MotionToast.error(
-                                          description: const Text(
-                                            "Error while checking report status",
-                                          ),
-                                          toastAlignment: Alignment.topCenter,
-                                          toastDuration: const Duration(
-                                            seconds: 3,
-                                          ),
-                                        ).show(context);
-                                        return;
-                                      }
-
-                                      if (existing != null) {
-                                        MotionToast.warning(
-                                          description: const Text(
-                                            "Looks like we already have data for this period. You can review or update it.",
-                                          ),
-                                          toastAlignment: Alignment.topCenter,
-                                          toastDuration: const Duration(
-                                            seconds: 4,
-                                          ),
-                                        ).show(context);
-                                        return;
-                                      } else if (deliverableList.isEmpty) {
-                                        MotionToast.info(
-                                          description: const Text(
-                                            "No deliverables selected for this period.",
-                                          ),
-                                          toastAlignment: Alignment.topCenter,
-                                          toastDuration: const Duration(
-                                            seconds: 4,
-                                          ),
-                                        ).show(context);
-                                        return;
-                                      }
-
-                                      Navigator.of(context).pushAndRemoveUntil(
-                                        MaterialPageRoute(
-                                          builder:
-                                              (
-                                                context,
-                                              ) => CreateSummaryNarrativeReportPage(
-                                                periodId:
-                                                    selectedPeriodCreateReport!,
-                                              ),
-                                        ),
-                                        (route) => false,
-                                      );
-                                    }
-                                    : null,
+                            onPressed: () {
+                              showReportDialog();
+                            },
 
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -1967,6 +1838,548 @@ class DeliverableStatusMonitoringPageState
       ),
     );
   }
+
+  void showReportDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          insetPadding: const EdgeInsets.all(20),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding: EdgeInsets.zero,
+          content: SizedBox(
+            width: 900,
+            child: SingleChildScrollView(child: _buildReportCard()),
+          ),
+
+          actions: [
+            TextButton(
+              onPressed: () {
+                _findingsController.clear();
+                _recommendationsController.clear();
+                _conclusionsController.clear();
+                _selectedOffice = null;
+                _selectedPeriod = null;
+
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Cancel', style: TextStyle(color: primaryColor)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text("Confirm Update"),
+                        content: const Text(
+                          "Are you sure you want to update this record?",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            },
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirmAction == true) {
+                    final summaryNarrative = PgsSummaryNarrative(
+                      0,
+                      int.tryParse(_selectedPeriod ?? '0') ?? 0,
+                      _findingsController.text,
+                      _recommendationsController.text,
+                      _conclusionsController.text,
+                      int.tryParse(_selectedOffice ?? '0') ?? 0,
+                      isDeleted: false,
+                      rowVersion: '',
+                    );
+
+                    await _summaryNarrativeService.updateSummaryNarrative(
+                      summaryNarrative.id,
+                      summaryNarrative,
+                    );
+
+                    MotionToast.success(
+                      description: const Text("Saved Successfully"),
+                      toastAlignment: Alignment.topCenter,
+                    ).show(context);
+                    Navigator.pop(context);
+                  }
+                }
+              },
+              child: const Text('Save', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildReportCard() {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 1000),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade400),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.black87),
+                          onPressed: () {
+                            _findingsController.clear();
+                            _recommendationsController.clear();
+                            _conclusionsController.clear();
+                            _selectedOffice = null;
+                            _selectedPeriod = null;
+
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.insert_drive_file_outlined,
+                          color: Colors.grey[700],
+                        ),
+                        const SizedBox(width: 8),
+                        const Text(
+                          'Summary Narrative Report',
+                          style: TextStyle(fontSize: 14, color: Colors.black87),
+                        ),
+                        const Spacer(),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade100,
+                          border: Border.all(color: Colors.grey.shade300),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text.rich(
+                                    TextSpan(
+                                      text: 'Period ',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: '*',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  DropdownSearch<PgsPeriod>(
+                                    popupProps: PopupProps.menu(
+                                      showSearchBox: true,
+                                      fit: FlexFit.loose,
+                                      menuProps: const MenuProps(
+                                        backgroundColor: Colors.white,
+                                        elevation: 2,
+                                      ),
+                                      searchFieldProps: TextFieldProps(
+                                        decoration: InputDecoration(
+                                          hintText: 'Search Period...',
+                                          hintStyle: TextStyle(fontSize: 13),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          prefixIcon: Icon(Icons.search),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: primaryColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      itemBuilder:
+                                          (
+                                            context,
+                                            period,
+                                            isSelected,
+                                          ) => ListTile(
+                                            tileColor: Colors.white,
+                                            title: Text(
+                                              "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
+                                              style: const TextStyle(
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                          ),
+                                    ),
+
+                                    items: periodList,
+                                    itemAsString:
+                                        (period) =>
+                                            "${LongDateOnlyConverter().toJson(period.startDate)} - ${LongDateOnlyConverter().toJson(period.endDate)}",
+                                    selectedItem:
+                                        _selectedPeriod == null
+                                            ? null
+                                            : periodList.firstWhere(
+                                              (office) =>
+                                                  office.id.toString() ==
+                                                  _selectedPeriod,
+                                              orElse:
+                                                  () => PgsPeriod(
+                                                    0,
+                                                    false,
+                                                    DateTime.now(),
+                                                    DateTime.now(),
+                                                    'remarks',
+                                                  ),
+                                            ),
+
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _selectedPeriod = value?.id.toString();
+                                      });
+                                    },
+                                    validator: (value) {
+                                      if (value == null) {
+                                        return 'Required';
+                                      }
+                                      return null;
+                                    },
+                                    dropdownDecoratorProps:
+                                        DropDownDecoratorProps(
+                                          dropdownSearchDecoration:
+                                              InputDecoration(
+                                                labelText: 'Select Period',
+                                                labelStyle: TextStyle(
+                                                  fontSize: 13,
+                                                ),
+                                                filled: true,
+                                                fillColor: Colors.transparent,
+                                                floatingLabelBehavior:
+                                                    FloatingLabelBehavior.never,
+                                                border: InputBorder.none,
+                                                enabledBorder: InputBorder.none,
+                                                focusedBorder: InputBorder.none,
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 8,
+                                                    ),
+                                              ),
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 24),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text.rich(
+                                    TextSpan(
+                                      text: 'Office ',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text: '*',
+                                          style: TextStyle(color: Colors.red),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  DropdownSearch<Office>(
+                                    popupProps: PopupProps.menu(
+                                      showSearchBox: true,
+                                      fit: FlexFit.loose,
+                                      menuProps: const MenuProps(
+                                        backgroundColor: Colors.white,
+                                        elevation: 2,
+                                      ),
+                                      searchFieldProps: TextFieldProps(
+                                        decoration: InputDecoration(
+                                          hintText: 'Search Office Name...',
+                                          hintStyle: TextStyle(fontSize: 13),
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          prefixIcon: Icon(Icons.search),
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          focusedBorder: OutlineInputBorder(
+                                            borderSide: BorderSide(
+                                              color: primaryColor,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      itemBuilder:
+                                          (context, office, isSelected) =>
+                                              ListTile(
+                                                tileColor: Colors.white,
+                                                title: Text(
+                                                  office.name,
+                                                  style: TextStyle(
+                                                    fontSize: 13,
+                                                  ),
+                                                ),
+                                              ),
+                                    ),
+                                    items: officeList,
+                                    itemAsString: (office) => office.name,
+                                    selectedItem:
+                                        _selectedOffice == null
+                                            ? null
+                                            : officeList.firstWhere(
+                                              (office) =>
+                                                  office.id.toString() ==
+                                                  _selectedOffice,
+                                              orElse:
+                                                  () => Office(
+                                                    id: 0,
+                                                    name: 'Unknown',
+                                                    officeTypeId: 0,
+                                                    parentOfficeId: 0,
+                                                    isActive: true,
+                                                    isDeleted: false,
+                                                  ),
+                                            ),
+
+                                    onChanged: (value) {
+                                      setState(() {
+                                        _selectedOffice = value?.id.toString();
+                                      });
+                                    },
+                                    validator: (value) {
+                                      if (value == null) {
+                                        return 'Required';
+                                      }
+                                      return null;
+                                    },
+                                    dropdownDecoratorProps:
+                                        DropDownDecoratorProps(
+                                          dropdownSearchDecoration:
+                                              InputDecoration(
+                                                labelText: 'Select Office',
+                                                labelStyle: TextStyle(
+                                                  fontSize: 13,
+                                                ),
+                                                filled: true,
+                                                fillColor: Colors.transparent,
+                                                floatingLabelBehavior:
+                                                    FloatingLabelBehavior.never,
+                                                border: InputBorder.none,
+                                                enabledBorder: InputBorder.none,
+                                                focusedBorder: InputBorder.none,
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 8,
+                                                    ),
+                                              ),
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+                      _buildReportSection(
+                        icon: Icons.error_outline_rounded,
+                        iconColor: Colors.blue,
+                        title: "Key Findings",
+                        description:
+                            "These will be displayed as separate points in the report.",
+                        controller: _findingsController,
+                      ),
+                      const SizedBox(height: 24),
+                      _buildReportSection(
+                        icon: Icons.check_circle_outline,
+                        iconColor: Colors.green,
+                        title: "Conclusions",
+                        description:
+                            "These should summarize your analysis and insights.",
+                        controller: _conclusionsController,
+                      ),
+                      const SizedBox(height: 24),
+                      _buildReportSection(
+                        title: "Recommendations",
+                        icon: Icons.trending_up,
+                        iconColor: Colors.deepOrangeAccent,
+                        description:
+                            "These should be actionable steps for improvement.",
+                        controller: _recommendationsController,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportSection({
+    required String title,
+    required String description,
+    required TextEditingController controller,
+    IconData icon = Icons.description_outlined,
+    Color iconColor = Colors.black54,
+  }) {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, color: iconColor, size: 20),
+                const SizedBox(width: 6),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              description,
+              style: const TextStyle(fontSize: 13, color: Colors.black54),
+            ),
+            const SizedBox(height: 12),
+            Container(
+              constraints: BoxConstraints(minHeight: 120, maxHeight: 180),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.transparent),
+              ),
+              child: Scrollbar(
+                thumbVisibility: true,
+                child: SingleChildScrollView(
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: TextFormField(
+                      controller: controller,
+                      style: const TextStyle(fontSize: 14),
+                      maxLines: null,
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                      decoration: const InputDecoration(
+                        border: InputBorder.none,
+                        hintText: "Type here...",
+                        hintStyle: TextStyle(color: Colors.grey),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Required';
+                        }
+                        return null;
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
 Future<bool?> showAccomplishmentFormDialog(
@@ -2250,7 +2663,7 @@ Future<bool?> showAccomplishmentFormDialog(
 
                           if (shouldSave != true) return;
                           MotionToast.success(
-                            description: Text('Save Successfully'),
+                            description: Text('Saved Successfully'),
                             toastAlignment: Alignment.topCenter,
                           ).show(context);
                           await saveAccomplishmentData(

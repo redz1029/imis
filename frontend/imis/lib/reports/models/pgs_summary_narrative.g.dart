@@ -13,6 +13,7 @@ PgsSummaryNarrative _$PgsSummaryNarrativeFromJson(Map<String, dynamic> json) =>
       json['findings'] as String?,
       json['recommendation'] as String?,
       json['conclusion'] as String?,
+      (json['officeId'] as num?)?.toInt(),
       isDeleted: json['isDeleted'] as bool?,
       rowVersion: json['rowVersion'] as String?,
     );
@@ -27,4 +28,5 @@ Map<String, dynamic> _$PgsSummaryNarrativeToJson(
   'conclusion': instance.conclusion,
   'isDeleted': instance.isDeleted,
   'rowVersion': instance.rowVersion,
+  'officeId': instance.officeId,
 };
