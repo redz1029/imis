@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:imis/announcements/pages/announcement_page.dart';
 import 'package:imis/auditor/pages/auditor_page.dart';
 import 'package:imis/auditor_offices/pages/auditor_offices_page.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/pages/deliverable_status_monitoring_page.dart';
@@ -771,6 +772,13 @@ class NavigationPanelState extends State<NavigationPanel> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                _buildListTile(
+                                  Icons.date_range,
+                                  hideIcon: true,
+                                  'Announcement',
+                                  22,
+                                  () => _setScreen(AnnouncementPage(), 22),
+                                ),
                                 _buildListTile(
                                   Icons.date_range,
                                   hideIcon: true,
