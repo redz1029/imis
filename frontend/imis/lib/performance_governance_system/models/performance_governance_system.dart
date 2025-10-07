@@ -34,6 +34,7 @@ class PerformanceGovernanceSystem {
   final double percentDeliverables;
   final String? pgsStatus;
   final bool forSignature;
+  final bool? isDraft;
 
   PerformanceGovernanceSystem({
     required this.id,
@@ -43,8 +44,10 @@ class PerformanceGovernanceSystem {
     required this.pgsReadinessRating,
     required this.pgsSignatories,
     required this.isDeleted,
+    required this.isDraft,
     this.remarks,
     this.rowVersion,
+
     required this.percentDeliverables,
     required this.pgsStatus,
     required this.forSignature,

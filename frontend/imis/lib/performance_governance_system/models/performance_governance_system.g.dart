@@ -24,6 +24,7 @@ PerformanceGovernanceSystem _$PerformanceGovernanceSystemFromJson(
           ?.map((e) => PgsSignatory.fromJson(e as Map<String, dynamic>))
           .toList(),
   isDeleted: json['isDeleted'] as bool,
+  isDraft: json['isDraft'] as bool?,
   remarks: json['remarks'] as String? ?? '',
   rowVersion: json['rowVersion'] as String?,
   percentDeliverables: (json['percentDeliverables'] as num).toDouble(),
@@ -46,4 +47,5 @@ Map<String, dynamic> _$PerformanceGovernanceSystemToJson(
   'percentDeliverables': instance.percentDeliverables,
   'pgsStatus': instance.pgsStatus,
   'forSignature': instance.forSignature,
+  'isDraft': instance.isDraft,
 };
