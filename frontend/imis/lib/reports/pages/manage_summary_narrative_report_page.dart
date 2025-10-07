@@ -14,13 +14,7 @@ import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class ManageSummaryNarrativeReportPage extends StatefulWidget {
-  // final PgsSummaryNarrative summaryNarrative;
-
-  const ManageSummaryNarrativeReportPage({
-    super.key,
-
-    // required this.summaryNarrative,
-  });
+  const ManageSummaryNarrativeReportPage({super.key});
 
   @override
   ManageSummaryNarrativeReportPageState createState() =>
@@ -128,7 +122,7 @@ class ManageSummaryNarrativeReportPageState
                             MaterialPageRoute(
                               builder:
                                   (context) => const NavigationPanel(
-                                    initialScreenIndex: 17,
+                                    initialScreenIndex: 16,
                                   ),
                             ),
                             (route) => false,
@@ -457,6 +451,7 @@ class ManageSummaryNarrativeReportPageState
                       _findingsController.text,
                       _recommendationsController.text,
                       _conclusionsController.text,
+                      0,
                       isDeleted: false,
                       rowVersion: '',
                     );
