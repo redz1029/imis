@@ -1,5 +1,4 @@
-﻿
-using Base.Abstractions;
+﻿using Base.Abstractions;
 using Base.Pagination;
 using IMIS.Domain;
 
