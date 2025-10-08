@@ -1,5 +1,4 @@
-﻿
-using Base.Auths.Permissions;
+﻿using Base.Auths.Permissions;
 
 namespace IMIS.Application.OfficeModule
 {
