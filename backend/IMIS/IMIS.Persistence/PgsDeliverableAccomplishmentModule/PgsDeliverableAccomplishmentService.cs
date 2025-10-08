@@ -3,7 +3,6 @@ using Base.Primitives;
 using Base.Utilities;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
 using IMIS.Domain;
-using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
