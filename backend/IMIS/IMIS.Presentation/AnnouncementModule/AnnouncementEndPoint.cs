@@ -1,6 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AnnouncementModule;
+using IMIS.Application.AuditorModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,15 @@ namespace IMIS.Presentation.AnnouncementModule
             })
            .WithTags(_announcementTag)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _announcementPermission.Add));
+
+            app.MapGet("/", async (IAnnouncementService service, CancellationToken cancellationToken) =>
+            {
+                var announcement = await service.GetAll(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(announcement);
+            })
+          .WithTags(_announcementTag)
+          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_announcementTag), true)
+          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _announcementPermission.View));
 
             app.MapGet("/Active", async (IAnnouncementService service, CancellationToken cancellationToken) =>
             {

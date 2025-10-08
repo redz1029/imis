@@ -1,5 +1,6 @@
 ﻿using Base.Primitives;
 using IMIS.Application.AnnouncementModule;
+using IMIS.Application.AuditorModule;
 
 namespace IMIS.Persistence.AnnouncementModule
 {
@@ -10,7 +11,12 @@ namespace IMIS.Persistence.AnnouncementModule
         public AnnouncementService(IAnnouncementRepository repository)
         {
             _repository = repository;
-        }       
+        }
+        public async Task<List<AnnouncementDto>?> GetAll(CancellationToken cancellationToken)
+        {
+            var announcementDto = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            return announcementDto?.Select(a => new AnnouncementDto(a)).ToList();
+        }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var announce = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);

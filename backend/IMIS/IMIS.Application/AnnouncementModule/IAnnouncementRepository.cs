@@ -7,5 +7,6 @@ namespace IMIS.Application.AnnouncementModule
     {
         Task<IEnumerable<Announcement>?> GetAllActive(CancellationToken cancellationToken);
         Task<Announcement?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<Announcement>?> GetAll(CancellationToken cancellationToken);
     }
 }

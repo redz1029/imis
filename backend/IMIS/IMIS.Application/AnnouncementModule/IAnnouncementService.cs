@@ -7,6 +7,7 @@ namespace IMIS.Application.AnnouncementModule
     {
         Task<List<AnnouncementDto>?> GetAllActive(CancellationToken cancellationToken);
         Task<AnnouncementDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);      
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<List<AnnouncementDto>?> GetAll(CancellationToken cancellationToken);
     }
 }

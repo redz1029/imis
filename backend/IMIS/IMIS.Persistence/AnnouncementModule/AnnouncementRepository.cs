@@ -24,5 +24,12 @@ namespace IMIS.Persistence.AnnouncementModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
+        public async Task<IEnumerable<Announcement>?> GetAll(CancellationToken cancellationToken)
+        {
+            return await _entities
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }
