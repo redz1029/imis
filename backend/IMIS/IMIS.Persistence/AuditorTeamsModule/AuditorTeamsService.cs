@@ -50,64 +50,72 @@ namespace IMIS.Application.AuditorTeamsModule
 
             return groupedAuditors;
         }
+        
+        public async Task<AuditorTeamsDto?> GetByTeamIdAsync(long teamId, CancellationToken cancellationToken)
+        {
+            var auditorTeams = await _repository.GetByTeamIdAsync(teamId, cancellationToken).ConfigureAwait(false);
 
+            if (auditorTeams == null || !auditorTeams.Any())
+                return null;
 
-        public async Task<List<AuditorTeamsDto>> GetAllAsyncFilterByTeamId(long? teamId, CancellationToken cancellationToken)
-        {          
-            var auditorTeams = await _repository.GetAllAsyncFilterByTeamId(teamId, cancellationToken)
-                .ConfigureAwait(false);
-          
-            var groupedAuditors = auditorTeams
-                .GroupBy(at => at.TeamId)
-                .Select(group => new AuditorTeamsDto
-                {
-                    Id = group.First().Id,
-                    TeamId = group.Key,
-                    Auditors = group
-                        .Where(at => at.Auditor != null)
-                        .Select(at => new AuditorDto
-                        {
-                            Id = at.Auditor!.Id,
-                            Name = at.Auditor.Name,
-                            IsTeamLeader = at.IsTeamLeader,
-                            IsActive = at.Auditor.IsActive,
-                            UserId= at.Auditor.UserId,
-                        })
-                        .ToList(),
-                    IsActive = group.Any() ? group.First().IsActive : false
-                })
-                .ToList();
+            var group = auditorTeams.First().TeamId;
 
-            return groupedAuditors;
+            var dto = new AuditorTeamsDto
+            {
+                Id = auditorTeams.First().Id,
+                TeamId = group,
+                Auditors = auditorTeams
+                    .Where(at => at.Auditor != null)
+                    .Select(at => new AuditorDto
+                    {
+                        Id = at.Auditor!.Id,
+                        Name = at.Auditor.Name,
+                        IsTeamLeader = at.IsTeamLeader,
+                        IsActive = at.Auditor.IsActive,
+                        UserId = at.Auditor.UserId
+                    })
+                    .ToList(),
+                IsActive = auditorTeams.First().IsActive
+            };
+
+            return dto;
         }
-
+        
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            var ODto = dto as AuditorTeamsDto;
-            var auditorTeamEntity = ODto!.ToEntity();
+            var oDto = dto as AuditorTeamsDto;
+            if (oDto == null)
+                throw new ArgumentException("Invalid DTO type. Expected AuditorTeamsDto.");
+
+            var context = _repository.GetDbContext();
           
-            if (ODto.Auditors != null && ODto.Auditors.Any())
+            var auditorTeamEntity = oDto.ToEntity();
+          
+            var existingTeams = await _repository.GetByTeamIdAsync(auditorTeamEntity.TeamId, cancellationToken).ConfigureAwait(false);
+
+            if (existingTeams.Any())
             {
-                foreach (var auditorDto in ODto.Auditors)
+                context.RemoveRange(existingTeams);
+            }
+           
+            if (oDto.Auditors != null && oDto.Auditors.Any())
+            {
+                foreach (var auditorDto in oDto.Auditors)
                 {
-                    var auditorTeam = new AuditorTeams
+                    var newTeam = new AuditorTeams
                     {
                         Id = 0,
-                        TeamId = auditorTeamEntity.TeamId,
-                        AuditorId = auditorDto.Id,
+                        TeamId = auditorTeamEntity.TeamId,       
+                        AuditorId = auditorDto.Id,               
                         IsTeamLeader = auditorDto.IsTeamLeader,
                         IsActive = auditorTeamEntity.IsActive
                     };
-                    await _repository.GetDbContext().AddAsync(auditorTeam, cancellationToken).ConfigureAwait(false);
+
+                    await context.AddAsync(newTeam, cancellationToken).ConfigureAwait(false);
                 }
             }
-           
-            if (auditorTeamEntity.Id != 0)
-            {
-                await _repository.UpdateAsync(auditorTeamEntity, auditorTeamEntity.Id, cancellationToken).ConfigureAwait(false);
-            }
 
-            await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 }

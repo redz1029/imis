@@ -21,14 +21,13 @@ namespace IMIS.Presentation.AuditorTeamsModule
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
             app.MapPost("/", async ([FromBody] AuditorTeamsDto auditorTeamsDto, IAuditorTeamsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            {             
+            {
                 await service.SaveOrUpdateAsync(auditorTeamsDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_AuditorTeamTag, cancellationToken);
                 return Results.Ok(auditorTeamsDto);
             })
-           .WithTags(_AuditorTeamTag)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _auditorTeamPermission.Add));
+           .WithTags(_AuditorTeamTag)           
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.Add));
 
             app.MapGet("/", async (IAuditorTeamsService service, CancellationToken cancellationToken) =>
             {
@@ -37,24 +36,34 @@ namespace IMIS.Presentation.AuditorTeamsModule
             })
             .WithTags(_AuditorTeamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _auditorTeamPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.View));
 
-            app.MapGet("/teamid/{id}", async (IAuditorTeamsService service, long? teamId, CancellationToken cancellationToken) =>
+            app.MapGet("/teamid/{id:long}", async (long id, IAuditorTeamsService service, CancellationToken cancellationToken) =>
             {
-                var team = await service.GetAllAsyncFilterByTeamId(teamId, cancellationToken).ConfigureAwait(false);
+                var team = await service.GetByTeamIdAsync(id, cancellationToken).ConfigureAwait(false);
 
-                if (team == null || !team.Any())
+                if (team == null)
                 {
-                    return Results.NotFound("No records found for the given teamId.");
+                    return Results.NotFound(new { message = $"No records found for TeamId {id}." });
                 }
+
                 return Results.Ok(team);
             })
-           .WithTags(_AuditorTeamTag)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _auditorTeamPermission.View));
-            
+            .WithTags(_AuditorTeamTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.View));
+
+            app.MapPut("/teamid", async ([FromBody] AuditorTeamsDto auditorTeamsDto, IAuditorTeamsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {                        
+                await service.SaveOrUpdateAsync(auditorTeamsDto, cancellationToken).ConfigureAwait(false);
+
+                await cache.EvictByTagAsync(_AuditorTeamTag, cancellationToken);
+                    
+                return Results.Ok(auditorTeamsDto);                              
+            })
+            .WithTags(_AuditorTeamTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.Edit));
+
             app.MapGet("/page", async (int page, int pageSize, IAuditorTeamsService service, CancellationToken cancellationToken) =>
             {
                 var auditorTeamsDto = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -62,8 +71,7 @@ namespace IMIS.Presentation.AuditorTeamsModule
             })
             .WithTags(_AuditorTeamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _auditorTeamPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.View));
         }
     }
 }

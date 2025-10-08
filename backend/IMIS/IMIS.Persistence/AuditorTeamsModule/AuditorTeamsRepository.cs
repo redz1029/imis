@@ -18,13 +18,16 @@ namespace IMIS.Persistence.AuditorTeamsModule
             return await EntityPageList<AuditorTeams, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
 
         }
-        public async Task<IEnumerable<AuditorTeams>> GetAllAsyncFilterByTeamId(long? teamId, CancellationToken cancellationToken)
+       
+        public async Task<List<AuditorTeams>> GetByTeamIdAsync(long teamId, CancellationToken cancellationToken)
         {
             return await _entities
-            .Where(p => teamId == null || p.TeamId == teamId)
-            .Include(x => x.Auditor)
-            .ToListAsync(cancellationToken);
+                .Where(p => p.TeamId == teamId)
+                .Include(x => x.Auditor)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
+
         public async Task<IEnumerable<AuditorTeams>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _entities
