@@ -33,9 +33,8 @@ class _AnnouncementListState extends State<AnnouncementList> {
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 👇 Centered Header
+          // 🔹 Fixed Header
           Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -54,54 +53,54 @@ class _AnnouncementListState extends State<AnnouncementList> {
             ),
           ),
           gap16px,
-          FutureBuilder<List<Announcement>>(
-            future: _announcementsFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Padding(
-                  padding: EdgeInsets.all(24),
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
 
-              if (snapshot.hasError) {
-                return Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    'Failed to load announcements: ${snapshot.error}',
-                    style: const TextStyle(color: Colors.redAccent),
-                  ),
-                );
-              }
+          // 🔹 Scrollable Content
+          Expanded(
+            child: FutureBuilder<List<Announcement>>(
+              future: _announcementsFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-              final announcements = snapshot.data ?? [];
-              if (announcements.isEmpty) {
-                return const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text(
-                    'No active announcements at the moment.',
-                    style: TextStyle(color: Colors.grey),
-                  ),
-                );
-              }
-
-              final colors = [
-                Colors.orange,
-                Colors.green,
-                Colors.blue,
-                Colors.red,
-              ];
-
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(announcements.length, (index) {
-                  return _AnnouncementCard(
-                    announcement: announcements[index],
-                    borderColor: colors[index % 4],
+                if (snapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Failed to load announcements: ${snapshot.error}',
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
                   );
-                }),
-              );
-            },
+                }
+
+                final announcements = snapshot.data ?? [];
+                if (announcements.isEmpty) {
+                  return const Center(
+                    child: Text(
+                      'No active announcements at the moment.',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  );
+                }
+
+                final colors = [
+                  Colors.orange,
+                  Colors.green,
+                  Colors.blue,
+                  Colors.red,
+                ];
+
+                // 🔹 Make the list scrollable
+                return ListView.builder(
+                  itemCount: announcements.length,
+                  itemBuilder: (context, index) {
+                    return _AnnouncementCard(
+                      announcement: announcements[index],
+                      borderColor: colors[index % 4],
+                    );
+                  },
+                );
+              },
+            ),
           ),
         ],
       ),
