@@ -1,6 +1,5 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
