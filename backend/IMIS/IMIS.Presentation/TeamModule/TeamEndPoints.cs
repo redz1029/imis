@@ -1,6 +1,5 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
-using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.TeamModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
