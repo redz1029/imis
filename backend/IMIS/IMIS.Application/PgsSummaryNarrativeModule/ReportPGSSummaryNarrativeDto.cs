@@ -12,9 +12,9 @@ namespace IMIS.Application.PgsSummaryNarrativeModules
     public class ReportPGSSummaryNarrativeDto : BaseDto<PgsSummaryNarrative, int>
     {
 
-        public required string Findings { get; set; }
-        public required string Recommendation { get; set; }
-        public required string Conclusion { get; set; }
+        public string? Findings { get; set; }
+        public string? Recommendation { get; set; }
+        public string? Conclusion { get; set; }
         public required PgsPeriodDto PgsPeriod { get; set; }     
         public PgsDeliverableSummaryNarrativeFilter? PgsDeliverableSummaryNarrativeFilter { get; set; }           
         public string PeriodRange => PgsDeliverableSummaryNarrativeFilter?.PgsPeriodId == PgsPeriod.Id ? $"{PgsPeriod.StartDate:MMM dd, yyyy} - {PgsPeriod.EndDate:MMM dd, yyyy}" : string.Empty;        

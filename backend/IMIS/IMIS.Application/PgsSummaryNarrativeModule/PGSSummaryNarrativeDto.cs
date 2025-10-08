@@ -6,9 +6,9 @@ namespace IMIS.Application.PgsSummaryNarrativeModule
 {
     public class PGSSummaryNarrativeDto : BaseDto<PgsSummaryNarrative, int>
     {
-        public required string Findings { get; set; }
-        public required string Recommendation { get; set; }
-        public required string Conclusion { get; set; }
+        public string? Findings { get; set; }
+        public string? Recommendation { get; set; }
+        public string? Conclusion { get; set; }
         public int? PgsPeriodId { get; set; }
         public int? OfficeId { get; set; }
 
