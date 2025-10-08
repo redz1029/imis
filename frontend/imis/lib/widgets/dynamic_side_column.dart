@@ -92,11 +92,7 @@ class DynamicSideColumn1 extends StatelessWidget {
           ),
           child: Padding(
             padding: const EdgeInsets.all(10.0),
-            child: SizedBox(
-              width: 280,
-              height: 350,
-              child: SingleChildScrollView(child: AnnouncementList()),
-            ),
+            child: SizedBox(width: 280, height: 350, child: AnnouncementList()),
           ),
         ),
       ],

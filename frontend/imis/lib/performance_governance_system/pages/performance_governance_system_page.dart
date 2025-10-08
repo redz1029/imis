@@ -560,6 +560,7 @@ class PerformanceGovernanceSystemPageState
       'periodId': pgs.pgsPeriod.id.toString(),
       'pgsDeliverables': pgs.pgsDeliverables?.map((d) => d.toJson()).toList(),
       'rowVersion': pgs.rowVersion,
+      'isDraft': pgs.isDraft,
     };
   }
 
@@ -848,6 +849,7 @@ class PerformanceGovernanceSystemPageState
   PerformanceGovernanceSystem getPgsDetails({
     required int id,
     required String pgsStatus,
+
     List<PgsSignatory> existingSignatories = const [],
   }) {
     double percentDeliverables = 0.0;
@@ -890,6 +892,7 @@ class PerformanceGovernanceSystemPageState
 
       pgsSignatories: [],
       isDeleted: false,
+      isDraft: false,
       remarks: "",
       rowVersion: "",
       percentDeliverables: percentDeliverables,
@@ -1443,7 +1446,7 @@ class PerformanceGovernanceSystemPageState
                 const SizedBox(height: 20),
                 Expanded(
                   child: DataTable2(
-                    columnSpacing: isMobile ? 8 : 12, // Reduced spacing
+                    columnSpacing: isMobile ? 8 : 12,
                     headingRowColor: WidgetStatePropertyAll(secondaryColor),
                     dataRowColor: WidgetStatePropertyAll(mainBgColor),
                     headingTextStyle: const TextStyle(color: grey),
@@ -1534,64 +1537,64 @@ class PerformanceGovernanceSystemPageState
                                                 .editPerformanceGovernanceSystem,
                                         child: IconButton(
                                           icon: Icon(Icons.edit),
+
                                           onPressed: () async {
-                                            await AuthUtil.saveSelectedOfficeId(
-                                              pgsgovernancesystem['officeid']
-                                                  .toString(),
-                                            );
+                                            try {
+                                              await AuthUtil.saveSelectedOfficeId(
+                                                pgsgovernancesystem['officeid']
+                                                    .toString(),
+                                              );
+                                              selectedOffice =
+                                                  await AuthUtil.fetchSelectedOfficeId();
 
-                                            selectedOffice =
-                                                await AuthUtil.fetchSelectedOfficeId();
+                                              final deliverables =
+                                                  await fetchDeliverables(
+                                                    pgsId:
+                                                        pgsgovernancesystem['id'],
+                                                  );
+                                              final signatory =
+                                                  await fetchSignatoryList(
+                                                    pgsId:
+                                                        pgsgovernancesystem['id'],
+                                                  );
+                                              await fetchSubmitUserId(
+                                                userId: userId,
+                                                pgsId:
+                                                    pgsgovernancesystem['id'],
+                                              );
 
-                                            List<PgsDeliverables> deliverables =
-                                                await fetchDeliverables(
-                                                  pgsId:
-                                                      pgsgovernancesystem['id'],
-                                                );
+                                              final isDraftValue =
+                                                  pgsgovernancesystem['isDraft'] ??
+                                                  false;
 
-                                            List<PgsSignatory> signatory =
-                                                await fetchSignatoryList(
-                                                  pgsId:
-                                                      pgsgovernancesystem['id'],
-                                                );
-                                            fetchSubmitUserId(
-                                              userId: userId,
-                                              pgsId: pgsgovernancesystem['id'],
-                                            );
-                                            showFormDialog(
-                                              userId:
-                                                  pgsgovernancesystem['userId'],
-                                              id: pgsgovernancesystem['id'],
-                                              officename:
-                                                  pgsgovernancesystem['name'],
-                                              officenameid:
-                                                  pgsgovernancesystem['officeid'],
-                                              competencescore:
-                                                  pgsgovernancesystem['competencescore'],
-                                              confidencescore:
-                                                  pgsgovernancesystem['confidencescore'],
-                                              resourcescore:
-                                                  pgsgovernancesystem['resourcescore'],
-                                              startDate:
-                                                  pgsgovernancesystem['startDate'],
-                                              endDate:
-                                                  pgsgovernancesystem['endDate'],
-                                              percentDeliverables:
-                                                  pgsgovernancesystem['percentDeliverables'],
-                                              deliverables: deliverables,
-                                              signatories: signatory,
-                                              pgsstatus:
-                                                  pgsgovernancesystem['pgsStatus'],
-                                              remarks:
-                                                  pgsgovernancesystem['remarks'],
-                                              // pgsDeliverableHistroy:
-                                              //     pgsDeliverableHistory,
-                                            );
-                                            // fetchPgsList();
-                                            // fetchSignatoryList(
-                                            //   pgsId:
-                                            //       pgsgovernancesystem['id'],
-                                            // );
+                                              showFormDialog(
+                                                userId:
+                                                    pgsgovernancesystem['userId'],
+                                                id: pgsgovernancesystem['id'],
+                                                officename:
+                                                    pgsgovernancesystem['name'],
+                                                officenameid:
+                                                    pgsgovernancesystem['officeid'],
+                                                competencescore:
+                                                    pgsgovernancesystem['competencescore'],
+                                                confidencescore:
+                                                    pgsgovernancesystem['confidencescore'],
+                                                resourcescore:
+                                                    pgsgovernancesystem['resourcescore'],
+                                                startDate:
+                                                    pgsgovernancesystem['startDate'],
+                                                endDate:
+                                                    pgsgovernancesystem['endDate'],
+                                                percentDeliverables:
+                                                    pgsgovernancesystem['percentDeliverables'],
+                                                deliverables: deliverables,
+                                                signatories: signatory,
+                                                isDraft: isDraftValue,
+                                                remarks:
+                                                    pgsgovernancesystem['remarks'],
+                                              );
+                                              // ignore: empty_catches
+                                            } catch (e) {}
                                           },
                                         ),
                                       ),
@@ -1801,12 +1804,13 @@ class PerformanceGovernanceSystemPageState
     List<PgsDeliverables>? deliverables,
     List<PgsSignatory>? signatories,
     List<PgsDeliverableHistory>? pgsDeliverableHistroy,
-    String? pgsstatus,
+    PerformanceGovernanceSystem? pgs,
+    bool? isDraft,
     String? pgsId,
     String? remarks,
     int? index,
   }) {
-    officeDisplay = officename ?? 'No Office';
+    officename ?? officeDisplay;
     setState(() {
       if (rows.isEmpty) {
         rows = [0];
@@ -1927,14 +1931,18 @@ class PerformanceGovernanceSystemPageState
         return StatefulBuilder(
           builder: (context, setDialogState) {
             final currentSignatory = signatoryList.firstWhere(
-              (signatory) => signatory['signatoryId'] == userId,
-              orElse: () => {'orderLevel': 0},
+              (signatory) =>
+                  signatory['signatoryId'].toString() == userId.toString(),
+              orElse: () => {'id': 0, 'orderLevel': 0},
             );
 
             final orderLevel = currentSignatory['orderLevel'] ?? 0;
 
+            final idSig = int.tryParse(currentSignatory['id'].toString()) ?? 0;
+
             final isAnyDisapproved =
                 deliverables?.any((d) => d.isDisapproved == true) ?? false;
+            bool showButton = !isDraft! && orderLevel >= 1 && idSig == 0;
 
             return AlertDialog(
               backgroundColor: mainBgColor,
@@ -2072,7 +2080,6 @@ class PerformanceGovernanceSystemPageState
                                                       });
                                                     },
 
-                                            // ✅ Selected item style
                                             selectedItemBuilder: (
                                               BuildContext context,
                                             ) {
@@ -2685,7 +2692,7 @@ class PerformanceGovernanceSystemPageState
                       ),
                     ),
                   ),
-                if (id != null && orderLevel >= 1)
+                if (showButton)
                   PermissionWidget(
                     allowedRoles: [
                       PermissionString.roleAdmin,
