@@ -1,63 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:imis/announcements/models/announcement.dart';
+import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:dio/dio.dart';
+import 'package:imis/utils/date_time_converter.dart';
 
-class AnnouncementList extends StatelessWidget {
-  static final List<Announcement> _staticAnnouncements = [
-    Announcement(
-      id: 0,
-      title: 'Annual Performance Review Schedule',
-      toDate: DateTime(2025, 5, 1),
-      fromDateDate: DateTime(2025, 4, 10),
-      description:
-          'All staff are advised to review their 2025 performance goals and prepare for review discussions by May 30th.',
-      isActive: true,
-    ),
-    Announcement(
-      id: 0,
-      title: 'New Policy Effective Next Month',
-      toDate: DateTime(2025, 4, 10),
-      fromDateDate: DateTime(2025, 4, 10),
-
-      description:
-          'Please review the udated attendance policy in the company portal.',
-      isActive: true,
-    ),
-    Announcement(
-      id: 0,
-      title: 'Workshop: Leadership Training',
-      toDate: DateTime(2025, 4, 25),
-      fromDateDate: DateTime(2025, 4, 10),
-      description:
-          'Participate in our upcoming CRMC Leadership Development session.',
-      isActive: true,
-    ),
-  ];
-
+class AnnouncementList extends StatefulWidget {
   const AnnouncementList({super.key});
+
+  @override
+  State<AnnouncementList> createState() => _AnnouncementListState();
+}
+
+class _AnnouncementListState extends State<AnnouncementList> {
+  late final AnnouncementService _announcementService;
+  late Future<List<Announcement>> _announcementsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _announcementService = AnnouncementService(Dio());
+    _announcementsFuture = _announcementService.getAnnouncements();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       decoration: BoxDecoration(
         color: const Color(0xFFeeeeee),
         borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 👇 Centered Header
           Center(
             child: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.campaign, size: 48, color: primaryTextColor),
-                SizedBox(width: 6),
+                Icon(Icons.campaign, size: 28, color: primaryTextColor),
+                const SizedBox(width: 8),
                 Text(
                   'Announcements',
                   style: TextStyle(
@@ -69,19 +53,56 @@ class AnnouncementList extends StatelessWidget {
               ],
             ),
           ),
-          gap24px,
-          ...List<Widget>.generate(_staticAnnouncements.length, (index) {
-            final colors = [
-              Colors.orange,
-              Colors.green,
-              Colors.blue,
-              Colors.red,
-            ];
-            return _AnnouncementCard(
-              announcement: _staticAnnouncements[index],
-              borderColor: colors[index % 4],
-            );
-          }),
+          gap16px,
+          FutureBuilder<List<Announcement>>(
+            future: _announcementsFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Padding(
+                  padding: EdgeInsets.all(24),
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (snapshot.hasError) {
+                return Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Text(
+                    'Failed to load announcements: ${snapshot.error}',
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+                );
+              }
+
+              final announcements = snapshot.data ?? [];
+              if (announcements.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text(
+                    'No active announcements at the moment.',
+                    style: TextStyle(color: Colors.grey),
+                  ),
+                );
+              }
+
+              final colors = [
+                Colors.orange,
+                Colors.green,
+                Colors.blue,
+                Colors.red,
+              ];
+
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: List.generate(announcements.length, (index) {
+                  return _AnnouncementCard(
+                    announcement: announcements[index],
+                    borderColor: colors[index % 4],
+                  );
+                }),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -91,6 +112,7 @@ class AnnouncementList extends StatelessWidget {
 class _AnnouncementCard extends StatelessWidget {
   final Announcement announcement;
   final Color borderColor;
+  final _dateConverter = const LongDateOnlyConverter();
 
   const _AnnouncementCard({
     required this.announcement,
@@ -99,21 +121,28 @@ class _AnnouncementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final fromDateStr = _dateConverter.toJson(announcement.fromDate);
+    final toDateStr = _dateConverter.toJson(announcement.toDate);
+
+    final displayDate =
+        fromDateStr == toDateStr ? fromDateStr : '$fromDateStr - $toDateStr';
+
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: borderColor, width: 4)),
+        border: Border(left: BorderSide(color: borderColor, width: 3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             announcement.title,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           Text(
-            announcement.toDate.toLocal().toString().split(' ')[0],
+            displayDate,
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           gap6px,

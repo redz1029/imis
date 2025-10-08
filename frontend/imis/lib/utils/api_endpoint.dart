@@ -46,6 +46,7 @@ class ApiEndpoint {
   late String pgsDeliverableAccomplishment;
   late String downloadFile;
   late String announcement;
+  late String announcementActive;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -90,6 +91,7 @@ class ApiEndpoint {
     pgsDeliverableAccomplishment = '$baseUrl/pgsDeliverableAccomplishment';
     downloadFile = '$baseUrl/download';
     announcement = '$baseUrl/announcement';
+    announcementActive = '$baseUrl/announcement/Active';
   }
 
   static Future<void> setBaseUrl() async {
