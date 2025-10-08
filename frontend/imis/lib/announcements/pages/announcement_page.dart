@@ -1,10 +1,15 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/widgets/custom_toggle.dart';
+import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class AnnouncementPage extends StatefulWidget {
   const AnnouncementPage({super.key});
@@ -17,19 +22,56 @@ class AnnouncementPageState extends State<AnnouncementPage> {
   final _announcement = AnnouncementService(Dio());
   final FocusNode isSearchfocus = FocusNode();
   final _formKey = GlobalKey<FormState>();
-  final int _currentPage = 1;
+  int _currentPage = 1;
   final int _pageSize = 15;
-  final int _totalCount = 0;
-  final bool _isLoading = false;
+  int _totalCount = 0;
+  bool _isLoading = false;
   List<Announcement> filteredList = [];
+  List<Announcement> announcementList = [];
   final Dio dio = Dio();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchAnnouncement();
+  }
+
+  Future<void> fetchAnnouncement({int page = 1, String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final pageList = await _announcement.getAnnouncement(
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPage = pageList.page;
+          _totalCount = pageList.totalCount;
+          announcementList = pageList.items;
+          filteredList = List.from(announcementList);
+        });
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: const Text('View Report'),
+        title: const Text('Announcement Information'),
         backgroundColor: mainBgColor,
         elevation: 0,
       ),
@@ -117,7 +159,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                         label: const Text('Title'),
                         size: ColumnSize.L,
                       ),
-
+                      const DataColumn(label: Text('Status')),
                       const DataColumn(label: Text('Actions')),
                     ],
                     rows:
@@ -137,11 +179,16 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                     maxWidth: constraints.maxWidth * 0.4,
                                   ),
                                   child: Text(
-                                    '',
+                                    announcement.title,
                                     overflow: TextOverflow.ellipsis,
                                     softWrap: true,
                                     maxLines: 2,
                                   ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  announcement.isActive ? 'Active' : 'Inactive',
                                 ),
                               ),
 
@@ -150,18 +197,29 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.edit),
-                                      onPressed: () {},
+                                      onPressed: () {
+                                        showAnnouncementFormDialog(
+                                          id: announcement.id.toString(),
+                                          title: announcement.title,
+                                          fromDate: DateTimeConverter().toJson(
+                                            announcement.fromDate,
+                                          ),
+                                          endDate: DateTimeConverter().toJson(
+                                            announcement.toDate,
+                                          ),
+                                          description: announcement.description,
+                                          isActive: announcement.isActive,
+                                        );
+                                      },
                                     ),
-                                    Tooltip(
-                                      message: 'Print Preview',
-
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.description_outlined,
-                                        ),
-
-                                        onPressed: () async {},
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: primaryColor,
                                       ),
+                                      onPressed: () {
+                                        // showDeleteDialog(team.id.toString());
+                                      },
                                     ),
                                   ],
                                 ),
@@ -172,29 +230,28 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                   ),
                 ),
 
-                // Container(
-                //   padding: EdgeInsets.all(10),
-                //   color: secondaryColor,
-                //   child: Row(
-                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //     children: [
-                //       PaginationInfo(
-                //         currentPage: _currentPage,
-                //         totalItems: _totalCount,
-                //         itemsPerPage: _pageSize,
-                //       ),
-                //       PaginationControls(
-                //         currentPage: _currentPage,
-                //         totalItems: _totalCount,
-                //         itemsPerPage: _pageSize,
-                //         isLoading: _isLoading,
-                //         onPageChanged:
-                //             (page) => fetchSummaryNarrative(page: page),
-                //       ),
-                //       Container(width: 60),
-                //     ],
-                //   ),
-                // ),
+                Container(
+                  padding: EdgeInsets.all(10),
+                  color: secondaryColor,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      PaginationInfo(
+                        currentPage: _currentPage,
+                        totalItems: _totalCount,
+                        itemsPerPage: _pageSize,
+                      ),
+                      PaginationControls(
+                        currentPage: _currentPage,
+                        totalItems: _totalCount,
+                        itemsPerPage: _pageSize,
+                        isLoading: _isLoading,
+                        onPageChanged: (page) => fetchAnnouncement(page: page),
+                      ),
+                      Container(width: 60),
+                    ],
+                  ),
+                ),
               ],
             ),
           );
@@ -206,8 +263,8 @@ class AnnouncementPageState extends State<AnnouncementPage> {
   void showAnnouncementFormDialog({
     String? id,
     String? title,
-    DateTime? fromDate,
-    DateTime? endDate,
+    String? fromDate,
+    String? endDate,
     String? description,
     bool isActive = false,
   }) {
@@ -215,9 +272,10 @@ class AnnouncementPageState extends State<AnnouncementPage> {
     TextEditingController descriptionController = TextEditingController(
       text: description,
     );
-
-    DateTime? selectedFromDate = fromDate;
-    DateTime? selectedEndDate = endDate;
+    DateTime? selectedFromDate =
+        fromDate != null ? DateTime.tryParse(fromDate) : null;
+    DateTime? selectedEndDate =
+        endDate != null ? DateTime.tryParse(endDate) : null;
 
     showDialog(
       context: context,
@@ -290,7 +348,9 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                       child: TextFormField(
                         readOnly: true,
                         decoration: InputDecoration(
+                          focusColor: primaryColor,
                           labelText: 'From Date',
+                          floatingLabelStyle: TextStyle(color: primaryColor),
                           suffixIcon: const Icon(Icons.calendar_today),
                           border: const OutlineInputBorder(),
                           focusedBorder: const OutlineInputBorder(
@@ -306,11 +366,27 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                   : '',
                         ),
                         onTap: () async {
-                          final picked = await showDatePicker(
+                          DateTime? picked = await showDatePicker(
                             context: context,
-                            initialDate: selectedFromDate ?? DateTime.now(),
+                            initialDate: DateTime.now(),
                             firstDate: DateTime(2000),
-                            lastDate: DateTime(2100),
+                            lastDate: DateTime(2101),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: ColorScheme.light(
+                                    primary: primaryColor,
+                                    onPrimary: secondaryColor,
+                                  ),
+                                  textButtonTheme: TextButtonThemeData(
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: primaryColor,
+                                    ),
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
                           if (picked != null) {
                             setState(() {
@@ -342,7 +418,9 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                       child: TextFormField(
                         readOnly: true,
                         decoration: InputDecoration(
-                          labelText: 'End Date',
+                          focusColor: primaryColor,
+                          labelText: 'To Date',
+                          floatingLabelStyle: TextStyle(color: primaryColor),
                           suffixIcon: const Icon(Icons.calendar_today),
                           border: const OutlineInputBorder(),
                           focusedBorder: const OutlineInputBorder(
@@ -369,11 +447,27 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                             return;
                           }
 
-                          final picked = await showDatePicker(
+                          DateTime? picked = await showDatePicker(
                             context: context,
-                            initialDate: selectedEndDate ?? selectedFromDate!,
-                            firstDate: selectedFromDate!,
-                            lastDate: DateTime(2100),
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2101),
+                            builder: (context, child) {
+                              return Theme(
+                                data: Theme.of(context).copyWith(
+                                  colorScheme: ColorScheme.light(
+                                    primary: primaryColor,
+                                    onPrimary: secondaryColor,
+                                  ),
+                                  textButtonTheme: TextButtonThemeData(
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: primaryColor,
+                                    ),
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
                           );
                           if (picked != null) {
                             setState(() => selectedEndDate = picked);
@@ -416,9 +510,8 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                     ),
                     const SizedBox(height: 14),
 
-                    // Active Toggle
                     CustomToggle(
-                      label: "Active",
+                      label: "Show on Dashboard",
                       value: isActive,
                       activeColor: primaryColor,
                       inactiveColor: Colors.grey,
@@ -479,18 +572,48 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                         final announcement = Announcement(
                           id: int.tryParse(id ?? '0') ?? 0,
                           title: titleController.text,
-                          fromDateDate: selectedFromDate!,
+                          fromDate: selectedFromDate!,
                           toDate: selectedEndDate!,
                           description: descriptionController.text,
                           isActive: isActive,
-                          rowVersion: '',
                           isDeleted: false,
                         );
 
-                        await _announcement.createAnnouncement(announcement);
-                        setState(() {});
-                        // ignore: use_build_context_synchronously
-                        Navigator.pop(context);
+                        try {
+                          if (announcement.id == 0) {
+                            await _announcement.createAnnouncement(
+                              announcement,
+                            );
+                          } else {
+                            await _announcement.updateAnnouncement(
+                              announcement,
+                            );
+                          }
+
+                          setState(() {
+                            fetchAnnouncement();
+                          });
+
+                          Navigator.pop(context);
+
+                          MotionToast.success(
+                            title: const Text("Success"),
+                            toastAlignment: Alignment.topCenter,
+                            description: Text(
+                              announcement.id == 0
+                                  ? "Announcement created successfully!"
+                                  : "Announcement updated successfully!",
+                            ),
+                          ).show(context);
+                        } catch (e) {
+                          MotionToast.error(
+                            title: const Text("Error"),
+                            toastAlignment: Alignment.topCenter,
+                            description: Text(
+                              "Failed to save announcement: $e",
+                            ),
+                          ).show(context);
+                        }
                       }
                     }
                   },
