@@ -1,6 +1,5 @@
 ﻿using Base.Primitives;
 using IMIS.Application.AnnouncementModule;
-using IMIS.Application.AuditorModule;
 
 namespace IMIS.Persistence.AnnouncementModule
 {

@@ -1,5 +1,4 @@
 ﻿using Base.Abstractions;
-using IMIS.Application.AuditorModule;
 
 namespace IMIS.Application.AnnouncementModule
 {

@@ -1,7 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AnnouncementModule;
-using IMIS.Application.AuditorModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
