@@ -1,23 +1,24 @@
 import 'package:json_annotation/json_annotation.dart';
+
 part 'announcement.g.dart';
 
 @JsonSerializable()
 class Announcement {
-  int id;
+  final int id;
   final String title;
-  final DateTime toDate;
-  final DateTime fromDateDate;
   final String description;
+  final DateTime fromDate;
+  final DateTime toDate;
   final bool isActive;
-  String? rowVersion;
-  bool? isDeleted;
+  final String? rowVersion;
+  final bool? isDeleted;
 
   Announcement({
     required this.id,
     required this.title,
-    required this.toDate,
     required this.description,
-    required this.fromDateDate,
+    required this.fromDate,
+    required this.toDate,
     required this.isActive,
     this.rowVersion,
     this.isDeleted,
