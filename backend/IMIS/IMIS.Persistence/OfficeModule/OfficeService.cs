@@ -96,7 +96,6 @@ namespace IMIS.Persistence.OfficeModule
 
             List<Office> offices;
 
-            // Admins, Service Heads, Auditor Heads → see all offices
             if (userRoles.Any(r =>
                     r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
                     r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
@@ -110,12 +109,11 @@ namespace IMIS.Persistence.OfficeModule
             }
             else
             {
-                // Regular Auditor → only assigned offices
                 offices = await _repository.GetOfficesForAuditorAsync(currentUser.Id, cancellationToken);
 
                 if (offices == null || !offices.Any())
                 {
-                    return new List<OfficeDto>(); // no assigned offices → return empty
+                    return new List<OfficeDto>(); 
                 }
             }
 

@@ -3,7 +3,7 @@ using Base.Pagination;
 using IMIS.Application.AuditorTeamsModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
-
+ 
 namespace IMIS.Persistence.AuditorTeamsModule
 {   
     public class AuditorTeamsRepository : BaseRepository<AuditorTeams, int, ImisDbContext>, IAuditorTeamsRepository

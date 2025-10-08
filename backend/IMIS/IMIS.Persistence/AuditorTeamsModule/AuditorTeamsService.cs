@@ -13,6 +13,24 @@ namespace IMIS.Application.AuditorTeamsModule
             _repository = repository;
         }
 
+        public async Task<bool> SoftDeleteAsync(int teamId, CancellationToken cancellationToken)
+        {           
+            var teamMembers = await _repository.GetByTeamIdAsync(teamId, cancellationToken).ConfigureAwait(false);
+
+            if (!teamMembers.Any())
+                return false;
+            
+            foreach (var member in teamMembers)
+            {
+                member.IsDeleted = true;
+                member.IsActive = false;
+            }
+
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            return true;
+        }
         public async Task<DtoPageList<AuditorTeamsDto, AuditorTeams, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var auditorTeams = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);

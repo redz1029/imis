@@ -72,6 +72,18 @@ namespace IMIS.Presentation.AuditorTeamsModule
             .WithTags(_AuditorTeamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditorTeamTag), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.View));
+
+            app.MapDelete("/{id:int}", async (int id, IAuditorTeamsService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_AuditorTeamTag, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Auditor Team deleted successfully." })
+                              : Results.NotFound(new { message = "Auditor Team not found." });
+            })
+            .WithTags(_AuditorTeamTag)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorTeamPermission.Edit));
         }
     }
 }
