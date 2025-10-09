@@ -131,6 +131,7 @@ namespace IMIS.Persistence
             builder.ApplyConfiguration(new AuditorConfiguration());
             builder.ApplyConfiguration(new PgsPeriodConfiguration());
             builder.ApplyConfiguration(new AuditorOfficeConfiguration());
+            builder.ApplyConfiguration(new AuditorTeamsConfiguration());
 
             // Apply global query filter for soft deletion
             // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false
