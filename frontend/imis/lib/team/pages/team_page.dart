@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -211,8 +213,10 @@ class TeamPageState extends State<TeamPage> {
                     setState(() {
                       fetchTeam();
                     });
-
-                    // ignore: use_build_context_synchronously
+                    MotionToast.success(
+                      description: const Text("Saved successfully!"),
+                      toastAlignment: Alignment.topCenter,
+                    ).show(context);
                     Navigator.pop(context);
                   }
                 }
@@ -423,7 +427,17 @@ class TeamPageState extends State<TeamPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                try {} catch (e) {
+                try {
+                  final teamService = TeamService(dio);
+                  await teamService.deleteTeam(id);
+                  setState(() {
+                    fetchTeam();
+                  });
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Team deleted successfully'),
+                  );
+                } catch (e) {
                   MotionToast.error(description: Text('Failed to Delete Team'));
                 }
               },
