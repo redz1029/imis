@@ -24,7 +24,7 @@ import '../../../user/models/user_registration.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/http_util.dart';
 import '../../../utils/permission_service.dart';
-import '../../../widgets/accomplishment_widget.dart';
+import '../../../widgets/accomplishment_auditor_widget.dart';
 import '../models/pgs_filter.dart';
 
 class DeliverableStatusMonitoringPage extends StatefulWidget {
@@ -84,7 +84,6 @@ class DeliverableStatusMonitoringPageState
   final TextEditingController _conclusionsController = TextEditingController();
   final TextEditingController _recommendationsController =
       TextEditingController();
-
   final _formKey = GlobalKey<FormState>();
   bool isMenuOpenOffice = false;
   bool isMenuOpenPeriod = false;
@@ -94,8 +93,11 @@ class DeliverableStatusMonitoringPageState
   bool isMenuScoreRange = false;
   bool isMenuOpenPage = false;
   final dio = Dio();
+  bool _hasAvailableDeliverables = false;
   String? _selectedPeriod;
   String? _selectedOffice;
+  int? officeId;
+  int? periodId;
   final List<String> officeLists = ['Office 1', 'Office 2', 'Office 3'];
   @override
   void initState() {
@@ -130,6 +132,59 @@ class DeliverableStatusMonitoringPageState
         allowedRoles: [PermissionString.pgsAuditor, PermissionString.roleAdmin],
       );
     });
+  }
+
+  Future<void> _checkDeliverablesAvailability(Function setDialogState) async {
+    if (_selectedOffice == null || _selectedPeriod == null) {
+      setState(() {
+        _hasAvailableDeliverables = false;
+      });
+      return;
+    }
+
+    try {
+      officeId = int.tryParse(_selectedOffice!) ?? 0;
+      periodId = int.tryParse(_selectedPeriod!) ?? 0;
+
+      final filter = PgsFilter(
+        periodId,
+        officeId,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+      );
+
+      final queryParams =
+          filter.toJson()..removeWhere((key, value) => value == null);
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        ApiEndpoint().filterBy,
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+        final items = data["items"] as List<dynamic>? ?? [];
+
+        setDialogState(() {
+          _hasAvailableDeliverables = items.isNotEmpty;
+        });
+      } else {
+        setDialogState(() {
+          _hasAvailableDeliverables = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error checking deliverables availability: $e");
+      setDialogState(() {
+        _hasAvailableDeliverables = false;
+      });
+    }
+    setDialogState(() {});
   }
 
   Future<void> _loadCurrentUserId() async {
@@ -287,84 +342,6 @@ class DeliverableStatusMonitoringPageState
 
     return PgsStatus.notStarted;
   }
-
-  // Widget _buildStatusCell(int index, VoidCallback setDialogState) {
-  //   if (!selectedStatus.containsKey(index)) {
-  //     final rawStatus = deliverableList[index]['status'];
-  //     final parsedStatus = dynamicToPgsStatus(rawStatus);
-  //     selectedStatus[index] = parsedStatus;
-  //   }
-
-  //   final statusDescriptions = {
-  //     PgsStatus.notStarted:
-  //         "Deliverable has been defined but work has not yet begun",
-  //     PgsStatus.completed:
-  //         "Deliverable has been finished and meets PGS requirements",
-  //     PgsStatus.onGoing:
-  //         "Deliverable is in progress and may be on hold pending decisions or resources",
-  //   };
-
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child:
-  //         _hasEditPermission
-  //             ? DropdownButtonFormField<PgsStatus>(
-  //               value: selectedStatus[index],
-  //               onChanged: (PgsStatus? newValue) async {
-  //                 if (newValue != null) {
-  //                   setDialogState();
-  //                   setState(() {
-  //                     selectedStatus[index] = newValue;
-  //                   });
-
-  //                   if (newValue == PgsStatus.completed) {
-  //                     percentageValues[index] = 100;
-  //                     percentageControllers[index]?.text = '100';
-  //                     setState(() {});
-  //                   }
-
-  //                   if (newValue == PgsStatus.notStarted) {
-  //                     percentageValues[index] = 0;
-  //                     percentageControllers[index]?.text = '0';
-  //                     setState(() {});
-  //                   }
-
-  //                   if (newValue == PgsStatus.onGoing) {
-  //                     percentageValues[index] = 0;
-  //                     percentageControllers[index]?.text = '';
-  //                   }
-  //                 }
-  //               },
-  //               isExpanded: true,
-  //               decoration: const InputDecoration(
-  //                 border: OutlineInputBorder(),
-  //                 contentPadding: EdgeInsets.all(8.0),
-  //                 focusedBorder: OutlineInputBorder(
-  //                   borderSide: BorderSide(color: primaryColor),
-  //                 ),
-  //               ),
-  //               items:
-  //                   PgsStatus.values.map((PgsStatus value) {
-  //                     return DropdownMenuItem<PgsStatus>(
-  //                       value: value,
-  //                       child: Tooltip(
-  //                         message: statusDescriptions[value] ?? value.name,
-  //                         child: Text(
-  //                           value.name,
-  //                           style: const TextStyle(fontSize: 13),
-  //                         ),
-  //                       ),
-  //                     );
-  //                   }).toList(),
-  //             )
-  //             : Center(
-  //               child: Text(
-  //                 selectedStatus[index]?.name ?? 'Unknown',
-  //                 style: const TextStyle(fontSize: 13),
-  //               ),
-  //             ),
-  //   );
-  // }
 
   void showFormDialog(int pgsDeliverableId) async {
     final groupedItem = deliverableHistoryGrouped.firstWhere(
@@ -568,265 +545,6 @@ class DeliverableStatusMonitoringPageState
     );
   }
 
-  // Widget _buildRemarkCell(int index) {
-  //   if (!remarkControllers.containsKey(index)) {
-  //     final remarks = deliverableList[index]['remarks'];
-
-  //     remarkControllers[index] = TextEditingController(text: remarks);
-  //   }
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child:
-  //         _hasEditPermission
-  //             ? ConstrainedBox(
-  //               constraints: BoxConstraints(minHeight: 50.0),
-  //               child: TextField(
-  //                 controller: remarkControllers[index],
-  //                 maxLines: null,
-  //                 keyboardType: TextInputType.multiline,
-  //                 style: TextStyle(fontSize: 14.0),
-  //                 decoration: InputDecoration(
-  //                   border: OutlineInputBorder(
-  //                     borderSide: BorderSide(color: grey),
-  //                   ),
-  //                   contentPadding: EdgeInsets.all(8.0),
-  //                   focusedBorder: OutlineInputBorder(
-  //                     borderSide: BorderSide(color: primaryColor),
-  //                   ),
-  //                 ),
-  //                 onChanged: (value) {
-  //                   setState(() {});
-  //                 },
-  //               ),
-  //             )
-  //             : Center(
-  //               child: Text(
-  //                 (remarkControllers[index]?.text.isEmpty ?? true)
-  //                     ? 'No remarks'
-  //                     : remarkControllers[index]!.text,
-  //               ),
-  //             ),
-  //   );
-  // }
-
-  // Widget _buildScoringCell(int index) {
-  //   if (!percentageControllers.containsKey(index)) {
-  //     final score = deliverableList[index]['score'];
-  //     final initialScore = (score is int && score <= 100) ? score : 0;
-
-  //     percentageControllers[index] = TextEditingController(
-  //       text: initialScore.toString(),
-  //     );
-  //     percentageValues[index] = initialScore;
-
-  //     percentageControllers[index]!.addListener(() {
-  //       final text = percentageControllers[index]!.text;
-  //       final value = int.tryParse(text);
-  //       setState(() {
-  //         percentageValues[index] = (value != null && value <= 100) ? value : 0;
-  //       });
-  //     });
-  //   }
-
-  //   final status = selectedStatus[index];
-  //   final int progress = percentageValues[index] ?? 0;
-
-  //   double progressFraction;
-  //   Color progressColor;
-
-  //   if (status == PgsStatus.onGoing &&
-  //       (percentageControllers[index]?.text.isEmpty ?? true)) {
-  //     progressFraction = 0.0;
-  //     progressColor = Colors.transparent;
-  //   } else if (progress == 100) {
-  //     progressFraction = 1.0;
-  //     progressColor = Colors.green;
-  //   } else if (progress == 0) {
-  //     progressFraction = 1.0;
-  //     progressColor = Colors.red;
-  //   } else {
-  //     progressFraction = progress / 100.0;
-  //     progressColor = Colors.orange;
-  //   }
-
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child:
-  //         _hasEditPermission
-  //             ? Column(
-  //               mainAxisSize: MainAxisSize.min,
-  //               children: [
-  //                 Stack(
-  //                   alignment: Alignment.center,
-  //                   children: [
-  //                     SizedBox(
-  //                       width: 60,
-  //                       height: 60,
-  //                       child: CircularProgressIndicator(
-  //                         value: progressFraction,
-  //                         strokeWidth: 6,
-  //                         backgroundColor: Colors.grey[300],
-  //                         valueColor: AlwaysStoppedAnimation<Color>(
-  //                           progressColor,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     SizedBox(
-  //                       width: 40,
-  //                       height: 40,
-  //                       child: Stack(
-  //                         alignment: Alignment.center,
-  //                         children: [
-  //                           TextField(
-  //                             onTap: () {
-  //                               if (selectedStatus[index] ==
-  //                                   PgsStatus.onGoing) {
-  //                                 MotionToast.info(
-  //                                   title: const Text("Ongoing Status"),
-  //                                   description: const Text(
-  //                                     "Enter a score between 1 to 99 only.",
-  //                                   ),
-  //                                   toastDuration: const Duration(seconds: 2),
-  //                                   toastAlignment: Alignment.center,
-  //                                   borderRadius: 10.0,
-  //                                 ).show(context);
-  //                               }
-  //                             },
-  //                             controller: percentageControllers[index],
-  //                             textAlign: TextAlign.center,
-  //                             style: const TextStyle(
-  //                               fontSize: 12,
-  //                               fontWeight: FontWeight.bold,
-  //                             ),
-  //                             keyboardType: TextInputType.number,
-  //                             readOnly:
-  //                                 progress == 100 ||
-  //                                 (progress == 0 &&
-  //                                     selectedStatus[index] !=
-  //                                         PgsStatus.onGoing),
-  //                             decoration: InputDecoration(
-  //                               border: InputBorder.none,
-  //                               contentPadding: const EdgeInsets.symmetric(
-  //                                 horizontal: 8,
-  //                                 vertical: 12,
-  //                               ),
-  //                               isDense: true,
-  //                             ),
-  //                             inputFormatters: [
-  //                               FilteringTextInputFormatter.digitsOnly,
-  //                               LengthLimitingTextInputFormatter(3),
-  //                               if (selectedStatus[index] == PgsStatus.onGoing)
-  //                                 RangeInputFormatter(1, 99)
-  //                               else
-  //                                 RangeInputFormatter(0, 100),
-  //                             ],
-  //                           ),
-  //                           Positioned(
-  //                             right: 0.5,
-  //                             child: Text(
-  //                               '%',
-  //                               style: const TextStyle(
-  //                                 fontSize: 12,
-  //                                 fontWeight: FontWeight.bold,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 gap16px,
-  //                 Center(
-  //                   child: TextButton(
-  //                     onPressed: () {
-  //                       final pgsDeliverableId =
-  //                           deliverableList[index]['pgsDeliverableId'];
-  //                       if (pgsDeliverableId != null) {
-  //                         showFormDialog(pgsDeliverableId);
-  //                         setState(() {
-  //                           fetchScoreHistory();
-  //                           fetchFilteredPgsList();
-  //                         });
-  //                       }
-  //                     },
-  //                     child: Text(
-  //                       textAlign: TextAlign.center,
-  //                       'View Score History',
-  //                       style: TextStyle(
-  //                         fontSize: 10,
-  //                         color: primaryLightColor,
-  //                         fontWeight: FontWeight.w600,
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ),
-  //               ],
-  //             )
-  //             : Column(
-  //               mainAxisSize: MainAxisSize.min,
-  //               children: [
-  //                 Stack(
-  //                   alignment: Alignment.center,
-  //                   children: [
-  //                     SizedBox(
-  //                       width: 60,
-  //                       height: 60,
-  //                       child: CircularProgressIndicator(
-  //                         value:
-  //                             (progress == 0 || progress == 100)
-  //                                 ? 1.0
-  //                                 : progress / 100.0,
-  //                         strokeWidth: 6,
-  //                         backgroundColor: Colors.grey[300],
-  //                         valueColor: AlwaysStoppedAnimation<Color>(
-  //                           progress == 100 ? Colors.green : Colors.red,
-  //                         ),
-  //                       ),
-  //                     ),
-
-  //                     SizedBox(
-  //                       width: 40,
-  //                       height: 40,
-  //                       child: Center(
-  //                         child: Text(
-  //                           '$progress%',
-  //                           style: const TextStyle(
-  //                             fontSize: 12,
-  //                             fontWeight: FontWeight.bold,
-  //                           ),
-  //                           textAlign: TextAlign.center,
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 gap16px,
-  //                 Center(
-  //                   child: TextButton(
-  //                     onPressed: () {
-  //                       final pgsDeliverableId =
-  //                           deliverableList[index]['pgsDeliverableId'];
-  //                       if (pgsDeliverableId != null) {
-  //                         showFormDialog(pgsDeliverableId);
-  //                       }
-  //                     },
-  //                     child: Text(
-  //                       textAlign: TextAlign.center,
-  //                       'View Score History',
-  //                       style: TextStyle(
-  //                         fontSize: 10,
-  //                         color: primaryLightColor,
-  //                         fontWeight: FontWeight.w600,
-  //                       ),
-  //                     ),
-  //                   ),
-  //                 ),
-  //               ],
-  //             ),
-  //   );
-  // }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -868,7 +586,7 @@ class DeliverableStatusMonitoringPageState
                     Icon(Icons.description_outlined, color: primaryTextColor),
                     SizedBox(width: 5),
                     Text(
-                      'Manage Reports',
+                      'Manage Auditor Reports',
                       style: TextStyle(color: primaryTextColor),
                     ),
                   ],
@@ -1482,95 +1200,6 @@ class DeliverableStatusMonitoringPageState
                   ],
                 ),
               ),
-
-              // PermissionWidget(
-              //   allowedRoles: [
-              //     PermissionString.pgsAuditor,
-              //     PermissionString.roleAdmin,
-              //   ],
-              //   child: Padding(
-              //     padding: const EdgeInsets.all(32.0),
-              //     child: Row(
-              //       mainAxisAlignment: MainAxisAlignment.end,
-              //       children: [
-              //         ElevatedButton(
-              //           onPressed: () async {
-              //             bool? confirmAction = await showDialog<bool>(
-              //               context: context,
-              //               builder: (context) {
-              //                 return AlertDialog(
-              //                   title: Text("Confirm Save"),
-              //                   content: Text(
-              //                     "Are you sure you want to save this record?",
-              //                   ),
-              //                   actions: [
-              //                     TextButton(
-              //                       onPressed:
-              //                           () => Navigator.pop(context, false),
-              //                       child: Text(
-              //                         "No",
-              //                         style: TextStyle(color: primaryColor),
-              //                       ),
-              //                     ),
-              //                     TextButton(
-              //                       onPressed: () {
-              //                         {
-              //                           Navigator.pop(context, true);
-              //                         }
-              //                       },
-              //                       child: Text(
-              //                         "Yes",
-              //                         style: TextStyle(color: primaryColor),
-              //                       ),
-              //                     ),
-              //                   ],
-              //                 );
-              //               },
-              //             );
-              //             if (confirmAction == true) {
-              //               final dataToSave = _prepareSaveData();
-
-              //               try {
-              //                 await _deliverableStatusMonitoring.saveData(
-              //                   dataToSave,
-              //                 );
-
-              //                 if (mounted) {
-              //                   MotionToast.success(
-              //                     title: const Text("Success"),
-              //                     description: const Text(
-              //                       "Data saved successfully!",
-              //                     ),
-              //                     toastAlignment: Alignment.topCenter,
-              //                   ).show(context);
-              //                 }
-              //               } catch (e) {
-              //                 debugPrint("Error saving data: $e");
-              //                 if (mounted) {
-              //                   MotionToast.error(
-              //                     title: const Text("Failed"),
-              //                     description: Text("Error: $e"),
-              //                     toastAlignment: Alignment.topCenter,
-              //                   ).show(context);
-              //                 }
-              //               }
-              //             }
-              //           },
-              //           style: ElevatedButton.styleFrom(
-              //             backgroundColor: primaryColor,
-              //             shape: RoundedRectangleBorder(
-              //               borderRadius: BorderRadius.circular(4),
-              //             ),
-              //           ),
-              //           child: Text(
-              //             'Save',
-              //             style: TextStyle(color: Colors.white),
-              //           ),
-              //         ),
-              //       ],
-              //     ),
-              //   ),
-              // ),
             ],
           );
         },
@@ -1842,185 +1471,124 @@ class DeliverableStatusMonitoringPageState
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return AlertDialog(
-          insetPadding: const EdgeInsets.all(20),
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          contentPadding: EdgeInsets.zero,
-          content: SizedBox(
-            width: 900,
-            child: SingleChildScrollView(child: _buildReportCard()),
-          ),
-
-          actions: [
-            TextButton(
-              onPressed: () {
-                _findingsController.clear();
-                _recommendationsController.clear();
-                _conclusionsController.clear();
-                _selectedOffice = null;
-                _selectedPeriod = null;
-
-                Navigator.pop(context);
-              },
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              insetPadding: const EdgeInsets.all(20),
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              contentPadding: EdgeInsets.zero,
+              content: SizedBox(
+                width: 900,
+                child: SingleChildScrollView(
+                  child: _buildReportCard(setDialogState),
                 ),
               ),
-              child: Text('Cancel', style: TextStyle(color: primaryColor)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              onPressed: () async {
-                if (_formKey.currentState!.validate()) {
-                  final filter = PgsFilter(
-                    int.tryParse(_selectedPeriod ?? '0') ?? 0,
-                    int.tryParse(_selectedOffice ?? '0') ?? 0,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                  );
 
-                  final queryParams =
-                      filter.toJson()
-                        ..removeWhere((key, value) => value == null);
-
-                  try {
-                    final response = await AuthenticatedRequest.get(
-                      dio,
-                      ApiEndpoint().filterBy,
-                      queryParameters: queryParams,
-                    );
-
-                    if (response.statusCode == 200) {
-                      final data = response.data;
-                      final items = data["items"] as List<dynamic>? ?? [];
-
-                      if (items.isEmpty) {
-                        MotionToast.warning(
-                          title: const Text("Warning"),
-                          description: const Text(
-                            "No deliverables found for the selected Period and Office. Cannot create report.",
-                          ),
-                          toastAlignment: Alignment.topCenter,
-                        ).show(context);
-                        return;
-                      }
-                    }
-                  } catch (e) {
-                    debugPrint("Error checking deliverables: $e");
-                    MotionToast.error(
-                      title: const Text("Error"),
-                      description: Text("Failed to check deliverables: $e"),
-                      toastAlignment: Alignment.topCenter,
-                    ).show(context);
-                    return;
-                  }
-                  try {
-                    final existingReport = await _summaryNarrativeService
-                        .checkExistingSummaryNarrative(
-                          int.tryParse(_selectedPeriod ?? '0') ?? 0,
-                          int.tryParse(_selectedOffice ?? '0') ?? 0,
-                        );
-
-                    if (existingReport != null) {
-                      MotionToast.warning(
-                        title: const Text("Warning"),
-                        description: const Text(
-                          "Report for this Office and Period already exists. Please update if needed.",
-                        ),
-                        toastAlignment: Alignment.topCenter,
-                      ).show(context);
-                      return;
-                    }
-                  } catch (e) {
-                    debugPrint("Error checking existing report: $e");
-                    MotionToast.error(
-                      title: const Text("Error"),
-                      description: Text("Failed to check existing report: $e"),
-                      toastAlignment: Alignment.topCenter,
-                    ).show(context);
-                    return;
-                  }
-
-                  bool? confirmAction = await showDialog<bool>(
-                    context: context,
-                    builder: (context) {
-                      return AlertDialog(
-                        title: const Text("Confirm Update"),
-                        content: const Text(
-                          "Are you sure you want to update this record?",
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: Text(
-                              "No",
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pop(context, true);
-                            },
-                            child: Text(
-                              "Yes",
-                              style: TextStyle(color: primaryColor),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  );
-
-                  if (confirmAction == true) {
-                    final summaryNarrative = PgsSummaryNarrative(
-                      0,
-                      int.tryParse(_selectedPeriod ?? '0') ?? 0,
-                      _findingsController.text,
-                      _recommendationsController.text,
-                      _conclusionsController.text,
-                      int.tryParse(_selectedOffice ?? '0') ?? 0,
-                      isDeleted: false,
-                      rowVersion: '',
-                    );
-
-                    await _summaryNarrativeService.addSummaryNarrative(
-                      summaryNarrative,
-                    );
+              actions: [
+                TextButton(
+                  onPressed: () {
                     _findingsController.clear();
                     _recommendationsController.clear();
                     _conclusionsController.clear();
                     _selectedOffice = null;
                     _selectedPeriod = null;
-                    MotionToast.success(
-                      description: const Text("Saved Successfully"),
-                      toastAlignment: Alignment.topCenter,
-                    ).show(context);
+                    officeId = null;
+                    periodId = null;
                     Navigator.pop(context);
-                  }
-                }
-              },
-              child: const Text('Save', style: TextStyle(color: Colors.white)),
-            ),
-          ],
+                  },
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  child: Text('Cancel', style: TextStyle(color: primaryColor)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                  onPressed: () async {
+                    if (_formKey.currentState!.validate()) {
+                      bool? confirmAction = await showDialog<bool>(
+                        context: context,
+                        builder: (context) {
+                          return AlertDialog(
+                            title: const Text("Confirm Update"),
+                            content: const Text(
+                              "Are you sure you want to update this record?",
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(
+                                  "No",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.pop(context, true);
+                                },
+                                child: Text(
+                                  "Yes",
+                                  style: TextStyle(color: primaryColor),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+
+                      if (confirmAction == true) {
+                        final summaryNarrative = PgsSummaryNarrative(
+                          0,
+                          int.tryParse(_selectedPeriod ?? '0') ?? 0,
+                          _findingsController.text,
+                          _recommendationsController.text,
+                          _conclusionsController.text,
+                          int.tryParse(_selectedOffice ?? '0') ?? 0,
+                          isDeleted: false,
+                          rowVersion: '',
+                        );
+
+                        await _summaryNarrativeService.addSummaryNarrative(
+                          summaryNarrative,
+                        );
+                        _findingsController.clear();
+                        _recommendationsController.clear();
+                        _conclusionsController.clear();
+                        _selectedOffice = null;
+                        _selectedPeriod = null;
+                        officeId = null;
+                        periodId = null;
+                        MotionToast.success(
+                          description: const Text("Saved Successfully"),
+                          toastAlignment: Alignment.topCenter,
+                        ).show(context);
+                        Navigator.pop(context);
+                      }
+                    }
+                  },
+                  child: const Text(
+                    'Save',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildReportCard() {
+  Widget _buildReportCard(Function setDialogState) {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -2054,7 +1622,16 @@ class DeliverableStatusMonitoringPageState
                       children: [
                         IconButton(
                           icon: const Icon(Icons.close, color: Colors.black87),
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () {
+                            _findingsController.clear();
+                            _recommendationsController.clear();
+                            _conclusionsController.clear();
+                            _selectedOffice = null;
+                            _selectedPeriod = null;
+                            officeId = null;
+                            periodId = null;
+                            Navigator.pop(context);
+                          },
                         ),
                       ],
                     ),
@@ -2177,8 +1754,11 @@ class DeliverableStatusMonitoringPageState
                                             ),
 
                                     onChanged: (value) {
-                                      setState(() {
+                                      setDialogState(() {
                                         _selectedPeriod = value?.id.toString();
+                                        _checkDeliverablesAvailability(
+                                          setDialogState,
+                                        );
                                       });
                                     },
                                     validator: (value) {
@@ -2293,8 +1873,11 @@ class DeliverableStatusMonitoringPageState
                                             ),
 
                                     onChanged: (value) {
-                                      setState(() {
+                                      setDialogState(() {
                                         _selectedOffice = value?.id.toString();
+                                        _checkDeliverablesAvailability(
+                                          setDialogState,
+                                        );
                                       });
                                     },
                                     validator: (value) {
@@ -2332,7 +1915,16 @@ class DeliverableStatusMonitoringPageState
                           ],
                         ),
                       ),
-
+                      if (!_hasAvailableDeliverables &&
+                          _selectedOffice != null &&
+                          _selectedPeriod != null)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Text(
+                            "No available deliverables for the selected office and period.",
+                            style: TextStyle(color: Colors.red, fontSize: 10),
+                          ),
+                        ),
                       const SizedBox(height: 32),
                       _buildReportSection(
                         icon: Icons.error_outline_rounded,
@@ -2341,6 +1933,7 @@ class DeliverableStatusMonitoringPageState
                         description:
                             "These will be displayed as separate points in the report.",
                         controller: _findingsController,
+                        disabled: !_hasAvailableDeliverables,
                       ),
                       const SizedBox(height: 24),
                       _buildReportSection(
@@ -2350,6 +1943,7 @@ class DeliverableStatusMonitoringPageState
                         description:
                             "These should summarize your analysis and insights.",
                         controller: _conclusionsController,
+                        disabled: !_hasAvailableDeliverables,
                       ),
                       const SizedBox(height: 24),
                       _buildReportSection(
@@ -2359,6 +1953,7 @@ class DeliverableStatusMonitoringPageState
                         description:
                             "These should be actionable steps for improvement.",
                         controller: _recommendationsController,
+                        disabled: !_hasAvailableDeliverables,
                       ),
                     ],
                   ),
@@ -2371,12 +1966,88 @@ class DeliverableStatusMonitoringPageState
     );
   }
 
+  // Widget _buildReportSection({
+  //   required String title,
+  //   required String description,
+  //   required TextEditingController controller,
+  //   IconData icon = Icons.description_outlined,
+  //   Color iconColor = Colors.black54,
+  // }) {
+  //   return Align(
+  //     alignment: Alignment.topCenter,
+  //     child: ConstrainedBox(
+  //       constraints: const BoxConstraints(maxWidth: 900),
+  //       child: Column(
+  //         crossAxisAlignment: CrossAxisAlignment.start,
+  //         children: [
+  //           Row(
+  //             children: [
+  //               Icon(icon, color: iconColor, size: 20),
+  //               const SizedBox(width: 6),
+  //               Text(
+  //                 title,
+  //                 style: const TextStyle(
+  //                   fontSize: 18,
+  //                   fontWeight: FontWeight.w600,
+  //                   color: Colors.black87,
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //           const SizedBox(height: 6),
+  //           Text(
+  //             description,
+  //             style: const TextStyle(fontSize: 13, color: Colors.black54),
+  //           ),
+  //           const SizedBox(height: 12),
+  //           Container(
+  //             constraints: BoxConstraints(minHeight: 120, maxHeight: 180),
+  //             width: double.infinity,
+  //             padding: const EdgeInsets.symmetric(horizontal: 12),
+  //             decoration: BoxDecoration(
+  //               color: Colors.grey.shade100,
+  //               borderRadius: BorderRadius.circular(8),
+  //               border: Border.all(color: Colors.transparent),
+  //             ),
+  //             child: Scrollbar(
+  //               thumbVisibility: true,
+  //               child: SingleChildScrollView(
+  //                 child: SizedBox(
+  //                   width: double.infinity,
+  //                   child: TextFormField(
+  //                     controller: controller,
+  //                     style: const TextStyle(fontSize: 14),
+  //                     maxLines: null,
+  //                     autovalidateMode: AutovalidateMode.onUserInteraction,
+  //                     decoration: const InputDecoration(
+  //                       border: InputBorder.none,
+  //                       hintText: "Type here...",
+  //                       hintStyle: TextStyle(color: Colors.grey),
+  //                     ),
+  //                     validator: (value) {
+  //                       if (value == null || value.trim().isEmpty) {
+  //                         return 'Required';
+  //                       }
+  //                       return null;
+  //                     },
+  //                   ),
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //   );
+  // }
+
   Widget _buildReportSection({
     required String title,
     required String description,
     required TextEditingController controller,
     IconData icon = Icons.description_outlined,
     Color iconColor = Colors.black54,
+    bool disabled = false,
   }) {
     return Align(
       alignment: Alignment.topCenter,
@@ -2424,10 +2095,12 @@ class DeliverableStatusMonitoringPageState
                       style: const TextStyle(fontSize: 14),
                       maxLines: null,
                       autovalidateMode: AutovalidateMode.onUserInteraction,
-                      decoration: const InputDecoration(
+                      readOnly: disabled,
+                      decoration: InputDecoration(
                         border: InputBorder.none,
                         hintText: "Type here...",
                         hintStyle: TextStyle(color: Colors.grey),
+                        disabledBorder: InputBorder.none,
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
