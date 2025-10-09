@@ -16,6 +16,7 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 import '../../common_services/common_service.dart';
 import '../../user/models/user.dart';
 
@@ -849,6 +850,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: mainBgColor,
           title: Text("Confirm Delete"),
           content: Text(
             "Are you sure you want to delete this Auditor Office? This action cannot be undone.",
@@ -862,6 +864,11 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
               onPressed: () async {
                 Navigator.pop(context);
                 await _auditorOfficeSevice.deleteAuditorOffice(id);
+                await fetchAuditorOffice();
+                MotionToast.success(
+                  toastAlignment: Alignment.topCenter,
+                  description: Text('Auditor Office deleted successfully'),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,

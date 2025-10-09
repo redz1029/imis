@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +12,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 import '../../widgets/custom_toggle.dart';
 
 class AuditorPage extends StatefulWidget {
@@ -122,12 +125,13 @@ class AuditorMainPageState extends State<AuditorPage> {
 
   void showDeleteDialog(String id) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text("Confirm Delete"),
           content: Text(
-            "Are you sure you want to delete this Role? This action cannot be undone.",
+            "Are you sure you want to delete this Auditor? This action cannot be undone.",
           ),
           actions: [
             TextButton(
@@ -137,7 +141,16 @@ class AuditorMainPageState extends State<AuditorPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await _auditorService.deleteAuditor(id);
+                try {
+                  await _auditorService.deleteAuditor(id);
+                  await fetchAuditors();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Auditor deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Delete Role'));
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,

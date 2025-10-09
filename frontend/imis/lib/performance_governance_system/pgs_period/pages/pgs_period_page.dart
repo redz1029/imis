@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
@@ -9,6 +11,7 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:intl/intl.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class PgsPeriodPage extends StatefulWidget {
   const PgsPeriodPage({super.key});
@@ -135,6 +138,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
 
   void showDeleteDialog(String id) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -150,7 +154,16 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                // await deletePGSPeriod(id);
+                try {
+                  await _pgsPeriodService.deletePeriod(id);
+                  await fetchPGSPeriods();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Period deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Delete Role'));
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,

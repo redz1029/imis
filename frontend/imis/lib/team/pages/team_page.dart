@@ -412,9 +412,11 @@ class TeamPageState extends State<TeamPage> {
 
   void showDeleteDialog(String id) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: mainBgColor,
           title: Text("Confirm Delete"),
           content: Text(
             "Are you sure you want to delete this Team? This action cannot be undone.",
@@ -428,11 +430,8 @@ class TeamPageState extends State<TeamPage> {
               onPressed: () async {
                 Navigator.pop(context);
                 try {
-                  final teamService = TeamService(dio);
-                  await teamService.deleteTeam(id);
-                  setState(() {
-                    fetchTeam();
-                  });
+                  await _teamService.deleteTeam(id);
+                  await fetchTeam();
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
                     description: Text('Team deleted successfully'),

@@ -36,4 +36,9 @@ class KeyResultAreaService {
       throw Exception('Failed to create kra');
     }
   }
+
+  Future<void> deleteKra(String kraId) async {
+    final url = '${ApiEndpoint().keyresult}/$kraId';
+    await AuthenticatedRequest.delete(dio, url);
+  }
 }

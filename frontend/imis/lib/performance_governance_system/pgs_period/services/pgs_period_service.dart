@@ -36,4 +36,9 @@ class PgsPeriodService {
       throw Exception('Failed to create pgsPeriod');
     }
   }
+
+  Future<void> deletePeriod(String period) async {
+    final url = '${ApiEndpoint().pgsperiod}/$period';
+    await AuthenticatedRequest.delete(dio, url);
+  }
 }

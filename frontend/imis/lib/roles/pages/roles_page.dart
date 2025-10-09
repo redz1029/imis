@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
@@ -506,9 +508,11 @@ class RolesPageState extends State<RolesPage> {
 
   void showDeleteDialog(String id) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: mainBgColor,
           title: Text("Confirm Delete"),
           content: Text(
             "Are you sure you want to delete this Role? This action cannot be undone.",
@@ -524,6 +528,10 @@ class RolesPageState extends State<RolesPage> {
                 try {
                   await _rolesService.deleteRole(id);
                   await fetchRoles();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Role deleted successfully'),
+                  ).show(context);
                 } catch (e) {
                   MotionToast.error(description: Text('Failed to Delete Role'));
                 }
