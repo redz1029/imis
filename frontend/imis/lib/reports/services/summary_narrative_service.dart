@@ -46,10 +46,58 @@ class SummaryNarrativeService {
     );
   }
 
+  Future<PageList<PgsSummaryNarrative>> getSummaryNarrativeHeadAuditor({
+    int page = 1,
+    int pageSize = 15,
+    String? searchQuery,
+    int? periodId,
+    int? officeId,
+  }) async {
+    final paginationUtil = PaginationUtil(dio);
+    UserRegistration? user = await AuthUtil.fetchLoggedUser();
+    if (user == null) {
+      throw Exception("User not logged in");
+    }
+
+    final queryParams = <String, String>{};
+    if (periodId != null) queryParams['periodId'] = periodId.toString();
+    if (officeId != null) queryParams['office'] = officeId.toString();
+
+    final queryString = queryParams.entries
+        .map((e) => '${e.key}=${e.value}')
+        .join('&');
+
+    final endpoint =
+        "${ApiEndpoint().summaryNarrativeAuditorHead}/byHeadAuditor${queryString.isNotEmpty ? '?$queryString' : ''}";
+
+    return await paginationUtil.fetchPaginatedData<PgsSummaryNarrative>(
+      endpoint: endpoint,
+      page: page,
+      pageSize: pageSize,
+      searchQuery: searchQuery,
+      fromJson: (json) => PgsSummaryNarrative.fromJson(json),
+    );
+  }
+
   Future<void> addSummaryNarrative(
     PgsSummaryNarrative pgsSummaryNarrative,
   ) async {
     final url = ApiEndpoint().summaryNarrative;
+    final Map<String, dynamic> requestData = pgsSummaryNarrative.toJson();
+    final response = await AuthenticatedRequest.post(
+      dio,
+      url,
+      data: requestData,
+    );
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to create summary narrative');
+    }
+  }
+
+  Future<void> addSummaryNarrativeAuditorHead(
+    PgsSummaryNarrative pgsSummaryNarrative,
+  ) async {
+    final url = ApiEndpoint().summaryNarrativeAuditorHead;
     final Map<String, dynamic> requestData = pgsSummaryNarrative.toJson();
     final response = await AuthenticatedRequest.post(
       dio,
