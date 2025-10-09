@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +11,9 @@ import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class ViewSummaryNarrativeReportPage extends StatefulWidget {
   const ViewSummaryNarrativeReportPage({super.key});
@@ -25,9 +29,11 @@ class ViewSummaryNarrativeReportPageState
   final _dateConverter = const LongDateOnlyConverter();
   final _summaryNarrativeService = SummaryNarrativeService(Dio());
   List<PgsSummaryNarrative> reports = [];
-  List<TextEditingController> _findingsControllers = [];
-  List<TextEditingController> _conclusionControllers = [];
-  List<TextEditingController> _recommendationControllers = [];
+  final TextEditingController _findingsControllers = TextEditingController();
+  final TextEditingController _conclusionControllers = TextEditingController();
+  final TextEditingController _recommendationControllers =
+      TextEditingController();
+  final TextEditingController _remakrsController = TextEditingController();
   List<PgsPeriod> _periods = [];
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
@@ -39,10 +45,18 @@ class ViewSummaryNarrativeReportPageState
   List<PgsSummaryNarrative> filteredList = [];
   List<Office> officeList = [];
   Map<int, String> officeMap = {};
+  String? selectedPeriod;
+  bool isMenuOpenPeriod = false;
+  String selectedPeriodText = "Select Period";
+  final _formKey = GlobalKey<FormState>();
+  int selectedTabIndex = 0;
+  String? _selectedOffice;
+
+  final List<String> tabs = ["View Auditor Reports", "View Overall Reports"];
   @override
   void initState() {
     super.initState();
-    _fetchReports();
+    // _fetchReports();
     () async {
       final period = await _commonService.fetchPgsPeriod();
       final offices = await _commonService.fetchOffices();
@@ -89,42 +103,6 @@ class ViewSummaryNarrativeReportPageState
     }
   }
 
-  Future<void> _fetchReports() async {
-    try {
-      final List rawNarratives =
-          await _summaryNarrativeService.getSummaryNarratives();
-      final List<PgsSummaryNarrative> narratives =
-          rawNarratives.map((n) => PgsSummaryNarrative.fromJson(n)).toList();
-
-      setState(() {
-        reports = narratives;
-        _findingsControllers =
-            narratives
-                .map(
-                  (report) =>
-                      TextEditingController(text: report.findings ?? ''),
-                )
-                .toList();
-        _conclusionControllers =
-            narratives
-                .map(
-                  (report) =>
-                      TextEditingController(text: report.conclusion ?? ''),
-                )
-                .toList();
-        _recommendationControllers =
-            narratives
-                .map(
-                  (report) =>
-                      TextEditingController(text: report.recommendation ?? ''),
-                )
-                .toList();
-      });
-    } catch (e) {
-      debugPrint("Error fetching narratives: $e");
-    }
-  }
-
   String getPeriodLabel(int periodId) {
     final period = _periods.firstWhere(
       (p) => p.id == periodId,
@@ -152,6 +130,56 @@ class ViewSummaryNarrativeReportPageState
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Padding(
+                  padding: const EdgeInsets.only(left: 16, top: 8, right: 16),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE9E9EC), // background of tabs
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.all(4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(tabs.length, (index) {
+                        final bool isSelected = selectedTabIndex == index;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 6.0),
+                          child: GestureDetector(
+                            onTap:
+                                () => setState(() => selectedTabIndex = index),
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 200),
+                              decoration: BoxDecoration(
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : Colors.transparent,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 10,
+                                horizontal: 18,
+                              ),
+                              child: Text(
+                                tabs[index],
+                                style: TextStyle(
+                                  color:
+                                      isSelected
+                                          ? primaryTextColor
+                                          : Colors.grey.shade700,
+
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ),
+                gap24px,
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -188,9 +216,113 @@ class ViewSummaryNarrativeReportPageState
                         ),
                       ),
                     ),
+
+                    Flexible(fit: FlexFit.tight, child: Container()),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              PopupMenuButton<String>(
+                                color: mainBgColor,
+                                offset: const Offset(0, 30),
+                                onCanceled: () {
+                                  setState(() {
+                                    isMenuOpenPeriod = false;
+                                  });
+                                },
+                                onOpened: () {
+                                  setState(() {
+                                    isMenuOpenPeriod = true;
+                                  });
+                                },
+                                onSelected: (String value) {
+                                  setState(() {
+                                    selectedPeriod = value;
+
+                                    final selected = _periods.firstWhere(
+                                      (period) =>
+                                          period.id.toString() ==
+                                          selectedPeriod,
+                                      orElse:
+                                          () => PgsPeriod(
+                                            0,
+                                            false,
+                                            DateTime.now(),
+                                            DateTime.now(),
+                                            'remarks',
+                                          ),
+                                    );
+
+                                    selectedPeriodText =
+                                        "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
+                                  });
+                                },
+                                itemBuilder: (BuildContext context) {
+                                  return _periods.map<PopupMenuItem<String>>((
+                                    period,
+                                  ) {
+                                    final formattedStart = _dateConverter
+                                        .toJson(period.startDate);
+                                    final formattedEnd = _dateConverter.toJson(
+                                      period.endDate,
+                                    );
+
+                                    return PopupMenuItem<String>(
+                                      value: period.id.toString(),
+                                      child: Text(
+                                        '$formattedStart - $formattedEnd',
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList();
+                                },
+                                child: FilterButton(
+                                  label: selectedPeriodText,
+                                  isActive: isMenuOpenPeriod,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          onPressed:
+                              selectedPeriod != null
+                                  ? () async {
+                                    showRemarksDialog();
+                                  }
+                                  : null,
+
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.add, color: Colors.white),
+                              SizedBox(width: 5),
+                              Text(
+                                'Create Overall Report',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
+
                 Expanded(
                   child: DataTable2(
                     columnSpacing: isMobile ? 8 : 12,
@@ -249,7 +381,7 @@ class ViewSummaryNarrativeReportPageState
                                     IconButton(
                                       icon: const Icon(Icons.edit),
                                       onPressed: () {
-                                        showReportDialog(summary, index);
+                                        showReportDialog(summary);
                                       },
                                     ),
                                     Tooltip(
@@ -286,7 +418,6 @@ class ViewSummaryNarrativeReportPageState
                         }).toList(),
                   ),
                 ),
-
                 Container(
                   padding: EdgeInsets.all(10),
                   color: secondaryColor,
@@ -318,7 +449,11 @@ class ViewSummaryNarrativeReportPageState
     );
   }
 
-  void showReportDialog(PgsSummaryNarrative report, int index) {
+  void showReportDialog(PgsSummaryNarrative report) {
+    _findingsControllers.text = report.findings ?? '';
+    _conclusionControllers.text = report.conclusion ?? '';
+    _recommendationControllers.text = report.recommendation ?? '';
+
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -326,13 +461,13 @@ class ViewSummaryNarrativeReportPageState
         return Dialog(
           insetPadding: EdgeInsets.all(20),
           backgroundColor: Colors.transparent,
-          child: SingleChildScrollView(child: _buildReportCard(report, index)),
+          child: SingleChildScrollView(child: _buildReportCard(report)),
         );
       },
     );
   }
 
-  Widget _buildReportCard(PgsSummaryNarrative report, int index) {
+  Widget _buildReportCard(PgsSummaryNarrative report) {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -475,7 +610,7 @@ class ViewSummaryNarrativeReportPageState
                       icon: Icons.error_outline_rounded,
                       iconColor: primaryTextColor,
                       title: "Key Findings",
-                      controller: _findingsControllers[index],
+                      controller: _findingsControllers,
                       decorationColor: Color(0xFFF5FBFF),
                       borderColor: Colors.blue[100],
                     ),
@@ -484,7 +619,7 @@ class ViewSummaryNarrativeReportPageState
                       icon: Icons.check_circle_outline,
                       iconColor: primaryTextColor,
                       title: "Conclusions",
-                      controller: _conclusionControllers[index],
+                      controller: _conclusionControllers,
                       decorationColor: Color(0xFFF6FFF8),
                       borderColor: Colors.green[100],
                     ),
@@ -493,7 +628,7 @@ class ViewSummaryNarrativeReportPageState
                       title: "Recommendations",
                       icon: Icons.trending_up,
                       iconColor: primaryTextColor,
-                      controller: _recommendationControllers[index],
+                      controller: _recommendationControllers,
                       decorationColor: Color(0xFFFFFAF3),
                       borderColor: Colors.orange[100],
                     ),
@@ -507,6 +642,209 @@ class ViewSummaryNarrativeReportPageState
     );
   }
 
+  void showRemarksDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          elevation: 0,
+          insetPadding: const EdgeInsets.all(20),
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          contentPadding: EdgeInsets.zero,
+          content: SizedBox(
+            width: 900,
+            child: SingleChildScrollView(child: _buildRemarksCard()),
+          ),
+
+          actions: [
+            TextButton(
+              onPressed: () {
+                _remakrsController.clear();
+                _selectedOffice = null;
+                selectedPeriod = null;
+
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Cancel', style: TextStyle(color: primaryColor)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              onPressed: () async {
+                if (_formKey.currentState!.validate()) {
+                  bool? confirmAction = await showDialog<bool>(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        title: const Text("Confirm Update"),
+                        content: const Text(
+                          "Are you sure you want to update this record?",
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              "No",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context, true);
+                            },
+                            child: Text(
+                              "Yes",
+                              style: TextStyle(color: primaryColor),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+
+                  if (confirmAction == true) {
+                    final summaryNarrative = PgsSummaryNarrative(
+                      0,
+                      int.tryParse(selectedPeriod ?? '0') ?? 0,
+                      _findingsControllers.text,
+                      _remakrsController.text,
+                      _conclusionControllers.text,
+                      null,
+                      isDeleted: false,
+                      rowVersion: '',
+                    );
+
+                    await _summaryNarrativeService.addSummaryNarrative(
+                      summaryNarrative,
+                    );
+                    _remakrsController.clear();
+
+                    _selectedOffice = null;
+
+                    selectedPeriod = null;
+                    MotionToast.success(
+                      description: const Text("Saved Successfully"),
+                      toastAlignment: Alignment.topCenter,
+                    ).show(context);
+                    Navigator.pop(context);
+                  }
+                }
+              },
+              child: const Text('Save', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRemarksCard() {
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 900, maxHeight: 500),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey.shade400),
+          ),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 16,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.close,
+                              color: Colors.black87,
+                            ),
+                            onPressed: () {
+                              _remakrsController.clear();
+
+                              Navigator.of(context).pop();
+                            },
+                          ),
+                        ],
+                      ),
+                      gap16px,
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.insert_drive_file_outlined,
+                            color: Colors.grey[700],
+                          ),
+                          const SizedBox(width: 8),
+
+                          Text(
+                            'Summary Narrative Report - $selectedPeriod',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 24),
+                      _buildReportSection(
+                        title: "Remarks/Recommendations",
+                        icon: Icons.trending_up,
+                        iconColor: primaryTextColor,
+                        controller: _remakrsController,
+                        decorationColor: Color(0xFFFFFAF3),
+                        borderColor: Colors.orange[100],
+                        readOnly: false,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildReportSection({
     required String title,
     required TextEditingController controller,
@@ -514,6 +852,7 @@ class ViewSummaryNarrativeReportPageState
     Color iconColor = Colors.black54,
     Color? decorationColor,
     Color? borderColor,
+    bool readOnly = true,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -532,8 +871,6 @@ class ViewSummaryNarrativeReportPageState
             ),
           ],
         ),
-        const SizedBox(height: 6),
-
         const SizedBox(height: 12),
         Container(
           constraints: const BoxConstraints(minHeight: 100, maxHeight: 300),
@@ -546,16 +883,22 @@ class ViewSummaryNarrativeReportPageState
           child: Scrollbar(
             thumbVisibility: true,
             child: SingleChildScrollView(
-              child: TextField(
-                readOnly: true,
+              child: TextFormField(
+                readOnly: readOnly,
                 controller: controller,
                 style: TextStyle(fontSize: 14),
-                maxLines: null,
+                maxLines: 6,
                 decoration: const InputDecoration(
                   border: InputBorder.none,
                   hintText: "Type here...",
                   hintStyle: TextStyle(color: grey),
                 ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'Required';
+                  }
+                  return null;
+                },
               ),
             ),
           ),
