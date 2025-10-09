@@ -50,7 +50,7 @@ class ViewSummaryNarrativeReportPageState
   String selectedPeriodText = "Select Period";
   final _formKey = GlobalKey<FormState>();
   int selectedTabIndex = 0;
-  String? _selectedOffice;
+  String? selectedOffice;
 
   final List<String> tabs = ["View Auditor Reports", "View Overall Reports"];
   @override
@@ -68,38 +68,44 @@ class ViewSummaryNarrativeReportPageState
         officeMap = {for (var office in offices) office.id: office.name};
       });
     }();
-    fetchSummaryNarrative();
+    fetchReportsForSelectedTab();
   }
 
-  Future<void> fetchSummaryNarrative({
+  Future<void> fetchReportsForSelectedTab({
     int page = 1,
     String? searchQuery,
   }) async {
-    if (_isLoading) return;
-
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _summaryNarrativeService.getSummaryNarrative(
-        page: page,
-        pageSize: _pageSize,
-        searchQuery: searchQuery,
-      );
-
-      if (mounted) {
+      if (selectedTabIndex == 0) {
+        // Fetch auditor reports
+        final pageList = await _summaryNarrativeService.getSummaryNarrative(
+          page: _currentPage,
+          pageSize: _pageSize,
+        );
         setState(() {
-          _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
           summaryList = pageList.items;
           filteredList = List.from(summaryList);
+          _totalCount = pageList.totalCount;
+        });
+      } else {
+        // Fetch head auditor (overall) reports
+        final pageList = await _summaryNarrativeService
+            .getSummaryNarrativeHeadAuditor(
+              page: _currentPage,
+              pageSize: _pageSize,
+            );
+        setState(() {
+          summaryList = pageList.items;
+          filteredList = List.from(summaryList);
+          _totalCount = pageList.totalCount;
         });
       }
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('Error fetching reports: $e');
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -118,7 +124,7 @@ class ViewSummaryNarrativeReportPageState
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: const Text('View Report'),
+        title: const Text('Report Information'),
         backgroundColor: mainBgColor,
         elevation: 0,
       ),
@@ -134,7 +140,7 @@ class ViewSummaryNarrativeReportPageState
                   padding: const EdgeInsets.only(left: 16, top: 8, right: 16),
                   child: Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE9E9EC), // background of tabs
+                      color: const Color(0xFFE9E9EC),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     padding: const EdgeInsets.all(4),
@@ -146,8 +152,11 @@ class ViewSummaryNarrativeReportPageState
                         return Padding(
                           padding: const EdgeInsets.only(right: 6.0),
                           child: GestureDetector(
-                            onTap:
-                                () => setState(() => selectedTabIndex = index),
+                            onTap: () async {
+                              setState(() => selectedTabIndex = index);
+                              await fetchReportsForSelectedTab();
+                            },
+
                             child: AnimatedContainer(
                               duration: const Duration(milliseconds: 200),
                               decoration: BoxDecoration(
@@ -218,112 +227,205 @@ class ViewSummaryNarrativeReportPageState
                     ),
 
                     Flexible(fit: FlexFit.tight, child: Container()),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              PopupMenuButton<String>(
-                                color: mainBgColor,
-                                offset: const Offset(0, 30),
-                                onCanceled: () {
-                                  setState(() {
-                                    isMenuOpenPeriod = false;
-                                  });
-                                },
-                                onOpened: () {
-                                  setState(() {
-                                    isMenuOpenPeriod = true;
-                                  });
-                                },
-                                onSelected: (String value) {
-                                  setState(() {
-                                    selectedPeriod = value;
+                    if (selectedTabIndex == 0)
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                PopupMenuButton<String>(
+                                  color: mainBgColor,
+                                  offset: const Offset(0, 30),
+                                  onCanceled: () {
+                                    setState(() {
+                                      isMenuOpenPeriod = false;
+                                    });
+                                  },
+                                  onOpened: () {
+                                    setState(() {
+                                      isMenuOpenPeriod = true;
+                                    });
+                                  },
+                                  onSelected: (String value) {
+                                    setState(() {
+                                      selectedPeriod = value;
 
-                                    final selected = _periods.firstWhere(
-                                      (period) =>
-                                          period.id.toString() ==
-                                          selectedPeriod,
-                                      orElse:
-                                          () => PgsPeriod(
-                                            0,
-                                            false,
-                                            DateTime.now(),
-                                            DateTime.now(),
-                                            'remarks',
+                                      final selected = _periods.firstWhere(
+                                        (period) =>
+                                            period.id.toString() ==
+                                            selectedPeriod,
+                                        orElse:
+                                            () => PgsPeriod(
+                                              0,
+                                              false,
+                                              DateTime.now(),
+                                              DateTime.now(),
+                                              'remarks',
+                                            ),
+                                      );
+
+                                      selectedPeriodText =
+                                          "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
+                                    });
+                                  },
+                                  itemBuilder: (BuildContext context) {
+                                    return _periods.map<PopupMenuItem<String>>((
+                                      period,
+                                    ) {
+                                      final formattedStart = _dateConverter
+                                          .toJson(period.startDate);
+                                      final formattedEnd = _dateConverter
+                                          .toJson(period.endDate);
+
+                                      return PopupMenuItem<String>(
+                                        value: period.id.toString(),
+                                        child: Text(
+                                          '$formattedStart - $formattedEnd',
+                                          style: const TextStyle(
+                                            color: Colors.black,
                                           ),
-                                    );
-
-                                    selectedPeriodText =
-                                        "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
-                                  });
-                                },
-                                itemBuilder: (BuildContext context) {
-                                  return _periods.map<PopupMenuItem<String>>((
-                                    period,
-                                  ) {
-                                    final formattedStart = _dateConverter
-                                        .toJson(period.startDate);
-                                    final formattedEnd = _dateConverter.toJson(
-                                      period.endDate,
-                                    );
-
-                                    return PopupMenuItem<String>(
-                                      value: period.id.toString(),
-                                      child: Text(
-                                        '$formattedStart - $formattedEnd',
-                                        style: const TextStyle(
-                                          color: Colors.black,
                                         ),
-                                      ),
-                                    );
-                                  }).toList();
-                                },
-                                child: FilterButton(
-                                  label: selectedPeriodText,
-                                  isActive: isMenuOpenPeriod,
+                                      );
+                                    }).toList();
+                                  },
+                                  child: FilterButton(
+                                    label: selectedPeriodText,
+                                    isActive: isMenuOpenPeriod,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
+                              ],
                             ),
                           ),
-                          onPressed:
-                              selectedPeriod != null
-                                  ? () async {
-                                    showRemarksDialog();
-                                  }
-                                  : null,
 
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.add, color: Colors.white),
-                              SizedBox(width: 5),
-                              Text(
-                                'Create Overall Report',
-                                style: TextStyle(color: Colors.white),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
                               ),
-                            ],
+                            ),
+                            onPressed:
+                                selectedPeriod != null
+                                    ? () async {
+                                      showRemarksDialog();
+                                    }
+                                    : null,
+
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.add, color: Colors.white),
+                                SizedBox(width: 5),
+                                Text(
+                                  'Create Overall Report',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
+                        ],
+                      ),
                   ],
                 ),
                 const SizedBox(height: 20),
 
                 Expanded(
+                  // child: DataTable2(
+                  //   columnSpacing: isMobile ? 8 : 12,
+                  //   headingRowColor: WidgetStatePropertyAll(secondaryColor),
+                  //   dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                  //   headingTextStyle: const TextStyle(color: grey),
+                  //   horizontalMargin: 12,
+                  //   minWidth: 700,
+                  //   fixedTopRows: 1,
+                  //   border: TableBorder(
+                  //     horizontalInside: BorderSide(color: Colors.grey.shade100),
+                  //   ),
+                  //   columns: [
+                  //     DataColumn2(label: const Text('#'), fixedWidth: 40),
+                  //     DataColumn2(
+                  //       label: const Text('Office'),
+                  //       size: ColumnSize.L,
+                  //     ),
+                  //     DataColumn2(
+                  //       label: const Text('Period'),
+                  //       size: ColumnSize.L,
+                  //     ),
+                  //     const DataColumn(label: Text('Actions')),
+                  //   ],
+                  //   rows:
+                  //       filteredList.asMap().entries.map((entry) {
+                  //         int index = entry.key;
+                  //         var summary = entry.value;
+                  //         int itemNumber =
+                  //             ((_currentPage - 1) * _pageSize) + index + 1;
+
+                  //         return DataRow(
+                  //           cells: [
+                  //             DataCell(Text(itemNumber.toString())),
+                  //             DataCell(
+                  //               Container(
+                  //                 constraints: BoxConstraints(
+                  //                   minWidth: 100,
+                  //                   maxWidth: constraints.maxWidth * 0.4,
+                  //                 ),
+                  //                 child: Text(
+                  //                   officeMap[summary.officeId] ??
+                  //                       'Unknown Office',
+                  //                   overflow: TextOverflow.ellipsis,
+                  //                   softWrap: true,
+                  //                   maxLines: 2,
+                  //                 ),
+                  //               ),
+                  //             ),
+                  //             DataCell(
+                  //               Text(getPeriodLabel(summary.pgsPeriodId)),
+                  //             ),
+                  //             DataCell(
+                  //               Row(
+                  //                 children: [
+                  //                   IconButton(
+                  //                     icon: const Icon(Icons.edit),
+                  //                     onPressed: () {
+                  //                       showReportDialog(summary);
+                  //                     },
+                  //                   ),
+                  //                   Tooltip(
+                  //                     message: 'Print Preview',
+
+                  //                     child: IconButton(
+                  //                       icon: const Icon(
+                  //                         Icons.description_outlined,
+                  //                       ),
+
+                  //                       onPressed: () async {
+                  //                         Navigator.push(
+                  //                           context,
+                  //                           MaterialPageRoute(
+                  //                             builder:
+                  //                                 (context) => ViewPdfSummary(
+                  //                                   pgsPeriodId:
+                  //                                       summary.pgsPeriodId
+                  //                                           .toString(),
+                  //                                   officeId:
+                  //                                       summary.officeId
+                  //                                           .toString(),
+                  //                                 ),
+                  //                           ),
+                  //                         );
+                  //                       },
+                  //                     ),
+                  //                   ),
+                  //                 ],
+                  //               ),
+                  //             ),
+                  //           ],
+                  //         );
+                  //       }).toList(),
+                  // ),
                   child: DataTable2(
                     columnSpacing: isMobile ? 8 : 12,
                     headingRowColor: WidgetStatePropertyAll(secondaryColor),
@@ -337,14 +439,23 @@ class ViewSummaryNarrativeReportPageState
                     ),
                     columns: [
                       DataColumn2(label: const Text('#'), fixedWidth: 40),
-                      DataColumn2(
-                        label: const Text('Office'),
-                        size: ColumnSize.L,
-                      ),
-                      DataColumn2(
-                        label: const Text('Period'),
-                        size: ColumnSize.L,
-                      ),
+
+                      if (selectedTabIndex == 0) ...[
+                        DataColumn2(
+                          label: const Text('Office'),
+                          size: ColumnSize.L,
+                        ),
+                        DataColumn2(
+                          label: const Text('Period'),
+                          size: ColumnSize.L,
+                        ),
+                      ] else ...[
+                        DataColumn2(
+                          label: const Text('Report (Period)'),
+                          size: ColumnSize.L,
+                        ),
+                      ],
+
                       const DataColumn(label: Text('Actions')),
                     ],
                     rows:
@@ -357,24 +468,36 @@ class ViewSummaryNarrativeReportPageState
                           return DataRow(
                             cells: [
                               DataCell(Text(itemNumber.toString())),
-                              DataCell(
-                                Container(
-                                  constraints: BoxConstraints(
-                                    minWidth: 100,
-                                    maxWidth: constraints.maxWidth * 0.4,
+
+                              if (selectedTabIndex == 0) ...[
+                                DataCell(
+                                  Container(
+                                    constraints: BoxConstraints(
+                                      minWidth: 100,
+                                      maxWidth: constraints.maxWidth * 0.4,
+                                    ),
+                                    child: Text(
+                                      officeMap[summary.officeId] ??
+                                          'Unknown Office',
+                                      overflow: TextOverflow.ellipsis,
+                                      softWrap: true,
+                                      maxLines: 2,
+                                    ),
                                   ),
-                                  child: Text(
-                                    officeMap[summary.officeId] ??
-                                        'Unknown Office',
+                                ),
+                                DataCell(
+                                  Text(getPeriodLabel(summary.pgsPeriodId)),
+                                ),
+                              ] else ...[
+                                DataCell(
+                                  Text(
+                                    "Report - ${getPeriodLabel(summary.pgsPeriodId)}",
                                     overflow: TextOverflow.ellipsis,
-                                    softWrap: true,
                                     maxLines: 2,
                                   ),
                                 ),
-                              ),
-                              DataCell(
-                                Text(getPeriodLabel(summary.pgsPeriodId)),
-                              ),
+                              ],
+
                               DataCell(
                                 Row(
                                   children: [
@@ -386,27 +509,39 @@ class ViewSummaryNarrativeReportPageState
                                     ),
                                     Tooltip(
                                       message: 'Print Preview',
-
                                       child: IconButton(
                                         icon: const Icon(
                                           Icons.description_outlined,
                                         ),
-
                                         onPressed: () async {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) => ViewPdfSummary(
-                                                    pgsPeriodId:
-                                                        summary.pgsPeriodId
-                                                            .toString(),
-                                                    officeId:
-                                                        summary.officeId
-                                                            .toString(),
-                                                  ),
-                                            ),
-                                          );
+                                          if (selectedTabIndex == 1) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) => ViewPdfSummary(
+                                                      pgsPeriodId:
+                                                          summary.pgsPeriodId
+                                                              .toString(),
+                                                    ),
+                                              ),
+                                            );
+                                          } else {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) => ViewPdfSummary(
+                                                      pgsPeriodId:
+                                                          summary.pgsPeriodId
+                                                              .toString(),
+                                                      officeId:
+                                                          summary.officeId
+                                                              .toString(),
+                                                    ),
+                                              ),
+                                            );
+                                          }
                                         },
                                       ),
                                     ),
@@ -435,7 +570,7 @@ class ViewSummaryNarrativeReportPageState
                         itemsPerPage: _pageSize,
                         isLoading: _isLoading,
                         onPageChanged:
-                            (page) => fetchSummaryNarrative(page: page),
+                            (page) => fetchReportsForSelectedTab(page: page),
                       ),
                       Container(width: 60),
                     ],
@@ -664,7 +799,7 @@ class ViewSummaryNarrativeReportPageState
             TextButton(
               onPressed: () {
                 _remakrsController.clear();
-                _selectedOffice = null;
+                selectedOffice = null;
                 selectedPeriod = null;
 
                 Navigator.pop(context);
@@ -727,12 +862,11 @@ class ViewSummaryNarrativeReportPageState
                       rowVersion: '',
                     );
 
-                    await _summaryNarrativeService.addSummaryNarrative(
-                      summaryNarrative,
-                    );
+                    await _summaryNarrativeService
+                        .addSummaryNarrativeAuditorHead(summaryNarrative);
                     _remakrsController.clear();
 
-                    _selectedOffice = null;
+                    selectedOffice = null;
 
                     selectedPeriod = null;
                     MotionToast.success(
