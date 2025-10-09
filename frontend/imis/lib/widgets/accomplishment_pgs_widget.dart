@@ -1,4 +1,4 @@
-// ignore_for_file: unused_local_variable
+// ignore_for_file: unused_local_variable, use_build_context_synchronously
 
 import 'dart:io';
 import 'package:dio/dio.dart';
@@ -12,8 +12,9 @@ import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
-import 'package:imis/widgets/accomplishment_widget.dart';
+import 'package:imis/widgets/accomplishment_auditor_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:open_file/open_file.dart';
 
@@ -39,8 +40,8 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
   File? mobileImage;
   String? fileName;
   final Dio dio = Dio();
-
   bool isLoading = false;
+
   Future<void> pickFile() async {
     setState(() {
       isLoading = true;
@@ -54,8 +55,24 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
       );
 
       if (result != null) {
+        final file = result.files.first;
         final pickedFile = result.files.first;
+        final fileSizeInMB = file.size / (1024 * 1024);
 
+        if (fileSizeInMB > 10) {
+          MotionToast.warning(
+            description: const Text(
+              "File too large! Maximum allowed size is 10 MB.",
+            ),
+            toastDuration: const Duration(seconds: 3),
+            toastAlignment: Alignment.topCenter,
+          ).show(context);
+
+          setState(() {
+            isLoading = false;
+          });
+          return;
+        }
         if (kIsWeb) {
           Uint8List? bytes = pickedFile.bytes;
           if (bytes != null) {
@@ -417,12 +434,20 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                           ),
                         ],
                       )
-                      : IconButton(
-                        icon: const Icon(
-                          Icons.attach_file_outlined,
-                          color: Colors.blue,
-                        ),
-                        onPressed: pickFile,
+                      : Column(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.upload_file_outlined,
+                              color: Colors.blue,
+                            ),
+                            onPressed: pickFile,
+                          ),
+                          Text(
+                            'Upload 1 supported file: PDF, document, or image: Max 10 MB',
+                            style: TextStyle(color: grey, fontSize: 10),
+                          ),
+                        ],
                       ),
             ),
           ),

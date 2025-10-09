@@ -1,4 +1,4 @@
-// ignore_for_file: unused_local_variable
+// ignore_for_file: unused_local_variable, use_build_context_synchronously
 
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -11,6 +11,7 @@ import 'package:imis/performance_governance_system/deliverable_status_monitoring
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/range_input_formatter.dart';
+import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
 import '../performance_governance_system/enum/pgs_status.dart';
@@ -93,41 +94,60 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.any,
         allowMultiple: false,
-        withData: kIsWeb,
+        withData: true,
       );
 
       if (result != null) {
+        final file = result.files.first;
+        final fileSizeInMB = file.size / (1024 * 1024);
+
+        if (fileSizeInMB > 10) {
+          MotionToast.warning(
+            description: const Text(
+              "File too large! Maximum allowed size is 10 MB.",
+            ),
+            toastDuration: const Duration(seconds: 3),
+            toastAlignment: Alignment.topCenter,
+          ).show(context);
+
+          setState(() {
+            isLoading = false;
+          });
+          return;
+        }
+
         if (kIsWeb) {
-          Uint8List? bytes = result.files.first.bytes;
+          Uint8List? bytes = file.bytes;
           setState(() {
             webImage = bytes;
-            fileName = result.files.first.name;
+            fileName = file.name;
             final row =
                 achievementsList[widget.deliverableId]!.rows[widget
                     .periodIndex];
-            row.attachmentPath = result.files.first.name;
+            row.attachmentPath = file.name;
             row.attachmentBytes = bytes;
           });
         } else {
-          File file = File(result.files.first.path!);
-          setState(() async {
-            mobileImage = file;
-            fileName = result.files.first.name;
+          File pickedFile = File(file.path!);
+          final bytes = await pickedFile.readAsBytes();
+          setState(() {
+            mobileImage = pickedFile;
+            fileName = file.name;
             final row =
                 achievementsList[widget.deliverableId]!.rows[widget
                     .periodIndex];
-            row.attachmentPath = file.path;
-            row.attachmentBytes = await file.readAsBytes();
+            row.attachmentPath = pickedFile.path;
+            row.attachmentBytes = bytes;
           });
         }
       }
     } catch (e) {
       debugPrint("File picking failed: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
-
-    setState(() {
-      isLoading = false;
-    });
   }
 
   @override
@@ -477,12 +497,20 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                           ),
                         ],
                       )
-                      : IconButton(
-                        icon: const Icon(
-                          Icons.attach_file_outlined,
-                          color: Colors.blue,
-                        ),
-                        onPressed: pickFile,
+                      : Column(
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.upload_file_outlined,
+                              color: Colors.blue,
+                            ),
+                            onPressed: pickFile,
+                          ),
+                          Text(
+                            'Upload 1 supported file: PDF, document, or image: Max 10 MB',
+                            style: TextStyle(color: grey, fontSize: 10),
+                          ),
+                        ],
                       ),
             ),
           ),
