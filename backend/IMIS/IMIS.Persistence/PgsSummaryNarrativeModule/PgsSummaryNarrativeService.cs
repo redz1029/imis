@@ -28,6 +28,11 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
             _keyResulktAreaRepository = keyResulktAreaRepository;
             _userManager = userManager;
         }
+        public async Task<PGSSummaryNarrativeDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var narrative = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return narrative != null ? new PGSSummaryNarrativeDto(narrative) : null;
+        }       
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var narrative = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
@@ -46,8 +51,11 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
         }
-      
-        public async Task<IEnumerable<PGSSummaryNarrativeDto>> GetNarrativesForAuditorAsync(int? periodId, int? office,       
+
+        // Auditor Role       
+        public async Task<IEnumerable<PGSSummaryNarrativeDto>> GetNarrativesForAuditorAsync(
+        int? periodId,
+        int? office,
         CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
@@ -62,27 +70,19 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
                     r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
                     r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase)))
             {
-                var query = await _repository.GetAll(cancellationToken);
-
-                if (periodId.HasValue)
-                    query = query.Where(n => n.PgsPeriodId == periodId.Value);
-
-                if (office.HasValue)
-                    query = query.Where(n => n.OfficeId == office.Value);
-
-                entities = query
-                    .Where(n => !n.IsDeleted)
-                    .ToList();
+                
+                entities = await _repository.GetAllFilteredNarrativeForHeadsAsync(periodId, office, cancellationToken);
             }
             else if (userRoles.Any(r => r.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase)))
             {
+               
                 entities = await _repository.GetNarrativesByAuditorAsync(currentUser.Id, periodId, office, cancellationToken);
             }
             else
             {
                 return Enumerable.Empty<PGSSummaryNarrativeDto>();
             }
-
+         
             return entities.Select(n => new PGSSummaryNarrativeDto
             {
                 Id = n.Id,
@@ -94,6 +94,33 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
             });
         }
 
+        // Head Auditor Role
+        public async Task<IEnumerable<PGSSummaryNarrativeDto>> GetNarrativesForHeadAuditorAsync(int? periodId, int? office, CancellationToken cancellationToken)
+        {
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                return Enumerable.Empty<PGSSummaryNarrativeDto>();
+
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
+
+            if (!userRoles.Any(r => r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) || 
+                                    r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                                    r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase)))
+                return Enumerable.Empty<PGSSummaryNarrativeDto>();
+
+            var entities = await _repository.GetAllForAuditorHeadAsync(periodId, office, cancellationToken);
+
+            return entities.Select(n => new PGSSummaryNarrativeDto
+            {
+                Id = n.Id,
+                Findings = n.Findings,
+                Recommendation = n.Recommendation,
+                Conclusion = n.Conclusion,
+                PgsPeriodId = n.PgsPeriodId,
+                OfficeId = n.OfficeId
+            });
+        }
+        
         public async Task<List<ReportPGSSummaryNarrativeDto>> ReportGetByFilterAsync(PgsDeliverableSummaryNarrativeFilter filter, CancellationToken cancellationToken)
         {
             var narratives = await _repository.GetNarrativesByFilterAsync(filter, cancellationToken);

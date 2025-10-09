@@ -1,5 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.OfficeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
 using IMIS.Domain;
 
@@ -13,5 +14,7 @@ namespace IMIS.Application.PgsSummaryNarrativeModule
         Task<DtoPageList<PGSSummaryNarrativeDto, PgsSummaryNarrative, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<IEnumerable<PGSSummaryNarrativeDto>> GetNarrativesForAuditorAsync(int? periodId, int? office, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<PGSSummaryNarrativeDto>> GetNarrativesForHeadAuditorAsync(int? periodId, int? office, CancellationToken cancellationToken);
+        Task<PGSSummaryNarrativeDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
     }
 }

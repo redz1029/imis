@@ -12,12 +12,34 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
         {
 
         }
+        // Get all for Auditor Head
+        public async Task<IEnumerable<PgsSummaryNarrative>> GetAllForAuditorHeadAsync(int? periodId,
+        int? office,
+        CancellationToken cancellationToken)
+        {
+            var query = _entities
+                .AsNoTracking();
+
+            query = query.Where(n => n.OfficeId == null || (office.HasValue && n.OfficeId == office.Value));
+
+            if (periodId.HasValue) 
+                query = query.Where(n => n.PgsPeriodId == periodId.Value);
+
+            return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
+        }
+       
         public async Task<PgsSummaryNarrative?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<PgsSummaryNarrative>()
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
-        public async Task<IEnumerable<PgsSummaryNarrative>> GetNarrativesByAuditorAsync(string userId, int? periodId, int? office, CancellationToken cancellationToken)
+
+        // Get all for Auditor
+        public async Task<IEnumerable<PgsSummaryNarrative>> GetNarrativesByAuditorAsync(
+        string userId,
+        int? periodId,
+        int? office, 
+        CancellationToken cancellationToken)
         {
             var auditor = await ReadOnlyDbContext.Set<Auditor>()
                 .FirstOrDefaultAsync(a => a.UserId == userId && !a.IsDeleted, cancellationToken);
@@ -46,12 +68,39 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
             return await query.ToListAsync(cancellationToken);
         }
 
-        public async Task<EntityPageList<PgsSummaryNarrative, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<EntityPageList<PgsSummaryNarrative, int>> GetPaginatedAsync(
+        int page,
+        int pageSize, CancellationToken cancellationToken)
         {
 
-            return await EntityPageList<PgsSummaryNarrative, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
+            return await EntityPageList<PgsSummaryNarrative, int>.CreateAsync(_entities.AsNoTracking(),
+            page, 
+            pageSize, 
+            cancellationToken
+            ).ConfigureAwait(false);
 
+        }      
+        public async Task<IEnumerable<PgsSummaryNarrative>> GetAllFilteredNarrativeForHeadsAsync(
+        int? periodId,
+        int? office,
+        CancellationToken cancellationToken)
+        {
+            var query = _entities
+                .AsNoTracking()
+                .Where(n => n.OfficeId != null); 
+
+            if (periodId.HasValue)
+                query = query.Where(n => n.PgsPeriodId == periodId.Value);
+
+            if (office.HasValue)
+                query = query.Where(n => n.OfficeId == office.Value);
+
+            return await query
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
+
+
         public async Task<IEnumerable<PgsSummaryNarrative>> GetAll(CancellationToken cancellationToken)
         {
             return await _entities

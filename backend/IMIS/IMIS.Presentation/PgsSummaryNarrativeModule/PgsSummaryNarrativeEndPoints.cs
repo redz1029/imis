@@ -1,9 +1,7 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
-using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.PgsSummaryNarrativeModules;
-using IMIS.Domain;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder; 
 using Microsoft.AspNetCore.Http;
@@ -17,18 +15,18 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
     public class PgsSummaryNarrativeEndPoints : CarterModule
     {
 
-        private const string _pgsSummaryNarrativeTag = "PgsSummaryNarrativeTag";
+        private const string _pgsSummaryNarrativeTag = "PgsSummaryNarrativeAuditorTag";
         public readonly PgsSummaryNarrativePermissions _pgsSummaryNarrativePermissions = new();
         public PgsSummaryNarrativeEndPoints() : base("/pgsSummaryNarrative")
         {
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            app.MapPost("/", async ([FromBody] PGSSummaryNarrativeDto userOfficeDto, IPGSSummaryNarrativeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] PGSSummaryNarrativeDto narrativeDto, IPGSSummaryNarrativeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                await service.SaveOrUpdateAsync(userOfficeDto, cancellationToken).ConfigureAwait(false);
+                await service.SaveOrUpdateAsync(narrativeDto, cancellationToken).ConfigureAwait(false);
                 await cache.EvictByTagAsync(_pgsSummaryNarrativeTag, cancellationToken);
-                return Results.Ok(userOfficeDto);
+                return Results.Ok(narrativeDto);
             })
            .WithTags(_pgsSummaryNarrativeTag)
            .RequireAuthorization(e => e.RequireClaim(
@@ -41,8 +39,8 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
             })
            .WithTags(_pgsSummaryNarrativeTag)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View))
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true);
-   
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true);         
+
             app.MapGet("/byAuditor", async(int ? periodId, int ? office, IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
             {            
                 var narratives = await service.GetNarrativesForAuditorAsync(periodId, office, cancellationToken);

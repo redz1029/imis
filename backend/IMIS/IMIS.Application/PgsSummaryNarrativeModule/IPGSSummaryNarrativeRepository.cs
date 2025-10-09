@@ -13,6 +13,8 @@ namespace IMIS.Application.PgsSummaryNarrativeModule
         Task<EntityPageList<PgsSummaryNarrative, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<IEnumerable<PgsSummaryNarrative>> GetNarrativesByAuditorAsync(string userid, int? office, int? periodId, CancellationToken cancellationToken);
         Task<PgsSummaryNarrative?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<IEnumerable<PgsSummaryNarrative>> GetAllForAuditorHeadAsync(int? periodId, int? office, CancellationToken cancellationToken);
+        Task<IEnumerable<PgsSummaryNarrative>> GetAllFilteredNarrativeForHeadsAsync(int? periodId, int? office, CancellationToken cancellationToken);
+
     }
 }
-  
