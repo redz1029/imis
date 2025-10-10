@@ -12,6 +12,7 @@ namespace IMIS.Application.AuditScheduleModule
         Task<EntityPageList<AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<AuditSchedule?> GetByAuditScheduleIdAsync(int id, CancellationToken cancellationToken);
         Task<AuditSchedule?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
-
+        Task<List<int>> GetExistingAuditableOfficeIdsAsync(long auditScheduleId, CancellationToken cancellationToken);
     }
 }
+

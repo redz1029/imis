@@ -344,14 +344,14 @@ namespace IMIS.Persistence.AuditScheduleModule
          
             if (entity.AuditableOffices != null && entity.AuditableOffices.Any())
             {
-                var existingOfficeIds = dbContext.Set<AuditableOffices>()
-                    .Where(o => o.AuditScheduleId == entity.Id)
-                    .Select(o => o.OfficeId)
-                    .ToList();
-
+      
+                var existingOfficeIds = await _auditScheduleRepository
+                    .GetExistingAuditableOfficeIdsAsync(entity.Id, cancellationToken);
+             
                 var newOffices = entity.AuditableOffices
                     .Where(o => !existingOfficeIds.Contains(o.OfficeId))
                     .ToList();
+
 
                 if (newOffices.Any())
                 {

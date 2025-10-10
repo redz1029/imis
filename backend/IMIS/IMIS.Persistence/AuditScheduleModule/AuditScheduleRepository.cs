@@ -10,6 +10,14 @@ namespace IMIS.Persistence.AuditScheduleModule
         : BaseRepository<AuditSchedule, int, ImisDbContext>(dbContext), IAuditScheduleRepository
     {
 
+        public async Task<List<int>> GetExistingAuditableOfficeIdsAsync(long auditScheduleId, CancellationToken cancellationToken)
+        {         
+            return await ReadOnlyDbContext.Set<AuditableOffices>()
+                .Where(o => o.AuditScheduleId == auditScheduleId)
+                .Select(o => o.OfficeId)
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<AuditSchedule?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditSchedule>()
