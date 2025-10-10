@@ -3,6 +3,7 @@ import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
@@ -56,5 +57,11 @@ class CommonService {
     ApiEndpoint().keyresult,
     (e) => KeyResultArea.fromJson(e),
     'Failed to fetch key result areas',
+  );
+
+  Future<List<Team>> fetchTeam() => _fetchList(
+    ApiEndpoint().team,
+    (e) => Team.fromJson(e),
+    'Failed to fetch team',
   );
 }
