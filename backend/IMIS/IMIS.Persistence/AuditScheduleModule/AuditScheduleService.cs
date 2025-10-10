@@ -7,9 +7,10 @@ using IMIS.Domain;
 
 namespace IMIS.Persistence.AuditScheduleModule
 {
-    public class AuditScheduleService(IAuditScheduleRepository auditScheduleRepository, ITeamRepository teamRepository) : IAuditScheduleService
+    public class AuditScheduleService(IAuditScheduleRepository auditScheduleRepository, ITeamRepository teamRepository, IAuditScheduleDetailRepository auditScheduleDetailsRepository) : IAuditScheduleService
     {
         private readonly IAuditScheduleRepository _auditScheduleRepository = auditScheduleRepository;
+        private readonly IAuditScheduleDetailRepository _auditScheduleDetailsRepository = auditScheduleDetailsRepository;
         private readonly ITeamRepository _teamRepository = teamRepository;
         public async Task<AuditScheduleDto?> GenerateAuditScheduleDetail(int auditScheduleId, double noOfHoursPerAudit, CancellationToken cancellationToken)
         {
@@ -210,25 +211,6 @@ namespace IMIS.Persistence.AuditScheduleModule
             return totalHours;
         }
 
-        // Check Overlapping for AuditScheduleDetails
-        public async Task<List<string>> GetOverlappingAuditAsync(AuditScheduleDto auditScheduleDto, CancellationToken cancellationToken)
-        {
-            List<string> overlapErrors = new();
-
-            foreach (var office in auditScheduleDto.AuditSchduleDetails!)
-            {
-                var overlappingSchedule = await _auditScheduleRepository
-                    .GetOverlappingAuditAsync(office.OfficeId, office.StartDateTime, office.EndDateTime, auditScheduleDto.Id);
-
-                if (overlappingSchedule != null)
-                {
-                    string errorMessage = $"Conflict: Office ID {office.OfficeId} has an existing audit from {overlappingSchedule.StartDateTime:yyyy-MM-dd} to {overlappingSchedule.EndDateTime:yyyy-MM-dd}.";
-                    overlapErrors.Add(errorMessage);
-                }
-            }
-            return overlapErrors;
-        }
-
         public async Task<List<AuditScheduleDto>?> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository
@@ -244,7 +226,8 @@ namespace IMIS.Persistence.AuditScheduleModule
                     EndDate = a.EndDate, 
                     IsActive = a.IsActive }
                 ).ToList();
-        }        
+        }  
+        
         public async Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -274,36 +257,127 @@ namespace IMIS.Persistence.AuditScheduleModule
             }).ToList();
         }
 
-
-        public async Task<AuditScheduleDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<AuditScheduleDto?> GetByAuditScheduleIdAsync(int id, CancellationToken cancellationToken)
         {
-            var auditSchedules = await _auditScheduleRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);           
-            return auditSchedules is not null 
-            ? new AuditScheduleDto
-            {
-                Id = auditSchedules.Id,
-                AuditTitle = auditSchedules.AuditTitle,
-                StartDate = auditSchedules.StartDate,
-                EndDate = auditSchedules.EndDate,
-                IsActive = auditSchedules.IsActive
-            }
-            : null;
+            var auditSchedules = await _auditScheduleRepository.GetByAuditScheduleIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return auditSchedules != null ? new AuditScheduleDto(auditSchedules) : null;          
         }
 
+        // Soft Delete for Audit Schedule 
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var auditSchedules = await _auditScheduleRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (auditSchedules == null)
+                return false;
+
+            auditSchedules.IsDeleted = true;
+
+            var context = _auditScheduleRepository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+
+        // Soft Delete for Audit Schedule Details
+        public async Task<bool> SoftDeleteAuditScheduleDetailsAsync(int id, CancellationToken cancellationToken)
+        {
+            var auditSchedules = await _auditScheduleDetailsRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (auditSchedules == null)
+                return false;
+
+            auditSchedules.IsDeleted = true;
+
+            var context = _auditScheduleRepository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+
+        // Check Overlapping for AuditScheduleDetails
+        public async Task<List<string>> GetOverlappingAuditAsync(AuditScheduleDto auditScheduleDto, CancellationToken cancellationToken)
+        {
+            List<string> overlapErrors = new();
+
+            foreach (var office in auditScheduleDto.AuditSchduleDetails!)
+            {
+                var overlappingSchedule = await _auditScheduleDetailsRepository
+                    .GetOverlappingAuditAsync(office.OfficeId, office.StartDateTime, office.EndDateTime, auditScheduleDto.Id);
+
+                if (overlappingSchedule != null)
+                {
+                    string errorMessage = $"Conflict: Office ID {office.OfficeId} has an existing audit from {overlappingSchedule.StartDateTime:yyyy-MM-dd} to {overlappingSchedule.EndDateTime:yyyy-MM-dd}.";
+                    overlapErrors.Add(errorMessage);
+                }
+            }
+            return overlapErrors;
+        }
+
+        //Check Overlapping for AuditScheduleDetails
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            var aDto = dto as AuditScheduleDto;
-            var auditSchedule = aDto?.ToEntity();
-            if (auditSchedule != null)
-            {                
-                if (auditSchedule.Id == 0)
+            if (dto is not AuditScheduleDto aDto)
+                throw new InvalidOperationException("Invalid DTO type for AuditSchedule saving.");
+
+            var entity = aDto.ToEntity();
+            var isNew = entity.Id == 0;
+
+            if (entity.AuditSchduleDetails != null && entity.AuditSchduleDetails.Any())
+            {
+                var overlapErrors = await GetOverlappingAuditAsync(aDto, cancellationToken);
+                if (overlapErrors.Any())
+                    throw new InvalidOperationException(
+                        $"Audit schedule conflicts detected:\n{string.Join("\n", overlapErrors)}"
+                    );
+            }
+
+            var dbContext = _auditScheduleRepository.GetDbContext();
+
+            if (isNew)
+            {
+                dbContext.Add(entity);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                await _auditScheduleRepository.UpdateAsync(entity, entity.Id, cancellationToken);
+            }
+         
+            if (entity.AuditableOffices != null && entity.AuditableOffices.Any())
+            {
+                var existingOfficeIds = dbContext.Set<AuditableOffices>()
+                    .Where(o => o.AuditScheduleId == entity.Id)
+                    .Select(o => o.OfficeId)
+                    .ToList();
+
+                var newOffices = entity.AuditableOffices
+                    .Where(o => !existingOfficeIds.Contains(o.OfficeId))
+                    .ToList();
+
+                if (newOffices.Any())
                 {
-                    _auditScheduleRepository.Add(auditSchedule);
-                } else
-                {
-                    await _auditScheduleRepository.UpdateAsync(auditSchedule, auditSchedule.Id, cancellationToken).ConfigureAwait(false);
+                    newOffices.ForEach(o => o.AuditScheduleId = entity.Id);
+
+                    await _auditScheduleRepository.AddAuditableOfficesAsync(newOffices, cancellationToken);
                 }
-                await _auditScheduleRepository.SaveOrUpdateAsync(auditSchedule, cancellationToken).ConfigureAwait(false);
+            }
+
+            if (entity.AuditSchduleDetails != null && entity.AuditSchduleDetails.Any())
+            {
+                foreach (var detail in entity.AuditSchduleDetails)
+                {
+                    detail.AuditScheduleId = entity.Id;
+
+                    if (detail.Id == 0)
+                    {
+                        dbContext.Add(detail);
+                    }
+                    else
+                    {
+                        dbContext.Update(detail);
+                    }
+                }
+
+                await dbContext.SaveChangesAsync(cancellationToken);
             }
         }
 
@@ -324,39 +398,6 @@ namespace IMIS.Persistence.AuditScheduleModule
             }).ToList();
 
             await _auditScheduleRepository.AddAuditableOfficesAsync(entities, cancellationToken);
-        }
-
-        public async Task<AuditScheduleDto> SaveOrUpdateAsync(AuditScheduleDto auditScheduleDto, CancellationToken cancellationToken)
-        {
-            if (auditScheduleDto == null) throw new ArgumentNullException(nameof(auditScheduleDto));
-
-            var entity = auditScheduleDto.ToEntity();
-            var savedEntity = await _auditScheduleRepository.SaveOrUpdateAsync(entity, cancellationToken).ConfigureAwait(false);
-
-            return new AuditScheduleDto
-            {
-                Id = savedEntity.Id,
-                AuditTitle = savedEntity.AuditTitle,
-                StartDate = savedEntity.StartDate,
-                EndDate = savedEntity.EndDate,
-                IsActive = savedEntity.IsActive,
-                AuditableOffices = savedEntity.AuditableOffices?.Select(a => new AuditableOfficesDto
-                {
-                    AuditScheduleId = a.AuditScheduleId,
-                    OfficeId = a.OfficeId
-                }).ToList(),
-
-                AuditSchduleDetails = savedEntity.AuditSchduleDetails?.Select(AuditScheduleDto => new AuditScheduleDetailDto
-                {
-                    Id = AuditScheduleDto.Id,
-                    AuditScheduleId = AuditScheduleDto.AuditScheduleId,
-                    TeamId = AuditScheduleDto.TeamId,
-                    StartDateTime = AuditScheduleDto.StartDateTime,
-                    EndDateTime = AuditScheduleDto.EndDateTime,
-                    OfficeId = AuditScheduleDto.OfficeId
-
-                }).ToList()
-            };
-        }
+        }        
     }
 }
