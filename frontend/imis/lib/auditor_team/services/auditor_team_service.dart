@@ -44,8 +44,15 @@ class AuditorTeamService {
     }
   }
 
-  Future<void> deleteAuditorTeam(String teamId) async {
+  Future<void> deleteAuditorTeam(int teamId) async {
     final url = '${ApiEndpoint().auditorteam}/$teamId';
-    await AuthenticatedRequest.delete(dio, url);
+    try {
+      final response = await AuthenticatedRequest.delete(dio, url);
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed to delete auditor team with teamId: $teamId');
+      }
+    } catch (e) {
+      rethrow;
+    }
   }
 }
