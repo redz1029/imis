@@ -3,6 +3,7 @@ using Base.Primitives;
 using IMIS.Application.AuditableOfficesModule;
 using IMIS.Domain;
 
+
 namespace IMIS.Application.AuditScheduleModule
 {
     public class AuditScheduleDto : BaseDto<AuditSchedule, int>
@@ -16,13 +17,28 @@ namespace IMIS.Application.AuditScheduleModule
         public AuditScheduleDto() { }   
         [SetsRequiredMembers]
         public AuditScheduleDto(AuditSchedule auditSchedule)
-        {
-            
-            Id = auditSchedule.Id;
-            AuditTitle = auditSchedule.AuditTitle;
-            StartDate = auditSchedule.StartDate;
-            EndDate = auditSchedule.EndDate;
-            IsActive = auditSchedule.IsActive;
+        {            
+            this.Id = auditSchedule.Id;
+            this.AuditTitle = auditSchedule.AuditTitle;
+            this.StartDate = auditSchedule.StartDate;
+            this.EndDate = auditSchedule.EndDate;
+            this.IsActive = auditSchedule.IsActive;
+          
+            this.AuditableOffices = auditSchedule.AuditableOffices != null
+                ? auditSchedule.AuditableOffices
+                    .Select(o => new AuditableOfficesDto(o))
+                    .ToList()
+                : new List<AuditableOfficesDto>();
+
+            this.AuditSchduleDetails = auditSchedule.AuditSchduleDetails != null
+            ? auditSchedule.AuditSchduleDetails
+                .Select(d => new AuditScheduleDetailDto(d))
+                .ToList()
+            : new List<AuditScheduleDetailDto>();
+
+            this.RowVersion = auditSchedule.RowVersion;
+
+
         }
         public override AuditSchedule ToEntity()
         {
@@ -35,6 +51,7 @@ namespace IMIS.Application.AuditScheduleModule
                 IsActive = IsActive,                                   
                 AuditableOffices = AuditableOffices?.Select(d => d.ToEntity()).ToList(),
                 AuditSchduleDetails = AuditSchduleDetails?.Select(d => d.ToEntity()).ToList(),
+                RowVersion = RowVersion,
             };
         }
     }
