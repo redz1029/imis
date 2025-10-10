@@ -232,7 +232,6 @@ class RolesPageState extends State<RolesPage> {
                           setState(() {
                             fetchRoles();
                           });
-                          // ignore: use_build_context_synchronously
                           Navigator.pop(context);
                         } catch (e) {
                           MotionToast.error(
@@ -243,7 +242,6 @@ class RolesPageState extends State<RolesPage> {
                         try {
                           await _rolesService.updateRole(id, roleName);
                           fetchRoles();
-                          // ignore: use_build_context_synchronously
                           Navigator.pop(context);
                         } catch (e) {
                           MotionToast.error(

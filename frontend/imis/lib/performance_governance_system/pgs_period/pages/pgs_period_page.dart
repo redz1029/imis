@@ -423,7 +423,6 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                     setState(() {
                       fetchPGSPeriods();
                     });
-                    // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
                 }

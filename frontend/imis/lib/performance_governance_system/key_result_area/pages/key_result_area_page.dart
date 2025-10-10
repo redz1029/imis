@@ -277,7 +277,6 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                     setState(() {
                       fetchKRA();
                     });
-                    // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
                 }

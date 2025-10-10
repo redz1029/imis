@@ -379,7 +379,7 @@ class AuditorMainPageState extends State<AuditorPage> {
                         setState(() {
                           fetchAuditors();
                         });
-                        // ignore: use_build_context_synchronously
+
                         Navigator.pop(context);
                       }
                     }

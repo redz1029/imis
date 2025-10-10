@@ -166,7 +166,6 @@ class OfficePageState extends State<OfficePage> {
     _selectedParentOffice = selectedParentOffice;
 
     showDialog(
-      // ignore: use_build_context_synchronously
       context: context,
       barrierDismissible: false,
       builder: (context) {
@@ -398,7 +397,6 @@ class OfficePageState extends State<OfficePage> {
                     setState(() {
                       fetchOffices();
                     });
-                    // ignore: use_build_context_synchronously
                     Navigator.pop(context);
                   }
                 }
