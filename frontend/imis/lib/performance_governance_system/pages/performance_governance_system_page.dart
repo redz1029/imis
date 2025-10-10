@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 import 'package:data_table_2/data_table_2.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
+import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/accomplishment_pgs_widget.dart';
 import 'package:imis/widgets/build_header_cell.dart';
@@ -49,7 +50,7 @@ class PerformanceGovernanceSystemPageState
   final GlobalKey _menuKey = GlobalKey();
   final _formKey = GlobalKey<FormState>();
   final _dateConverter = const LongDateOnlyConverter();
-
+  final _pgsService = PerformanceGovernanceSystemService(Dio());
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> deliverablesControllersDisapproved = {};
   Map<int, bool> clearedOnDisapprove = {};
@@ -772,7 +773,6 @@ class PerformanceGovernanceSystemPageState
     _loadCurrentUserId();
     fetchPgsList();
     fetchPGSPeriods();
-
     isSearchFocus.addListener(() {
       setState(() {});
     });
@@ -1028,7 +1028,16 @@ class PerformanceGovernanceSystemPageState
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                // await deleteTeam(id);
+                await _pgsService.deletePgs(id);
+                await fetchPgsList();
+                try {
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Pgs deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Pgs'));
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
@@ -1464,7 +1473,7 @@ class PerformanceGovernanceSystemPageState
                       ),
                       DataColumn2(
                         label: const Text('Period'),
-                        size: ColumnSize.S,
+                        size: ColumnSize.L,
                       ),
                       DataColumn2(
                         label: const Text('Status'),
@@ -1481,7 +1490,38 @@ class PerformanceGovernanceSystemPageState
                           var pgsgovernancesystem = entry.value;
                           int itemNumber =
                               ((_currentPage - 1) * _pageSize) + index + 1;
+                          final isDraft =
+                              pgsgovernancesystem['isDraft'] as bool? ?? false;
+                          final signatories =
+                              (pgsgovernancesystem['pgsSignatories']
+                                  as List?) ??
+                              [];
 
+                          String status = 'Draft';
+
+                          if (isDraft) {
+                            status = 'Draft';
+                          } else {
+                            final hasNextStatus = signatories.any((signatory) {
+                              if (signatory is Map<String, dynamic>) {
+                                final isNextStatus = signatory['isNextStatus'];
+
+                                final boolValue =
+                                    isNextStatus is String
+                                        ? isNextStatus == 'true'
+                                        : (isNextStatus as bool? ?? false);
+
+                                return boolValue;
+                              }
+                              return false;
+                            });
+
+                            if (hasNextStatus) {
+                              status = 'For Approval';
+                            } else {
+                              status = 'Approved';
+                            }
+                          }
                           return DataRow(
                             cells: [
                               DataCell(
@@ -1512,7 +1552,7 @@ class PerformanceGovernanceSystemPageState
                                 ),
                               ),
 
-                              DataCell(SizedBox(child: Text('Status'))),
+                              DataCell(SizedBox(child: Text(status))),
                               DataCell(
                                 SizedBox(
                                   child: Row(
@@ -2566,7 +2606,6 @@ class PerformanceGovernanceSystemPageState
                     (signatories == null || signatories.isEmpty))
                   PermissionWidget(
                     allowedRoles: [
-                      PermissionString.roleAdmin,
                       PermissionString.roleStandardUser,
                       PermissionString.serviceHead,
                       PermissionString.osm,
@@ -2619,7 +2658,6 @@ class PerformanceGovernanceSystemPageState
                     (signatories == null || signatories.isEmpty))
                   PermissionWidget(
                     allowedRoles: [
-                      PermissionString.roleAdmin,
                       PermissionString.roleStandardUser,
                       PermissionString.serviceHead,
                       PermissionString.osm,
@@ -2679,7 +2717,6 @@ class PerformanceGovernanceSystemPageState
                 if (showButton)
                   PermissionWidget(
                     allowedRoles: [
-                      PermissionString.roleAdmin,
                       PermissionString.coreTeam,
                       PermissionString.serviceHead,
                       PermissionString.mcc,
@@ -3876,7 +3913,7 @@ class PerformanceGovernanceSystemPageState
                                         flex: 2,
                                         child: Center(
                                           child: Text(
-                                            "Attach Proof File",
+                                            "Proof",
                                             style: TextStyle(color: grey),
                                           ),
                                         ),

@@ -2311,7 +2311,7 @@ Future<bool?> showAccomplishmentFormDialog(
                                       flex: 2,
                                       child: Center(
                                         child: Text(
-                                          "Attach Proof File",
+                                          "Proof",
                                           style: TextStyle(color: grey),
                                         ),
                                       ),
