@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/auditor/models/auditor.dart';
@@ -6,7 +8,9 @@ import 'package:imis/auditor_team/services/auditor_team_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
+import 'package:imis/widgets/custom_toggle.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class AuditorTeamPage extends StatefulWidget {
   const AuditorTeamPage({super.key});
@@ -91,7 +95,12 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     super.dispose();
   }
 
-  void showFormDialog({String? id, String? teamId, List<dynamic>? auditors}) {
+  void showFormDialog({
+    String? id,
+    String? teamId,
+    List<dynamic>? auditors,
+    bool isActive = false,
+  }) {
     selectTeam = teamId != null ? int.tryParse(teamId) : null;
     if (teamId != null && auditors != null) {
       selectedAuditors =
@@ -219,6 +228,18 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                           ),
                         ),
                       ),
+                      gap14px,
+                      CustomToggle(
+                        label: "Active",
+                        value: isActive,
+                        activeColor: primaryColor,
+                        inactiveColor: Colors.grey,
+                        onChanged: (val) {
+                          setDialogState(() {
+                            isActive = val;
+                          });
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -292,7 +313,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                         auditors,
                         true,
                         rowVersion: '',
-                        isDeleted: false,
+                        isDeleted: isActive,
                       );
 
                       await _adutiorTeamService.createOrUpdateAuditorTeam(
@@ -319,17 +340,16 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
   }
 
   void showAvailableAuditorsDialog(Function setDialogState) {
-    final assignedAuditorIds =
-        auditorTeamList.expand((auditorTeam) {
-          final auditors = auditorTeam.auditors;
-          return auditors.map((auditor) {
-            if (auditor is Map<String, dynamic>) {
-              return auditor.id;
-            } else {
-              return auditor.id;
-            }
-          }).whereType<dynamic>();
-        }).toSet();
+    auditorTeamList.expand((auditorTeam) {
+      final auditors = auditorTeam.auditors;
+      return auditors.map((auditor) {
+        if (auditor is Map<String, dynamic>) {
+          return auditor.id;
+        } else {
+          return auditor.id;
+        }
+      }).whereType<dynamic>();
+    }).toSet();
 
     showDialog(
       context: context,
@@ -353,8 +373,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                         (auditor) =>
                             !selectedAuditors.any(
                               (sel) => sel['id'] == auditor.id,
-                            ) &&
-                            !assignedAuditorIds.contains(auditor.id),
+                            ),
                       )
                       .map((auditor) {
                         return ListTile(
@@ -364,7 +383,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                             setDialogState(() {
                               selectedAuditors.add({
                                 'id': auditor.id,
-                                'name': auditor.name.toString,
+                                'name': auditor.name.toString(),
                               });
                             });
                             Navigator.pop(context);
@@ -520,7 +539,6 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                       ),
                                     ),
                                     const SizedBox(height: 10),
-                                    // List of auditors - aligned to the left
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment:
@@ -559,7 +577,6 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                       ),
                                     ),
                                     const SizedBox(height: 10),
-                                    // Bottom-right action buttons
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
@@ -572,6 +589,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                                   (audiorTeam.teamId)
                                                       .toString(),
                                               auditors: audiorTeam.auditors,
+                                              isActive: audiorTeam.isActive,
                                             );
                                           },
                                         ),
@@ -581,9 +599,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                             color: primaryColor,
                                           ),
                                           onPressed: () {
-                                            showDeleteDialog(
-                                              audiorTeam.id.toString(),
-                                            );
+                                            showDeleteDialog(audiorTeam.teamId);
                                           },
                                         ),
                                       ],
@@ -634,8 +650,9 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     );
   }
 
-  void showDeleteDialog(String id) {
+  void showDeleteDialog(int teamId) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -651,7 +668,18 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await _adutiorTeamService.deleteAuditorTeam(id);
+                try {
+                  await _adutiorTeamService.deleteAuditorTeam(teamId);
+                  await fetchAuditorTeam();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Auditor Team deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(
+                    description: Text('Failed to Delete Auditor Team'),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
