@@ -2,12 +2,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/auditor_team/models/auditor_team.dart';
+import 'package:imis/auditor_team/services/auditor_team_service.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
-import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/http_util.dart';
-import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 
 class AuditorTeamPage extends StatefulWidget {
@@ -19,21 +17,18 @@ class AuditorTeamPage extends StatefulWidget {
 }
 
 class _AuditorTeamPageState extends State<AuditorTeamPage> {
-  List<Map<String, dynamic>> auditorTeamList = [];
-  List<Map<String, dynamic>> filteredList = [];
+  final _adutiorTeamService = AuditorTeamService(Dio());
+  final _commonService = CommonService(Dio());
+  List<AuditorTeam> auditorTeamList = [];
+  List<AuditorTeam> filteredList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
-  List<Map<String, dynamic>> filteredListTeamAuditor = [];
-  List<Map<String, dynamic>> filteredListAuditor = [];
   List<Map<String, dynamic>> selectedAuditors = [];
-  List<Map<String, dynamic>> teamList = [];
-  List<Map<String, dynamic>> auditorList = [];
+  List<Team> teamList = [];
+  List<Auditor> auditorList = [];
   int? selectTeam;
   int? selectAuditor;
   String? selectTeamText;
-
-  final _paginationUtils = PaginationUtil(Dio());
-
   int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
@@ -47,121 +42,26 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils.fetchPaginatedData<AuditorTeam>(
-        endpoint: ApiEndpoint().auditorteam,
+      final pageList = await _adutiorTeamService.getAuditorTeam(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
-        fromJson: (json) => AuditorTeam.fromJson(json),
       );
 
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          auditorTeamList = pageList.items.map((a) => a.toJson()).toList();
-          filteredListTeamAuditor = List.from(auditorTeamList);
+          auditorTeamList = pageList.items;
+          filteredList = List.from(auditorTeamList);
         });
       }
     } catch (e) {
-      debugPrint("Error in fetchAuditSchedule: $e");
+      debugPrint(e.toString());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  Future<void> fetchTeam() async {
-    final url = ApiEndpoint().team;
-
-    try {
-      String? token = await AuthUtil.getAccessToken();
-      if (token == null || token.isEmpty) {
-        return;
-      }
-
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Team> data =
-            (response.data as List).map((team) => Team.fromJson(team)).toList();
-
-        if (mounted) {
-          setState(() {
-            teamList = data.map((team) => team.toJson()).toList();
-            filteredList = List.from(teamList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
-
-  Future<void> fetchAuditors() async {
-    var url = ApiEndpoint().auditor;
-
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Auditor> data =
-            (response.data as List)
-                .map((auditor) => Auditor.fromJson(auditor))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            auditorList = data.map((auditor) => auditor.toJson()).toList();
-            filteredListAuditor = List.from(auditorList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
-
-  Future<void> addOrUpdateAuditorTeam(AuditorTeam auditorTeam) async {
-    var url = ApiEndpoint().auditorteam;
-
-    try {
-      final Map<String, dynamic> requestData = auditorTeam.toJson();
-      final response = await AuthenticatedRequest.post(
-        dio,
-        url,
-        data: requestData,
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        fetchAuditorTeam();
-      } else {
-        debugPrint("Failed to add/update audtor team");
-      }
-    } catch (e) {
-      debugPrint("Error adding/updating audtor team: $e");
-    }
-  }
-
-  Future<void> deleteAuditorTeam(String kraId) async {
-    var url = ApiEndpoint().keyresult;
-    try {
-      final response = await AuthenticatedRequest.delete(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchAuditorTeam();
-      }
-    } catch (e) {
-      debugPrint("Error deleting KRA: $e");
     }
   }
 
@@ -171,9 +71,18 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
-    fetchTeam();
-    fetchAuditors();
     fetchAuditorTeam();
+
+    () async {
+      final auditors = await _commonService.fetchAuditors();
+      final team = await _commonService.fetchTeam();
+      if (!mounted) return;
+
+      setState(() {
+        auditorList = auditors;
+        teamList = team;
+      });
+    }();
   }
 
   @override
@@ -237,8 +146,8 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                 items:
                                     teamList.map((team) {
                                       return DropdownMenuItem<int>(
-                                        value: team['id'],
-                                        child: Text(team['name']),
+                                        value: team.id,
+                                        child: Text(team.name),
                                       );
                                     }).toList(),
                                 onChanged: (value) {
@@ -368,16 +277,31 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                     if (confirmAction == true) {
                       List<Auditor> auditors =
                           selectedAuditors
-                              .map((a) => Auditor(id: a['id'], name: a['name'], userId: a['userId']))
+                              .map(
+                                (a) => Auditor(
+                                  id: a['id'],
+                                  name: a['name'],
+                                  userId: a['userId'],
+                                ),
+                              )
                               .toList();
 
                       final auditorTeam = AuditorTeam(
+                        0,
                         selectTeam ?? 0,
                         auditors,
                         true,
+                        rowVersion: '',
+                        isDeleted: false,
                       );
 
-                      await addOrUpdateAuditorTeam(auditorTeam);
+                      await _adutiorTeamService.createOrUpdateAuditorTeam(
+                        auditorTeam,
+                      );
+                      setState(() {
+                        fetchAuditorTeam();
+                      });
+
                       if (context.mounted) Navigator.pop(context);
                     }
                   },
@@ -397,14 +321,12 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
   void showAvailableAuditorsDialog(Function setDialogState) {
     final assignedAuditorIds =
         auditorTeamList.expand((auditorTeam) {
-          final auditors = auditorTeam['auditors'] ?? [];
+          final auditors = auditorTeam.auditors;
           return auditors.map((auditor) {
             if (auditor is Map<String, dynamic>) {
-              return auditor['id'];
-            } else if (auditor is Auditor) {
               return auditor.id;
             } else {
-              return null;
+              return auditor.id;
             }
           }).whereType<dynamic>();
         }).toSet();
@@ -430,19 +352,19 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                       .where(
                         (auditor) =>
                             !selectedAuditors.any(
-                              (sel) => sel['id'] == auditor['id'],
+                              (sel) => sel['id'] == auditor.id,
                             ) &&
-                            !assignedAuditorIds.contains(auditor['id']),
+                            !assignedAuditorIds.contains(auditor.id),
                       )
                       .map((auditor) {
                         return ListTile(
-                          title: Text(auditor['name']),
+                          title: Text(auditor.name.toString()),
                           trailing: Icon(Icons.person_add, color: primaryColor),
                           onTap: () {
                             setDialogState(() {
                               selectedAuditors.add({
-                                'id': auditor['id'],
-                                'name': auditor['name'],
+                                'id': auditor.id,
+                                'name': auditor.name.toString,
                               });
                             });
                             Navigator.pop(context);
@@ -463,25 +385,25 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     );
   }
 
-  void filterSearchResults(String query) {
-    setState(() {
-      filteredList =
-          auditorTeamList
-              .where(
-                (auditorTeam) => auditorTeam['name']!.toLowerCase().contains(
-                  query.toLowerCase(),
-                ),
-              )
-              .toList();
-    });
-  }
+  // void filterSearchResults(String query) {
+  //   setState(() {
+  //     filteredList =
+  //         auditorTeamList
+  //             .where(
+  //               (auditorTeam) => auditorTeam['name']!.toLowerCase().contains(
+  //                 query.toLowerCase(),
+  //               ),
+  //             )
+  //             .toList();
+  //   });
+  // }
 
-  String getTeamNameById(int id, List<Map<String, dynamic>> teamList) {
+  String getTeamNameById(int id, List<Team> teamList) {
     final team = teamList.firstWhere(
-      (team) => team['id'] == id,
-      orElse: () => {'name': 'Unknown Team'},
+      (team) => team.id == id,
+      orElse: () => Team(id, 'name', true, false),
     );
-    return team['name'] ?? 'Unknown Team';
+    return team.name;
   }
 
   @override
@@ -489,9 +411,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
 
     final uniqueTeams =
-        {
-          for (var item in filteredListTeamAuditor) item['teamId']: item,
-        }.values.toList();
+        {for (var item in filteredList) item.teamId: item}.values.toList();
 
     return Scaffold(
       backgroundColor: mainBgColor,
@@ -537,7 +457,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                         horizontal: 5,
                       ),
                     ),
-                    onChanged: filterSearchResults,
+                    // onChanged: filterSearchResults,
                   ),
                 ),
                 if (!isMinimized)
@@ -589,7 +509,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                     Center(
                                       child: Text(
                                         getTeamNameById(
-                                          audiorTeam['teamId'],
+                                          audiorTeam.teamId,
                                           teamList,
                                         ),
                                         style: TextStyle(
@@ -616,13 +536,10 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                           Expanded(
                                             child: ListView.builder(
                                               itemCount:
-                                                  (audiorTeam['auditors']
-                                                          as List<Auditor>)
-                                                      .length,
+                                                  (audiorTeam.auditors).length,
                                               itemBuilder: (context, i) {
                                                 final auditor =
-                                                    (audiorTeam['auditors']
-                                                        as List<Auditor>)[i];
+                                                    (audiorTeam.auditors)[i];
                                                 return Padding(
                                                   padding:
                                                       const EdgeInsets.only(
@@ -650,11 +567,11 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                           icon: const Icon(Icons.edit),
                                           onPressed: () {
                                             showFormDialog(
-                                              id: audiorTeam['id'],
+                                              id: audiorTeam.id.toString(),
                                               teamId:
-                                                  (audiorTeam['teamId'] ?? '')
+                                                  (audiorTeam.teamId)
                                                       .toString(),
-                                              auditors: audiorTeam['auditors'],
+                                              auditors: audiorTeam.auditors,
                                             );
                                           },
                                         ),
@@ -665,7 +582,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                           ),
                                           onPressed: () {
                                             showDeleteDialog(
-                                              audiorTeam['id'].toString(),
+                                              audiorTeam.id.toString(),
                                             );
                                           },
                                         ),
@@ -734,7 +651,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deleteAuditorTeam(id);
+                await _adutiorTeamService.deleteAuditorTeam(id);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
