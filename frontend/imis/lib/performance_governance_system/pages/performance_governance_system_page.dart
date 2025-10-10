@@ -2,7 +2,7 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/utils/permission_string.dart';
-import 'package:imis/widgets/accomplishment_widget_modal.dart';
+import 'package:imis/widgets/accomplishment_pgs_widget.dart';
 import 'package:imis/widgets/build_header_cell.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
 import 'package:imis/widgets/pagination_controls.dart';
@@ -1457,17 +1457,17 @@ class PerformanceGovernanceSystemPageState
                       horizontalInside: BorderSide(color: Colors.grey.shade100),
                     ),
                     columns: [
-                      DataColumn2(label: const Text('#'), size: ColumnSize.S),
+                      DataColumn2(label: const Text('#'), fixedWidth: 40),
                       DataColumn2(
-                        label: const Text('Office Name'),
+                        label: const Text('Office'),
                         size: ColumnSize.L,
                       ),
                       DataColumn2(
-                        label: const Text('Start Date'),
+                        label: const Text('Period'),
                         size: ColumnSize.S,
                       ),
                       DataColumn2(
-                        label: const Text('End Date'),
+                        label: const Text('Status'),
                         size: ColumnSize.S,
                       ),
                       DataColumn2(
@@ -1486,7 +1486,7 @@ class PerformanceGovernanceSystemPageState
                             cells: [
                               DataCell(
                                 SizedBox(
-                                  width: 40, // Fixed width for index
+                                  width: 40,
                                   child: Text(itemNumber.toString()),
                                 ),
                               ),
@@ -1507,25 +1507,12 @@ class PerformanceGovernanceSystemPageState
                               DataCell(
                                 SizedBox(
                                   child: Text(
-                                    LongDateOnlyConverter().toJson(
-                                      LongDateOnlyConverter().fromJson(
-                                        pgsgovernancesystem['startDate'],
-                                      ),
-                                    ),
+                                    "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['startDate']))} - ${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['endDate']))}",
                                   ),
                                 ),
                               ),
-                              DataCell(
-                                SizedBox(
-                                  child: Text(
-                                    LongDateOnlyConverter().toJson(
-                                      LongDateOnlyConverter().fromJson(
-                                        pgsgovernancesystem['endDate'],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+
+                              DataCell(SizedBox(child: Text('Status'))),
                               DataCell(
                                 SizedBox(
                                   child: Row(
@@ -1942,7 +1929,8 @@ class PerformanceGovernanceSystemPageState
 
             final isAnyDisapproved =
                 deliverables?.any((d) => d.isDisapproved == true) ?? false;
-            bool showButton = !isDraft! && orderLevel >= 1 && idSig == 0;
+            final isDraftSafe = isDraft ?? false;
+            bool showButton = !isDraftSafe && orderLevel >= 1 && idSig == 0;
 
             return AlertDialog(
               backgroundColor: mainBgColor,
@@ -1964,10 +1952,6 @@ class PerformanceGovernanceSystemPageState
                             await SharedPreferences.getInstance();
                         await prefs.remove('selectedOfficeId');
                         await prefs.remove('selectedOfficeName');
-                        //
-                        // setState(() {
-                        //   pgsIdHistory = null;
-                        // });
                         setDialogState(() {
                           Navigator.pop(context);
                           clearAllSelections();
@@ -1982,7 +1966,7 @@ class PerformanceGovernanceSystemPageState
                       width: MediaQuery.of(context).size.width * 0.9,
                       height: MediaQuery.of(context).size.height * 0.8,
                       child: DefaultTabController(
-                        length: 3, // Number of tabs
+                        length: 3,
                         child: Form(
                           key: _formKey,
                           child: Column(
