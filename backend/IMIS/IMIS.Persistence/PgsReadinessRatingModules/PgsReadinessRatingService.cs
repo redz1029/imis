@@ -11,29 +11,21 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
         public PgsReadinessRatingService(IPgsReadinessRatingRepository repository)
         {
             _repository = repository;
-        }        
-        private PgsReadinessRatingDto ConvertToDTO(PgsReadinessRating pgsReadinessRating)
-        {
-            if (pgsReadinessRating == null) return null;
-
-            return new PgsReadinessRatingDto
-            {
-                Id = pgsReadinessRating.Id,
-                CompetenceToDeliver = pgsReadinessRating.CompetenceToDeliver,
-                ResourceAvailability = pgsReadinessRating.ResourceAvailability,
-                ConfidenceToDeliver = pgsReadinessRating.ConfidenceToDeliver,
-                TotalScore = pgsReadinessRating.TotalScore
-            };
-        }             
+        }                    
+        
         public async Task<List<PgsReadinessRatingDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var pgsReadiness = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return pgsReadiness?.Select(o => ConvertToDTO(o)).ToList();
+            if (pgsReadiness == null)
+                return null;
+
+            return pgsReadiness.Select(d => new PgsReadinessRatingDto(d)).ToList();
         }
+
         public async Task<PgsReadinessRatingDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var pgsReadiness = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return pgsReadiness != null ? ConvertToDTO(pgsReadiness) : null;
+            return pgsReadiness != null ? new PgsReadinessRatingDto(pgsReadiness) : null;
         }      
         public async Task<DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
@@ -42,6 +34,7 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
                 return null;
             return DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>.Create(pgsReadiness.Items, page, pageSize, pgsReadiness.TotalCount);
         }
+
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {           
             var ODto = dto as PgsReadinessRatingDto;
