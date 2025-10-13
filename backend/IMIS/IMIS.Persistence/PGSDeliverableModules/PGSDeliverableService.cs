@@ -87,42 +87,25 @@ namespace IMIS.Persistence.PGSModules
 
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
 
-            return ConvertToDto(pgsDeliverableEntity);
+            return new PGSDeliverableDto(pgsDeliverableEntity);
         }
-
+        
         public async Task<List<PGSDeliverableDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var pgsDeliverables = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return pgsDeliverables?.Select(o => ConvertToDto(o)).ToList();
+
+            if (pgsDeliverables == null)
+                return null;
+
+            return pgsDeliverables.Select(d => new PGSDeliverableDto(d)).ToList();
         }
+
         public async Task<PGSDeliverableDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var pgsDeliverables = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return pgsDeliverables != null ? ConvertToDto(pgsDeliverables) : null;
-        }      
-        private static PGSDeliverableDto ConvertToDto(PgsDeliverable deliverable)
-        {
-            return new PGSDeliverableDto
-            {
-                Id = deliverable.Id,                
-                IsDirect = deliverable.IsDirect,
-                DeliverableName = deliverable.DeliverableName,
-                ByWhen = deliverable.ByWhen,
-                PercentDeliverables = deliverable.PercentDeliverables,
-                Status = deliverable.Status,
-                RowVersion = deliverable.RowVersion ?? Array.Empty<byte>(),
-                Remarks = deliverable.Remarks ?? string.Empty,
-                KraDescription = deliverable.KraDescription ?? string.Empty,
-                PerfomanceGovernanceSystemId = deliverable.PerfomanceGovernanceSystemId,
-                Kra = deliverable.Kra != null ? new KeyResultAreaDto
-                {
-                    Id = deliverable.Kra.Id,
-                    Name = deliverable.Kra.Name,
-                    Remarks = deliverable.Kra.Remarks ?? string.Empty
-                } : null
-            };
+            var pgsDeliverable = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return pgsDeliverable != null ? new PGSDeliverableDto(pgsDeliverable) : null;
         }
-             
+        
         private async Task<User?> GetCurrentUserAsync()
         {
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
