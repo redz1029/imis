@@ -13,19 +13,15 @@ namespace IMIS.Persistence.OfficeTypeModule
         {
             _repository = repository;
         }
-        private static OfficeTypeDto ConvOfficeToDTO(OfficeType officetype)
-        {
-            return new OfficeTypeDto()
-            {
-                Id = officetype.Id,
-                Name = officetype.Name,
-                IsActive = officetype.IsActive,              
-            };
-        }
+       
         public async Task<List<OfficeTypeDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
+
+            if (offices == null)
+                return null;
+
+            return offices.Select(o => new OfficeTypeDto(o)).ToList();
         }
 
         public async Task<DtoPageList<OfficeTypeDto, OfficeType, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
