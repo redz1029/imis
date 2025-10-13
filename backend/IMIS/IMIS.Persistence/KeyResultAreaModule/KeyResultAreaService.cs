@@ -27,20 +27,10 @@ namespace IMIS.Persistence.KraModule
         }
         public async Task<List<KeyResultAreaDto>?> FilterByName(string name, int keyResultAreaNoOfResults, CancellationToken cancellationToken)
         {
-            var keyResultArea = await _repository.FilterByName(name, keyResultAreaNoOfResults, cancellationToken).ConfigureAwait(false);
-            return keyResultArea != null && keyResultArea.Count() > 0 ? keyResultArea.Select(a => ConvOfficeToDTO(a)).ToList() : null;
+            var keyResultArea = await _repository.FilterByName(name, keyResultAreaNoOfResults, cancellationToken).ConfigureAwait(false);     
+            return keyResultArea != null && keyResultArea.Count() > 0 ? keyResultArea.Select(a => new KeyResultAreaDto(a)).ToList() : null;
         }
-        private KeyResultAreaDto ConvOfficeToDTO(KeyResultArea keyResultArea)
-        {
-            if (keyResultArea == null) return null;
-
-            return new KeyResultAreaDto
-            {
-                Id = keyResultArea.Id,
-                Name = keyResultArea.Name,
-                Remarks = keyResultArea.Remarks
-            };
-        }
+        
         public async Task<DtoPageList<KeyResultAreaDto, KeyResultArea, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var keyResultArea = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -52,12 +42,15 @@ namespace IMIS.Persistence.KraModule
         public async Task<KeyResultAreaDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var keyResultAreaDto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return keyResultAreaDto != null ? ConvOfficeToDTO(keyResultAreaDto) : null;
+            return keyResultAreaDto != null ? new KeyResultAreaDto(keyResultAreaDto) : null;
         }
         public async Task<List<KeyResultAreaDto>?> GetAllAsync(CancellationToken cancellationToken)
         {          
             var keyResultAreaDto = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return keyResultAreaDto?.Select(o => ConvOfficeToDTO(o)).ToList();
+            if (keyResultAreaDto == null)
+                return null;
+
+            return keyResultAreaDto.Select(o => new KeyResultAreaDto(o)).ToList();
         }            
        
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)where TEntity : Entity<TId>
