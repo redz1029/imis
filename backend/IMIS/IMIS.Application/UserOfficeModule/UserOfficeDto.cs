@@ -18,15 +18,31 @@ namespace IMIS.Application.UserOfficeModule
         public bool IsOfficeHead { get; set; }
 
         public UserOfficeDto() { }
-        [SetsRequiredMembers]
-        public UserOfficeDto(UserOffices userOffices)
+        [SetsRequiredMembers]      
+        public UserOfficeDto(UserOffices userOffices, List<User>? users = null)
         {
+           
             this.Id = userOffices.Id;
             this.UserId = userOffices.UserId;
             this.OfficeId = userOffices.OfficeId;
             this.IsActive = userOffices.IsActive;
             this.IsOfficeHead = userOffices.IsOfficeHead;
+
+            if (users != null)
+            {
+                var user = users.FirstOrDefault(u => u.Id == userOffices.UserId);
+                if (user != null)
+                {
+                    this.FirstName = user.FirstName;
+                    this.MiddleName = user.MiddleName;
+                    this.LastName = user.LastName;
+                    this.Prefix = user.Prefix;
+                    this.Suffix = user.Suffix;
+                    this.Position = user.Position;
+                }
+            }
         }
+
         public override UserOffices ToEntity()
         {
             return new UserOffices()

@@ -30,38 +30,7 @@ namespace IMIS.Persistence.UserOfficeModule
 
             return true;
         }
-        private async Task<UserOfficeDto> ConvertToDTO(UserOffices userOffices, List<User> users, CancellationToken cancellationToken)
-        {
-           
-            // Find the corresponding user based on UserId
-            var user = users.FirstOrDefault(u => u.Id == userOffices.UserId);
-         
-            if (user == null)
-            {               
-                return new UserOfficeDto
-                {
-                    Id = userOffices.Id,
-                    UserId = userOffices.UserId,
-                    OfficeId = userOffices.OfficeId,
-                    IsActive = userOffices.IsActive,
-                    IsOfficeHead = userOffices.IsOfficeHead
-                };
-            }           
-            return new UserOfficeDto
-            {
-                Id = userOffices.Id,
-                UserId = userOffices.UserId,
-                OfficeId = userOffices.OfficeId,
-                IsActive = userOffices.IsActive,
-                IsOfficeHead = userOffices.IsOfficeHead,
-                FirstName = user.FirstName,
-                MiddleName = user.MiddleName,
-                LastName = user.LastName,
-                Prefix = user.Prefix,
-                Suffix = user.Suffix,
-                Position = user.Position
-            };
-        }
+       
         public async Task<DtoPageList<UserOfficeDto, UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var userOffice = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -116,8 +85,8 @@ namespace IMIS.Persistence.UserOfficeModule
             }
             
             var userIds = userOffices.Select(o => o.UserId).Distinct().ToList();
-            var users = await _userManager.Users.Where(u => userIds.Contains(u.Id)).ToListAsync(cancellationToken);            
-            var userOfficeDtos = await Task.WhenAll(userOffices.Select(o => ConvertToDTO(o, users, cancellationToken)));       
+            var users = await _userManager.Users.Where(u => userIds.Contains(u.Id)).ToListAsync(cancellationToken);
+            var userOfficeDtos = userOffices.Select(o => new UserOfficeDto(o, users)).ToList();
             return userOfficeDtos.ToList();
         }
         
