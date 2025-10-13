@@ -35,27 +35,19 @@ namespace IMIS.Persistence.PgsPeriodModule
             }
             return DtoPageList<PgsPeriodDto, PgsPeriod, int>.Create(pgsPeriod.Items, page, pageSize, pgsPeriod.TotalCount);
         }
-        private PgsPeriodDto ConvPgsPeriodToDTO(PgsPeriod period)
-        {
-            if (period == null) return null;
-
-            return new PgsPeriodDto
-            {
-                Id = period.Id,
-                StartDate = period.StartDate,
-                EndDate = period.EndDate,
-                Remarks = period.Remarks,
-            };
-        }
+      
         public async Task<PgsPeriodDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var period = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return period != null ? ConvPgsPeriodToDTO(period) : null;
+            return period != null ? new PgsPeriodDto(period) : null;
         }
         public async Task<List<PgsPeriodDto>?> GetAllAsync(CancellationToken cancellationToken) 
         {
             var periods = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return periods?.Select(o => ConvPgsPeriodToDTO(o)).ToList();
+            if (periods == null)
+                return null;
+
+            return periods.Select(d => new PgsPeriodDto(d)).ToList();
         }       
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
