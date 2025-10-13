@@ -50,6 +50,13 @@ class AnnouncementService {
     return data.map((json) => Announcement.fromJson(json)).toList();
   }
 
+  Future<List<Announcement>> getAnnouncementsFromEndpoint(String url) async {
+    final response = await AuthenticatedRequest.get(dio, url);
+    final List data =
+        response.data is List ? response.data : response.data['data'];
+    return data.map((json) => Announcement.fromJson(json)).toList();
+  }
+
   Future<void> updateAnnouncement(Announcement a) async {
     if (a.id == 0) {
       throw Exception('Announcement ID is required for update.');
