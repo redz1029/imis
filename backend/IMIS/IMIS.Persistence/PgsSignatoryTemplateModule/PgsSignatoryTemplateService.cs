@@ -27,22 +27,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
 
             return true;
         }
-
-        private static PgsSignatoryTemplateDto ConvSignatoryTemplateToDTO(PgsSignatoryTemplate signatoryTemplate)
-        {
-            return new PgsSignatoryTemplateDto()
-            {
-                Id = signatoryTemplate.Id,
-                Status = signatoryTemplate.Status,
-                SignatoryLabel = signatoryTemplate.SignatoryLabel,
-                OrderLevel = signatoryTemplate.OrderLevel,
-                DefaultSignatoryId = signatoryTemplate.DefaultSignatoryId,
-                IsActive = signatoryTemplate.IsActive,
-                OfficeId = signatoryTemplate.OfficeId,
-                Position = signatoryTemplate.Position,
-                
-            };
-        }
+        
         public async Task<DtoPageList<PgsSignatoryTemplateDto, PgsSignatoryTemplate, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var pgsSignatoryTemplateDto = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -53,12 +38,15 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
         public async Task<PgsSignatoryTemplateDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var pgsSignatoryTemplateDto = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            return pgsSignatoryTemplateDto != null ? ConvSignatoryTemplateToDTO(pgsSignatoryTemplateDto) : null;
+            return pgsSignatoryTemplateDto != null ? new PgsSignatoryTemplateDto(pgsSignatoryTemplateDto) : null;
         }
         public async Task<List<PgsSignatoryTemplateDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var pgsSignatoryTemplateDto = await _repository.GetAllAsync(cancellationToken).ConfigureAwait(false);
-            return pgsSignatoryTemplateDto?.Select(t => ConvSignatoryTemplateToDTO(t)).ToList();
+            if (pgsSignatoryTemplateDto == null)
+                return null;
+
+            return pgsSignatoryTemplateDto.Select(d => new PgsSignatoryTemplateDto(d)).ToList();
         }
 
         public async Task<List<PgsSignatoryTemplateDto>> SaveOrUpdateAsync(List<PgsSignatoryTemplateDto> dtoList, CancellationToken cancellationToken)
