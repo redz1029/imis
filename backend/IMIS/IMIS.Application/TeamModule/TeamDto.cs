@@ -17,6 +17,14 @@ namespace IMIS.Application.TeamModule
             this.Id = team.Id;
             this.Name = team.Name;
             this.IsActive = team.IsActive;
+            this.Auditors = team.AuditorTeams?.Select(a => new AuditorDto()
+            {
+                Id = a.AuditorId ?? 0,
+                IsActive = a.Auditor!.IsActive,
+                Name = a.Auditor!.Name,
+                UserId = a.Auditor!.UserId,
+
+            }).ToList();
         }
         public override Team ToEntity()
         {
