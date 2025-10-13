@@ -1,9 +1,7 @@
 ﻿using Base.Primitives;
 using IMIS.Application.TeamModule;
 using IMIS.Domain;
-using IMIS.Application.AuditorModule;
 using Base.Pagination;
-using IMIS.Application.PgsModule;
 
 namespace IMIS.Persistence.TeamModule
 {
