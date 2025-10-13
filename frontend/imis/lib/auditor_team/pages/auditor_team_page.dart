@@ -510,8 +510,6 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                     uniqueTeams
                         .asMap()
                         .map((index, audiorTeam) {
-                          // int itemNumber =
-                          //     ((_currentPage - 1) * _pageSize) + index + 1;
                           return MapEntry(
                             index,
                             Card(

@@ -217,6 +217,15 @@ class _AnnouncementListState extends State<AnnouncementList> {
                               itemBuilder: (context, index) {
                                 final ann = allAnnouncements[index];
                                 return Card(
+                                  elevation: 0,
+                                  color: mainBgColor,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    side: BorderSide(
+                                      color: Colors.grey.shade300,
+                                      width: 1,
+                                    ),
+                                  ),
                                   margin: const EdgeInsets.symmetric(
                                     vertical: 6,
                                   ),
