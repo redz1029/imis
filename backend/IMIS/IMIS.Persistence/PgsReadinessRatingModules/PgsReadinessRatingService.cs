@@ -11,8 +11,7 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
         public PgsReadinessRatingService(IPgsReadinessRatingRepository repository)
         {
             _repository = repository;
-        }                    
-        
+        }                            
         public async Task<List<PgsReadinessRatingDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var pgsReadiness = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
@@ -21,7 +20,6 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
 
             return pgsReadiness.Select(d => new PgsReadinessRatingDto(d)).ToList();
         }
-
         public async Task<PgsReadinessRatingDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var pgsReadiness = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -34,7 +32,6 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
                 return null;
             return DtoPageList<PgsReadinessRatingDto, PgsReadinessRating, long>.Create(pgsReadiness.Items, page, pageSize, pgsReadiness.TotalCount);
         }
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {           
             var ODto = dto as PgsReadinessRatingDto;

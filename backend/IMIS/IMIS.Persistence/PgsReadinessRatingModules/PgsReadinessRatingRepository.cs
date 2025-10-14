@@ -12,10 +12,8 @@ namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
         {
         }
         public async Task<EntityPageList<PgsReadinessRating, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
-        {
-           
-            return await EntityPageList<PgsReadinessRating, long>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
-           
+        {           
+            return await EntityPageList<PgsReadinessRating, long>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);           
         }
         public async Task<IEnumerable<PgsReadinessRating>> GetAll(CancellationToken cancellationToken)
         {
