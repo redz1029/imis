@@ -27,8 +27,7 @@ namespace IMIS.Presentation.TeamModule
                 return Results.Ok(teamDto);
             })
             .WithTags(_teamTag)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _teamPermission.Add));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.Add));
 
             app.MapGet("/", async (ITeamService service, CancellationToken cancellationToken) =>
             {
@@ -37,8 +36,7 @@ namespace IMIS.Presentation.TeamModule
             })
             .WithTags(_teamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _teamPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
 
             app.MapGet("/filter/{name}", async (string name, ITeamService service, CancellationToken cancellationToken) =>
             {
@@ -48,8 +46,7 @@ namespace IMIS.Presentation.TeamModule
             })
             .WithTags(_teamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _teamPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
 
             app.MapGet("/{id}", async (int id, ITeamService service, CancellationToken cancellationToken) =>
             {
@@ -58,8 +55,7 @@ namespace IMIS.Presentation.TeamModule
             })
             .WithTags(_teamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _teamPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] TeamDto teamDto, ITeamService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -74,8 +70,7 @@ namespace IMIS.Presentation.TeamModule
                 return Results.Ok(teamDto);
             })
             .WithTags(_teamTag)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _teamPermission.Edit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.Edit));
 
             app.MapGet("/page", async (int page, int pageSize, ITeamService service, CancellationToken cancellationToken) =>
             {
@@ -84,8 +79,7 @@ namespace IMIS.Presentation.TeamModule
             })
             .WithTags(_teamTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_teamTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _teamPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _teamPermission.View));
 
             app.MapDelete("/{id:int}", async (int id, ITeamService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

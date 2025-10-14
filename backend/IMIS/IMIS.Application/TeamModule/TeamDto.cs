@@ -23,13 +23,13 @@ namespace IMIS.Application.TeamModule
                 IsActive = a.Auditor!.IsActive,
                 Name = a.Auditor!.Name,
                 UserId = a.Auditor!.UserId,
-
             }).ToList();
         }
         public override Team ToEntity()
         {
             return new Team()
-            { Id = Id, 
+            { 
+              Id = Id, 
               Name = Name, 
               IsActive = IsActive
             };

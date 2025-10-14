@@ -20,8 +20,7 @@ namespace IMIS.Persistence.TeamModule
         {
             var team = await _teamRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return team != null ? new TeamDto(team) : null;
-        }
-       
+        }       
         public async Task<List<TeamDto>?> FilterByName(string name, int teamNoOfResults, CancellationToken cancellationToken)
         {
             var teams = await _teamRepository.FilterByName(name, teamNoOfResults, cancellationToken).ConfigureAwait(false);
@@ -31,7 +30,6 @@ namespace IMIS.Persistence.TeamModule
 
             return teams.Select(a => new TeamDto(a)).ToList();
         }
-
         public async Task<List<TeamDto>?> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             var teams = await _teamRepository.GetAllActiveAsync(cancellationToken).ConfigureAwait(false);

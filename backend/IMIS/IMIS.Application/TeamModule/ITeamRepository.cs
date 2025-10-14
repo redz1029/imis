@@ -11,6 +11,5 @@ namespace IMIS.Application.TeamModule
         Task<IEnumerable<Team>> GetAllActiveAsync(CancellationToken cancellationToken);    
         Task<IEnumerable<Team>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
         Task<Team?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
-
     }
 }
