@@ -25,8 +25,7 @@ namespace IMIS.Presentation.UserOfficeModule
                 return Results.Ok(userOfficeDto);
             })
             .WithTags(_userOffice)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _userOfficePermission.Add));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.Add));
 
             app.MapGet("/", async (IUserOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -34,8 +33,7 @@ namespace IMIS.Presentation.UserOfficeModule
                 return Results.Ok(userOffice);
             })
             .WithTags(_userOffice)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _userOfficePermission.View))
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
  
             app.MapGet("/{id}", async (int id, IUserOfficeService service, CancellationToken cancellationToken) =>
@@ -45,8 +43,7 @@ namespace IMIS.Presentation.UserOfficeModule
             })
             .WithTags(_userOffice)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _userOfficePermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] UserOfficeDto useroffice, IUserOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -64,8 +61,7 @@ namespace IMIS.Presentation.UserOfficeModule
                 return Results.Ok(useroffice);
             })
             .WithTags(_userOffice)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _userOfficePermission.Edit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.Edit));
 
             app.MapGet("/page", async (int page, int pageSize, IUserOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -75,8 +71,7 @@ namespace IMIS.Presentation.UserOfficeModule
             })
             .WithTags(_userOffice)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true)
-            .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _userOfficePermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IUserOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -88,7 +83,7 @@ namespace IMIS.Presentation.UserOfficeModule
                               : Results.NotFound(new { message = "User Office Template not found." });
             })
             .WithTags(_userOffice)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.Edit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.Edit));
         }
     }
 }

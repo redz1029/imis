@@ -29,8 +29,7 @@ namespace IMIS.Persistence.UserOfficeModule
             await context.SaveChangesAsync(cancellationToken);
 
             return true;
-        }
-       
+        }       
         public async Task<DtoPageList<UserOfficeDto, UserOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var userOffice = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -88,8 +87,7 @@ namespace IMIS.Persistence.UserOfficeModule
             var users = await _userManager.Users.Where(u => userIds.Contains(u.Id)).ToListAsync(cancellationToken);
             var userOfficeDtos = userOffices.Select(o => new UserOfficeDto(o, users)).ToList();
             return userOfficeDtos.ToList();
-        }
-        
+        }        
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
 

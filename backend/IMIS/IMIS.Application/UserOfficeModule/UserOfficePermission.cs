@@ -6,6 +6,5 @@ namespace IMIS.Application.UserOfficeModule
     {
         public override string ModuleName => "UserOffice";
         public override string PermissionGroup => PermissionGrouper.Setting;
-
     }
 }
