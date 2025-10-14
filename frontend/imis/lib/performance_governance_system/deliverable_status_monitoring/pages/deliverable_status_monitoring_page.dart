@@ -1,90 +1,79 @@
-// ignore_for_file: use_build_context_synchronously, deprecated_member_use, unnecessary_null_comparison
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
-import 'package:imis/common_services/common_service.dart';
-import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
-import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
-import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
-import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
-import 'package:imis/reports/pages/manage_summary_narrative_report_page.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
-import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/date_time_converter.dart';
-import 'package:imis/utils/permission_string.dart';
+import 'package:imis/widgets/accomplishment_auditor_widget.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:imis/constant/constant.dart';
 import 'package:motion_toast/motion_toast.dart';
+import '../../../common_services/common_service.dart';
+import '../../../reports/pages/manage_summary_narrative_report_page.dart';
 import '../../../user/models/user_registration.dart';
+import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
+import '../../../utils/date_time_converter.dart';
 import '../../../utils/http_util.dart';
-import '../../../utils/permission_service.dart';
-import '../../../widgets/accomplishment_auditor_widget.dart';
+import '../../../utils/permission_string.dart';
+import '../../models/pgs_deliverable_score_history.dart';
+import '../../pgs_period/models/pgs_period.dart';
 import '../models/pgs_filter.dart';
+import '../services/deliverable_status_monitoring_service.dart';
 
 class DeliverableStatusMonitoringPage extends StatefulWidget {
   const DeliverableStatusMonitoringPage({super.key});
 
   @override
-  DeliverableStatusMonitoringPageState createState() =>
-      DeliverableStatusMonitoringPageState();
+  State<DeliverableStatusMonitoringPage> createState() =>
+      _DeliverableStatusMonitoringPageState();
 }
 
-class DeliverableStatusMonitoringPageState
+class _DeliverableStatusMonitoringPageState
     extends State<DeliverableStatusMonitoringPage> {
-  final _commonService = CommonService(Dio());
-  final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
-    Dio(),
-  );
+  final ScrollController _verticalController = ScrollController();
+  final ScrollController _horizontalController = ScrollController();
+  final ScrollController _headerHorizontalController = ScrollController();
   final _dateConverter = const LongDateOnlyConverter();
-  final _summaryNarrativeService = SummaryNarrativeService(Dio());
-  final GlobalKey _menuScoreRangeKey = GlobalKey();
-  final GlobalKey _menuPageKey = GlobalKey();
-  Map<int, TextEditingController> remarkControllers = {};
-
-  List<Map<String, dynamic>> deliverableList = [];
-  List<Map<String, dynamic>> filteredList = [];
-  Map<int, String> selectedByWhen = {};
-
-  Map<int, TextEditingController> percentageControllers = {};
-  Map<int, int> percentageValues = {};
-
-  int accomplishmentCount = 3;
-  List<KeyResultArea> kraListOptions = [];
-  int? selectedKra;
-
-  List<Office> officeList = [];
-  String? _selectedOfficeId;
-
-  List<PgsPeriod> periodList = [];
-  int? selectedPeriod;
-  int? selectedPeriodCreateReport;
-  String? selectedPeriodText;
-  String? selectedPeriodTextCreateReport;
-  final PermissionService _permissionService = PermissionService();
-  bool hasEditPermission = false;
-  List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
-  List<PgsDeliverableHistoryGrouped> deliverableHistoryGroupedfilteredList = [];
-  bool hasSeenOnGoingTip = false;
-  Map<int, PgsStatus> selectedStatus = {};
-
   TextEditingController scoreRangeToController = TextEditingController();
   TextEditingController scoreRangeFromController = TextEditingController();
   TextEditingController pageController = TextEditingController();
   TextEditingController pageSizeController = TextEditingController();
-  String userId = "";
-  bool? isDirect;
-
   final TextEditingController _findingsController = TextEditingController();
   final TextEditingController _conclusionsController = TextEditingController();
   final TextEditingController _recommendationsController =
       TextEditingController();
+  final _summaryNarrativeService = SummaryNarrativeService(Dio());
   final _formKey = GlobalKey<FormState>();
+  final GlobalKey _menuScoreRangeKey = GlobalKey();
+  final GlobalKey _menuPageKey = GlobalKey();
+  final int dataColumns = 7;
+  final double numberColumnWidth = 70;
+  final double dataColumnWidth = 260;
+  final dio = Dio();
+  final _commonService = CommonService(Dio());
+  final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
+    Dio(),
+  );
+  List<Map<String, dynamic>> deliverableList = [];
+  List<Map<String, dynamic>> filteredList = [];
+  List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
+  String userId = "";
+  final List<String> headers = [
+    "PERIOD",
+    "OFFICE",
+    "KRA",
+    "DIRECT",
+    "DELIVERABLES",
+    "BY WHEN",
+    "ACTIONS",
+  ];
   bool isMenuOpenOffice = false;
   bool isMenuOpenPeriod = false;
   bool isMenuOpenPeriodCreateReport = false;
@@ -92,19 +81,37 @@ class DeliverableStatusMonitoringPageState
   bool isMenuOpenType = false;
   bool isMenuScoreRange = false;
   bool isMenuOpenPage = false;
-  final dio = Dio();
-  bool _hasAvailableDeliverables = false;
+  List<KeyResultArea> kraListOptions = [];
+  int? selectedKra;
+
+  List<Office> officeList = [];
+  String? _selectedOfficeId;
+  bool? isDirect;
+  List<PgsPeriod> periodList = [];
+  int? selectedPeriod;
+  int? selectedPeriodCreateReport;
+  String? selectedPeriodText;
+  String? selectedPeriodTextCreateReport;
   String? _selectedPeriod;
   String? _selectedOffice;
   int? officeId;
   int? periodId;
-  final List<String> officeLists = ['Office 1', 'Office 2', 'Office 3'];
+  bool _hasAvailableDeliverables = false;
+  @override
   @override
   void initState() {
     super.initState();
-    fetchFilteredPgsList();
-    fetchScoreHistory();
-    _checkPermissions();
+    _headerHorizontalController.addListener(() {
+      if (_horizontalController.offset != _headerHorizontalController.offset) {
+        _horizontalController.jumpTo(_headerHorizontalController.offset);
+      }
+    });
+
+    _horizontalController.addListener(() {
+      if (_headerHorizontalController.offset != _horizontalController.offset) {
+        _headerHorizontalController.jumpTo(_horizontalController.offset);
+      }
+    });
     () async {
       final offices = await _deliverableStatusMonitoring.fetchOffices();
       final period = await _commonService.fetchPgsPeriod();
@@ -117,21 +124,20 @@ class DeliverableStatusMonitoringPageState
         kraListOptions = kra;
       });
     }();
+    fetchFilteredPgsList();
     _loadCurrentUserId();
   }
 
-  @override
-  void dispose() {
-    super.dispose();
-  }
+  Future<void> _loadCurrentUserId() async {
+    UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
 
-  void _checkPermissions() {
     setState(() {
-      hasEditPermission = _permissionService.hasPermission(
-        PermissionString.scorePgsDeliverableMonitor,
-        allowedRoles: [PermissionString.pgsAuditor, PermissionString.roleAdmin],
-      );
+      userId = user!.id ?? "UserId";
     });
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _checkDeliverablesAvailability(Function setDialogState) async {
@@ -187,16 +193,12 @@ class DeliverableStatusMonitoringPageState
     setDialogState(() {});
   }
 
-  Future<void> _loadCurrentUserId() async {
-    UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
-
-    setState(() {
-      userId = user!.id ?? "UserId";
-    });
-
-    if (mounted) {
-      setState(() {});
-    }
+  @override
+  void dispose() {
+    _verticalController.dispose();
+    _horizontalController.dispose();
+    _headerHorizontalController.dispose();
+    super.dispose();
   }
 
   Future<void> fetchFilteredPgsList() async {
@@ -242,11 +244,6 @@ class DeliverableStatusMonitoringPageState
       if (response.statusCode == 200) {
         final data = response.data;
         final items = data["items"] as List<dynamic>? ?? [];
-
-        remarkControllers.clear();
-        percentageControllers.clear();
-        percentageValues.clear();
-        selectedStatus.clear();
 
         List<Map<String, dynamic>> formattedData =
             items.map((item) {
@@ -297,257 +294,12 @@ class DeliverableStatusMonitoringPageState
     }
   }
 
-  Future<void> fetchScoreHistory() async {
-    var url = ApiEndpoint().pgsDeliverableScoreHistoryGrouped;
-
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<PgsDeliverableHistoryGrouped> data =
-            (response.data as List)
-                .map((e) => PgsDeliverableHistoryGrouped.fromJson(e))
-                .toList();
-
-        setState(() {
-          deliverableHistoryGrouped = data;
-        });
-
-        debugPrint("deliverable list loaded");
-      }
-    } catch (e) {
-      debugPrint("fetchdeliverableList Error: $e");
-    }
-  }
-
-  PgsStatus dynamicToPgsStatus(dynamic value) {
-    if (value == null) return PgsStatus.notStarted;
-
-    if (value is int) {
-      if (value >= 0 && value < PgsStatus.values.length) {
-        return PgsStatus.values[value];
-      }
-    }
-
-    if (value is String) {
-      try {
-        return PgsStatus.values.firstWhere(
-          (status) => status.name == value,
-          orElse: () => PgsStatus.notStarted,
-        );
-      } catch (e) {
-        debugPrint("Failed to parse status string");
-      }
-    }
-
-    return PgsStatus.notStarted;
-  }
-
-  void showFormDialog(int pgsDeliverableId) async {
-    final groupedItem = deliverableHistoryGrouped.firstWhere(
-      (item) => item.pgsDeliverableId == pgsDeliverableId,
-      orElse: () => PgsDeliverableHistoryGrouped(pgsDeliverableId, null),
-    );
-
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10.0),
-          ),
-          backgroundColor: mainBgColor,
-
-          contentPadding: EdgeInsets.zero,
-          titlePadding: EdgeInsets.all(16),
-          title: Stack(
-            children: [
-              const Text("Deliverable's History"),
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.of(context).pop(),
-                  color: primaryTextColor,
-                ),
-              ),
-            ],
-          ),
-          content: SizedBox(
-            width: 1600,
-            height: 700,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (groupedItem.scoreHistory != null &&
-                      groupedItem.scoreHistory!.isNotEmpty)
-                    _buildHistoryTable(groupedItem.scoreHistory!)
-                  else
-                    const Padding(
-                      padding: EdgeInsets.all(24.0),
-                      child: Text('No history available for this deliverable'),
-                    ),
-                ],
-              ),
-            ),
-          ),
-          actions: [],
-        );
-      },
-    );
-  }
-
-  Widget _buildHistoryTable(List<PgsDeliverableScoreHistory> items) {
-    items.sort((a, b) => b.date.compareTo(a.date));
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Header row
-        Container(
-          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          color: Colors.grey.shade200,
-          child: Row(
-            children: const [
-              Expanded(
-                flex: 2,
-                child: Text('Date', style: TextStyle(color: grey)),
-              ),
-
-              Expanded(
-                flex: 2,
-                child: Text('Status', style: TextStyle(color: grey)),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text('Remarks', style: TextStyle(color: grey)),
-              ),
-              Expanded(
-                flex: 1,
-                child: Text('Score', style: TextStyle(color: grey)),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 4),
-
-        ...items.map((item) {
-          final date = item.date;
-          final datePart = DateFormat('MMM. dd, yyyy').format(date);
-          final timePart = DateFormat('hh:mm a').format(date);
-
-          return Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: RichText(
-                    text: TextSpan(
-                      style: const TextStyle(fontSize: 14, color: Colors.black),
-                      children: [
-                        TextSpan(text: datePart),
-                        const WidgetSpan(child: SizedBox(width: 10)),
-                        TextSpan(
-                          text: timePart,
-                          style: const TextStyle(
-                            fontWeight: FontWeight.normal,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text(
-                    item.status.name,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(
-                    (item.remarks == null || item.remarks!.trim().isEmpty)
-                        ? 'No Remarks'
-                        : item.remarks!,
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Text(
-                    '${item.score}%',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ],
-    );
-  }
-
-  Widget _buildCreateAccomplishmentCell(int index, VoidCallback onPressed) {
-    final deliverable = deliverableList[index];
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: SizedBox(
-        height: 30,
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-              side: const BorderSide(color: Colors.black, width: 1),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            textStyle: const TextStyle(fontSize: 13),
-            minimumSize: Size.zero,
-          ).copyWith(
-            overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(MaterialState.hovered)) {
-                return const Color.fromARGB(255, 221, 221, 221);
-              }
-              if (states.contains(MaterialState.pressed)) {
-                return const Color.fromARGB(255, 221, 221, 221);
-              }
-              return null; // default
-            }),
-          ),
-
-          onPressed: () async {
-            await loadAccomplishments(deliverable['pgsDeliverableId']);
-            showAccomplishmentFormDialog(context, deliverable, userId);
-          },
-
-          icon: const Icon(
-            Icons.bar_chart_outlined,
-            size: 14,
-            color: primaryTextColor,
-          ),
-          label: const Text(
-            'Accomplishment',
-            style: TextStyle(color: primaryTextColor, fontSize: 10),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    double totalWidth = numberColumnWidth + (dataColumns * dataColumnWidth);
+
     return Scaffold(
+      backgroundColor: mainBgColor,
       appBar: AppBar(
         backgroundColor: mainBgColor,
         title: Row(
@@ -583,7 +335,10 @@ class DeliverableStatusMonitoringPageState
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.description_outlined, color: primaryTextColor),
+                    Icon(
+                      Icons.description_outlined,
+                      color: const Color.fromARGB(255, 17, 16, 16),
+                    ),
                     SizedBox(width: 5),
                     Text(
                       'Manage Auditor Reports',
@@ -596,870 +351,492 @@ class DeliverableStatusMonitoringPageState
           ],
         ),
       ),
-      backgroundColor: mainBgColor,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                  vertical: 8.0,
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Filter by', style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      PopupMenuButton<String>(
+                        color: mainBgColor,
+                        offset: const Offset(0, 30),
+                        onCanceled: () {
+                          setState(() {
+                            isMenuOpenPeriod = false;
+                          });
+                        },
+                        onOpened: () {
+                          setState(() {
+                            isMenuOpenPeriod = true;
+                          });
+                        },
+                        onSelected: (String value) {
+                          setState(() {
+                            selectedPeriod =
+                                value.isEmpty ? null : int.tryParse(value);
+                            if (selectedPeriod == null) {
+                              selectedPeriodText = 'All Period';
+                            } else {
+                              final selected = periodList.firstWhere(
+                                (period) => period.id == selectedPeriod,
+                                orElse:
+                                    () => PgsPeriod(
+                                      0,
+                                      false,
+                                      DateTime.now(),
+                                      DateTime.now(),
+                                      'remarks',
+                                    ),
+                              );
+                              selectedPeriodText =
+                                  "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
+                            }
+                            isMenuOpenPeriod = false;
+                            fetchFilteredPgsList();
+                          });
+                        },
+                        itemBuilder: (BuildContext context) {
+                          final updatedPeriodList = [
+                            {'id': '', 'name': 'All Period'},
+                            ...periodList.map(
+                              (period) => {
+                                'id': period.id,
+                                'name':
+                                    "${_dateConverter.toJson(period.startDate)} - ${_dateConverter.toJson(period.endDate)}",
+                              },
+                            ),
+                          ];
+
+                          return updatedPeriodList.map<PopupMenuItem<String>>((
+                            period,
+                          ) {
+                            return PopupMenuItem<String>(
+                              value: period['id'].toString(),
+                              child: Text(period['name']!.toString()),
+                            );
+                          }).toList();
+                        },
+                        child: FilterButton(
+                          label:
+                              selectedPeriod == null
+                                  ? 'All Period'
+                                  : selectedPeriodText ?? 'Period',
+                          isActive: isMenuOpenPeriod,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Filter by',
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PopupMenuButton<String>(
-                            color: mainBgColor,
-                            offset: const Offset(0, 30),
-                            onCanceled: () {
-                              setState(() {
-                                isMenuOpenPeriod = false;
-                              });
-                            },
-                            onOpened: () {
-                              setState(() {
-                                isMenuOpenPeriod = true;
-                              });
-                            },
-                            onSelected: (String value) {
-                              setState(() {
-                                selectedPeriod =
-                                    value.isEmpty ? null : int.tryParse(value);
-                                if (selectedPeriod == null) {
-                                  selectedPeriodText = 'All Period';
-                                } else {
-                                  final selected = periodList.firstWhere(
-                                    (period) => period.id == selectedPeriod,
-                                    orElse:
-                                        () => PgsPeriod(
-                                          0,
-                                          false,
-                                          DateTime.now(),
-                                          DateTime.now(),
-                                          'remarks',
-                                        ),
-                                  );
-                                  selectedPeriodText =
-                                      "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
-                                  isMenuOpenPeriod = true;
-                                }
-                                fetchFilteredPgsList();
-                              });
-                            },
-                            itemBuilder: (BuildContext context) {
-                              final updatedPeriodList = [
-                                {'id': '', 'name': 'All Period'},
-                                ...periodList.map(
-                                  (period) => {
-                                    'id': period.id,
-                                    'name':
-                                        "${_dateConverter.toJson(period.startDate)} - ${_dateConverter.toJson(period.endDate)}",
-                                  },
-                                ),
-                              ];
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      PopupMenuButton<String>(
+                        color: mainBgColor,
+                        offset: const Offset(0, 30),
+                        onCanceled: () {
+                          setState(() {
+                            isMenuOpenOffice = false;
+                          });
+                        },
+                        onOpened: () {
+                          setState(() {
+                            isMenuOpenOffice = true;
+                          });
+                        },
+                        onSelected: (String value) {
+                          setState(() {
+                            _selectedOfficeId = value.isEmpty ? null : value;
+                            isMenuOpenOffice = false;
 
-                              return updatedPeriodList
-                                  .map<PopupMenuItem<String>>((period) {
-                                    return PopupMenuItem<String>(
-                                      value: period['id'].toString(),
-                                      child: Text(period['name']!.toString()),
-                                    );
-                                  })
-                                  .toList();
-                            },
-                            child: FilterButton(
-                              label:
-                                  selectedPeriod == null
-                                      ? 'All Period'
-                                      : selectedPeriodText ?? 'Period',
-                              isActive: isMenuOpenPeriod,
+                            fetchFilteredPgsList();
+                          });
+                        },
+                        itemBuilder: (BuildContext context) {
+                          final updatedOfficeList = [
+                            {'id': '', 'name': 'All Offices'},
+                            ...officeList.map(
+                              (o) => {'id': o.id, 'name': o.name},
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
+                          ];
 
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PopupMenuButton<String>(
-                            color: mainBgColor,
-                            offset: const Offset(0, 30),
-                            onCanceled: () {
-                              setState(() {
-                                isMenuOpenOffice = false;
-                              });
-                            },
-                            onOpened: () {
-                              setState(() {
-                                isMenuOpenOffice = true;
-                              });
-                            },
-                            onSelected: (String value) {
-                              setState(() {
-                                _selectedOfficeId =
-                                    value.isEmpty ? null : value;
-                                isMenuOpenOffice = false;
-                                fetchFilteredPgsList();
-                              });
-                            },
-                            itemBuilder: (BuildContext context) {
-                              final updatedOfficeList = [
-                                {'id': '', 'name': 'All Offices'},
-                                ...officeList.map(
-                                  (o) => {'id': o.id, 'name': o.name},
-                                ),
-                              ];
+                          final searchController = TextEditingController();
+                          ValueNotifier<String> searchQuery = ValueNotifier('');
 
-                              final searchController = TextEditingController();
-                              ValueNotifier<String> searchQuery = ValueNotifier(
-                                '',
-                              );
-
-                              return [
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  height: kMinInteractiveDimension,
-                                  child: Column(
-                                    children: [
-                                      TextField(
-                                        controller: searchController,
-                                        decoration: InputDecoration(
-                                          hintText: 'Search offices...',
-                                          hintStyle: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 12,
-                                          ),
-                                          prefixIcon: Icon(
-                                            Icons.search,
-                                            size: 18,
-                                          ),
-                                          contentPadding: EdgeInsets.symmetric(
-                                            vertical: 8,
-                                          ),
-                                          border: OutlineInputBorder(),
-                                          isDense: true,
-                                        ),
-                                        onChanged: (value) {
-                                          searchQuery.value =
-                                              value.toLowerCase();
-                                        },
+                          return [
+                            PopupMenuItem<String>(
+                              enabled: false,
+                              height: kMinInteractiveDimension,
+                              child: Column(
+                                children: [
+                                  TextField(
+                                    controller: searchController,
+                                    decoration: InputDecoration(
+                                      hintText: 'Search offices...',
+                                      hintStyle: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 12,
                                       ),
-                                      const Divider(height: 16, thickness: 1),
-                                    ],
-                                  ),
-                                ),
-
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  child: ValueListenableBuilder<String>(
-                                    valueListenable: searchQuery,
-                                    builder: (context, query, _) {
-                                      final filteredOffices =
-                                          updatedOfficeList
-                                              .where(
-                                                (office) => office['name']
-                                                    .toString()
-                                                    .toLowerCase()
-                                                    .contains(query),
-                                              )
-                                              .toList();
-
-                                      return ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxHeight:
-                                              MediaQuery.of(
-                                                context,
-                                              ).size.height *
-                                              0.4,
-                                        ),
-                                        child: SingleChildScrollView(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children:
-                                                filteredOffices
-                                                    .map<Widget>(
-                                                      (office) => ListTile(
-                                                        dense: true,
-                                                        title: Text(
-                                                          office['name']
-                                                              .toString(),
-                                                          style:
-                                                              const TextStyle(
-                                                                color:
-                                                                    Colors
-                                                                        .black,
-                                                              ),
-                                                        ),
-                                                        onTap: () {
-                                                          Navigator.pop(
-                                                            context,
-                                                          );
-                                                          setState(() {
-                                                            _selectedOfficeId =
-                                                                office['id']
-                                                                    .toString();
-                                                            fetchFilteredPgsList();
-                                                          });
-                                                        },
-                                                      ),
-                                                    )
-                                                    .toList(),
-                                          ),
-                                        ),
-                                      );
+                                      prefixIcon: Icon(Icons.search, size: 18),
+                                      contentPadding: EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                    onChanged: (value) {
+                                      searchQuery.value = value.toLowerCase();
                                     },
                                   ),
-                                ),
-                              ];
-                            },
-
-                            child: FilterButton(
-                              label:
-                                  _selectedOfficeId == null
-                                      ? 'All Offices'
-                                      : officeList
-                                          .firstWhere(
-                                            (office) =>
-                                                office.id.toString() ==
-                                                _selectedOfficeId,
-                                            orElse:
-                                                () => Office(
-                                                  id: 0,
-                                                  name: 'Office',
-                                                ),
-                                          )
-                                          .name,
-                              isActive: isMenuOpenOffice,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PopupMenuButton<int>(
-                            color: mainBgColor,
-                            offset: const Offset(0, 30),
-                            onCanceled: () {
-                              setState(() {
-                                isMenuOpenKra = false;
-                              });
-                            },
-                            onOpened: () {
-                              setState(() {
-                                isMenuOpenKra = true;
-                              });
-                            },
-
-                            onSelected: (int value) {
-                              setState(() {
-                                selectedKra = (value == -1) ? null : value;
-                                isMenuOpenKra = false;
-
-                                fetchFilteredPgsList();
-                              });
-                            },
-                            itemBuilder: (BuildContext context) {
-                              final updatedKraList = [
-                                {'id': -1, 'name': 'All KRA'},
-                                ...kraListOptions.map(
-                                  (k) => {
-                                    'id': k.id,
-                                    'name': k.name,
-                                    'remakrs': k.remarks,
-                                  },
-                                ),
-                              ];
-
-                              return updatedKraList.map<PopupMenuItem<int>>((
-                                kra,
-                              ) {
-                                return PopupMenuItem<int>(
-                                  value: kra['id'] as int,
-                                  child: Text(kra['name'].toString()),
-                                );
-                              }).toList();
-                            },
-                            child: FilterButton(
-                              label:
-                                  selectedKra == null
-                                      ? 'All KRA'
-                                      : kraListOptions
-                                          .firstWhere(
-                                            (kra) => kra.id == selectedKra,
-                                            orElse:
-                                                () => KeyResultArea(
-                                                  0,
-                                                  'name',
-                                                  'remarks',
-                                                  false,
-                                                ),
-                                          )
-                                          .name,
-                              isActive: isMenuOpenKra,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PopupMenuButton<String>(
-                            color: mainBgColor,
-                            offset: const Offset(0, 30),
-                            onCanceled: () {
-                              setState(() {
-                                isMenuOpenType = false;
-                              });
-                            },
-                            onOpened: () {
-                              setState(() {
-                                isMenuOpenType = true;
-                              });
-                            },
-                            onSelected: (String value) {
-                              setState(() {
-                                if (value.isEmpty) {
-                                  isDirect = null;
-                                } else if (value == 'true') {
-                                  isDirect = true;
-                                } else {
-                                  isDirect = false;
-                                }
-                                isMenuOpenType = false;
-
-                                fetchFilteredPgsList();
-                              });
-                            },
-                            itemBuilder: (BuildContext context) {
-                              return [
-                                PopupMenuItem<String>(
-                                  value: '',
-                                  child: Text('All Types'),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'true',
-                                  child: Text('Direct'),
-                                ),
-                                PopupMenuItem<String>(
-                                  value: 'false',
-                                  child: Text('Indirect'),
-                                ),
-                              ];
-                            },
-                            child: FilterButton(
-                              label:
-                                  isDirect == null
-                                      ? 'All Types'
-                                      : isDirect!
-                                      ? 'Direct'
-                                      : 'Indirect',
-                              isActive: isMenuOpenType,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            key: _menuScoreRangeKey,
-                            onTap: () => _showScoreRangeMenu(context),
-                            child: FilterButton(
-                              label:
-                                  (scoreRangeFromController.text.isEmpty ||
-                                          scoreRangeToController.text.isEmpty)
-                                      ? 'Score Range'
-                                      : 'From ${scoreRangeFromController.text} to ${scoreRangeToController.text}',
-                              isActive: isMenuScoreRange,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          GestureDetector(
-                            key: _menuPageKey,
-                            onTap: () => _showPageSizeMenu(context),
-                            child: FilterButton(
-                              label:
-                                  (pageController.text.isEmpty ||
-                                          pageSizeController.text.isEmpty)
-                                      ? 'Page'
-                                      : 'From ${pageController.text} to ${pageSizeController.text}',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Flexible(fit: FlexFit.tight, child: Container()),
-                    PermissionWidget(
-                      allowedRoles: [
-                        PermissionString.pgsAuditor,
-                        PermissionString.roleAdmin,
-                      ],
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
+                                  const Divider(height: 16, thickness: 1),
+                                ],
                               ),
                             ),
-                            onPressed: () {
-                              showReportDialog();
-                            },
 
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.add, color: Colors.white),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Create Report',
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                              ],
+                            PopupMenuItem<String>(
+                              enabled: false,
+                              child: ValueListenableBuilder<String>(
+                                valueListenable: searchQuery,
+                                builder: (context, query, _) {
+                                  final filteredOffices =
+                                      updatedOfficeList
+                                          .where(
+                                            (office) => office['name']
+                                                .toString()
+                                                .toLowerCase()
+                                                .contains(query),
+                                          )
+                                          .toList();
+
+                                  return ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxHeight:
+                                          MediaQuery.of(context).size.height *
+                                          0.4,
+                                    ),
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children:
+                                            filteredOffices
+                                                .map<Widget>(
+                                                  (office) => ListTile(
+                                                    dense: true,
+                                                    title: Text(
+                                                      office['name'].toString(),
+                                                      style: const TextStyle(
+                                                        color: Colors.black,
+                                                      ),
+                                                    ),
+                                                    onTap: () {
+                                                      Navigator.pop(context);
+                                                      setState(() {
+                                                        _selectedOfficeId =
+                                                            office['id']
+                                                                .toString();
+                                                        fetchFilteredPgsList();
+                                                      });
+                                                    },
+                                                  ),
+                                                )
+                                                .toList(),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+                          ];
+                        },
 
-              Expanded(
-                child: Column(
-                  children: [
-                    // HEADER (Fixed)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      child: Container(
-                        color: primaryLightColor,
-                        child: Table(
-                          border: TableBorder.all(
-                            color: Colors.black,
-                            width: 1.0,
+                        child: FilterButton(
+                          label:
+                              _selectedOfficeId == null
+                                  ? 'All Offices'
+                                  : officeList
+                                      .firstWhere(
+                                        (office) =>
+                                            office.id.toString() ==
+                                            _selectedOfficeId,
+                                        orElse:
+                                            () => Office(
+                                              id: 0,
+                                              name: 'All Offices',
+                                            ),
+                                      )
+                                      .name,
+                          isActive: isMenuOpenOffice,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      PopupMenuButton<int>(
+                        color: mainBgColor,
+                        offset: const Offset(0, 30),
+                        onCanceled: () {
+                          setState(() {
+                            isMenuOpenKra = false;
+                          });
+                        },
+                        onOpened: () {
+                          setState(() {
+                            isMenuOpenKra = true;
+                          });
+                        },
+
+                        onSelected: (int value) {
+                          setState(() {
+                            selectedKra = (value == -1) ? null : value;
+                            isMenuOpenKra = false;
+
+                            fetchFilteredPgsList();
+                          });
+                        },
+                        itemBuilder: (BuildContext context) {
+                          final updatedKraList = [
+                            {'id': -1, 'name': 'All KRA'},
+                            ...kraListOptions.map(
+                              (k) => {
+                                'id': k.id,
+                                'name': k.name,
+                                'remakrs': k.remarks,
+                              },
+                            ),
+                          ];
+
+                          return updatedKraList.map<PopupMenuItem<int>>((kra) {
+                            return PopupMenuItem<int>(
+                              value: kra['id'] as int,
+                              child: Text(kra['name'].toString()),
+                            );
+                          }).toList();
+                        },
+                        child: FilterButton(
+                          label:
+                              selectedKra == null
+                                  ? 'All KRA'
+                                  : kraListOptions
+                                      .firstWhere(
+                                        (kra) => kra.id == selectedKra,
+                                        orElse:
+                                            () => KeyResultArea(
+                                              0,
+                                              'name',
+                                              'remarks',
+                                              false,
+                                            ),
+                                      )
+                                      .name,
+                          isActive: isMenuOpenKra,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      PopupMenuButton<String>(
+                        color: mainBgColor,
+                        offset: const Offset(0, 30),
+                        onCanceled: () {
+                          setState(() {
+                            isMenuOpenType = false;
+                          });
+                        },
+                        onOpened: () {
+                          setState(() {
+                            isMenuOpenType = true;
+                          });
+                        },
+                        onSelected: (String value) {
+                          setState(() {
+                            if (value.isEmpty) {
+                              isDirect = null;
+                            } else if (value == 'true') {
+                              isDirect = true;
+                            } else {
+                              isDirect = false;
+                            }
+                            isMenuOpenType = false;
+
+                            fetchFilteredPgsList();
+                          });
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return [
+                            PopupMenuItem<String>(
+                              value: '',
+                              child: Text('All Types'),
+                            ),
+                            PopupMenuItem<String>(
+                              value: 'true',
+                              child: Text('Direct'),
+                            ),
+                            PopupMenuItem<String>(
+                              value: 'false',
+                              child: Text('Indirect'),
+                            ),
+                          ];
+                        },
+                        child: FilterButton(
+                          label:
+                              isDirect == null
+                                  ? 'All Types'
+                                  : isDirect!
+                                  ? 'Direct'
+                                  : 'Indirect',
+                          isActive: isMenuOpenType,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        key: _menuScoreRangeKey,
+                        onTap: () => _showScoreRangeMenu(context),
+                        child: FilterButton(
+                          label:
+                              (scoreRangeFromController.text.isEmpty ||
+                                      scoreRangeToController.text.isEmpty)
+                                  ? 'Score Range'
+                                  : 'From ${scoreRangeFromController.text} to ${scoreRangeToController.text}',
+                          isActive: isMenuScoreRange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      GestureDetector(
+                        key: _menuPageKey,
+                        onTap: () => _showPageSizeMenu(context),
+                        child: FilterButton(
+                          label:
+                              (pageController.text.isEmpty ||
+                                      pageSizeController.text.isEmpty)
+                                  ? 'Page'
+                                  : 'From ${pageController.text} to ${pageSizeController.text}',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Flexible(fit: FlexFit.tight, child: Container()),
+                PermissionWidget(
+                  allowedRoles: [
+                    PermissionString.pgsAuditor,
+                    PermissionString.roleAdmin,
+                  ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
                           ),
-                          columnWidths: const {
-                            0: FlexColumnWidth(0.5),
-                            1: FlexColumnWidth(2),
-                            2: FlexColumnWidth(2),
-                            3: FlexColumnWidth(3),
-                            4: FlexColumnWidth(1.5),
-                            5: FlexColumnWidth(4),
-                            6: FlexColumnWidth(2),
-                            // 7: FlexColumnWidth(7),
-                            // 7: FlexColumnWidth(2),
-                            // 8: FlexColumnWidth(2),
-                            // 9: FlexColumnWidth(2),
-                            7: FlexColumnWidth(2),
-                          },
+                        ),
+                        onPressed: () {
+                          showReportDialog();
+                        },
+
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            TableRow(
-                              children: [
-                                _buildTableHeaderCell('#'),
-                                _buildTableHeaderCell('PERIOD'),
-                                _buildTableHeaderCell('OFFICE'),
-                                _buildTableHeaderCell('KRA'),
-                                _buildTableHeaderCell('DIRECT'),
-                                _buildTableHeaderCell('DELIVERABLES'),
-                                _buildTableHeaderCell('BY WHEN'),
-                                // _buildTableHeaderCell('STATUS'),
-                                // _buildTableHeaderCell('REMARKS'),
-                                // _buildTableHeaderCell('SCORE'),
-                                _buildTableHeaderCell('ACTIONS'),
-                              ],
+                            Icon(Icons.add, color: Colors.white),
+                            SizedBox(width: 5),
+                            Text(
+                              'Create Report',
+                              style: TextStyle(color: Colors.white),
                             ),
                           ],
                         ),
                       ),
-                    ),
-
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: ConstrainedBox(
-                          constraints: BoxConstraints(
-                            minWidth: constraints.maxWidth,
-                          ),
-                          child: SingleChildScrollView(
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16.0,
-                              ),
-                              child: Table(
-                                border: TableBorder.all(
-                                  color: Colors.black,
-                                  width: 1.0,
-                                ),
-                                defaultVerticalAlignment:
-                                    TableCellVerticalAlignment.middle,
-                                columnWidths: const {
-                                  0: FlexColumnWidth(0.5),
-                                  1: FlexColumnWidth(2),
-                                  2: FlexColumnWidth(2),
-                                  3: FlexColumnWidth(3),
-                                  4: FlexColumnWidth(1.5),
-                                  5: FlexColumnWidth(4),
-                                  6: FlexColumnWidth(2),
-
-                                  // 7: FlexColumnWidth(2),
-                                  // 7: FlexColumnWidth(2),
-                                  // 9: FlexColumnWidth(2),
-                                  7: FlexColumnWidth(2),
-                                },
-
-                                children: [
-                                  ...deliverableList.asMap().entries.map((
-                                    entry,
-                                  ) {
-                                    final int index = entry.key;
-                                    final deliverable = entry.value;
-
-                                    return TableRow(
-                                      children: [
-                                        _buildTableCell('${index + 1}'),
-                                        _buildTableCell(
-                                          '${deliverable['Start Date']} - ${deliverable['End Date']}',
-                                        ),
-                                        _buildTableCell(
-                                          deliverable['officeName'] ?? '',
-                                        ),
-                                        _buildKRA(
-                                          deliverable['kra'] ?? ' ',
-                                          deliverable['kraDescription'],
-                                        ),
-                                        _buildTableCell(
-                                          '',
-                                          isDirect: deliverable['isDirect'],
-                                        ),
-                                        _buildTableCell(
-                                          deliverable['deliverableName'] ?? '',
-                                        ),
-                                        _buildTableCell(
-                                          deliverable['byWhen'] ?? '',
-                                        ),
-                                        // _buildStatusCell(index, () => (index)),
-                                        // _buildRemarkCell(index),
-                                        // _buildScoringCell(index),
-                                        _buildCreateAccomplishmentCell(
-                                          index,
-                                          () {},
-                                        ),
-                                      ],
-                                    );
-                                  }),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  void _showScoreRangeMenu(BuildContext context) {
-    final RenderBox renderBox =
-        _menuScoreRangeKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset offset = renderBox.localToGlobal(Offset.zero);
-    showMenu(
-      color: secondaryColor,
-      context: context,
-      position: RelativeRect.fromLTRB(
-        offset.dx,
-        offset.dy + renderBox.size.height,
-        offset.dx + renderBox.size.width,
-        offset.dy + renderBox.size.height + 200,
-      ),
-      items: [
-        PopupMenuItem(
-          enabled: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Score Range',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              gap4px,
-              TextField(
-                controller: scoreRangeFromController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'From',
-                  labelStyle: TextStyle(color: grey, fontSize: 12),
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-
-                  floatingLabelStyle: TextStyle(
-                    color: primaryColor,
-                    fontSize: 12,
+                    ],
                   ),
                 ),
-              ),
-              gap16px,
-              TextField(
-                controller: scoreRangeToController,
-                keyboardType: TextInputType.none,
-                decoration: const InputDecoration(
-                  labelText: 'To',
-                  labelStyle: TextStyle(color: grey, fontSize: 12),
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  floatingLabelStyle: TextStyle(
-                    color: primaryColor,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              gap16px,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: primaryColor),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    onPressed: () {
-                      scoreRangeFromController.text;
-                      scoreRangeToController.text;
-                      fetchFilteredPgsList();
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      'Apply',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showPageSizeMenu(BuildContext context) {
-    final RenderBox renderBox =
-        _menuPageKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset offset = renderBox.localToGlobal(Offset.zero);
-    showMenu(
-      color: secondaryColor,
-      context: context,
-      position: RelativeRect.fromLTRB(
-        offset.dx,
-        offset.dy + renderBox.size.height,
-        offset.dx + renderBox.size.width,
-        offset.dy + renderBox.size.height + 200,
-      ),
-      items: [
-        PopupMenuItem(
-          enabled: false,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: pageController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Page',
-                  labelStyle: TextStyle(color: grey, fontSize: 12),
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  floatingLabelStyle: TextStyle(
-                    color: primaryColor,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              gap16px,
-              TextField(
-                controller: pageSizeController,
-                keyboardType: TextInputType.none,
-                decoration: const InputDecoration(
-                  labelText: 'Page Size',
-                  labelStyle: TextStyle(color: grey, fontSize: 12),
-                  isDense: true,
-                  border: OutlineInputBorder(),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                  floatingLabelStyle: TextStyle(
-                    color: primaryColor,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              gap16px,
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(color: primaryColor),
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                    onPressed: () {
-                      pageController.text;
-                      pageSizeController.text;
-                      fetchFilteredPgsList();
-                      Navigator.pop(context);
-                    },
-                    child: const Text(
-                      'Apply',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTableHeaderCell(String text, {double fontSize = 12}) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      child: Center(
-        child: Text(
-          text,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: fontSize),
-          textAlign: TextAlign.start,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTableCell(String text, {bool? isDirect}) {
-    String displayText = text;
-    if (isDirect != null) {
-      displayText = isDirect ? 'Direct' : 'Indirect';
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(),
-      child: Center(
-        child: Text(
-          displayText,
-          style: const TextStyle(fontSize: 14),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildKRA(String textKra, String textKraDescription) {
-    String displayKra = textKra;
-    String displayDescription = textKraDescription;
-
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Text(
-              displayKra,
-              style: const TextStyle(fontSize: 14),
-              textAlign: TextAlign.center,
+              ],
             ),
           ),
-          gap16px,
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'KRA Description:',
-                style: TextStyle(fontSize: 10, color: grey),
+          SizedBox(
+            height: 60,
+            child: SingleChildScrollView(
+              controller: _headerHorizontalController,
+              scrollDirection: Axis.horizontal,
+              child: SizedBox(width: totalWidth, child: _buildHeader()),
+            ),
+          ),
+
+          // Table body with scroll
+          Expanded(
+            child: Scrollbar(
+              controller: _verticalController,
+              thumbVisibility: true,
+              trackVisibility: true,
+              child: Scrollbar(
+                controller: _horizontalController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                notificationPredicate: (notif) => notif.depth == 1,
+                child: SingleChildScrollView(
+                  controller: _verticalController,
+                  scrollDirection: Axis.vertical,
+                  child: SingleChildScrollView(
+                    controller: _horizontalController,
+                    scrollDirection: Axis.horizontal,
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minWidth: totalWidth,
+                        minHeight: MediaQuery.of(context).size.height - 160,
+                      ),
+                      child: _buildTableBody(),
+                    ),
+                  ),
+                ),
               ),
-              Text(
-                displayDescription,
-                style: const TextStyle(fontSize: 10),
-                textAlign: TextAlign.start,
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -1966,81 +1343,6 @@ class DeliverableStatusMonitoringPageState
     );
   }
 
-  // Widget _buildReportSection({
-  //   required String title,
-  //   required String description,
-  //   required TextEditingController controller,
-  //   IconData icon = Icons.description_outlined,
-  //   Color iconColor = Colors.black54,
-  // }) {
-  //   return Align(
-  //     alignment: Alignment.topCenter,
-  //     child: ConstrainedBox(
-  //       constraints: const BoxConstraints(maxWidth: 900),
-  //       child: Column(
-  //         crossAxisAlignment: CrossAxisAlignment.start,
-  //         children: [
-  //           Row(
-  //             children: [
-  //               Icon(icon, color: iconColor, size: 20),
-  //               const SizedBox(width: 6),
-  //               Text(
-  //                 title,
-  //                 style: const TextStyle(
-  //                   fontSize: 18,
-  //                   fontWeight: FontWeight.w600,
-  //                   color: Colors.black87,
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //           const SizedBox(height: 6),
-  //           Text(
-  //             description,
-  //             style: const TextStyle(fontSize: 13, color: Colors.black54),
-  //           ),
-  //           const SizedBox(height: 12),
-  //           Container(
-  //             constraints: BoxConstraints(minHeight: 120, maxHeight: 180),
-  //             width: double.infinity,
-  //             padding: const EdgeInsets.symmetric(horizontal: 12),
-  //             decoration: BoxDecoration(
-  //               color: Colors.grey.shade100,
-  //               borderRadius: BorderRadius.circular(8),
-  //               border: Border.all(color: Colors.transparent),
-  //             ),
-  //             child: Scrollbar(
-  //               thumbVisibility: true,
-  //               child: SingleChildScrollView(
-  //                 child: SizedBox(
-  //                   width: double.infinity,
-  //                   child: TextFormField(
-  //                     controller: controller,
-  //                     style: const TextStyle(fontSize: 14),
-  //                     maxLines: null,
-  //                     autovalidateMode: AutovalidateMode.onUserInteraction,
-  //                     decoration: const InputDecoration(
-  //                       border: InputBorder.none,
-  //                       hintText: "Type here...",
-  //                       hintStyle: TextStyle(color: Colors.grey),
-  //                     ),
-  //                     validator: (value) {
-  //                       if (value == null || value.trim().isEmpty) {
-  //                         return 'Required';
-  //                       }
-  //                       return null;
-  //                     },
-  //                   ),
-  //                 ),
-  //               ),
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
   Widget _buildReportSection({
     required String title,
     required String description,
@@ -2114,6 +1416,368 @@ class DeliverableStatusMonitoringPageState
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showScoreRangeMenu(BuildContext context) {
+    final RenderBox renderBox =
+        _menuScoreRangeKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+    showMenu(
+      color: secondaryColor,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy + renderBox.size.height,
+        offset.dx + renderBox.size.width,
+        offset.dy + renderBox.size.height + 200,
+      ),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Score Range',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              gap4px,
+              TextField(
+                controller: scoreRangeFromController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'From',
+                  labelStyle: TextStyle(color: grey, fontSize: 12),
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
+
+                  floatingLabelStyle: TextStyle(
+                    color: primaryColor,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              gap16px,
+              TextField(
+                controller: scoreRangeToController,
+                keyboardType: TextInputType.none,
+                decoration: const InputDecoration(
+                  labelText: 'To',
+                  labelStyle: TextStyle(color: grey, fontSize: 12),
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: primaryColor,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              gap16px,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: primaryColor),
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () {
+                      scoreRangeFromController.text;
+                      scoreRangeToController.text;
+                      fetchFilteredPgsList();
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Apply',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showPageSizeMenu(BuildContext context) {
+    final RenderBox renderBox =
+        _menuPageKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset = renderBox.localToGlobal(Offset.zero);
+    showMenu(
+      color: secondaryColor,
+      context: context,
+      position: RelativeRect.fromLTRB(
+        offset.dx,
+        offset.dy + renderBox.size.height,
+        offset.dx + renderBox.size.width,
+        offset.dy + renderBox.size.height + 200,
+      ),
+      items: [
+        PopupMenuItem(
+          enabled: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: pageController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Page',
+                  labelStyle: TextStyle(color: grey, fontSize: 12),
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: primaryColor,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              gap16px,
+              TextField(
+                controller: pageSizeController,
+                keyboardType: TextInputType.none,
+                decoration: const InputDecoration(
+                  labelText: 'Page Size',
+                  labelStyle: TextStyle(color: grey, fontSize: 12),
+                  isDense: true,
+                  border: OutlineInputBorder(),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    color: primaryColor,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              gap16px,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: primaryColor),
+                    ),
+                  ),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    onPressed: () {
+                      pageController.text;
+                      pageSizeController.text;
+                      fetchFilteredPgsList();
+                      Navigator.pop(context);
+                    },
+                    child: const Text(
+                      'Apply',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader() {
+    final border = TableBorder.all(color: Colors.grey.shade700, width: 1.0);
+
+    Map<int, TableColumnWidth> columnWidths = {
+      0: FixedColumnWidth(numberColumnWidth),
+    };
+    for (int i = 1; i <= dataColumns; i++) {
+      columnWidths[i] = FixedColumnWidth(dataColumnWidth);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0),
+      child: Table(
+        border: border,
+        columnWidths: columnWidths,
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        children: [
+          TableRow(
+            decoration: const BoxDecoration(color: primaryLightColor),
+            children: [
+              _cell("#", isHeader: true, align: TextAlign.center),
+              for (final h in headers) _cell(h, isHeader: true),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTableBody() {
+    final border = TableBorder.all(color: Colors.grey.shade700, width: 1.0);
+
+    Map<int, TableColumnWidth> columnWidths = {
+      0: FixedColumnWidth(numberColumnWidth),
+    };
+    for (int i = 1; i <= dataColumns; i++) {
+      columnWidths[i] = FixedColumnWidth(dataColumnWidth);
+    }
+
+    if (deliverableList.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: Text("No data available"),
+        ),
+      );
+    }
+
+    List<TableRow> rows =
+        deliverableList.asMap().entries.map((entry) {
+          final int index = entry.key;
+          final deliverable = entry.value;
+
+          return TableRow(
+            children: [
+              _cell("${index + 1}", align: TextAlign.center),
+              _cell(
+                "${deliverable['Start Date']} - ${deliverable['End Date']}",
+              ),
+              _cell(deliverable['officeName'] ?? ''),
+              _buildKRA(deliverable['kra'], deliverable['kraDescription']),
+              _cell(deliverable['isDirect'] ? "Direct" : "Indirect"),
+              _cell(deliverable['deliverableName'] ?? ''),
+              _cell(deliverable['byWhen'] ?? ''),
+              _buildCreateAccomplishmentCell(index, () {
+                debugPrint(
+                  "Create tapped for ID: ${deliverable['pgsDeliverableId']}",
+                );
+              }),
+            ],
+          );
+        }).toList();
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 12.0),
+      child: Table(
+        border: border,
+        columnWidths: columnWidths,
+        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+        children: rows,
+      ),
+    );
+  }
+
+  Widget _cell(
+    String text, {
+    bool isHeader = false,
+    TextAlign align = TextAlign.left,
+  }) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      child: Center(
+        child: Text(
+          text,
+          textAlign: align,
+          style: TextStyle(
+            fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+            fontSize: 14,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildKRA(String? kra, String? description) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Text(
+              kra ?? '',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          if (description != null)
+            Text(description, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCreateAccomplishmentCell(int index, VoidCallback onPressed) {
+    final deliverable = deliverableList[index];
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: SizedBox(
+        height: 30,
+        child: ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+              side: const BorderSide(color: Colors.black, width: 1),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            textStyle: const TextStyle(fontSize: 13),
+            minimumSize: Size.zero,
+          ).copyWith(
+            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (states.contains(WidgetState.hovered)) {
+                return const Color.fromARGB(255, 221, 221, 221);
+              }
+              if (states.contains(WidgetState.pressed)) {
+                return const Color.fromARGB(255, 221, 221, 221);
+              }
+              return null; // default
+            }),
+          ),
+
+          onPressed: () async {
+            await loadAccomplishments(deliverable['pgsDeliverableId']);
+            showAccomplishmentFormDialog(context, deliverable, userId);
+          },
+
+          icon: const Icon(
+            Icons.bar_chart_outlined,
+            size: 14,
+            color: primaryTextColor,
+          ),
+          label: const Text(
+            'Accomplishment',
+            style: TextStyle(color: primaryTextColor, fontSize: 10),
+          ),
         ),
       ),
     );

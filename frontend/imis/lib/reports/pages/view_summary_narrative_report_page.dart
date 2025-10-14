@@ -37,7 +37,7 @@ class ViewSummaryNarrativeReportPageState
   List<PgsPeriod> _periods = [];
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
-  int _currentPage = 1;
+  final int _currentPage = 1;
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
@@ -333,99 +333,6 @@ class ViewSummaryNarrativeReportPageState
                 const SizedBox(height: 20),
 
                 Expanded(
-                  // child: DataTable2(
-                  //   columnSpacing: isMobile ? 8 : 12,
-                  //   headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                  //   dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                  //   headingTextStyle: const TextStyle(color: grey),
-                  //   horizontalMargin: 12,
-                  //   minWidth: 700,
-                  //   fixedTopRows: 1,
-                  //   border: TableBorder(
-                  //     horizontalInside: BorderSide(color: Colors.grey.shade100),
-                  //   ),
-                  //   columns: [
-                  //     DataColumn2(label: const Text('#'), fixedWidth: 40),
-                  //     DataColumn2(
-                  //       label: const Text('Office'),
-                  //       size: ColumnSize.L,
-                  //     ),
-                  //     DataColumn2(
-                  //       label: const Text('Period'),
-                  //       size: ColumnSize.L,
-                  //     ),
-                  //     const DataColumn(label: Text('Actions')),
-                  //   ],
-                  //   rows:
-                  //       filteredList.asMap().entries.map((entry) {
-                  //         int index = entry.key;
-                  //         var summary = entry.value;
-                  //         int itemNumber =
-                  //             ((_currentPage - 1) * _pageSize) + index + 1;
-
-                  //         return DataRow(
-                  //           cells: [
-                  //             DataCell(Text(itemNumber.toString())),
-                  //             DataCell(
-                  //               Container(
-                  //                 constraints: BoxConstraints(
-                  //                   minWidth: 100,
-                  //                   maxWidth: constraints.maxWidth * 0.4,
-                  //                 ),
-                  //                 child: Text(
-                  //                   officeMap[summary.officeId] ??
-                  //                       'Unknown Office',
-                  //                   overflow: TextOverflow.ellipsis,
-                  //                   softWrap: true,
-                  //                   maxLines: 2,
-                  //                 ),
-                  //               ),
-                  //             ),
-                  //             DataCell(
-                  //               Text(getPeriodLabel(summary.pgsPeriodId)),
-                  //             ),
-                  //             DataCell(
-                  //               Row(
-                  //                 children: [
-                  //                   IconButton(
-                  //                     icon: const Icon(Icons.edit),
-                  //                     onPressed: () {
-                  //                       showReportDialog(summary);
-                  //                     },
-                  //                   ),
-                  //                   Tooltip(
-                  //                     message: 'Print Preview',
-
-                  //                     child: IconButton(
-                  //                       icon: const Icon(
-                  //                         Icons.description_outlined,
-                  //                       ),
-
-                  //                       onPressed: () async {
-                  //                         Navigator.push(
-                  //                           context,
-                  //                           MaterialPageRoute(
-                  //                             builder:
-                  //                                 (context) => ViewPdfSummary(
-                  //                                   pgsPeriodId:
-                  //                                       summary.pgsPeriodId
-                  //                                           .toString(),
-                  //                                   officeId:
-                  //                                       summary.officeId
-                  //                                           .toString(),
-                  //                                 ),
-                  //                           ),
-                  //                         );
-                  //                       },
-                  //                     ),
-                  //                   ),
-                  //                 ],
-                  //               ),
-                  //             ),
-                  //           ],
-                  //         );
-                  //       }).toList(),
-                  // ),
                   child: DataTable2(
                     columnSpacing: isMobile ? 8 : 12,
                     headingRowColor: WidgetStatePropertyAll(secondaryColor),
