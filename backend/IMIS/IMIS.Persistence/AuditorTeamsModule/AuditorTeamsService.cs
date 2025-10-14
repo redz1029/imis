@@ -12,7 +12,6 @@ namespace IMIS.Application.AuditorTeamsModule
         {
             _repository = repository;
         }
-
         public async Task<bool> SoftDeleteAsync(int teamId, CancellationToken cancellationToken)
         {           
             var teamMembers = await _repository.GetByTeamIdAsync(teamId, cancellationToken).ConfigureAwait(false);
@@ -40,7 +39,6 @@ namespace IMIS.Application.AuditorTeamsModule
             }
             return DtoPageList<AuditorTeamsDto, AuditorTeams, int>.Create(auditorTeams.Items, page, pageSize, auditorTeams.TotalCount);
         }
-
         public async Task<List<AuditorTeamsDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditorTeams = await _repository.GetAllAsync(cancellationToken);
@@ -67,8 +65,7 @@ namespace IMIS.Application.AuditorTeamsModule
                 .ToList();
 
             return groupedAuditors;
-        }
-        
+        }        
         public async Task<AuditorTeamsDto?> GetByTeamIdAsync(long teamId, CancellationToken cancellationToken)
         {
             var auditorTeams = await _repository.GetByTeamIdAsync(teamId, cancellationToken).ConfigureAwait(false);
@@ -97,8 +94,7 @@ namespace IMIS.Application.AuditorTeamsModule
             };
 
             return dto;
-        }
-        
+        }        
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var oDto = dto as AuditorTeamsDto;

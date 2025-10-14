@@ -14,11 +14,8 @@ namespace IMIS.Persistence.AuditorTeamsModule
         }
         public async Task<EntityPageList<AuditorTeams, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-
             return await EntityPageList<AuditorTeams, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
-
-        }
-       
+        }       
         public async Task<List<AuditorTeams>> GetByTeamIdAsync(long teamId, CancellationToken cancellationToken)
         {
             return await _entities
@@ -27,7 +24,6 @@ namespace IMIS.Persistence.AuditorTeamsModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
         public async Task<IEnumerable<AuditorTeams>> GetAllAsync(CancellationToken cancellationToken)
         {
             return await _entities

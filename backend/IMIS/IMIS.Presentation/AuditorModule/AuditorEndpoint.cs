@@ -27,8 +27,7 @@ namespace IMIS.Presentation.AuditorModule
                 return Results.Ok(auditor);
             })
             .WithTags(_auditorTag)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _auditorPermission.Add));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.Add));
 
             app.MapGet("/", async (IAuditorService service, CancellationToken cancellationToken) =>
             {
@@ -47,6 +46,7 @@ namespace IMIS.Presentation.AuditorModule
             })
             .WithTags(_auditorTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true);
+
             app.MapGet("/{id}", async (int id, IAuditorService service, CancellationToken cancellationToken) =>
             {
                 var auditor = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -54,8 +54,7 @@ namespace IMIS.Presentation.AuditorModule
             })
             .WithTags(_auditorTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _auditorPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] AuditorDto auditor, IAuditorService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {               
@@ -69,8 +68,8 @@ namespace IMIS.Presentation.AuditorModule
                 return Results.Ok(auditor);
             })
            .WithTags(_auditorTag)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _auditorPermission.Edit));          
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.Edit));   
+            
             app.MapGet("/page", async (int page, int pageSize, IAuditorService service, CancellationToken cancellationToken) =>
             {
                 var paginatedAuditor = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
