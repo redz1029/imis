@@ -21,7 +21,6 @@ namespace IMIS.Persistence.PGSModules
                .ToListAsync(cancellationToken)
                .ConfigureAwait(false);
         }
-
         public async Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
         {
             var query = _entities
@@ -67,8 +66,7 @@ namespace IMIS.Persistence.PGSModules
           .AsNoTracking()
           .ToListAsync(cancellationToken)
           .ConfigureAwait(false);
-        }
-      
+        }      
     }
 }
 

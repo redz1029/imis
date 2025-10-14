@@ -40,7 +40,6 @@ namespace IMIS.Persistence.PGSModules
             }
             return DtoPageList<PGSDeliverableDto, PgsDeliverable, long>.Create(pgsDeliverable.Items, page, pageSize, pgsDeliverable.TotalCount);
         }
-
         public async Task<PGSDeliverableDto> SaveOrUpdateAsync(PGSDeliverableDto pgsDeliverableDto, CancellationToken cancellationToken)
         {
             if (pgsDeliverableDto == null)
@@ -88,8 +87,7 @@ namespace IMIS.Persistence.PGSModules
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
 
             return new PGSDeliverableDto(pgsDeliverableEntity);
-        }
-        
+        }        
         public async Task<List<PGSDeliverableDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var pgsDeliverables = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
@@ -99,19 +97,16 @@ namespace IMIS.Persistence.PGSModules
 
             return pgsDeliverables.Select(d => new PGSDeliverableDto(d)).ToList();
         }
-
         public async Task<PGSDeliverableDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var pgsDeliverable = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return pgsDeliverable != null ? new PGSDeliverableDto(pgsDeliverable) : null;
-        }
-        
+        }        
         private async Task<User?> GetCurrentUserAsync()
         {
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
         }
-
         public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
@@ -157,7 +152,6 @@ namespace IMIS.Persistence.PGSModules
                 filter.PageSize,
                 filtered.TotalCount);
         }             
-
         public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(
          PgsDeliverableMonitorPageList request,
          IOutputCacheStore cache,
@@ -213,7 +207,6 @@ namespace IMIS.Persistence.PGSModules
                 updatedItems.Count
             );
         }
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
           where TEntity : Entity<TId>
         {
