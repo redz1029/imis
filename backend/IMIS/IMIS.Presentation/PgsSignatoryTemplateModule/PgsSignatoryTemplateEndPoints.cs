@@ -29,8 +29,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
             })
 
             .WithTags(_PgsSignatoryTemplate)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Add));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Add));
 
             app.MapGet("/", async (IPgsSignatoryTemplateService service, CancellationToken cancellationToken) =>
             {
@@ -39,8 +38,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
             })
             .WithTags(_PgsSignatoryTemplate)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
 
             app.MapGet("/{id}", async (int id, IPgsSignatoryTemplateService service, CancellationToken cancellationToken) =>
             {
@@ -49,9 +47,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
             })
             .WithTags(_PgsSignatoryTemplate)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
-
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
 
             app.MapPut("/", async ([FromBody] List<PgsSignatoryTemplateDto> pgsSignatoryTemplateDtos, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -65,10 +61,8 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
                 return Results.Ok(updatedTemplates);
             })
             .WithTags(_PgsSignatoryTemplate)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Edit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.Edit));
 
-            ;
             app.MapGet("/page", async (int page, int pageSize, IPgsSignatoryTemplateService service, CancellationToken cancellationToken) =>
             {
                 var paginatedSignatoryTemplate = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -76,8 +70,7 @@ namespace IMIS.Presentation.PgsSignatoryTemplateModule
             })
            .WithTags(_PgsSignatoryTemplate)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_PgsSignatoryTemplate), true)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSignatoryTemplatePermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IPgsSignatoryTemplateService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

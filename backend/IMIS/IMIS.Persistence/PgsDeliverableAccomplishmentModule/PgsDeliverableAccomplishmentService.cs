@@ -25,26 +25,22 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
             }
             return DtoPageList<PgsDeliverableAccomplishmentDto, PgsDeliverableAccomplishment, long>.Create(pgsDeliverableAccomplishmentDto.Items, page, pageSize, pgsDeliverableAccomplishmentDto.TotalCount);
         }
-
         public async Task<List<PgsDeliverableAccomplishmentDto>> GetByDeliverableIdAsync(long deliverableId, CancellationToken cancellationToken)
         {
             var accomplishments = await _repository.GetByDeliverableIdAsync(deliverableId, cancellationToken).ConfigureAwait(false);
             
             return accomplishments.Select(a => new PgsDeliverableAccomplishmentDto(a)).ToList();
         }
-
         public async Task<PgsDeliverableAccomplishmentDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdAsync(id, cancellationToken);
             return entity == null ? null : new PgsDeliverableAccomplishmentDto(entity);
         }
-
         public async Task UpdateAsync(PgsDeliverableAccomplishmentDto accomplishment, CancellationToken cancellationToken)
         {
             var entity = accomplishment.ToEntity();
             await _repository.UpdateAsync(entity, entity.Id, cancellationToken);
         }
-
         public async Task UpdateAttachmentPathAsync(long id, string attachmentPath, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdAsync(id, cancellationToken);
@@ -54,9 +50,7 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
             entity.AttachmentPath = attachmentPath;
             await _repository.UpdateAsync(entity, id, cancellationToken);
             await _repository.SaveOrUpdateAsync(entity, cancellationToken);
-        }
-
-        
+        }        
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
         where TEntity : Entity<TId>
         {

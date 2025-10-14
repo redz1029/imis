@@ -12,10 +12,8 @@ namespace IMIS.Persistence.PgsSignatoryTemplateModule
         {
         }
         public async Task<EntityPageList<PgsSignatoryTemplate, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
-        {
-           
-           return await EntityPageList<PgsSignatoryTemplate, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
-            
+        {           
+           return await EntityPageList<PgsSignatoryTemplate, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);            
         }
         public async Task<PgsSignatoryTemplate?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {

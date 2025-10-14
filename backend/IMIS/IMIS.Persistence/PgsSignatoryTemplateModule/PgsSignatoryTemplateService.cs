@@ -13,7 +13,6 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
             _repository = repository;          
           
         }
-
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var signatoryTemplate = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
@@ -26,8 +25,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
             await context.SaveChangesAsync(cancellationToken);
 
             return true;
-        }
-        
+        }        
         public async Task<DtoPageList<PgsSignatoryTemplateDto, PgsSignatoryTemplate, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var pgsSignatoryTemplateDto = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -48,7 +46,6 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
 
             return pgsSignatoryTemplateDto.Select(d => new PgsSignatoryTemplateDto(d)).ToList();
         }
-
         public async Task<List<PgsSignatoryTemplateDto>> SaveOrUpdateAsync(List<PgsSignatoryTemplateDto> dtoList, CancellationToken cancellationToken)
         {
             if (dtoList == null || dtoList.Count == 0)
@@ -91,8 +88,7 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                         await _repository.UpdateAsync(existing, existing.Id, cancellationToken).ConfigureAwait(false); ;
                     }
                 }
-            }
-           
+            }           
             await _repository.GetDbContext().SaveChangesAsync(cancellationToken).ConfigureAwait(false); ;
          
             var updatedEntities = await _repository.GetSignatoryTemplateByOfficeIdAsync(officeId, cancellationToken);
@@ -109,7 +105,6 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
                 Position = x.Position,
             }).ToList();
         }   
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
           
@@ -123,7 +118,6 @@ namespace IMIS.Application.PgsSignatoryTemplateModule
 
             await _repository.SaveOrUpdateAsync(pgsSignatoryTemplateDto, cancellationToken).ConfigureAwait(false);
         }
-
         public async Task<List<PgsSignatoryTemplateDto>> GetSignatoryTemplateByOfficeIdAsync(int officeId, CancellationToken cancellationToken)
         {
             var signatoryTemplate = await _repository.GetSignatoryTemplateByOfficeIdAsync(officeId, cancellationToken).ConfigureAwait(false);
