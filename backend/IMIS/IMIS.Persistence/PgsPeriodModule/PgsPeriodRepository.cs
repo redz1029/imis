@@ -28,7 +28,6 @@ namespace IMIS.Persistence.PgsPeriodModule
             .AsNoTracking()           
             .ToListAsync(cancellationToken) 
             .ConfigureAwait(false);
-        }      
-       
+        }            
     }
 }
