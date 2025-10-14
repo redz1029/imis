@@ -3,8 +3,7 @@ using Base.Pagination;
 using IMIS.Domain;
 
 namespace IMIS.Application.PgsKraModule
-{
- 
+{ 
     public interface IKeyResultAreaService : IService
     {     
         public Task<DtoPageList<KeyResultAreaDto, KeyResultArea, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);

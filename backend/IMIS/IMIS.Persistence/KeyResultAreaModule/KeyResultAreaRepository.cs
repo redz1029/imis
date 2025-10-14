@@ -29,7 +29,6 @@ namespace IMIS.Persistence.KraModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
         public async Task<IEnumerable<KeyResultArea>> GetAll(CancellationToken cancellationToken)
         {
             return await _entities

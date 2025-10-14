@@ -28,8 +28,7 @@ namespace IMIS.Presentation.KraModuleAPI
                 return Results.Ok(keyResultAreaDto);
             })
             .WithTags(_keyAreaResultTag)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _keyResultAreaPermission.Add));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.Add));
 
             app.MapGet("/", async (IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
@@ -38,8 +37,7 @@ namespace IMIS.Presentation.KraModuleAPI
             })
             .WithTags(_keyAreaResultTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _keyResultAreaPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
 
             app.MapGet("/filter/{name}", async (string name, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
@@ -49,8 +47,7 @@ namespace IMIS.Presentation.KraModuleAPI
             })
             .WithTags(_keyAreaResultTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _keyResultAreaPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
 
             app.MapGet("/{id}", async (int id, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
@@ -73,8 +70,7 @@ namespace IMIS.Presentation.KraModuleAPI
                 return Results.Ok(keyResultAreaDto);
             })
             .WithTags(_keyAreaResultTag)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _keyResultAreaPermission.Edit));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.Edit));
           
             app.MapGet("/page", async (int page, int pageSize, IKeyResultAreaService service, CancellationToken cancellationToken) =>
             {
@@ -83,8 +79,7 @@ namespace IMIS.Presentation.KraModuleAPI
             })
             .WithTags(_keyAreaResultTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_keyAreaResultTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _keyResultAreaPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _keyResultAreaPermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IKeyResultAreaService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
