@@ -172,8 +172,7 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
             })
            .WithTags(_pgsDeliverableAccomplishmentTag)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsDeliverableAccomplishmentTag), true)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsDeliverableAccomplishmentPermission.View));
         }
     }
 }
