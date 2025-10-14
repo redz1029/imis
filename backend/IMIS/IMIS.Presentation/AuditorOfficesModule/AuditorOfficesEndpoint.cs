@@ -28,8 +28,7 @@ namespace IMIS.Presentation.AuditorOfficesModule
                 return Results.Ok(auditorOffices);
             })
             .WithTags(_auditorOfficesTag)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _auditorOfficePermission.Add));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorOfficePermission.Add));
           
             app.MapGet("/", async (IAuditorOfficesService service, CancellationToken cancellationToken) =>
             {
@@ -51,8 +50,7 @@ namespace IMIS.Presentation.AuditorOfficesModule
                 return Results.Ok(auditorOffice);
             })
            .WithTags(_auditorOfficesTag)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _auditorOfficePermission.Edit));
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorOfficePermission.Edit));
 
             app.MapGet("/page", async (int page, int pageSize, IAuditorOfficesService service, CancellationToken cancellationToken) =>
             {
@@ -61,8 +59,7 @@ namespace IMIS.Presentation.AuditorOfficesModule
             })
             .WithTags(_auditorOfficesTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_auditorOfficesTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _auditorOfficePermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorOfficePermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IAuditorOfficesService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

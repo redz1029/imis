@@ -12,7 +12,6 @@ namespace IMIS.Persistence.AuditorOfficesModule
         {
             _auditorOfficeRepository = auditorOfficeRepository;
         }
-
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var auditorOffices = await _auditorOfficeRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);
@@ -31,7 +30,6 @@ namespace IMIS.Persistence.AuditorOfficesModule
             var auditorOffices = await _auditorOfficeRepository.GetAll(cancellationToken).ConfigureAwait(false);
             return auditorOffices?.Select(a => new AuditorOfficesDto(a)).ToList();
         }
-
         public async Task<AuditorOfficesDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var auditorOffices = await _auditorOfficeRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -46,7 +44,6 @@ namespace IMIS.Persistence.AuditorOfficesModule
             }
             return DtoPageList<AuditorOfficesDto, AuditorOffices, int>.Create(auditorOffices.Items, page, pageSize, auditorOffices.TotalCount);
         }
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var auditorOfficeDto = dto as AuditorOfficesDto;
