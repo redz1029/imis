@@ -6,7 +6,6 @@ using IMIS.Domain;
 using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-
 public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGovernanceSystem, long, ImisDbContext>, IPerfomanceGovernanceSystemRepository
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
@@ -16,7 +15,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
             .FirstOrDefaultAsync(d => d.Id == deliverableId, cancellationToken);
     }
-
     public async Task<List<PerfomanceGovernanceSystem>> GetByOfficeIdsAsync(List<int> officeIds, CancellationToken cancellationToken)
     {
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
@@ -29,7 +27,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
     }
-
     public async Task<PerfomanceGovernanceSystem?> GetWithIncludesAsync(int id, CancellationToken cancellationToken)
     {
         return await _entities
@@ -39,8 +36,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                .Include(p => p.Office)
                .Include(p => p.PgsPeriod)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-    }
-   
+    }   
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
     {      
         var userOfficeIds = await ReadOnlyDbContext.Set<UserOffices>()
@@ -66,7 +62,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 
         return pgsRecords;
     }
-
     private async Task<List<int>> GetAllChildOfficeIdsAsync(List<int> officeIds, CancellationToken cancellationToken)
     {
         var allIds = new HashSet<int>(officeIds);
@@ -85,7 +80,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
 
         return allIds.ToList();
     }
-
     public async Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken)
     {
          return await _entities
@@ -99,7 +93,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Include(p => p.PgsSignatories!)                
         .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
-
     public async Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
     {
         var pgs = await _entities
@@ -167,7 +160,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .AsNoTracking()
         .ToListAsync(cancellationToken);
     }
-
     // Get Pgs, Filter by all Paginated
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
@@ -197,7 +189,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         return paginatedResult;
     }
     // Save or Update Record
-  
     public Task<int> CountAsync(CancellationToken cancellationToken)
     {
         return ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().CountAsync(cancellationToken);
@@ -206,8 +197,6 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     {
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
-
-
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(
     PgsFilter filter,
     string userId,
