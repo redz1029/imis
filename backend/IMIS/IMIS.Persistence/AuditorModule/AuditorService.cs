@@ -12,7 +12,6 @@ namespace IMIS.Persistence.AuditorModule
         {
             _auditorRepository = auditorRepository;
         }
-
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var auditor = await _auditorRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);

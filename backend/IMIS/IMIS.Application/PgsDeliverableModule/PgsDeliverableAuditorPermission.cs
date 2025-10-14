@@ -1,5 +1,4 @@
-﻿
-namespace IMIS.Application.PgsDeliverableModule
+﻿namespace IMIS.Application.PgsDeliverableModule
 {
     public class PgsDeliverableAuditorPermission : BaseAuditorPermission
     {
