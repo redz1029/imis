@@ -16,15 +16,13 @@ namespace IMIS.Persistence.OfficeModule
         private readonly IOfficeRepository _repository;
         private readonly ImisDbContext _dbContext;
         private readonly UserManager<User> _userManager;
-  
-
+ 
         public OfficeService(IOfficeRepository repository, ImisDbContext dbContext, UserManager<User> userManager)
         {
             _repository = repository;
             _dbContext = dbContext;
             _userManager = userManager;
         }
-
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var office = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
@@ -76,16 +74,13 @@ namespace IMIS.Persistence.OfficeModule
             var offices = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
         }
-
-
         private async Task<User?> GetCurrentUserAsync()
         {
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return currentUserService != null
                 ? await currentUserService.GetCurrentUserAsync()
                 : null;
-        }
-        
+        }        
         public async Task<List<OfficeDto>> GetOfficesForPgsAuditorAsync(CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
@@ -119,9 +114,6 @@ namespace IMIS.Persistence.OfficeModule
 
             return offices.Select(o => ConvOfficeToDTO(o)).ToList();
         }
-
-
-
         public async Task<List<OfficeDto>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {
             var offices = await _repository.GetAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
@@ -136,8 +128,7 @@ namespace IMIS.Persistence.OfficeModule
         {
             var offices = await _repository.GetNonAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
-        }
-     
+        }     
         public async Task<bool> HasCircularReferenceAsync(int? parentId, int childId, CancellationToken cancellationToken)
         {
             int depth = 0;
@@ -160,7 +151,6 @@ namespace IMIS.Persistence.OfficeModule
 
             return false;
         }
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var ODto = dto as OfficeDto;
@@ -173,7 +163,6 @@ namespace IMIS.Persistence.OfficeModule
 
             await _repository.SaveOrUpdateAsync(office, cancellationToken).ConfigureAwait(false);
         }
-
         public async Task<OfficeDto> GetRootParentOfficeAsync(int officeId, CancellationToken cancellationToken)
         {
             var childOffice = await _repository.GetByIdAsync(officeId, cancellationToken).ConfigureAwait(false);

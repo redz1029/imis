@@ -39,8 +39,7 @@ namespace IMIS.Presentation.OfficeModule
                 return Results.Ok(officeDto);
             })
              .WithTags(_officeTag)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _officePermission.Add));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.Add));
 
             app.MapGet("/", async (IOfficeService service, CancellationToken cancellationToken) =>
             {
@@ -69,6 +68,7 @@ namespace IMIS.Presentation.OfficeModule
             })
             .WithTags(_officeTag)          
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
+
             app.MapGet("/{id}", async (int id, IOfficeService service, CancellationToken cancellationToken) =>
             {
                 var office = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -77,6 +77,7 @@ namespace IMIS.Presentation.OfficeModule
             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeTag), true);
+
             app.MapPut("/{id}", async (int id, [FromBody] OfficeDto office, IOfficeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 // Validate: Office cannot be its own parent
@@ -99,6 +100,7 @@ namespace IMIS.Presentation.OfficeModule
             })
             .WithTags(_officeTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officePermission.Edit));
+
             app.MapGet("/page", async (int page, int pageSize, IOfficeService service, CancellationToken cancellationToken) =>
             {
                 var paginatedOffice = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);

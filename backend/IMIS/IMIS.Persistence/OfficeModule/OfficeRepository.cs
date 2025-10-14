@@ -36,9 +36,6 @@ namespace IMIS.Persistence.OfficeModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
-
-
         public async Task<List<Office>> GetAllForPgsAuditorAsync(CancellationToken cancellationToken)
         {
             // Admins can see all offices
@@ -46,7 +43,6 @@ namespace IMIS.Persistence.OfficeModule
                 .AsNoTracking()
                 .ToListAsync(cancellationToken);
         }
-
         public async Task<List<Office>> GetOfficesForAuditorAsync(string userId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditorOffices>()
@@ -55,7 +51,6 @@ namespace IMIS.Persistence.OfficeModule
                 .Distinct()
                 .ToListAsync(cancellationToken);
         }
-
         public async Task<List<int>> GetAuditorOfficeIdsAsync(string userId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditorOffices>()
@@ -65,8 +60,6 @@ namespace IMIS.Persistence.OfficeModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
-
         public async Task<IEnumerable<Office>?> GetAuditableOffices(int? auditScheduleId, CancellationToken cancellationToken)
         {
             if (auditScheduleId.HasValue)
