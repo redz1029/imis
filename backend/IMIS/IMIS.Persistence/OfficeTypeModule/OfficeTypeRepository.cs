@@ -13,9 +13,7 @@ namespace IMIS.Persistence.OfficeTypeModule
         }
         public async Task<EntityPageList<OfficeType, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-
             return await EntityPageList<OfficeType, int>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
-
         }
         public async Task<IEnumerable<OfficeType>?> GetAll(CancellationToken cancellationToken)
         {
@@ -24,6 +22,5 @@ namespace IMIS.Persistence.OfficeTypeModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }       
-
     }
 }

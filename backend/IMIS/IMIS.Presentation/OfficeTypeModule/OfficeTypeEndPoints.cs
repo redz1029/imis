@@ -28,8 +28,8 @@ namespace IMIS.Presentation.OfficeTypeModule
                 return Results.Ok(officeTypeDto);               
             })
             .WithTags(_officeType)
-            .RequireAuthorization(e => e.RequireClaim(
-                PermissionClaimType.Claim, _officeTypePermission.Add));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officeTypePermission.Add));
+
             app.MapGet("/", async (IOfficeTypeService service, CancellationToken cancellationToken) =>
             {
                 var officeTypeDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -46,8 +46,7 @@ namespace IMIS.Presentation.OfficeTypeModule
             })
             .WithTags(_officeType)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_officeType), true)
-            .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _officeTypePermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _officeTypePermission.View));
         }
     }
 
