@@ -11,7 +11,6 @@ using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 using Sprache;
 
-
 namespace IMIS.Persistence.PgsSummaryNarrativeModule
 {
     public class PgsSummaryNarrativeService : IPGSSummaryNarrativeService
@@ -93,7 +92,6 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
                 OfficeId = n.OfficeId
             });
         }
-
         // Head Auditor Role
         public async Task<IEnumerable<PGSSummaryNarrativeDto>> GetNarrativesForHeadAuditorAsync(int? periodId, int? office, CancellationToken cancellationToken)
         {
@@ -119,8 +117,7 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
                 PgsPeriodId = n.PgsPeriodId,
                 OfficeId = n.OfficeId
             });
-        }
-        
+        }        
         public async Task<List<ReportPGSSummaryNarrativeDto>> ReportGetByFilterAsync(PgsDeliverableSummaryNarrativeFilter filter, CancellationToken cancellationToken)
         {
             var narratives = await _repository.GetNarrativesByFilterAsync(filter, cancellationToken);
@@ -158,13 +155,11 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
 
             return reportDtos;
         }
-
         public async Task<PGSSummaryNarrativeDto?> GetByPeriodIdAsync(int pgsPeriodId, CancellationToken cancellationToken)
         {
             var narrative = await _repository.GetByPeriodIdAsync(pgsPeriodId, cancellationToken).ConfigureAwait(false);
             return narrative == null ? null : new PGSSummaryNarrativeDto(narrative);
-        }
-    
+        }    
         public async Task<List<PGSSummaryNarrativeDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var pgsNarrativeSummary = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
@@ -176,7 +171,6 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
                 .Select(x => new PGSSummaryNarrativeDto(x))
                 .ToList();
         }
-
         public async Task<DtoPageList<PGSSummaryNarrativeDto, PgsSummaryNarrative, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var pgsSignatoryTemplateDto = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -184,7 +178,6 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
                 return null;
             return DtoPageList<PGSSummaryNarrativeDto, PgsSummaryNarrative, int>.Create(pgsSignatoryTemplateDto.Items, page, pageSize, pgsSignatoryTemplateDto.TotalCount);
         }
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var ODto = dto as PGSSummaryNarrativeDto;

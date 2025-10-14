@@ -26,14 +26,12 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
                 query = query.Where(n => n.PgsPeriodId == periodId.Value);
 
             return await query.ToListAsync(cancellationToken).ConfigureAwait(false);
-        }
-       
+        }       
         public async Task<PgsSummaryNarrative?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<PgsSummaryNarrative>()
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
-
         // Get all for Auditor
         public async Task<IEnumerable<PgsSummaryNarrative>> GetNarrativesByAuditorAsync(
         string userId,
@@ -67,7 +65,6 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
 
             return await query.ToListAsync(cancellationToken);
         }
-
         public async Task<EntityPageList<PgsSummaryNarrative, int>> GetPaginatedAsync(
         int page,
         int pageSize, CancellationToken cancellationToken)
@@ -99,8 +96,6 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
-
         public async Task<IEnumerable<PgsSummaryNarrative>> GetAll(CancellationToken cancellationToken)
         {
             return await _entities
@@ -129,8 +124,7 @@ namespace IMIS.Persistence.PgsSummaryNarrativeModule
                 .Skip((filter.Page - 1) * filter.PageSize)
                 .Take(filter.PageSize)
                 .ToListAsync(cancellationToken);
-        }
-      
+        }      
         public async Task<List<PgsDeliverable>> GetFilteredDeliverablesAsync(IEnumerable<int> periodIds,
         PgsDeliverableSummaryNarrativeFilter filter,
         CancellationToken cancellationToken)

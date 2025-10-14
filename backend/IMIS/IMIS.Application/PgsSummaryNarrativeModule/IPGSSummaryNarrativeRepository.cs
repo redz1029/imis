@@ -15,6 +15,5 @@ namespace IMIS.Application.PgsSummaryNarrativeModule
         Task<PgsSummaryNarrative?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<PgsSummaryNarrative>> GetAllForAuditorHeadAsync(int? periodId, int? office, CancellationToken cancellationToken);
         Task<IEnumerable<PgsSummaryNarrative>> GetAllFilteredNarrativeForHeadsAsync(int? periodId, int? office, CancellationToken cancellationToken);
-
     }
 }

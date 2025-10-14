@@ -1,6 +1,5 @@
 ﻿namespace IMIS.Application.PgsSummaryNarrativeModule
-{
-  
+{  
     public record PgsDeliverableSummaryNarrativeFilter
     {
         public int? PgsPeriodId { get; set; }

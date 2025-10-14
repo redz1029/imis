@@ -11,7 +11,6 @@ namespace IMIS.Application.PgsSummaryNarrativeModules
 
     public class ReportPGSSummaryNarrativeDto : BaseDto<PgsSummaryNarrative, int>
     {
-
         public string? Findings { get; set; }
         public string? Recommendation { get; set; }
         public string? Conclusion { get; set; }
@@ -40,10 +39,9 @@ namespace IMIS.Application.PgsSummaryNarrativeModules
                filter?.MaxScore,
                filter?.Page ?? 1,
                filter?.PageSize ?? 25
-            );
-           
-            Office = office;
-            KeyResultArea = kra;
+            );           
+            this.Office = office;
+            this.KeyResultArea = kra;
 
             if (deliverables != null)
             {

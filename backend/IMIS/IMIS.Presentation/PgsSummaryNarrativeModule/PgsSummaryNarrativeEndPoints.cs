@@ -29,8 +29,7 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
                 return Results.Ok(narrativeDto);
             })
            .WithTags(_pgsSummaryNarrativeTag)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.Add));
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.Add));
 
             app.MapGet("/", async (IPGSSummaryNarrativeService service, CancellationToken cancellationToken) =>
             {
@@ -99,8 +98,7 @@ namespace IMIS.Presentation.PgsSummaryNarrativeModule
             })
             .WithTags(_pgsSummaryNarrativeTag)
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsSummaryNarrativeTag), true)
-            .RequireAuthorization(e => e.RequireClaim(
-             PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _pgsSummaryNarrativePermissions.View));
 
             app.MapDelete("/{id:int}", async (int id, IPGSSummaryNarrativeService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
