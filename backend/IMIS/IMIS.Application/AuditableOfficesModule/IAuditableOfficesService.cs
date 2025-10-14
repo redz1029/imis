@@ -1,6 +1,4 @@
-﻿
-
-namespace IMIS.Application.AuditableOfficesModule
+﻿namespace IMIS.Application.AuditableOfficesModule
 {
     public interface IAuditableOfficesService
     {
