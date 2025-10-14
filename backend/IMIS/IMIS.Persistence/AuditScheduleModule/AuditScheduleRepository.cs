@@ -6,10 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.AuditScheduleModule
 {
-    public class AuditScheduleRepository(ImisDbContext dbContext)
-        : BaseRepository<AuditSchedule, int, ImisDbContext>(dbContext), IAuditScheduleRepository
+    public class AuditScheduleRepository(ImisDbContext dbContext) : BaseRepository<AuditSchedule, int, ImisDbContext>(dbContext), IAuditScheduleRepository
     {
-
         public async Task<List<int>> GetExistingAuditableOfficeIdsAsync(long auditScheduleId, CancellationToken cancellationToken)
         {         
             return await ReadOnlyDbContext.Set<AuditableOffices>()
@@ -17,7 +15,6 @@ namespace IMIS.Persistence.AuditScheduleModule
                 .Select(o => o.OfficeId)
                 .ToListAsync(cancellationToken);
         }
-
         public async Task<AuditSchedule?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditSchedule>()
@@ -37,7 +34,6 @@ namespace IMIS.Persistence.AuditScheduleModule
                 .FirstOrDefaultAsync(a => a.Id == id, cancellationToken)
                 .ConfigureAwait(false);
         }
-
         public async Task AddAuditableOfficesAsync(List<AuditableOffices> auditableOffices, CancellationToken cancellationToken)
         {
             var existingOfficeIds = ReadOnlyDbContext.Set<AuditableOffices>()
@@ -52,8 +48,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                 await ReadOnlyDbContext.Set<AuditableOffices>().AddRangeAsync(newOffices, cancellationToken);
                 await GetDbContext().SaveChangesAsync(cancellationToken);
             }
-        }
-        
+        }        
         public async Task<IEnumerable<AuditSchedule>> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             return await _entities

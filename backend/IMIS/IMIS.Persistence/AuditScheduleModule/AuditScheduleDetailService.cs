@@ -10,7 +10,6 @@ namespace IMIS.Persistence.AuditScheduleModule
         {
             _repository = repository;
         }
-
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var ODto = dto as AuditScheduleDetailDto;

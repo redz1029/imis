@@ -44,8 +44,7 @@ namespace IMIS.Presentation.AuditScheduleModule
             })
            .WithTags(_AuditSchedule)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _auditSchedulePermission.View));
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.View));
 
             app.MapGet("/{id}", async (int id, IAuditScheduleService service, CancellationToken cancellationToken) =>
             {
@@ -76,7 +75,6 @@ namespace IMIS.Presentation.AuditScheduleModule
             .WithTags(_AuditSchedule)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.Edit));
 
-
             app.MapGet("/page", async (int page, int pageSize, IAuditScheduleService service, CancellationToken cancellationToken) =>
             {
                 var paginatedAuditSchedule = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
@@ -84,8 +82,7 @@ namespace IMIS.Presentation.AuditScheduleModule
             })
            .WithTags(_AuditSchedule)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditSchedule), true)
-           .RequireAuthorization(e => e.RequireClaim(
-            PermissionClaimType.Claim, _auditSchedulePermission.View));
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditSchedulePermission.View));
 
             app.MapDelete("/{id:int}", async (int id, IAuditScheduleService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

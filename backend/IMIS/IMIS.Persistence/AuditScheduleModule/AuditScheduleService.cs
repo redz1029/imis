@@ -140,7 +140,6 @@ namespace IMIS.Persistence.AuditScheduleModule
             }
             return null;
         }
-
         private static double CalculateWorkingHours(DateTime startDate, DateTime endDate, 
             TimeSpan workingDayStart, TimeSpan workingDayEnd, TimeSpan lunchBreakStart, TimeSpan lunchBreakEnd)
         {
@@ -210,7 +209,6 @@ namespace IMIS.Persistence.AuditScheduleModule
 
             return totalHours;
         }
-
         public async Task<List<AuditScheduleDto>?> GetAllActiveAsync(CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository
@@ -226,8 +224,7 @@ namespace IMIS.Persistence.AuditScheduleModule
                     EndDate = a.EndDate, 
                     IsActive = a.IsActive }
                 ).ToList();
-        }  
-        
+        }          
         public async Task<List<AuditScheduleDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository.GetAllAsync(cancellationToken).ConfigureAwait(false);
@@ -256,13 +253,11 @@ namespace IMIS.Persistence.AuditScheduleModule
                 return dto;
             }).ToList();
         }
-
         public async Task<AuditScheduleDto?> GetByAuditScheduleIdAsync(int id, CancellationToken cancellationToken)
         {
             var auditSchedules = await _auditScheduleRepository.GetByAuditScheduleIdAsync(id, cancellationToken).ConfigureAwait(false);
             return auditSchedules != null ? new AuditScheduleDto(auditSchedules) : null;          
         }
-
         // Soft Delete for Audit Schedule 
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
@@ -277,7 +272,6 @@ namespace IMIS.Persistence.AuditScheduleModule
 
             return true;
         }
-
         // Soft Delete for Audit Schedule Details
         public async Task<bool> SoftDeleteAuditScheduleDetailsAsync(int id, CancellationToken cancellationToken)
         {
@@ -292,7 +286,6 @@ namespace IMIS.Persistence.AuditScheduleModule
 
             return true;
         }
-
         // Check Overlapping for AuditScheduleDetails
         public async Task<List<string>> GetOverlappingAuditAsync(AuditScheduleDto auditScheduleDto, CancellationToken cancellationToken)
         {
@@ -311,7 +304,6 @@ namespace IMIS.Persistence.AuditScheduleModule
             }
             return overlapErrors;
         }
-
         //Check Overlapping for AuditScheduleDetails
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
@@ -380,7 +372,6 @@ namespace IMIS.Persistence.AuditScheduleModule
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
         }
-
         public async Task<DtoPageList<AuditScheduleDto, AuditSchedule, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var auditSchedule = await _auditScheduleRepository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
