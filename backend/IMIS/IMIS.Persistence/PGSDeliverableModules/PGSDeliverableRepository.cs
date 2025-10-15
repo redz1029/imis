@@ -38,13 +38,7 @@ namespace IMIS.Persistence.PGSModules
                 query = query.Where(d => d.PerfomanceGovernanceSystem!.Office.Id == filter.OfficeId.Value);
 
             if (filter.IsDirect.HasValue)
-                query = query.Where(d => d.IsDirect == filter.IsDirect.Value);
-
-            if (filter.ScoreRangeFrom.HasValue)
-                query = query.Where(d => d.PgsDeliverableScoreHistory!.Any(s => s.Score >= filter.ScoreRangeFrom.Value));
-
-            if (filter.ScoreRangeTo.HasValue)
-                query = query.Where(d => d.PgsDeliverableScoreHistory!.Any(s => s.Score <= filter.ScoreRangeTo.Value));
+                query = query.Where(d => d.IsDirect == filter.IsDirect.Value);          
 
             if (filter.KraId.HasValue)
                 query = query.Where(d => d.KraId == filter.KraId.Value);

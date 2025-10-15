@@ -1,5 +1,4 @@
 ﻿using Base.Primitives;
-using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 using System.Diagnostics.CodeAnalysis;
@@ -23,7 +22,6 @@ namespace IMIS.Application.PgsModule
 
         public long PerfomanceGovernanceSystemId { get; set; }
 
-        public List<PgsDeliverableScoreHistoryDto>? PgsDeliverableScoreHistory { get; set; }
         public PGSDeliverableDto() {}
 
         [SetsRequiredMembers]
@@ -43,23 +41,11 @@ namespace IMIS.Application.PgsModule
             {
                 this.Kra = new KeyResultAreaDto(pgsDeliverable.Kra);
             }
-        
-            this.PgsDeliverableScoreHistory = pgsDeliverable.PgsDeliverableScoreHistory?.Select(s => new PgsDeliverableScoreHistoryDto
-            {
-                Id = s.Id,
-                PgsDeliverableId = s.PgsDeliverableId,
-                Date = s.Date,
-                Status = s.Status,
-                Remarks = s.Remarks,
-                Score = s.Score,              
-            }).ToList();
-
+                  
             this.IsDeleted = pgsDeliverable.IsDeleted;
             this.RowVersion = pgsDeliverable.RowVersion;
-
             this.DisapprovalRemarks = pgsDeliverable.DisapprovalRemarks;
             this.IsDisapproved = pgsDeliverable.IsDisapproved;
-
             this.PerfomanceGovernanceSystemId = pgsDeliverable.PerfomanceGovernanceSystemId;
         }
 
@@ -76,7 +62,6 @@ namespace IMIS.Application.PgsModule
                 KraId = KraId,
                 KraDescription = KraDescription,               
                 Kra = null,
-                PgsDeliverableScoreHistory = PgsDeliverableScoreHistory?.Select(d => d.ToEntity()).ToList(),
                 Remarks = Remarks,
                 DisapprovalRemarks = DisapprovalRemarks,
                 IsDisapproved = IsDisapproved,

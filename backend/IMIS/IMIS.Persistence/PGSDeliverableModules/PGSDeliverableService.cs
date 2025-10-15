@@ -3,7 +3,6 @@ using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.PgsDeliverableModule;
-using IMIS.Application.PgsDeliverableScoreHistoryModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Application.PgsModule;
 using IMIS.Domain;
@@ -18,16 +17,14 @@ namespace IMIS.Persistence.PGSModules
     {
         private readonly IPGSDeliverableRepository _repository;
         private readonly IKeyResultAreaRepository _kraRepository;
-        private readonly IPgsDeliverableScoreHistoryRepository _scoreHistoryRepository;
         private readonly UserManager<User> _userManager;    
 
         private const string PgsDeliverableScoreHistoryTag = "PgsDeliverableScoreHistory";
        
-        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, IPgsDeliverableScoreHistoryRepository scoreHistoryRepository, UserManager<User> userManager)
+        public PGSDeliverableService(IPGSDeliverableRepository repository, IKeyResultAreaRepository kraRepository, UserManager<User> userManager)
         {
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _kraRepository = kraRepository ?? throw new ArgumentNullException(nameof(kraRepository));
-            _scoreHistoryRepository = scoreHistoryRepository ?? throw new ArgumentNullException(nameof(scoreHistoryRepository));
             _userManager = userManager;
 
         }       
@@ -57,24 +54,7 @@ namespace IMIS.Persistence.PGSModules
             pgsDeliverableEntity.KraId = keyResultArea.Id;
             pgsDeliverableEntity.Kra = null; 
             pgsDeliverableEntity.IsDeleted = false;
-          
-            if (pgsDeliverableEntity.PgsDeliverableScoreHistory != null)
-            {
-                foreach (var history in pgsDeliverableEntity.PgsDeliverableScoreHistory)
-                {
-                    if (history.Id == 0)
-                    {
-                        
-                        _repository.GetDbContext().Entry(history).State = EntityState.Added;
-                    }
-                    else
-                    {
                       
-                        _repository.GetDbContext().Entry(history).State = EntityState.Unchanged;
-                    }
-                }
-            }
-
             if (pgsDeliverableEntity.Id == 0)
             {
                 await _repository.GetDbContext().AddAsync(pgsDeliverableEntity, cancellationToken);
@@ -173,22 +153,7 @@ namespace IMIS.Persistence.PGSModules
                 deliverable.Status = Enum.TryParse<PgsStatus>(dto.Status, out var status)
                     ? status
                     : deliverable.Status;
-
-                if (scoreChanged)
-                {
-                    var history = new PgsDeliverableScoreHistory
-                    {
-                        Id = 0,
-                        PgsDeliverableId = deliverable.Id,
-                        Date = DateTime.Now,
-                        Status = status,
-                        Remarks = dto.Remarks,
-                        Score = dto.Score
-                    };
-
-                    _scoreHistoryRepository.Add(history);
-                    anyScoreChanged = true;
-                }               
+                    
                 await _repository.UpdateAsync(deliverable, deliverable.Id, cancellationToken);
 
                 updatedItems.Add(dto);
