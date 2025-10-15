@@ -24,8 +24,7 @@ namespace IMIS.Persistence
         public DbSet<PgsReadinessRating> PgsReadiness { get; set; }
         public DbSet<UserOffices> UserOffices { get; set; }
         public DbSet<PgsSignatory> PgsSignatory { get; set; }
-        public DbSet<PgsSignatoryTemplate> PgsSignatoryTemplate { get; set; }
-        public DbSet<PgsDeliverableScoreHistory> PgsDeliverableScoreHistories { get; set; }
+        public DbSet<PgsSignatoryTemplate> PgsSignatoryTemplate { get; set; }       
         public DbSet<OfficeType> OfficeType { get; set; }
         public DbSet<PgsSummaryNarrative> PgsSummaryNarrative { get; set; }
         public DbSet<PgsDeliverableAccomplishment> PgsDeliverableAccomplishment { get; set; }
