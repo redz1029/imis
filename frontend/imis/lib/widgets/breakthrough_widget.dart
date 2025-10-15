@@ -259,27 +259,28 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                         child: ValueListenableBuilder<double>(
                           valueListenable: finalScoreNotifier,
                           builder: (context, finalScore, _) {
-                            String finalGradeIcon = '';
+                            Color circleColor;
 
                             if (finalScore >= 4.5) {
-                              finalGradeIcon = '🟢';
+                              circleColor = Colors.green;
                             } else if (finalScore >= 3.0 && finalScore < 4.5) {
-                              finalGradeIcon = '🟡';
+                              circleColor = Colors.yellow;
                             } else {
-                              finalGradeIcon = '🔴';
+                              circleColor = Colors.red;
                             }
 
                             WidgetsBinding.instance.addPostFrameCallback((_) {
-                              latestDisplayText = finalGradeIcon;
+                              latestDisplayText = circleColor.toString();
                             });
 
                             return Center(
-                              child: Text(
-                                finalGradeIcon,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                              child: Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: circleColor,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(color: Colors.black26),
                                 ),
                               ),
                             );
