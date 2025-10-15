@@ -87,8 +87,7 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Include(p => p.Office)
         .Include(p => p.PgsDeliverables)
         .ThenInclude(d => d.Kra)
-        .Include(p => p.PgsDeliverables)
-        .ThenInclude(d => d.PgsDeliverableScoreHistory)
+        .Include(p => p.PgsDeliverables)      
         .Include(p => p.PgsReadinessRating)
         .Include(p => p.PgsSignatories!)                
         .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
