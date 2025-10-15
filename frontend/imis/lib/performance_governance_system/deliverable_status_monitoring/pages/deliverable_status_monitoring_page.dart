@@ -55,7 +55,7 @@ class _DeliverableStatusMonitoringPageState
   final GlobalKey _menuPageKey = GlobalKey();
   final int dataColumns = 7;
   final double numberColumnWidth = 70;
-  final double dataColumnWidth = 260;
+  final double dataColumnWidth = 280;
   final dio = Dio();
   final _commonService = CommonService(Dio());
   final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
@@ -101,17 +101,8 @@ class _DeliverableStatusMonitoringPageState
   @override
   void initState() {
     super.initState();
-    _headerHorizontalController.addListener(() {
-      if (_horizontalController.offset != _headerHorizontalController.offset) {
-        _horizontalController.jumpTo(_headerHorizontalController.offset);
-      }
-    });
-
-    _horizontalController.addListener(() {
-      if (_headerHorizontalController.offset != _horizontalController.offset) {
-        _headerHorizontalController.jumpTo(_horizontalController.offset);
-      }
-    });
+    _headerHorizontalController.addListener(_syncHeaderScroll);
+    _horizontalController.addListener(_syncBodyScroll);
     () async {
       final offices = await _deliverableStatusMonitoring.fetchOffices();
       final period = await _commonService.fetchPgsPeriod();
@@ -126,6 +117,18 @@ class _DeliverableStatusMonitoringPageState
     }();
     fetchFilteredPgsList();
     _loadCurrentUserId();
+  }
+
+  void _syncHeaderScroll() {
+    if (_horizontalController.offset != _headerHorizontalController.offset) {
+      _horizontalController.jumpTo(_headerHorizontalController.offset);
+    }
+  }
+
+  void _syncBodyScroll() {
+    if (_headerHorizontalController.offset != _horizontalController.offset) {
+      _headerHorizontalController.jumpTo(_horizontalController.offset);
+    }
   }
 
   Future<void> _loadCurrentUserId() async {
@@ -296,7 +299,8 @@ class _DeliverableStatusMonitoringPageState
 
   @override
   Widget build(BuildContext context) {
-    double totalWidth = numberColumnWidth + (dataColumns * dataColumnWidth);
+    double totalWidth =
+        numberColumnWidth + (dataColumns * dataColumnWidth) + 24.0;
 
     return Scaffold(
       backgroundColor: mainBgColor,
@@ -1675,7 +1679,7 @@ class _DeliverableStatusMonitoringPageState
               _cell(deliverable['isDirect'] ? "Direct" : "Indirect"),
               _cell(deliverable['deliverableName'] ?? ''),
               _cell(deliverable['byWhen'] ?? ''),
-              _buildCreateAccomplishmentCell(index, () {
+              _buildCreateAccomplishmentAndBreakthroughCell(index, () {
                 debugPrint(
                   "Create tapped for ID: ${deliverable['pgsDeliverableId']}",
                 );
@@ -1735,50 +1739,95 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  Widget _buildCreateAccomplishmentCell(int index, VoidCallback onPressed) {
+  Widget _buildCreateAccomplishmentAndBreakthroughCell(
+    int index,
+    VoidCallback onPressed,
+  ) {
     final deliverable = deliverableList[index];
+
     return Padding(
       padding: const EdgeInsets.all(4.0),
-      child: SizedBox(
-        height: 30,
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-              side: const BorderSide(color: Colors.black, width: 1),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: 30,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                  side: const BorderSide(color: Colors.black, width: 1),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                textStyle: const TextStyle(fontSize: 13),
+                minimumSize: Size.zero,
+              ).copyWith(
+                overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                  if (states.contains(WidgetState.hovered) ||
+                      states.contains(WidgetState.pressed)) {
+                    return const Color.fromARGB(255, 221, 221, 221);
+                  }
+                  return null;
+                }),
+              ),
+              onPressed: () async {
+                await loadAccomplishments(deliverable['pgsDeliverableId']);
+                showAccomplishmentFormDialog(context, deliverable, userId);
+              },
+              icon: const Icon(
+                Icons.bar_chart_outlined,
+                size: 14,
+                color: primaryTextColor,
+              ),
+              label: const Text(
+                'Accomplishment',
+                style: TextStyle(color: primaryTextColor, fontSize: 10),
+              ),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            textStyle: const TextStyle(fontSize: 13),
-            minimumSize: Size.zero,
-          ).copyWith(
-            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(WidgetState.hovered)) {
-                return const Color.fromARGB(255, 221, 221, 221);
-              }
-              if (states.contains(WidgetState.pressed)) {
-                return const Color.fromARGB(255, 221, 221, 221);
-              }
-              return null; // default
-            }),
           ),
 
-          onPressed: () async {
-            await loadAccomplishments(deliverable['pgsDeliverableId']);
-            showAccomplishmentFormDialog(context, deliverable, userId);
-          },
+          const SizedBox(width: 8),
 
-          icon: const Icon(
-            Icons.bar_chart_outlined,
-            size: 14,
-            color: primaryTextColor,
+          SizedBox(
+            height: 30,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                  side: const BorderSide(color: Colors.black, width: 1),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                textStyle: const TextStyle(fontSize: 13),
+                minimumSize: Size.zero,
+              ).copyWith(
+                overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+                  if (states.contains(WidgetState.hovered) ||
+                      states.contains(WidgetState.pressed)) {
+                    return const Color.fromARGB(255, 221, 221, 221);
+                  }
+                  return null;
+                }),
+              ),
+              onPressed: () async {
+                // await loadBreakthroughScores(deliverable['pgsDeliverableId']);
+                // showBreakthroughScoringDialog(context, deliverable, userId);
+              },
+              icon: const Icon(
+                Icons.star_outline,
+                size: 14,
+                color: primaryTextColor,
+              ),
+              label: const Text(
+                'Breakthrough Scoring',
+                style: TextStyle(color: primaryTextColor, fontSize: 10),
+              ),
+            ),
           ),
-          label: const Text(
-            'Accomplishment',
-            style: TextStyle(color: primaryTextColor, fontSize: 10),
-          ),
-        ),
+        ],
       ),
     );
   }
