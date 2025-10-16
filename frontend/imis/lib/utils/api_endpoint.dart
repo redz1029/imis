@@ -49,6 +49,7 @@ class ApiEndpoint {
   late String announcementActive;
   late String summaryNarrativeAuditorHead;
   late String deletePgs;
+  late String breakThroughScoring;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -96,6 +97,7 @@ class ApiEndpoint {
     announcementActive = '$baseUrl/announcement/Active';
     summaryNarrativeAuditorHead = '$baseUrl/pgsSummaryNarrativeAuditorHead';
     deletePgs = '$baseUrl/pgs/deliverable';
+    breakThroughScoring = '$baseUrl/BreakThroughScoring';
   }
 
   static Future<void> setBaseUrl() async {
