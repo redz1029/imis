@@ -2,6 +2,7 @@
 using Base.Auths.Permissions;
 using Base.Auths.Roles;
 using IMIS.Application.AnnouncementModule;
+using IMIS.Application.BreakThroughScoringModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.PerfomanceGovernanceSystemModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
@@ -48,8 +49,8 @@ namespace IMIS.Infrastructure.Auths
                 new PgsPeriodPermission(), 
                 new OfficePermission(),
                 new PgsSummaryNarrativePermissions(),
-                new PgsDeliverableAccomplishmentPermission());
-        
+                new PgsDeliverableAccomplishmentPermission(),
+                new BreakThroughScoringPermission());        
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
