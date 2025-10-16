@@ -14,7 +14,9 @@ import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class ManageSummaryNarrativeReportPage extends StatefulWidget {
@@ -304,6 +306,27 @@ class ManageSummaryNarrativeReportPageState
                                         },
                                       ),
                                     ),
+
+                                    PermissionWidget(
+                                      permission:
+                                          PermissionString
+                                              .editPerformanceGovernanceSystem,
+                                      child: IconButton(
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: Color.fromARGB(
+                                            255,
+                                            221,
+                                            79,
+                                            79,
+                                          ),
+                                        ),
+                                        onPressed:
+                                            () => showDeleteDialog(
+                                              summary.id.toString(),
+                                            ),
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -341,6 +364,48 @@ class ManageSummaryNarrativeReportPageState
           );
         },
       ),
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this PGS? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _summaryNarrativeService.deleteSummaryNarrative(id);
+                await fetchSummaryNarrative();
+                try {
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Pgs deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Pgs'));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 

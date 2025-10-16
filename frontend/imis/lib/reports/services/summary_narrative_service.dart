@@ -221,4 +221,9 @@ class SummaryNarrativeService {
 
     return false;
   }
+
+  Future<void> deleteSummaryNarrative(String summaryId) async {
+    final url = '${ApiEndpoint().summaryNarrative}/$summaryId';
+    await AuthenticatedRequest.delete(dio, url);
+  }
 }
