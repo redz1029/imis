@@ -1,9 +1,6 @@
-// ignore_for_file: use_build_context_synchronously
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:dio/dio.dart';
-import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/utils/range_input_formatter.dart';
 
@@ -13,9 +10,24 @@ final Map<int, TrackingRowData> accomplishmentsMap = {};
 
 class TrackingRowData {
   final TextEditingController percentageController;
+  final TextEditingController strategicController;
+  final TextEditingController breakthroughController;
+  final ValueNotifier<double> finalScoreNotifier;
+  String latestDisplayText;
   int? accomplishmentId;
-
-  TrackingRowData({required this.percentageController, this.accomplishmentId});
+  String target;
+  TrackingRowData({
+    required this.percentageController,
+    TextEditingController? strategicController,
+    TextEditingController? breakthroughController,
+    ValueNotifier<double>? finalScoreNotifier,
+    this.accomplishmentId,
+    this.target = '',
+    this.latestDisplayText = '',
+  }) : strategicController = strategicController ?? TextEditingController(),
+       breakthroughController =
+           breakthroughController ?? TextEditingController(),
+       finalScoreNotifier = finalScoreNotifier ?? ValueNotifier(0.0);
 }
 
 class BreakthroughWidget extends StatefulWidget {
@@ -28,11 +40,12 @@ class BreakthroughWidget extends StatefulWidget {
 }
 
 class _BreakthroughWidgetState extends State<BreakthroughWidget> {
-  late final TextEditingController _percentageController;
-  final strategicController = TextEditingController();
-  final breakthroughController = TextEditingController();
+  late TextEditingController _percentageController;
+  late TextEditingController strategicController;
+  late TextEditingController breakthroughController;
+  late ValueNotifier<double> finalScoreNotifier;
   String latestDisplayText = '';
-  final ValueNotifier<double> finalScoreNotifier = ValueNotifier(0.0);
+
   @override
   void initState() {
     super.initState();
@@ -40,10 +53,20 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
     final existingData = accomplishmentsMap[widget.deliverableId];
     if (existingData != null) {
       _percentageController = existingData.percentageController;
+      strategicController = existingData.strategicController;
+      breakthroughController = existingData.breakthroughController;
+      finalScoreNotifier = existingData.finalScoreNotifier;
+      latestDisplayText = existingData.latestDisplayText;
     } else {
       _percentageController = TextEditingController(text: '0');
+      strategicController = TextEditingController();
+      breakthroughController = TextEditingController();
+      finalScoreNotifier = ValueNotifier(0.0);
       accomplishmentsMap[widget.deliverableId] = TrackingRowData(
         percentageController: _percentageController,
+        strategicController: strategicController,
+        breakthroughController: breakthroughController,
+        finalScoreNotifier: finalScoreNotifier,
       );
     }
   }
@@ -62,7 +85,6 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
 
       final B = double.tryParse(strategicText) ?? 0.0;
       final C = double.tryParse(breakthroughText) ?? 0.0;
-
       final double finalScore =
           (targetAchievementText * 0.6) + (B * 0.25) + (C * 0.15);
       finalScoreNotifier.value = finalScore;
@@ -152,6 +174,7 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                       ),
                     ),
 
+                    // Target Achievement Display
                     Expanded(
                       flex: 2,
                       child: Padding(
@@ -177,6 +200,12 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
 
                             WidgetsBinding.instance.addPostFrameCallback((_) {
                               latestDisplayText = displayTargetAchievement;
+                              final trackingData =
+                                  accomplishmentsMap[widget.deliverableId];
+                              if (trackingData != null) {
+                                trackingData.target =
+                                    displayTargetAchievement; // ✅ store target
+                              }
                               updateFinalScore();
                             });
 
@@ -194,6 +223,8 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                         ),
                       ),
                     ),
+
+                    // Strategic input
                     Expanded(
                       flex: 2,
                       child: Padding(
@@ -211,6 +242,8 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                         ),
                       ),
                     ),
+
+                    // Breakthrough input
                     Expanded(
                       flex: 2,
                       child: Padding(
@@ -229,6 +262,7 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                       ),
                     ),
 
+                    // Final Score Display
                     Expanded(
                       flex: 2,
                       child: Center(
@@ -247,6 +281,7 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                       ),
                     ),
 
+                    // Circle indicator
                     Expanded(
                       flex: 2,
                       child: Padding(
@@ -255,7 +290,6 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                           valueListenable: finalScoreNotifier,
                           builder: (context, finalScore, _) {
                             Color circleColor;
-
                             if (finalScore >= 4.5) {
                               circleColor = Colors.green;
                             } else if (finalScore >= 3.0 && finalScore < 4.5) {
@@ -263,11 +297,6 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                             } else {
                               circleColor = Colors.red;
                             }
-
-                            WidgetsBinding.instance.addPostFrameCallback((_) {
-                              latestDisplayText = circleColor.toString();
-                            });
-
                             return Center(
                               child: Container(
                                 width: 30,
@@ -286,7 +315,7 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                   ],
                 ),
 
-                gap48px,
+                const SizedBox(height: 48),
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -359,37 +388,74 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
 }
 
 Future<void> loadBreakThrough(int deliverableId) async {
-  final accomplishments = await _accomplishmentService.fetchAccomplishments(
-    deliverableId,
-  );
+  try {
+    final breakthrough = await _accomplishmentService.fetchBreakthrough(
+      deliverableId,
+    );
 
-  if (accomplishments.isNotEmpty) {
-    final acc = accomplishments.first;
-    final percent = acc.percentAccomplished ?? 0;
+    final double targetAchievementText =
+        double.tryParse(breakthrough.target.toString()) ?? 0.0;
+    final double strategicText =
+        double.tryParse(breakthrough.strategic.toString()) ?? 0.0;
+    final double breakthroughText =
+        double.tryParse(breakthrough.breakThrough.toString()) ?? 0.0;
+
+    final double finalScore =
+        (targetAchievementText * 0.6) +
+        (strategicText * 0.25) +
+        (breakthroughText * 0.15);
+
     accomplishmentsMap[deliverableId] = TrackingRowData(
-      percentageController: TextEditingController(text: percent.toString()),
-      accomplishmentId: acc.id,
+      percentageController: TextEditingController(
+        text: breakthrough.percentAccomplishment.toString(),
+      ),
+      accomplishmentId: breakthrough.id,
+      target: breakthrough.target.toString(),
+      strategicController: TextEditingController(
+        text: breakthrough.strategic.toString(),
+      ),
+      breakthroughController: TextEditingController(
+        text: breakthrough.breakThrough.toString(),
+      ),
+      finalScoreNotifier: ValueNotifier(finalScore),
     );
-  } else {
-    accomplishmentsMap[deliverableId] = TrackingRowData(
-      percentageController: TextEditingController(text: '0'),
-    );
-  }
+    // ignore: empty_catches
+  } catch (e) {}
 }
 
-Future<void> saveAccomplishmentDatas(int deliverableId, String userId) async {
-  final data = accomplishmentsMap[deliverableId];
-  if (data != null) {
-    final form = {
-      if (data.accomplishmentId != null) "id": data.accomplishmentId,
-      "pgsDeliverableId": deliverableId,
-      "postingDate": DateTime.now().toIso8601String(),
-      "userId": userId,
-      "percentAccomplished":
-          double.tryParse(data.percentageController.text) ?? 0,
-    };
+Future<void> saveBreakthroughData(int currentDeliverableId) async {
+  final trackingData = accomplishmentsMap[currentDeliverableId];
+  if (trackingData == null) return;
 
-    final formData = FormData.fromMap(form);
-    await _accomplishmentService.saveAccomplishment(formData);
+  final id = trackingData.accomplishmentId;
+  if (id == null) {
+    return;
   }
+
+  final percentAccomplishment =
+      int.tryParse(trackingData.percentageController.text) ?? 0;
+  final strategic = int.tryParse(trackingData.strategicController.text) ?? 0;
+  final breakThrough =
+      int.tryParse(trackingData.breakthroughController.text) ?? 0;
+  final finalScore = trackingData.finalScoreNotifier.value;
+  final target = int.tryParse(trackingData.target) ?? 0;
+  try {
+    final updated = await _accomplishmentService.updateBreakthrough(
+      id,
+      pgsDeliverableId: currentDeliverableId,
+      percentAccomplishment: percentAccomplishment,
+      target: target,
+      strategic: strategic,
+      breakThrough: breakThrough,
+      finalScore: finalScore,
+    );
+
+    accomplishmentsMap[currentDeliverableId] = TrackingRowData(
+      percentageController: TextEditingController(
+        text: updated.percentAccomplishment?.toString() ?? '0',
+      ),
+      accomplishmentId: updated.id,
+    );
+    // ignore: empty_catches
+  } catch (e) {}
 }
