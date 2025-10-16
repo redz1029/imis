@@ -389,7 +389,7 @@ class ManageSummaryNarrativeReportPageState
                 try {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Pgs deleted successfully'),
+                    description: Text('Deleted successfully'),
                   ).show(context);
                 } catch (e) {
                   MotionToast.error(description: Text('Failed to Pgs'));
