@@ -31,6 +31,7 @@ import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../common_services/common_service.dart';
 import '../../utils/http_util.dart';
 import '../enum/pgs_action_type.dart';
 import 'pgs_reports.dart';
@@ -46,7 +47,7 @@ class PerformanceGovernanceSystemPage extends StatefulWidget {
 class PerformanceGovernanceSystemPageState
     extends State<PerformanceGovernanceSystemPage> {
   late FilterSearchResultUtil<PerformanceGovernanceSystem> pgsSearchUtil;
-  // final _commonService = CommonService(Dio());
+  final _commonService = CommonService(Dio());
   final GlobalKey _menuKey = GlobalKey();
   final _formKey = GlobalKey<FormState>();
   final _dateConverter = const LongDateOnlyConverter();
@@ -122,16 +123,12 @@ class PerformanceGovernanceSystemPageState
   bool isMenuOpenEndDate = false;
 
   Map<int, bool> rowErrors = {};
-
-  List<Map<String, dynamic>> filteredListOffice = [];
-  List<Map<String, dynamic>> officeList = [];
+  List<Office> officeList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
   Map<int, TextEditingController> reasonController = {};
   Map<int, TextEditingController> kraDescriptionController = {};
-
   List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
-  //Start Readiness Rating-Cancer Care------------------------------------------------------------------------------------------------
   TextEditingController competenceScoreController = TextEditingController(
     text: '',
   );
@@ -144,8 +141,6 @@ class PerformanceGovernanceSystemPageState
 
   TextEditingController totalScoreController = TextEditingController(text: '');
   ValueNotifier<double> percentageScore = ValueNotifier(0.0);
-
-  // Variables to store dropdown selections
   ValueNotifier<double> competenceScore = ValueNotifier(0.0);
   ValueNotifier<double> resourceScore = ValueNotifier(0.0);
   ValueNotifier<double> confidenceScore = ValueNotifier(0.0);
@@ -373,34 +368,6 @@ class PerformanceGovernanceSystemPageState
     }
 
     return deliverablesListHistory;
-  }
-
-  Future<void> fetchOffice() async {
-    final url = ApiEndpoint().office;
-
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map((office) => Office.fromJson(office))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            officeList = data.map((office) => office.toJson()).toList();
-            filteredListOffice = List.from(officeList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
   }
 
   Future<String?> _selectOffice() async {
@@ -767,11 +734,18 @@ class PerformanceGovernanceSystemPageState
   @override
   void initState() {
     super.initState();
+    () async {
+      final offices = await _commonService.fetchOffices();
+      if (!mounted) return;
 
-    fetchOffice();
+      setState(() {
+        officeList = offices;
+      });
+    }();
     _loadOfficeName();
     _loadCurrentUserId();
     fetchPgsList();
+
     fetchPGSPeriods();
     isSearchFocus.addListener(() {
       setState(() {});
@@ -1116,14 +1090,17 @@ class PerformanceGovernanceSystemPageState
                                         setState(() {
                                           _selectedOfficeId =
                                               value.isEmpty ? null : value;
-                                          fetchPGSPeriods();
                                           isMenuOpenOffice = false;
+
+                                          fetchPgsList();
                                         });
                                       },
                                       itemBuilder: (BuildContext context) {
                                         final updatedOfficeList = [
                                           {'id': '', 'name': 'All Offices'},
-                                          ...filteredListOffice,
+                                          ...officeList.map(
+                                            (o) => {'id': o.id, 'name': o.name},
+                                          ),
                                         ];
 
                                         final searchController =
@@ -1170,7 +1147,7 @@ class PerformanceGovernanceSystemPageState
                                               ],
                                             ),
                                           ),
-                                          // Scrollable office list
+
                                           PopupMenuItem<String>(
                                             enabled: false,
                                             child: ValueListenableBuilder<
@@ -1211,8 +1188,9 @@ class PerformanceGovernanceSystemPageState
                                                                 ) => ListTile(
                                                                   dense: true,
                                                                   title: Text(
-                                                                    office['name'],
-                                                                    style: TextStyle(
+                                                                    office['name']
+                                                                        .toString(),
+                                                                    style: const TextStyle(
                                                                       color:
                                                                           Colors
                                                                               .black,
@@ -1226,7 +1204,7 @@ class PerformanceGovernanceSystemPageState
                                                                       _selectedOfficeId =
                                                                           office['id']
                                                                               .toString();
-                                                                      fetchPgsFilter();
+                                                                      fetchPgsList();
                                                                     });
                                                                   },
                                                                 ),
@@ -1240,19 +1218,24 @@ class PerformanceGovernanceSystemPageState
                                           ),
                                         ];
                                       },
+
                                       child: FilterButton(
                                         label:
                                             _selectedOfficeId == null
                                                 ? 'All Offices'
-                                                : filteredListOffice.firstWhere(
-                                                  (office) =>
-                                                      office['id'].toString() ==
-                                                      _selectedOfficeId,
-                                                  orElse:
-                                                      () => {
-                                                        'name': 'All Offices',
-                                                      },
-                                                )['name'],
+                                                : officeList
+                                                    .firstWhere(
+                                                      (office) =>
+                                                          office.id
+                                                              .toString() ==
+                                                          _selectedOfficeId,
+                                                      orElse:
+                                                          () => Office(
+                                                            id: 0,
+                                                            name: 'All Offices',
+                                                          ),
+                                                    )
+                                                    .name,
                                         isActive: isMenuOpenOffice,
                                       ),
                                     ),
@@ -1492,10 +1475,10 @@ class PerformanceGovernanceSystemPageState
                               ((_currentPage - 1) * _pageSize) + index + 1;
                           final isDraft =
                               pgsgovernancesystem['isDraft'] as bool? ?? false;
-                          final signatories =
-                              (pgsgovernancesystem['pgsSignatories']
-                                  as List?) ??
-                              [];
+
+                          final signatories = List<Map<String, dynamic>>.from(
+                            pgsgovernancesystem['signatories'] ?? [],
+                          );
 
                           String status = 'Draft';
 
@@ -1503,25 +1486,20 @@ class PerformanceGovernanceSystemPageState
                             status = 'Draft';
                           } else {
                             final hasNextStatus = signatories.any((signatory) {
-                              if (signatory is Map<String, dynamic>) {
-                                final isNextStatus = signatory['isNextStatus'];
+                              final isNextStatus = signatory['isNextStatus'];
 
-                                final boolValue =
-                                    isNextStatus is String
-                                        ? isNextStatus == 'true'
-                                        : (isNextStatus as bool? ?? false);
-
-                                return boolValue;
+                              if (isNextStatus == null) return false;
+                              if (isNextStatus is bool) return isNextStatus;
+                              if (isNextStatus is String) {
+                                return isNextStatus.toLowerCase() == 'true';
                               }
                               return false;
                             });
 
-                            if (hasNextStatus) {
-                              status = 'For Approval';
-                            } else {
-                              status = 'Approved';
-                            }
+                            status =
+                                hasNextStatus ? 'For Approval' : 'Approved';
                           }
+
                           return DataRow(
                             cells: [
                               DataCell(
