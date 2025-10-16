@@ -36,7 +36,7 @@ namespace IMIS.Presentation.BreakThroughScoringModule
                return Results.Ok(result);
            })
            .WithTags(_breakThroughScoring)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_breakThroughScoring), true)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_breakThroughScoring), true)
            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _breakThroughScoringPermission.View));
 
             app.MapPut("/{id}", async (int id, [FromBody] BreakThroughScoringDto breakThroughScoringDto, IBreakThroughScoringService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
