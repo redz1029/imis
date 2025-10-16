@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
+import '../models/breakthrough_scoring.dart';
 import '../models/pgs_deliverable_accomplishment.dart';
 
 class DeliverableStatusMonitoringService {
@@ -57,6 +58,50 @@ class DeliverableStatusMonitoringService {
           .toList();
     } else {
       throw Exception('Failed to fetch PGS accomplishments');
+    }
+  }
+
+  Future<BreakthroughScoring> fetchBreakthrough(int deliverableId) async {
+    final url = "${ApiEndpoint().breakThroughScoring}/$deliverableId";
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode == 200) {
+      final data = response.data;
+      return BreakthroughScoring.fromJson(data);
+    } else {
+      throw Exception('Failed to fetch breakthrough');
+    }
+  }
+
+  Future<BreakthroughScoring> updateBreakthrough(
+    int id, {
+    required int pgsDeliverableId,
+    required int percentAccomplishment,
+    required int target,
+    required int strategic,
+    required int breakThrough,
+    required double finalScore,
+  }) async {
+    final url = "${ApiEndpoint().breakThroughScoring}/$id";
+
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: {
+        "id": id,
+        "pgsDeliverableId": pgsDeliverableId,
+        "percentAccomplishment": percentAccomplishment,
+        "target": target,
+        "strategic": strategic,
+        "breakThrough": breakThrough,
+        "finalScore": finalScore,
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return BreakthroughScoring.fromJson(response.data);
+    } else {
+      throw Exception('Failed to update breakthrough');
     }
   }
 }
