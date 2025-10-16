@@ -53,7 +53,7 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
             entity.AttachmentPath = attachmentPath;
             await _repository.UpdateAsync(entity, id, cancellationToken);
             await _repository.SaveOrUpdateAsync(entity, cancellationToken);
-        }         
+        }      
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             if (dto is PgsDeliverableAccomplishmentDto accomplishmentDto)
@@ -66,25 +66,39 @@ namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
                     await _repository.UpdateAsync(accomplishment, accomplishment.Id, cancellationToken)
                         .ConfigureAwait(false);
 
-                await _repository.SaveOrUpdateAsync(accomplishment, cancellationToken).ConfigureAwait(false);
+                await _repository.SaveOrUpdateAsync(accomplishment, cancellationToken)
+                    .ConfigureAwait(false);
 
-                var existing = await _breakThroughrepository
-                    .GetByDeliverableIdAsync(accomplishment.PgsDeliverableId, cancellationToken);
-
-                if (existing == null)
+                if (accomplishment.PercentAccomplished > 0)
                 {
-                    existing = new BreakThroughScoring
+                    var existingBreakThrough = await _breakThroughrepository
+                        .GetByDeliverableIdAsync(accomplishment.PgsDeliverableId, cancellationToken)
+                        .ConfigureAwait(false);
+
+                    if (existingBreakThrough == null)
                     {
-                        Id = 0,
-                        PgsDeliverableId = accomplishment.PgsDeliverableId
-                    };
-                    _breakThroughrepository.Add(existing);
+                        existingBreakThrough = new BreakThroughScoring
+                        {
+                            Id = 0,
+                            PgsDeliverableId = accomplishment.PgsDeliverableId,
+                            PercentAccomplishment = accomplishment.PercentAccomplished
+                        };
+                        _breakThroughrepository.Add(existingBreakThrough);
+                    }
+                    else
+                    {
+                        existingBreakThrough.PercentAccomplishment = accomplishment.PercentAccomplished;
+                    }
+
+                    await _breakThroughrepository.SaveOrUpdateAsync(existingBreakThrough, cancellationToken)
+                        .ConfigureAwait(false);
                 }
-
-                existing.PercentAccomplishment = accomplishment.PercentAccomplished;              
-
-                await _breakThroughrepository.SaveOrUpdateAsync(existing, cancellationToken);
+                else
+                {
+                   
+                }
             }
         }
+
     }
 }
