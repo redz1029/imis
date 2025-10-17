@@ -1,8 +1,11 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
+import 'package:imis/performance_governance_system/pgs_signatory_template/pgs_signatory_template_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
@@ -10,8 +13,7 @@ import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
-import '../../../user/models/user_registration.dart';
-import '../../../utils/auth_util.dart';
+import '../../../common_services/common_service.dart';
 import '../../../widgets/dotted_button.dart';
 import '../models/pgs_signatory_template.dart';
 
@@ -25,30 +27,23 @@ class PgsSignatoryTemplatePage extends StatefulWidget {
 
 class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   final _formKey = GlobalKey<FormState>();
+  final _signatroyTemplateService = PgsSignatoryTemplateService(Dio());
   late FilterSearchResultUtil<PgsSignatoryTemplate> signatoryTemplateUtil;
-
-  List<Map<String, dynamic>> signatoryTemplateList = [];
-  List<Map<String, dynamic>> filteredList = [];
-
+  final _commonService = CommonService(Dio());
+  List<PgsSignatoryTemplate> signatoryTemplateList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
-  List<Map<String, dynamic>> filteredListSignatoryTemplate = [];
-  List<Map<String, dynamic>> filteredListSignatories = [];
+  List<PgsSignatoryTemplate> filteredListSignatoryTemplate = [];
   List<Map<String, dynamic>> selectedSignatory = [];
-  List<Map<String, dynamic>> officeList = [];
+  List<Office> officeList = [];
   List<Map<String, dynamic>> signatoryList = [];
-
-  List<PgsSignatoryTemplate> addSignatories = [];
   int? selectOffice;
-
   String? selectTeamText;
   List<User> userList = [];
-  List<User> filteredListUser = [];
   String? selectedUserId;
   TextEditingController signatoryLabelController = TextEditingController();
   TextEditingController signatoryStatusController = TextEditingController();
   final _paginationUtils = PaginationUtil(Dio());
-
   int _currentPage = 1;
   final int _pageSize = 48;
   int _totalCount = 0;
@@ -65,134 +60,26 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils
-          .fetchPaginatedData<PgsSignatoryTemplate>(
-            endpoint: ApiEndpoint().signatoryTemplate,
-            page: page,
-            pageSize: _pageSize,
-            searchQuery: searchQuery,
-            fromJson: (json) => PgsSignatoryTemplate.fromJson(json),
-          );
+      final pageList = await _signatroyTemplateService.getSignatoryTemplate(
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+      );
 
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          signatoryTemplateList =
-              pageList.items.map((a) => a.toJson()).toList();
-
+          signatoryTemplateList = pageList.items;
           filteredListSignatoryTemplate = List.from(signatoryTemplateList);
         });
       }
     } catch (e) {
-      debugPrint("Error in fetching signatory template");
+      debugPrint(e.toString());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  Future<void> fetchUser() async {
-    var url = ApiEndpoint().users;
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-      if (response.statusCode == 200 && response.data is List) {
-        List<User> data =
-            (response.data as List)
-                .map((userJson) => User.fromJson(userJson))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            userList = data;
-            filteredListUser = List.from(userList);
-
-            if (filteredListUser.isNotEmpty) {
-              selectedUserId = filteredListUser[0].id;
-            }
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching user");
-    }
-  }
-
-  Future<void> fetchOffice() async {
-    final url = ApiEndpoint().office;
-
-    try {
-      UserRegistration? user = await AuthUtil.fetchLoggedUser();
-      if (user == null) {
-        return;
-      }
-
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map((team) => Office.fromJson(team))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            officeList = data.map((team) => team.toJson()).toList();
-            filteredList = List.from(officeList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format}");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error");
-    }
-  }
-
-  Future<void> fetchSignatories() async {
-    var url = ApiEndpoint().users;
-
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<User> data =
-            (response.data as List)
-                .map((auditor) => User.fromJson(auditor))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            signatoryList = data.map((auditor) => auditor.toJson()).toList();
-            filteredListSignatories = List.from(signatoryList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format: ${response.data.runtimeType}");
-      }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.response?.data ?? e.message}");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
-
-  Future<void> deleteSignatoryTemplate(String kraId) async {
-    var url = ApiEndpoint().signatoryTemplate;
-    try {
-      final response = await AuthenticatedRequest.delete(dio, url);
-
-      if (response.statusCode == 200) {
-        await fetchSignatoryTemplate();
-        setState(() {
-          fetchSignatoryTemplate();
-        });
-      }
-    } catch (e) {
-      debugPrint("Error deleting KRA: $e");
     }
   }
 
@@ -202,9 +89,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
-    fetchUser();
-    fetchOffice();
-    fetchSignatories();
+
     fetchSignatoryTemplate();
     signatoryTemplateUtil = FilterSearchResultUtil<PgsSignatoryTemplate>(
       paginationUtils: _paginationUtils,
@@ -212,9 +97,20 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
       pageSize: _pageSize,
       fromJson: (json) => PgsSignatoryTemplate.fromJson(json),
     );
-    if (filteredListUser.isNotEmpty) {
-      selectedUserId = filteredListUser[0].id;
+    if (userList.isNotEmpty) {
+      selectedUserId = userList[0].id;
     }
+
+    () async {
+      final users = await _commonService.fetchUsers();
+      final offices = await _commonService.fetchOffices();
+      if (!mounted) return;
+
+      setState(() {
+        userList = users;
+        officeList = offices;
+      });
+    }();
   }
 
   @override
@@ -301,7 +197,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: Stack(
                             children: [
-                              DropdownSearch<Map<String, dynamic>?>(
+                              DropdownSearch<Office?>(
                                 popupProps: PopupProps.menu(
                                   showSearchBox: true,
                                   searchFieldProps: TextFieldProps(
@@ -309,7 +205,6 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                       hintText: 'Search offices...',
                                       fillColor: mainBgColor,
                                       filled: true,
-
                                       prefixIcon: Icon(Icons.search),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
@@ -322,27 +217,31 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                     ),
                                   ),
                                   itemBuilder:
-                                      (context, item, isSelected) => ListTile(
+                                      (context, office, isSelected) => ListTile(
                                         tileColor: mainBgColor,
-
-                                        title: Text(item?['name'] ?? ''),
+                                        title: Text(office?.name ?? ''),
                                       ),
                                 ),
-
-                                items: officeList.cast<Map<String, dynamic>?>(),
-                                itemAsString: (o) => o?['name'] ?? '',
-                                selectedItem: officeList
-                                    .cast<Map<String, dynamic>?>()
-                                    .firstWhere(
-                                      (o) => o?['id'] == selectOffice,
-                                      orElse: () => null,
-                                    ),
+                                items: officeList,
+                                itemAsString: (office) => office?.name ?? '',
+                                selectedItem: officeList.firstWhere(
+                                  (office) => office.id == selectOffice,
+                                  orElse:
+                                      () => Office(
+                                        id: 0,
+                                        name: 'Unknown',
+                                        officeTypeId: 0,
+                                        parentOfficeId: 0,
+                                        isActive: true,
+                                        isDeleted: false,
+                                      ),
+                                ),
                                 onChanged:
                                     (value) => setState(
-                                      () => selectOffice = value?['id'],
+                                      () => selectOffice = value?.id,
                                     ),
                                 validator: (value) {
-                                  if (value == null || value.isEmpty) {
+                                  if (value == null) {
                                     return 'Please select an office';
                                   }
                                   return null;
@@ -496,7 +395,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     }
                     if (selectOffice != null && id == null) {
                       final officeExists = signatoryTemplateList.any(
-                        (item) => item['officeId'] == selectOffice,
+                        (item) => item.officeId == selectOffice,
                       );
 
                       if (officeExists) {
@@ -862,7 +761,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                   ),
                   onPressed: () async {
                     if (_formKey.currentState!.validate()) {
-                      final selectedUser = filteredListUser.firstWhere(
+                      final selectedUser = userList.firstWhere(
                         (user) => user.id == selectedUserId,
                         orElse: () => throw Exception('User not found'),
                       );
@@ -905,46 +804,15 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
     });
   }
 
-  Future<void> filterSearchResults(String query) async {
-    try {
-      final results = await signatoryTemplateUtil.filter(query, (
-        signatoryTemplate,
-        search,
-      ) {
-        final officeMap = officeList.firstWhere(
-          (office) => office['id'] == signatoryTemplate.officeId,
-          orElse:
-              () => {
-                'id': -1,
-                'name': 'Unknown Office',
-                'officeTypeId': -1,
-                'isActive': false,
-              },
-        );
-
-        final officeName = officeMap['name']?.toString().toLowerCase() ?? '';
-        return officeName.contains(search.toLowerCase());
-      });
-
-      setState(() {
-        filteredListSignatoryTemplate =
-            results.map((template) => template.toJson()).toList();
-      });
-    } catch (e) {
-      setState(() => filteredListSignatoryTemplate = []);
-      debugPrint('Filter error: $e');
-    }
-  }
-
   Map<String, List<Map<String, dynamic>>> groupByOfficeName(
-    List<Map<String, dynamic>> list,
+    List<PgsSignatoryTemplate> list,
     List<Office> offices,
     List<User> users,
   ) {
     Map<String, List<Map<String, dynamic>>> grouped = {};
 
     for (var item in list) {
-      int? officeId = item['officeId'];
+      int? officeId = item.officeId;
       if (officeId == null) continue;
 
       var office = offices.firstWhere(
@@ -958,22 +826,19 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
             ),
       );
 
-      String? signatoryId = item['defaultSignatoryId']?.toString();
-      String signatoryName = 'Unknown User';
-      if (signatoryId != null) {
-        var user = users.firstWhere(
-          (u) => u.id == signatoryId,
-          orElse: () => User(id: '', fullName: 'Unknown User', position: ''),
-        );
-        signatoryName = user.fullName;
-      }
+      String? signatoryId = item.defaultSignatoryId.toString();
+      var user = users.firstWhere(
+        (u) => u.id == signatoryId,
+        orElse: () => User(id: '', fullName: 'Unknown User', position: ''),
+      );
 
-      var itemWithName = Map<String, dynamic>.from(item);
-      itemWithName['signatoryName'] = signatoryName;
+      var itemWithName = item.toJson();
+      itemWithName['signatoryName'] = user.fullName;
 
       if (!grouped.containsKey(office.name)) {
         grouped[office.name] = [];
       }
+
       grouped[office.name]!.add(itemWithName);
     }
 
@@ -983,11 +848,10 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
-    List<Office> offices =
-        officeList.map((officeMap) => Office.fromJson(officeMap)).toList();
+
     final groupedData = groupByOfficeName(
       filteredListSignatoryTemplate,
-      offices,
+      officeList,
       userList,
     );
 
@@ -1035,7 +899,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                         horizontal: 5,
                       ),
                     ),
-                    onChanged: filterSearchResults,
+                    // onChanged: filterSearchResults,
                   ),
                 ),
 
@@ -1159,7 +1023,14 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                                           Icons.delete,
                                           color: primaryColor,
                                         ),
-                                        onPressed: () => {},
+                                        onPressed: () {
+                                          final templateId =
+                                              signatories.first['id']
+                                                  ?.toString();
+                                          if (templateId != null) {
+                                            showDeleteDialog(templateId);
+                                          }
+                                        },
                                       ),
                                     ],
                                   ),
@@ -1211,6 +1082,7 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
 
   void showDeleteDialog(String id) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -1226,7 +1098,18 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await deleteSignatoryTemplate(id);
+                try {
+                  await _signatroyTemplateService.deleteSignatory(id);
+                  await fetchSignatoryTemplate();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text(
+                      'Signatory template deleted successfully',
+                    ),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Delete Team'));
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,
