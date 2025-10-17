@@ -26,7 +26,7 @@ namespace IMIS.Presentation.UserModule
         public static IEndpointConventionBuilder MapCustomIdentityApi<TUser>(this IEndpointRouteBuilder endpoints)
         where TUser : User, new()
         {
-            // Authentication Endpoints
+            // User Endpoints
             var authGroup = endpoints.MapGroup("").WithTags(IdentityGroup);
             authGroup.MapPost("/register", (UserRegistrationDto registration, IServiceProvider sp) => RegisterUser(registration, sp));
             authGroup.MapGet("/getUser", (IServiceProvider sp) => GetRegisteredUsers(sp)).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles"));
@@ -36,7 +36,8 @@ namespace IMIS.Presentation.UserModule
             authGroup.MapPost("/refresh", RefreshToken<TUser>);
             authGroup.MapDelete("/revokeRefreshToken", RevokeRefreshToken<TUser>);
             authGroup.MapGet("/users", (HttpContext httpContext, IServiceProvider sp) => GetUsers(httpContext, sp));
-             
+            authGroup.MapDelete("/deleteUser/{id}", async (string id, IServiceProvider sp) => await DeleteUser(id, sp));
+
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
             roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
@@ -335,7 +336,35 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok(role);
         }
+        private static async Task<IResult> DeleteUser(string id, IServiceProvider sp)
+        {
+            var userManager = sp.GetRequiredService<UserManager<User>>();
 
+            var user = await userManager.FindByIdAsync(id);
+            if (user == null)
+            {
+                return Results.NotFound(new
+                {                 
+                    message = "User not found."
+                });
+            }
+
+            var result = await userManager.DeleteAsync(user);
+            if (result.Succeeded)
+            {
+                return Results.Ok(new
+                {                  
+                    message = "User deleted successfully."
+                });
+            }
+
+            return Results.BadRequest(new
+            {
+                success = false,
+                message = "Failed to delete user.",
+                errors = result.Errors.Select(e => e.Description)
+            });
+        }
         private static async Task<IResult> GetRoles(HttpContext httpContext, IServiceProvider sp)
         {
             var identity = (ClaimsIdentity)httpContext.User.Identity!;
