@@ -9,7 +9,6 @@ using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.OutputCaching;
-using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PGSModules
 {

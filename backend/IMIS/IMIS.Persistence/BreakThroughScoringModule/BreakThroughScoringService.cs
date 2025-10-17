@@ -1,6 +1,5 @@
 ﻿using Base.Primitives;
 using IMIS.Application.BreakThroughScoringModule;
-using IMIS.Application.PgsDeliverableAccomplishmentModule;
 
 namespace IMIS.Persistence.BreakThroughScoringModule
 {
@@ -21,7 +20,7 @@ namespace IMIS.Persistence.BreakThroughScoringModule
             var breakThroughScoring = await _repository
                 .GetByDeliverableIdAsync(deliverableId, cancellationToken)
                 .ConfigureAwait(false);
-
+              
             return breakThroughScoring is null
                 ? null
                 : new BreakThroughScoringDto(breakThroughScoring);
