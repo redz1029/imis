@@ -162,7 +162,9 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                     description: Text('Period deleted successfully'),
                   ).show(context);
                 } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Role'));
+                  MotionToast.error(
+                    description: Text('Failed to Delete Period'),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -12,6 +14,7 @@ import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/custom_toggle.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class UserOfficePage extends StatefulWidget {
   const UserOfficePage({super.key});
@@ -749,6 +752,7 @@ class UserOfficePageState extends State<UserOfficePage> {
 
   void showDeleteDialog(String id) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -764,7 +768,18 @@ class UserOfficePageState extends State<UserOfficePage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await _userOfficeService.deleteUserOffice(id);
+                try {
+                  await _userOfficeService.deleteUserOffice(id);
+                  await fetchUserOffice();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('User office deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(
+                    description: Text('Failed to Delete User office'),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,

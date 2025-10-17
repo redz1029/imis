@@ -1108,7 +1108,9 @@ class PgsSignatoryTemplatePageState extends State<PgsSignatoryTemplatePage> {
                     ),
                   ).show(context);
                 } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Team'));
+                  MotionToast.error(
+                    description: Text('Failed to Delete Signatory template'),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(

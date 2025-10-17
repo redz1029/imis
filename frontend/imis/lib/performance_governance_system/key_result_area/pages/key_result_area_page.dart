@@ -112,7 +112,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                     description: Text('KRA deleted successfully'),
                   ).show(context);
                 } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Role'));
+                  MotionToast.error(description: Text('Failed to Delete KRA'));
                 }
               },
               style: ElevatedButton.styleFrom(
