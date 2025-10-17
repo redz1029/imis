@@ -1088,7 +1088,11 @@ class UserProfileState extends State<UserProfilePage> {
                                                     Icons.delete,
                                                     color: Colors.red,
                                                   ),
-                                                  onPressed: () async {},
+                                                  onPressed: () {
+                                                    showDeleteDialog(
+                                                      userProfile.id.toString(),
+                                                    );
+                                                  },
                                                 ),
                                               ],
                                             ),
@@ -1139,6 +1143,51 @@ class UserProfileState extends State<UserProfilePage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this PGS Period? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  // await _pgsPeriodService.deletePeriod(id);
+                  // await fetchPGSPeriods();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Period deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(
+                    description: Text('Failed to Delete Period'),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

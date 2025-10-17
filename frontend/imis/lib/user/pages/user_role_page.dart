@@ -436,10 +436,12 @@ class UserRolePageState extends State<UserRolePage> {
                   await fetchUserRoles();
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Period deleted successfully'),
+                    description: Text('User role deleted successfully'),
                   ).show(context);
                 } catch (e) {
-                  MotionToast.error(description: Text('Failed to Delete Role'));
+                  MotionToast.error(
+                    description: Text('Failed to Delete User role'),
+                  );
                 }
               },
               style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
