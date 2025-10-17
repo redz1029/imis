@@ -128,33 +128,14 @@ namespace IMIS.Persistence.OfficeModule
         {
             var offices = await _repository.GetNonAuditableOffices(auditScheduleId, cancellationToken).ConfigureAwait(false);
             return offices?.Select(o => ConvOfficeToDTO(o)).ToList();
-        }     
-        public async Task<bool> HasCircularReferenceAsync(int? parentId, int childId, CancellationToken cancellationToken)
-        {
-            int depth = 0;
-            const int maxDepth = 50;
-
-            while (parentId != null)
-            {
-                if (++depth > maxDepth)
-                    return true; 
-
-                if (parentId == childId)
-                    return true;
-
-                var parent = await _dbContext.Offices.FindAsync(new object[] { parentId }, cancellationToken);
-                if (parent == null)
-                    break;
-
-                parentId = parent.ParentOfficeId;
-            }
-
-            return false;
-        }
+        }            
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
             var ODto = dto as OfficeDto;
             var office = ODto!.ToEntity();
+       
+            if (office.ParentOfficeId.HasValue && office.ParentOfficeId.Value == office.Id)
+                throw new InvalidOperationException("An office cannot be its own parent.");
 
             if (office.Id == 0)
                 _repository.Add(office);
