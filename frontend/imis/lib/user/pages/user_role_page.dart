@@ -13,6 +13,7 @@ import 'package:collection/collection.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/dotted_button.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 
 class UserRolePage extends StatefulWidget {
   const UserRolePage({super.key});
@@ -416,6 +417,7 @@ class UserRolePageState extends State<UserRolePage> {
 
   void showDeleteDialog(String id) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -429,8 +431,16 @@ class UserRolePageState extends State<UserRolePage> {
             TextButton(
               onPressed: () async {
                 Navigator.pop(context);
-                await _userRoleService.deleteUserRole(id);
-                await fetchUserRoles();
+                try {
+                  await _userRoleService.deleteUserRole(id);
+                  await fetchUserRoles();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Period deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Delete Role'));
+                }
               },
               style: ElevatedButton.styleFrom(backgroundColor: primaryColor),
               child: Text('Delete', style: TextStyle(color: Colors.white)),

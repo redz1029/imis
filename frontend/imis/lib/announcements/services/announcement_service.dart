@@ -75,4 +75,9 @@ class AnnouncementService {
       throw Exception('Failed to update announcement');
     }
   }
+
+  Future<void> deleteAnnouncement(String announcement) async {
+    final url = '${ApiEndpoint().announcement}/$announcement';
+    await AuthenticatedRequest.delete(dio, url);
+  }
 }

@@ -868,7 +868,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                 MotionToast.success(
                   toastAlignment: Alignment.topCenter,
                   description: Text('Auditor Office deleted successfully'),
-                );
+                ).show(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryColor,

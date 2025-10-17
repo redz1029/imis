@@ -218,7 +218,9 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                                         color: primaryColor,
                                       ),
                                       onPressed: () {
-                                        // showDeleteDialog(team.id.toString());
+                                        showDeleteDialog(
+                                          announcement.id.toString(),
+                                        );
                                       },
                                     ),
                                   ],
@@ -625,6 +627,50 @@ class AnnouncementPageState extends State<AnnouncementPage> {
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: mainBgColor,
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this Team? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await _announcement.deleteAnnouncement(id);
+                  await fetchAnnouncement();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Announcement deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Delete Team'));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
         );
       },
     );

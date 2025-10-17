@@ -435,7 +435,7 @@ class TeamPageState extends State<TeamPage> {
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
                     description: Text('Team deleted successfully'),
-                  );
+                  ).show(context);
                 } catch (e) {
                   MotionToast.error(description: Text('Failed to Delete Team'));
                 }
