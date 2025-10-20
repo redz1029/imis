@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="10/02/2025 14:48:11" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="10/20/2025 09:23:53" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -312,18 +312,18 @@ namespace FastReport
   </Dictionary>
   <ReportPage Name="Page1" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
     <ReportTitleBand Name="ReportTitle1" Width="1047.06"/>
-    <PageHeaderBand Name="PageHeader1" Top="3.2" Width="1047.06" Height="234.1" CanGrow="true">
+    <PageHeaderBand Name="PageHeader1" Top="4" Width="1047.06" Height="234.1" CanGrow="true">
       <ShapeObject Name="Shape1" Left="83.45" Top="106.4" Width="885.1" Height="60.8" Fill.Color="192, 80, 77"/>
-      <TextObject Name="Text2" Left="841.15" Top="111.85" Width="121.15" Height="47.9" Fill.Color="192, 80, 77" Text="[ReportPerfomanceGovernanceSystemDto.PercentDeliverables] %" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 16pt" TextFill.Color="White"/>
-      <TextObject Name="Text3" Left="352.95" Top="110.85" Width="478.6" Height="48.9" Fill.Color="192, 80, 77" Text="STRATEGIC CONTRIBUTIONS" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 16pt" TextFill.Color="White"/>
-      <TextObject Name="Text4" Left="86.45" Top="169.65" Width="94.15" Height="58.9" Text="KRA&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
-      <TextObject Name="Text6" Left="182.95" Top="201.45" Width="72.35" Height="26.9" Text="DIRECT&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
-      <TextObject Name="Text7" Left="258.1" Top="202" Width="90.35" Height="26.55" Text="INDIRECT&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
-      <TextObject Name="Text8" Left="356.05" Top="171.2" Width="475.6" Height="51.35" Text="DELIVERABLES" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
-      <TextObject Name="Text9" Left="841.25" Top="171.55" Width="122.35" Height="50.55" Text="BY WHEN&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
+      <TextObject Name="Text2" Left="841.15" Top="110.85" Width="121.15" Height="51.9" Fill.Color="192, 80, 77" Text="[ReportPerfomanceGovernanceSystemDto.PercentDeliverables] %" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 16pt" TextFill.Color="White"/>
+      <TextObject Name="Text3" Left="352.95" Top="113.85" Width="478.6" Height="47.9" Fill.Color="192, 80, 77" Text="STRATEGIC CONTRIBUTIONS" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 16pt" TextFill.Color="White"/>
+      <TextObject Name="Text4" Left="86.45" Top="169.65" Width="94.15" Height="62.9" Text="KRA&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
+      <TextObject Name="Text6" Left="182.95" Top="201.45" Width="72.35" Height="30.9" Text="DIRECT&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
+      <TextObject Name="Text7" Left="258.1" Top="201" Width="90.35" Height="31.55" Text="INDIRECT&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
+      <TextObject Name="Text8" Left="356.05" Top="171.2" Width="475.6" Height="59.35" Text="DELIVERABLES" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
+      <TextObject Name="Text9" Left="841.25" Top="171.55" Width="122.35" Height="58.55" Text="BY WHEN&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
       <TextObject Name="Text5" Left="185.5" Top="171.2" Width="163.4" Height="24.9" Text="ALIGNMENT&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
       <LineObject Name="Line1" Left="836.7" Top="107.95" Height="125.9" Diagonal="true"/>
-      <TextObject Name="txtPgsOffice" Left="85.9" Top="112.4" Width="262" Height="47.9" Fill.Color="192, 80, 77" BeforePrintEvent="txtPgsOffice_BeforePrint" Text="[ReportPerfomanceGovernanceSystemDto.OfficeName]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 16pt" TextFill.Color="White"/>
+      <TextObject Name="txtPgsOffice" Left="85.9" Top="110.4" Width="262" Height="51.9" Fill.Color="192, 80, 77" BeforePrintEvent="txtPgsOffice_BeforePrint" Text="[ReportPerfomanceGovernanceSystemDto.OfficeName]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 16pt" TextFill.Color="White"/>
       <LineObject Name="Line10" Left="183.2" Top="166.75" Height="67.35"/>
       <LineObject Name="Line11" Left="83.9" Top="166.2" Height="67.35"/>
       <LineObject Name="Line12" Left="183.65" Top="198.65" Width="166.3" Diagonal="true"/>
@@ -334,26 +334,26 @@ namespace FastReport
       <LineObject Name="Line15" Left="967.6" Top="159.95" Height="73.9" Diagonal="true"/>
       <TextObject Name="txtStartDateTOEndDate" Left="342.2" Top="48.7" Width="396.9" Height="21.8" BeforePrintEvent="txtStartDateTOEndDate_BeforePrint" Text="[ReportPerfomanceGovernanceSystemDto.StartDate] To [ReportPerfomanceGovernanceSystemDto.EndDate]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 10pt"/>
     </PageHeaderBand>
-    <DataBand Name="Data2" Top="240.5" Width="1047.06" DataSource="ReportPerfomanceGovernanceSystemDto">
-      <DataBand Name="Data1" Top="243.7" Width="1047.06" Height="34.3" CanGrow="true" FirstRowStartsNewPage="true" Guides="0" DataSource="PgsDeliverables">
+    <DataBand Name="Data2" Top="242.1" Width="1047.06" DataSource="ReportPerfomanceGovernanceSystemDto">
+      <DataBand Name="Data1" Top="246.1" Width="1047.06" Height="34.3" CanGrow="true" FirstRowStartsNewPage="true" Guides="0" DataSource="PgsDeliverables">
         <TextObject Name="txtInDirect" Left="255.7" Top="-0.55" Width="94.5" Height="33.25" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtInDirect_BeforePrint" HorzAlign="Center" Font="Noto Sans, 12pt"/>
         <TextObject Name="Text26" Left="183.65" Top="-1" Width="72.15" Height="33.7" CanGrow="true" GrowToBottom="true" BeforePrintEvent="Text26_BeforePrint" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.IsDirect]" HorzAlign="Center" Font="Noto Sans, 12pt"/>
         <ShapeObject Name="Shape12" Left="83.15" Top="-1.65" Width="885.2" Height="35.95" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-        <TextObject Name="Text23" Left="356.7" Top="0.8" Width="474.5" Height="29.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.DeliverableName]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
+        <TextObject Name="Text23" Left="356.7" Top="3.8" Width="474.5" Height="22.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.DeliverableName]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
         <LineObject Name="Line5" Left="836.8" Top="-1.65" Height="34.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-        <TextObject Name="Text24" Left="840.7" Top="3" Width="121.5" Height="24.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.ByWhen]" Format="Date" Format.Format="MMMM yyyy" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
+        <TextObject Name="Text24" Left="840.7" Top="1" Width="121.5" Height="29.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.ByWhen]" Format="Date" Format.Format="MMMM yyyy" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
         <LineObject Name="Line6" Left="350.15" Top="-1" Height="34.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
         <LineObject Name="Line7" Left="183.5" Top="-1" Height="34.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
         <LineObject Name="Line8" Left="255.55" Top="-1" Height="34.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
-        <TextObject Name="Text25" Left="88.45" Top="3.45" Width="90.6" Height="23.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.KraName]&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
+        <TextObject Name="Text25" Left="88.45" Top="7.45" Width="90.6" Height="16.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.KraName]&#13;&#10;" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 12pt"/>
       </DataBand>
     </DataBand>
-    <PageFooterBand Name="PageFooter1" Top="281.2" Width="1047.06" Height="251.75" CanBreak="true">
+    <PageFooterBand Name="PageFooter1" Top="284.4" Width="1047.06" Height="251.75" CanBreak="true">
       <TextObject Name="Text14" Left="277.9" Top="3" Width="264.6" Height="19.8" Anchor="Bottom, Left" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel2]" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="SigantoryLabel1" Left="23.3" Top="3" Width="170.1" Height="19.8" Anchor="Bottom, Left" Text="Prepared By&#13;&#10;" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <LineObject Name="SigLine1" Left="45.45" Top="48.8" Width="200.85" Anchor="Bottom, Left" Diagonal="true"/>
       <LineObject Name="SigLine2" Left="300.8" Top="49.25" Width="210.85" Anchor="Bottom, Left" Diagonal="true"/>
-      <LineObject Name="SigLine4" Left="800.65" Top="51.15" Width="203.95" Anchor="Bottom, Left" Diagonal="true"/>
+      <LineObject Name="SigLine4" Left="800.65" Top="50.15" Width="203.95" Anchor="Bottom, Left" Diagonal="true"/>
       <TextObject Name="Text16" Left="18.3" Top="52.7" Width="253.05" Height="15.25" Anchor="Bottom, Left" CanGrow="true" BeforePrintEvent="Text16_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId1]" HorzAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text17" Left="275.7" Top="52.7" Width="262.1" Height="15.6" Anchor="Bottom, Left" CanGrow="true" BeforePrintEvent="Text17_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId2]&#13;&#10;" HorzAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="txtPgsSignatoryId3" Left="541.65" Top="52.7" Width="236.85" Height="16.25" Anchor="Bottom, Left" CanGrow="true" BeforePrintEvent="Text18_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId3]&#13;&#10;" HorzAlign="Center" Font="Noto Sans, 8pt"/>
@@ -361,14 +361,14 @@ namespace FastReport
       <TextObject Name="Text59" Left="17.9" Top="68.08" Width="252.8" Height="16.25" Anchor="Bottom, Left" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition1]" HorzAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text60" Left="275.95" Top="68.08" Width="262.35" Height="16.45" Anchor="Bottom, Left" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition2]" HorzAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text61" Left="782.35" Top="69.44" Width="238" Height="16.35" Anchor="Bottom, Left" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition4]" HorzAlign="Center" Font="Noto Sans, 8pt"/>
-      <LineObject Name="SigLine3" Left="559.8" Top="50.7" Width="202.3" Anchor="Bottom, Left" Diagonal="true"/>
+      <LineObject Name="SigLine3" Left="559.8" Top="49.7" Width="202.3" Anchor="Bottom, Left" Diagonal="true"/>
       <TextObject Name="Text62" Left="544.45" Top="2" Width="179.55" Height="22.9" Anchor="Bottom, Left" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel3]" Font="Noto Sans, 8pt"/>
       <TextObject Name="txtPgsSignatoryId4" Left="782.8" Top="53.15" Width="237.25" Height="15.9" Anchor="Bottom, Left" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId4_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId4]&#13;&#10;" HorzAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text64" Left="541" Top="69.05" Width="237.25" Height="15.9" Anchor="Bottom, Left" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition3]" HorzAlign="Center" Font="Noto Sans, 8pt"/>
       <LineObject Name="SigLine5" Left="431.45" Top="151.2" Width="220.3" Anchor="Bottom, Left" Diagonal="true"/>
       <TextObject Name="Text83" Left="396.45" Top="104.85" Width="171.1" Height="25.9" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel5]" Font="Noto Sans, 8pt"/>
-      <TextObject Name="txtPgsSignatoryId5" Left="159" Top="155.55" Width="766.7" Height="13.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId5_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId5]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
-      <TextObject Name="Text85" Left="159.1" Top="169.45" Width="766.7" Height="15.9" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition5]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
+      <TextObject Name="txtPgsSignatoryId5" Left="159" Top="155.55" Width="765.7" Height="13.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId5_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId5]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
+      <TextObject Name="Text85" Left="158.1" Top="169.45" Width="766.7" Height="15.9" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition5]" HorzAlign="Center" VertAlign="Center" Font="Noto Sans, 8pt"/>
       <TextObject Name="Text13" Left="777.55" Top="2.45" Width="163.65" Height="21.8" Anchor="Bottom, Left" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel4]&#13;&#10;" VertAlign="Center" Font="Noto Sans, 8pt"/>
     </PageFooterBand>
   </ReportPage>
