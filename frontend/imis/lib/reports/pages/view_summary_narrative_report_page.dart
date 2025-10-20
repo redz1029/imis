@@ -411,7 +411,11 @@ class ViewSummaryNarrativeReportPageState
                                     IconButton(
                                       icon: const Icon(Icons.edit),
                                       onPressed: () {
-                                        showReportDialog(summary);
+                                        if (selectedTabIndex == 0) {
+                                          showReportDialog(summary);
+                                        } else {
+                                          showRemarksDialog(summary);
+                                        }
                                       },
                                     ),
                                     Tooltip(
@@ -684,7 +688,16 @@ class ViewSummaryNarrativeReportPageState
     );
   }
 
-  void showRemarksDialog() {
+  void showRemarksDialog([PgsSummaryNarrative? summary]) {
+    if (summary != null) {
+      _remakrsController.text = summary.recommendation ?? '';
+      selectedPeriod = summary.pgsPeriodId.toString();
+      selectedOffice = summary.officeId.toString();
+    } else {
+      _remakrsController.clear();
+      selectedPeriod = null;
+      selectedOffice = null;
+    }
     showDialog(
       context: context,
       barrierDismissible: true,
@@ -699,7 +712,7 @@ class ViewSummaryNarrativeReportPageState
           contentPadding: EdgeInsets.zero,
           content: SizedBox(
             width: 900,
-            child: SingleChildScrollView(child: _buildRemarksCard()),
+            child: SingleChildScrollView(child: _buildRemarksCard(summary)),
           ),
 
           actions: [
@@ -792,7 +805,7 @@ class ViewSummaryNarrativeReportPageState
     );
   }
 
-  Widget _buildRemarksCard() {
+  Widget _buildRemarksCard(PgsSummaryNarrative? summary) {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
@@ -849,7 +862,7 @@ class ViewSummaryNarrativeReportPageState
                           const SizedBox(width: 8),
 
                           Text(
-                            'Summary Narrative Report - $selectedPeriod',
+                            'Summary Narrative Report - ${summary != null ? getPeriodLabel(summary.pgsPeriodId) : selectedPeriodText}',
                             style: const TextStyle(
                               fontSize: 14,
                               color: Colors.black87,

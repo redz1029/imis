@@ -410,7 +410,6 @@ class UserOfficePageState extends State<UserOfficePage> {
                         );
 
                         if (isDuplicate) {
-                          // ignore: use_build_context_synchronously
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -441,7 +440,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                         setState(() {
                           fetchUserOffice();
                         });
-                        // ignore: use_build_context_synchronously
+
                         Navigator.pop(context);
                       }
                     }
