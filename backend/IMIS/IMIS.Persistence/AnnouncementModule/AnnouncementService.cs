@@ -1,5 +1,7 @@
-﻿using Base.Primitives;
+﻿using Base.Pagination;
+using Base.Primitives;
 using IMIS.Application.AnnouncementModule;
+using IMIS.Domain;
 
 namespace IMIS.Persistence.AnnouncementModule
 {
@@ -10,6 +12,20 @@ namespace IMIS.Persistence.AnnouncementModule
         public AnnouncementService(IAnnouncementRepository repository)
         {
             _repository = repository;
+        }
+        public async Task<DtoPageList<AnnouncementDto, Announcement, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var AnnouncementDto = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (AnnouncementDto.TotalCount == 0)
+            {
+                return null;
+            }
+            return DtoPageList<AnnouncementDto, Announcement, int>.Create(AnnouncementDto.Items, page, pageSize, AnnouncementDto.TotalCount);
+        }
+        public async Task<List<AnnouncementDto>?> FilteByName(string name, int AnnouncementNoOfResults, CancellationToken cancellationToken)
+        {
+            var announcementDto = await _repository.FilteByName(name, AnnouncementNoOfResults, cancellationToken).ConfigureAwait(false);
+            return announcementDto != null && announcementDto.Count() > 0 ? announcementDto.Select(a => new AnnouncementDto(a)).ToList() : null;
         }
         public async Task<List<AnnouncementDto>?> GetAll(CancellationToken cancellationToken)
         {

@@ -34,9 +34,19 @@ namespace IMIS.Presentation.AnnouncementModule
                 var announcement = await service.GetAll(cancellationToken).ConfigureAwait(false);
                 return Results.Ok(announcement);
             })
-          .WithTags(_announcementTag)
-          .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_announcementTag), true)
-          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _announcementPermission.View));
+           .WithTags(_announcementTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_announcementTag), true)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _announcementPermission.View));
+
+            app.MapGet("/filter/{name}", async (string name, IAnnouncementService service, CancellationToken cancellationToken) =>
+            {
+                int noOfResults = 10;
+                var announcement = await service.FilteByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
+                return announcement != null ? Results.Ok(announcement) : Results.NoContent();
+            })
+           .WithTags(_announcementTag)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_announcementTag), true)
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _announcementPermission.View));
 
             app.MapGet("/Active", async (IAnnouncementService service, CancellationToken cancellationToken) =>
             {
@@ -70,7 +80,16 @@ namespace IMIS.Presentation.AnnouncementModule
                               : Results.NotFound(new { message = "Announcement not found." });
             })
            .WithTags(_announcementTag)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _announcementPermission.Edit));          
+           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _announcementPermission.Edit));
+
+            app.MapGet("/page", async (int page, int pageSize, IAnnouncementService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedAnnouncement = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(paginatedAnnouncement);
+            })
+            .WithTags(_announcementTag)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_announcementTag), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _announcementPermission.View));
         }
     }
 }

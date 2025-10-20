@@ -1,4 +1,6 @@
 ﻿using Base.Abstractions;
+using Base.Pagination;
+using IMIS.Domain;
 
 namespace IMIS.Application.AnnouncementModule
 {
@@ -8,5 +10,7 @@ namespace IMIS.Application.AnnouncementModule
         Task<AnnouncementDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<List<AnnouncementDto>?> GetAll(CancellationToken cancellationToken);
+        Task<List<AnnouncementDto>?> FilteByName(string name, int noOfResults, CancellationToken cancellationToken);
+        public Task<DtoPageList<AnnouncementDto, Announcement, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
     }
 }
