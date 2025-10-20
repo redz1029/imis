@@ -2253,7 +2253,7 @@ Future<bool?> showBreakthroughFormDialog(
         insetPadding: const EdgeInsets.all(20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1100, maxHeight: 650),
+          constraints: const BoxConstraints(maxWidth: 1200),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -2364,7 +2364,10 @@ Future<bool?> showBreakthroughFormDialog(
                                       child: Center(
                                         child: Text(
                                           "Percent Accomplishment",
-                                          style: TextStyle(color: grey),
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -2373,7 +2376,10 @@ Future<bool?> showBreakthroughFormDialog(
                                       child: Center(
                                         child: Text(
                                           "Target Achievement",
-                                          style: TextStyle(color: grey),
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -2382,7 +2388,10 @@ Future<bool?> showBreakthroughFormDialog(
                                       child: Center(
                                         child: Text(
                                           "Strategic Contribution ",
-                                          style: TextStyle(color: grey),
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -2391,7 +2400,10 @@ Future<bool?> showBreakthroughFormDialog(
                                       child: Center(
                                         child: Text(
                                           "Breakthrough Impact",
-                                          style: TextStyle(color: grey),
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -2401,7 +2413,10 @@ Future<bool?> showBreakthroughFormDialog(
                                       child: Center(
                                         child: Text(
                                           "Final Score",
-                                          style: TextStyle(color: grey),
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -2410,7 +2425,10 @@ Future<bool?> showBreakthroughFormDialog(
                                       child: Center(
                                         child: Text(
                                           "Final Grade",
-                                          style: TextStyle(color: grey),
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
                                     ),

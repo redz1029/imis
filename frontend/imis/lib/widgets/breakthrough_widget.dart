@@ -173,8 +173,6 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                         ),
                       ),
                     ),
-
-                    // Target Achievement Display
                     Expanded(
                       flex: 2,
                       child: Padding(
@@ -203,8 +201,7 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                               final trackingData =
                                   accomplishmentsMap[widget.deliverableId];
                               if (trackingData != null) {
-                                trackingData.target =
-                                    displayTargetAchievement; // ✅ store target
+                                trackingData.target = displayTargetAchievement;
                               }
                               updateFinalScore();
                             });
@@ -224,45 +221,107 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                       ),
                     ),
 
-                    // Strategic input
+                    // Expanded(
+                    //   flex: 2,
+                    //   child: Padding(
+                    //     padding: const EdgeInsets.symmetric(horizontal: 8),
+                    //     child: TextField(
+                    //       controller: strategicController,
+                    //       textAlign: TextAlign.center,
+                    //       keyboardType: TextInputType.number,
+                    //       decoration: const InputDecoration(
+                    //         isDense: true,
+                    //         border: OutlineInputBorder(),
+                    //         contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    //       ),
+                    //       onChanged: (_) => updateFinalScore(),
+                    //     ),
+                    //   ),
+                    // ),
+
+                    // Expanded(
+                    //   flex: 2,
+                    //   child: Padding(
+                    //     padding: const EdgeInsets.symmetric(horizontal: 8),
+                    //     child: TextField(
+                    //       controller: breakthroughController,
+                    //       textAlign: TextAlign.center,
+                    //       keyboardType: TextInputType.number,
+                    //       decoration: const InputDecoration(
+                    //         isDense: true,
+                    //         border: OutlineInputBorder(),
+                    //         contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    //       ),
+                    //       onChanged: (_) => updateFinalScore(),
+                    //     ),
+                    //   ),
+                    // ),
                     Expanded(
                       flex: 2,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: TextField(
-                          controller: strategicController,
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
+                        child: DropdownButtonFormField<int>(
+                          value: int.tryParse(
+                            strategicController.text.isEmpty
+                                ? '0'
+                                : strategicController.text,
+                          ),
                           decoration: const InputDecoration(
                             isDense: true,
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 8,
+                            ),
                           ),
-                          onChanged: (_) => updateFinalScore(),
+                          items: List.generate(
+                            6,
+                            (index) => DropdownMenuItem(
+                              value: index,
+                              child: Center(child: Text(index.toString())),
+                            ),
+                          ),
+                          onChanged: (value) {
+                            strategicController.text = value.toString();
+                            updateFinalScore();
+                          },
                         ),
                       ),
                     ),
 
-                    // Breakthrough input
                     Expanded(
                       flex: 2,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: TextField(
-                          controller: breakthroughController,
-                          textAlign: TextAlign.center,
-                          keyboardType: TextInputType.number,
+                        child: DropdownButtonFormField<int>(
+                          value: int.tryParse(
+                            breakthroughController.text.isEmpty
+                                ? '0'
+                                : breakthroughController.text,
+                          ),
                           decoration: const InputDecoration(
                             isDense: true,
                             border: OutlineInputBorder(),
-                            contentPadding: EdgeInsets.symmetric(vertical: 8),
+                            contentPadding: EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 8,
+                            ),
                           ),
-                          onChanged: (_) => updateFinalScore(),
+                          items: List.generate(
+                            6,
+                            (index) => DropdownMenuItem(
+                              value: index,
+                              child: Center(child: Text(index.toString())),
+                            ),
+                          ),
+                          onChanged: (value) {
+                            breakthroughController.text = value.toString();
+                            updateFinalScore();
+                          },
                         ),
                       ),
                     ),
 
-                    // Final Score Display
                     Expanded(
                       flex: 2,
                       child: Center(
@@ -316,6 +375,7 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                 ),
 
                 const SizedBox(height: 48),
+
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
@@ -326,6 +386,324 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      const Text(
+                        "Step 2: Scoring Rubric per Dimension",
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 12),
+
+                      const Text(
+                        "A. Target Achievement (60%)",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Table(
+                        border: TableBorder.all(color: Colors.grey),
+                        columnWidths: const {
+                          0: FlexColumnWidth(3),
+                          1: FlexColumnWidth(1),
+                        },
+                        children: const [
+                          TableRow(
+                            decoration: BoxDecoration(color: Color(0xFFEFEFEF)),
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text(
+                                  '% Accomplishment',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text(
+                                  'Score',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('0–49%'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('1'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('50–74%'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('2'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('75–99%'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('3'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('100% (infra not yet functional)'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('4'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text(
+                                  '>100% (fully functional and used)',
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('5'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 16),
+                      const Text(
+                        "B. Strategic Contribution (25%)",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Table(
+                        border: TableBorder.all(color: Colors.grey),
+                        columnWidths: const {
+                          0: FlexColumnWidth(3),
+                          1: FlexColumnWidth(1),
+                        },
+                        children: const [
+                          TableRow(
+                            decoration: BoxDecoration(color: Color(0xFFEFEFEF)),
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text(
+                                  'Contribution Level',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text(
+                                  'Score',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('Low (minor activity)'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('1'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('Moderate (important project)'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('2'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('High (direct strategic goal)'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('3'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('Very High (core priority)'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('4'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('Critical (roadmap enabler)'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('5'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 16),
+                      const Text(
+                        "C. Breakthrough Impact (15%)",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Table(
+                        border: TableBorder.all(color: Colors.grey),
+                        columnWidths: const {
+                          0: FlexColumnWidth(3),
+                          1: FlexColumnWidth(1),
+                        },
+                        children: const [
+                          TableRow(
+                            decoration: BoxDecoration(color: Color(0xFFEFEFEF)),
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text(
+                                  'Breakthrough Level',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text(
+                                  'Score',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('None'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('0'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('Incremental improvement'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('1'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('Significant process innovation'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('2'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('System-wide / cross-sector'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('3'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('Transformational breakthrough'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('4'),
+                              ),
+                            ],
+                          ),
+                          TableRow(
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('National / global model'),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(6),
+                                child: Text('5'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      SizedBox(height: 24),
+
                       const Text(
                         "Performance Status – Traffic Light Legend",
                         style: TextStyle(
