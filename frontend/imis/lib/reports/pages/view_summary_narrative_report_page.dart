@@ -693,7 +693,6 @@ class ViewSummaryNarrativeReportPageState
       selectedOffice = summary.officeId.toString();
     } else {
       _remakrsController.clear();
-      selectedPeriod = null;
       selectedOffice = null;
     }
     showDialog(
@@ -767,32 +766,6 @@ class ViewSummaryNarrativeReportPageState
                       );
                     },
                   );
-
-                  // if (confirmAction == true) {
-                  //   final summaryNarrative = PgsSummaryNarrative(
-                  //     0,
-                  //     int.tryParse(selectedPeriod ?? '0') ?? 0,
-                  //     _findingsControllers.text,
-                  //     _remakrsController.text,
-                  //     _conclusionControllers.text,
-                  //     null,
-                  //     isDeleted: false,
-                  //     rowVersion: '',
-                  //   );
-
-                  //   await _summaryNarrativeService
-                  //       .addSummaryNarrativeAuditorHead(summaryNarrative);
-                  //   _remakrsController.clear();
-
-                  //   selectedOffice = null;
-
-                  //   selectedPeriod = null;
-                  //   MotionToast.success(
-                  //     description: const Text("Saved Successfully"),
-                  //     toastAlignment: Alignment.topCenter,
-                  //   ).show(context);
-                  //   Navigator.pop(context);
-                  // }
 
                   if (confirmAction == true) {
                     final int id = summary?.id ?? 0;
