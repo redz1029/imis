@@ -1,5 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.AnnouncementModule;
 using IMIS.Application.UserOfficeModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -35,7 +36,17 @@ namespace IMIS.Presentation.UserOfficeModule
             .WithTags(_userOffice)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true);
- 
+
+            app.MapGet("/filter/{name}", async (string name, IUserOfficeService service, CancellationToken cancellationToken) =>
+            {
+                int noOfResults = 10;
+                var userOfficeDto = await service.FilteByName(name, noOfResults, cancellationToken).ConfigureAwait(false);
+                return userOfficeDto != null ? Results.Ok(userOfficeDto) : Results.NoContent();
+            })
+            .WithTags(_userOffice)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_userOffice), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _userOfficePermission.View));
+
             app.MapGet("/{id}", async (int id, IUserOfficeService service, CancellationToken cancellationToken) =>
             {
                 var userOffice = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);

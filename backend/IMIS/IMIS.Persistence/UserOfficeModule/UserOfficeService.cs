@@ -17,6 +17,11 @@ namespace IMIS.Persistence.UserOfficeModule
             _repository = repository;
             _userManager = userManager;
         }
+        public async Task<List<UserOfficeDto>?> FilteByName(string name, int userOfficeNoOfResults, CancellationToken cancellationToken)
+        {
+            var userOffice = await _repository.FilteByName(name, userOfficeNoOfResults, cancellationToken).ConfigureAwait(false);
+            return userOffice != null && userOffice.Count() > 0 ? userOffice.Select(a => new UserOfficeDto(a)).ToList() : null;
+        }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var userOffice = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);

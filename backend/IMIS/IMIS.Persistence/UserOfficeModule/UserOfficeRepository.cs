@@ -12,6 +12,15 @@ namespace IMIS.Persistence.UserOfficeModule
         {
           
         }
+        public async Task<IEnumerable<UserOffices>?> FilteByName(string name, int UserOfficeNoOfResults, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Where(a => EF.Functions.Like(a.UserId, $"{name}%"))
+                .Take(UserOfficeNoOfResults)
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
         public async Task<UserOffices?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<UserOffices>()
