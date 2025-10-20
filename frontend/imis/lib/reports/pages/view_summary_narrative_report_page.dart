@@ -79,7 +79,6 @@ class ViewSummaryNarrativeReportPageState
 
     try {
       if (selectedTabIndex == 0) {
-        // Fetch auditor reports
         final pageList = await _summaryNarrativeService.getSummaryNarrative(
           page: _currentPage,
           pageSize: _pageSize,
@@ -90,7 +89,6 @@ class ViewSummaryNarrativeReportPageState
           _totalCount = pageList.totalCount;
         });
       } else {
-        // Fetch head auditor (overall) reports
         final pageList = await _summaryNarrativeService
             .getSummaryNarrativeHeadAuditor(
               page: _currentPage,
@@ -770,9 +768,36 @@ class ViewSummaryNarrativeReportPageState
                     },
                   );
 
+                  // if (confirmAction == true) {
+                  //   final summaryNarrative = PgsSummaryNarrative(
+                  //     0,
+                  //     int.tryParse(selectedPeriod ?? '0') ?? 0,
+                  //     _findingsControllers.text,
+                  //     _remakrsController.text,
+                  //     _conclusionControllers.text,
+                  //     null,
+                  //     isDeleted: false,
+                  //     rowVersion: '',
+                  //   );
+
+                  //   await _summaryNarrativeService
+                  //       .addSummaryNarrativeAuditorHead(summaryNarrative);
+                  //   _remakrsController.clear();
+
+                  //   selectedOffice = null;
+
+                  //   selectedPeriod = null;
+                  //   MotionToast.success(
+                  //     description: const Text("Saved Successfully"),
+                  //     toastAlignment: Alignment.topCenter,
+                  //   ).show(context);
+                  //   Navigator.pop(context);
+                  // }
+
                   if (confirmAction == true) {
+                    final int id = summary?.id ?? 0;
                     final summaryNarrative = PgsSummaryNarrative(
-                      0,
+                      id,
                       int.tryParse(selectedPeriod ?? '0') ?? 0,
                       _findingsControllers.text,
                       _remakrsController.text,
@@ -782,18 +807,36 @@ class ViewSummaryNarrativeReportPageState
                       rowVersion: '',
                     );
 
-                    await _summaryNarrativeService
-                        .addSummaryNarrativeAuditorHead(summaryNarrative);
-                    _remakrsController.clear();
+                    try {
+                      if (summaryNarrative.id == 0) {
+                        await _summaryNarrativeService
+                            .addSummaryNarrativeAuditorHead(summaryNarrative);
+                      } else {
+                        await _summaryNarrativeService.updateSummaryNarrative(
+                          summaryNarrative.id,
+                          summaryNarrative,
+                        );
+                      }
+                      _remakrsController.clear();
+                      selectedOffice = null;
+                      selectedPeriod = null;
+                      await fetchReportsForSelectedTab();
+                      MotionToast.success(
+                        description: Text(
+                          id == 0
+                              ? "Added successfully"
+                              : "Updated successfully",
+                        ),
+                        toastAlignment: Alignment.topCenter,
+                      ).show(context);
 
-                    selectedOffice = null;
-
-                    selectedPeriod = null;
-                    MotionToast.success(
-                      description: const Text("Saved Successfully"),
-                      toastAlignment: Alignment.topCenter,
-                    ).show(context);
-                    Navigator.pop(context);
+                      Navigator.pop(context);
+                    } catch (e) {
+                      MotionToast.error(
+                        description: Text("Failed to save: $e"),
+                        toastAlignment: Alignment.topCenter,
+                      ).show(context);
+                    }
                   }
                 }
               },
