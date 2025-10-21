@@ -11,7 +11,6 @@ import 'package:imis/performance_governance_system/deliverable_status_monitoring
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/range_input_formatter.dart';
 import 'package:imis/widgets/accomplishment_auditor_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -41,7 +40,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
   String? fileName;
   final Dio dio = Dio();
   bool isLoading = false;
-
+  OverlayEntry? _overlayEntry;
   Future<void> pickFile() async {
     setState(() {
       isLoading = true;
@@ -102,6 +101,55 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
         isLoading = false;
       });
     }
+  }
+
+  void _showTooltip(BuildContext context, String message) {
+    _removeTooltip();
+
+    final renderBox = context.findRenderObject() as RenderBox?;
+    if (renderBox == null) return;
+    final offset = renderBox.localToGlobal(Offset.zero);
+
+    _overlayEntry = OverlayEntry(
+      builder:
+          (context) => Positioned(
+            left: offset.dx - 20,
+            top: offset.dy - 40,
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black87,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black26,
+                      blurRadius: 6,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  message,
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                ),
+              ),
+            ),
+          ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+
+    Future.delayed(const Duration(seconds: 2), _removeTooltip);
+  }
+
+  void _removeTooltip() {
+    _overlayEntry?.remove();
+    _overlayEntry = null;
   }
 
   @override
@@ -221,6 +269,64 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                                 ),
                               ),
                             ),
+
+                            // SizedBox(
+                            //   width: 40,
+                            //   height: 40,
+                            //   child: Center(
+                            //     child: Row(
+                            //       mainAxisAlignment: MainAxisAlignment.center,
+                            //       crossAxisAlignment: CrossAxisAlignment.center,
+                            //       mainAxisSize: MainAxisSize.min,
+                            //       children: [
+                            //         SizedBox(
+                            //           width: 30,
+                            //           child: TextField(
+                            //             controller: percentageController,
+                            //             textAlign: TextAlign.center,
+                            //             style: const TextStyle(
+                            //               fontSize: 12,
+                            //               fontWeight: FontWeight.bold,
+                            //             ),
+                            //             keyboardType: TextInputType.number,
+                            //             readOnly:
+                            //                 progress == 100 ||
+                            //                 (progress == 0 &&
+                            //                     status != PgsStatus.onGoing),
+                            //             decoration: const InputDecoration(
+                            //               border: InputBorder.none,
+                            //               isDense: true,
+                            //               contentPadding: EdgeInsets.symmetric(
+                            //                 horizontal: 0,
+                            //                 vertical: 12,
+                            //               ),
+                            //             ),
+                            //             inputFormatters: [
+                            //               FilteringTextInputFormatter
+                            //                   .digitsOnly,
+
+                            //               LengthLimitingTextInputFormatter(2),
+                            //               RangeInputFormatter(1, 99),
+                            //             ],
+                            //             onChanged: (val) {
+                            //               int parsed = int.tryParse(val) ?? 0;
+                            //               if (parsed > 100) {
+                            //                 percentageController.text = '100';
+                            //               }
+                            //             },
+                            //           ),
+                            //         ),
+                            //         const Text(
+                            //           '%',
+                            //           style: TextStyle(
+                            //             fontSize: 12,
+                            //             fontWeight: FontWeight.bold,
+                            //           ),
+                            //         ),
+                            //       ],
+                            //     ),
+                            //   ),
+                            // ),
                             SizedBox(
                               width: 40,
                               height: 40,
@@ -230,41 +336,105 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    SizedBox(
-                                      width: 30,
-                                      child: TextField(
-                                        controller: percentageController,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        keyboardType: TextInputType.number,
-                                        readOnly:
-                                            progress == 100 ||
-                                            (progress == 0 &&
-                                                status != PgsStatus.onGoing),
-                                        decoration: const InputDecoration(
-                                          border: InputBorder.none,
-                                          isDense: true,
-                                          contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 0,
-                                            vertical: 12,
+                                    Focus(
+                                      onFocusChange: (hasFocus) {
+                                        if (hasFocus &&
+                                            status == PgsStatus.onGoing) {
+                                          _showTooltip(
+                                            context,
+                                            'Enter value from 1–99 only',
+                                          );
+                                        }
+                                      },
+                                      child: SizedBox(
+                                        width: 30,
+                                        child: TextField(
+                                          controller: percentageController,
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                        ),
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly,
+                                          keyboardType: TextInputType.number,
+                                          readOnly:
+                                              selectedStatus.value ==
+                                              PgsStatus.notStarted,
+                                          decoration: const InputDecoration(
+                                            border: InputBorder.none,
+                                            isDense: true,
+                                            contentPadding:
+                                                EdgeInsets.symmetric(
+                                                  horizontal: 0,
+                                                  vertical: 12,
+                                                ),
+                                          ),
+                                          onTap: () {
+                                            if (status == PgsStatus.onGoing) {
+                                              _showTooltip(
+                                                context,
+                                                'Enter value from 1–99 only',
+                                              );
+                                            }
+                                            if (status == PgsStatus.completed) {
+                                              _showTooltip(
+                                                context,
+                                                'Enter value from 100–999 only',
+                                              );
+                                            }
+                                          },
+                                          onChanged: (val) {
+                                            if (status == PgsStatus.onGoing) {
+                                              _showTooltip(
+                                                context,
+                                                'Enter score from 1–99 only',
+                                              );
+                                            }
+                                            if (status == PgsStatus.completed) {
+                                              _showTooltip(
+                                                context,
+                                                'Enter score from 100–999 only',
+                                              );
+                                            }
+                                            if (val.isEmpty) return;
+                                            int parsed = int.tryParse(val) ?? 0;
 
-                                          LengthLimitingTextInputFormatter(2),
-                                          RangeInputFormatter(1, 99),
-                                        ],
-                                        onChanged: (val) {
-                                          int parsed = int.tryParse(val) ?? 0;
-                                          if (parsed > 100) {
-                                            percentageController.text = '100';
-                                          }
-                                        },
+                                            if (selectedStatus.value ==
+                                                PgsStatus.completed) {
+                                              if (parsed < 100 &&
+                                                  val.length >= 3) {
+                                                percentageController.text =
+                                                    '100';
+                                              } else if (parsed > 999) {
+                                                percentageController.text =
+                                                    '999';
+                                              }
+                                            } else if (selectedStatus.value ==
+                                                PgsStatus.onGoing) {
+                                              if (parsed < 1 &&
+                                                  val.isNotEmpty) {
+                                                percentageController.text = '1';
+                                              } else if (parsed > 99) {
+                                                percentageController.text =
+                                                    '99';
+                                              }
+                                            } else if (selectedStatus.value ==
+                                                PgsStatus.notStarted) {
+                                              if (parsed != 0) {
+                                                percentageController.text = '0';
+                                              }
+                                            }
+
+                                            percentageController.selection =
+                                                TextSelection.fromPosition(
+                                                  TextPosition(
+                                                    offset:
+                                                        percentageController
+                                                            .text
+                                                            .length,
+                                                  ),
+                                                );
+                                          },
+                                        ),
                                       ),
                                     ),
                                     const Text(

@@ -221,51 +221,12 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                       ),
                     ),
 
-                    // Expanded(
-                    //   flex: 2,
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    //     child: TextField(
-                    //       controller: strategicController,
-                    //       textAlign: TextAlign.center,
-                    //       keyboardType: TextInputType.number,
-                    //       decoration: const InputDecoration(
-                    //         isDense: true,
-                    //         border: OutlineInputBorder(),
-                    //         contentPadding: EdgeInsets.symmetric(vertical: 8),
-                    //       ),
-                    //       onChanged: (_) => updateFinalScore(),
-                    //     ),
-                    //   ),
-                    // ),
-
-                    // Expanded(
-                    //   flex: 2,
-                    //   child: Padding(
-                    //     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    //     child: TextField(
-                    //       controller: breakthroughController,
-                    //       textAlign: TextAlign.center,
-                    //       keyboardType: TextInputType.number,
-                    //       decoration: const InputDecoration(
-                    //         isDense: true,
-                    //         border: OutlineInputBorder(),
-                    //         contentPadding: EdgeInsets.symmetric(vertical: 8),
-                    //       ),
-                    //       onChanged: (_) => updateFinalScore(),
-                    //     ),
-                    //   ),
-                    // ),
                     Expanded(
                       flex: 2,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: DropdownButtonFormField<int>(
-                          value: int.tryParse(
-                            strategicController.text.isEmpty
-                                ? '0'
-                                : strategicController.text,
-                          ),
+                          value: getDropdownValue(strategicController),
                           decoration: const InputDecoration(
                             isDense: true,
                             border: OutlineInputBorder(),
@@ -278,12 +239,14 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                             6,
                             (index) => DropdownMenuItem(
                               value: index,
-                              child: Center(child: Text(index.toString())),
+                              child: Text(index.toString()),
                             ),
                           ),
                           onChanged: (value) {
-                            strategicController.text = value.toString();
-                            updateFinalScore();
+                            if (value != null) {
+                              strategicController.text = value.toString();
+                              updateFinalScore();
+                            }
                           },
                         ),
                       ),
@@ -294,11 +257,7 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: DropdownButtonFormField<int>(
-                          value: int.tryParse(
-                            breakthroughController.text.isEmpty
-                                ? '0'
-                                : breakthroughController.text,
-                          ),
+                          value: getDropdownValue(breakthroughController),
                           decoration: const InputDecoration(
                             isDense: true,
                             border: OutlineInputBorder(),
@@ -311,12 +270,14 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                             6,
                             (index) => DropdownMenuItem(
                               value: index,
-                              child: Center(child: Text(index.toString())),
+                              child: Text(index.toString()),
                             ),
                           ),
                           onChanged: (value) {
-                            breakthroughController.text = value.toString();
-                            updateFinalScore();
+                            if (value != null) {
+                              breakthroughController.text = value.toString();
+                              updateFinalScore();
+                            }
                           },
                         ),
                       ),
@@ -763,6 +724,12 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
       ),
     );
   }
+}
+
+int getDropdownValue(TextEditingController controller) {
+  final value = int.tryParse(controller.text);
+  if (value == null || value < 0 || value > 5) return 0;
+  return value;
 }
 
 Future<void> loadBreakThrough(int deliverableId) async {
