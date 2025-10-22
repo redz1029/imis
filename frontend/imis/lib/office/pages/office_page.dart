@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
@@ -418,296 +419,188 @@ class OfficePageState extends State<OfficePage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: Text('Office Information'),
+        title: const Text('Office Information'),
         backgroundColor: mainBgColor,
+        elevation: 0,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          bool isMobile = constraints.maxWidth < 600;
+
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  height: 30,
-                  width: 300,
-                  child: TextField(
-                    focusNode: isSearchfocus,
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: lightGrey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Office',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: isSearchfocus.hasFocus ? primaryColor : grey,
-                        size: 20,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      filled: true,
-                      fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 5,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    SizedBox(
+                      height: 30,
+                      width: 300,
+                      child: TextField(
+                        focusNode: isSearchfocus,
+                        controller: searchController,
+                        decoration: InputDecoration(
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          labelText: 'Search...',
+                          prefixIcon: Icon(
+                            Icons.search,
+                            color: isSearchfocus.hasFocus ? primaryColor : grey,
+                            size: 20,
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 5,
+                            horizontal: 5,
+                          ),
+                        ),
+                        onChanged: filterSearchResults,
                       ),
                     ),
-                    onChanged: filterSearchResults,
+                    if (!isMinimized)
+                      ElevatedButton.icon(
+                        onPressed: () => showFormDialog(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        label: const Text(
+                          'Add New',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Expanded(
+                  child: DataTable2(
+                    columnSpacing: isMobile ? 16 : 40,
+                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
+                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                    headingTextStyle: const TextStyle(color: grey),
+                    horizontalMargin: 12,
+                    minWidth: constraints.maxWidth,
+                    fixedTopRows: 1,
+                    border: TableBorder(
+                      horizontalInside: BorderSide(color: Colors.grey.shade100),
+                    ),
+                    columns: const [
+                      DataColumn2(label: Text('#'), fixedWidth: 40),
+                      DataColumn2(label: Text('Office'), size: ColumnSize.L),
+                      DataColumn(label: Text('Office Type')),
+                      DataColumn(label: Text('Parent Office')),
+                      DataColumn(label: Text('Actions')),
+                    ],
+                    rows:
+                        filteredList.asMap().entries.map((entry) {
+                          int index = entry.key;
+                          var office = entry.value;
+                          int itemNumber =
+                              ((_currentPage - 1) * _pageSize) + index + 1;
+
+                          return DataRow(
+                            cells: [
+                              DataCell(Text(itemNumber.toString())),
+                              DataCell(Text(office.name)),
+                              DataCell(
+                                Text(
+                                  _officeService.getOfficeTypeName(
+                                    office.officeTypeId ?? 0,
+                                    officeTypeList,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Text(
+                                  _officeService.getParentOfficeName(
+                                    office.parentOfficeId,
+                                    parentOfficeList,
+                                  ),
+                                ),
+                              ),
+                              DataCell(
+                                Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit),
+                                      onPressed:
+                                          () => showFormDialog(
+                                            id: office.id.toString(),
+                                            name: office.name,
+                                            selectedOfficeType:
+                                                office.officeTypeId.toString(),
+
+                                            selectedParentOffice:
+                                                office.parentOfficeId
+                                                    ?.toString() ??
+                                                '0',
+                                          ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.delete,
+                                        color: primaryColor,
+                                      ),
+                                      onPressed: () {
+                                        showDeleteDialog(office.id.toString());
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          );
+                        }).toList(),
                   ),
                 ),
-                if (!isMinimized)
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(4),
+
+                Container(
+                  padding: EdgeInsets.all(10),
+                  color: secondaryColor,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      PaginationInfo(
+                        currentPage: _currentPage,
+                        totalItems: _totalCount,
+                        itemsPerPage: _pageSize,
                       ),
-                    ),
-
-                    onPressed: () async {
-                      await fetchOffices();
-
-                      showFormDialog();
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 5),
-                        Text('Add New', style: TextStyle(color: Colors.white)),
-                      ],
-                    ),
+                      PaginationControls(
+                        currentPage: _currentPage,
+                        totalItems: _totalCount,
+                        itemsPerPage: _pageSize,
+                        isLoading: _isLoading,
+                        onPageChanged: (page) => fetchOffices(page: page),
+                      ),
+                      Container(width: 60),
+                    ],
                   ),
+                ),
               ],
             ),
-            gap16px,
-            Expanded(
-              child: Column(
-                children: [
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text('Office', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Office Type',
-                            style: TextStyle(color: grey),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Parent Office',
-                            style: TextStyle(color: grey),
-                          ),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Actions', style: TextStyle(color: grey)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: Column(
-                        children:
-                            filteredList
-                                .asMap()
-                                .map((index, office) {
-                                  int itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 10,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade300,
-                                          ),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                itemNumber.toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                office.name,
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                _officeService
-                                                    .getOfficeTypeName(
-                                                      office.officeTypeId ?? 0,
-                                                      officeTypeList,
-                                                    ),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                _officeService
-                                                    .getParentOfficeName(
-                                                      office.parentOfficeId,
-                                                      parentOfficeList,
-                                                    ),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ),
-
-                                          Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed:
-                                                        () => showFormDialog(
-                                                          id:
-                                                              office.id
-                                                                  .toString(),
-                                                          name: office.name,
-                                                          selectedOfficeType:
-                                                              office
-                                                                  .officeTypeId
-                                                                  .toString(),
-
-                                                          selectedParentOffice:
-                                                              office
-                                                                  .parentOfficeId
-                                                                  ?.toString() ??
-                                                              '0',
-                                                        ),
-                                                  ),
-                                                  SizedBox(width: 1),
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: primaryColor,
-                                                    ),
-                                                    onPressed:
-                                                        () => showDeleteDialog(
-                                                          office.id.toString(),
-                                                        ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                })
-                                .values
-                                .toList(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.all(10),
-              color: secondaryColor,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PaginationInfo(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                  ),
-                  PaginationControls(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                    isLoading: _isLoading,
-                    onPageChanged: (page) => fetchOffices(page: page),
-                  ),
-                  Container(width: 60),
-                ],
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
+
       floatingActionButton:
           isMinimized
               ? FloatingActionButton(

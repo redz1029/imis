@@ -68,4 +68,9 @@ class UsersProfileService {
       throw Exception('Failed to create user');
     }
   }
+
+  Future<void> deleteUser(String id) async {
+    final url = '${ApiEndpoint().signatoryTemplate}/$id';
+    await AuthenticatedRequest.delete(dio, url);
+  }
 }

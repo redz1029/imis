@@ -10,7 +10,6 @@ import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/range_input_formatter.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
@@ -151,7 +150,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
   }
 
   void _showTooltip(BuildContext context, String message) {
-    _removeTooltip(); // remove any existing tooltip first
+    _removeTooltip();
 
     final renderBox = context.findRenderObject() as RenderBox?;
     if (renderBox == null) return;
@@ -191,7 +190,6 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
 
     Overlay.of(context).insert(_overlayEntry!);
 
-    // auto remove after 2 seconds
     Future.delayed(const Duration(seconds: 2), _removeTooltip);
   }
 
@@ -341,7 +339,6 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                                 ),
                               ),
                             ),
-
                             SizedBox(
                               width: 40,
                               height: 40,
@@ -473,160 +470,6 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
             ),
           ),
 
-          // Expanded(
-          //   flex: 2,
-          //   child: ValueListenableBuilder<PgsStatus>(
-          //     valueListenable: selectedStatus,
-          //     builder: (context, status, _) {
-          //       return ValueListenableBuilder<TextEditingValue>(
-          //         valueListenable: percentageController,
-          //         builder: (context, value, __) {
-          //           int progress = int.tryParse(value.text) ?? 0;
-          //           double progressFraction;
-          //           Color progressColor;
-
-          //           if (status == PgsStatus.onGoing && progress == 0) {
-          //             progressFraction = 0.0;
-          //             progressColor = Colors.orange;
-          //           } else if (progress >= 100) {
-          //             progressFraction = 1.0;
-          //             progressColor = Colors.green;
-          //           } else if (progress == 0) {
-          //             progressFraction = 1.0;
-          //             progressColor = Colors.red;
-          //           } else {
-          //             progressFraction = progress / 100.0;
-          //             progressColor = Colors.orange;
-          //           }
-
-          //           return Column(
-          //             mainAxisSize: MainAxisSize.min,
-          //             children: [
-          //               Stack(
-          //                 alignment: Alignment.center,
-          //                 children: [
-          //                   SizedBox(
-          //                     width: 60,
-          //                     height: 60,
-          //                     child: CircularProgressIndicator(
-          //                       value: progressFraction,
-          //                       strokeWidth: 6,
-          //                       backgroundColor: Colors.grey[300],
-          //                       valueColor: AlwaysStoppedAnimation<Color>(
-          //                         progressColor,
-          //                       ),
-          //                     ),
-          //                   ),
-          //                   SizedBox(
-          //                     width: 40,
-          //                     height: 40,
-          //                     child: Center(
-          //                       child: Row(
-          //                         mainAxisAlignment: MainAxisAlignment.center,
-          //                         crossAxisAlignment: CrossAxisAlignment.center,
-          //                         mainAxisSize: MainAxisSize.min,
-          //                         children: [
-          //                           SizedBox(
-          //                             width: 30,
-          //                             child: TextField(
-          //                               controller: percentageController,
-          //                               textAlign: TextAlign.center,
-          //                               style: const TextStyle(
-          //                                 fontSize: 12,
-          //                                 fontWeight: FontWeight.bold,
-          //                               ),
-          //                               keyboardType: TextInputType.number,
-          //                               readOnly:
-          //                                   selectedStatus.value ==
-          //                                   PgsStatus.notStarted,
-          //                               decoration: const InputDecoration(
-          //                                 border: InputBorder.none,
-          //                                 isDense: true,
-          //                                 contentPadding: EdgeInsets.symmetric(
-          //                                   horizontal: 0,
-          //                                   vertical: 12,
-          //                                 ),
-          //                               ),
-          //                               inputFormatters:
-          //                                   selectedStatus.value ==
-          //                                           PgsStatus.completed
-          //                                       ? [
-          //                                         FilteringTextInputFormatter
-          //                                             .digitsOnly,
-          //                                       ]
-          //                                       : selectedStatus.value ==
-          //                                           PgsStatus.onGoing
-          //                                       ? [
-          //                                         FilteringTextInputFormatter
-          //                                             .digitsOnly,
-          //                                         LengthLimitingTextInputFormatter(
-          //                                           2,
-          //                                         ),
-          //                                       ]
-          //                                       : [
-          //                                         FilteringTextInputFormatter
-          //                                             .digitsOnly,
-          //                                       ],
-          //                               onChanged: (val) {
-          //                                 if (val.isEmpty) return;
-
-          //                                 int parsed = int.tryParse(val) ?? 0;
-
-          //                                 if (selectedStatus.value ==
-          //                                     PgsStatus.completed) {
-          //                                   if (parsed < 100 &&
-          //                                       val.length >= 3) {
-          //                                     percentageController.text = '100';
-          //                                   } else if (parsed > 999) {
-          //                                     percentageController.text = '999';
-          //                                   }
-          //                                 } else if (selectedStatus.value ==
-          //                                     PgsStatus.onGoing) {
-          //                                   // Allow 1–99
-          //                                   if (parsed < 1 && val.isNotEmpty) {
-          //                                     percentageController.text = '1';
-          //                                   } else if (parsed > 99) {
-          //                                     percentageController.text = '99';
-          //                                   }
-          //                                 } else if (selectedStatus.value ==
-          //                                     PgsStatus.notStarted) {
-          //                                   if (parsed != 0) {
-          //                                     percentageController.text = '0';
-          //                                   }
-          //                                 }
-
-          //                                 percentageController.selection =
-          //                                     TextSelection.fromPosition(
-          //                                       TextPosition(
-          //                                         offset:
-          //                                             percentageController
-          //                                                 .text
-          //                                                 .length,
-          //                                       ),
-          //                                     );
-          //                               },
-          //                             ),
-          //                           ),
-          //                           const Text(
-          //                             '%',
-          //                             style: TextStyle(
-          //                               fontSize: 12,
-          //                               fontWeight: FontWeight.bold,
-          //                             ),
-          //                           ),
-          //                         ],
-          //                       ),
-          //                     ),
-          //                   ),
-          //                 ],
-          //               ),
-          //             ],
-          //           );
-          //         },
-          //       );
-          //     },
-          //   ),
-          // ),
           Expanded(
             flex: 3,
             child: ConstrainedBox(
