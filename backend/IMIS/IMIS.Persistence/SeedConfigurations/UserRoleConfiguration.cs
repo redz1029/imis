@@ -487,7 +487,138 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             {
                 UserId = "9821dbf5-0f70-4630-8c68-f2077a3abf08",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "8e4f430c-72da-4142-83d9-cd9d9c6f2a6e",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "4e21fe59-4f5e-46b3-82b7-28df270038da",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "b582fc78-cd33-46d4-a994-8c43789600ff",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "0301f6de-6d6d-448f-a46c-2bb32ba97a28",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "eeadfae2-544f-4a5d-9027-808537e694b1",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "562a00d1-f6de-4c44-bfc2-b55e99074bcf",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "ba16dd9a-fbdb-4ed6-9cfa-b972bda73917",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "bacdfd11-acd7-40fe-9fb3-b8831f94d7de",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "75228ef1-9a3f-4a55-8181-b1794ec72e8d",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "0c0e6892-41a4-4536-bda7-757dd5aeb4ee",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "576fc42f-b0f9-433b-907a-29d98ebf7af6",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "aa704a60-ad3d-4148-90c0-316803202de6",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "08a7ead1-5c61-4207-8ea5-aec3d6b691d0",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "d55b7093-1298-42fb-96b2-b12edb1cf49f",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "35035c73-8072-4005-85bb-0a91cd97741b",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "b1ec6cc6-9920-4df6-bce0-b22b107a476d",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "31298867-e329-4dbf-8c68-2e557d98e864",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "86e65501-a4a6-438c-abe7-5ec802032bd4",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "60cbc60f-8572-47ba-b70c-cc328c363bd7",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "6ccacdfe-d21f-404a-a09a-fbb0a8027c9e",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "2902eb0b-328f-4c82-a37b-e6b67c1e7770",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "756c27c7-7637-4525-9b85-c1f41c0c5a8f",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "32074da3-f8f8-4755-8cd5-f2aabba599e2",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "a452e452-d791-439e-b390-d80dba5ffbc0",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "6517b46b-eade-4618-984b-525a31aec14f",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "3cfa9401-553a-4ac5-ab8d-3d65899090b3",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
             }
+
 
 
 
