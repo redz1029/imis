@@ -194,7 +194,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                          LastName = "Singgon",
                          FirstName = "Bai Samirah",
                          MiddleName = "A.",
-                         PhoneNumber = "",
+                         PhoneNumber = "09177220668",
                      },                   
                     new User
                     {
@@ -1357,8 +1357,392 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                         FirstName = "JHOANA MARIE",
                         MiddleName = "JUANEZA",
                         PhoneNumber = "09178470437",
-                    }
+                    },
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    new User
+                    {
+                        Id = "8e4f430c-72da-4142-83d9-cd9d9c6f2a6e",
+                        UserName = "santuring.sittie",
+                        NormalizedUserName = "SANTURING.SITTIE",
+                        Email = "sittierayhana@gmail.com",
+                        NormalizedEmail = "SITTIERAYHANA@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "SANTURING",
+                        FirstName = "SITTIE RAYHANA",
+                        MiddleName = "MARICOR",
+                        PhoneNumber = "09451067619",
+                    },
+                    new User
+                    {
+                        Id = "4e21fe59-4f5e-46b3-82b7-28df270038da",
+                        UserName = "kansi.noraine",
+                        NormalizedUserName = "KANSI.NORAINE",
+                        Email = "norainekansimd@gmail.com",
+                        NormalizedEmail = "NORAINEKANSIMD@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "KANSI",
+                        FirstName = "NOR-AINE",
+                        MiddleName = "PENDONG",
+                        PhoneNumber = "0917846224",
+                    },
+                    new User
+                    {
+                        Id = "b582fc78-cd33-46d4-a994-8c43789600ff",
+                        UserName = "buenaflor.fasl",
+                        NormalizedUserName = "BUENAFLOR.FASL",
+                        Email = "fasl.buenaflor@gmail.com",
+                        NormalizedEmail = "FASL.BUENAFLOR@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "BUENAFLOR",
+                        FirstName = "FASL GOLDANNE",
+                        MiddleName = "BIRUAR",
+                        PhoneNumber = "00000000000",
+                    },
+                    new User
+                    {
+                        Id = "0301f6de-6d6d-448f-a46c-2bb32ba97a28",
+                        UserName = "rabago.sigmund",
+                        NormalizedUserName = "RABAGO.SIGMUND",
+                        Email = "sigmundprabago@gmail.com",
+                        NormalizedEmail = "SIGMUNDRABAGO@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "RABAGO",
+                        FirstName = "SIGMUND",
+                        MiddleName = "PASCUAL",
+                        PhoneNumber = "09682425921",
+                    },                   
+                    new User
+                    {
+                        Id = "eeadfae2-544f-4a5d-9027-808537e694b1",
+                        UserName = "romancap.faisal",
+                        NormalizedUserName = "ROMANCAP.FAISAL",
+                        Email = "",
+                        NormalizedEmail = "",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "ROMANCAP",
+                        FirstName = "FAISAL",
+                        MiddleName = "KASID",
+                        PhoneNumber = "09176339433",
+                    },
+                    new User
+                    {
+                        Id = "562a00d1-f6de-4c44-bfc2-b55e99074bcf",
+                        UserName = "mabang.moctar",
+                        NormalizedUserName = "MABANG.MOCTAR",
+                        Email = "mokibox2@yahoo.com",
+                        NormalizedEmail = "MOKIBOX2@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "MABANG",
+                        FirstName = "MOCTAR",
+                        MiddleName = "MOPAC",
+                        PhoneNumber = "09177237960",
+                    },
+                    new User
+                    {
+                        Id = "ba16dd9a-fbdb-4ed6-9cfa-b972bda73917",
+                        UserName = "salik.shirley",
+                        NormalizedUserName = "SALIK.SHIRLEY",
+                        Email = "flickersps@gmail.com",
+                        NormalizedEmail = "FLICKERSPS@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "SALIK",
+                        FirstName = "SHIRLEY",
+                        MiddleName = "PULIDO",
+                        PhoneNumber = "09177229341",
+                    },
+                    new User
+                    {
+                        Id = "bacdfd11-acd7-40fe-9fb3-b8831f94d7de",
+                        UserName = "ong.febe",
+                        NormalizedUserName = "ONG.FEBE",
+                        Email = "fsornd@gmail.com",
+                        NormalizedEmail = "FSORND@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "ONG",
+                        FirstName = "FEBE",
+                        MiddleName = "SUYO",
+                        PhoneNumber = "09422188023",
+                    },
+                    new User
+                    {
+                        Id = "75228ef1-9a3f-4a55-8181-b1794ec72e8d",
+                        UserName = "alfonso.sofia",
+                        NormalizedUserName = "ALFONSO.SOFIA",
+                        Email = "sofia_alfonso64@gmail.com",
+                        NormalizedEmail = "SOFIA_ALFONSO64@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "ALFONSO",
+                        FirstName = "SOFIA",
+                        MiddleName = "DUMAMA",
+                        PhoneNumber = "09176338010",
+                    },
+                    new User
+                    {
+                        Id = "0c0e6892-41a4-4536-bda7-757dd5aeb4ee",
+                        UserName = "rodriguez.alma",
+                        NormalizedUserName = "RODRIGUEZ.ALMA",
+                        Email = "almarodriguez1969@yahoo.com",
+                        NormalizedEmail = "ALMARODRIGUEZ1969@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "RODRIGUEZ",
+                        FirstName = "ALMA ROSARIO",
+                        MiddleName = "PIOQUINTO",
+                        PhoneNumber = "093233910958",
+                    },
+                    new User
+                    {
+                        Id = "576fc42f-b0f9-433b-907a-29d98ebf7af6",
+                        UserName = "juliano.ronald",
+                        NormalizedUserName = "JULIANO.RONALD",
+                        Email = "",
+                        NormalizedEmail = "",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "JULIANO",
+                        FirstName = "RONALD BENEDICK",
+                        MiddleName = "RIVERO",
+                        PhoneNumber = "09393704748",
+                    },
+                    new User
+                    {
+                        Id = "aa704a60-ad3d-4148-90c0-316803202de6",
+                        UserName = "bargo.sheryll",
+                        NormalizedUserName = "BARGO.SHERYLL",
+                        Email = "sheryllbargo041388@gmail.com",
+                        NormalizedEmail = "SHERYLLBARGO041388@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "BARGO",
+                        FirstName = "SHERYLL",
+                        MiddleName = "LUMACAD",
+                        PhoneNumber = "09178319784",
+                    },
+                    new User
+                    {
+                        Id = "08a7ead1-5c61-4207-8ea5-aec3d6b691d0",
+                        UserName = "gecosala.felisa",
+                        NormalizedUserName = "GECOSALA.FELISA",
+                        Email = "pong_rg@yahoo.com",
+                        NormalizedEmail = "PONG_RG@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "GECOSALA",
+                        FirstName = "FELISA",
+                        MiddleName = "RODRIGUEZ",
+                        PhoneNumber = "09227487001",
+                    },
+                    new User
+                    {
+                        Id = "d55b7093-1298-42fb-96b2-b12edb1cf49f",
+                        UserName = "satol.parida",
+                        NormalizedUserName = "SATOL.PARIDA",
+                        Email = "paridasatol@yahoo.com",
+                        NormalizedEmail = "PARIDASATOL@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "SATOL",
+                        FirstName = "PARIDA",
+                        MiddleName = "KIMAMAO",
+                        PhoneNumber = "09174470268",
+                    },
+                    new User
+                    {
+                        Id = "35035c73-8072-4005-85bb-0a91cd97741b",
+                        UserName = "cambri.rotchel",
+                        NormalizedUserName = "CAMBRI.ROTCHEL",
+                        Email = "rotchelcambri38@gmail.com",
+                        NormalizedEmail = "ROTCHELCAMBRI38@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "CAMBRI",
+                        FirstName = "ROTCHEL",
+                        MiddleName = "GUIAMAD",
+                        PhoneNumber = "09171280911",
+                    },
+                    new User
+                    {
+                        Id = "b1ec6cc6-9920-4df6-bce0-b22b107a476d",
+                        UserName = "uy.vernon",
+                        NormalizedUserName = "UY.VERNON",
+                        Email = "vernon_uy@yahoo.com",
+                        NormalizedEmail = "VERNON_UY@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "UY",
+                        FirstName = "VERNON",
+                        MiddleName = "LIM",
+                        PhoneNumber = "09177227460",
+                    },
+                    new User
+                    {
+                        Id = "31298867-e329-4dbf-8c68-2e557d98e864",
+                        UserName = "songcayauon.chqui",
+                        NormalizedUserName = "SONGCAYAUON.CHIQUI",
+                        Email = "chiquivsongcayauon@gmail.com",
+                        NormalizedEmail = "CHIQUIVSONGCAYAUON@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "SONGCAYAUON",
+                        FirstName = "CHIQUI",
+                        MiddleName = "VILLANUEVA",
+                        PhoneNumber = "09568141482",
+                    },
+                    new User
+                    {
+                        Id = "86e65501-a4a6-438c-abe7-5ec802032bd4",
+                        UserName = "lampito.marilou",
+                        NormalizedUserName = "LAMPITCO.MARILOU",
+                        Email = "g_lou08@yahoo.com",
+                        NormalizedEmail = "G_LOU08@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "LAMPITCO",
+                        FirstName = "MARILOU",
+                        MiddleName = "ACEJO",
+                        PhoneNumber = "09157358418",
+                    },
+                    new User
+                    {
+                        Id = "60cbc60f-8572-47ba-b70c-cc328c363bd7",
+                        UserName = "dumama-remo.shana",
+                        NormalizedUserName = "DUMAMA-REMO.SHANA",
+                        Email = "shanarizza@yahoo.com",
+                        NormalizedEmail = "SHANARIZZA@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "DUMAMA-REMO",
+                        FirstName = "SHANA RIZZA",
+                        MiddleName = "BIRUAR",
+                        PhoneNumber = "09175277669",
+                    },
+                    new User
+                    {
+                        Id = "6ccacdfe-d21f-404a-a09a-fbb0a8027c9e",
+                        UserName = "lao.louella",
+                        NormalizedUserName = "LAO.LOUELLA",
+                        Email = "ljalao28@yahoo.com",
+                        NormalizedEmail = "LJALAO28@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "LAO",
+                        FirstName = "LOUELLA JEANNE",
+                        MiddleName = "AGDEPPA",
+                        PhoneNumber = "09177267389",
+                    },
+                    new User
+                    {
+                        Id = "2902eb0b-328f-4c82-a37b-e6b67c1e7770",
+                        UserName = "calingasan.hazel",
+                        NormalizedUserName = "CALINGASAN.HAZEL",
+                        Email = "hazel_calingasan@yahoo.com",
+                        NormalizedEmail = "HAZEL_CALINGASAN@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "CALINGASAN",
+                        FirstName = "HAZEL",
+                        MiddleName = "LOPEZ",
+                        PhoneNumber = "09173228233",
+                    },
+                    new User
+                    {
+                        Id = "756c27c7-7637-4525-9b85-c1f41c0c5a8f",
+                        UserName = "oro-josef.cheridine",
+                        NormalizedUserName = "ORO-JOSEF.CHERIDINE",
+                        Email = "cheridinemd@gmail.com",
+                        NormalizedEmail = "CHERIDINEMD@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "ORO-JOSEF",
+                        FirstName = "CHERIDINE",
+                        MiddleName = "PAGARIGAN",
+                        PhoneNumber = "09228270573",
+                    },
+                    new User
+                    {
+                        Id = "32074da3-f8f8-4755-8cd5-f2aabba599e2",
+                        UserName = "doruelo.venicius",
+                        NormalizedUserName = "DORUELO.VENICIUS",
+                        Email = "veniciusdoruelo@yahoo.com",
+                        NormalizedEmail = "VENICIUSDORUELO@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "DORUELO",
+                        FirstName = "VENICIUS",
+                        MiddleName = "PADUA",
+                        PhoneNumber = "09173012016",
+                    },
+                    new User
+                    {
+                        Id = "a452e452-d791-439e-b390-d80dba5ffbc0",
+                        UserName = "santos.rocelyn",
+                        NormalizedUserName = "SANTOS.ROCELYN",
+                        Email = "rocelynmbarrientos@gmail.com",
+                        NormalizedEmail = "ROCELYNMBARRIENTOS@GMAIL.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "SANTOS",
+                        FirstName = "ROCELYN",
+                        MiddleName = "BARRIENTOS",
+                        PhoneNumber = "09176592255",
+                    },
+                    new User
+                    {
+                        Id = "6517b46b-eade-4618-984b-525a31aec14f",
+                        UserName = "mokamad-romancap.halima",
+                        NormalizedUserName = "MOKAMAD-ROMANCAP.HALIMA",
+                        Email = "lhemy_K@yahoo.com",
+                        NormalizedEmail = "LHEMY_K@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "MOKAMAD-ROMANCAP",
+                        FirstName = "HALIMA",
+                        MiddleName = "OMAR",
+                        PhoneNumber = "09173049710",
+                    },                   
+                    new User
+                    {
+                        Id = "3cfa9401-553a-4ac5-ab8d-3d65899090b3",
+                        UserName = "apostol.mildred",
+                        NormalizedUserName = "APOSTOL.MILDRED",
+                        Email = "mar23md@yahoo.com",
+                        NormalizedEmail = "MAR23MD@YAHOO.COM",
+                        PasswordHash = hasher.HashPassword(null, defaultPassword),
+                        ConcurrencyStamp = Guid.NewGuid().ToString(),
+                        LastName = "APOSTOL",
+                        FirstName = "MILDRED",
+                        MiddleName = "VINLUAN",
+                        PhoneNumber = "09177068296",
+                    }
         );
     }
 }
