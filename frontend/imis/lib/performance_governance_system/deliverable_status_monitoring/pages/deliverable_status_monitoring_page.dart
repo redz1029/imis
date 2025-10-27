@@ -25,6 +25,7 @@ import '../../../utils/http_util.dart';
 import '../../../utils/permission_string.dart';
 import '../../models/pgs_deliverable_score_history.dart';
 import '../../pgs_period/models/pgs_period.dart';
+import '../models/pgs_deliverable_accomplishment.dart';
 import '../models/pgs_filter.dart';
 import '../services/deliverable_status_monitoring_service.dart';
 
@@ -195,6 +196,51 @@ class _DeliverableStatusMonitoringPageState
       });
     }
     setDialogState(() {});
+  }
+
+  Future<bool> _hasCompleteAccomplishmentData(
+    int deliverableId,
+    int expectedPeriods,
+  ) async {
+    try {
+      final List<PgsDeliverableAccomplishment> accomplishments =
+          await _deliverableStatusMonitoring.fetchAccomplishments(
+            deliverableId,
+          );
+
+      if (accomplishments.isEmpty || accomplishments.length < expectedPeriods) {
+        return false;
+      }
+
+      int completedPeriods = 0;
+
+      for (var i = 0; i < accomplishments.length; i++) {
+        var accomplishment = accomplishments[i];
+
+        final status = accomplishment.remarks;
+
+        final attachmentPath = accomplishment.attachmentPath;
+
+        bool hasValidStatus = status != null && status.toString().isNotEmpty;
+
+        bool hasValidAttachment =
+            attachmentPath != null && attachmentPath.isNotEmpty;
+
+        bool isComplete = hasValidStatus && hasValidAttachment;
+
+        if (isComplete) {
+          completedPeriods++;
+        } else {
+          if (!hasValidStatus) debugPrint("    - Missing status: $status");
+        }
+      }
+
+      bool allComplete = completedPeriods >= expectedPeriods;
+
+      return allComplete;
+    } catch (e) {
+      return false;
+    }
   }
 
   @override
@@ -1843,7 +1889,25 @@ class _DeliverableStatusMonitoringPageState
     VoidCallback onPressed,
   ) {
     final deliverable = deliverableList[index];
+    final deliverableId = deliverable['pgsDeliverableId'];
 
+    final startDateStr = deliverable['Start Date'];
+    final endDateStr = deliverable['End Date'];
+    final startDate = DateFormat('MMM dd, yyyy').parse(startDateStr);
+    final endDate = DateFormat('MMM dd, yyyy').parse(endDateStr);
+
+    List<Map<String, dynamic>> monthlyPeriods = [];
+    DateTime current = DateTime(startDate.year, startDate.month);
+    DateTime end = DateTime(endDate.year, endDate.month);
+
+    while (current.isBefore(end) || current.isAtSameMomentAs(end)) {
+      monthlyPeriods.add({
+        'period': DateFormat('MMMM yyyy').format(current),
+        'month': current.month,
+        'year': current.year,
+      });
+      current = DateTime(current.year, current.month + 1);
+    }
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: Row(
@@ -1889,42 +1953,114 @@ class _DeliverableStatusMonitoringPageState
 
           const SizedBox(width: 8),
 
-          SizedBox(
-            height: 30,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  side: const BorderSide(color: Colors.black, width: 1),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                textStyle: const TextStyle(fontSize: 13),
-                minimumSize: Size.zero,
-              ).copyWith(
-                overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                  if (states.contains(WidgetState.hovered) ||
-                      states.contains(WidgetState.pressed)) {
-                    return const Color.fromARGB(255, 221, 221, 221);
-                  }
-                  return null;
-                }),
-              ),
-              onPressed: () async {
-                await loadBreakThrough(deliverable['pgsDeliverableId']);
-                showBreakthroughFormDialog(context, deliverable, userId);
-              },
-              icon: const Icon(
-                Icons.star_outline,
-                size: 14,
-                color: primaryTextColor,
-              ),
-              label: const Text(
-                'Breakthrough Scoring',
-                style: TextStyle(color: primaryTextColor, fontSize: 10),
-              ),
+          // SizedBox(
+          //   height: 30,
+          //   child: ElevatedButton.icon(
+          //     style: ElevatedButton.styleFrom(
+          //       backgroundColor: Colors.transparent,
+          //       elevation: 0,
+          //       shape: RoundedRectangleBorder(
+          //         borderRadius: BorderRadius.circular(4),
+          //         side: const BorderSide(color: Colors.black, width: 1),
+          //       ),
+          //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
+          //       textStyle: const TextStyle(fontSize: 13),
+          //       minimumSize: Size.zero,
+          //     ).copyWith(
+          //       overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+          //         if (states.contains(WidgetState.hovered) ||
+          //             states.contains(WidgetState.pressed)) {
+          //           return const Color.fromARGB(255, 221, 221, 221);
+          //         }
+          //         return null;
+          //       }),
+          //     ),
+          //     onPressed: () async {
+          //       await loadBreakThrough(deliverable['pgsDeliverableId']);
+          //       showBreakthroughFormDialog(context, deliverable, userId);
+          //     },
+          //     icon: const Icon(
+          //       Icons.star_outline,
+          //       size: 14,
+          //       color: primaryTextColor,
+          //     ),
+          //     label: const Text(
+          //       'Breakthrough Scoring',
+          //       style: TextStyle(color: primaryTextColor, fontSize: 10),
+          //     ),
+          //   ),
+          // ),
+          FutureBuilder<bool>(
+            future: _hasCompleteAccomplishmentData(
+              deliverableId,
+              monthlyPeriods.length,
             ),
+            builder: (context, snapshot) {
+              final hasCompleteData = snapshot.data ?? false;
+
+              return Tooltip(
+                message:
+                    hasCompleteData
+                        ? 'Click to open Breakthrough Scoring'
+                        : 'Please complete Accomplishment data first',
+                child: SizedBox(
+                  height: 30,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor:
+                          hasCompleteData
+                              ? Colors.transparent
+                              : Colors.grey.shade300,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                        side: BorderSide(
+                          color: hasCompleteData ? Colors.black : Colors.grey,
+                          width: 1,
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      textStyle: const TextStyle(fontSize: 13),
+                      minimumSize: Size.zero,
+                    ).copyWith(
+                      overlayColor: WidgetStateProperty.resolveWith<Color?>((
+                        states,
+                      ) {
+                        if (hasCompleteData &&
+                            (states.contains(WidgetState.hovered) ||
+                                states.contains(WidgetState.pressed))) {
+                          return const Color.fromARGB(255, 221, 221, 221);
+                        }
+                        return null;
+                      }),
+                    ),
+                    onPressed:
+                        hasCompleteData
+                            ? () async {
+                              await loadBreakThrough(deliverableId);
+                              showBreakthroughFormDialog(
+                                context,
+                                deliverable,
+                                userId,
+                              );
+                            }
+                            : null,
+                    icon: Icon(
+                      Icons.star_outline,
+                      size: 14,
+                      color: hasCompleteData ? primaryTextColor : Colors.grey,
+                    ),
+                    label: Text(
+                      'Breakthrough Scoring',
+                      style: TextStyle(
+                        color: hasCompleteData ? primaryTextColor : Colors.grey,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -1996,8 +2132,6 @@ Future<bool?> showAccomplishmentFormDialog(
                           ],
                         ),
                         const SizedBox(height: 16),
-
-                        // Info section
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
@@ -2131,11 +2265,9 @@ Future<bool?> showAccomplishmentFormDialog(
                                   ],
                                 ),
                               ),
-
                               ...monthlyPeriods.asMap().entries.map((entry) {
                                 final index = entry.key;
                                 final period = entry.value;
-
                                 return Column(
                                   children: [
                                     const Divider(height: 1),
@@ -2156,7 +2288,6 @@ Future<bool?> showAccomplishmentFormDialog(
                     ),
                   ),
                 ),
-
                 SizedBox(height: 20),
                 PermissionWidget(
                   allowedRoles: [
