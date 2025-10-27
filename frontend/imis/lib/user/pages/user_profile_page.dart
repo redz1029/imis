@@ -146,7 +146,11 @@ class UserProfileState extends State<UserProfilePage> {
     final results = await userSearchUtil.filter(
       query,
       (user, search) =>
-          (user.firstName ?? '').toLowerCase().contains(search.toLowerCase()),
+          (user.firstName ?? '').toLowerCase().contains(search.toLowerCase()) ||
+          (user.middleName ?? '').toLowerCase().contains(
+            search.toLowerCase(),
+          ) ||
+          (user.lastName ?? '').toLowerCase().contains(search.toLowerCase()),
     );
 
     setState(() {
