@@ -37,7 +37,8 @@ builder.Services.AddCors(opts => opts.AddPolicy(allowedOrigins, policy =>
         // In production, restrict to specific origins
         policy.WithOrigins(
                 "http://192.168.0.89:8085",  // LAN Origin
-                "https://demo.imis.crmc.ph" // Production domain
+                "https://demo.imis.crmc.ph", // Demo domain
+                "https://cpems.crmc.ph"  // Production domain
             )
             .AllowAnyHeader()
             .AllowAnyMethod()

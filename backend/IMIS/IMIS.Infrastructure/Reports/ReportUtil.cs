@@ -38,7 +38,7 @@ namespace IMIS.Infrastructure.Reports
                     if (obj is FastReport.TextObject text)
                     {
                         var oldFont = text.Font;
-                        text.Font = new System.Drawing.Font("DejaVu Sans", oldFont.Size, oldFont.Style);
+                        text.Font = new System.Drawing.Font("Noto Sans", oldFont.Size, oldFont.Style);
                     }
                 }
             }
