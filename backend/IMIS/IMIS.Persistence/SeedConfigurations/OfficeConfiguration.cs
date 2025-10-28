@@ -196,7 +196,10 @@ namespace IMIS.Persistence.SeedConfigurations
                 new Office { Id = 175, Name = "Physical Plant - Laundry and Linen unit", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false },
                 new Office { Id = 176, Name = "Family and Community Medicine Department", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
                 new Office { Id = 177, Name = "Operating Room & Post-Anesthesia Care Unit", OfficeTypeId = 2, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
-                new Office { Id = 178, Name = "Material and Supply Management Department", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false }
+                new Office { Id = 178, Name = "Material and Supply Management Department", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false },
+                new Office { Id = 179, Name = "Head Women and Child Protection Unit", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
+                new Office { Id = 180, Name = "EEG", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
+                new Office { Id = 181, Name = "SHTH", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false }
             );
         }
     }
