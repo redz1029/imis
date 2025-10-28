@@ -128,7 +128,6 @@ class PerformanceGovernanceSystemPageState
   final FocusNode isSearchFocus = FocusNode();
   Map<int, TextEditingController> reasonController = {};
   Map<int, TextEditingController> kraDescriptionController = {};
-  List<String> pgsStatusOptions = PgsStatus.values.map((e) => e.name).toList();
   TextEditingController competenceScoreController = TextEditingController(
     text: '',
   );
@@ -438,7 +437,6 @@ class PerformanceGovernanceSystemPageState
                     itemBuilder: (context, index) {
                       return Card(
                         color: mainBgColor,
-
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(0.1),
                           side: const BorderSide(
@@ -446,7 +444,6 @@ class PerformanceGovernanceSystemPageState
                             width: 0.5,
                           ),
                         ),
-
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16,
@@ -461,7 +458,6 @@ class PerformanceGovernanceSystemPageState
                             style: const TextStyle(fontSize: 16),
                           ),
                           onTap: () => Navigator.pop(context, officeIds[index]),
-
                           hoverColor: primaryColor.withValues(alpha: 0.1),
                         ),
                       );
@@ -602,8 +598,6 @@ class PerformanceGovernanceSystemPageState
       final response = await AuthenticatedRequest.get(
         dio,
         "${ApiEndpoint().fetchPGSUserId}/${user.id}?pgsId=$pgsId",
-
-        // options: Options(headers: {"Authorization": "Bearer $token"}),
       );
       if (response.statusCode == 200 && mounted) {
         final data = response.data;
@@ -687,7 +681,6 @@ class PerformanceGovernanceSystemPageState
   //fetch periods
   Future<void> fetchPGSPeriods() async {
     var url = ApiEndpoint().pgsperiod;
-
     try {
       var response = await AuthenticatedRequest.get(dio, url);
 
@@ -696,7 +689,6 @@ class PerformanceGovernanceSystemPageState
             (response.data as List)
                 .map((period) => PgsPeriod.fromJson(period))
                 .toList();
-
         if (mounted) {
           setState(() {
             periodList = data.map((period) => period.toJson()).toList();
@@ -924,7 +916,6 @@ class PerformanceGovernanceSystemPageState
             kraData['name'] as String,
             kraData['remarks'] ?? '',
             true,
-
             rowVersion: rowVersion,
           ),
           kraId,
@@ -942,7 +933,6 @@ class PerformanceGovernanceSystemPageState
         ),
       );
     });
-
     return updatedDeliverables;
   }
 
@@ -1040,7 +1030,6 @@ class PerformanceGovernanceSystemPageState
       body: LayoutBuilder(
         builder: (context, constraints) {
           bool isMobile = constraints.maxWidth < 600;
-
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -1102,12 +1091,10 @@ class PerformanceGovernanceSystemPageState
                                             (o) => {'id': o.id, 'name': o.name},
                                           ),
                                         ];
-
                                         final searchController =
                                             TextEditingController();
                                         ValueNotifier<String> searchQuery =
                                             ValueNotifier('');
-
                                         return [
                                           PopupMenuItem<String>(
                                             enabled: false,
@@ -1147,7 +1134,6 @@ class PerformanceGovernanceSystemPageState
                                               ],
                                             ),
                                           ),
-
                                           PopupMenuItem<String>(
                                             enabled: false,
                                             child: ValueListenableBuilder<
@@ -1167,7 +1153,6 @@ class PerformanceGovernanceSystemPageState
                                                                   ),
                                                         )
                                                         .toList();
-
                                                 return ConstrainedBox(
                                                   constraints: BoxConstraints(
                                                     maxHeight:
@@ -1287,7 +1272,6 @@ class PerformanceGovernanceSystemPageState
                                           },
                                         ),
                                       ];
-
                                       return periodOptions
                                           .map<PopupMenuItem<String>>((option) {
                                             return PopupMenuItem<String>(
@@ -1479,10 +1463,15 @@ class PerformanceGovernanceSystemPageState
                           final signatories = List<Map<String, dynamic>>.from(
                             pgsgovernancesystem['signatories'] ?? [],
                           );
-
+                          final deliverables = List<Map<String, dynamic>>.from(
+                            pgsgovernancesystem['pgsDeliverables'] ?? [],
+                          );
                           String status = 'Draft';
-
-                          if (isDraft) {
+                          if (deliverables.any(
+                            (d) => d['isDisapproved'] as bool? ?? false,
+                          )) {
+                            status = 'Disapproved';
+                          } else if (isDraft) {
                             status = 'Draft';
                           } else {
                             final hasNextStatus = signatories.any((signatory) {
@@ -1529,7 +1518,6 @@ class PerformanceGovernanceSystemPageState
                                   ),
                                 ),
                               ),
-
                               DataCell(SizedBox(child: Text(status))),
                               DataCell(
                                 SizedBox(
@@ -4458,7 +4446,6 @@ class PerformanceGovernanceSystemPageState
             ),
           ],
         ),
-
         if (isDisapproved == true) ...[
           const SizedBox(height: 16),
           Padding(
