@@ -4,7 +4,7 @@
 
 namespace IMIS.Persistence.Migrations
 {
-    /// <inheritdoc />
+    /// <inheritdoc /> 
     public partial class SeedUpdateUserAddedPositions : Migration
     {
         /// <inheritdoc />
