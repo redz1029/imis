@@ -398,6 +398,10 @@ class OfficePageState extends State<OfficePage> {
                     setState(() {
                       fetchOffices();
                     });
+                    MotionToast.success(
+                      toastAlignment: Alignment.topCenter,
+                      description: Text('Saved successfully'),
+                    ).show(context);
                     Navigator.pop(context);
                   }
                 }

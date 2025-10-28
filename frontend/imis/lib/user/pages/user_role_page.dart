@@ -275,30 +275,30 @@ class UserRolePageState extends State<UserRolePage> {
                         showDialog(
                           context: context,
                           builder: (context) {
+                            final availableRoles =
+                                roleList
+                                    .where(
+                                      (role) =>
+                                          !currentRoles.contains(role.name),
+                                    )
+                                    .toList();
                             return AlertDialog(
                               title: Text("Select Role"),
                               content: SizedBox(
                                 width: 400,
                                 child: ListView.builder(
                                   shrinkWrap: true,
-                                  itemCount: roleList.length,
+                                  itemCount: availableRoles.length,
                                   itemBuilder: (context, index) {
-                                    final role = roleList[index];
+                                    final role = availableRoles[index];
                                     return ListTile(
                                       title: Text(role.name),
                                       trailing: IconButton(
-                                        icon: Icon(
-                                          Icons.add,
-                                          color: primaryTextColor,
-                                        ),
+                                        icon: Icon(Icons.add),
                                         onPressed: () {
-                                          if (!currentRoles.contains(
-                                            role.name,
-                                          )) {
-                                            setStateDialog(
-                                              () => currentRoles.add(role.name),
-                                            );
-                                          }
+                                          setStateDialog(
+                                            () => currentRoles.add(role.name),
+                                          );
                                           Navigator.pop(context);
                                         },
                                       ),
@@ -390,13 +390,20 @@ class UserRolePageState extends State<UserRolePage> {
 
                         if (id == null) {
                           await _userRoleService.addUserRoles(newUserRole);
+                          MotionToast.success(
+                            toastAlignment: Alignment.topCenter,
+                            description: Text('Saved successfully'),
+                          ).show(context);
                         } else {
                           await _userRoleService.updateRole(
                             _selectedUserId!,
                             assignedRoles,
                           );
+                          MotionToast.success(
+                            toastAlignment: Alignment.topCenter,
+                            description: Text('Updated successfully'),
+                          ).show(context);
                         }
-
                         await fetchUserRoles();
                         Navigator.pop(context);
                       }

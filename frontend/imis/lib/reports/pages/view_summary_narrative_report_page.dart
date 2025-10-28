@@ -454,6 +454,17 @@ class ViewSummaryNarrativeReportPageState
                                         },
                                       ),
                                     ),
+                                    if (selectedTabIndex == 1)
+                                      IconButton(
+                                        onPressed:
+                                            () => showDeleteDialog(
+                                              summary.id.toString(),
+                                            ),
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: primaryColor,
+                                        ),
+                                      ),
                                   ],
                                 ),
                               ),
@@ -490,6 +501,49 @@ class ViewSummaryNarrativeReportPageState
           );
         },
       ),
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text("Are you sure you want to delete this Summary Report?"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await _summaryNarrativeService.deleteSummaryNarrative(id);
+                  await fetchReportsForSelectedTab();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Summary Report deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(
+                    description: Text('Failed to Delete  Summary Report'),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -797,7 +851,7 @@ class ViewSummaryNarrativeReportPageState
                       MotionToast.success(
                         description: Text(
                           id == 0
-                              ? "Added successfully"
+                              ? "Saved successfully"
                               : "Updated successfully",
                         ),
                         toastAlignment: Alignment.topCenter,

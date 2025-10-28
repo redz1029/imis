@@ -1913,83 +1913,51 @@ class _DeliverableStatusMonitoringPageState
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
-            height: 30,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                  side: const BorderSide(color: Colors.black, width: 1),
+          Tooltip(
+            message: 'Click to open Accomplishment Form',
+            child: SizedBox(
+              height: 30,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                    side: const BorderSide(color: Colors.black, width: 1),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                  textStyle: const TextStyle(fontSize: 13),
+                  minimumSize: Size.zero,
+                ).copyWith(
+                  overlayColor: WidgetStateProperty.resolveWith<Color?>((
+                    states,
+                  ) {
+                    if (states.contains(WidgetState.hovered) ||
+                        states.contains(WidgetState.pressed)) {
+                      return const Color.fromARGB(255, 221, 221, 221);
+                    }
+                    return null;
+                  }),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                textStyle: const TextStyle(fontSize: 13),
-                minimumSize: Size.zero,
-              ).copyWith(
-                overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-                  if (states.contains(WidgetState.hovered) ||
-                      states.contains(WidgetState.pressed)) {
-                    return const Color.fromARGB(255, 221, 221, 221);
-                  }
-                  return null;
-                }),
-              ),
-              onPressed: () async {
-                await loadAccomplishments(deliverable['pgsDeliverableId']);
-                showAccomplishmentFormDialog(context, deliverable, userId);
-              },
-              icon: const Icon(
-                Icons.bar_chart_outlined,
-                size: 14,
-                color: primaryTextColor,
-              ),
-              label: const Text(
-                'Accomplishment',
-                style: TextStyle(color: primaryTextColor, fontSize: 10),
+                onPressed: () async {
+                  await loadAccomplishments(deliverable['pgsDeliverableId']);
+                  showAccomplishmentFormDialog(context, deliverable, userId);
+                },
+                icon: const Icon(
+                  Icons.bar_chart_outlined,
+                  size: 14,
+                  color: primaryTextColor,
+                ),
+                label: const Text(
+                  'Accomplishment',
+                  style: TextStyle(color: primaryTextColor, fontSize: 10),
+                ),
               ),
             ),
           ),
 
           const SizedBox(width: 8),
 
-          // SizedBox(
-          //   height: 30,
-          //   child: ElevatedButton.icon(
-          //     style: ElevatedButton.styleFrom(
-          //       backgroundColor: Colors.transparent,
-          //       elevation: 0,
-          //       shape: RoundedRectangleBorder(
-          //         borderRadius: BorderRadius.circular(4),
-          //         side: const BorderSide(color: Colors.black, width: 1),
-          //       ),
-          //       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          //       textStyle: const TextStyle(fontSize: 13),
-          //       minimumSize: Size.zero,
-          //     ).copyWith(
-          //       overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-          //         if (states.contains(WidgetState.hovered) ||
-          //             states.contains(WidgetState.pressed)) {
-          //           return const Color.fromARGB(255, 221, 221, 221);
-          //         }
-          //         return null;
-          //       }),
-          //     ),
-          //     onPressed: () async {
-          //       await loadBreakThrough(deliverable['pgsDeliverableId']);
-          //       showBreakthroughFormDialog(context, deliverable, userId);
-          //     },
-          //     icon: const Icon(
-          //       Icons.star_outline,
-          //       size: 14,
-          //       color: primaryTextColor,
-          //     ),
-          //     label: const Text(
-          //       'Breakthrough Scoring',
-          //       style: TextStyle(color: primaryTextColor, fontSize: 10),
-          //     ),
-          //   ),
-          // ),
           FutureBuilder<bool>(
             future: _hasCompleteAccomplishmentData(
               deliverableId,

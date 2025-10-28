@@ -379,7 +379,10 @@ class AuditorMainPageState extends State<AuditorPage> {
                         setState(() {
                           fetchAuditors();
                         });
-
+                        MotionToast.success(
+                          toastAlignment: Alignment.topCenter,
+                          description: Text('Saved successfully'),
+                        ).show(context);
                         Navigator.pop(context);
                       }
                     }

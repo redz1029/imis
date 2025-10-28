@@ -322,7 +322,10 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                       setState(() {
                         fetchAuditorTeam();
                       });
-
+                      MotionToast.success(
+                        toastAlignment: Alignment.topCenter,
+                        description: Text('Saved successfully'),
+                      ).show(context);
                       if (context.mounted) Navigator.pop(context);
                     }
                   },

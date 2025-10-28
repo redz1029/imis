@@ -441,7 +441,10 @@ class UserOfficePageState extends State<UserOfficePage> {
                         setState(() {
                           fetchUserOffice();
                         });
-
+                        MotionToast.success(
+                          toastAlignment: Alignment.topCenter,
+                          description: Text('Saved successfully'),
+                        ).show(context);
                         Navigator.pop(context);
                       }
                     }

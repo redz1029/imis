@@ -535,6 +535,10 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                     setState(() {
                       fetchAuditorOffice();
                     });
+                    MotionToast.success(
+                      toastAlignment: Alignment.topCenter,
+                      description: Text('Saved successfully'),
+                    ).show(context);
                     Navigator.pop(context);
                   }
                 }

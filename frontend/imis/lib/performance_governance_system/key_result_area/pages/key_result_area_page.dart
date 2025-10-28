@@ -286,6 +286,10 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                     setState(() {
                       fetchKRA();
                     });
+                    MotionToast.success(
+                      toastAlignment: Alignment.topCenter,
+                      description: Text('Saved successfully'),
+                    ).show(context);
                     Navigator.pop(context);
                   }
                 }

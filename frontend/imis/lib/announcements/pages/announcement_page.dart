@@ -599,7 +599,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                           Navigator.pop(context);
 
                           MotionToast.success(
-                            title: const Text("Success"),
+                            title: const Text("Saved Successfully"),
                             toastAlignment: Alignment.topCenter,
                             description: Text(
                               announcement.id == 0

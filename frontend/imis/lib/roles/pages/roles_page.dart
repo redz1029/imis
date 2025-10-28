@@ -233,6 +233,10 @@ class RolesPageState extends State<RolesPage> {
                           setState(() {
                             fetchRoles();
                           });
+                          MotionToast.success(
+                            toastAlignment: Alignment.topCenter,
+                            description: Text('Saved successfully'),
+                          ).show(context);
                           Navigator.pop(context);
                         } catch (e) {
                           MotionToast.error(
@@ -243,6 +247,10 @@ class RolesPageState extends State<RolesPage> {
                         try {
                           await _rolesService.updateRole(id, roleName);
                           fetchRoles();
+                          MotionToast.success(
+                            toastAlignment: Alignment.topCenter,
+                            description: Text('Updated successfully'),
+                          ).show(context);
                           Navigator.pop(context);
                         } catch (e) {
                           MotionToast.error(

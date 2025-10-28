@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
@@ -358,10 +360,18 @@ class UserProfileState extends State<UserProfilePage> {
 
                         if (id == null) {
                           await _userProfileService.createUser(userProfile);
+                          MotionToast.success(
+                            toastAlignment: Alignment.topCenter,
+                            description: Text('Saved successfully'),
+                          ).show(context);
                         } else {
                           await _userProfileService.updateUser(userProfile);
+                          MotionToast.success(
+                            toastAlignment: Alignment.topCenter,
+                            description: Text('Updated successfully'),
+                          ).show(context);
                         }
-                        // ignore: use_build_context_synchronously
+
                         Navigator.pop(context);
                       }
                     }
@@ -788,7 +798,6 @@ class UserProfileState extends State<UserProfilePage> {
                         MotionToast.warning(
                           description: const Text('Username already exists'),
                           toastAlignment: Alignment.topCenter,
-                          // ignore: use_build_context_synchronously
                         ).show(context);
                         return;
                       }
@@ -808,16 +817,24 @@ class UserProfileState extends State<UserProfilePage> {
                       );
                       if (id == null) {
                         await _userProfileService.createUser(userProfile);
+                        MotionToast.success(
+                          toastAlignment: Alignment.topCenter,
+                          description: Text('Saved successfully'),
+                        ).show(context);
                         setState(() {
                           fetchUserProfile();
                         });
                       } else {
                         await _userProfileService.updateUser(userProfile);
+                        MotionToast.success(
+                          toastAlignment: Alignment.topCenter,
+                          description: Text('Updated successfully'),
+                        ).show(context);
                         setState(() {
                           fetchUserProfile();
                         });
                       }
-                      // ignore: use_build_context_synchronously
+
                       Navigator.pop(context);
                     }
                   },
@@ -1034,7 +1051,7 @@ class UserProfileState extends State<UserProfilePage> {
         return AlertDialog(
           title: Text("Confirm Delete"),
           content: Text(
-            "Are you sure you want to delete this PGS Period? This action cannot be undone.",
+            "Are you sure you want to delete this User? This action cannot be undone.",
           ),
           actions: [
             TextButton(
@@ -1049,12 +1066,10 @@ class UserProfileState extends State<UserProfilePage> {
                   // await fetchPGSPeriods();
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Period deleted successfully'),
+                    description: Text('User deleted successfully'),
                   ).show(context);
                 } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete Period'),
-                  );
+                  MotionToast.error(description: Text('User to Delete Period'));
                 }
               },
               style: ElevatedButton.styleFrom(
