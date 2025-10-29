@@ -6,7 +6,10 @@ import 'package:flutter/material.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
+import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/custom_toggle.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -20,6 +23,7 @@ class AnnouncementPage extends StatefulWidget {
 
 class AnnouncementPageState extends State<AnnouncementPage> {
   final _announcement = AnnouncementService(Dio());
+  TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
   final _formKey = GlobalKey<FormState>();
   int _currentPage = 1;
@@ -29,11 +33,25 @@ class AnnouncementPageState extends State<AnnouncementPage> {
   List<Announcement> filteredList = [];
   List<Announcement> announcementList = [];
   final Dio dio = Dio();
+  late FilterSearchResultUtil<Announcement> announcementSearchUtil;
+  final _paginationUtils = PaginationUtil(Dio());
 
   @override
   void initState() {
     super.initState();
     fetchAnnouncement();
+    announcementSearchUtil = FilterSearchResultUtil<Announcement>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().announcement,
+      pageSize: _pageSize,
+      fromJson: (json) => Announcement.fromJson(json),
+    );
+  }
+
+  @override
+  void dispose() {
+    isSearchfocus.dispose();
+    super.dispose();
   }
 
   Future<void> fetchAnnouncement({int page = 1, String? searchQuery}) async {
@@ -65,6 +83,18 @@ class AnnouncementPageState extends State<AnnouncementPage> {
     }
   }
 
+  Future<void> filterSearchResults(String query) async {
+    final results = await announcementSearchUtil.filter(
+      query,
+      (announcement, search) =>
+          (announcement.title).toLowerCase().contains(search.toLowerCase()),
+    );
+
+    setState(() {
+      filteredList = results;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
@@ -91,7 +121,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                       width: 300,
                       child: TextField(
                         focusNode: isSearchfocus,
-                        // controller: searchController,
+                        controller: searchController,
                         decoration: InputDecoration(
                           enabledBorder: OutlineInputBorder(
                             borderSide: BorderSide(color: lightGrey),
@@ -117,6 +147,7 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                             horizontal: 5,
                           ),
                         ),
+                        onChanged: filterSearchResults,
                       ),
                     ),
                     if (!isMinimized)
