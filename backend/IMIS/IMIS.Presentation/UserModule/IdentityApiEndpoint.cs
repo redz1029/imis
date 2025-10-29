@@ -66,6 +66,94 @@ namespace IMIS.Presentation.UserModule
             .RequireAuthorization()
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup), true);
 
+            roleGroup.MapGet("/roles/{roleId}/permission", async (string roleId,
+            [FromServices] RoleManager<IdentityRole> roleManager,
+            [FromServices] ImisDbContext db) =>
+            {
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null)
+                    return Results.NotFound(new { message = "Role not found." });
+
+                var roleClaims = await db.Set<IdentityRoleClaim<string>>()
+                    .Where(rc => rc.RoleId == roleId && rc.ClaimType == PermissionClaimType.Claim)
+                    .Select(rc => rc.ClaimValue!)
+                    .ToListAsync();
+
+                var userClaims = await db.Set<IdentityUserClaim<string>>()
+                    .Where(uc => uc.ClaimType == PermissionClaimType.Claim)
+                    .Select(uc => uc.ClaimValue!)
+                    .Distinct()
+                    .ToListAsync();
+
+                var combined = roleClaims.Union(userClaims).Distinct().ToList();
+
+                static string FormatPermissionName(string value)
+                {
+                    if (string.IsNullOrWhiteSpace(value)) return value;
+                    return System.Text.RegularExpressions.Regex.Replace(value, "(\\B[A-Z])", " $1");
+                }
+
+                var permissions = combined
+                    .Select(p => new
+                    {
+                        Permission = FormatPermissionName(p),
+                        IsAssigned = roleClaims.Contains(p) 
+                    })
+                    .OrderBy(p => p.Permission)
+                    .ToList();
+
+                return Results.Ok(new
+                {
+                    role.Id,
+                    role.Name,
+                    Permissions = permissions
+                });
+            })
+            .WithTags(RoleGroup)
+            .RequireAuthorization()
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
+
+            roleGroup.MapPut("/roles/{roleId}/permissions", async (string roleId,
+            [FromBody] RolePermissionUpdateModel request,
+            [FromServices] RoleManager<IdentityRole> roleManager,
+            [FromServices] ImisDbContext db,
+            [FromServices] IServiceProvider sp) =>
+            {
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null)
+                    return Results.NotFound(new { message = "Role not found." });
+
+                var currentClaims = await db.Set<IdentityRoleClaim<string>>()
+                    .Where(rc => rc.RoleId == roleId && rc.ClaimType == PermissionClaimType.Claim)
+                    .ToListAsync();
+
+                foreach (var permission in request.Permissions)
+                {
+                    var normalized = permission.Permission.Replace(" ", "");
+
+                    var existingClaim = currentClaims
+                        .FirstOrDefault(c => c.ClaimValue!.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+
+                    if (permission.IsAssigned)
+                    {
+                        if (existingClaim == null)
+                            await roleManager.AddClaimAsync(role, new Claim(PermissionClaimType.Claim, normalized));
+                    }
+                    else
+                    {
+                        if (existingClaim != null)
+                            await roleManager.RemoveClaimAsync(role, new Claim(PermissionClaimType.Claim, normalized));
+                    } 
+                }  
+
+                var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
+                await outputCacheStore.EvictByTagAsync("roles", default);
+
+                return Results.Ok(new { message = "Role permissions updated successfully." });
+            })
+           .WithTags(RoleGroup)
+           .RequireAuthorization();
+
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
             userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup)); 
@@ -104,7 +192,7 @@ namespace IMIS.Presentation.UserModule
             {
                 UserName = registration.Username,
                 Email = registration.Email,
-                FirstName = registration.FirstName,
+                FirstName = registration.FirstName, 
                 MiddleName = registration.MiddleName,
                 LastName = registration.LastName,
                 Prefix = registration.Prefix,
