@@ -3721,6 +3721,7 @@ class PerformanceGovernanceSystemPageState
 
     await showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return Dialog(
           backgroundColor: mainBgColor,
