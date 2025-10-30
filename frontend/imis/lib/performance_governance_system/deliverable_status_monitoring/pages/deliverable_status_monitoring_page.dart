@@ -2064,6 +2064,7 @@ Future<bool?> showAccomplishmentFormDialog(
 
   return showDialog<bool>(
     context: context,
+    barrierDismissible: false,
     builder: (context) {
       return Dialog(
         backgroundColor: mainBgColor,
@@ -2346,6 +2347,7 @@ Future<bool?> showBreakthroughFormDialog(
 ) {
   return showDialog<bool>(
     context: context,
+    barrierDismissible: false,
     builder: (context) {
       return Dialog(
         backgroundColor: mainBgColor,
