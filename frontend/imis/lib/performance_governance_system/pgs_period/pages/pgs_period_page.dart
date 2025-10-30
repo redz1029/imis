@@ -425,6 +425,10 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
                     setState(() {
                       fetchPGSPeriods();
                     });
+                    MotionToast.success(
+                      toastAlignment: Alignment.topCenter,
+                      description: Text('Saved successfully'),
+                    ).show(context);
                     Navigator.pop(context);
                   }
                 }
