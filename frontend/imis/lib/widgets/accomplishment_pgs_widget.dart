@@ -231,6 +231,16 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
             child: ValueListenableBuilder<PgsStatus>(
               valueListenable: selectedStatus,
               builder: (context, status, _) {
+                if (status == PgsStatus.onGoing &&
+                    percentageController.text == '0') {
+                  percentageController.text = '1';
+                } else if (status == PgsStatus.notStarted &&
+                    percentageController.text != '0') {
+                  percentageController.text = '0';
+                } else if (status == PgsStatus.completed &&
+                    (int.tryParse(percentageController.text) ?? 0) < 100) {
+                  percentageController.text = '100';
+                }
                 return ValueListenableBuilder<TextEditingValue>(
                   valueListenable: percentageController,
                   builder: (context, value, __) {
