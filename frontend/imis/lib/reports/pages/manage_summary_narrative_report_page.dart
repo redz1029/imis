@@ -13,7 +13,10 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
+import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
+import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -43,7 +46,8 @@ class ManageSummaryNarrativeReportPageState
   final TextEditingController _recommendationsController =
       TextEditingController();
   int periodId = 0;
-
+  late FilterSearchResultUtil<PgsSummaryNarrative> summarySearchUtil;
+  final _paginationUtils = PaginationUtil(Dio());
   List<PgsPeriod> periodList = [];
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
@@ -60,7 +64,7 @@ class ManageSummaryNarrativeReportPageState
   @override
   void initState() {
     super.initState();
-    // _fetchReports();
+
     () async {
       final period = await _commonService.fetchPgsPeriod();
       final offices = await _deliverableStatusMonitoring.fetchOffices();
@@ -73,6 +77,12 @@ class ManageSummaryNarrativeReportPageState
       });
     }();
     fetchSummaryNarrative();
+    summarySearchUtil = FilterSearchResultUtil<PgsSummaryNarrative>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().useroffice,
+      pageSize: _pageSize,
+      fromJson: (json) => PgsSummaryNarrative.fromJson(json),
+    );
   }
 
   Future<void> fetchSummaryNarrative({
@@ -115,6 +125,19 @@ class ManageSummaryNarrativeReportPageState
     );
 
     return "${_dateConverter.toJson(period.startDate)} to ${_dateConverter.toJson(period.endDate)}";
+  }
+
+  Future<void> filterSearchResults(String query) async {
+    final results = await summarySearchUtil.filter(
+      query,
+      (summary, search) => (officeMap[summary.officeId] ?? 'Unknown Office')
+          .toLowerCase()
+          .contains(search.toLowerCase()),
+    );
+
+    setState(() {
+      filteredList = results;
+    });
   }
 
   @override

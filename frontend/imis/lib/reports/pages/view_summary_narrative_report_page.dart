@@ -10,7 +10,10 @@ import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/pages/view_pdf_summary.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
+import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
+import 'package:imis/utils/filter_search_result_util.dart';
+import 'package:imis/utils/pagination_util.dart' show PaginationUtil;
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -51,7 +54,8 @@ class ViewSummaryNarrativeReportPageState
   final _formKey = GlobalKey<FormState>();
   int selectedTabIndex = 0;
   String? selectedOffice;
-
+  late FilterSearchResultUtil<PgsSummaryNarrative> summarySearchUtil;
+  final _paginationUtils = PaginationUtil(Dio());
   final List<String> tabs = ["View Auditor Reports", "View Overall Reports"];
   @override
   void initState() {
@@ -69,6 +73,12 @@ class ViewSummaryNarrativeReportPageState
       });
     }();
     fetchReportsForSelectedTab();
+    summarySearchUtil = FilterSearchResultUtil<PgsSummaryNarrative>(
+      paginationUtils: _paginationUtils,
+      endpoint: ApiEndpoint().summaryNarrative,
+      pageSize: _pageSize,
+      fromJson: (json) => PgsSummaryNarrative.fromJson(json),
+    );
   }
 
   Future<void> fetchReportsForSelectedTab({
@@ -115,6 +125,19 @@ class ViewSummaryNarrativeReportPageState
     );
 
     return "${_dateConverter.toJson(period.startDate)} to ${_dateConverter.toJson(period.endDate)}";
+  }
+
+  Future<void> filterSearchResults(String query) async {
+    final results = await summarySearchUtil.filter(
+      query,
+      (summary, search) => (officeMap[summary.officeId] ?? 'Unknown Office')
+          .toLowerCase()
+          .contains(search.toLowerCase()),
+    );
+
+    setState(() {
+      filteredList = results;
+    });
   }
 
   @override
@@ -221,6 +244,7 @@ class ViewSummaryNarrativeReportPageState
                             horizontal: 5,
                           ),
                         ),
+                        onChanged: filterSearchResults,
                       ),
                     ),
 

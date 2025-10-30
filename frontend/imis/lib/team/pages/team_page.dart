@@ -323,7 +323,7 @@ class TeamPageState extends State<TeamPage> {
                       horizontalInside: BorderSide(color: Colors.grey.shade100),
                     ),
                     columns: const [
-                      DataColumn(label: Text('#')),
+                      DataColumn2(label: Text('#'), fixedWidth: 40),
                       DataColumn2(
                         label: Text('Office Name'),
                         size: ColumnSize.L,
