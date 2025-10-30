@@ -94,8 +94,27 @@ namespace IMIS.Persistence.SeedConfigurations
                 new UserOffices { Id = 71, UserId = "f23ac0c6-68ac-41c8-94ff-383acbfc3e41", OfficeId = 18, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 72, UserId = "6517b46b-eade-4618-984b-525a31aec14f", OfficeId = 15, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 73, UserId = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00", OfficeId = 14, IsActive = true, IsDeleted = false, IsOfficeHead = true },
-                new UserOffices { Id = 74, UserId = "3cfa9401-553a-4ac5-ab8d-3d65899090b3", OfficeId = 36, IsActive = true, IsDeleted = false, IsOfficeHead = true }
-
+                new UserOffices { Id = 74, UserId = "3cfa9401-553a-4ac5-ab8d-3d65899090b3", OfficeId = 36, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 75, UserId = "60cbc60f-8572-47ba-b70c-cc328c363bd7", OfficeId = 79, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 76, UserId = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00", OfficeId = 182, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 77, UserId = "756c27c7-7637-4525-9b85-c1f41c0c5a8f", OfficeId = 184, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 78, UserId = "4e21fe59-4f5e-46b3-82b7-28df270038da", OfficeId = 185, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 79, UserId = "6517b46b-eade-4618-984b-525a31aec14f", OfficeId = 77, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 80, UserId = "45fm8462-553a-4ac5-ap8i-3d65879641h8", OfficeId = 154, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 81, UserId = "21ag1234-884k-0ak8-ap8i-2y54768532d2", OfficeId = 154, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 82, UserId = "66fg1385-86sd-8aw9-vm5g-1s87643521j5", OfficeId = 78, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 83, UserId = "f82a9135-7bdf-4ca1-9ea2-2c8b63a1d7f9", OfficeId = 79, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 84, UserId = "c63b2e15-8ad4-45b8-bfd1-3a98216c5ea4", OfficeId = 70, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 85, UserId = "b7f4e831-25ad-48a9-91d3-7e26f53a4db2", OfficeId = 183, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 86, UserId = "a1c7d995-3f89-4fcb-86c4-4d8d193b57a3", OfficeId = 184, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 87, UserId = "d5e2c4f8-95b1-47b9-bc12-8c4f9d8e2b17", OfficeId = 186, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 88, UserId = "e4b3a611-7c8a-4f9b-83a6-2a5b9e61d4c8", OfficeId = 106, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 89, UserId = "9f3b1c52-2e4a-4d65-8d13-6f2c7a9b5f42", OfficeId = 90, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 90, UserId = "2e9a6b74-7a21-4d33-9a84-5b9f1e8a3d27", OfficeId = 80, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 91, UserId = "8c1f5b93-4e7a-4f18-b3c9-1a2d5f84c9e1", OfficeId = 80, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 92, UserId = "7e4c8a59-1b9d-4c5e-ae31-8c2f3d5b7a61", OfficeId = 80, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 93, UserId = "1a9e3f84-2b4d-45a8-9e3f-7b6c8d1e2f94", OfficeId = 161, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 94, UserId = "6b3f8d72-9a1e-4c65-bd43-2e9c7f4b6a85", OfficeId = 161, IsActive = true, IsDeleted = false, IsOfficeHead = true }
             );
         }
     }
