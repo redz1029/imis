@@ -19,7 +19,8 @@ namespace IMIS.Domain
 
         public required double PercentAccomplished { get; set; }
         public string? Remarks { get; set; }
-     
+        public string? AuditorRemarks { get; set; }
+
         public string? AttachmentPath { get; set; }
     }
 }

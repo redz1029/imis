@@ -10,7 +10,8 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
         public DateTime PostingDate { get; set; }
         public required string UserId { get; set; }
         public required double PercentAccomplished { get; set; }
-        public string? Remarks { get; set; }       
+        public string? Remarks { get; set; }
+        public string? AuditorRemarks { get; set; }
         public string? AttachmentPath { get; set; }
        
         public PgsDeliverableAccomplishmentDto() { }
@@ -23,6 +24,7 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
             this.UserId = pgsDeliverableAccomplishment.UserId;
             this.PercentAccomplished = pgsDeliverableAccomplishment.PercentAccomplished;
             this.Remarks = pgsDeliverableAccomplishment?.Remarks;
+            this.AuditorRemarks = pgsDeliverableAccomplishment?.AuditorRemarks;
             this.AttachmentPath = pgsDeliverableAccomplishment!.AttachmentPath;
         }
 
@@ -36,10 +38,9 @@ namespace IMIS.Application.PgsDeliverableAccomplishmentModule
                 UserId = UserId,
                 PercentAccomplished = PercentAccomplished,
                 Remarks = Remarks,
-                AttachmentPath = AttachmentPath,
-               
+                AuditorRemarks = AuditorRemarks,
+                AttachmentPath = AttachmentPath,               
             };
-
         }    
     }
 }
