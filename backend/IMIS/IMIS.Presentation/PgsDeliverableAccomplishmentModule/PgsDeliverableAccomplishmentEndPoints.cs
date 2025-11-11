@@ -61,6 +61,7 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                     UserId = form.UserId,
                     PercentAccomplished = form.PercentAccomplished,
                     Remarks = form.Remarks,
+                    AuditorRemarks = form.AuditorRemarks,
                     AttachmentPath = uploadedFilePath
                 };
 
@@ -128,6 +129,7 @@ namespace IMIS.Presentation.PgsDeliverableAccomplishmentModule
                     UserId = form.UserId,
                     PercentAccomplished = form.PercentAccomplished,
                     Remarks = form.Remarks,
+                    AuditorRemarks = form.AuditorRemarks,
                     AttachmentPath = uploadedFilePath
                 };
 
