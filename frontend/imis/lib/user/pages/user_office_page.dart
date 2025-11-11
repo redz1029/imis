@@ -401,23 +401,89 @@ class UserOfficePageState extends State<UserOfficePage> {
                         },
                       );
 
+                      // if (confirmAction == true) {
+                      //   final isDuplicate = userOfficeList.any(
+                      //     (u) =>
+                      //         u.userId == _selectedUserId &&
+                      //         u.officeId ==
+                      //             int.tryParse(_selectedOfficeId ?? '0') &&
+                      //         u.id != int.tryParse(id ?? '0'),
+                      //   );
+
+                      //   if (isDuplicate) {
+                      //     ScaffoldMessenger.of(context).showSnackBar(
+                      //       SnackBar(
+                      //         content: Text(
+                      //           'User already assigned to this office.',
+                      //         ),
+                      //       ),
+                      //     );
+                      //     return;
+                      //   }
+
+                      //   final user = UserOffice(
+                      //     int.tryParse(id ?? '0') ?? 0,
+                      //     isDeleted,
+                      //     '',
+                      //     _selectedUserId ?? '',
+                      //     int.tryParse(_selectedOfficeId ?? '0') ?? 0,
+                      //     isActive,
+                      //     firstNameController.text,
+                      //     middleNameController.text,
+                      //     lastNameController.text,
+                      //     prefixController.text,
+                      //     suffixController.text,
+                      //     positionController.text,
+                      //     isOfficeHead,
+                      //   );
+
+                      //   await _userOfficeService.addOrUpdateUserOffice(user);
+                      //   setState(() {
+                      //     fetchUserOffice();
+                      //   });
+                      //   MotionToast.success(
+                      //     toastAlignment: Alignment.topCenter,
+                      //     description: Text('Saved successfully'),
+                      //   ).show(context);
+                      //   Navigator.pop(context);
+                      // }
+
                       if (confirmAction == true) {
-                        final isDuplicate = userOfficeList.any(
+                        final selectedOfficeId =
+                            int.tryParse(_selectedOfficeId ?? '0') ?? 0;
+                        final selectedUserId = _selectedUserId ?? '';
+
+                        final isDuplicateUserOffice = userOfficeList.any(
                           (u) =>
-                              u.userId == _selectedUserId &&
-                              u.officeId ==
-                                  int.tryParse(_selectedOfficeId ?? '0') &&
+                              u.userId == selectedUserId &&
+                              u.officeId == selectedOfficeId &&
                               u.id != int.tryParse(id ?? '0'),
                         );
 
-                        if (isDuplicate) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                'User already assigned to this office.',
-                              ),
+                        if (isDuplicateUserOffice) {
+                          MotionToast.warning(
+                            toastAlignment: Alignment.topCenter,
+                            description: const Text(
+                              'User is already assigned to this office.',
                             ),
-                          );
+                          ).show(context);
+                          return;
+                        }
+
+                        final hasOfficeHead = userOfficeList.any(
+                          (u) =>
+                              u.officeId == selectedOfficeId &&
+                              u.isOfficeHead == true &&
+                              u.id != int.tryParse(id ?? '0'),
+                        );
+
+                        if (isOfficeHead && hasOfficeHead) {
+                          MotionToast.warning(
+                            toastAlignment: Alignment.topCenter,
+                            description: const Text(
+                              'This office already has an Office Head.',
+                            ),
+                          ).show(context);
                           return;
                         }
 
@@ -425,8 +491,8 @@ class UserOfficePageState extends State<UserOfficePage> {
                           int.tryParse(id ?? '0') ?? 0,
                           isDeleted,
                           '',
-                          _selectedUserId ?? '',
-                          int.tryParse(_selectedOfficeId ?? '0') ?? 0,
+                          selectedUserId,
+                          selectedOfficeId,
                           isActive,
                           firstNameController.text,
                           middleNameController.text,
@@ -437,15 +503,30 @@ class UserOfficePageState extends State<UserOfficePage> {
                           isOfficeHead,
                         );
 
-                        await _userOfficeService.addOrUpdateUserOffice(user);
-                        setState(() {
-                          fetchUserOffice();
-                        });
-                        MotionToast.success(
-                          toastAlignment: Alignment.topCenter,
-                          description: Text('Saved successfully'),
-                        ).show(context);
-                        Navigator.pop(context);
+                        try {
+                          await _userOfficeService.addOrUpdateUserOffice(user);
+                          setState(() {
+                            fetchUserOffice();
+                          });
+
+                          MotionToast.success(
+                            toastAlignment: Alignment.topCenter,
+                            description: Text(
+                              id == null
+                                  ? 'Saved successfully!'
+                                  : 'Updated successfully!',
+                            ),
+                          ).show(context);
+
+                          Navigator.pop(context);
+                        } catch (e) {
+                          MotionToast.error(
+                            toastAlignment: Alignment.topCenter,
+                            description: const Text(
+                              'You cannot assign another Office Head to this office.',
+                            ),
+                          ).show(context);
+                        }
                       }
                     }
                   },
