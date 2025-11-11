@@ -14,8 +14,10 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart' show PaginationUtil;
+import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 
 class ViewSummaryNarrativeReportPage extends StatefulWidget {
@@ -250,105 +252,108 @@ class ViewSummaryNarrativeReportPageState
 
                     Flexible(fit: FlexFit.tight, child: Container()),
                     if (selectedTabIndex == 0)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                PopupMenuButton<String>(
-                                  color: mainBgColor,
-                                  offset: const Offset(0, 30),
-                                  onCanceled: () {
-                                    setState(() {
-                                      isMenuOpenPeriod = false;
-                                    });
-                                  },
-                                  onOpened: () {
-                                    setState(() {
-                                      isMenuOpenPeriod = true;
-                                    });
-                                  },
-                                  onSelected: (String value) {
-                                    setState(() {
-                                      selectedPeriod = value;
+                      PermissionWidget(
+                        allowedRoles: [PermissionString.headAuditor],
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  PopupMenuButton<String>(
+                                    color: mainBgColor,
+                                    offset: const Offset(0, 30),
+                                    onCanceled: () {
+                                      setState(() {
+                                        isMenuOpenPeriod = false;
+                                      });
+                                    },
+                                    onOpened: () {
+                                      setState(() {
+                                        isMenuOpenPeriod = true;
+                                      });
+                                    },
+                                    onSelected: (String value) {
+                                      setState(() {
+                                        selectedPeriod = value;
 
-                                      final selected = _periods.firstWhere(
-                                        (period) =>
-                                            period.id.toString() ==
-                                            selectedPeriod,
-                                        orElse:
-                                            () => PgsPeriod(
-                                              0,
-                                              false,
-                                              DateTime.now(),
-                                              DateTime.now(),
-                                              'remarks',
+                                        final selected = _periods.firstWhere(
+                                          (period) =>
+                                              period.id.toString() ==
+                                              selectedPeriod,
+                                          orElse:
+                                              () => PgsPeriod(
+                                                0,
+                                                false,
+                                                DateTime.now(),
+                                                DateTime.now(),
+                                                'remarks',
+                                              ),
+                                        );
+
+                                        selectedPeriodText =
+                                            "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
+                                      });
+                                    },
+                                    itemBuilder: (BuildContext context) {
+                                      return _periods.map<
+                                        PopupMenuItem<String>
+                                      >((period) {
+                                        final formattedStart = _dateConverter
+                                            .toJson(period.startDate);
+                                        final formattedEnd = _dateConverter
+                                            .toJson(period.endDate);
+
+                                        return PopupMenuItem<String>(
+                                          value: period.id.toString(),
+                                          child: Text(
+                                            '$formattedStart - $formattedEnd',
+                                            style: const TextStyle(
+                                              color: Colors.black,
                                             ),
-                                      );
-
-                                      selectedPeriodText =
-                                          "${_dateConverter.toJson(selected.startDate)} - ${_dateConverter.toJson(selected.endDate)}";
-                                    });
-                                  },
-                                  itemBuilder: (BuildContext context) {
-                                    return _periods.map<PopupMenuItem<String>>((
-                                      period,
-                                    ) {
-                                      final formattedStart = _dateConverter
-                                          .toJson(period.startDate);
-                                      final formattedEnd = _dateConverter
-                                          .toJson(period.endDate);
-
-                                      return PopupMenuItem<String>(
-                                        value: period.id.toString(),
-                                        child: Text(
-                                          '$formattedStart - $formattedEnd',
-                                          style: const TextStyle(
-                                            color: Colors.black,
                                           ),
-                                        ),
-                                      );
-                                    }).toList();
-                                  },
-                                  child: FilterButton(
-                                    label: selectedPeriodText,
-                                    isActive: isMenuOpenPeriod,
+                                        );
+                                      }).toList();
+                                    },
+                                    child: FilterButton(
+                                      label: selectedPeriodText,
+                                      isActive: isMenuOpenPeriod,
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryColor,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
+                                ],
                               ),
                             ),
-                            onPressed:
-                                selectedPeriod != null
-                                    ? () async {
-                                      showRemarksDialog();
-                                    }
-                                    : null,
 
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.add, color: Colors.white),
-                                SizedBox(width: 5),
-                                Text(
-                                  'Create Overall Report',
-                                  style: TextStyle(color: Colors.white),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
                                 ),
-                              ],
+                              ),
+                              onPressed:
+                                  selectedPeriod != null
+                                      ? () async {
+                                        showRemarksDialog();
+                                      }
+                                      : null,
+
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.add, color: Colors.white),
+                                  SizedBox(width: 5),
+                                  Text(
+                                    'Create Overall Report',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                   ],
                 ),

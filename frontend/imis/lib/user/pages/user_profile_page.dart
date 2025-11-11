@@ -971,6 +971,31 @@ class UserProfileState extends State<UserProfilePage> {
                                 Row(
                                   children: [
                                     IconButton(
+                                      icon: Icon(Icons.key, color: Colors.blue),
+                                      onPressed: () {
+                                        showFormDialogChangePassword(
+                                          id: user.id.toString(),
+                                          userName: user.userName,
+                                          email: user.email,
+                                          password: user.password,
+                                          firstName: user.firstName,
+                                          middleName: user.middleName,
+                                          lastName: user.lastName,
+                                          prefix: user.prefix,
+                                          suffix: user.suffix,
+                                          position: user.position,
+                                          fullName:
+                                              '${user.firstName} ${user.middleName} ${user.lastName}'
+                                                  .trim()
+                                                  .replaceAll(
+                                                    RegExp(' +'),
+                                                    ' ',
+                                                  ),
+                                        );
+                                      },
+                                    ),
+
+                                    IconButton(
                                       icon: const Icon(Icons.edit),
                                       onPressed:
                                           () => showFormDialog(
