@@ -542,7 +542,7 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                             children: [
                               Padding(
                                 padding: EdgeInsets.all(6),
-                                child: Text('Critical (roadmap enabler)'),
+                                child: Text('Excellent (roadmap enabler)'),
                               ),
                               Padding(
                                 padding: EdgeInsets.all(6),
