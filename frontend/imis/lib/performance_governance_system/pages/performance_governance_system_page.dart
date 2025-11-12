@@ -1803,12 +1803,11 @@ class PerformanceGovernanceSystemPageState
     String? remarks,
     int? index,
   }) {
-    officename ?? officeDisplay;
     setState(() {
       if (rows.isEmpty) {
         rows = [0];
       }
-
+      officename ?? officeDisplay;
       if (id == null) {
         competenceScore.value = 0.0;
         resourceScore.value = 0.0;
@@ -2117,7 +2116,6 @@ class PerformanceGovernanceSystemPageState
                                                   return DropdownMenuItem<int>(
                                                     value: period['id'],
                                                     child: Center(
-                                                      // ✅ centers menu items
                                                       child: Text(
                                                         "$start to $end",
                                                         softWrap: true,
@@ -2263,7 +2261,6 @@ class PerformanceGovernanceSystemPageState
                                           ),
                                         ),
 
-                                        gap16px,
                                         if ((id == null && orderLevel == 0) ||
                                             (id == null && orderLevel >= 1) ||
                                             isAnyDisapproved ||
@@ -3730,13 +3727,12 @@ class PerformanceGovernanceSystemPageState
             borderRadius: BorderRadius.circular(12),
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
+            constraints: const BoxConstraints(maxWidth: 1500),
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Scrollable content
                   Expanded(
                     child: SingleChildScrollView(
                       child: Column(
@@ -3760,8 +3756,6 @@ class PerformanceGovernanceSystemPageState
                             ],
                           ),
                           const SizedBox(height: 16),
-
-                          // Info section
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
@@ -3775,7 +3769,7 @@ class PerformanceGovernanceSystemPageState
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text("Office: $officeDisplay"),
+                                    Text("KRA: $kraName"),
                                     Text(
                                       "Monthly Tracking Periods: ${startAndEndDates.length} month(s)",
                                       style: const TextStyle(
@@ -3789,12 +3783,11 @@ class PerformanceGovernanceSystemPageState
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text("KRA: $kraName"),
+                                    Text("Deliverable: $deliverableName"),
                                     Text("Due: $formattedByWhen"),
                                   ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text("Deliverable: $deliverableName"),
+
                                 const SizedBox(height: 4),
                                 Text(
                                   "Type: ${isDirect ? 'Direct' : 'Indirect'}",
@@ -3803,8 +3796,6 @@ class PerformanceGovernanceSystemPageState
                             ),
                           ),
                           const SizedBox(height: 20),
-
-                          // Section title
                           const Row(
                             children: [
                               Icon(Icons.bar_chart_outlined, size: 18),
@@ -3871,7 +3862,7 @@ class PerformanceGovernanceSystemPageState
                                         flex: 3,
                                         child: Center(
                                           child: Text(
-                                            "Remarks",
+                                            "Remarks (Department Head)",
                                             style: TextStyle(color: grey),
                                           ),
                                         ),
@@ -3881,6 +3872,15 @@ class PerformanceGovernanceSystemPageState
                                         child: Center(
                                           child: Text(
                                             "Proof",
+                                            style: TextStyle(color: grey),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 3,
+                                        child: Center(
+                                          child: Text(
+                                            "Remarks (Auditor)",
                                             style: TextStyle(color: grey),
                                           ),
                                         ),
@@ -3907,7 +3907,6 @@ class PerformanceGovernanceSystemPageState
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 20),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.end,

@@ -157,7 +157,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
     final remarksController = widget.row.remarksController;
     final percentageController = widget.row.percentageController;
     final selectedStatus = widget.row.status;
-
+    final remarksAuditorController = widget.row.auditorRemarksController;
     final statusDescriptions = {
       PgsStatus.notStarted:
           "Deliverable has been defined but work has not yet begun",
@@ -171,7 +171,6 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       child: Row(
         children: [
-          // PERIOD
           Expanded(
             flex: 2,
             child: Text(
@@ -280,63 +279,6 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                               ),
                             ),
 
-                            // SizedBox(
-                            //   width: 40,
-                            //   height: 40,
-                            //   child: Center(
-                            //     child: Row(
-                            //       mainAxisAlignment: MainAxisAlignment.center,
-                            //       crossAxisAlignment: CrossAxisAlignment.center,
-                            //       mainAxisSize: MainAxisSize.min,
-                            //       children: [
-                            //         SizedBox(
-                            //           width: 30,
-                            //           child: TextField(
-                            //             controller: percentageController,
-                            //             textAlign: TextAlign.center,
-                            //             style: const TextStyle(
-                            //               fontSize: 12,
-                            //               fontWeight: FontWeight.bold,
-                            //             ),
-                            //             keyboardType: TextInputType.number,
-                            //             readOnly:
-                            //                 progress == 100 ||
-                            //                 (progress == 0 &&
-                            //                     status != PgsStatus.onGoing),
-                            //             decoration: const InputDecoration(
-                            //               border: InputBorder.none,
-                            //               isDense: true,
-                            //               contentPadding: EdgeInsets.symmetric(
-                            //                 horizontal: 0,
-                            //                 vertical: 12,
-                            //               ),
-                            //             ),
-                            //             inputFormatters: [
-                            //               FilteringTextInputFormatter
-                            //                   .digitsOnly,
-
-                            //               LengthLimitingTextInputFormatter(2),
-                            //               RangeInputFormatter(1, 99),
-                            //             ],
-                            //             onChanged: (val) {
-                            //               int parsed = int.tryParse(val) ?? 0;
-                            //               if (parsed > 100) {
-                            //                 percentageController.text = '100';
-                            //               }
-                            //             },
-                            //           ),
-                            //         ),
-                            //         const Text(
-                            //           '%',
-                            //           style: TextStyle(
-                            //             fontSize: 12,
-                            //             fontWeight: FontWeight.bold,
-                            //           ),
-                            //         ),
-                            //       ],
-                            //     ),
-                            //   ),
-                            // ),
                             SizedBox(
                               width: 40,
                               height: 40,
@@ -468,7 +410,6 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
             ),
           ),
 
-          // REMARKS
           Expanded(
             flex: 3,
             child: ConstrainedBox(
@@ -490,6 +431,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
               ),
             ),
           ),
+
           SizedBox(width: 20),
           Expanded(
             flex: 2,
@@ -631,6 +573,21 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                       ),
             ),
           ),
+          SizedBox(width: 20),
+          Expanded(
+            flex: 3,
+            child: Center(
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: remarksAuditorController,
+                builder: (context, value, _) {
+                  return Text(
+                    value.text.isEmpty ? '' : value.text,
+                    style: const TextStyle(fontSize: 14.0),
+                  );
+                },
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -676,6 +633,7 @@ class _AccomplishmentListViewState extends State<AccomplishmentListView> {
           remarksController: TextEditingController(),
           percentageController: TextEditingController(text: '0'),
           status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
+          auditorRemarksController: TextEditingController(),
         ),
       );
     }
@@ -726,6 +684,7 @@ Future<void> saveAccomplishmentData(
       "percentAccomplished":
           double.tryParse(row.percentageController.text) ?? 0,
       "remarks": row.remarksController.text,
+      "auditorRemarks": row.auditorRemarksController.text,
     };
 
     final formData = FormData.fromMap({
@@ -759,6 +718,9 @@ Future<void> loadAccomplishments(int deliverableId) async {
               ),
               status: ValueNotifier<PgsStatus>(
                 _deriveStatusFromPercent(percent),
+              ),
+              auditorRemarksController: TextEditingController(
+                text: acc.auditorRemarks,
               ),
               attachmentPath: acc.attachmentPath,
               attachmentBytes: null,

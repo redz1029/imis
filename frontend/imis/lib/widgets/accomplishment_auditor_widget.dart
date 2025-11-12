@@ -27,6 +27,7 @@ class AchievementPeriodData {
 
 class TrackingRowData {
   final TextEditingController remarksController;
+  final TextEditingController auditorRemarksController;
   final TextEditingController percentageController;
   final ValueNotifier<PgsStatus> status;
   String? attachmentPath;
@@ -40,6 +41,7 @@ class TrackingRowData {
     this.attachmentPath,
     this.attachmentBytes,
     this.accomplishmentId,
+    required this.auditorRemarksController,
   });
 }
 
@@ -149,55 +151,6 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
     }
   }
 
-  void _showTooltip(BuildContext context, String message) {
-    _removeTooltip();
-
-    final renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    final offset = renderBox.localToGlobal(Offset.zero);
-
-    _overlayEntry = OverlayEntry(
-      builder:
-          (context) => Positioned(
-            left: offset.dx - 20,
-            top: offset.dy - 40,
-            child: Material(
-              color: Colors.transparent,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.black87,
-                  borderRadius: BorderRadius.circular(8),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black26,
-                      blurRadius: 6,
-                      offset: Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  message,
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                ),
-              ),
-            ),
-          ),
-    );
-
-    Overlay.of(context).insert(_overlayEntry!);
-
-    Future.delayed(const Duration(seconds: 2), _removeTooltip);
-  }
-
-  void _removeTooltip() {
-    _overlayEntry?.remove();
-    _overlayEntry = null;
-  }
-
   @override
   Widget build(BuildContext context) {
     achievementsList.putIfAbsent(
@@ -212,13 +165,15 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
           remarksController: TextEditingController(),
           percentageController: TextEditingController(text: '0'),
           status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
+          auditorRemarksController: TextEditingController(),
         ),
       );
     }
 
     final row =
         achievementsList[widget.deliverableId]!.rows[widget.periodIndex];
-    final remarksController = row.remarksController;
+    final remarksControllerStandardUser = row.remarksController;
+    final remarksControllerAuditor = row.auditorRemarksController;
     final percentageController = row.percentageController;
     final selectedStatus = row.status;
 
@@ -246,55 +201,74 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
               ),
             ),
           ),
+          // Expanded(
+          //   flex: 2,
+          //   child: Container(
+          //     margin: const EdgeInsets.symmetric(horizontal: 6),
+          //     child: ValueListenableBuilder<PgsStatus>(
+          //       valueListenable: selectedStatus,
+          //       builder: (context, status, _) {
+          //         return DropdownButtonFormField<PgsStatus>(
+          //           value: status,
+
+          //           onChanged: (PgsStatus? newValue) {
+          //             if (newValue != null) {
+          //               selectedStatus.value = newValue;
+
+          //               if (newValue == PgsStatus.completed) {
+          //                 percentageController.text = '100';
+          //               } else if (newValue == PgsStatus.notStarted) {
+          //                 percentageController.text = '0';
+          //               } else if (newValue == PgsStatus.onGoing) {
+          //                 if (percentageController.text == '100') {
+          //                   percentageController.text = '1';
+          //                 }
+          //               }
+          //             }
+          //           },
+
+          //           isExpanded: true,
+          //           decoration: const InputDecoration(
+          //             border: OutlineInputBorder(),
+          //             contentPadding: EdgeInsets.all(8.0),
+          //           ),
+          //           items:
+          //               PgsStatus.values.map((value) {
+          //                 return DropdownMenuItem<PgsStatus>(
+          //                   value: value,
+          //                   child: Tooltip(
+          //                     message: statusDescriptions[value] ?? value.name,
+          //                     child: Text(
+          //                       value.name,
+          //                       style: const TextStyle(fontSize: 13),
+          //                     ),
+          //                   ),
+          //                 );
+          //               }).toList(),
+          //         );
+          //       },
+          //     ),
+          //   ),
+          // ),
           Expanded(
             flex: 2,
-            child: Container(
-              margin: const EdgeInsets.symmetric(horizontal: 6),
+            child: Center(
               child: ValueListenableBuilder<PgsStatus>(
                 valueListenable: selectedStatus,
                 builder: (context, status, _) {
-                  return DropdownButtonFormField<PgsStatus>(
-                    value: status,
-
-                    onChanged: (PgsStatus? newValue) {
-                      if (newValue != null) {
-                        selectedStatus.value = newValue;
-
-                        if (newValue == PgsStatus.completed) {
-                          percentageController.text = '100';
-                        } else if (newValue == PgsStatus.notStarted) {
-                          percentageController.text = '0';
-                        } else if (newValue == PgsStatus.onGoing) {
-                          if (percentageController.text == '100') {
-                            percentageController.text = '1';
-                          }
-                        }
-                      }
-                    },
-
-                    isExpanded: true,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.all(8.0),
+                  return Tooltip(
+                    message: statusDescriptions[status] ?? status.name,
+                    child: Text(
+                      status.name,
+                      // style: const TextStyle(fontSize: 13),
                     ),
-                    items:
-                        PgsStatus.values.map((value) {
-                          return DropdownMenuItem<PgsStatus>(
-                            value: value,
-                            child: Tooltip(
-                              message: statusDescriptions[value] ?? value.name,
-                              child: Text(
-                                value.name,
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ),
-                          );
-                        }).toList(),
                   );
                 },
               ),
             ),
           ),
+
+          SizedBox(width: 30),
           Expanded(
             flex: 2,
             child: ValueListenableBuilder<PgsStatus>(
@@ -358,105 +332,62 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Focus(
-                                      onFocusChange: (hasFocus) {
-                                        if (hasFocus &&
-                                            status == PgsStatus.onGoing) {
-                                          _showTooltip(
-                                            context,
-                                            'Enter value from 1–99 only',
-                                          );
-                                        }
-                                      },
-                                      child: SizedBox(
-                                        width: 30,
-                                        child: TextField(
-                                          controller: percentageController,
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          keyboardType: TextInputType.number,
-                                          readOnly:
-                                              selectedStatus.value ==
-                                              PgsStatus.notStarted,
-                                          decoration: const InputDecoration(
-                                            border: InputBorder.none,
-                                            isDense: true,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                  horizontal: 0,
-                                                  vertical: 12,
-                                                ),
-                                          ),
-                                          onTap: () {
-                                            if (status == PgsStatus.onGoing) {
-                                              _showTooltip(
-                                                context,
-                                                'Enter value from 1–99 only',
-                                              );
-                                            }
-                                            if (status == PgsStatus.completed) {
-                                              _showTooltip(
-                                                context,
-                                                'Enter value from 100–999 only',
-                                              );
-                                            }
-                                          },
-                                          onChanged: (val) {
-                                            if (status == PgsStatus.onGoing) {
-                                              _showTooltip(
-                                                context,
-                                                'Enter score from 1–99 only',
-                                              );
-                                            }
-                                            if (status == PgsStatus.completed) {
-                                              _showTooltip(
-                                                context,
-                                                'Enter score from 100–999 only',
-                                              );
-                                            }
-                                            if (val.isEmpty) return;
-                                            int parsed = int.tryParse(val) ?? 0;
-
-                                            if (selectedStatus.value ==
-                                                PgsStatus.completed) {
-                                              if (parsed < 100 &&
-                                                  val.length >= 3) {
-                                                percentageController.text =
-                                                    '100';
-                                              } else if (parsed > 999) {
-                                                percentageController.text =
-                                                    '999';
-                                              }
-                                            } else if (selectedStatus.value ==
-                                                PgsStatus.onGoing) {
-                                              if (parsed < 1 &&
-                                                  val.isNotEmpty) {
-                                                percentageController.text = '1';
-                                              } else if (parsed > 99) {
-                                                percentageController.text =
-                                                    '99';
-                                              }
-                                            } else if (selectedStatus.value ==
-                                                PgsStatus.notStarted) {
-                                              if (parsed != 0) {
-                                                percentageController.text = '0';
-                                              }
-                                            }
-
-                                            percentageController.selection =
-                                                TextSelection.fromPosition(
-                                                  TextPosition(
-                                                    offset:
-                                                        percentageController
-                                                            .text
-                                                            .length,
-                                                  ),
-                                                );
-                                          },
+                                    SizedBox(
+                                      width: 30,
+                                      child: TextFormField(
+                                        readOnly: true,
+                                        controller: percentageController,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
                                         ),
+                                        keyboardType: TextInputType.number,
+                                        decoration: const InputDecoration(
+                                          border: InputBorder.none,
+                                          isDense: true,
+                                          contentPadding: EdgeInsets.symmetric(
+                                            horizontal: 0,
+                                            vertical: 12,
+                                          ),
+                                        ),
+
+                                        onChanged: (val) {
+                                          if (val.isEmpty) return;
+                                          int parsed = int.tryParse(val) ?? 0;
+
+                                          if (selectedStatus.value ==
+                                              PgsStatus.completed) {
+                                            if (parsed < 100 &&
+                                                val.length >= 3) {
+                                              percentageController.text = '100';
+                                            } else if (parsed > 999) {
+                                              percentageController.text = '999';
+                                            }
+                                          } else if (selectedStatus.value ==
+                                              PgsStatus.onGoing) {
+                                            if (parsed < 1 && val.isNotEmpty) {
+                                              percentageController.text = '1';
+                                            } else if (parsed > 99) {
+                                              percentageController.text = '99';
+                                            }
+                                          } else if (selectedStatus.value ==
+                                              PgsStatus.notStarted) {
+                                            if (parsed != 0) {
+                                              percentageController.text = '0';
+                                            }
+                                          }
+
+                                          percentageController.selection =
+                                              TextSelection.fromPosition(
+                                                TextPosition(
+                                                  offset:
+                                                      percentageController
+                                                          .text
+                                                          .length,
+                                                ),
+                                              );
+                                        },
                                       ),
                                     ),
                                     const Text(
@@ -479,29 +410,43 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
               },
             ),
           ),
-
+          // Expanded(
+          //   flex: 3,
+          //   child: ConstrainedBox(
+          //     constraints: const BoxConstraints(minHeight: 50.0),
+          //     child: TextField(
+          //       controller: remarksControllerStandardUser,
+          //       maxLines: null,
+          //       keyboardType: TextInputType.multiline,
+          //       style: const TextStyle(fontSize: 14.0),
+          //       decoration: InputDecoration(
+          //         border: OutlineInputBorder(
+          //           borderSide: BorderSide(color: grey),
+          //         ),
+          //         contentPadding: const EdgeInsets.all(8.0),
+          //         focusedBorder: OutlineInputBorder(
+          //           borderSide: BorderSide(color: primaryColor),
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
           Expanded(
             flex: 3,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 50.0),
-              child: TextField(
-                controller: remarksController,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                style: const TextStyle(fontSize: 14.0),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: grey),
-                  ),
-                  contentPadding: const EdgeInsets.all(8.0),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                ),
+            child: Center(
+              child: ValueListenableBuilder<TextEditingValue>(
+                valueListenable: remarksControllerStandardUser,
+                builder: (context, value, _) {
+                  return Text(
+                    value.text.isEmpty ? '' : value.text,
+                    style: const TextStyle(fontSize: 14.0),
+                  );
+                },
               ),
             ),
           ),
-          SizedBox(width: 20),
+
+          SizedBox(width: 30),
           Expanded(
             flex: 2,
             child: Container(
@@ -638,6 +583,28 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                       ),
             ),
           ),
+          SizedBox(width: 20),
+          Expanded(
+            flex: 3,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: 50.0),
+              child: TextField(
+                controller: remarksControllerAuditor,
+                maxLines: null,
+                keyboardType: TextInputType.multiline,
+                style: const TextStyle(fontSize: 14.0),
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(color: grey),
+                  ),
+                  contentPadding: const EdgeInsets.all(8.0),
+                  focusedBorder: OutlineInputBorder(
+                    borderSide: BorderSide(color: primaryColor),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -657,6 +624,9 @@ Future<void> loadAccomplishments(int deliverableId) async {
             remarksController: TextEditingController(text: acc.remarks),
             percentageController: TextEditingController(
               text: percent.toString(),
+            ),
+            auditorRemarksController: TextEditingController(
+              text: acc.auditorRemarks,
             ),
             status: ValueNotifier<PgsStatus>(_deriveStatusFromPercent(percent)),
             attachmentPath: acc.attachmentPath,
@@ -693,6 +663,7 @@ Future<void> saveAccomplishmentData(
         "percentAccomplished":
             double.tryParse(row.percentageController.text) ?? 0,
         "remarks": row.remarksController.text,
+        "auditorRemarks": row.auditorRemarksController.text,
       };
       final formData = FormData.fromMap({
         ...data,

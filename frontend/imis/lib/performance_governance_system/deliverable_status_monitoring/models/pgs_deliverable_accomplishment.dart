@@ -17,7 +17,7 @@ class PgsDeliverableAccomplishment {
 
   final bool? isDeleted;
   final String? rowVersion;
-
+  String? auditorRemarks;
   PgsDeliverableAccomplishment(
     this.id,
     this.pgsDeliverableId,
@@ -25,7 +25,8 @@ class PgsDeliverableAccomplishment {
     this.userId,
     this.percentAccomplished,
     this.remarks,
-    this.attachmentPath, {
+    this.attachmentPath,
+    this.auditorRemarks, {
     this.isDeleted,
     this.rowVersion,
   });

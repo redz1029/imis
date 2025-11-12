@@ -16,6 +16,7 @@ PgsDeliverableAccomplishment _$PgsDeliverableAccomplishmentFromJson(
   (json['percentAccomplished'] as num?)?.toInt(),
   json['remarks'] as String?,
   json['attachmentPath'] as String?,
+  json['auditorRemarks'] as String?,
   isDeleted: json['isDeleted'] as bool?,
   rowVersion: json['rowVersion'] as String?,
 );
@@ -32,4 +33,5 @@ Map<String, dynamic> _$PgsDeliverableAccomplishmentToJson(
   'attachmentPath': instance.attachmentPath,
   'isDeleted': instance.isDeleted,
   'rowVersion': instance.rowVersion,
+  'auditorRemarks': instance.auditorRemarks,
 };
