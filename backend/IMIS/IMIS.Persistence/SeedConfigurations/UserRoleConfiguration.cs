@@ -822,6 +822,21 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             {
                 UserId = "6b3f8d72-9a1e-4c65-bd43-2e9c7f4b6a85",
                 RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "1a7c3e9b-42f8-4b25-9f81-7cd92c84b9a3",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "c5e81f9d-73a0-4b93-b6fc-97c72e3c15e8",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "8d9a1b3f-0c84-46a7-b932-13cf8d05f2a1",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
             }
        );
     }
