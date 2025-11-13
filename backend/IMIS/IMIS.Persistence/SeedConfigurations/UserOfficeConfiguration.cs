@@ -114,7 +114,10 @@ namespace IMIS.Persistence.SeedConfigurations
                 new UserOffices { Id = 91, UserId = "8c1f5b93-4e7a-4f18-b3c9-1a2d5f84c9e1", OfficeId = 80, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 92, UserId = "7e4c8a59-1b9d-4c5e-ae31-8c2f3d5b7a61", OfficeId = 80, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 93, UserId = "1a9e3f84-2b4d-45a8-9e3f-7b6c8d1e2f94", OfficeId = 161, IsActive = true, IsDeleted = false, IsOfficeHead = true },
-                new UserOffices { Id = 94, UserId = "6b3f8d72-9a1e-4c65-bd43-2e9c7f4b6a85", OfficeId = 161, IsActive = true, IsDeleted = false, IsOfficeHead = true }
+                new UserOffices { Id = 94, UserId = "6b3f8d72-9a1e-4c65-bd43-2e9c7f4b6a85", OfficeId = 161, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 95, UserId = "1a7c3e9b-42f8-4b25-9f81-7cd92c84b9a3", OfficeId = 59, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 96, UserId = "c5e81f9d-73a0-4b93-b6fc-97c72e3c15e8", OfficeId = 96, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 97, UserId = "8d9a1b3f-0c84-46a7-b932-13cf8d05f2a1", OfficeId = 134, IsActive = true, IsDeleted = false, IsOfficeHead = true }
             );
         }
     }
