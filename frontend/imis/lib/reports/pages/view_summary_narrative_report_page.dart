@@ -736,7 +736,7 @@ class ViewSummaryNarrativeReportPageState
                     _buildReportSection(
                       icon: Icons.error_outline_rounded,
                       iconColor: primaryTextColor,
-                      title: "Key Findings",
+                      title: "Auditor Findings",
                       controller: _findingsControllers,
                       decorationColor: Color(0xFFF5FBFF),
                       borderColor: Colors.blue[100],

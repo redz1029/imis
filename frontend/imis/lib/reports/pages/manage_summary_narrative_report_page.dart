@@ -903,7 +903,7 @@ class ManageSummaryNarrativeReportPageState
                     _buildReportSection(
                       icon: Icons.error_outline_rounded,
                       iconColor: primaryTextColor,
-                      title: "Key Findings",
+                      title: "Auditor Findings",
                       controller: _findingsController,
                       decorationColor: Color(0xFFF5FBFF),
                       borderColor: Colors.blue[100],
