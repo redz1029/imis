@@ -1282,6 +1282,12 @@ class _DeliverableStatusMonitoringPageState
                                     onChanged: (value) {
                                       setDialogState(() {
                                         _selectedPeriod = value?.id.toString();
+                                        _findingsController.clear();
+                                        _recommendationsController.clear();
+                                        _conclusionsController.clear();
+                                        _checkDeliverablesAvailability(
+                                          setDialogState,
+                                        );
                                         _checkDeliverablesAvailability(
                                           setDialogState,
                                         );
@@ -1401,6 +1407,12 @@ class _DeliverableStatusMonitoringPageState
                                     onChanged: (value) {
                                       setDialogState(() {
                                         _selectedOffice = value?.id.toString();
+                                        _findingsController.clear();
+                                        _recommendationsController.clear();
+                                        _conclusionsController.clear();
+                                        _checkDeliverablesAvailability(
+                                          setDialogState,
+                                        );
                                         _checkDeliverablesAvailability(
                                           setDialogState,
                                         );
@@ -1455,7 +1467,7 @@ class _DeliverableStatusMonitoringPageState
                       _buildReportSection(
                         icon: Icons.error_outline_rounded,
                         iconColor: Colors.blue,
-                        title: "Key Findings",
+                        title: "Auditor Findings",
                         description:
                             "These will be displayed as separate points in the report.",
                         controller: _findingsController,
@@ -2071,7 +2083,7 @@ Future<bool?> showAccomplishmentFormDialog(
         insetPadding: const EdgeInsets.all(20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1200),
+          constraints: const BoxConstraints(maxWidth: 1500),
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -2138,12 +2150,15 @@ Future<bool?> showAccomplishmentFormDialog(
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
                                 "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
                               ),
+                              Text(
+                                "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
                             ],
                           ),
                         ),
@@ -2216,7 +2231,7 @@ Future<bool?> showAccomplishmentFormDialog(
                                       flex: 3,
                                       child: Center(
                                         child: Text(
-                                          "Remarks",
+                                          "Remarks (Department Head)",
                                           style: TextStyle(color: grey),
                                         ),
                                       ),
@@ -2227,6 +2242,15 @@ Future<bool?> showAccomplishmentFormDialog(
                                       child: Center(
                                         child: Text(
                                           "Proof",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Center(
+                                        child: Text(
+                                          "Remarks (Auditor)",
                                           style: TextStyle(color: grey),
                                         ),
                                       ),
@@ -2413,12 +2437,16 @@ Future<bool?> showBreakthroughFormDialog(
                                 ],
                               ),
                               const SizedBox(height: 4),
+
                               Text(
-                                "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
+                                "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "Type: ${deliverable['isDirect'] == true ? 'Direct' : 'Indirect'}",
+                                "Deliverable: ${deliverable['deliverableName'] ?? 'N/A'}",
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ),
