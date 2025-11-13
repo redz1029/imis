@@ -530,12 +530,6 @@ class UserProfileState extends State<UserProfilePage> {
                                 borderSide: BorderSide(color: primaryColor),
                               ),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Please fill out this field';
-                              }
-                              return null;
-                            },
                           ),
                         ),
                         SizedBox(
