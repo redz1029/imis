@@ -600,7 +600,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 NormalizedEmail = "GLORIACALUBIRAN79@GMAIL.COM",
                 PasswordHash = hasher.HashPassword(null, defaultPassword),
                 ConcurrencyStamp = Guid.NewGuid().ToString(),
-                LastName = "DE LOS REYES",
+                LastName = "DELOS REYES",
                 FirstName = "GLORIA",
                 MiddleName = "CALUBIRAN",
                 PhoneNumber = "09363304534",
@@ -2005,7 +2005,52 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "ALBESA",
                 PhoneNumber = "09171340137",
                 Position = "Head, Toxicology",
-            }            
+            },
+            new User
+            {
+                Id = "1a7c3e9b-42f8-4b25-9f81-7cd92c84b9a3",
+                UserName = "datumanong.abdulkadir",
+                NormalizedUserName = "DATUMANONG.ABDULKADIR",
+                Email = "dats_88@yahoo.com/yoshiokadat88@gmail.com",
+                NormalizedEmail = "DATS_88@YAHOO.COM/YOSHIOKADAT88@GMAIL.COM",
+                PasswordHash = hasher.HashPassword(null, defaultPassword),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+                LastName = "DATUMANONG",
+                FirstName = "ABDULKADIR",
+                MiddleName = "YOSHIOKA",
+                PhoneNumber = "09053278687",
+                Position = "Head, ICU Complex",
+            },
+            new User
+            {
+                Id = "c5e81f9d-73a0-4b93-b6fc-97c72e3c15e8",
+                UserName = "peria.cynthia",
+                NormalizedUserName = "PERIA.CYNTHIA",
+                Email = "peria_cynthia@yahoo.com",
+                NormalizedEmail = "PERIA_CYNTHIA@YAHOO.COM",
+                PasswordHash = hasher.HashPassword(null, defaultPassword),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+                LastName = "PERIA",
+                FirstName = "CYNTHIA",
+                MiddleName = "BADE",
+                PhoneNumber = "09167805311",
+                Position = "Head, Neonatal Intensive Care Unit",
+            },
+            new User
+            {
+                Id = "8d9a1b3f-0c84-46a7-b932-13cf8d05f2a1",
+                UserName = "navarra.geraldine",
+                NormalizedUserName = "NAVARRA.GERALDINE",
+                Email = "geraldine_navarra@yahoo.com",
+                NormalizedEmail = "GERALDINE_NAVARRA@YAHOO.COM",
+                PasswordHash = hasher.HashPassword(null, defaultPassword),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+                LastName = "NAVARRA",
+                FirstName = "GERALDINE",
+                MiddleName = "ABOGHO",
+                PhoneNumber = "09177272645",
+                Position = "Head, TB-Isolation",
+            }
         );
     }
 }
