@@ -200,7 +200,8 @@ class AuthUtil {
 
   static Future<void> _showSessionExpiredDialog(BuildContext context) async {
     if (!context.mounted) return;
-
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
     await showDialog(
       barrierDismissible: false,
       context: context,
