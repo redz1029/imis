@@ -1081,7 +1081,7 @@ class PerformanceGovernanceSystemPageState
                                               value.isEmpty ? null : value;
                                           isMenuOpenOffice = false;
 
-                                          fetchPgsList();
+                                          fetchPgsFilter();
                                         });
                                       },
                                       itemBuilder: (BuildContext context) {
@@ -1189,7 +1189,8 @@ class PerformanceGovernanceSystemPageState
                                                                       _selectedOfficeId =
                                                                           office['id']
                                                                               .toString();
-                                                                      fetchPgsList();
+
+                                                                      fetchPgsFilter();
                                                                     });
                                                                   },
                                                                 ),
@@ -1203,7 +1204,6 @@ class PerformanceGovernanceSystemPageState
                                           ),
                                         ];
                                       },
-
                                       child: FilterButton(
                                         label:
                                             _selectedOfficeId == null
@@ -1253,11 +1253,16 @@ class PerformanceGovernanceSystemPageState
                                                 ? null
                                                 : selectedDate;
                                         selectedStartDateText =
-                                            selectedStartPeriod ??
-                                            'All Start Date';
+                                            selectedStartPeriod == null
+                                                ? 'All Start Date'
+                                                : _dateConverter.toJson(
+                                                  DateTime.parse(
+                                                    selectedStartPeriod!,
+                                                  ),
+                                                );
                                         isMenuOpenStartDate = false;
+                                        fetchPgsFilter();
                                       });
-                                      fetchPgsFilter();
                                     },
                                     itemBuilder: (BuildContext context) {
                                       final periodOptions = [
@@ -1268,10 +1273,16 @@ class PerformanceGovernanceSystemPageState
                                         ...filteredListPeriod.map(
                                           (period) => {
                                             'date': period['startDate'],
-                                            'displayText': period['startDate'],
+                                            'displayText': _dateConverter
+                                                .toJson(
+                                                  DateTime.parse(
+                                                    period['startDate'],
+                                                  ),
+                                                ),
                                           },
                                         ),
                                       ];
+
                                       return periodOptions
                                           .map<PopupMenuItem<String>>((option) {
                                             return PopupMenuItem<String>(
@@ -1293,6 +1304,7 @@ class PerformanceGovernanceSystemPageState
                                 ],
                               ),
                             ),
+
                             Padding(
                               padding: const EdgeInsets.only(right: 8.0),
                               child: Column(
@@ -1318,10 +1330,16 @@ class PerformanceGovernanceSystemPageState
                                                 ? null
                                                 : selectedDate;
                                         selectedEndDateText =
-                                            selectedEndDate ?? 'All End Date';
+                                            selectedEndDate == null
+                                                ? 'All End Date'
+                                                : _dateConverter.toJson(
+                                                  DateTime.parse(
+                                                    selectedEndDate!,
+                                                  ),
+                                                );
                                         isMenuOpenEndDate = false;
+                                        fetchPgsFilter();
                                       });
-                                      fetchPgsFilter();
                                     },
                                     itemBuilder: (BuildContext context) {
                                       final periodOptions = [
@@ -1332,7 +1350,12 @@ class PerformanceGovernanceSystemPageState
                                         ...filteredListPeriod.map(
                                           (period) => {
                                             'date': period['endDate'],
-                                            'displayText': period['endDate'],
+                                            'displayText': _dateConverter
+                                                .toJson(
+                                                  DateTime.parse(
+                                                    period['endDate'],
+                                                  ),
+                                                ),
                                           },
                                         ),
                                       ];
@@ -2170,80 +2193,177 @@ class PerformanceGovernanceSystemPageState
                                       children: [
                                         SizedBox(height: 20),
 
-                                        Table(
-                                          border: TableBorder.all(
-                                            color: const Color.fromARGB(
-                                              255,
-                                              49,
-                                              46,
-                                              46,
-                                            ),
-                                            width: 1,
-                                          ),
-                                          columnWidths: {
-                                            0: FlexColumnWidth(1.7),
-                                            1: FlexColumnWidth(1.0),
-                                            2: FlexColumnWidth(3.0),
-                                            3: FlexColumnWidth(1.7),
-                                          },
-                                          children: [
-                                            _buildMainHeaderStrategic(
-                                              officename:
-                                                  officename ?? officeDisplay,
-                                              orderLevel: orderLevel,
-                                            ),
-                                          ],
-                                        ),
+                                        // Table(
+                                        //   border: TableBorder.all(
+                                        //     color: const Color.fromARGB(
+                                        //       255,
+                                        //       49,
+                                        //       46,
+                                        //       46,
+                                        //     ),
+                                        //     width: 1,
+                                        //   ),
+                                        //   columnWidths: {
+                                        //     0: FlexColumnWidth(1.7),
+                                        //     1: FlexColumnWidth(1.0),
+                                        //     2: FlexColumnWidth(3.0),
+                                        //     3: FlexColumnWidth(1.7),
+                                        //   },
+                                        //   children: [
+                                        //     _buildMainHeaderStrategic(
+                                        //       officename:
+                                        //           officename ?? officeDisplay,
+                                        //       orderLevel: orderLevel,
+                                        //     ),
+                                        //   ],
+                                        // ),
 
-                                        Table(
-                                          border: TableBorder.all(
-                                            color: const Color.fromARGB(
-                                              255,
-                                              49,
-                                              46,
-                                              46,
-                                            ),
-                                            width: 1,
-                                          ),
-                                          columnWidths: {
-                                            0: FlexColumnWidth(0.2),
-                                            1: FlexColumnWidth(1.5),
-                                            2: FlexColumnWidth(0.5),
-                                            3: FlexColumnWidth(0.5),
-                                            4: FlexColumnWidth(3),
-                                            5: FlexColumnWidth(1),
-                                            6: FlexColumnWidth(0.7),
-                                          },
-                                          children: [
-                                            _buildTableSubHeaderStrategic(),
-                                          ],
-                                        ),
+                                        // Table(
+                                        //   border: TableBorder.all(
+                                        //     color: const Color.fromARGB(
+                                        //       255,
+                                        //       49,
+                                        //       46,
+                                        //       46,
+                                        //     ),
+                                        //     width: 1,
+                                        //   ),
+                                        //   columnWidths: {
+                                        //     0: FlexColumnWidth(0.2),
+                                        //     1: FlexColumnWidth(1.5),
+                                        //     2: FlexColumnWidth(0.5),
+                                        //     3: FlexColumnWidth(0.5),
+                                        //     4: FlexColumnWidth(3),
+                                        //     5: FlexColumnWidth(1),
+                                        //     6: FlexColumnWidth(0.7),
+                                        //   },
+                                        //   children: [
+                                        //     _buildTableSubHeaderStrategic(),
+                                        //   ],
+                                        // ),
 
+                                        // Expanded(
+                                        //   child: SingleChildScrollView(
+                                        //     child: Table(
+                                        //       border: TableBorder.all(
+                                        //         color: const Color.fromARGB(
+                                        //           255,
+                                        //           49,
+                                        //           46,
+                                        //           46,
+                                        //         ),
+                                        //         width: 1,
+                                        //       ),
+                                        //       columnWidths: const {
+                                        //         0: FlexColumnWidth(0.2),
+                                        //         1: FlexColumnWidth(1.5),
+                                        //         2: FlexColumnWidth(0.5),
+                                        //         3: FlexColumnWidth(0.5),
+                                        //         4: FlexColumnWidth(3),
+                                        //         5: FlexColumnWidth(1),
+                                        //         6: FlexColumnWidth(0.7),
+                                        //       },
+                                        //       children: [
+                                        //         ...rows.map(
+                                        //           (rowId) =>
+                                        //               _buildTableRowStrategic(
+                                        //                 rowId,
+                                        //                 '',
+                                        //                 '',
+                                        //                 setState,
+                                        //                 setDialogState,
+                                        //                 orderLevel,
+                                        //                 id,
+                                        //                 showErrors:
+                                        //                     rowErrors[rowId] ??
+                                        //                     false,
+                                        //               ),
+                                        //         ),
+                                        //       ],
+                                        //     ),
+                                        //   ),
+                                        // ),
                                         Expanded(
                                           child: SingleChildScrollView(
-                                            child: Table(
-                                              border: TableBorder.all(
-                                                color: const Color.fromARGB(
-                                                  255,
-                                                  49,
-                                                  46,
-                                                  46,
-                                                ),
-                                                width: 1,
-                                              ),
-                                              columnWidths: const {
-                                                0: FlexColumnWidth(0.2),
-                                                1: FlexColumnWidth(1.5),
-                                                2: FlexColumnWidth(0.5),
-                                                3: FlexColumnWidth(0.5),
-                                                4: FlexColumnWidth(3),
-                                                5: FlexColumnWidth(1),
-                                                6: FlexColumnWidth(0.7),
-                                              },
+                                            child: Column(
                                               children: [
-                                                ...rows.map(
-                                                  (rowId) =>
-                                                      _buildTableRowStrategic(
+                                                // MAIN HEADER TABLE
+                                                Table(
+                                                  border: TableBorder.all(
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      49,
+                                                      46,
+                                                      46,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(1.7),
+                                                    1: FlexColumnWidth(1.0),
+                                                    2: FlexColumnWidth(3.0),
+                                                    3: FlexColumnWidth(1.7),
+                                                  },
+                                                  children: [
+                                                    _buildMainHeaderStrategic(
+                                                      officename:
+                                                          officename ??
+                                                          officeDisplay,
+                                                      orderLevel: orderLevel,
+                                                    ),
+                                                  ],
+                                                ),
+
+                                                // SUB HEADER TABLE
+                                                Table(
+                                                  border: TableBorder.all(
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      49,
+                                                      46,
+                                                      46,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(0.2),
+                                                    1: FlexColumnWidth(1.5),
+                                                    2: FlexColumnWidth(0.5),
+                                                    3: FlexColumnWidth(0.5),
+                                                    4: FlexColumnWidth(3),
+                                                    5: FlexColumnWidth(1),
+                                                    6: FlexColumnWidth(0.7),
+                                                  },
+                                                  children: [
+                                                    _buildTableSubHeaderStrategic(),
+                                                  ],
+                                                ),
+
+                                                // ROWS TABLE
+                                                Table(
+                                                  border: TableBorder.all(
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      49,
+                                                      46,
+                                                      46,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(0.2),
+                                                    1: FlexColumnWidth(1.5),
+                                                    2: FlexColumnWidth(0.5),
+                                                    3: FlexColumnWidth(0.5),
+                                                    4: FlexColumnWidth(3),
+                                                    5: FlexColumnWidth(1),
+                                                    6: FlexColumnWidth(0.7),
+                                                  },
+                                                  children: [
+                                                    ...rows.map(
+                                                      (
+                                                        rowId,
+                                                      ) => _buildTableRowStrategic(
                                                         rowId,
                                                         '',
                                                         '',
@@ -2255,6 +2375,8 @@ class PerformanceGovernanceSystemPageState
                                                             rowErrors[rowId] ??
                                                             false,
                                                       ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
