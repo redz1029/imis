@@ -670,12 +670,12 @@ namespace IMIS.Persistence.PgsModule
             pgs.PgsSignatories = new List<PgsSignatoryDto>();
             return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
         }
-      
+
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>>
-        GetFilteredPGSAsync(
-        PgsFilter filter,
-        string userId,
-        CancellationToken cancellationToken)
+            GetFilteredPGSAsync(
+            PgsFilter filter,
+            string userId,
+            CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
@@ -694,8 +694,9 @@ namespace IMIS.Persistence.PgsModule
             {
                 var pgs = await _repository.GetFilteredPGSAsync(filter, userId, cancellationToken)
                     .ConfigureAwait(false);
+
                 filteredEntities = pgs.Items;
-            }           
+            }
             else
             {
                 var userDtos = await GetByUserIdAsync(currentUser.Id, cancellationToken)
@@ -707,19 +708,13 @@ namespace IMIS.Persistence.PgsModule
                         bool matches = true;
 
                         if (filter.OfficeId.HasValue)
-                        {
                             matches &= dto.Office.Id == filter.OfficeId.Value;
-                        }
 
                         if (filter.FromDate.HasValue)
-                        {
                             matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
-                        }
 
                         if (filter.ToDate.HasValue)
-                        {
                             matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
-                        }
 
                         return matches;
                     })
@@ -733,64 +728,74 @@ namespace IMIS.Persistence.PgsModule
 
             foreach (var item in pagedPgs.Items)
             {
-                var currentStatus = item.PgsSignatories?.LastOrDefault();
-                if (currentStatus == null) continue;
+                if (item.PgsSignatories == null)
+                    item.PgsSignatories = new List<PgsSignatoryDto>();
 
-                foreach (var signatory in item.PgsSignatories!)
+                foreach (var signatory in item.PgsSignatories)
                 {
-                    if (signatory.PgsSignatoryTemplateId == null) continue;
+                    if (signatory.PgsSignatoryTemplateId != null)
+                    {
+                        var template = await _signatoryTemplateRepository
+                            .GetByIdAsync(signatory.PgsSignatoryTemplateId.Value, cancellationToken);
 
-                    var signatoryTemplate = await _signatoryTemplateRepository
-                        .GetByIdAsync(signatory.PgsSignatoryTemplateId.Value, cancellationToken);
+                        signatory.Label = template.SignatoryLabel;
+                        signatory.Status = template.Status;
+                        signatory.OrderLevel = template.OrderLevel;
+                    }
 
                     var user = await _userManager.FindByIdAsync(signatory.SignatoryId);
-
-                    signatory.Label = signatoryTemplate.SignatoryLabel;
-                    signatory.Status = signatoryTemplate.Status;
-                    signatory.OrderLevel = signatoryTemplate.OrderLevel;
-
                     if (user != null)
                     {
                         signatory.SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}";
                     }
 
-                    signatory.IsNextStatus = false;
+                    signatory.IsNextStatus = false; 
                 }
 
-                if (currentStatus.PgsSignatoryTemplateId == null) continue;
-
-                var currentTemplate = await _signatoryTemplateRepository
-                    .GetByIdAsync(currentStatus.PgsSignatoryTemplateId.Value, cancellationToken);
-
-                var signatoryTemplates = await GetSignatoryTemplates(item.Office.ToEntity(), cancellationToken);
-
-                var nextTemplate = signatoryTemplates
-                    .Where(e => e.OrderLevel == (currentTemplate.OrderLevel + 1))
+                var nextSignatory = item.PgsSignatories
+                    .Where(s => s.DateSigned == null || s.DateSigned == DateTime.MinValue)
+                    .OrderBy(s => s.OrderLevel)
                     .FirstOrDefault();
 
-                if (nextTemplate != null && nextTemplate.DefaultSignatoryId == currentUser.Id)
+                if (nextSignatory != null)
                 {
-                    var user = await _userManager.FindByIdAsync(currentUser.Id);
+                    nextSignatory.IsNextStatus = true;
+                }
+                else
+                {
+                    var signatoryTemplates = await GetSignatoryTemplates(item.Office.ToEntity(), cancellationToken);
+                    var maxOrder = item.PgsSignatories.Any() ? item.PgsSignatories.Max(s => s.OrderLevel) : -1;
 
-                    if (user != null)
+                    var nextTemplate = signatoryTemplates
+                        .Where(t => t.OrderLevel > maxOrder && t.DefaultSignatoryId == currentUser.Id)
+                        .OrderBy(t => t.OrderLevel)
+                        .FirstOrDefault();
+
+                    if (nextTemplate != null)
                     {
-                        item.PgsSignatories.Add(new PgsSignatoryDto
+                        var user = await _userManager.FindByIdAsync(currentUser.Id);
+                        if (user != null)
                         {
-                            Id = 0,
-                            PgsId = item.Id,
-                            PgsSignatoryTemplateId = nextTemplate.Id,
-                            SignatoryId = currentUser.Id,
-                            Status = nextTemplate.Status,
-                            Label = nextTemplate.SignatoryLabel,
-                            OrderLevel = nextTemplate.OrderLevel,
-                            IsNextStatus = true,
-                            SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}"
-                        });
+                            var newSignatory = new PgsSignatoryDto
+                            {
+                                Id = 0,
+                                PgsId = item.Id,
+                                PgsSignatoryTemplateId = nextTemplate.Id,
+                                SignatoryId = currentUser.Id,
+                                Status = nextTemplate.Status,
+                                Label = nextTemplate.SignatoryLabel,
+                                OrderLevel = nextTemplate.OrderLevel,
+                                SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}",
+                                IsNextStatus = true
+                            };
+
+                            item.PgsSignatories.Add(newSignatory);
+                        }
                     }
                 }
             }
 
             return pagedPgs;
-        }
+        }      
     }
 }
