@@ -669,61 +669,128 @@ namespace IMIS.Persistence.PgsModule
         {
             pgs.PgsSignatories = new List<PgsSignatoryDto>();
             return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
-        }         
-        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, CancellationToken cancellationToken)
+        }
+      
+        public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>>
+        GetFilteredPGSAsync(
+        PgsFilter filter,
+        string userId,
+        CancellationToken cancellationToken)
         {
-            var pgs = await _repository.GetFilteredPGSAsync(filter, userId, cancellationToken).ConfigureAwait(false);
-            var pagedPgs = DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>.Create(pgs.Items, filter.Page, filter.PageSize, pgs.TotalCount);
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+            {
+                return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
+                    .Create(new List<PerfomanceGovernanceSystem>(), filter.Page, filter.PageSize, 0);
+            }
+
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
+            bool isPrivileged = userRoles.Any(r =>
+                r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase));
+
+            List<PerfomanceGovernanceSystem> filteredEntities;
+
+            if (isPrivileged)
+            {
+                var pgs = await _repository.GetFilteredPGSAsync(filter, userId, cancellationToken)
+                    .ConfigureAwait(false);
+                filteredEntities = pgs.Items;
+            }           
+            else
+            {
+                var userDtos = await GetByUserIdAsync(currentUser.Id, cancellationToken)
+                    .ConfigureAwait(false) ?? new List<PerfomanceGovernanceSystemDto>();
+
+                var filteredDtos = userDtos
+                    .Where(dto =>
+                    {
+                        bool matches = true;
+
+                        if (filter.OfficeId.HasValue)
+                        {
+                            matches &= dto.Office.Id == filter.OfficeId.Value;
+                        }
+
+                        if (filter.FromDate.HasValue)
+                        {
+                            matches &= dto.PgsPeriod?.StartDate >= filter.FromDate.Value;
+                        }
+
+                        if (filter.ToDate.HasValue)
+                        {
+                            matches &= dto.PgsPeriod?.EndDate <= filter.ToDate.Value;
+                        }
+
+                        return matches;
+                    })
+                    .ToList();
+
+                filteredEntities = filteredDtos.Select(dto => dto.ToEntity()).ToList();
+            }
+
+            var pagedPgs = DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
+                .Create(filteredEntities, filter.Page, filter.PageSize, filteredEntities.Count);
+
             foreach (var item in pagedPgs.Items)
             {
                 var currentStatus = item.PgsSignatories?.LastOrDefault();
-                if (currentStatus != null)
+                if (currentStatus == null) continue;
+
+                foreach (var signatory in item.PgsSignatories!)
                 {
-                    foreach (var signatory in item.PgsSignatories!)
+                    if (signatory.PgsSignatoryTemplateId == null) continue;
+
+                    var signatoryTemplate = await _signatoryTemplateRepository
+                        .GetByIdAsync(signatory.PgsSignatoryTemplateId.Value, cancellationToken);
+
+                    var user = await _userManager.FindByIdAsync(signatory.SignatoryId);
+
+                    signatory.Label = signatoryTemplate.SignatoryLabel;
+                    signatory.Status = signatoryTemplate.Status;
+                    signatory.OrderLevel = signatoryTemplate.OrderLevel;
+
+                    if (user != null)
                     {
-                        var signatoryTemplate = await _signatoryTemplateRepository
-                            .GetByIdAsync(signatory.PgsSignatoryTemplateId ?? 0, cancellationToken)
-                            .ConfigureAwait(false);
-
-                        var user = await _userManager
-                            .FindByIdAsync(signatory.SignatoryId)
-                            .ConfigureAwait(false);
-
-                        signatory.Label = signatoryTemplate.SignatoryLabel;
-                        signatory.Status = signatoryTemplate.Status;
-                        signatory.OrderLevel = signatoryTemplate.OrderLevel;
-                        signatory.SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}";
-                        signatory.IsNextStatus = false;
+                        signatory.SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}";
                     }
 
-                    var signatoryTemplates = await GetSignatoryTemplates(item.Office.ToEntity(), cancellationToken).ConfigureAwait(false);
-                    var currentTemplate = await _signatoryTemplateRepository.GetByIdAsync(currentStatus.PgsSignatoryTemplateId ?? 0, cancellationToken);
+                    signatory.IsNextStatus = false;
+                }
 
-                    var nextTemplate = signatoryTemplates.Where(e => e.OrderLevel == (currentTemplate.OrderLevel + 1)).FirstOrDefault();
+                if (currentStatus.PgsSignatoryTemplateId == null) continue;
 
-                    // Append signatory template, if the passed userId is equal to the DefaultSignatoryId
-                    if (nextTemplate != null && nextTemplate.DefaultSignatoryId != null && nextTemplate.DefaultSignatoryId == userId)
+                var currentTemplate = await _signatoryTemplateRepository
+                    .GetByIdAsync(currentStatus.PgsSignatoryTemplateId.Value, cancellationToken);
+
+                var signatoryTemplates = await GetSignatoryTemplates(item.Office.ToEntity(), cancellationToken);
+
+                var nextTemplate = signatoryTemplates
+                    .Where(e => e.OrderLevel == (currentTemplate.OrderLevel + 1))
+                    .FirstOrDefault();
+
+                if (nextTemplate != null && nextTemplate.DefaultSignatoryId == currentUser.Id)
+                {
+                    var user = await _userManager.FindByIdAsync(currentUser.Id);
+
+                    if (user != null)
                     {
-                        var user = await _userManager
-                            .FindByIdAsync(userId)
-                            .ConfigureAwait(false);
-
-                        item.PgsSignatories.Add(new PgsSignatoryDto()
+                        item.PgsSignatories.Add(new PgsSignatoryDto
                         {
                             Id = 0,
                             PgsId = item.Id,
                             PgsSignatoryTemplateId = nextTemplate.Id,
-                            SignatoryId = userId,
+                            SignatoryId = currentUser.Id,
                             Status = nextTemplate.Status,
                             Label = nextTemplate.SignatoryLabel,
                             OrderLevel = nextTemplate.OrderLevel,
                             IsNextStatus = true,
-                            SignatoryName = $"{user!.Prefix}. {user!.FirstName} {user!.LastName} {user!.Suffix}"
+                            SignatoryName = $"{user.Prefix}. {user.FirstName} {user.LastName} {user.Suffix}"
                         });
                     }
                 }
             }
+
             return pagedPgs;
-        } 
+        }
     }
 }

@@ -196,20 +196,22 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     {
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>().Skip(skip).Take(pageSize).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
+    
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(
     PgsFilter filter,
     string userId,
     CancellationToken cancellationToken)
     {
-
         var userPgs = _entities
             .Where(p => !p.IsDeleted &&
-                p.Office!.UserOffices!.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
+                p.Office != null &&
+                p.Office.UserOffices != null &&
+                p.Office.UserOffices.Any(u => u.UserId == userId && u.OfficeId == p.OfficeId))
             .Select(p => p.Id);
 
         var forApprovalPgs = _entities
-            .Where(p => !p.IsDeleted &&           
-                 ReadOnlyDbContext.Set<PgsSignatoryTemplate>()
+            .Where(p => !p.IsDeleted &&
+                ReadOnlyDbContext.Set<PgsSignatoryTemplate>()
                     .Where(template =>
                         template.OfficeId == p.OfficeId &&
                         template.IsActive &&
@@ -224,26 +226,35 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         var combinedIds = await userPgs
             .Union(forApprovalPgs)
             .Distinct()
-            .ToListAsync(cancellationToken);
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
 
-        var filteredQuery = _entities
-            .Where(p => combinedIds.Contains(p.Id));
+        IQueryable<PerfomanceGovernanceSystem> filteredQuery = _entities
+            .Where(p => !p.IsDeleted);
+
+        if (combinedIds.Any())
+        {
+            filteredQuery = filteredQuery.Where(p => combinedIds.Contains(p.Id));
+        }
 
         if (filter.FromDate != null && filter.ToDate != null)
         {
             filteredQuery = filteredQuery.Where(p =>
-                p.PgsPeriod.StartDate >= filter.FromDate &&
-                p.PgsPeriod.EndDate <= filter.ToDate);
+                p.PgsPeriod != null &&
+                p.PgsPeriod.StartDate <= filter.ToDate &&
+                p.PgsPeriod.EndDate >= filter.FromDate);
         }
         else if (filter.FromDate != null)
         {
             filteredQuery = filteredQuery.Where(p =>
-                p.PgsPeriod.StartDate >= filter.FromDate);
+                p.PgsPeriod != null &&
+                p.PgsPeriod.EndDate >= filter.FromDate);
         }
         else if (filter.ToDate != null)
         {
             filteredQuery = filteredQuery.Where(p =>
-                p.PgsPeriod.EndDate <= filter.ToDate);
+                p.PgsPeriod != null &&
+                p.PgsPeriod.StartDate <= filter.ToDate);
         }
 
         if (filter.OfficeId != null)
@@ -254,12 +265,20 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         var fullQuery = filteredQuery
             .Include(p => p.PgsPeriod)
             .Include(p => p.Office)
+                .ThenInclude(o => o.UserOffices)
             .Include(p => p.PgsReadinessRating)
-            .Include(p => p.PgsSignatories);
-
-        // Apply pagination
+            .Include(p => p.PgsSignatories)
+            .Include(p => p.PgsDeliverables);
+     
         return await EntityPageList<PerfomanceGovernanceSystem, long>
-            .CreateAsync(fullQuery, filter.Page, filter.PageSize, cancellationToken)
+            .CreateAsync(
+                fullQuery.OrderByDescending(p => p.Id),
+                filter.Page,
+                filter.PageSize,
+                cancellationToken)
             .ConfigureAwait(false);
-    } 
+
+    }
+
+
 }
