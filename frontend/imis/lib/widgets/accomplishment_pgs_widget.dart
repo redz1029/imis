@@ -166,7 +166,11 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
       PgsStatus.completed:
           "Deliverable has been finished and meets PGS requirements",
     };
-
+    final statusDisplayNames = {
+      PgsStatus.notStarted: "Not Started",
+      PgsStatus.onGoing: "On Going",
+      PgsStatus.completed: "Completed",
+    };
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       child: Row(
@@ -213,7 +217,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                           child: Tooltip(
                             message: statusDescriptions[value] ?? value.name,
                             child: Text(
-                              value.name,
+                              statusDisplayNames[value]!,
                               style: const TextStyle(fontSize: 13),
                             ),
                           ),

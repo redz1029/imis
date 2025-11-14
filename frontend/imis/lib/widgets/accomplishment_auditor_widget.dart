@@ -233,7 +233,11 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
       PgsStatus.completed:
           "Deliverable has been finished and meets PGS requirements",
     };
-
+    final statusDisplayNames = {
+      PgsStatus.notStarted: "Not Started",
+      PgsStatus.onGoing: "On Going",
+      PgsStatus.completed: "Completed",
+    };
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
       child: Row(
@@ -288,9 +292,10 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                               value: value,
                               child: Tooltip(
                                 message:
-                                    statusDescriptions[value] ?? value.name,
+                                    statusDescriptions[value] ??
+                                    statusDisplayNames[value],
                                 child: Text(
-                                  value.name,
+                                  statusDisplayNames[value]!,
                                   style: const TextStyle(fontSize: 13),
                                 ),
                               ),
@@ -320,11 +325,10 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                   valueListenable: selectedStatus,
                   builder: (context, status, _) {
                     return Tooltip(
-                      message: statusDescriptions[status] ?? status.name,
-                      child: Text(
-                        status.name,
-                        // style: const TextStyle(fontSize: 13),
-                      ),
+                      message:
+                          statusDescriptions[status] ??
+                          statusDisplayNames[status]!,
+                      child: Text(statusDisplayNames[status]!),
                     );
                   },
                 ),
