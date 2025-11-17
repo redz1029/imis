@@ -5,8 +5,7 @@ namespace IMIS.Application.SWOTAnalysisModule
 {
     public interface ISWOTAnalysisRepository : IRepository<SWOTAnalysis, int>
     {
-        //Task<SWOTAnalysis?> GetByUserIdAsync(string userId, CancellationToken cancellationToken);
         Task<List<SWOTAnalysis>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken);
-
+        Task<List<SWOTAnalysis>> GetAllAsync(CancellationToken cancellationToken);
     }
 }

@@ -9,7 +9,13 @@ namespace IMIS.Persistence.SWOTAnalysisModule
     {
         public SWOTAnalysisRepository(ImisDbContext dbContext) : base(dbContext)
         {
-        }    
+        }
+        public async Task<List<SWOTAnalysis>> GetAllAsync(CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<SWOTAnalysis>()
+                .ToListAsync(cancellationToken);
+        }
+
         public async Task<List<SWOTAnalysis>?> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
         {
             var entities = await ReadOnlyDbContext.Set<SWOTAnalysis>()
@@ -18,6 +24,5 @@ namespace IMIS.Persistence.SWOTAnalysisModule
 
             return entities.Count == 0 ? null : entities;
         }
-
     }
 }
