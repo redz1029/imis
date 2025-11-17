@@ -11,6 +11,7 @@ using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
+using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
@@ -41,7 +42,8 @@ namespace IMIS.Infrastructure.Auths
                 new PgsPeriodPermission(),
                 new OfficePermission(),
                 new PgsDeliverableAccomplishmentPermission(),
-                new PgsSummaryNarrativePermissions());
+                new PgsSummaryNarrativePermissions(),
+                new SWOTAnalysisPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),              
@@ -61,7 +63,8 @@ namespace IMIS.Infrastructure.Auths
                 new PerformanceGovernanceSystemPermission(),              
                 new KeyResultAreaPermission(),                
                 new OfficePermission(),
-                new PgsDeliverableAccomplishmentPermission());
+                new PgsDeliverableAccomplishmentPermission(),
+                new SWOTAnalysisPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsServiceHead, IdentityRole>(_roleManager,
                 new PerformanceGovernanceSystemPermission(),
@@ -70,7 +73,8 @@ namespace IMIS.Infrastructure.Auths
                 new PgsPeriodPermission(),
                 new OfficePermission(),
                 new PgsSummaryNarrativePermissions(),
-                new PgsDeliverableAccomplishmentPermission());
+                new PgsDeliverableAccomplishmentPermission(),
+                new SWOTAnalysisPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsHead, IdentityRole>(_roleManager, 
                 new PgsDeliverableAuditorPermission(),
@@ -89,7 +93,8 @@ namespace IMIS.Infrastructure.Auths
                 new OfficePermission(),
                 new PgsSummaryNarrativePermissions(),
                 new PgsDeliverableAccomplishmentPermission(),
-                new AnnouncementPermission());
+                new AnnouncementPermission(),
+                new SWOTAnalysisPermission());
 
             await PermissionSeeder.SeedPermissionForRole<OSM, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),
