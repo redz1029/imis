@@ -30,6 +30,7 @@ namespace IMIS.Persistence
         public DbSet<PgsDeliverableAccomplishment> PgsDeliverableAccomplishment { get; set; }
         public DbSet<Announcement> Announcement { get; set; }
         public DbSet<BreakThroughScoring> BreakThroughScoring { get; set; }
+        public DbSet<SWOTAnalysis> SWOTAnalysis { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)

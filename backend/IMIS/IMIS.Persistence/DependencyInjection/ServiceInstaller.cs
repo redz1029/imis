@@ -13,6 +13,7 @@ using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
+using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
 using IMIS.Persistence.AnnouncementModule;
@@ -31,6 +32,7 @@ using IMIS.Persistence.PgsPeriodModule;
 using IMIS.Persistence.PGSReadinessRatingCancerCareModule;
 using IMIS.Persistence.PgsSignatoryTemplateModule;
 using IMIS.Persistence.PgsSummaryNarrativeModule;
+using IMIS.Persistence.SWOTAnalysisModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.Extensions.DependencyInjection;
@@ -97,6 +99,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IBreakThroughScoringRepository, BreakThroughScoringRepository>();
             services.AddScoped<IBreakThroughScoringService, BreakThroughScoringService>();
+
+            services.AddScoped<ISWOTAnalysisRepository, SWOTAnalysisRepository>();
+            services.AddScoped<ISWOTAnalysisService, SWOTAnalysisService>();
 
             return services;
         }
