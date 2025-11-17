@@ -2572,63 +2572,43 @@ class PerformanceGovernanceSystemPageState
                                     //End Second Tab
 
                                     // Third Tab: PGS Deliverable Status
-                                    Column(
-                                      children: [
-                                        SizedBox(height: 20),
-
-                                        Table(
-                                          border: TableBorder.all(
-                                            color: const Color.fromARGB(
-                                              255,
-                                              49,
-                                              46,
-                                              46,
-                                            ),
-                                            width: 1,
-                                          ),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(1.5),
-                                            1: FlexColumnWidth(0.8),
-                                            2: FlexColumnWidth(2.6),
-                                            3: FlexColumnWidth(1),
-                                          },
+                                    Expanded(
+                                      child: SingleChildScrollView(
+                                        child: Column(
                                           children: [
-                                            _PgsDeliverableHeader(
-                                              officename:
-                                                  officename ?? officeDisplay,
-                                              orderLevel: orderLevel,
-                                            ),
-                                          ],
-                                        ),
-                                        Table(
-                                          border: TableBorder.all(
-                                            color: const Color.fromARGB(
-                                              255,
-                                              49,
-                                              46,
-                                              46,
-                                            ),
-                                            width: 1,
-                                          ),
-                                          columnWidths: {
-                                            0: FlexColumnWidth(0.2),
-                                            1: FlexColumnWidth(1.3),
-                                            2: FlexColumnWidth(0.4),
-                                            3: FlexColumnWidth(0.4),
-                                            4: FlexColumnWidth(1.9),
-                                            5: FlexColumnWidth(0.7),
-                                            // 6: FlexColumnWidth(0.6),
-                                            // 7: FlexColumnWidth(1.30),
-                                            // 8: FlexColumnWidth(0.5),
-                                            6: FlexColumnWidth(1),
-                                          },
-                                          children: [_pgsBuildTableSubheader()],
-                                        ),
-                                        Expanded(
-                                          child: SingleChildScrollView(
-                                            child: Table(
+                                            SizedBox(height: 20),
+
+                                            // MAIN HEADER TABLE
+                                            Table(
                                               border: TableBorder.all(
-                                                color: const Color.fromARGB(
+                                                color: Color.fromARGB(
+                                                  255,
+                                                  49,
+                                                  46,
+                                                  46,
+                                                ),
+                                                width: 1,
+                                              ),
+                                              columnWidths: const {
+                                                0: FlexColumnWidth(1.5),
+                                                1: FlexColumnWidth(0.8),
+                                                2: FlexColumnWidth(2.6),
+                                                3: FlexColumnWidth(1),
+                                              },
+                                              children: [
+                                                _PgsDeliverableHeader(
+                                                  officename:
+                                                      officename ??
+                                                      officeDisplay,
+                                                  orderLevel: orderLevel,
+                                                ),
+                                              ],
+                                            ),
+
+                                            // SUB HEADER TABLE
+                                            Table(
+                                              border: TableBorder.all(
+                                                color: Color.fromARGB(
                                                   255,
                                                   49,
                                                   46,
@@ -2641,11 +2621,33 @@ class PerformanceGovernanceSystemPageState
                                                 1: FlexColumnWidth(1.3),
                                                 2: FlexColumnWidth(0.4),
                                                 3: FlexColumnWidth(0.4),
-                                                4: FlexColumnWidth(1.90),
+                                                4: FlexColumnWidth(1.9),
                                                 5: FlexColumnWidth(0.7),
-                                                // 6: FlexColumnWidth(0.6),
-                                                // 7: FlexColumnWidth(1.30),
-                                                // 8: FlexColumnWidth(0.5),
+                                                6: FlexColumnWidth(1),
+                                              },
+                                              children: [
+                                                _pgsBuildTableSubheader(),
+                                              ],
+                                            ),
+
+                                            // ROWS TABLE
+                                            Table(
+                                              border: TableBorder.all(
+                                                color: Color.fromARGB(
+                                                  255,
+                                                  49,
+                                                  46,
+                                                  46,
+                                                ),
+                                                width: 1,
+                                              ),
+                                              columnWidths: const {
+                                                0: FlexColumnWidth(0.2),
+                                                1: FlexColumnWidth(1.3),
+                                                2: FlexColumnWidth(0.4),
+                                                3: FlexColumnWidth(0.4),
+                                                4: FlexColumnWidth(1.9),
+                                                5: FlexColumnWidth(0.7),
                                                 6: FlexColumnWidth(1),
                                               },
                                               children: [
@@ -2658,9 +2660,7 @@ class PerformanceGovernanceSystemPageState
                                                         setState,
                                                         orderLevel,
                                                         id,
-
                                                         setDialogState,
-
                                                         showErrors:
                                                             rowErrors[rowId] ??
                                                             false,
@@ -2668,10 +2668,111 @@ class PerformanceGovernanceSystemPageState
                                                 ),
                                               ],
                                             ),
-                                          ),
+                                          ],
                                         ),
-                                      ],
+                                      ),
                                     ),
+
+                                    // Column(
+                                    //   children: [
+                                    //     SizedBox(height: 20),
+
+                                    //     Table(
+                                    //       border: TableBorder.all(
+                                    //         color: const Color.fromARGB(
+                                    //           255,
+                                    //           49,
+                                    //           46,
+                                    //           46,
+                                    //         ),
+                                    //         width: 1,
+                                    //       ),
+                                    //       columnWidths: const {
+                                    //         0: FlexColumnWidth(1.5),
+                                    //         1: FlexColumnWidth(0.8),
+                                    //         2: FlexColumnWidth(2.6),
+                                    //         3: FlexColumnWidth(1),
+                                    //       },
+                                    //       children: [
+                                    //         _PgsDeliverableHeader(
+                                    //           officename:
+                                    //               officename ?? officeDisplay,
+                                    //           orderLevel: orderLevel,
+                                    //         ),
+                                    //       ],
+                                    //     ),
+                                    //     Table(
+                                    //       border: TableBorder.all(
+                                    //         color: const Color.fromARGB(
+                                    //           255,
+                                    //           49,
+                                    //           46,
+                                    //           46,
+                                    //         ),
+                                    //         width: 1,
+                                    //       ),
+                                    //       columnWidths: {
+                                    //         0: FlexColumnWidth(0.2),
+                                    //         1: FlexColumnWidth(1.3),
+                                    //         2: FlexColumnWidth(0.4),
+                                    //         3: FlexColumnWidth(0.4),
+                                    //         4: FlexColumnWidth(1.9),
+                                    //         5: FlexColumnWidth(0.7),
+                                    //         // 6: FlexColumnWidth(0.6),
+                                    //         // 7: FlexColumnWidth(1.30),
+                                    //         // 8: FlexColumnWidth(0.5),
+                                    //         6: FlexColumnWidth(1),
+                                    //       },
+                                    //       children: [_pgsBuildTableSubheader()],
+                                    //     ),
+                                    //     Expanded(
+                                    //       child: SingleChildScrollView(
+                                    //         child: Table(
+                                    //           border: TableBorder.all(
+                                    //             color: const Color.fromARGB(
+                                    //               255,
+                                    //               49,
+                                    //               46,
+                                    //               46,
+                                    //             ),
+                                    //             width: 1,
+                                    //           ),
+                                    //           columnWidths: const {
+                                    //             0: FlexColumnWidth(0.2),
+                                    //             1: FlexColumnWidth(1.3),
+                                    //             2: FlexColumnWidth(0.4),
+                                    //             3: FlexColumnWidth(0.4),
+                                    //             4: FlexColumnWidth(1.90),
+                                    //             5: FlexColumnWidth(0.7),
+                                    //             // 6: FlexColumnWidth(0.6),
+                                    //             // 7: FlexColumnWidth(1.30),
+                                    //             // 8: FlexColumnWidth(0.5),
+                                    //             6: FlexColumnWidth(1),
+                                    //           },
+                                    //           children: [
+                                    //             ...rows.map(
+                                    //               (rowId) =>
+                                    //                   _buildTableRowStrategicPGSDeliverableStatus(
+                                    //                     rowId,
+                                    //                     '',
+                                    //                     '',
+                                    //                     setState,
+                                    //                     orderLevel,
+                                    //                     id,
+
+                                    //                     setDialogState,
+
+                                    //                     showErrors:
+                                    //                         rowErrors[rowId] ??
+                                    //                         false,
+                                    //                   ),
+                                    //             ),
+                                    //           ],
+                                    //         ),
+                                    //       ),
+                                    //     ),
+                                    //   ],
+                                    // ),
                                   ],
                                 ),
                               ),
