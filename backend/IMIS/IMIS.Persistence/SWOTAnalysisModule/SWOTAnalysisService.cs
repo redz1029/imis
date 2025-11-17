@@ -1,5 +1,6 @@
 ﻿using Base.Auths;
 using Base.Auths.Roles;
+using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Domain;
@@ -16,6 +17,28 @@ namespace IMIS.Persistence.SWOTAnalysisModule
         {
             _repository = repository;
             _userManager = userManager;
+        }
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var swotAnalysisDto = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (swotAnalysisDto == null)
+                return false;
+
+            swotAnalysisDto.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
+        public async Task<DtoPageList<SWOTAnalysisDto, SWOTAnalysis, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var swotAnalysisDto = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (swotAnalysisDto.TotalCount == 0)
+            {
+                return null;
+            }
+            return DtoPageList<SWOTAnalysisDto, SWOTAnalysis, int>.Create(swotAnalysisDto.Items, page, pageSize, swotAnalysisDto.TotalCount);
         }
         public async Task<SWOTAnalysisDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
