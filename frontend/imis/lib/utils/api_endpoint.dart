@@ -50,6 +50,7 @@ class ApiEndpoint {
   late String summaryNarrativeAuditorHead;
   late String deletePgs;
   late String breakThroughScoring;
+  late String swotAnalysis;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -98,6 +99,7 @@ class ApiEndpoint {
     summaryNarrativeAuditorHead = '$baseUrl/pgsSummaryNarrativeAuditorHead';
     deletePgs = '$baseUrl/pgs/deliverable';
     breakThroughScoring = '$baseUrl/BreakThroughScoring';
+    swotAnalysis = '$baseUrl/swotAnalysis';
   }
 
   static Future<void> setBaseUrl() async {
