@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using IMIS.Domain;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using VaultSharp.V1.SecretsEngines.Database;
 
 public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<string>>
 {
@@ -837,6 +839,11 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             {
                 UserId = "8d9a1b3f-0c84-46a7-b932-13cf8d05f2a1",
                 RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "c4bd9e2a-1cb3-4c3b-9d0c-2ff2e43c7d1b",
+                RoleId = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17"
             }
        );
     }
