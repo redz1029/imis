@@ -12,7 +12,7 @@ const grey = Color.fromRGBO(161, 161, 161, 1);
 const lightGrey = Color.fromRGBO(217, 217, 217, 1);
 const lightGrey1 = Color.fromRGBO(245, 245, 245, 1);
 const primaryTextColor = Color.fromRGBO(65, 65, 65, 1);
-
+const Color peachLight = Color.fromARGB(255, 255, 225, 224);
 //Sizing
 const gap4px = SizedBox(height: 4);
 const gap6px = SizedBox(height: 6);
@@ -146,5 +146,6 @@ class JobPositions {
     'Head, Patient and Safety Unit',
     'Head, Credit and Collection Section',
     'Head, PACD',
+    'HEAD, Family and Community Medicine',
   ];
 }
