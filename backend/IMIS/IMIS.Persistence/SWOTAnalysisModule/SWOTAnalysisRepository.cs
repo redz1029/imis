@@ -11,6 +11,40 @@ namespace IMIS.Persistence.SWOTAnalysisModule
         public SWOTAnalysisRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+        public async Task<List<SWOTAnalysisDto>?> FilterByYearAsync(int year, int noOfResults, CancellationToken cancellationToken)
+        {
+            var query = ReadOnlyDbContext.Set<SWOTAnalysis>()
+                .AsNoTracking()
+                .Where(s => s.PostingDate.HasValue
+                         && s.PostingDate.Value.Year == year)
+                .OrderByDescending(s => s.PostingDate)
+                .Take(noOfResults);
+
+            var result = await query
+                .Select(s => new SWOTAnalysisDto(s))
+                .ToListAsync(cancellationToken);
+
+            return result.Any() ? result : null;
+        }
+        public async Task<List<SWOTAnalysisDto>?> FilterByYearByUserAsync(string userId, int year, int noOfResults, CancellationToken cancellationToken)
+        {
+            var query = ReadOnlyDbContext.Set<SWOTAnalysis>()
+                .AsNoTracking()
+                .Where(s =>
+                    s.UserId == userId &&
+                    s.PostingDate.HasValue &&
+                    s.PostingDate.Value.Year == year)
+                .OrderByDescending(s => s.PostingDate)
+                .Take(noOfResults);
+
+            var result = await query
+                .Select(x => new SWOTAnalysisDto(x))
+                .ToListAsync(cancellationToken);
+
+            return result.Any() ? result : null;
+        }
+
+
         public async Task<SWOTAnalysis?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<SWOTAnalysis>()

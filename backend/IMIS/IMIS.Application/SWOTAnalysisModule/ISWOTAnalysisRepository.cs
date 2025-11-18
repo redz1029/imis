@@ -10,5 +10,8 @@ namespace IMIS.Application.SWOTAnalysisModule
         Task<List<SWOTAnalysis>> GetAllAsync(CancellationToken cancellationToken);
         Task<EntityPageList<SWOTAnalysis, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<SWOTAnalysis?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
+        Task<List<SWOTAnalysisDto>?> FilterByYearAsync(int year, int noOfResults, CancellationToken cancellationToken);
+        Task<List<SWOTAnalysisDto>?> FilterByYearByUserAsync(string userId, int year, int noOfResults, CancellationToken cancellationToken);
+
     }
 }

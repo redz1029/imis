@@ -17,6 +17,31 @@ namespace IMIS.Persistence.SWOTAnalysisModule
         {
             _repository = repository;
             _userManager = userManager;
+        }       
+        public async Task<List<SWOTAnalysisDto>?> FilterByYearAsync(int year, int noOfResults, CancellationToken cancellationToken)
+        {
+            if (year <= 0) year = DateTime.Now.Year;
+
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                return null;
+
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
+
+            bool isElevatedUser = userRoles.Any(r =>
+                 r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                 r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                 r.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                 r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase));
+
+            if (isElevatedUser)
+            {
+                return await _repository.FilterByYearAsync(year, noOfResults, cancellationToken);
+            }
+            else
+            {
+                return await _repository.FilterByYearByUserAsync(currentUser.Id, year, noOfResults, cancellationToken);
+            }
         }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {

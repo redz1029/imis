@@ -1,6 +1,5 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
-using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.SWOTAnalysisModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -60,6 +59,18 @@ namespace IMIS.Presentation.SWOTAnalysisModule
             })
             .WithTags(_swotAnalysisTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _swotAnalysisPermission.Edit));
+            
+            app.MapGet("/filter/year", async (int? year, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
+            {
+                int swotAnalysisDtoNoOfResults = 10;
+
+                int finalYear = (year.HasValue && year.Value > 0) ? year.Value : DateTime.Now.Year;
+
+                var swotAnalysisDto = await service.FilterByYearAsync(finalYear, swotAnalysisDtoNoOfResults, cancellationToken);
+
+                return swotAnalysisDto != null && swotAnalysisDto.Any() ? Results.Ok(swotAnalysisDto) : Results.NoContent();
+            })            
+            .WithTags(_swotAnalysisTag).CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_swotAnalysisTag), true);
 
             app.MapGet("/page", async (int page, int pageSize, ISWOTAnalysisService service, CancellationToken cancellationToken) =>
             {
