@@ -2050,6 +2050,21 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "ABOGHO",
                 PhoneNumber = "09177272645",
                 Position = "Head, TB-Isolation",
+            },
+            new User
+            {
+                Id = "c4bd9e2a-1cb3-4c3b-9d0c-2ff2e43c7d1b",
+                UserName = "olero.ryan",
+                NormalizedUserName = "OLERO.RYAN",
+                Email = "ryanchrisolero@outlook.com",
+                NormalizedEmail = "RYANCHRISOLERO@OUTLOOK.COM",
+                PasswordHash = hasher.HashPassword(null, defaultPassword),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+                LastName = "OLERO",
+                FirstName = "RYAN CHRIS",
+                MiddleName = "ELEVAZO",
+                PhoneNumber = "09175170327",
+                Position = "Computer Maintenance Technologist II",
             }
         );
     }
