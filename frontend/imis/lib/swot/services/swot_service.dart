@@ -30,9 +30,9 @@ class SwotService {
   //   );
   // }
 
-  Future<void> createSwot(Swot team) async {
+  Future<void> createSwot(Swot swot) async {
     final url = ApiEndpoint().swotAnalysis;
-    final Map<String, dynamic> requestData = team.toJson();
+    final Map<String, dynamic> requestData = swot.toJson();
     final response = await AuthenticatedRequest.post(
       dio,
       url,
@@ -42,5 +42,10 @@ class SwotService {
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create swot');
     }
+  }
+
+  Future<void> deleteSwot(String swotId) async {
+    final url = '${ApiEndpoint().swotAnalysis}/$swotId';
+    await AuthenticatedRequest.delete(dio, url);
   }
 }
