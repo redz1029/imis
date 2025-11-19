@@ -9,13 +9,12 @@ import 'package:imis/swot/services/swot_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/date_time_converter.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
-
 import '../../common_services/common_service.dart';
 import '../../user/models/user_registration.dart';
 import '../../utils/pagination_util.dart';
+import '../../widgets/filter_button_widget.dart';
 
 class SwotPage extends StatefulWidget {
   const SwotPage({super.key});
@@ -47,6 +46,8 @@ class SwotDialogResponsiveState extends State<SwotPage> {
   final _formKey = GlobalKey<FormState>();
   String userId = "";
   final _paginationUtils = PaginationUtil(Dio());
+  String? _selectedYear = DateTime.now().year.toString();
+  bool isMenuOpenYear = false;
   @override
   void initState() {
     super.initState();
@@ -64,21 +65,28 @@ class SwotDialogResponsiveState extends State<SwotPage> {
     }();
   }
 
-  Future<void> fetchSwot({int page = 1, String? searchQuery}) async {
+  Future<void> fetchSwot({
+    int page = 1,
+    String? searchQuery,
+    String? year,
+  }) async {
     if (_isLoading) return;
 
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      swotList = [];
+      filteredList = [];
+    });
 
     try {
-      UserRegistration? user = await AuthUtil.fetchLoggedUser();
-      if (user == null) {
-        return;
-      }
-
-      setState(() => userId = user.id ?? "UserId");
+      final selectedYear = year ?? _selectedYear;
+      final endpoint =
+          (selectedYear == null || selectedYear.isEmpty)
+              ? "${ApiEndpoint().swotAnalysis}/filter/year"
+              : "${ApiEndpoint().swotAnalysis}/filter/year?year=$selectedYear";
 
       final pageList = await _paginationUtils.fetchPaginatedData<Swot>(
-        endpoint: "${ApiEndpoint().swotAnalysis}/userId/$userId?userId=$userId",
+        endpoint: endpoint,
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
@@ -98,9 +106,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
     } catch (e) {
       debugPrint("Unexpected error: $e");
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -137,37 +143,140 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    SizedBox(
-                      height: 30,
-                      width: 300,
-                      child: TextField(
-                        focusNode: isSearchfocus,
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: lightGrey),
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          PopupMenuButton<String>(
+                            color: mainBgColor,
+                            offset: const Offset(0, 30),
+                            onCanceled: () {
+                              setState(() {
+                                isMenuOpenYear = false;
+                              });
+                            },
+                            onOpened: () {
+                              setState(() {
+                                isMenuOpenYear = true;
+                              });
+                            },
+                            onSelected: (String value) {
+                              setState(() {
+                                _selectedYear = value;
+
+                                isMenuOpenYear = false;
+                                fetchSwot();
+                              });
+                            },
+                            itemBuilder: (BuildContext context) {
+                              final updatedYearList = [
+                                ...SwotYear.years.map(
+                                  (y) => {'id': y, 'name': y},
+                                ),
+                              ];
+
+                              final searchController = TextEditingController();
+                              ValueNotifier<String> searchQuery = ValueNotifier(
+                                '',
+                              );
+
+                              return [
+                                PopupMenuItem<String>(
+                                  enabled: false,
+                                  height: kMinInteractiveDimension,
+                                  child: Column(
+                                    children: [
+                                      TextField(
+                                        controller: searchController,
+                                        decoration: const InputDecoration(
+                                          hintText: 'Search year...',
+                                          hintStyle: TextStyle(
+                                            color: Colors.grey,
+                                            fontSize: 12,
+                                          ),
+                                          prefixIcon: Icon(
+                                            Icons.search,
+                                            size: 18,
+                                          ),
+                                          isDense: true,
+                                          border: OutlineInputBorder(),
+                                          contentPadding: EdgeInsets.symmetric(
+                                            vertical: 8,
+                                          ),
+                                        ),
+                                        onChanged: (value) {
+                                          searchQuery.value =
+                                              value.toLowerCase();
+                                        },
+                                      ),
+                                      const Divider(height: 16, thickness: 1),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem<String>(
+                                  enabled: false,
+                                  child: ValueListenableBuilder<String>(
+                                    valueListenable: searchQuery,
+                                    builder: (context, query, _) {
+                                      final filteredYears =
+                                          updatedYearList
+                                              .where(
+                                                (y) => y['name']
+                                                    .toString()
+                                                    .toLowerCase()
+                                                    .contains(query),
+                                              )
+                                              .toList();
+
+                                      return ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          maxHeight:
+                                              MediaQuery.of(
+                                                context,
+                                              ).size.height *
+                                              0.4,
+                                        ),
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children:
+                                                filteredYears.map<Widget>((y) {
+                                                  return ListTile(
+                                                    dense: true,
+                                                    title: Text(
+                                                      y['name'].toString(),
+                                                      style: const TextStyle(
+                                                        color: Colors.black,
+                                                      ),
+                                                    ),
+                                                    onTap: () {
+                                                      Navigator.pop(context);
+
+                                                      setState(() {
+                                                        _selectedYear =
+                                                            y['id'].toString();
+
+                                                        fetchSwot();
+                                                      });
+                                                    },
+                                                  );
+                                                }).toList(),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              ];
+                            },
+
+                            child: FilterButton(
+                              label: _selectedYear ?? '',
+                              isActive: isMenuOpenYear,
+                            ),
                           ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
-                          labelStyle: TextStyle(color: grey, fontSize: 14),
-                          labelText: 'Search...',
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: isSearchfocus.hasFocus ? primaryColor : grey,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          filled: true,
-                          fillColor: secondaryColor,
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 5,
-                          ),
-                        ),
+                        ],
                       ),
                     ),
                     if (!isMinimized)
@@ -263,7 +372,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                         color: primaryColor,
                                       ),
                                       onPressed: () {
-                                        // showDeleteDialog(team.id.toString());
+                                        showDeleteDialog(swot.id.toString());
                                       },
                                     ),
                                   ],
@@ -575,7 +684,6 @@ class SwotDialogResponsiveState extends State<SwotPage> {
     );
   }
 
-  // New colored SWOT box
   Widget _buildColoredBox({
     required TextEditingController controller,
     required Color bg,
@@ -608,7 +716,6 @@ class SwotDialogResponsiveState extends State<SwotPage> {
     );
   }
 
-  // Extra questions (small boxes)
   Widget _buildSmallBox(TextEditingController controller) {
     return TextField(
       controller: controller,
@@ -618,6 +725,52 @@ class SwotDialogResponsiveState extends State<SwotPage> {
         filled: true,
         fillColor: Color(0xFFF8F8F8),
       ),
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: mainBgColor,
+          title: Text('Confirm Delete'),
+          content: Text(
+            'Are you sure you want to delete this SWOT Analysis? This action cannot be undone.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await _swotService.deleteSwot(id);
+                  await fetchSwot();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('SWOT Analysis deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(
+                    description: Text('Failed to SWOT Analysis'),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
