@@ -17,6 +17,7 @@ namespace IMIS.Application.PgsDeliverableModule
         public required PgsStatus Status { get; set; }
         public string? Remarks { get; set; }
         public string? KraName => Kra?.Name;
+        public string? StrategicObjective => Kra?.StrategicObjective;
 
         public ReportPGSDeliverableDto() { }
 
