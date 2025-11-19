@@ -2193,96 +2193,6 @@ class PerformanceGovernanceSystemPageState
                                       children: [
                                         SizedBox(height: 20),
 
-                                        // Table(
-                                        //   border: TableBorder.all(
-                                        //     color: const Color.fromARGB(
-                                        //       255,
-                                        //       49,
-                                        //       46,
-                                        //       46,
-                                        //     ),
-                                        //     width: 1,
-                                        //   ),
-                                        //   columnWidths: {
-                                        //     0: FlexColumnWidth(1.7),
-                                        //     1: FlexColumnWidth(1.0),
-                                        //     2: FlexColumnWidth(3.0),
-                                        //     3: FlexColumnWidth(1.7),
-                                        //   },
-                                        //   children: [
-                                        //     _buildMainHeaderStrategic(
-                                        //       officename:
-                                        //           officename ?? officeDisplay,
-                                        //       orderLevel: orderLevel,
-                                        //     ),
-                                        //   ],
-                                        // ),
-
-                                        // Table(
-                                        //   border: TableBorder.all(
-                                        //     color: const Color.fromARGB(
-                                        //       255,
-                                        //       49,
-                                        //       46,
-                                        //       46,
-                                        //     ),
-                                        //     width: 1,
-                                        //   ),
-                                        //   columnWidths: {
-                                        //     0: FlexColumnWidth(0.2),
-                                        //     1: FlexColumnWidth(1.5),
-                                        //     2: FlexColumnWidth(0.5),
-                                        //     3: FlexColumnWidth(0.5),
-                                        //     4: FlexColumnWidth(3),
-                                        //     5: FlexColumnWidth(1),
-                                        //     6: FlexColumnWidth(0.7),
-                                        //   },
-                                        //   children: [
-                                        //     _buildTableSubHeaderStrategic(),
-                                        //   ],
-                                        // ),
-
-                                        // Expanded(
-                                        //   child: SingleChildScrollView(
-                                        //     child: Table(
-                                        //       border: TableBorder.all(
-                                        //         color: const Color.fromARGB(
-                                        //           255,
-                                        //           49,
-                                        //           46,
-                                        //           46,
-                                        //         ),
-                                        //         width: 1,
-                                        //       ),
-                                        //       columnWidths: const {
-                                        //         0: FlexColumnWidth(0.2),
-                                        //         1: FlexColumnWidth(1.5),
-                                        //         2: FlexColumnWidth(0.5),
-                                        //         3: FlexColumnWidth(0.5),
-                                        //         4: FlexColumnWidth(3),
-                                        //         5: FlexColumnWidth(1),
-                                        //         6: FlexColumnWidth(0.7),
-                                        //       },
-                                        //       children: [
-                                        //         ...rows.map(
-                                        //           (rowId) =>
-                                        //               _buildTableRowStrategic(
-                                        //                 rowId,
-                                        //                 '',
-                                        //                 '',
-                                        //                 setState,
-                                        //                 setDialogState,
-                                        //                 orderLevel,
-                                        //                 id,
-                                        //                 showErrors:
-                                        //                     rowErrors[rowId] ??
-                                        //                     false,
-                                        //               ),
-                                        //         ),
-                                        //       ],
-                                        //     ),
-                                        //   ),
-                                        // ),
                                         Expanded(
                                           child: SingleChildScrollView(
                                             child: Column(
@@ -2299,10 +2209,10 @@ class PerformanceGovernanceSystemPageState
                                                     width: 1,
                                                   ),
                                                   columnWidths: const {
-                                                    0: FlexColumnWidth(1.7),
+                                                    0: FlexColumnWidth(3.5),
                                                     1: FlexColumnWidth(1.0),
-                                                    2: FlexColumnWidth(3.0),
-                                                    3: FlexColumnWidth(1.7),
+                                                    2: FlexColumnWidth(2.2),
+                                                    3: FlexColumnWidth(2.2),
                                                   },
                                                   children: [
                                                     _buildMainHeaderStrategic(
@@ -2327,12 +2237,13 @@ class PerformanceGovernanceSystemPageState
                                                   ),
                                                   columnWidths: const {
                                                     0: FlexColumnWidth(0.2),
-                                                    1: FlexColumnWidth(1.5),
-                                                    2: FlexColumnWidth(0.5),
+                                                    1: FlexColumnWidth(1.8),
+                                                    2: FlexColumnWidth(1.5),
                                                     3: FlexColumnWidth(0.5),
-                                                    4: FlexColumnWidth(3),
-                                                    5: FlexColumnWidth(1),
-                                                    6: FlexColumnWidth(0.7),
+                                                    4: FlexColumnWidth(0.5),
+                                                    5: FlexColumnWidth(2.2),
+                                                    6: FlexColumnWidth(1),
+                                                    7: FlexColumnWidth(1.2),
                                                   },
                                                   children: [
                                                     _buildTableSubHeaderStrategic(),
@@ -2352,12 +2263,13 @@ class PerformanceGovernanceSystemPageState
                                                   ),
                                                   columnWidths: const {
                                                     0: FlexColumnWidth(0.2),
-                                                    1: FlexColumnWidth(1.5),
-                                                    2: FlexColumnWidth(0.5),
+                                                    1: FlexColumnWidth(1.8),
+                                                    2: FlexColumnWidth(1.5),
                                                     3: FlexColumnWidth(0.5),
-                                                    4: FlexColumnWidth(3),
-                                                    5: FlexColumnWidth(1),
-                                                    6: FlexColumnWidth(0.7),
+                                                    4: FlexColumnWidth(0.5),
+                                                    5: FlexColumnWidth(2.2),
+                                                    6: FlexColumnWidth(1),
+                                                    7: FlexColumnWidth(1.2),
                                                   },
                                                   children: [
                                                     ...rows.map(
@@ -2590,10 +2502,10 @@ class PerformanceGovernanceSystemPageState
                                                 width: 1,
                                               ),
                                               columnWidths: const {
-                                                0: FlexColumnWidth(1.5),
-                                                1: FlexColumnWidth(0.8),
-                                                2: FlexColumnWidth(2.6),
-                                                3: FlexColumnWidth(1),
+                                                0: FlexColumnWidth(3.5),
+                                                1: FlexColumnWidth(1.0),
+                                                2: FlexColumnWidth(2.2),
+                                                3: FlexColumnWidth(2.2),
                                               },
                                               children: [
                                                 _PgsDeliverableHeader(
@@ -2618,12 +2530,13 @@ class PerformanceGovernanceSystemPageState
                                               ),
                                               columnWidths: const {
                                                 0: FlexColumnWidth(0.2),
-                                                1: FlexColumnWidth(1.3),
-                                                2: FlexColumnWidth(0.4),
-                                                3: FlexColumnWidth(0.4),
-                                                4: FlexColumnWidth(1.9),
-                                                5: FlexColumnWidth(0.7),
+                                                1: FlexColumnWidth(1.8),
+                                                2: FlexColumnWidth(1.5),
+                                                3: FlexColumnWidth(0.5),
+                                                4: FlexColumnWidth(0.5),
+                                                5: FlexColumnWidth(2.2),
                                                 6: FlexColumnWidth(1),
+                                                7: FlexColumnWidth(1.2),
                                               },
                                               children: [
                                                 _pgsBuildTableSubheader(),
@@ -2643,12 +2556,13 @@ class PerformanceGovernanceSystemPageState
                                               ),
                                               columnWidths: const {
                                                 0: FlexColumnWidth(0.2),
-                                                1: FlexColumnWidth(1.3),
-                                                2: FlexColumnWidth(0.4),
-                                                3: FlexColumnWidth(0.4),
-                                                4: FlexColumnWidth(1.9),
-                                                5: FlexColumnWidth(0.7),
+                                                1: FlexColumnWidth(1.8),
+                                                2: FlexColumnWidth(1.5),
+                                                3: FlexColumnWidth(0.5),
+                                                4: FlexColumnWidth(0.5),
+                                                5: FlexColumnWidth(2.2),
                                                 6: FlexColumnWidth(1),
+                                                7: FlexColumnWidth(1.2),
                                               },
                                               children: [
                                                 ...rows.map(
@@ -2672,107 +2586,6 @@ class PerformanceGovernanceSystemPageState
                                         ),
                                       ),
                                     ),
-
-                                    // Column(
-                                    //   children: [
-                                    //     SizedBox(height: 20),
-
-                                    //     Table(
-                                    //       border: TableBorder.all(
-                                    //         color: const Color.fromARGB(
-                                    //           255,
-                                    //           49,
-                                    //           46,
-                                    //           46,
-                                    //         ),
-                                    //         width: 1,
-                                    //       ),
-                                    //       columnWidths: const {
-                                    //         0: FlexColumnWidth(1.5),
-                                    //         1: FlexColumnWidth(0.8),
-                                    //         2: FlexColumnWidth(2.6),
-                                    //         3: FlexColumnWidth(1),
-                                    //       },
-                                    //       children: [
-                                    //         _PgsDeliverableHeader(
-                                    //           officename:
-                                    //               officename ?? officeDisplay,
-                                    //           orderLevel: orderLevel,
-                                    //         ),
-                                    //       ],
-                                    //     ),
-                                    //     Table(
-                                    //       border: TableBorder.all(
-                                    //         color: const Color.fromARGB(
-                                    //           255,
-                                    //           49,
-                                    //           46,
-                                    //           46,
-                                    //         ),
-                                    //         width: 1,
-                                    //       ),
-                                    //       columnWidths: {
-                                    //         0: FlexColumnWidth(0.2),
-                                    //         1: FlexColumnWidth(1.3),
-                                    //         2: FlexColumnWidth(0.4),
-                                    //         3: FlexColumnWidth(0.4),
-                                    //         4: FlexColumnWidth(1.9),
-                                    //         5: FlexColumnWidth(0.7),
-                                    //         // 6: FlexColumnWidth(0.6),
-                                    //         // 7: FlexColumnWidth(1.30),
-                                    //         // 8: FlexColumnWidth(0.5),
-                                    //         6: FlexColumnWidth(1),
-                                    //       },
-                                    //       children: [_pgsBuildTableSubheader()],
-                                    //     ),
-                                    //     Expanded(
-                                    //       child: SingleChildScrollView(
-                                    //         child: Table(
-                                    //           border: TableBorder.all(
-                                    //             color: const Color.fromARGB(
-                                    //               255,
-                                    //               49,
-                                    //               46,
-                                    //               46,
-                                    //             ),
-                                    //             width: 1,
-                                    //           ),
-                                    //           columnWidths: const {
-                                    //             0: FlexColumnWidth(0.2),
-                                    //             1: FlexColumnWidth(1.3),
-                                    //             2: FlexColumnWidth(0.4),
-                                    //             3: FlexColumnWidth(0.4),
-                                    //             4: FlexColumnWidth(1.90),
-                                    //             5: FlexColumnWidth(0.7),
-                                    //             // 6: FlexColumnWidth(0.6),
-                                    //             // 7: FlexColumnWidth(1.30),
-                                    //             // 8: FlexColumnWidth(0.5),
-                                    //             6: FlexColumnWidth(1),
-                                    //           },
-                                    //           children: [
-                                    //             ...rows.map(
-                                    //               (rowId) =>
-                                    //                   _buildTableRowStrategicPGSDeliverableStatus(
-                                    //                     rowId,
-                                    //                     '',
-                                    //                     '',
-                                    //                     setState,
-                                    //                     orderLevel,
-                                    //                     id,
-
-                                    //                     setDialogState,
-
-                                    //                     showErrors:
-                                    //                         rowErrors[rowId] ??
-                                    //                         false,
-                                    //                   ),
-                                    //             ),
-                                    //           ],
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //   ],
-                                    // ),
                                   ],
                                 ),
                               ),
@@ -3206,7 +3019,7 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildDropdownKraCell(
+  Widget _buildtheme(
     int index,
     String? id,
     Function setDialogState,
@@ -3215,10 +3028,6 @@ class PerformanceGovernanceSystemPageState
     if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
       selectedKRA[index] = options.first['id'];
       selectedKRAObjects[index] = options.first;
-    }
-
-    if (!kraDescriptionController.containsKey(index)) {
-      kraDescriptionController[index] = TextEditingController();
     }
 
     final selectedKraObject =
@@ -3277,12 +3086,25 @@ class PerformanceGovernanceSystemPageState
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          const Text(
-            "KRA Description",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdownKraCell(
+    int index,
+    String? id,
+    Function setDialogState,
+    int orderLevel,
+  ) {
+    if (!kraDescriptionController.containsKey(index)) {
+      kraDescriptionController[index] = TextEditingController();
+    }
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           CustomTooltip(
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
@@ -3399,20 +3221,18 @@ class PerformanceGovernanceSystemPageState
   // Sub Header
   TableRow _buildTableSubHeaderStrategic() {
     return TableRow(
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 255, 254, 254),
-      ),
+      // decoration: BoxDecoration(
+      //   color: const Color.fromARGB(255, 255, 254, 254),
+      // ),
+      decoration: BoxDecoration(color: peachLight),
       children: [
         BuildHeaderCell(text: '#'),
+        BuildHeaderCell(text: 'PROCESS (CORE & SUPPORT)'),
         BuildHeaderCell(text: 'KRA'),
-
         BuildHeaderCell(text: 'DIRECT'),
         BuildHeaderCell(text: 'INDIRECT'),
         BuildHeaderCell(text: 'DELIVERABLES'),
         BuildHeaderCell(text: 'BY WHEN'),
-
-        // BuildHeaderCell(text: 'STATUS'),
-        // BuildHeaderCell(text: 'ACTION'),
         BuildHeaderCell(text: 'ACTION'),
       ],
     );
@@ -3447,6 +3267,7 @@ class PerformanceGovernanceSystemPageState
       decoration: BoxDecoration(color: rowColor),
       children: [
         _buildNumbering(index),
+        _buildtheme(index, id, setDialogState, orderLevel),
         _buildDropdownKraCell(index, id, setDialogState, orderLevel),
         _buildCheckboxCell(
           index,
@@ -3731,32 +3552,24 @@ class PerformanceGovernanceSystemPageState
         color: Color.fromARGB(255, 255, 254, 254),
       ),
       children: [
-        _buildSizedHeaderCell('#', width: 20),
-        _buildSizedHeaderCell('KRA', width: 100),
-        _buildSizedHeaderCell('DIRECT', width: 70),
-        _buildSizedHeaderCell('INDIRECT', width: 80),
-        _buildSizedHeaderCell('DELIVERABLES', width: 200),
-        _buildSizedHeaderCell('WHEN', width: 90),
-        // _buildSizedHeaderCell('STATUS', width: 100),
-        // _buildSizedHeaderCell('REMARKS', width: 120),
-        // _buildSizedHeaderCell('SCORE', width: 100),
-        _buildSizedHeaderCell('ACTION', width: 100),
-        // _buildSizedHeaderCell('ACTION', width: 100),
-      ],
-    );
-  }
+        // _buildSizedHeaderCell('#', width: 20),
+        // _buildSizedHeaderCell('THEME (PROCESS)', width: 100),
+        // _buildSizedHeaderCell('KRA', width: 100),
+        // _buildSizedHeaderCell('DIRECT', width: 70),
+        // _buildSizedHeaderCell('INDIRECT', width: 80),
+        // _buildSizedHeaderCell('DELIVERABLES', width: 200),
+        // _buildSizedHeaderCell('WHEN', width: 90),
 
-  Widget _buildSizedHeaderCell(String text, {double width = 10}) {
-    return TableCell(
-      verticalAlignment: TableCellVerticalAlignment.middle,
-      child: SizedBox(
-        width: width,
-        child: BuildHeaderCell(
-          text: text,
-          fontSize: 13,
-          fontStyle: FontStyle.normal,
-        ),
-      ),
+        // _buildSizedHeaderCell('ACTION', width: 100),
+        BuildHeaderCell(text: '#'),
+        BuildHeaderCell(text: 'THEME (PROCESS)'),
+        BuildHeaderCell(text: 'KRA'),
+        BuildHeaderCell(text: 'DIRECT'),
+        BuildHeaderCell(text: 'INDIRECT'),
+        BuildHeaderCell(text: 'DELIVERABLES'),
+        BuildHeaderCell(text: 'BY WHEN'),
+        BuildHeaderCell(text: 'ACTION'),
+      ],
     );
   }
 
@@ -3786,6 +3599,7 @@ class PerformanceGovernanceSystemPageState
       decoration: BoxDecoration(color: rowColor),
       children: [
         _buildNumbering(index),
+        _buildtheme(index, id, setDialogState, orderLevel),
         _buildDropdownKraCellPGSDeliverableStatus(
           index,
           id,
@@ -4209,76 +4023,15 @@ class PerformanceGovernanceSystemPageState
     Function setDialogState,
     int orderLevel,
   ) {
-    if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
-      selectedKRA[index] = options.first['id'];
-      selectedKRAObjects[index] = options.first;
-    }
-
     if (!kraDescriptionController.containsKey(index)) {
       kraDescriptionController[index] = TextEditingController();
     }
-
-    final selectedKraObject =
-        selectedKRAObjects[index] ??
-        (options.isNotEmpty ? options.first : null);
-
-    final kraTooltipMessage =
-        selectedKraObject?['remarks'] ?? 'No description available';
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CustomTooltip(
-            key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
-            maxLines: 4,
-            message: kraTooltipMessage,
-            child: DropdownButtonFormField<int>(
-              isExpanded: true,
-              value: selectedKRA[index],
-              onChanged:
-                  id != null && orderLevel >= 1
-                      ? null
-                      : (int? newValue) {
-                        if (newValue == null) return;
-                        setDialogState(() {
-                          selectedKRA[index] = newValue;
-                          final selectedOption = options.firstWhere(
-                            (option) => option['id'] == newValue,
-                            orElse:
-                                () => {
-                                  'id': -1,
-                                  'name': 'Unknown',
-                                  'remarks': 'Not found',
-                                },
-                          );
-
-                          selectedKRAObjects[index] = selectedOption;
-                        });
-                      },
-              items:
-                  options.map<DropdownMenuItem<int>>((option) {
-                    return DropdownMenuItem<int>(
-                      value: option['id'],
-                      child: Text(option['name']),
-                    );
-                  }).toList(),
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 20,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            "KRA Description",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
           Tooltip(
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
