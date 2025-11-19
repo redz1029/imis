@@ -149,3 +149,15 @@ class JobPositions {
     'HEAD, Family and Community Medicine',
   ];
 }
+
+class SwotYear {
+  static const List<String> years = [
+    '2024',
+    '2025',
+    '2026',
+    '2027',
+    '2028',
+    '2029',
+    '2030',
+  ];
+}
