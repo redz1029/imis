@@ -55,7 +55,7 @@ class _DeliverableStatusMonitoringPageState
   final _formKey = GlobalKey<FormState>();
   final GlobalKey _menuScoreRangeKey = GlobalKey();
   final GlobalKey _menuPageKey = GlobalKey();
-  final int dataColumns = 7;
+  final int dataColumns = 8;
   final double numberColumnWidth = 70;
   final double dataColumnWidth = 280;
   final dio = Dio();
@@ -70,6 +70,7 @@ class _DeliverableStatusMonitoringPageState
   final List<String> headers = [
     "PERIOD",
     "OFFICE",
+    "PROCESS (CORE & SUPPORT)",
     "KRA",
     "DIRECT",
     "DELIVERABLES",
@@ -708,6 +709,7 @@ class _DeliverableStatusMonitoringPageState
                                                                     0,
                                                                     'name',
                                                                     'remarks',
+                                                                    'strategic',
                                                                     false,
                                                                   ),
                                                         )
@@ -1832,7 +1834,8 @@ class _DeliverableStatusMonitoringPageState
                 "${deliverable['Start Date']} - ${deliverable['End Date']}",
               ),
               _cell(deliverable['officeName'] ?? ''),
-              _buildKRA(deliverable['kra'], deliverable['kraDescription']),
+              _buildCoreSupport(deliverable['kra']),
+              _buildKRA(deliverable['kraDescription']),
               _cell(deliverable['isDirect'] ? "Direct" : "Indirect"),
               _cell(deliverable['deliverableName'] ?? ''),
               _cell(deliverable['byWhen'] ?? ''),
@@ -1877,7 +1880,7 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  Widget _buildKRA(String? kra, String? description) {
+  Widget _buildCoreSupport(String? kra) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -1889,9 +1892,17 @@ class _DeliverableStatusMonitoringPageState
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-          if (description != null)
-            Text(description, style: const TextStyle(fontSize: 12)),
         ],
+      ),
+    );
+  }
+
+  Widget _buildKRA(String? description) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [if (description != null) Text(description)],
       ),
     );
   }
