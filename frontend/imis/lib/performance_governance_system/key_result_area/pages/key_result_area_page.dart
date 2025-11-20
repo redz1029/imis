@@ -138,10 +138,19 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
     );
   }
 
-  void showFormDialog({String? id, String? name, String? remarks}) {
+  void showFormDialog({
+    String? id,
+    String? name,
+    String? remarks,
+    String? strategicObjective,
+  }) {
     TextEditingController nameController = TextEditingController(text: name);
     TextEditingController remarksController = TextEditingController(
       text: remarks,
+    );
+
+    TextEditingController strategicObjectiveController = TextEditingController(
+      text: strategicObjective,
     );
 
     showDialog(
@@ -218,6 +227,23 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                     ),
                   ),
                 ),
+                gap4px,
+                SizedBox(
+                  width: 350,
+                  height: 65,
+                  child: TextFormField(
+                    controller: strategicObjectiveController,
+                    decoration: InputDecoration(
+                      labelText: 'Strategic Contribution',
+                      focusColor: primaryColor,
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      border: OutlineInputBorder(),
+                      focusedBorder: const OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -280,6 +306,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                       int.tryParse(id ?? '0') ?? 0,
                       nameController.text,
                       remarksController.text,
+                      strategicObjectiveController.text,
                       false,
                     );
                     await _kraService.createOrUpdateKra(kra);
@@ -399,6 +426,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                       DataColumn2(label: Text('#'), fixedWidth: 40),
                       DataColumn2(label: Text('Name'), size: ColumnSize.L),
                       DataColumn(label: Text('Description')),
+                      DataColumn(label: Text('Strategic Objectives')),
                       DataColumn(label: Text('Actions')),
                     ],
                     rows:
@@ -413,6 +441,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                               DataCell(Text(itemNumber.toString())),
                               DataCell(Text(kra.name)),
                               DataCell(Text(kra.remarks ?? '')),
+                              DataCell(Text(kra.strategicObjective ?? '')),
                               DataCell(
                                 Row(
                                   children: [
@@ -423,6 +452,8 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                                           id: kra.id.toString(),
                                           name: kra.name,
                                           remarks: kra.remarks,
+                                          strategicObjective:
+                                              kra.strategicObjective,
                                         );
                                       },
                                     ),
