@@ -11,6 +11,7 @@ KeyResultArea _$KeyResultAreaFromJson(Map<String, dynamic> json) =>
       (json['id'] as num).toInt(),
       json['name'] as String,
       json['remarks'] as String?,
+      json['strategicObjective'] as String?,
       json['isDeleted'] as bool,
       rowVersion: json['rowVersion'] as String?,
     );
@@ -22,4 +23,5 @@ Map<String, dynamic> _$KeyResultAreaToJson(KeyResultArea instance) =>
       'remarks': instance.remarks,
       'isDeleted': instance.isDeleted,
       'rowVersion': instance.rowVersion,
+      'strategicObjective': instance.strategicObjective,
     };

@@ -9,11 +9,13 @@ class KeyResultArea {
   String? remarks;
   bool isDeleted;
   String? rowVersion;
+  String? strategicObjective;
 
   KeyResultArea(
     this.id,
     this.name,
     this.remarks,
+    this.strategicObjective,
     this.isDeleted, {
     this.rowVersion,
   });
