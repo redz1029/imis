@@ -4,6 +4,7 @@ import 'package:imis/performance_governance_system/models/pgs_deliverable_histor
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/accomplishment_pgs_widget.dart';
+import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/build_header_cell.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
 import 'package:imis/widgets/pagination_controls.dart';
@@ -915,6 +916,7 @@ class PerformanceGovernanceSystemPageState
             kraData['id'] as int,
             kraData['name'] as String,
             kraData['remarks'] ?? '',
+            kraData['strategic objectives'] ?? '',
             true,
             rowVersion: rowVersion,
           ),
@@ -3221,9 +3223,6 @@ class PerformanceGovernanceSystemPageState
   // Sub Header
   TableRow _buildTableSubHeaderStrategic() {
     return TableRow(
-      // decoration: BoxDecoration(
-      //   color: const Color.fromARGB(255, 255, 254, 254),
-      // ),
       decoration: BoxDecoration(color: peachLight),
       children: [
         BuildHeaderCell(text: '#'),
@@ -3640,12 +3639,7 @@ class PerformanceGovernanceSystemPageState
           setDialogState,
           orderLevel,
         ),
-
-        // _buildDropdownCellStatusPgsDeliverableStatus(index, () => (index)),
-        // _buildExpandableTextAreaRemarksCell(index),
-        // _buildExpandableTextAreaPercentageCell(index),
         _buildCreateAccomplishmentCell(index, deliverableId),
-        // _buildCreateAccomplishmentCell(index),
       ],
     );
   }
@@ -3653,55 +3647,115 @@ class PerformanceGovernanceSystemPageState
   Widget _buildCreateAccomplishmentCell(int index, int deliverableId) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
-      child: SizedBox(
-        height: 30,
-        child: ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(4),
-              side: const BorderSide(color: Colors.black, width: 1),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            textStyle: const TextStyle(fontSize: 13),
-            minimumSize: Size.zero,
-          ).copyWith(
-            overlayColor: MaterialStateProperty.resolveWith<Color?>((states) {
-              if (states.contains(MaterialState.hovered)) {
-                return const Color.fromARGB(255, 221, 221, 221);
-              }
-              if (states.contains(MaterialState.pressed)) {
-                return const Color.fromARGB(255, 221, 221, 221);
-              }
-              return null; // default
-            }),
-          ),
-
-          onPressed: () async {
-            if (deliverableId == 0) {
-              MotionToast.warning(
-                title: const Text("Deliverable Not Saved"),
-                description: const Text(
-                  "Please save your deliverable first before creating an accomplishment.",
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            height: 30,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                  side: const BorderSide(color: Colors.black, width: 1),
                 ),
-                toastAlignment: Alignment.center,
-              ).show(context);
-              return;
-            }
-            await loadAccomplishments(deliverableId);
-            _showAccomplishmentDialog(index);
-          },
-          icon: const Icon(
-            Icons.bar_chart_outlined,
-            size: 14,
-            color: primaryTextColor,
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                textStyle: const TextStyle(fontSize: 13),
+                minimumSize: Size.zero,
+              ).copyWith(
+                overlayColor: MaterialStateProperty.resolveWith<Color?>((
+                  states,
+                ) {
+                  if (states.contains(MaterialState.hovered)) {
+                    return const Color.fromARGB(255, 221, 221, 221);
+                  }
+                  if (states.contains(MaterialState.pressed)) {
+                    return const Color.fromARGB(255, 221, 221, 221);
+                  }
+                  return null; // default
+                }),
+              ),
+
+              onPressed: () async {
+                if (deliverableId == 0) {
+                  MotionToast.warning(
+                    title: const Text("Deliverable Not Saved"),
+                    description: const Text(
+                      "Please save your deliverable first before creating an accomplishment.",
+                    ),
+                    toastAlignment: Alignment.center,
+                  ).show(context);
+                  return;
+                }
+                await loadAccomplishments(deliverableId);
+                _showAccomplishmentDialog(index);
+              },
+              icon: const Icon(
+                Icons.bar_chart_outlined,
+                size: 14,
+                color: primaryTextColor,
+              ),
+              label: const Text(
+                'Accomplishment',
+                style: TextStyle(color: primaryTextColor, fontSize: 10),
+              ),
+            ),
           ),
-          label: const Text(
-            'Accomplishment',
-            style: TextStyle(color: primaryTextColor, fontSize: 10),
+          gap8px,
+          SizedBox(
+            height: 30,
+            child: ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                  side: const BorderSide(color: Colors.black, width: 1),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                textStyle: const TextStyle(fontSize: 13),
+                minimumSize: Size.zero,
+              ).copyWith(
+                overlayColor: MaterialStateProperty.resolveWith<Color?>((
+                  states,
+                ) {
+                  if (states.contains(MaterialState.hovered)) {
+                    return const Color.fromARGB(255, 221, 221, 221);
+                  }
+                  if (states.contains(MaterialState.pressed)) {
+                    return const Color.fromARGB(255, 221, 221, 221);
+                  }
+                  return null; // default
+                }),
+              ),
+
+              onPressed: () async {
+                if (deliverableId == 0) {
+                  MotionToast.warning(
+                    title: const Text("Deliverable Not Saved"),
+                    description: const Text(
+                      "Please save your deliverable first before creating an accomplishment.",
+                    ),
+                    toastAlignment: Alignment.center,
+                  ).show(context);
+                  return;
+                }
+                await loadAccomplishments(deliverableId);
+                showBreakthroughFormDialog(index, context, userId);
+              },
+              icon: const Icon(
+                Icons.bar_chart_outlined,
+                size: 14,
+                color: primaryTextColor,
+              ),
+              label: const Text(
+                'Breakthrough Scoring',
+                style: TextStyle(color: primaryTextColor, fontSize: 10),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -4007,6 +4061,310 @@ class PerformanceGovernanceSystemPageState
                         ),
                       ),
                     ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<bool?> showBreakthroughFormDialog(
+    int index,
+    BuildContext context,
+    String userId,
+  ) {
+    final int? kraId = selectedKRA[index];
+    final String kraName =
+        options.firstWhere(
+          (o) => o['id'] == kraId,
+          orElse:
+              () => {
+                'id': 1,
+                'name': 'Unknown',
+                'remarks': '',
+                'isDeleted': false,
+                'rowVersion': '',
+              },
+        )['name'];
+    final int deliverableId = deliverableIds[index] ?? 0;
+    final String deliverableName = deliverablesControllers[index]?.text ?? '';
+    final bool isDirect = selectedDirect[index] ?? false;
+    final String byWhen = selectedByWhen[index] ?? '';
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          backgroundColor: mainBgColor,
+          insetPadding: const EdgeInsets.all(20),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1200),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Scrollable Content
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Breakthrough Form",
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.close),
+                                onPressed: () => Navigator.pop(context),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Info section
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 4),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [Text("KRA: $kraName")],
+                                ),
+                                const SizedBox(height: 4),
+
+                                Text(
+                                  "Type: ${isDirect ? 'Direct' : 'Indirect'}",
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "Deliverable: $deliverableName",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+
+                          const Row(
+                            children: [
+                              Icon(Icons.star_outline, size: 18),
+                              SizedBox(width: 8),
+                              Text(
+                                "Breakthrough Scoring",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Dynamic table
+                          Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.black12),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Column(
+                              children: [
+                                // Headers
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade50,
+                                    borderRadius: const BorderRadius.only(
+                                      topLeft: Radius.circular(8),
+                                      topRight: Radius.circular(8),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: const [
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Percent Accomplishment",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Target Achievement",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Strategic Contribution ",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Breakthrough Impact",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Final Score",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        flex: 2,
+                                        child: Center(
+                                          child: Text(
+                                            "Final Grade",
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                Column(
+                                  children: [
+                                    const Divider(height: 1),
+                                    BreakthroughWidget(
+                                      deliverableId: deliverableId,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  SizedBox(height: 20),
+                  PermissionWidget(
+                    allowedRoles: [
+                      PermissionString.pgsAuditor,
+                      PermissionString.roleAdmin,
+                    ],
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: primaryColor),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final shouldSave = await showDialog<bool>(
+                              context: context,
+                              builder:
+                                  (ctx) => AlertDialog(
+                                    title: Text("Confirm Save"),
+                                    content: Text(
+                                      "Are you sure you want to save this data?",
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(ctx).pop(false),
+                                        child: Text(
+                                          "No",
+                                          style: TextStyle(color: primaryColor),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(ctx).pop(true),
+                                        child: Text(
+                                          "Yes",
+                                          style: TextStyle(color: primaryColor),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                            );
+
+                            if (shouldSave != true) return;
+                            MotionToast.success(
+                              description: Text('Saved Successfully'),
+                              toastAlignment: Alignment.topCenter,
+                            ).show(context);
+                            await saveBreakthroughData(deliverableId);
+                            Navigator.of(context).pop(true);
+                          },
+                          child: Text(
+                            "Save",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
