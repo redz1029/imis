@@ -11,6 +11,7 @@ namespace IMIS.Application.PgsModule
         Task<List<PgsDeliverable>?> GetAll(CancellationToken cancellationToken);       
         Task<EntityPageList<PgsDeliverable, long>> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken);
         Task<List<int>> GetUserOfficeIdsAsync(string userId, CancellationToken cancellationToken);
+        Task<long?> GetCurrentYearPeriodIdAsync(int year, CancellationToken cancellationToken);
     }
 }
 

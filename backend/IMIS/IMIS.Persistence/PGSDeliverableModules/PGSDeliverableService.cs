@@ -85,23 +85,43 @@ namespace IMIS.Persistence.PGSModules
         {
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
-        }
+        }      
         public async Task<PgsDeliverableMonitorPageList> GetFilteredAsync(PgsDeliverableMonitorFilter filter, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
                 return PgsDeliverableMonitorPageList.Create(new List<PgsDeliverable>(), filter.Page, filter.PageSize, 0);
+          
+            if (!filter.PgsPeriodId.HasValue)
+            {
+                int currentYear = DateTime.Now.Year;
 
-            var userRoles = await _userManager.GetRolesAsync(currentUser);            
+                var currentYearPeriodId = await _repository
+                    .GetCurrentYearPeriodIdAsync(currentYear, cancellationToken);
+
+                if (currentYearPeriodId != null)
+                {
+                    filter.PgsPeriodId = (int?)currentYearPeriodId;
+                }
+                else
+                {
+                    return PgsDeliverableMonitorPageList.Create(
+                        new List<PgsDeliverable>(), filter.Page, filter.PageSize, 0
+                    );
+                }
+            }
+          
+            var userRoles = await _userManager.GetRolesAsync(currentUser);
             var filtered = await _repository.GetFilteredAsync(filter, cancellationToken);
-            
-            if (!userRoles.Any(r => r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) || 
-                                    r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                                    r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                                    r.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                                    r.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
-                                    r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
-                                    r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase)))
+
+            if (!userRoles.Any(r =>
+                r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                r.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                r.Equals(new PgsAuditorHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                r.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                r.Equals(new PgsHead().Name, StringComparison.OrdinalIgnoreCase) ||
+                r.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                r.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase)))
             {
                 var userOfficeIds = await _repository.GetUserOfficeIdsAsync(currentUser.Id, cancellationToken);
 
@@ -109,7 +129,7 @@ namespace IMIS.Persistence.PGSModules
                 {
                     filtered.Items = filtered.Items
                         .Where(d => d.PerfomanceGovernanceSystem != null &&
-                         userOfficeIds.Contains(d.PerfomanceGovernanceSystem.Office.Id))
+                                    userOfficeIds.Contains(d.PerfomanceGovernanceSystem.Office.Id))
                         .ToList();
                 }
                 else
@@ -118,19 +138,20 @@ namespace IMIS.Persistence.PGSModules
                 }
 
                 return PgsDeliverableMonitorPageList.Create(
-                 filtered.Items,
-                 filter.Page,
-                 filter.PageSize,
-                 filtered.TotalCount
-             );
+                     filtered.Items,
+                     filter.Page,
+                     filter.PageSize,
+                     filtered.TotalCount
+                );
             }
 
             return PgsDeliverableMonitorPageList.Create(
-                filtered.Items,
-                filter.Page,
-                filter.PageSize,
-                filtered.TotalCount);
-        }             
+                 filtered.Items,
+                 filter.Page,
+                 filter.PageSize,
+                 filtered.TotalCount);
+        }
+
         public async Task<PgsDeliverableMonitorPageList> UpdateDeliverablesAsync(
          PgsDeliverableMonitorPageList request,
          IOutputCacheStore cache,
