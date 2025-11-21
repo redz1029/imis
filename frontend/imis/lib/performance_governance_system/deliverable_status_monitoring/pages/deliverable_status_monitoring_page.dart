@@ -1993,7 +1993,7 @@ class _DeliverableStatusMonitoringPageState
                 message:
                     hasCompleteData
                         ? 'Click to open Breakthrough Scoring'
-                        : 'Please complete Accomplishment data first',
+                        : "The accomplishment data hasn't been completed yet.",
                 child: SizedBox(
                   height: 30,
                   child: ElevatedButton.icon(

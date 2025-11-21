@@ -253,7 +253,10 @@ class ViewSummaryNarrativeReportPageState
                     Flexible(fit: FlexFit.tight, child: Container()),
                     if (selectedTabIndex == 0)
                       PermissionWidget(
-                        allowedRoles: [PermissionString.headAuditor],
+                        allowedRoles: [
+                          PermissionString.headAuditor,
+                          PermissionString.roleAdmin,
+                        ],
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
