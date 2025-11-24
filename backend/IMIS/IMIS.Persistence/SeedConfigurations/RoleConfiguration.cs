@@ -29,7 +29,7 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                 {
                     Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                     Name = new StandardUserRole().Name,
-                    NormalizedName = "PGS USER",
+                    NormalizedName = "STANDARD USER",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                 },
                  new IdentityRole
