@@ -65,14 +65,16 @@ namespace IMIS.Presentation.UserModule
             }).WithTags(RoleGroup)
             .RequireAuthorization()
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup), true);
-
-            roleGroup.MapGet("/roles/{roleId}/permission", async (string roleId,
-            [FromServices] RoleManager<IdentityRole> roleManager,
-            [FromServices] ImisDbContext db) =>
+         
+            roleGroup.MapGet("/users/{userId}/permissions", async (
+            string userId,
+            string roleId, 
+            UserManager<User> userManager,
+            ImisDbContext db
+            ) =>
             {
-                var role = await roleManager.FindByIdAsync(roleId);
-                if (role == null)
-                    return Results.NotFound(new { message = "Role not found." });
+                var user = await userManager.FindByIdAsync(userId);
+                if (user == null) return Results.NotFound(new { message = "User not found." });
 
                 var roleClaims = await db.Set<IdentityRoleClaim<string>>()
                     .Where(rc => rc.RoleId == roleId && rc.ClaimType == PermissionClaimType.Claim)
@@ -80,80 +82,83 @@ namespace IMIS.Presentation.UserModule
                     .ToListAsync();
 
                 var userClaims = await db.Set<IdentityUserClaim<string>>()
-                    .Where(uc => uc.ClaimType == PermissionClaimType.Claim)
-                    .Select(uc => uc.ClaimValue!)
-                    .Distinct()
+                    .Where(c => c.UserId == userId && c.ClaimType == PermissionClaimType.Claim)
+                    .Select(c => c.ClaimValue!)
                     .ToListAsync();
 
-                var combined = roleClaims.Union(userClaims).Distinct().ToList();
-
-                static string FormatPermissionName(string value)
-                {
-                    if (string.IsNullOrWhiteSpace(value)) return value;
-                    return System.Text.RegularExpressions.Regex.Replace(value, "(\\B[A-Z])", " $1");
-                }
-
-                var permissions = combined
+                var finalPermissions = roleClaims
                     .Select(p => new
                     {
-                        Permission = FormatPermissionName(p),
-                        IsAssigned = roleClaims.Contains(p) 
+                        permission = System.Text.RegularExpressions.Regex
+                            .Replace(p, "(\\B[A-Z])", " $1"),
+                        isAssigned = userClaims.Contains(p)
                     })
-                    .OrderBy(p => p.Permission)
+                    .OrderBy(p => p.permission)
                     .ToList();
 
                 return Results.Ok(new
                 {
-                    role.Id,
-                    role.Name,
-                    Permissions = permissions
+                    user.Id,
+                    user.UserName,
+                    permissions = finalPermissions
                 });
             })
-            .WithTags(RoleGroup)
-            .RequireAuthorization()
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
+           .RequireAuthorization()
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
 
-            roleGroup.MapPut("/roles/{roleId}/permissions", async (string roleId,
-            [FromBody] RolePermissionUpdateModel request,
-            [FromServices] RoleManager<IdentityRole> roleManager,
-            [FromServices] ImisDbContext db,
-            [FromServices] IServiceProvider sp) =>
+            roleGroup.MapPut("/users/{userId}/permissions", async (
+            string userId,
+            RolePermissionUpdateModel request,
+            UserManager<User> userManager,
+            ImisDbContext db
+             ) =>
             {
-                var role = await roleManager.FindByIdAsync(roleId);
-                if (role == null)
-                    return Results.NotFound(new { message = "Role not found." });
+                var user = await userManager.FindByIdAsync(userId);
+                if (user == null)
+                    return Results.NotFound(new { message = "User not found." });
 
-                var currentClaims = await db.Set<IdentityRoleClaim<string>>()
-                    .Where(rc => rc.RoleId == roleId && rc.ClaimType == PermissionClaimType.Claim)
+                // Get current user claims
+                var currentClaims = await db.Set<IdentityUserClaim<string>>()
+                    .Where(c => c.UserId == userId && c.ClaimType == PermissionClaimType.Claim)
                     .ToListAsync();
 
                 foreach (var permission in request.Permissions)
                 {
                     var normalized = permission.Permission.Replace(" ", "");
 
-                    var existingClaim = currentClaims
-                        .FirstOrDefault(c => c.ClaimValue!.Equals(normalized, StringComparison.OrdinalIgnoreCase));
+                    var existingClaim = currentClaims.FirstOrDefault(c => c.ClaimValue!.Equals(normalized, StringComparison.OrdinalIgnoreCase));
 
                     if (permission.IsAssigned)
                     {
                         if (existingClaim == null)
-                            await roleManager.AddClaimAsync(role, new Claim(PermissionClaimType.Claim, normalized));
+                        {
+                            var claim = new IdentityUserClaim<string>
+                            {
+                                UserId = userId,
+                                ClaimType = PermissionClaimType.Claim,
+                                ClaimValue = normalized
+                            };
+                            db.Set<IdentityUserClaim<string>>().Add(claim);
+                        }
                     }
                     else
                     {
                         if (existingClaim != null)
-                            await roleManager.RemoveClaimAsync(role, new Claim(PermissionClaimType.Claim, normalized));
-                    } 
-                }  
+                        {
+                            db.Set<IdentityUserClaim<string>>().Remove(existingClaim);
+                        }
+                    }
+                }
 
-                var outputCacheStore = sp.GetRequiredService<IOutputCacheStore>();
-                await outputCacheStore.EvictByTagAsync("roles", default);
+                await db.SaveChangesAsync();
 
-                return Results.Ok(new { message = "Role permissions updated successfully." });
+                return Results.Ok(new
+                {
+                    message = "User permissions updated successfully. Please re-login for changes to take effect."
+                });
             })
-           .WithTags(RoleGroup)
-           .RequireAuthorization();
-
+            .RequireAuthorization();
+         
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
             userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup)); 
@@ -280,7 +285,7 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok("User updated successfully.");
         }
-   
+        
         private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp)
         where TUser : User
         {
@@ -302,14 +307,25 @@ namespace IMIS.Presentation.UserModule
                 .Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id, (uo, o) => new { o.Id, o.Name })
                 .Distinct()
                 .ToList();
+         
+            var roleClaims = await dbContext.Set<IdentityRoleClaim<string>>()
+                .Where(rc => roles.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType.Claim)
+                .Select(rc => rc.ClaimValue!)
+                .ToListAsync();
 
-            var accessToken = await TokenUtils.GenerateAccessTokenAsync(user, roles, userManager, roleManager);
+            var userClaims = await dbContext.Set<IdentityUserClaim<string>>()
+                .Where(c => c.UserId == user.Id && c.ClaimType == PermissionClaimType.Claim)
+                .Select(c => c.ClaimValue!)
+                .ToListAsync();
+
+            var effectivePermissions = userClaims.Any() ? userClaims : roleClaims;
+
+            var accessToken = await TokenUtils.GenerateAccessTokenAsync(user, roles, userManager, roleManager, effectivePermissions);
             var refreshToken = TokenUtils.GenerateRefreshToken();
 
             var hashedAccessToken = TokenUtils.HashToken(accessToken);
             var hashedRefreshToken = TokenUtils.HashToken(refreshToken);
 
-            // Store hashed tokens securely
             await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "AccessTokenHash", hashedAccessToken);
             await userManager.SetAuthenticationTokenAsync(user, "IMIS_API", "RefreshTokenHash", hashedRefreshToken);
 
@@ -342,8 +358,7 @@ namespace IMIS.Presentation.UserModule
                 return Results.ValidationProblem(result.Errors.ToDictionary(e => e.Code, e => new[] { e.Description }));
             }         
             return Results.Ok("Password changed successfully.");
-        }
-        // Refresh Token method              
+        }      
         private static async Task<IResult> RefreshToken<TUser>(
         [FromBody] UserRefreshDto refresh,
         IServiceProvider sp)
@@ -352,6 +367,7 @@ namespace IMIS.Presentation.UserModule
             var signInManager = sp.GetRequiredService<SignInManager<TUser>>();
             var userManager = signInManager.UserManager;
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
+            var dbContext = sp.GetRequiredService<ImisDbContext>();
 
             var user = await userManager.FindByIdAsync(refresh.Id);
             if (user == null)
@@ -360,20 +376,36 @@ namespace IMIS.Presentation.UserModule
             }
 
             var providedHashedToken = TokenUtils.HashToken(refresh.RefreshToken);
-
-            // Retrieve the stored hashed refresh token
             var storedHashedToken = await userManager.GetAuthenticationTokenAsync(user, "IMIS_API", "RefreshTokenHash");
             if (string.IsNullOrEmpty(storedHashedToken) || storedHashedToken != providedHashedToken)
             {
                 return Results.Unauthorized();
             }
 
-            // Valid refresh token: generate new tokens
             var roles = await userManager.GetRolesAsync(user);
-            var accessToken = await TokenUtils.GenerateAccessTokenAsync(user, roles, userManager, roleManager);
+
+            var roleClaims = await dbContext.Set<IdentityRoleClaim<string>>()
+                .Where(rc => roles.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType.Claim)
+                .Select(rc => rc.ClaimValue!)
+                .ToListAsync();
+
+            var userClaims = await dbContext.Set<IdentityUserClaim<string>>()
+                .Where(c => c.UserId == user.Id && c.ClaimType == PermissionClaimType.Claim)
+                .Select(c => c.ClaimValue!)
+                .ToListAsync();
+
+            var effectivePermissions = userClaims.Any() ? userClaims : roleClaims;
+
+            var accessToken = await TokenUtils.GenerateAccessTokenAsync(
+                user,
+                roles,
+                userManager,
+                roleManager,
+                effectivePermissions 
+            );
+
             var newRefreshToken = TokenUtils.GenerateRefreshToken();
 
-            // Hash and store the new tokens
             var hashedAccessToken = TokenUtils.HashToken(accessToken);
             var hashedRefreshToken = TokenUtils.HashToken(newRefreshToken);
 
