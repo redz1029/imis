@@ -52,6 +52,48 @@ class UserRolePageState extends State<UserRolePage> {
     });
   }
 
+  Future<List<dynamic>?> _fetchPermissions(String userId, String roleId) async {
+    try {
+      final response = await AuthenticatedRequest.get(
+        dio,
+        'https://localhost:7273/users/$userId/permissions?roleId=$roleId',
+      );
+
+      if (response.statusCode == 200) {
+        return response.data['permissions'];
+      }
+
+      return null;
+    } catch (e) {
+      MotionToast.error(
+        description: Text('Failed to fetch permissions'),
+      ).show(context);
+      return null;
+    }
+  }
+
+  Future<void> _updatePermission(
+    String userId,
+    String userName,
+    List<dynamic> permissions,
+  ) async {
+    try {
+      final response = await AuthenticatedRequest.put(
+        dio,
+        'https://localhost:7273/users/$userId/permissions',
+        data: {"id": userId, "name": userName, "permissions": permissions},
+      );
+
+      if (response.statusCode == 200) {
+        print("Permission updated successfully");
+      } else {
+        print("Failed: ${response.data}");
+      }
+    } catch (e) {
+      print("Error updating permission: $e");
+    }
+  }
+
   Future<void> _fetchRolesAndUsers() async {
     final roles = await _userRoleService.fetchRoles();
     final users = await _commonService.fetchUsers();
@@ -251,16 +293,56 @@ class UserRolePageState extends State<UserRolePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Flexible(child: Text(roleName)),
-                              IconButton(
-                                icon: Icon(
-                                  Icons.close,
-                                  color: primaryTextColor,
-                                ),
-                                onPressed: () {
-                                  setStateDialog(
-                                    () => currentRoles.remove(roleName),
-                                  );
-                                },
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.edit,
+                                      color: primaryTextColor,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: BoxConstraints(),
+
+                                    // Inside the IconButton's onPressed for editing permissions
+                                    onPressed: () async {
+                                      final role = roleList.firstWhere(
+                                        (r) =>
+                                            r.name.toLowerCase() ==
+                                            roleName.toLowerCase(),
+                                      );
+
+                                      final roleId = role.id;
+
+                                      final permissions =
+                                          await _fetchPermissions(
+                                            _selectedUserId!,
+                                            roleId,
+                                          );
+
+                                      if (permissions != null) {
+                                        _showPermissionsDialog(
+                                          _selectedUserId!, // <-- REQUIRED
+                                          roleId, // <-- REQUIRED
+                                          permissions, // <-- LIST
+                                        );
+                                      }
+                                    },
+                                  ),
+                                  SizedBox(width: 6),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.close,
+                                      color: primaryTextColor,
+                                    ),
+                                    padding: EdgeInsets.zero,
+                                    constraints: BoxConstraints(),
+                                    onPressed: () {
+                                      setStateDialog(
+                                        () => currentRoles.remove(roleName),
+                                      );
+                                    },
+                                  ),
+                                ],
                               ),
                             ],
                           ),
@@ -460,10 +542,68 @@ class UserRolePageState extends State<UserRolePage> {
     );
   }
 
+  void _showPermissionsDialog(
+    String userId,
+    String userName,
+    List<dynamic> permissions,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              backgroundColor: mainBgColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0),
+              ),
+              title: Text('Permissions'),
+              content: SizedBox(
+                width: 700,
+                height: 300,
+                child:
+                    permissions.isNotEmpty
+                        ? ListView.builder(
+                          itemCount: permissions.length,
+                          itemBuilder: (context, index) {
+                            final item = permissions[index];
+
+                            return CheckboxListTile(
+                              title: Text(item['permission']),
+                              value: item['isAssigned'],
+                              onChanged: (value) async {
+                                // Update UI immediately
+                                setDialogState(() {
+                                  item['isAssigned'] = value;
+                                });
+
+                                await _updatePermission(
+                                  userId,
+                                  userName,
+                                  permissions,
+                                );
+                              },
+                            );
+                          },
+                        )
+                        : Text('No permissions found.'),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Close', style: TextStyle(color: primaryColor)),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isMinimized = MediaQuery.of(context).size.width < 600;
-
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
@@ -546,7 +686,6 @@ class UserRolePageState extends State<UserRolePage> {
                                 filteredList
                                     .where((ur) => ur.userId == user.id)
                                     .toList();
-
                             return Card(
                               color: mainBgColor,
                               elevation: 0,
