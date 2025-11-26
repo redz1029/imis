@@ -552,6 +552,7 @@ class UserRolePageState extends State<UserRolePage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
+            bool allChecked = permissions.every((p) => p['isAssigned'] == true);
             return AlertDialog(
               backgroundColor: mainBgColor,
               shape: RoundedRectangleBorder(
@@ -560,33 +561,73 @@ class UserRolePageState extends State<UserRolePage> {
               title: Text('Permissions'),
               content: SizedBox(
                 width: 700,
-                height: 300,
-                child:
-                    permissions.isNotEmpty
-                        ? ListView.builder(
-                          itemCount: permissions.length,
-                          itemBuilder: (context, index) {
-                            final item = permissions[index];
+                height: 350,
+                child: Column(
+                  children: [
+                    CheckboxListTile(
+                      title: Text(
+                        allChecked ? "Uncheck All" : "Check All",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      value: allChecked,
+                      onChanged: (value) async {
+                        setDialogState(() {
+                          for (var item in permissions) {
+                            item['isAssigned'] = value;
+                          }
+                        });
 
-                            return CheckboxListTile(
-                              title: Text(item['permission']),
-                              value: item['isAssigned'],
-                              onChanged: (value) async {
-                                // Update UI immediately
-                                setDialogState(() {
-                                  item['isAssigned'] = value;
-                                });
+                        await _updatePermission(userId, userName, permissions);
+                      },
+                      fillColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.selected)) {
+                          return primaryColor;
+                        }
+                        return Colors.transparent;
+                      }),
+                    ),
+                    Divider(),
+                    gap8px,
+                    Expanded(
+                      child:
+                          permissions.isNotEmpty
+                              ? ListView.builder(
+                                itemCount: permissions.length,
+                                itemBuilder: (context, index) {
+                                  final item = permissions[index];
+                                  return CheckboxListTile(
+                                    title: Text(item['permission']),
+                                    value: item['isAssigned'],
+                                    onChanged: (value) async {
+                                      setDialogState(() {
+                                        item['isAssigned'] = value;
+                                      });
 
-                                await _updatePermission(
-                                  userId,
-                                  userName,
-                                  permissions,
-                                );
-                              },
-                            );
-                          },
-                        )
-                        : Text('No permissions found.'),
+                                      await _updatePermission(
+                                        userId,
+                                        userName,
+                                        permissions,
+                                      );
+                                    },
+                                    controlAffinity:
+                                        ListTileControlAffinity.leading,
+                                    fillColor: WidgetStateProperty.resolveWith((
+                                      states,
+                                    ) {
+                                      if (states.contains(
+                                        WidgetState.selected,
+                                      )) {
+                                        return primaryColor;
+                                      }
+                                      return Colors.transparent;
+                                    }),
+                                  );
+                                },
+                              )
+                              : Text('No permissions found.'),
+                    ),
+                  ],
+                ),
               ),
               actions: [
                 TextButton(
