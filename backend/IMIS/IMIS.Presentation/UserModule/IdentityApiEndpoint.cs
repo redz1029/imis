@@ -344,7 +344,7 @@ namespace IMIS.Presentation.UserModule
                 user.LastName,
                 user.Position,
                 roles,
-                roleIds,     // ← Added here
+                roleIds, 
                 offices,
                 accessToken,
                 refreshToken
