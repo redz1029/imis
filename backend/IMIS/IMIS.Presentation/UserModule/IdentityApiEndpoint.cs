@@ -284,8 +284,7 @@ namespace IMIS.Presentation.UserModule
             await outputCacheStore.EvictByTagAsync("roles", default);
 
             return Results.Ok("User updated successfully.");
-        }
-        
+        }        
         private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp)
         where TUser : User
         {
@@ -302,14 +301,22 @@ namespace IMIS.Presentation.UserModule
 
             var roles = await userManager.GetRolesAsync(user);
 
+            var roleIds = new List<string>();
+            foreach (var roleName in roles)
+            {
+                var role = await roleManager.FindByNameAsync(roleName);
+                if (role != null)
+                    roleIds.Add(role.Id);
+            }
+
             var offices = dbContext.UserOffices
                 .Where(uo => uo.UserId == user.Id)
                 .Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id, (uo, o) => new { o.Id, o.Name })
                 .Distinct()
                 .ToList();
-         
+
             var roleClaims = await dbContext.Set<IdentityRoleClaim<string>>()
-                .Where(rc => roles.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType.Claim)
+                .Where(rc => roleIds.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType.Claim)
                 .Select(rc => rc.ClaimValue!)
                 .ToListAsync();
 
@@ -337,11 +344,13 @@ namespace IMIS.Presentation.UserModule
                 user.LastName,
                 user.Position,
                 roles,
+                roleIds,     // ← Added here
                 offices,
                 accessToken,
                 refreshToken
             });
         }
+
 
         private static async Task<IResult> ChangePassword<TUser>([FromBody] ChangePasswordRequest request,[FromServices] UserManager<TUser> userManager,
         HttpContext httpContext) where TUser : User
