@@ -284,7 +284,7 @@ namespace IMIS.Presentation.UserModule
             await outputCacheStore.EvictByTagAsync("roles", default);
 
             return Results.Ok("User updated successfully.");
-        }        
+        }
         private static async Task<IResult> LoginUser<TUser>([FromBody] UserLoginDto login, IServiceProvider sp)
         where TUser : User
         {
@@ -301,12 +301,18 @@ namespace IMIS.Presentation.UserModule
 
             var roles = await userManager.GetRolesAsync(user);
 
-            var roleIds = new List<string>();
+            var roleList = new List<object>();
             foreach (var roleName in roles)
             {
                 var role = await roleManager.FindByNameAsync(roleName);
                 if (role != null)
-                    roleIds.Add(role.Id);
+                {
+                    roleList.Add(new
+                    {
+                        name = roleName,
+                        id = role.Id
+                    });
+                }
             }
 
             var offices = dbContext.UserOffices
@@ -314,6 +320,8 @@ namespace IMIS.Presentation.UserModule
                 .Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id, (uo, o) => new { o.Id, o.Name })
                 .Distinct()
                 .ToList();
+
+            var roleIds = roleList.Select(r => (string)r.GetType().GetProperty("id")!.GetValue(r)!).ToList();
 
             var roleClaims = await dbContext.Set<IdentityRoleClaim<string>>()
                 .Where(rc => roleIds.Contains(rc.RoleId) && rc.ClaimType == PermissionClaimType.Claim)
@@ -343,15 +351,12 @@ namespace IMIS.Presentation.UserModule
                 user.MiddleName,
                 user.LastName,
                 user.Position,
-                roles,
-                roleIds, 
+                roles = roleList,
                 offices,
                 accessToken,
                 refreshToken
             });
         }
-
-
         private static async Task<IResult> ChangePassword<TUser>([FromBody] ChangePasswordRequest request,[FromServices] UserManager<TUser> userManager,
         HttpContext httpContext) where TUser : User
         {          
