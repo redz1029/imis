@@ -11,6 +11,14 @@ class Roles {
 
   Roles(this.id, this.name, this.normalizedName, this.concurrencyStamp);
 
-  factory Roles.fromJson(Map<String, dynamic> json) => _$RolesFromJson(json);
+  factory Roles.fromJson(Map<String, dynamic> json) {
+    return Roles(
+      json['id']?.toString() ?? '',
+      json['name']?.toString() ?? '',
+      json['normalizedName']?.toString() ?? '',
+      json['concurrencyStamp']?.toString(),
+    );
+  }
+
   Map<String, dynamic> toJson() => _$RolesToJson(this);
 }

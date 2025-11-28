@@ -4,6 +4,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -48,6 +49,7 @@ class AuthUtil {
       await sharedPref.setStringList(officeIdsKey, officeIds);
     }
     await sharedPref.setString(userKey, jsonEncode(user.toJson()));
+
     await sharedPref.setBool(isLoggedInKey, true);
     return user;
   }
@@ -65,15 +67,21 @@ class AuthUtil {
     return UserRegistration.fromJson(jsonDecode(userJson));
   }
 
+  static Future<List<Roles>?> fetchRoles() async {
+    final sharedPref = await SharedPreferences.getInstance();
+    String? rolesJson = sharedPref.getString(rolesKey);
+
+    if (rolesJson != null) {
+      final List<dynamic> decoded = jsonDecode(rolesJson);
+      return decoded.map((r) => Roles.fromJson(r)).toList();
+    }
+
+    return null;
+  }
+
   static Future<String?> getAccessToken() async {
     final user = await fetchLoggedUser();
     return user?.accessToken;
-  }
-
-  static Future<List<String>?> fetchRoles() async {
-    final sharedPref = await SharedPreferences.getInstance();
-    String? rolesJson = sharedPref.getString(rolesKey);
-    return rolesJson != null ? List<String>.from(jsonDecode(rolesJson)) : null;
   }
 
   static Future<List<String>?> fetchOfficeNames() async {
