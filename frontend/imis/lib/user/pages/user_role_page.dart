@@ -292,7 +292,6 @@ class UserRolePageState extends State<UserRolePage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Flexible(child: Text(roleName)),
                               Row(
                                 children: [
                                   IconButton(
@@ -302,8 +301,6 @@ class UserRolePageState extends State<UserRolePage> {
                                     ),
                                     padding: EdgeInsets.zero,
                                     constraints: BoxConstraints(),
-
-                                    // Inside the IconButton's onPressed for editing permissions
                                     onPressed: () async {
                                       final role = roleList.firstWhere(
                                         (r) =>
@@ -321,28 +318,30 @@ class UserRolePageState extends State<UserRolePage> {
 
                                       if (permissions != null) {
                                         _showPermissionsDialog(
-                                          _selectedUserId!, // <-- REQUIRED
-                                          roleId, // <-- REQUIRED
-                                          permissions, // <-- LIST
+                                          _selectedUserId!,
+                                          roleId,
+                                          permissions,
                                         );
                                       }
                                     },
                                   ),
-                                  SizedBox(width: 6),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.close,
-                                      color: primaryTextColor,
-                                    ),
-                                    padding: EdgeInsets.zero,
-                                    constraints: BoxConstraints(),
-                                    onPressed: () {
-                                      setStateDialog(
-                                        () => currentRoles.remove(roleName),
-                                      );
-                                    },
-                                  ),
+                                  SizedBox(width: 10),
+                                  Text(roleName),
                                 ],
+                              ),
+
+                              IconButton(
+                                icon: Icon(
+                                  Icons.close,
+                                  color: primaryTextColor,
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: BoxConstraints(),
+                                onPressed: () {
+                                  setStateDialog(
+                                    () => currentRoles.remove(roleName),
+                                  );
+                                },
                               ),
                             ],
                           ),
