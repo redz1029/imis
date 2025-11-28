@@ -9,11 +9,14 @@ import 'package:imis/swot/services/swot_service.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
+import 'package:imis/utils/permission_string.dart';
+import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../common_services/common_service.dart';
 import '../../user/models/user_registration.dart';
 import '../../utils/pagination_util.dart';
+import '../../utils/permission_service.dart';
 import '../../widgets/filter_button_widget.dart';
 
 class SwotPage extends StatefulWidget {
@@ -35,6 +38,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
   final questionBestPracticesController = TextEditingController();
   final TextEditingController searchController = TextEditingController();
   final _commonService = CommonService(Dio());
+  final permissionService = PermissionService();
   final dio = Dio();
   List<User> userList = [];
   List<Swot> filteredList = [];
@@ -125,6 +129,13 @@ class SwotDialogResponsiveState extends State<SwotPage> {
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
+    bool hasPermission = permissionService.hasPermission(
+      PermissionString.viewPerformanceGovernanceSystem,
+    );
+
+    if (!hasPermission) {
+      return noPermissionScreen();
+    }
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(

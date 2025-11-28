@@ -714,7 +714,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                                 selectedRole == PermissionString.serviceHead ||
                                 selectedRole == PermissionString.osm)
                             ? _buildListTile(
-                              Icons.analytics_outlined,
+                              Icons.insert_drive_file_outlined,
                               selectedRole == PermissionString.roleAdmin
                                   ? 'Create/View Deliverables'
                                   : selectedRole ==
@@ -724,7 +724,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                               2,
                               () => _setScreen(
                                 PerformanceGovernanceSystemPage(),
-                                22,
+                                2,
                               ),
                             )
                             : SizedBox.shrink(),
@@ -745,8 +745,8 @@ class NavigationPanelState extends State<NavigationPanel> {
                                       PermissionString.roleStandardUser
                                   ? 'Create SWOT'
                                   : 'View SWOT',
-                              22,
-                              () => _setScreen(SwotPage(), 22),
+                              23,
+                              () => _setScreen(SwotPage(), 23),
                             )
                             : SizedBox.shrink(),
                   ),

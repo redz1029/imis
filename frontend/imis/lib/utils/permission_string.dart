@@ -9,27 +9,27 @@ class PermissionString {
   static const String coreTeam = 'PGS Core Team';
   static const String headAuditor = 'PGS Auditor Head';
   // Team
-  static const String addTeam = 'AddTeam';
-  static const String viewTeam = 'ViewTeam';
-  static const String editTeam = 'EditTeam';
+  static const String addTeam = 'Add Team';
+  static const String viewTeam = 'View Team';
+  static const String editTeam = 'Edit Team';
 
   // KRA
-  static const String addKra = 'AddKra';
-  static const String viewKra = 'ViewKra';
-  static const String editKra = 'EditKra';
+  static const String addKra = 'Add Kra';
+  static const String viewKra = 'View Kra';
+  static const String editKra = 'Edit Kra';
 
   // Period
-  static const String addPeriod = 'AddPeriod';
-  static const String viewPeriod = 'ViewPeriod';
-  static const String editPeriod = 'EditPeriod';
+  static const String addPeriod = 'Add Period';
+  static const String viewPeriod = 'View Period';
+  static const String editPeriod = 'Edit Period';
 
   // Performance Governance System (PGS)
   static const String addPerformanceGovernanceSystem =
-      'AddPerformanceGovernanceSystem';
+      'Add Performance Governance System';
   static const String viewPerformanceGovernanceSystem =
-      'ViewPerformanceGovernanceSystem';
+      'View Performance Governance System';
   static const String editPerformanceGovernanceSystem =
-      'EditPerformanceGovernanceSystem';
+      'Edit Performance Governance System';
   static const List<String> pgsPermissions = [
     addPerformanceGovernanceSystem,
     viewPerformanceGovernanceSystem,
@@ -37,48 +37,46 @@ class PermissionString {
   ];
 
   // Deliverables
-  static const String addPgsDeliverable = 'AddPgsDeliverable';
-  static const String viewPgsDeliverable = 'ViewPgsDeliverable';
-  static const String editPgsDeliverable = 'EditPgsDeliverable';
-  static const String scorePgsDeliverable = 'ScorePgsDeliverable';
+  static const String addPgsDeliverable = 'Add Pgs Deliverable';
+  static const String viewPgsDeliverable = 'View Pgs Deliverable';
+  static const String editPgsDeliverable = 'Edit Pgs Deliverable';
 
   // Deliverable Monitor
   static const String viewPgsDeliverableMonitor = 'ViewPgsDeliverableMonitor';
   static const String scorePgsDeliverableMonitor = 'ScorePgsDeliverableMonitor';
 
-  // Deliverable Score History
-  static const String viewPgsDeliverableScoreHistory =
-      'ViewPgsDeliverableScoreHistory';
-  static const String scorePgsDeliverableScoreHistory =
-      'ScorePgsDeliverableScoreHistory';
-
   // Signatory Template
-  static const String addPgsSignatoryTemplate = 'AddPgsSignatoryTemplate';
-  static const String viewPgsSignatoryTemplate = 'ViewPgsSignatoryTemplate';
-  static const String editPgsSignatoryTemplate = 'EditPgsSignatoryTemplate';
+  static const String addPgsSignatoryTemplate = 'Add Pgs Signatory Template';
+  static const String viewPgsSignatoryTemplate = 'View Pgs Signatory Template';
+  static const String editPgsSignatoryTemplate = 'Edit Pgs Signatory Template';
 
   // Office
-  static const String addOffice = 'AddOffice';
-  static const String viewOffice = 'ViewOffice';
-  static const String editOffice = 'EditOffice';
+  static const String addOffice = 'Add Office';
+  static const String viewOffice = 'View Office';
+  static const String editOffice = 'Edit Office';
 
   // User Office
-  static const String addUserOffice = 'AddUserOffice';
-  static const String viewUserOffice = 'ViewUserOffice';
-  static const String editUserOffice = 'EditUserOffice';
+  static const String addUserOffice = 'Add User Office';
+  static const String viewUserOffice = 'View User Office';
+  static const String editUserOffice = 'Edit User Office';
 
   // Audit Schedule
-  static const String addAuditSchedule = 'AddAuditSchedule';
-  static const String viewAuditSchedule = 'ViewAuditSchedule';
-  static const String editAuditSchedule = 'EditAuditSchedule';
+  static const String addAuditSchedule = 'Add Audit Schedule';
+  static const String viewAuditSchedule = 'View Audit Schedule';
+  static const String editAuditSchedule = 'Edit Audit Schedule';
 
   // Auditor Team
-  static const String addAuditorTeam = 'AddAuditorTeam';
-  static const String viewAuditorTeam = 'ViewAuditorTeam';
-  static const String editAuditorTeam = 'EditAuditorTeam';
+  static const String addAuditorTeam = 'Add Auditor Team';
+  static const String viewAuditorTeam = 'View Auditor Team';
+  static const String editAuditorTeam = 'Edit Auditor Team';
 
   // Auditor
-  static const String addAuditor = 'AddAuditor';
-  static const String viewAuditor = 'ViewAuditor';
-  static const String editAuditor = 'EditAuditor';
+  static const String addAuditor = 'Add Auditor';
+  static const String viewAuditor = 'View Auditor';
+  static const String editAuditor = 'Edit Auditor';
+
+  //SWOT analysis
+  static const String addSwot = 'Add S W O T Analysis';
+  static const String viewSwot = 'View S W O T Analysis';
+  static const String editSwot = 'Edit S W O T Analysis';
 }
