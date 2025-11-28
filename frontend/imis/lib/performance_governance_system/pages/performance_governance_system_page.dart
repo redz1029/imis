@@ -3536,11 +3536,6 @@ class PerformanceGovernanceSystemPageState
             ),
           ),
         ),
-        // BuildHeaderCell(
-        //   text: 'ACCOMPLISHMENT',
-        //   fontSize: 15,
-        //   fontStyle: FontStyle.normal,
-        // ),
       ],
     );
   }
@@ -3551,15 +3546,6 @@ class PerformanceGovernanceSystemPageState
         color: Color.fromARGB(255, 255, 254, 254),
       ),
       children: [
-        // _buildSizedHeaderCell('#', width: 20),
-        // _buildSizedHeaderCell('THEME (PROCESS)', width: 100),
-        // _buildSizedHeaderCell('KRA', width: 100),
-        // _buildSizedHeaderCell('DIRECT', width: 70),
-        // _buildSizedHeaderCell('INDIRECT', width: 80),
-        // _buildSizedHeaderCell('DELIVERABLES', width: 200),
-        // _buildSizedHeaderCell('WHEN', width: 90),
-
-        // _buildSizedHeaderCell('ACTION', width: 100),
         BuildHeaderCell(text: '#'),
         BuildHeaderCell(text: 'THEME (PROCESS)'),
         BuildHeaderCell(text: 'KRA'),

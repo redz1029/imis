@@ -342,7 +342,6 @@ class ViewSummaryNarrativeReportPageState
                                         showRemarksDialog();
                                       }
                                       : null,
-
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
