@@ -5,26 +5,28 @@ class PermissionWidget extends StatelessWidget {
   final String? permission;
   final List<String>? allowedRoles;
   final Widget child;
+  final bool ignorePermission;
 
   const PermissionWidget({
     super.key,
     this.permission,
     this.allowedRoles,
     required this.child,
+    this.ignorePermission = false,
   });
 
   @override
   Widget build(BuildContext context) {
+    if (ignorePermission) return child;
+
     final hasPermission =
         permission != null
-            ? permissionService.hasPermission(permission!)
+            ? permissionService.hasPermission(
+              permission!,
+              allowedRoles: allowedRoles,
+            )
             : true;
 
-    final roleAllowed =
-        allowedRoles != null
-            ? permissionService.hasRoleIn(allowedRoles!)
-            : true;
-
-    return (hasPermission && roleAllowed) ? child : const SizedBox.shrink();
+    return hasPermission ? child : const SizedBox.shrink();
   }
 }
