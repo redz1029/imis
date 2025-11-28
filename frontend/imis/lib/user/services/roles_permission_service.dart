@@ -1,26 +1,30 @@
 import 'package:dio/dio.dart';
-import 'package:imis/user/models/roles_permissions.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
 
 class RolesPermissionsService {
   final Dio dio = Dio();
 
-  Future<List<RolesPermissions>> fetchRolesPermissions() async {
+  Future<List<dynamic>?> fetchUserRolePermissions(
+    String userId,
+    String roleId,
+  ) async {
+    final url = "${ApiEndpoint().users}/$userId/permissions?roleId=$roleId";
+
     try {
-      final response = await AuthenticatedRequest.get(
-        dio,
-        ApiEndpoint().rolesPermissions,
-      );
+      final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data;
-        return data.map((e) => RolesPermissions.fromJson(e)).toList();
-      } else {
-        throw Exception("Failed to load roles permissions");
+        final data = response.data;
+
+        return data['permissions'] as List<dynamic>;
       }
-    } on DioException {
-      throw Exception("Dio error");
+
+      return null;
+    } on DioException catch (e) {
+      return null;
+    } catch (e) {
+      return null;
     }
   }
 }
