@@ -5,24 +5,26 @@ class PermissionService {
   factory PermissionService() => _instance;
   PermissionService._internal();
 
-  Set<String> _permissions = {};
+  Map<String, bool> _permissions = {};
   String? _roleName;
 
-  void loadPermissions(List<String> permissions, String roleName) {
-    _permissions = permissions.toSet();
+  void loadPermissions(
+    List<Map<String, dynamic>> permissions,
+    String roleName,
+  ) {
+    _permissions = {
+      for (var perm in permissions)
+        perm['permission'] as String: perm['isAssigned'] as bool,
+    };
     _roleName = roleName;
   }
 
   bool hasPermission(String permission, {List<String>? allowedRoles}) {
-    if (allowedRoles != null) {
-      return _permissions.contains(permission) &&
-          allowedRoles.contains(_roleName);
+    final isAssigned = _permissions[permission] ?? false;
+    if (allowedRoles != null && _roleName != null) {
+      return isAssigned && allowedRoles.contains(_roleName);
     }
-    return _permissions.contains(permission);
-  }
-
-  bool hasRoleIn(List<String> allowedRoles) {
-    return _roleName != null && allowedRoles.contains(_roleName);
+    return isAssigned;
   }
 
   String? get currentRole => _roleName;
@@ -31,14 +33,35 @@ class PermissionService {
 final rolesPermissionsService = RolesPermissionsService();
 final permissionService = PermissionService();
 
-Future<void> loadUserPermissions(String roleName) async {
-  final roles = await rolesPermissionsService.fetchRolesPermissions();
+Future<void> loadUserPermissionss({
+  required String userId,
+  required String roleId,
+}) async {
+  try {
+    final permissions = await rolesPermissionsService.fetchUserRolePermissions(
+      userId,
+      roleId,
+    );
 
-  final role = roles.where((r) => r.name == roleName).toList();
+    if (permissions == null || permissions.isEmpty) {
+      permissionService.loadPermissions([], "");
+      return;
+    }
 
-  if (role.isNotEmpty) {
-    permissionService.loadPermissions(role.first.permissions, role.first.name);
-  } else {
-    permissionService.loadPermissions([], roleName);
+    final List<Map<String, dynamic>> permList =
+        permissions
+            .map<Map<String, dynamic>>(
+              (perm) => {
+                'permission': perm['permission'],
+                'isAssigned': perm['isAssigned'],
+              },
+            )
+            .toList();
+
+    final roleName = permissions.first['roleName'] ?? "";
+
+    permissionService.loadPermissions(permList, roleName);
+  } catch (e) {
+    permissionService.loadPermissions([], "");
   }
 }
