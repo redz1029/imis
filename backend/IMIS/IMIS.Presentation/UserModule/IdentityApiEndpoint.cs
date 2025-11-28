@@ -65,16 +65,20 @@ namespace IMIS.Presentation.UserModule
             }).WithTags(RoleGroup)
             .RequireAuthorization()
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup), true);
-         
+            
             roleGroup.MapGet("/users/{userId}/permissions", async (
             string userId,
-            string roleId, 
+            string roleId,
             UserManager<User> userManager,
+            RoleManager<IdentityRole> roleManager,
             ImisDbContext db
             ) =>
             {
                 var user = await userManager.FindByIdAsync(userId);
                 if (user == null) return Results.NotFound(new { message = "User not found." });
+
+                var role = await roleManager.FindByIdAsync(roleId);
+                if (role == null) return Results.NotFound(new { message = "Role not found." });
 
                 var roleClaims = await db.Set<IdentityRoleClaim<string>>()
                     .Where(rc => rc.RoleId == roleId && rc.ClaimType == PermissionClaimType.Claim)
@@ -100,11 +104,13 @@ namespace IMIS.Presentation.UserModule
                 {
                     user.Id,
                     user.UserName,
+                    roleId,
+                    roleName = role.Name,  
                     permissions = finalPermissions
                 });
             })
-           .RequireAuthorization()
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
+            .RequireAuthorization()
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(RoleGroup), true);
 
             roleGroup.MapPut("/users/{userId}/permissions", async (
             string userId,
