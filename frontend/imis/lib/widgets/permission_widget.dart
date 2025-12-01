@@ -25,7 +25,9 @@ class PermissionWidget extends StatelessWidget {
               permission!,
               allowedRoles: allowedRoles,
             )
-            : true;
+            : (allowedRoles != null
+                ? allowedRoles!.contains(permissionService.currentRole)
+                : true);
 
     return hasPermission ? child : const SizedBox.shrink();
   }
