@@ -38,17 +38,20 @@ Future<void> loadUserPermissionss({
   required String roleId,
 }) async {
   try {
-    final permissions = await rolesPermissionsService.fetchUserRolePermissions(
+    final data = await rolesPermissionsService.fetchUserRolePermissions(
       userId,
       roleId,
     );
 
-    if (permissions == null || permissions.isEmpty) {
+    if (data == null) {
       permissionService.loadPermissions([], "");
       return;
     }
 
-    final List<Map<String, dynamic>> permList =
+    final List<dynamic> permissions = data['permissions'] ?? [];
+    final String roleName = data['roleName'] ?? "";
+
+    final permList =
         permissions
             .map<Map<String, dynamic>>(
               (perm) => {
@@ -57,8 +60,6 @@ Future<void> loadUserPermissionss({
               },
             )
             .toList();
-
-    final roleName = permissions.first['roleName'] ?? "";
 
     permissionService.loadPermissions(permList, roleName);
   } catch (e) {
