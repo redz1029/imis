@@ -5,7 +5,7 @@ import 'package:imis/utils/http_util.dart';
 class RolesPermissionsService {
   final Dio dio = Dio();
 
-  Future<List<dynamic>?> fetchUserRolePermissions(
+  Future<Map<String, dynamic>?> fetchUserRolePermissions(
     String userId,
     String roleId,
   ) async {
@@ -15,13 +15,9 @@ class RolesPermissionsService {
       final response = await AuthenticatedRequest.get(dio, url);
 
       if (response.statusCode == 200) {
-        final data = response.data;
-
-        return data['permissions'] as List<dynamic>;
+        return response.data;
       }
 
-      return null;
-    } on DioException catch (e) {
       return null;
     } catch (e) {
       return null;
