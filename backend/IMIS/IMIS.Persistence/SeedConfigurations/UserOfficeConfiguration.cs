@@ -13,37 +13,26 @@ namespace IMIS.Persistence.SeedConfigurations
                 new UserOffices { Id = 1, UserId = "a6866933-92a9-41e7-9100-8bee51ed0ada", OfficeId = 1, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 2, UserId = "743b9807-3441-47c1-9285-5ff8dfd7acb9", OfficeId = 1, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 3, UserId = "e1a3ac20-1d20-4f37-8826-242657a746c7", OfficeId = 1, IsActive = true, IsDeleted = false, IsOfficeHead = false },
-
                 new UserOffices { Id = 4, UserId = "a6866933-92a9-41e7-9100-8bee51ed0ada", OfficeId = 2, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 5, UserId = "743b9807-3441-47c1-9285-5ff8dfd7acb9", OfficeId = 2, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 6, UserId = "e1a3ac20-1d20-4f37-8826-242657a746c7", OfficeId = 2, IsActive = true, IsDeleted = false, IsOfficeHead = false },
-
                 new UserOffices { Id = 7, UserId = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00", OfficeId = 3, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 8, UserId = "a6866933-92a9-41e7-9100-8bee51ed0ada", OfficeId = 3, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 9, UserId = "743b9807-3441-47c1-9285-5ff8dfd7acb9", OfficeId = 3, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 10, UserId = "e1a3ac20-1d20-4f37-8826-242657a746c7", OfficeId = 3, IsActive = true, IsDeleted = false, IsOfficeHead = false },
-
                 new UserOffices { Id = 11, UserId = "8fa3f3e4-b8a2-4375-9dc8-91b6fbc55e4a", OfficeId = 4, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 12, UserId = "a6866933-92a9-41e7-9100-8bee51ed0ada", OfficeId = 4, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 13, UserId = "743b9807-3441-47c1-9285-5ff8dfd7acb9", OfficeId = 4, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 14, UserId = "e1a3ac20-1d20-4f37-8826-242657a746c7", OfficeId = 4, IsActive = true, IsDeleted = false, IsOfficeHead = false },
-
                 new UserOffices { Id = 15, UserId = "e9bcc340-e63f-40e6-8326-8fe86cbef923", OfficeId = 5, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 16, UserId = "a6866933-92a9-41e7-9100-8bee51ed0ada", OfficeId = 5, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 17, UserId = "743b9807-3441-47c1-9285-5ff8dfd7acb9", OfficeId = 5, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 18, UserId = "e1a3ac20-1d20-4f37-8826-242657a746c7", OfficeId = 5, IsActive = true, IsDeleted = false, IsOfficeHead = false },
-
                 new UserOffices { Id = 19, UserId = "7acb06ae-c2de-4fa1-8b62-53c1d63121f0", OfficeId = 7, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 20, UserId = "a6866933-92a9-41e7-9100-8bee51ed0ada", OfficeId = 7, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 21, UserId = "743b9807-3441-47c1-9285-5ff8dfd7acb9", OfficeId = 7, IsActive = true, IsDeleted = false, IsOfficeHead = false },
                 new UserOffices { Id = 22, UserId = "e1a3ac20-1d20-4f37-8826-242657a746c7", OfficeId = 7, IsActive = true, IsDeleted = false, IsOfficeHead = false },
-
                 new UserOffices { Id = 23, UserId = "537d9fcd-b505-4f93-afc6-17eb8eddff83", OfficeId = 125, IsActive = true, IsDeleted = false, IsOfficeHead = true },
-
-
-
-
-
                 new UserOffices { Id = 24, UserId = "8e4f430c-72da-4142-83d9-cd9d9c6f2a6e", OfficeId = 126, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 25, UserId = "9821dbf5-0f70-4630-8c68-f2077a3abf08", OfficeId = 13, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 26, UserId = "9b6d73e5-ff27-44bb-a9d0-f7c58b31c4a1", OfficeId = 50, IsActive = true, IsDeleted = false, IsOfficeHead = true },
@@ -118,7 +107,8 @@ namespace IMIS.Persistence.SeedConfigurations
                 new UserOffices { Id = 95, UserId = "1a7c3e9b-42f8-4b25-9f81-7cd92c84b9a3", OfficeId = 59, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 96, UserId = "c5e81f9d-73a0-4b93-b6fc-97c72e3c15e8", OfficeId = 96, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 97, UserId = "8d9a1b3f-0c84-46a7-b932-13cf8d05f2a1", OfficeId = 134, IsActive = true, IsDeleted = false, IsOfficeHead = true },
-                new UserOffices { Id = 98, UserId = "c4bd9e2a-1cb3-4c3b-9d0c-2ff2e43c7d1b", OfficeId = 135, IsActive = true, IsDeleted = false, IsOfficeHead = true }
+                new UserOffices { Id = 98, UserId = "c4bd9e2a-1cb3-4c3b-9d0c-2ff2e43c7d1b", OfficeId = 135, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 99, UserId = "m3xzke5a-1cb3-4c3b-9d0o-9kk8f72v8j5f", OfficeId = 41, IsActive = true, IsDeleted = false, IsOfficeHead = true }                
             );
         }
     }

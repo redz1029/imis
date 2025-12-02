@@ -16,7 +16,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasData(
             new User
             {
-                Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",             
+                Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                 UserName = "castillano.mrb",
                 NormalizedUserName = "CASTILLANO.MRB",
                 Email = "marcrejohncastillano@gmail.com",
@@ -26,11 +26,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 LastName = "Castillano",
                 FirstName = "Marc Rejohn",
                 MiddleName = "Ballares",
-                PhoneNumber = "09959283775",               
+                PhoneNumber = "09959283775",
             },
             new User
             {
-                Id = "176bcfeb-f12a-4d42-b790-5d2312660801",                
+                Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
                 UserName = "rama.emg",
                 NormalizedUserName = "RAMA.EMG",
                 Email = "earlmaerama@gmail.com",
@@ -40,11 +40,11 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 LastName = "Rama",
                 FirstName = "Earlene Mae",
                 MiddleName = "Gallos",
-                PhoneNumber = "09128293036",              
+                PhoneNumber = "09128293036",
             },
             new User
             {
-                Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",              
+                Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                 UserName = "pimentel.wb",
                 NormalizedUserName = "PIMENTEL.WB",
                 Email = "wilburpimentel09@gmail.com",
@@ -70,6 +70,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "",
                 PhoneNumber = "",
                 Position = "Head, Integrated Hospital Operations and Management Program",
+                Prefix = "Mr.",
             },
             new User
             {
@@ -85,6 +86,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "K.",
                 PhoneNumber = "",
                 Position = "Head, Office for Strategy Management",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -99,6 +101,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 FirstName = "Johari",
                 MiddleName = "P.",
                 PhoneNumber = "",
+                Prefix = "Atty."
             },
             new User
             {
@@ -114,6 +117,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "P.",
                 PhoneNumber = "",
                 Position = "Head, Budget Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -129,6 +133,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "C.",
                 PhoneNumber = "",
                 Position = "Chief Administrative Officer",
+                Prefix = "Mr.",
             },
             new User
             {
@@ -143,6 +148,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 FirstName = "John",
                 MiddleName = "O.",
                 PhoneNumber = "",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -158,6 +164,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "I.",
                 PhoneNumber = "09178663037",
                 Position = "Head, Out-Patient Department",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -173,6 +180,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "R.",
                 PhoneNumber = "",
                 Position = "Medical Center Chief II",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -188,6 +196,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "Y.",
                 PhoneNumber = "",
                 Position = "Chief Administrative Officer",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -203,7 +212,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "A.",
                 PhoneNumber = "09177220668",
                 Position = "Head, Department of Pediatrics",
-            },                   
+                Prefix = "Dr.",
+            },
             new User
             {
                 Id = "399f5e43-93d8-4a28-b113-d23eccd2ea15",
@@ -232,6 +242,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "PANGILAN",
                 PhoneNumber = "09177266885",
                 Position = "Head, Women and Child Protection Unit",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -246,6 +257,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 FirstName = "LINTANG",
                 MiddleName = "BUAN",
                 PhoneNumber = "09226218394",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -275,6 +287,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "DUMBI",
                 PhoneNumber = "09363769315",
                 Position = "Head, Public Health Unit-Health Promotion Unit",
+                Prefix = "Mr.",
             },
             new User
             {
@@ -289,6 +302,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 FirstName = "ADONIS",
                 MiddleName = "CHAN",
                 PhoneNumber = "09176261812",
+                Prefix = "Mr."
             },
             new User
             {
@@ -304,6 +318,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "SHARIF",
                 PhoneNumber = "09618235949",
                 Position = "Head, Claims Section",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -319,6 +334,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "PENDALIDAY",
                 PhoneNumber = "09177234338",
                 Position = "Head, Emergency Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -348,6 +364,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "KALI",
                 PhoneNumber = "09177124579",
                 Position = "Head, Sec. Ona Wing",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -392,6 +409,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "DELA CRUZ",
                 PhoneNumber = "09178202970",
                 Position = "Head, Operating Room",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -434,6 +452,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 FirstName = "AL-JAZZER",
                 MiddleName = "MAULANA",
                 PhoneNumber = "09179755770",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -463,6 +482,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "KEMBUAN",
                 PhoneNumber = "09396526665",
                 Position = "Head, Procurement Department",
+                Prefix = "Mr.",
             },
             new User
             {
@@ -520,6 +540,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "YU",
                 PhoneNumber = "09055207141",
                 Position = "Head, Billing Section",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -605,6 +626,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "CALUBIRAN",
                 PhoneNumber = "09363304534",
                 Position = "Head, SHTH",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -619,7 +641,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 FirstName = "Andul Hanif",
                 MiddleName = "B.",
                 PhoneNumber = "",
-            }, 
+            },
             new User
             {
                 Id = "2z9f8451-1n19-4b50-8432-4e23c164cs51",
@@ -690,6 +712,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "MAGBANUA",
                 PhoneNumber = "09276048113",
                 Position = "Head, Paritoneal Dialysis Clinic",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -719,6 +742,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "SUDARIO",
                 PhoneNumber = "09166248783",
                 Position = "Head, Medicine Ward",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -818,6 +842,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "OMALDE",
                 PhoneNumber = "09458244916",
                 Position = "Head, TTMF",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -931,6 +956,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "MAPUTI",
                 PhoneNumber = "09173000155",
                 Position = "Head, Health Information Management Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -946,6 +972,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "OREJUDOS",
                 PhoneNumber = "09109099656",
                 Position = "Head, General Extension Ward",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -975,6 +1002,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "AMAD",
                 PhoneNumber = "09989913196",
                 Position = "Head, Cancer Institute",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1060,6 +1088,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "OLAMA",
                 PhoneNumber = "09606059079",
                 Position = "Head, OB-Gyne Ward",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1075,6 +1104,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "USOP",
                 PhoneNumber = "09755272044",
                 Position = "Head, Delivery Room",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1090,6 +1120,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "BAJAO",
                 PhoneNumber = "NA",
                 Position = "Head, Hemodialysis-Main",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1217,6 +1248,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "SARATAO",
                 PhoneNumber = "09171027173",
                 Position = "Head, Department of Dental Medicine",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1231,6 +1263,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 FirstName = "NEIL ALFONSO",
                 MiddleName = "VIRAY",
                 PhoneNumber = "09260398619",
+                Prefix = "Mr.",
             },
             new User
             {
@@ -1245,6 +1278,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 FirstName = "MARY JANE",
                 MiddleName = "ORTEGA",
                 PhoneNumber = "09162424748",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1288,6 +1322,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "DATUMANONG",
                 PhoneNumber = "09368159393",
                 Position = "Head, Materials and Supplies Management Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1345,6 +1380,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "ELEVAZO",
                 PhoneNumber = "09173510613",
                 Position = "Head, Credit and Collection Section",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1388,6 +1424,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "JUANEZA",
                 PhoneNumber = "09178470437",
                 Position = "Head, Physical Medicine and Rehabilitation Department",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1400,9 +1437,10 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 ConcurrencyStamp = Guid.NewGuid().ToString(),
                 LastName = "SANTURING",
                 FirstName = "SITTIE RAYHANA",
-                MiddleName = "MARICOR", 
-                PhoneNumber = "09451067619",                   
+                MiddleName = "MARICOR",
+                PhoneNumber = "09451067619",
                 Position = "Head, Legal Unit",
+                Prefix = "Atty.",
             },
             new User
             {
@@ -1418,6 +1456,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "PENDONG",
                 PhoneNumber = "0917846224",
                 Position = "Head, Hospital Epidemiology and Surveillance Unit",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1425,7 +1464,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 UserName = "buenaflor.fasl",
                 NormalizedUserName = "BUENAFLOR.FASL",
                 Email = "fasl.buenaflor@gmail.com",
-                NormalizedEmail = "FASL.BUENAFLOR@GMAIL.COM",
+                NormalizedEmail = "FASL.BUENAFLOR@GMAIL.COM",  
                 PasswordHash = hasher.HashPassword(null, defaultPassword),
                 ConcurrencyStamp = Guid.NewGuid().ToString(),
                 LastName = "BUENAFLOR",
@@ -1433,6 +1472,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "BIRUAR",
                 PhoneNumber = "00000000000",
                 Position = "Head, Professional Education Training Development Unit",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1448,7 +1488,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "PASCUAL",
                 PhoneNumber = "09682425921",
                 Position = "Head, Public Assistance and Complaint Desk",
-            },                   
+                Prefix = "Mr.",
+            },
             new User
             {
                 Id = "eeadfae2-544f-4a5d-9027-808537e694b1",
@@ -1463,6 +1504,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "KASID",
                 PhoneNumber = "09176339433",
                 Position = "Head, Department of Surgery",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1478,6 +1520,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "MOPAC",
                 PhoneNumber = "09177237960",
                 Position = "Head, Research Institute",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1493,6 +1536,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "PULIDO",
                 PhoneNumber = "09177229341",
                 Position = "Head, Medical Social Work Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1508,6 +1552,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "SUYO",
                 PhoneNumber = "09422188023",
                 Position = "Head, Nutrition and Dietetics Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1523,6 +1568,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "DUMAMA",
                 PhoneNumber = "09176338010",
                 Position = "Head, Pharmacy Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1538,6 +1584,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "PIOQUINTO",
                 PhoneNumber = "093233910958",
                 Position = "Head, Human Resource Management Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1553,6 +1600,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "RIVERO",
                 PhoneNumber = "09393704748",
                 Position = "Head, Engineering and Facilities Management Department",
+                Prefix = "Engr.",
             },
             new User
             {
@@ -1568,6 +1616,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "LUMACAD",
                 PhoneNumber = "09178319784",
                 Position = "Head, Accounting Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1583,6 +1632,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "RODRIGUEZ",
                 PhoneNumber = "09227487001",
                 Position = "Head, Cash Operations Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1598,6 +1648,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "KIMAMAO",
                 PhoneNumber = "09174470268",
                 Position = "Head, Out-Patient Department",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1613,6 +1664,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "GUIAMAD",
                 PhoneNumber = "09171280911",
                 Position = "Head, Central Supply and Sterilization Room",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1628,6 +1680,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "LIM",
                 PhoneNumber = "09177227460",
                 Position = "Head, Pediatrics Ward",
+                Prefix = "Mr.",
             },
             new User
             {
@@ -1643,6 +1696,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "VILLANUEVA",
                 PhoneNumber = "09568141482",
                 Position = "Head, Surgery Wing",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1658,6 +1712,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "ACEJO",
                 PhoneNumber = "09157358418",
                 Position = "Head, Oncology Ward",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -1673,6 +1728,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "BIRUAR",
                 PhoneNumber = "09175277669",
                 Position = "Head, Department of Internal Medicine",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1688,6 +1744,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "AGDEPPA",
                 PhoneNumber = "09177267389",
                 Position = "Head, Department of Obstetics-Gynecology",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1703,6 +1760,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "LOPEZ",
                 PhoneNumber = "09173228233",
                 Position = "Head, Department of Anesthesiology",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1718,6 +1776,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "PAGARIGAN",
                 PhoneNumber = "09228270573",
                 Position = "Head, Department of Family and Community Medicine",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1733,6 +1792,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "PADUA",
                 PhoneNumber = "09173012016",
                 Position = "Head, Department of Diagnostic and Therapuetic Radiology",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1748,6 +1808,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "BARRIENTOS",
                 PhoneNumber = "09176592255",
                 Position = "OIC-Head, Department of Pathology",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1763,7 +1824,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "OMAR",
                 PhoneNumber = "09173049710",
                 Position = "Head, Emergency Department",
-            },                   
+                Prefix = "Dr.",
+            },
             new User
             {
                 Id = "3cfa9401-553a-4ac5-ab8d-3d65899090b3",
@@ -1778,6 +1840,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "VINLUAN",
                 PhoneNumber = "09177068296",
                 Position = "Head, Mental Health Unit",
+                Prefix = "Dr.",
             },
 
 
@@ -1795,6 +1858,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "CONSTANTINO",
                 PhoneNumber = "09664010006",
                 Position = "Head, Brain and Spine Care",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1825,6 +1889,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "LIM",
                 PhoneNumber = "09224969711",
                 Position = "Head, Burn Care",
+                Prefix = "Dr."
             },
             new User
             {
@@ -1855,6 +1920,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "AGDEPPA",
                 PhoneNumber = "09279667275",
                 Position = "Head, Dermatology",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1870,6 +1936,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "BACAR",
                 PhoneNumber = "09175483387",
                 Position = "Head, Eye Care",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1900,6 +1967,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "NOBLE",
                 PhoneNumber = "09178202383",
                 Position = "Head, Lung Care",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1915,6 +1983,8 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "DESACA",
                 PhoneNumber = "09277197299",
                 Position = "Head, Noenatal Care",
+                Prefix = "Dr.",
+
             },
             new User
             {
@@ -1930,6 +2000,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "ANIÑON",
                 PhoneNumber = "09177260949",
                 Position = "Head, Orthopedic Care",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1945,6 +2016,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "CHONG",
                 PhoneNumber = "09175114716",
                 Position = "Head, Renal Care and Kidney Transplant",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -1960,7 +2032,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "MANALASAL",
                 PhoneNumber = "",
                 Position = "Head, Renal Care and Kidney Transplant",
-            }, 
+            },
             new User
             {
                 Id = "7e4c8a59-1b9d-4c5e-ae31-8c2f3d5b7a61",
@@ -1990,6 +2062,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "",
                 PhoneNumber = "",
                 Position = "Head, Toxicology",
+                Prefix = "Dr.",
             },
             new User
             {
@@ -2020,6 +2093,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "YOSHIOKA",
                 PhoneNumber = "09053278687",
                 Position = "Head, ICU Complex",
+                Prefix = "Mr.",
             },
             new User
             {
@@ -2035,6 +2109,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "BADE",
                 PhoneNumber = "09167805311",
                 Position = "Head, Neonatal Intensive Care Unit",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -2050,6 +2125,7 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "ABOGHO",
                 PhoneNumber = "09177272645",
                 Position = "Head, TB-Isolation",
+                Prefix = "Ms.",
             },
             new User
             {
@@ -2065,6 +2141,22 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 MiddleName = "ELEVAZO",
                 PhoneNumber = "09175170327",
                 Position = "Computer Maintenance Technologist II",
+            },
+            new User
+            {
+                Id = "m3xzke5a-1cb3-4c3b-9d0o-9kk8f72v8j5f",
+                UserName = "sabanal.annelyn",
+                NormalizedUserName = "SABANAL.ANNELYN",
+                Email = "doc_annie@yahoo.com",
+                NormalizedEmail = "DOC_ANNIE@YAHOO.COM",
+                PasswordHash = hasher.HashPassword(null, defaultPassword),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+                LastName = "SABANAL-AMOC",
+                FirstName = "ANNELYN GRACE",
+                MiddleName = "COCAL",
+                PhoneNumber = "09176348295",
+                Position = "Head, Dental Department",
+                Prefix = "Dr.",
             }
         );
     }
