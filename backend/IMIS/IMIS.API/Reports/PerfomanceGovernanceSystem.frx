@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="11/26/2025 13:43:29" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="05/23/2025 08:31:25" ReportInfo.Modified="12/02/2025 11:16:44" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -54,17 +54,17 @@ namespace FastReport
       {
         txt.Text = value.ToString().ToUpper();
 
-        // Show the line
         SigLine1.Visible = true;
         SigantoryLabel1.Visible = true;
+        ContainerSig1.Visible = true;
       }
       else
       {
         txt.Text = &quot;&quot;;
 
-        // Hide the line if no signatory
         SigLine1.Visible = false;
         SigantoryLabel1.Visible = false;
+        ContainerSig1.Visible = false;
       }
     }
 
@@ -80,6 +80,7 @@ namespace FastReport
 
         // Show the line
         SigLine2.Visible = true;
+        ContainerSig2.Visible = true;
       }
       else
       {
@@ -87,6 +88,7 @@ namespace FastReport
 
         // Hide the line if no signatory
         SigLine2.Visible = false;
+        ContainerSig2.Visible = false;
       }
     }
 
@@ -102,6 +104,7 @@ namespace FastReport
 
         // Show the line
         SigLine3.Visible = true;
+        ContainerSig3.Visible = true;
       }
       else
       {
@@ -109,6 +112,7 @@ namespace FastReport
 
       
         SigLine3.Visible = false;
+        ContainerSig3.Visible = false;
       }
     }
        
@@ -161,6 +165,7 @@ namespace FastReport
 
         // Show the line
         SigLine4.Visible = true;
+        ContainerSig4.Visible = true;
       }
       else
       {
@@ -168,6 +173,7 @@ namespace FastReport
 
         // Hide the line if no signatory
         SigLine4.Visible = false;
+        ContainerSig4.Visible = false;
       }
     }
 
@@ -266,7 +272,44 @@ namespace FastReport
         txt.Text = endDateText;
       else
         txt.Text = &quot;&quot;;              
-    }        
+    }     
+    
+    
+     
+    private void MainContainer_BeforePrint(object sender, EventArgs e)
+    {
+      float spacing = 5;
+
+      List&lt;FastReport.ReportComponentBase&gt; containers = new List&lt;FastReport.ReportComponentBase&gt;();
+
+      if (ContainerSig1.Visible) containers.Add(ContainerSig1);
+      if (ContainerSig2.Visible) containers.Add(ContainerSig2);
+      if (ContainerSig3.Visible) containers.Add(ContainerSig3);
+      if (ContainerSig4.Visible) containers.Add(ContainerSig4);
+
+      float totalWidth = 0;
+      for (int i = 0; i &lt; containers.Count; i++)
+      {
+        totalWidth += containers[i].Width;
+
+        if (i &lt; containers.Count - 1)
+          totalWidth += spacing;
+      }
+
+      float startX = (MainContainer.Width - totalWidth) / 2;
+      float currentX = startX;
+
+      for (int i = 0; i &lt; containers.Count; i++)
+      {
+        containers[i].Left = currentX;
+        containers[i].Top = (MainContainer.Height - containers[i].Height) / 2; 
+
+        currentX += containers[i].Width + spacing;
+      }
+    }
+
+    
+
    }  
 }</ScriptText>
   <Dictionary>
@@ -313,7 +356,7 @@ namespace FastReport
   </Dictionary>
   <ReportPage Name="Page1" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt">
     <ReportTitleBand Name="ReportTitle1" Width="1047.06"/>
-    <PageHeaderBand Name="PageHeader1" Top="2.29" Width="1047.06" Height="240.9" CanGrow="true">
+    <PageHeaderBand Name="PageHeader1" Top="4" Width="1047.06" Height="240.9" CanGrow="true">
       <ShapeObject Name="Shape26" Left="5.9" Top="165.1" Width="1035.2" Height="75.8" Fill.Color="250, 255, 228, 225" CanGrow="true" GrowToBottom="true"/>
       <ShapeObject Name="Shape1" Left="5.9" Top="106.4" Width="1035.25" Height="60.8" Fill.Color="192, 80, 77"/>
       <TextObject Name="Text2" Left="920" Top="110.85" Width="117.15" Height="51.9" Fill.Color="192, 80, 77" Text="[ReportPerfomanceGovernanceSystemDto.PercentDeliverables] %" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 16pt" TextFill.Color="White"/>
@@ -338,8 +381,8 @@ namespace FastReport
       <LineObject Name="Line56" Left="333.3" Top="165.65" Height="74.35"/>
       <TextObject Name="Text88" Left="235.7" Top="171.65" Width="95.9" Height="65.9" Text="KRA" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 12pt"/>
     </PageHeaderBand>
-    <DataBand Name="Data2" Top="245.47" Width="1047.06" DataSource="ReportPerfomanceGovernanceSystemDto">
-      <DataBand Name="Data1" Top="247.76" Width="1047.06" Height="34.3" CanGrow="true" FirstRowStartsNewPage="true" Guides="0" DataSource="PgsDeliverables">
+    <DataBand Name="Data2" Top="248.9" Width="1047.06" DataSource="ReportPerfomanceGovernanceSystemDto">
+      <DataBand Name="Data1" Top="252.9" Width="1047.06" Height="34.3" CanGrow="true" FirstRowStartsNewPage="true" Guides="0" DataSource="PgsDeliverables">
         <ShapeObject Name="Shape12" Left="6" Top="-1.65" Width="1035.1" Height="35.95" Fill.Color="193, 240, 248, 255" CanGrow="true" GrowToBottom="true"/>
         <TextObject Name="Text23" Left="491" Top="3.8" Width="426.8" Height="24.9" CanGrow="true" GrowToBottom="true" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.DeliverableName]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 10pt"/>
         <LineObject Name="Line5" Left="919.5" Top="-1.65" Height="34.8" CanGrow="true" CanShrink="true" GrowToBottom="true"/>
@@ -356,28 +399,38 @@ namespace FastReport
         <TextObject Name="Text26" Left="333.95" Top="-1" Width="68.35" Height="33.85" GrowToBottom="true" BeforePrintEvent="Text26_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsDeliverables.IsDirect]" AllowExpressions="false" HorzAlign="Center" WordWrap="false" Font="Noto Sans, 10pt"/>
       </DataBand>
     </DataBand>
-    <PageFooterBand Name="PageFooter1" Top="284.34" Width="1047.06" Height="157.4" CanBreak="true">
-      <LineObject Name="SigLine1" Left="49.45" Top="39.25" Width="200.85" Diagonal="true"/>
-      <LineObject Name="SigLine2" Left="304.8" Top="39.7" Width="210.85" Diagonal="true"/>
-      <LineObject Name="SigLine4" Left="804.65" Top="40.6" Width="203.95" Diagonal="true"/>
-      <TextObject Name="Text16" Left="22.3" Top="43.15" Width="253.05" Height="15.25" CanGrow="true" BeforePrintEvent="Text16_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId1]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text17" Left="279.7" Top="43.15" Width="262.1" Height="15.6" CanGrow="true" BeforePrintEvent="Text17_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId2]&#13;&#10;" HorzAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="txtPgsSignatoryId3" Left="545.65" Top="43.15" Width="236.85" Height="16.25" CanGrow="true" BeforePrintEvent="Text18_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId3]&#13;&#10;" HorzAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text29" Left="163.1" Top="143.05" Width="765.7" Height="14.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text59" Left="21.9" Top="58.53" Width="252.8" Height="16.25" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition1]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text60" Left="279.95" Top="58.53" Width="262.35" Height="16.45" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition2]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text61" Left="786.35" Top="59.89" Width="238" Height="16.35" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition4]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
-      <LineObject Name="SigLine3" Left="563.8" Top="40.15" Width="202.3" Diagonal="true"/>
-      <TextObject Name="txtPgsSignatoryId4" Left="786.8" Top="43.6" Width="237.25" Height="15.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId4_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId4]&#13;&#10;" HorzAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text64" Left="545" Top="59.5" Width="237.25" Height="15.9" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition3]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
-      <LineObject Name="SigLine5" Left="435.45" Top="109.45" Width="220.3" Diagonal="true"/>
-      <TextObject Name="Text83" Left="394.45" Top="77.4" Width="173.75" Height="15.9" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel5]" Font="Avenir Book, 8pt"/>
-      <TextObject Name="txtPgsSignatoryId5" Left="163" Top="111.1" Width="765.7" Height="13.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId5_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId5]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text85" Left="163.1" Top="125" Width="765.7" Height="15.9" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition5]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text13" Left="781.55" Top="0.35" Width="196" Height="21.8" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel4]&#13;&#10;" VertAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="SigantoryLabel1" Left="20.85" Top="1.55" Width="179.55" Height="19.8" Text="Prepared By&#13;&#10;" VertAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text14" Left="268.55" Top="2.35" Width="266.6" Height="18.25" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel2]" VertAlign="Center" Font="Avenir Book, 8pt"/>
-      <TextObject Name="Text62" Left="536.1" Top="2.35" Width="234.8" Height="18.9" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel3]" Font="Avenir Book, 8pt"/>
+    <PageFooterBand Name="PageFooter1" Top="291.2" Width="1047.06" Height="175" CanBreak="true">
+      <TextObject Name="Text29" Left="155.1" Top="156.65" Width="765.7" Height="14.35" Text="Page [Page#] of [TotalPages#]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
+      <LineObject Name="SigLine5" Left="427.45" Top="123.05" Width="220.3" Diagonal="true"/>
+      <TextObject Name="txtPgsSignatoryId5" Left="155" Top="124.7" Width="765.7" Height="13.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId5_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId5]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
+      <TextObject Name="Text85" Left="155.1" Top="138.6" Width="765.7" Height="15.9" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition5]" HorzAlign="Center" VertAlign="Center" Font="Avenir Book, 8pt"/>
+      <ContainerObject Name="MainContainer" Left="6.45" Top="0.45" Width="1035.25" Height="87.4" BeforePrintEvent="MainContainer_BeforePrint">
+        <ContainerObject Name="ContainerSig1" Left="3.45" Top="2.45" Width="262.35" Height="81.85" Fill.Color="White">
+          <TextObject Name="SigantoryLabel1" Left="5.4" Top="2.55" Width="195.55" Height="17.8" Text="Prepared By&#13;&#10;" VertAlign="Center" Font="Avenir Book, 8pt"/>
+          <LineObject Name="SigLine1" Left="25.55" Top="40.15" Width="209.85" Diagonal="true"/>
+          <TextObject Name="Text16" Left="3.4" Top="44.5" Width="253.05" Height="15.25" CanGrow="true" BeforePrintEvent="Text16_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId1]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
+          <TextObject Name="Text59" Left="3" Top="59.43" Width="252.8" Height="18.25" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition1]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
+        </ContainerObject>
+        <ContainerObject Name="ContainerSig2" Left="266.95" Top="2.45" Width="265.35" Height="81.95" Fill.Color="White">
+          <TextObject Name="Text17" Left="3.65" Top="46.05" Width="258.1" Height="15.6" CanGrow="true" BeforePrintEvent="Text17_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId2]&#13;&#10;" HorzAlign="Center" Font="Avenir Book, 8pt"/>
+          <TextObject Name="Text14" Left="3.95" Top="2.35" Width="258.9" Height="19.25" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel2]" VertAlign="Center" Font="Avenir Book, 8pt"/>
+          <LineObject Name="SigLine2" Left="23.4" Top="42.15" Width="219.85" Diagonal="true"/>
+          <TextObject Name="Text60" Left="3.35" Top="62.43" Width="258.65" Height="16.45" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition2]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
+        </ContainerObject>
+        <ContainerObject Name="ContainerSig3" Left="533.45" Top="2.45" Width="246.35" Height="82.95" Fill.Color="White">
+          <TextObject Name="Text62" Left="1.9" Top="3.35" Width="239.8" Height="18.9" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel3]" Font="Avenir Book, 8pt"/>
+          <TextObject Name="txtPgsSignatoryId3" Left="4" Top="45.5" Width="237.85" Height="16.25" CanGrow="true" BeforePrintEvent="Text18_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId3]&#13;&#10;" HorzAlign="Center" Font="Avenir Book, 8pt"/>
+          <LineObject Name="SigLine3" Left="23.15" Top="42.05" Width="202.3" Diagonal="true"/>
+          <TextObject Name="Text64" Left="4.35" Top="61.85" Width="237.25" Height="16.9" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition3]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
+        </ContainerObject>
+        <ContainerObject Name="ContainerSig4" Left="781.25" Top="2" Width="250.35" Height="83.95" Fill.Color="White" BeforePrintEvent="ContainerSig4_BeforePrint">
+          <TextObject Name="txtPgsSignatoryId4" Left="2.45" Top="45.5" Width="247.25" Height="15.9" CanGrow="true" BeforePrintEvent="txtPgsSignatoryId4_BeforePrint" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryId4]&#13;&#10;" HorzAlign="Center" Font="Avenir Book, 8pt"/>
+          <LineObject Name="SigLine4" Left="17.3" Top="42.5" Width="220.95" Diagonal="true"/>
+          <TextObject Name="Text61" Left="2" Top="62.24" Width="247" Height="17.35" CanGrow="true" CanBreak="false" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryPosition4]" HorzAlign="Center" Font="Avenir Book, 8pt"/>
+          <TextObject Name="Text13" Left="3.65" Top="2.35" Width="245" Height="19.8" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel4]&#13;&#10;" VertAlign="Center" Font="Avenir Book, 8pt"/>
+        </ContainerObject>
+      </ContainerObject>
+      <TextObject Name="Text83" Left="386.45" Top="91" Width="173.75" Height="15.9" Text="[ReportPerfomanceGovernanceSystemDto.PgsSignatoryLabel5]" Font="Avenir Book, 8pt"/>
     </PageFooterBand>
   </ReportPage>
   <ReportPage Name="Page2" Landscape="true" PaperWidth="297" PaperHeight="210" RawPaperSize="9" Watermark.Font="Arial, 60pt" LastPageSource="15" FirstPageSource="15">
