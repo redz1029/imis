@@ -79,4 +79,11 @@ class PermissionString {
   static const String addSwot = 'Add S W O T Analysis';
   static const String viewSwot = 'View S W O T Analysis';
   static const String editSwot = 'Edit S W O T Analysis';
+
+  // Accomplishment
+  static const String addAccomplishment = 'Add Pgs Deliverable Accomplishment';
+  static const String editAccomplishment =
+      'Edit Pgs Deliverable Accomplishment';
+  static const String viewAccomplishment =
+      'View Pgs Deliverable Accomplishment';
 }
