@@ -585,9 +585,9 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                                         CrossAxisAlignment.center,
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
-                                      const Text(
-                                        '%',
-                                        style: TextStyle(
+                                      Text(
+                                        '${value.text}%',
+                                        style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
                                         ),
