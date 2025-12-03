@@ -130,7 +130,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     bool hasPermission = permissionService.hasPermission(
-      PermissionString.viewPerformanceGovernanceSystem,
+      PermissionString.viewSwot,
     );
 
     if (!hasPermission) {

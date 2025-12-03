@@ -50,7 +50,6 @@ class NavigationPanelState extends State<NavigationPanel> {
   final GlobalKey<ScaffoldMessengerState> snackbarKey =
       GlobalKey<ScaffoldMessengerState>();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
   bool _isLoading = false;
   String userId = "userId";
   String firstName = "firstName";

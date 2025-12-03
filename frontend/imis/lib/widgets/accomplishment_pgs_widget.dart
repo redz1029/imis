@@ -228,7 +228,6 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
             ),
           ),
 
-          // PROGRESS CIRCLE
           Expanded(
             flex: 2,
             child: ValueListenableBuilder<PgsStatus>(

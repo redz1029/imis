@@ -424,8 +424,6 @@ class AnnouncementPageState extends State<AnnouncementPage> {
                           if (picked != null) {
                             setState(() {
                               selectedFromDate = picked;
-
-                              // reset end date if it's before from date
                               if (selectedEndDate != null &&
                                   selectedEndDate!.isBefore(
                                     selectedFromDate!,
