@@ -52,48 +52,6 @@ class UserRolePageState extends State<UserRolePage> {
     });
   }
 
-  Future<List<dynamic>?> _fetchPermissions(String userId, String roleId) async {
-    try {
-      final response = await AuthenticatedRequest.get(
-        dio,
-        'https://localhost:7273/users/$userId/permissions?roleId=$roleId',
-      );
-
-      if (response.statusCode == 200) {
-        return response.data['permissions'];
-      }
-
-      return null;
-    } catch (e) {
-      MotionToast.error(
-        description: Text('Failed to fetch permissions'),
-      ).show(context);
-      return null;
-    }
-  }
-
-  Future<void> _updatePermission(
-    String userId,
-    String userName,
-    List<dynamic> permissions,
-  ) async {
-    try {
-      final response = await AuthenticatedRequest.put(
-        dio,
-        'https://localhost:7273/users/$userId/permissions',
-        data: {"id": userId, "name": userName, "permissions": permissions},
-      );
-
-      if (response.statusCode == 200) {
-        print("Permission updated successfully");
-      } else {
-        print("Failed: ${response.data}");
-      }
-    } catch (e) {
-      print("Error updating permission: $e");
-    }
-  }
-
   Future<void> _fetchRolesAndUsers() async {
     final roles = await _userRoleService.fetchRoles();
     final users = await _commonService.fetchUsers();
@@ -310,8 +268,8 @@ class UserRolePageState extends State<UserRolePage> {
 
                                       final roleId = role.id;
 
-                                      final permissions =
-                                          await _fetchPermissions(
+                                      final permissions = await _userRoleService
+                                          .fetchPermissions(
                                             _selectedUserId!,
                                             roleId,
                                           );
@@ -576,7 +534,11 @@ class UserRolePageState extends State<UserRolePage> {
                           }
                         });
 
-                        await _updatePermission(userId, userName, permissions);
+                        await _userRoleService.updatePermission(
+                          userId,
+                          userName,
+                          permissions,
+                        );
                       },
                       fillColor: WidgetStateProperty.resolveWith((states) {
                         if (states.contains(WidgetState.selected)) {
@@ -602,7 +564,7 @@ class UserRolePageState extends State<UserRolePage> {
                                         item['isAssigned'] = value;
                                       });
 
-                                      await _updatePermission(
+                                      await _userRoleService.updatePermission(
                                         userId,
                                         userName,
                                         permissions,

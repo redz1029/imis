@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/rendering.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_role.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -40,5 +41,38 @@ class UserRoleService {
   Future<void> deleteUserRole(String userRole) async {
     final url = '${ApiEndpoint().userRole}/$userRole';
     await AuthenticatedRequest.delete(dio, url);
+  }
+
+  Future<void> updatePermission(
+    String userId,
+    String userName,
+    List<dynamic> permissions,
+  ) async {
+    final url = '${ApiEndpoint().users}/$userId/permissions';
+
+    try {
+      final response = await AuthenticatedRequest.put(dio, url);
+
+      if (response.statusCode == 200) {
+        debugPrint('Permission updated successfully');
+      }
+    } catch (e) {
+      debugPrint('Error udpating permission: $e');
+    }
+  }
+
+  Future<List<dynamic>?> fetchPermissions(String userId, String roleId) async {
+    final url = '${ApiEndpoint().users}/$userId/permissions?roleId=$roleId';
+
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200) {
+        return response.data['permissions'];
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch permission');
+    }
+    return null;
   }
 }
