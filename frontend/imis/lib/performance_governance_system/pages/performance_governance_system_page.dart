@@ -2,11 +2,13 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/accomplishment_pgs_widget.dart';
 import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/build_header_cell.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
+import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:dio/dio.dart';
@@ -73,7 +75,7 @@ class PerformanceGovernanceSystemPageState
   Map<int, bool> tempSelectedIndirect = {};
   Map<int, int?> selectedKRA = {};
   String userId = "";
-
+  final permissionService = PermissionService();
   List<Map<String, dynamic>> filteredList = [];
 
   List<Map<String, dynamic>> deliverableLists = [];
@@ -1022,6 +1024,13 @@ class PerformanceGovernanceSystemPageState
   @override
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
+    bool hasPermission = permissionService.hasPermission(
+      PermissionString.viewSwot,
+    );
+
+    if (!hasPermission) {
+      return noPermissionScreen();
+    }
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
@@ -4078,7 +4087,6 @@ class PerformanceGovernanceSystemPageState
     final int deliverableId = deliverableIds[index] ?? 0;
     final String deliverableName = deliverablesControllers[index]?.text ?? '';
     final bool isDirect = selectedDirect[index] ?? false;
-    final String byWhen = selectedByWhen[index] ?? '';
     return showDialog<bool>(
       context: context,
       barrierDismissible: false,
