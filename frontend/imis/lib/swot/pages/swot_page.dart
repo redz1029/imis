@@ -45,7 +45,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
   List<Swot> swotList = [];
   int _currentPage = 1;
   final int _pageSize = 15;
-  int _totalCount = 0;
+  int totalCount = 0;
   bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
   String userId = "";
@@ -100,7 +100,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
+          totalCount = pageList.totalCount;
           swotList = pageList.items;
           filteredList = List.from(swotList);
         });
