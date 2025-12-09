@@ -210,29 +210,32 @@ class AuthUtil {
     if (!context.mounted) return;
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    await showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder:
-          (context) => WillPopScope(
-            onWillPop: () async => false,
-            child: AlertDialog(
-              title: const Text("Session Expired"),
-              content: const Text("Please log in again to continue."),
-              actions: [
-                TextButton(
-                  onPressed: () async {
-                    Navigator.pop(context);
-                    await logout(context);
-                  },
-                  child: const Text(
-                    "OK",
-                    style: TextStyle(color: primaryColor),
+
+    if (context.mounted) {
+      await showDialog(
+        barrierDismissible: false,
+        context: context,
+        builder:
+            (context) => WillPopScope(
+              onWillPop: () async => false,
+              child: AlertDialog(
+                title: const Text("Session Expired"),
+                content: const Text("Please log in again to continue."),
+                actions: [
+                  TextButton(
+                    onPressed: () async {
+                      Navigator.pop(context);
+                      await logout(context);
+                    },
+                    child: const Text(
+                      "OK",
+                      style: TextStyle(color: primaryColor),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-    );
+      );
+    }
   }
 }

@@ -8,9 +8,11 @@ import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/reports/models/pgs_summary_narrative.dart';
 import 'package:imis/reports/services/summary_narrative_service.dart';
+import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/accomplishment_auditor_widget.dart';
 import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
+import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:imis/constant/constant.dart';
@@ -63,6 +65,7 @@ class _DeliverableStatusMonitoringPageState
   final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
     Dio(),
   );
+  final permissionService = PermissionService();
   List<Map<String, dynamic>> deliverableList = [];
   List<Map<String, dynamic>> filteredList = [];
   List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
@@ -350,6 +353,13 @@ class _DeliverableStatusMonitoringPageState
     double totalWidth =
         numberColumnWidth + (dataColumns * dataColumnWidth) + 24.0;
     bool isMinimized = MediaQuery.of(context).size.width < 600;
+    bool hasPermission = permissionService.hasPermission(
+      PermissionString.viewPgsDeliverable,
+    );
+
+    if (!hasPermission) {
+      return noPermissionScreen();
+    }
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
@@ -366,7 +376,6 @@ class _DeliverableStatusMonitoringPageState
               horizontal: 16.0,
               vertical: 8.0,
             ),
-
             child: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [

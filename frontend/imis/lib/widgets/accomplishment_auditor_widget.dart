@@ -708,7 +708,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                                     final blob = html.Blob([bytes]);
                                     final url = html
                                         .Url.createObjectUrlFromBlob(blob);
-                                    final anchor =
+                                    final _ =
                                         html.AnchorElement(href: url)
                                           ..setAttribute(
                                             "download",
