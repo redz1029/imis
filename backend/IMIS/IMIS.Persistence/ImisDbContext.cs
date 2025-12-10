@@ -17,7 +17,7 @@ namespace IMIS.Persistence
         public DbSet<AuditSchedule> AuditSchedules { get; set; }
         public DbSet<AuditScheduleDetails> AuditScheduleDetails { get; set; }
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
-        public DbSet<PgsDeliverable> Deliverable { get; set; }
+        public DbSet<PgsDeliverable> Deliverable { get; set; }  
         public DbSet<KeyResultArea> KeyResultArea { get; set; }
         public DbSet<PerfomanceGovernanceSystem> PerformanceGovernanceSystem { get; set; }
         public DbSet<PgsPeriod> PgsPeriod { get; set; }
@@ -31,6 +31,7 @@ namespace IMIS.Persistence
         public DbSet<Announcement> Announcement { get; set; }
         public DbSet<BreakThroughScoring> BreakThroughScoring { get; set; }
         public DbSet<SWOTAnalysis> SWOTAnalysis { get; set; }
+        public DbSet<KraRoadMapPeriod> KraRoadMapPeriod { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)

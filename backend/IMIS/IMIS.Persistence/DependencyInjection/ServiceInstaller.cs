@@ -4,6 +4,7 @@ using IMIS.Application.AuditorOfficesModule;
 using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.BreakThroughScoringModule;
+using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
@@ -23,6 +24,7 @@ using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.BreakThroughScoringModule;
 using IMIS.Persistence.KraModule;
+using IMIS.Persistence.KraRoadMapPeriodModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.OfficeTypeModule;
 using IMIS.Persistence.PgsDeliverableAccomplishmentModule;
@@ -102,6 +104,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<ISWOTAnalysisRepository, SWOTAnalysisRepository>();
             services.AddScoped<ISWOTAnalysisService, SWOTAnalysisService>();
+
+            services.AddScoped<IKraRoadMapPeriodRepository, KraRoadMapPeriodRepository>();
+            services.AddScoped<IKraRoadMapPeriodService, KraRoadMapPeriodService>();
 
             return services;
         }
