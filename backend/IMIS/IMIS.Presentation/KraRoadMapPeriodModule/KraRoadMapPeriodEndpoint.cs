@@ -1,8 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.KraRoadMapPeriodModule;
-using IMIS.Application.PgsKeyResultAreaModule;
-using IMIS.Application.PgsKraModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
