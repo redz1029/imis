@@ -64,7 +64,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _pgsPeriodService.getPgsPeriod(
+      final pageList = await _pgsPeriodService.getKraPeriod(
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
@@ -155,7 +155,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
               onPressed: () async {
                 Navigator.pop(context);
                 try {
-                  await _pgsPeriodService.deletePeriod(id);
+                  await _pgsPeriodService.deleteKraPeriod(id);
                   await fetchPGSPeriods();
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
@@ -403,7 +403,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                       DateTime.parse(endDateController.text),
                       false,
                     );
-                    await _pgsPeriodService.createOrUpdatePgsPeriod(period);
+                    await _pgsPeriodService.createOrUpdateKraPeriod(period);
                     setState(() {
                       fetchPGSPeriods();
                     });

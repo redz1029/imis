@@ -9,7 +9,7 @@ class KraPeriodRoadmapService {
   final Dio dio;
 
   KraPeriodRoadmapService(this.dio);
-  Future<PageList<KraRoadmapPeriod>> getPgsPeriod({
+  Future<PageList<KraRoadmapPeriod>> getKraPeriod({
     int page = 1,
     int pageSize = 15,
     String? searchQuery,
@@ -24,7 +24,7 @@ class KraPeriodRoadmapService {
     );
   }
 
-  Future<void> createOrUpdatePgsPeriod(KraRoadmapPeriod period) async {
+  Future<void> createOrUpdateKraPeriod(KraRoadmapPeriod period) async {
     var url = ApiEndpoint().kraRoadMapPeriod;
     final Map<String, dynamic> requestData = period.toJson();
     final response = await AuthenticatedRequest.post(
@@ -37,8 +37,8 @@ class KraPeriodRoadmapService {
     }
   }
 
-  Future<void> deletePeriod(String period) async {
-    final url = '${ApiEndpoint().kraRoadMapPeriod}/$period';
+  Future<void> deleteKraPeriod(String kraPeriod) async {
+    final url = '${ApiEndpoint().kraRoadMapPeriod}/$kraPeriod';
     await AuthenticatedRequest.delete(dio, url);
   }
 }
