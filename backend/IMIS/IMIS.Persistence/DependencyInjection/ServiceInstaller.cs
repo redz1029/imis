@@ -4,6 +4,9 @@ using IMIS.Application.AuditorOfficesModule;
 using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.BreakThroughScoringModule;
+using IMIS.Application.KraRoadMapDeliverableModule;
+using IMIS.Application.KraRoadMapKpiModule;
+using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
@@ -24,6 +27,9 @@ using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.BreakThroughScoringModule;
 using IMIS.Persistence.KraModule;
+using IMIS.Persistence.KraRoadMapDeliverableModule;
+using IMIS.Persistence.KraRoadMapKpiModule;
+using IMIS.Persistence.KraRoadMapModule;
 using IMIS.Persistence.KraRoadMapPeriodModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.OfficeTypeModule;
@@ -107,6 +113,15 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IKraRoadMapPeriodRepository, KraRoadMapPeriodRepository>();
             services.AddScoped<IKraRoadMapPeriodService, KraRoadMapPeriodService>();
+
+            services.AddScoped<IKraRoadMapKpiRepository, KraRoadMapKpiRepository>();
+            services.AddScoped<IKraRoadMapKpiService, KraRoadMapKpiService>();
+
+            services.AddScoped<IKraRoadMapDeliverableRepository, KraRoadMapDeliverableRepository>();
+            services.AddScoped<IKraRoadMapDeliverableService, KraRoadMapDeliverableService>();
+
+            services.AddScoped<IkraRoadMapRepository, KraRoadMapRepository>();
+            services.AddScoped<IKraRoadMapService, KraRoadMapService>();
 
             return services;
         }

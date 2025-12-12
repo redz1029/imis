@@ -31,8 +31,11 @@ namespace IMIS.Persistence
         public DbSet<Announcement> Announcement { get; set; }
         public DbSet<BreakThroughScoring> BreakThroughScoring { get; set; }
         public DbSet<SWOTAnalysis> SWOTAnalysis { get; set; }
-        public DbSet<KraRoadMapPeriod> KraRoadMapPeriod { get; set; }
-
+        public DbSet<KraRoadMapPeriod> KraRoadMapPeriod { get; set; }        
+        public DbSet<KraRoadMapKpi> KraRoadMapKPI { get; set; }
+        public DbSet<KraRoadMapDeliverable> KraRoadMapDeliverable { get; set; }
+        public DbSet<KraRoadMap> KraRoadMap { get; set; }
+        
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
         {

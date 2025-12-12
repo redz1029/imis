@@ -1,0 +1,14 @@
+﻿using Base.Abstractions;
+using Base.Pagination;
+using IMIS.Domain;
+
+namespace IMIS.Application.KraRoadMapModule
+{
+    public interface IKraRoadMapService : IService
+    {
+        public Task<DtoPageList<KraRoadMapDto, KraRoadMap, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        Task<List<KraRoadMapDto>?> GetAll(CancellationToken cancellationToken);
+        Task<KraRoadMapDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+    }
+}

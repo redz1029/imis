@@ -1,0 +1,16 @@
+﻿using Base.Primitives;
+
+namespace IMIS.Domain
+{
+    public class KraRoadMap : Entity<long>
+    {
+        public required int? KraId { get; set; }
+        public KeyResultArea? Kra { get; set; }        
+        public required int KraRoadMapPeriodId { get; set; }
+        public KraRoadMapPeriod? KraRoadMapPeriod { get; set; }
+        public string? KraDescription { get; set; }
+        public bool IsEnabler { get; set; }
+        public List<KraRoadMapDeliverable>? Deliverables { get; set; }
+        public List<KraRoadMapKpi>? Kpis { get; set; }
+    }
+}
