@@ -51,6 +51,7 @@ class ApiEndpoint {
   late String deletePgs;
   late String breakThroughScoring;
   late String swotAnalysis;
+  late String kraRoadMapPeriod;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -100,6 +101,7 @@ class ApiEndpoint {
     deletePgs = '$baseUrl/pgs/deliverable';
     breakThroughScoring = '$baseUrl/BreakThroughScoring';
     swotAnalysis = '$baseUrl/swotAnalysis';
+    kraRoadMapPeriod = '$baseUrl/kraRoadMapPeriod';
   }
 
   static Future<void> setBaseUrl() async {
