@@ -12,7 +12,7 @@ import 'package:imis/performance_governance_system/deliverable_status_monitoring
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
-import 'package:imis/roadmap/pages/roadmap.dart';
+import 'package:imis/roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/swot/pages/swot_page.dart';
 import 'package:imis/user/models/user_registration.dart';
@@ -767,7 +767,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                               Icons.timeline_outlined,
                               'Roadmap',
                               25,
-                              () => _setScreen(Roadmap(), 25),
+                              () => _setScreen(RoadmapPage(), 25),
                             )
                             : SizedBox.shrink(),
                   ),

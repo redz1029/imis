@@ -3,6 +3,7 @@ import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/user/models/user.dart';
 import 'package:imis/utils/api_endpoint.dart';
@@ -63,5 +64,11 @@ class CommonService {
     ApiEndpoint().team,
     (e) => Team.fromJson(e),
     'Failed to fetch team',
+  );
+
+  Future<List<KraRoadmapPeriod>> fetchKraPeriod() => _fetchList(
+    ApiEndpoint().kraRoadMapPeriod,
+    (e) => KraRoadmapPeriod.fromJson(e),
+    'Failed to fetch kra period',
   );
 }
