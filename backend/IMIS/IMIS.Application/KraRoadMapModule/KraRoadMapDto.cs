@@ -16,9 +16,6 @@ namespace IMIS.Application.KraRoadMapModule
         public int KraRoadMapPeriodId { get; set; }
         public KraRoadMapPeriodDto? KraRoadMapPeriod { get; set; }
 
-        public string? KraDescription { get; set; }
-        public bool IsEnabler { get; set; }
-
         public List<KraRoadMapDeliverableDto>? Deliverables { get; set; }
         public List<KraRoadMapKpiDto>? Kpis { get; set; }
 
@@ -29,9 +26,7 @@ namespace IMIS.Application.KraRoadMapModule
         {
             this.Id = entity.Id;
             this.KraId = entity.KraId;
-            this.KraRoadMapPeriodId = entity.KraRoadMapPeriodId;
-            this.KraDescription = entity.KraDescription;
-            this.IsEnabler = entity.IsEnabler;
+            this.KraRoadMapPeriodId = entity.KraRoadMapPeriodId;         
             this.Kra = entity.Kra != null ? new KeyResultAreaDto(entity.Kra) : null;
             this.KraRoadMapPeriod = entity.KraRoadMapPeriod != null ? new KraRoadMapPeriodDto(entity.KraRoadMapPeriod) : null;
             this.Deliverables = entity.Deliverables?.Select(d => new KraRoadMapDeliverableDto(d)).ToList();
@@ -44,9 +39,7 @@ namespace IMIS.Application.KraRoadMapModule
             {
                 Id = Id,
                 KraId = KraId,
-                KraRoadMapPeriodId = KraRoadMapPeriodId,
-                KraDescription = KraDescription,
-                IsEnabler = IsEnabler,
+                KraRoadMapPeriodId = KraRoadMapPeriodId,            
                 Deliverables = Deliverables?.Select(d => d.ToEntity()).ToList(),
                 Kpis = Kpis?.Select(k => k.ToEntity()).ToList(),
             };
