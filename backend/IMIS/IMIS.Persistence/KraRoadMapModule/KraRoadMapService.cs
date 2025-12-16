@@ -1,11 +1,11 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
-using IMIS.Application.AuditorModule;
+using IMIS.Application.KraRoadMapDeliverableModule;
+using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
-using IMIS.Persistence.AuditorModule;
 
 namespace IMIS.Persistence.KraRoadMapModule
 {
@@ -46,28 +46,69 @@ namespace IMIS.Persistence.KraRoadMapModule
             }
             return DtoPageList<KraRoadMapDto, KraRoadMap, long>.Create(kraRoadMapDto.Items, page, pageSize, kraRoadMapDto.TotalCount);
         }
+        private KraRoadMapDto MapToDto(KraRoadMap entity)
+        {
+            if (entity == null) return null!; 
 
+            var dto = new KraRoadMapDto(entity);
+
+            dto.Deliverables = entity.Deliverables?
+                .Where(d => !d.IsDeleted)
+                .GroupBy(d => d.KraDescription)
+                .Select(g => new KraRoadMapDeliverableGroupDto
+                {
+                    Id = 0,
+                    KraDescription = g.Key,
+                    Items = g.ToList()
+                })
+                .ToList();
+
+            dto.Kpis = entity.Kpis?
+                .Where(k => !k.IsDeleted)
+                .Select(k => new KraRoadMapKpiDto
+                {
+                    Id = k.Id,
+                    KpiDescription = k.KpiDescription,
+                    IsDeleted = false,
+                    RowVersion = k.RowVersion
+                })
+                .ToList();
+
+            return dto;
+        }
         public async Task<KraRoadMapDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
-            return entity != null ? new KraRoadMapDto(entity) : null;
+            return entity != null ? MapToDto(entity) : null;
         }
 
         public async Task<List<KraRoadMapDto>?> GetAll(CancellationToken cancellationToken)
         {
             var list = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            return list?.Select(a => new KraRoadMapDto(a)).ToList();
+            if (list == null) return null;
+
+            return list.Select(MapToDto).ToList();
         }
-      
+
+        private List<KraRoadMapDeliverable> FlattenDeliverableGroups(List<KraRoadMapDeliverableGroupDto>? groups)
+        {
+            if (groups == null) return new List<KraRoadMapDeliverable>();
+
+            return groups.SelectMany(g => g.Items ?? new List<KraRoadMapDeliverable>()).ToList();
+        }
+
         public async Task<KraRoadMapDto> SaveOrUpdateAsync(KraRoadMapDto dto, CancellationToken cancellationToken)
         {
+            var flattenedDeliverables = FlattenDeliverableGroups(dto.Deliverables);
+
             var entity = dto.ToEntity();
-        
+            entity.Deliverables = flattenedDeliverables; 
+
             var kra = await _kraRepository.GetByIdAsync(entity.KraId!.Value, cancellationToken)
-                     ?? throw new InvalidOperationException("Invalid KRA Id");
+                      ?? throw new InvalidOperationException("Invalid KRA Id");
 
             var period = await _kraRoadMapPeriodRepository.GetByIdAsync(entity.KraRoadMapPeriodId, cancellationToken)
-                        ?? throw new InvalidOperationException("Invalid RoadMap Period Id");
+                         ?? throw new InvalidOperationException("Invalid RoadMap Period Id");
 
             entity.Kra = kra;
             entity.KraRoadMapPeriod = period;
@@ -76,14 +117,11 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             if (isNew)
             {
-               
                 _repository.GetDbContext().Add(entity);
                 await _repository.SaveOrUpdateAsync(entity, cancellationToken);
-                                               
             }
             else
-            {           
-                
+            {
                 var existing = await _repository
                     .GetByIdWithChildrenAsync(entity.Id, cancellationToken)
                     ?? throw new InvalidOperationException("KraRoadMap record not found.");
@@ -105,7 +143,7 @@ namespace IMIS.Persistence.KraRoadMapModule
                 Id = entity.Id
             };
         }
-        
+
         private void UpdateDeliverables(KraRoadMap existing, KraRoadMap incoming)
         {
             var incomingIds = incoming.Deliverables?.Select(d => d.Id).ToList() ?? new();
@@ -116,7 +154,7 @@ namespace IMIS.Persistence.KraRoadMapModule
             foreach (var d in incoming.Deliverables ?? new List<KraRoadMapDeliverable>())
             {
                 if (d.Id == 0)
-                {                                    
+                {
                     existing.Deliverables!.Add(d);
                     continue;
                 }
@@ -130,7 +168,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                 }
             }
         }
-        
+
+
         private void UpdateKpis(KraRoadMap existing, KraRoadMap incoming)
         {
             var incomingIds = incoming.Kpis?.Select(k => k.Id).ToList() ?? new();

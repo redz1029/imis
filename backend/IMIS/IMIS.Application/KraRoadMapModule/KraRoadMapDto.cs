@@ -12,11 +12,9 @@ namespace IMIS.Application.KraRoadMapModule
     {
         public int? KraId { get; set; }
         public KeyResultAreaDto? Kra { get; set; }
-
         public int KraRoadMapPeriodId { get; set; }
         public KraRoadMapPeriodDto? KraRoadMapPeriod { get; set; }
-
-        public List<KraRoadMapDeliverableDto>? Deliverables { get; set; }
+        public List<KraRoadMapDeliverableGroupDto>? Deliverables { get; set; }
         public List<KraRoadMapKpiDto>? Kpis { get; set; }
 
         public KraRoadMapDto() { }
@@ -29,22 +27,29 @@ namespace IMIS.Application.KraRoadMapModule
             this.KraRoadMapPeriodId = entity.KraRoadMapPeriodId;         
             this.Kra = entity.Kra != null ? new KeyResultAreaDto(entity.Kra) : null;
             this.KraRoadMapPeriod = entity.KraRoadMapPeriod != null ? new KraRoadMapPeriodDto(entity.KraRoadMapPeriod) : null;
-            this.Deliverables = entity.Deliverables?.Select(d => new KraRoadMapDeliverableDto(d)).ToList();
+            this.Deliverables = entity.Deliverables?
+            .Select(d => new KraRoadMapDeliverableGroupDto { Id = d.Id, KraDescription = d.KraDescription, Items = new List<KraRoadMapDeliverable> { d } })
+            .ToList();
             this.Kpis = entity.Kpis?.Select(k => new KraRoadMapKpiDto(k)).ToList();
-        }
-
+        }      
         public override KraRoadMap ToEntity()
         {
             return new KraRoadMap()
             {
                 Id = Id,
                 KraId = KraId,
-                KraRoadMapPeriodId = KraRoadMapPeriodId,            
-                Deliverables = Deliverables?.Select(d => d.ToEntity()).ToList(),
+                KraRoadMapPeriodId = KraRoadMapPeriodId,
+                Deliverables = Deliverables?
+                    .SelectMany(g => g.Items ?? new List<KraRoadMapDeliverable>())
+                    .Select(d =>
+                    {
+                        d.IsDeleted = false;
+                        return d;
+                    })
+                    .ToList(),
                 Kpis = Kpis?.Select(k => k.ToEntity()).ToList(),
             };
-
-        }      
+        }
     }
 }
 

@@ -19,7 +19,7 @@ namespace IMIS.Presentation.KraRoadMapModule
         }
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-          
+
             app.MapPost("/", async ([FromBody] KraRoadMapDto dto, IKraRoadMapService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 await service.SaveOrUpdateAsync(dto, cancellationToken);
@@ -27,7 +27,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                 return Results.Ok(dto);
             })
            .WithTags(_kraRoadMap)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.Add));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.Add));
 
             app.MapGet("/", async (IKraRoadMapService service, CancellationToken cancellationToken) =>
             {
@@ -36,7 +36,7 @@ namespace IMIS.Presentation.KraRoadMapModule
             })
            .WithTags(_kraRoadMap)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
 
             app.MapGet("/{id}", async (int id, IKraRoadMapService service, CancellationToken cancellationToken) =>
             {
