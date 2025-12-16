@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using VaultSharp.V1.SecretsEngines.Database;
 
 public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<string>>
 {
@@ -849,6 +848,53 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             {
                 UserId = "m3xzke5a-1cb3-4c3b-9d0o-9kk8f72v8j5f",
                 RoleId = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17"
+            },
+
+            // Point Person RoadMap 
+            new IdentityUserRole<string>
+            {
+                UserId = "a6866933-92a9-41e7-9100-8bee51ed0ada",
+                RoleId = "4c1c9c2e-9e2b-4c88-8a94-6a7d3e4c5a01"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "b582fc78-cd33-46d4-a994-8c43789600ff",
+                RoleId = "2a6f5c90-1d3b-4e8f-9c42-7b1e5d0a83c2"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "562a00d1-f6de-4c44-bfc2-b55e99074bcf",
+                RoleId = "9b7d2e11-6c3a-4f2e-a1d8-0f7c4b2e91a4"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "9821dbf5-0f70-4630-8c68-f2077a3abf08",
+                RoleId = "e3f7a4c1-5b29-4a8e-9d10-8c6e2f91b4a7"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "6517b46b-eade-4618-984b-525a31aec14f",
+                RoleId = "6b7f1c2e-8a4d-4f90-9e53-0d3a5c2b718f"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "0c0e6892-41a4-4536-bda7-757dd5aeb4ee",
+                RoleId = "3e1b5f2c-9d8a-4a07-8c64-fb2e9d7a1c50"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "8fa3f3e4-b8a2-4375-9dc8-91b6fbc55e4a",
+                RoleId = "7d8b0f3c-4a6e-4f9b-8c21-2e5a1d7b90f3"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "537d9fcd-b505-4f93-afc6-17eb8eddff83",
+                RoleId = "f0a8d2c7-1e9b-4c5a-8f63-7b4e2d9c1a30"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "e9bcc340-e63f-40e6-8326-8fe86cbef923",
+                RoleId = "5c2e8b9f-6a1d-4e73-9f0b-1c7a4d3e8b52"
             }
        );
     }
