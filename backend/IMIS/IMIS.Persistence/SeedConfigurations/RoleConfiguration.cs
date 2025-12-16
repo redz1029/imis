@@ -67,14 +67,76 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
                     NormalizedName = "OSM",
                     ConcurrencyStamp = Guid.NewGuid().ToString(),
                 },
-                 new IdentityRole
-                 {
-                     Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
-                     Name = new PgsAuditorHead().Name,
-                     NormalizedName = "PGS AUDITOR HEAD",
-                     ConcurrencyStamp = Guid.NewGuid().ToString(),
-                 }
-
+                new IdentityRole
+                {
+                    Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
+                    Name = new PgsAuditorHead().Name,
+                    NormalizedName = "PGS AUDITOR HEAD",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "4c1c9c2e-9e2b-4c88-8a94-6a7d3e4c5a01",
+                    Name = new ServiceOfficer().Name,
+                    NormalizedName = "SERVICE OFFICER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "9b7d2e11-6c3a-4f2e-a1d8-0f7c4b2e91a4",
+                    Name = new ResearchOfficer().Name,
+                    NormalizedName = "RESEARCH OFFICER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "2a6f5c90-1d3b-4e8f-9c42-7b1e5d0a83c2",
+                    Name = new TrainingOfficer().Name,
+                    NormalizedName = "TRAINING OFFICER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "e3f7a4c1-5b29-4a8e-9d10-8c6e2f91b4a7",
+                    Name = new LinkagesOfficer().Name,
+                    NormalizedName = "LINKAGES OFFICER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "7d8b0f3c-4a6e-4f9b-8c21-2e5a1d7b90f3",
+                    Name = new FacilitiesOfficer().Name,
+                    NormalizedName = "FACILITIES OFFICER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },               
+                new IdentityRole
+                {
+                    Id = "5c2e8b9f-6a1d-4e73-9f0b-1c7a4d3e8b52",
+                    Name = new FinanceOfficer().Name,
+                    NormalizedName = "FINANCE OFFICER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "f0a8d2c7-1e9b-4c5a-8f63-7b4e2d9c1a30",
+                    Name = new InformationOfficer().Name,
+                    NormalizedName = "INFORMATION OFFICER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },
+                new IdentityRole
+                {
+                    Id = "3e1b5f2c-9d8a-4a07-8c64-fb2e9d7a1c50",
+                    Name = new HROfficer().Name,
+                    NormalizedName = "HR OFFICER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                },               
+                new IdentityRole
+                {
+                    Id = "6b7f1c2e-8a4d-4f90-9e53-0d3a5c2b718f",
+                    Name = new SafetyOfficer().Name,
+                    NormalizedName = "SAFETY OFFICER",
+                    ConcurrencyStamp = Guid.NewGuid().ToString(),
+                }
         );
     }
 }
