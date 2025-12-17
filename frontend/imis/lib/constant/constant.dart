@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 const primaryColor = Color.fromRGBO(192, 80, 77, 1);
 const secondaryBgButton = Color.fromRGBO(192, 74, 74, 0.226);
 const primaryLightColor = Color.fromRGBO(192, 74, 74, 0.644);
-const maroon = Color.fromRGBO(134, 23, 23, 0.643);
+const maroon = Color.fromRGBO(117, 38, 38, 1);
 const secondaryColor = Color.fromRGBO(253, 252, 250, 1);
 const mainBgColor = Color.fromRGBO(245, 245, 245, 1);
 const grey = Color.fromRGBO(161, 161, 161, 1);
