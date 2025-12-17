@@ -50,14 +50,20 @@ class UserRoleService {
   ) async {
     final url = '${ApiEndpoint().users}/$userId/permissions';
 
+    final body = {
+      "userId": userId,
+      "userName": userName,
+      "permissions": permissions,
+    };
+
     try {
-      final response = await AuthenticatedRequest.put(dio, url);
+      final response = await AuthenticatedRequest.put(dio, url, data: body);
 
       if (response.statusCode == 200) {
         debugPrint('Permission updated successfully');
       }
     } catch (e) {
-      debugPrint('Error udpating permission: $e');
+      debugPrint('Error updating permission: $e');
     }
   }
 
