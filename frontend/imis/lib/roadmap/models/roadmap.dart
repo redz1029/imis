@@ -15,9 +15,7 @@ class Roadmap {
   KeyResultArea? kra;
   int? kraRoadMapPeriodId;
   KraRoadmapPeriod? kraRoadMapPeriod;
-  String? kraDescription;
-  bool? isEnabler;
-  List<RoadmapDeliverables>? deliverables;
+  List<DeliverableGroup>? deliverables;
   List<KpiRoadmap>? kpis;
 
   Roadmap(
@@ -26,8 +24,6 @@ class Roadmap {
     this.kra,
     this.kraRoadMapPeriodId,
     this.kraRoadMapPeriod,
-    this.kraDescription,
-    this.isEnabler,
     this.deliverables,
     this.kpis, {
     this.rowVersion,
