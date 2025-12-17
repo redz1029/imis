@@ -3,23 +3,49 @@ import 'package:json_annotation/json_annotation.dart';
 part 'roadmap_deliverables.g.dart';
 
 @JsonSerializable()
-class RoadmapDeliverables {
+class RoadmapDeliverableItem {
   final int id;
   bool? isDeleted;
   String? rowVersion;
-  final String description;
+  final String deliverableDescription;
   final int year;
+  String? kraDescription;
+  bool? isEnabler;
 
-  RoadmapDeliverables({
+  RoadmapDeliverableItem({
     required this.id,
-    required this.description,
+    required this.deliverableDescription,
     required this.year,
+    this.kraDescription,
+    this.isEnabler,
     this.isDeleted,
     this.rowVersion,
   });
 
-  factory RoadmapDeliverables.fromJson(Map<String, dynamic> json) =>
-      _$RoadmapDeliverablesFromJson(json);
+  factory RoadmapDeliverableItem.fromJson(Map<String, dynamic> json) =>
+      _$RoadmapDeliverableItemFromJson(json);
 
-  Map<String, dynamic> toJson() => _$RoadmapDeliverablesToJson(this);
+  Map<String, dynamic> toJson() => _$RoadmapDeliverableItemToJson(this);
+}
+
+@JsonSerializable()
+class DeliverableGroup {
+  final int id;
+  bool? isDeleted;
+  String? rowVersion;
+  String? kraDescription;
+  List<RoadmapDeliverableItem>? items;
+
+  DeliverableGroup({
+    required this.id,
+    this.kraDescription,
+    this.items,
+    this.isDeleted,
+    this.rowVersion,
+  });
+
+  factory DeliverableGroup.fromJson(Map<String, dynamic> json) =>
+      _$DeliverableGroupFromJson(json);
+
+  Map<String, dynamic> toJson() => _$DeliverableGroupToJson(this);
 }
