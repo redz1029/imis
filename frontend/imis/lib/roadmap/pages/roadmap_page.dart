@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +10,7 @@ import 'package:imis/roadmap/models/roadmap.dart';
 import 'package:imis/roadmap/models/roadmap_deliverables.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 import '../../common_services/common_service.dart';
 import '../kra_period_roadmap/models/kra_roadmap_period.dart';
 
@@ -31,10 +34,12 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   final _commonService = CommonService(Dio());
   final _roadmapService = RoadmapService(Dio());
   final dio = Dio();
-  final List<RoadmapDeliverables> deliverables = [];
+  final List<DeliverableGroup> deliverables = [];
   List<KeyResultArea> kraList = [];
   List<KraRoadmapPeriod> kraPeriodList = [];
+  final List<TextEditingController> kpiControllers = [];
 
+  final ScrollController _horizontalScrollController = ScrollController();
   @override
   void initState() {
     super.initState();
@@ -91,10 +96,9 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
     final int startYear = period.startYear.year;
     final int endYear = period.endYear.year;
 
-    final List<int> yearColumns = [];
-    for (int y = startYear; y <= endYear; y += 2) {
-      yearColumns.add(y);
-    }
+    final List<int> yearColumns = [
+      for (int y = startYear; y <= endYear; y++) y,
+    ];
 
     final List<String> headers = [
       'Action',
@@ -102,20 +106,65 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
       'KRA',
       ...yearColumns.map((y) => y.toString()),
     ];
-    final String title =
-        selectedKra != null ? '${selectedKra.name} ROADMAP' : 'ROADMAP';
+
+    final bool isEdit = roadmapToEdit != null;
+    final String title = '${selectedKra?.name ?? ''} ROADMAP';
+
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) {
-        List<List<String>> tableRows = [
-          List.generate(headers.length, (_) => ''),
-        ];
+        List<TextEditingController> kpiControllers = [];
+        List<List<TextEditingController>> tableControllers = [];
+        List<List<bool>> enablerStates = [];
+        if (isEdit) {
+          final deliverables = roadmapToEdit.deliverables ?? [];
+          for (var group in deliverables) {
+            final row = List.generate(headers.length, (_) => '');
+            row[2] = group.kraDescription ?? '';
 
-        List<List<bool>> enablerStates = [
-          List.generate(tableRows[0].length, (_) => false),
-        ];
+            for (int i = 3; i < headers.length; i++) {
+              final year = yearColumns[i - 3];
+              final match = group.items?.firstWhere(
+                (d) => d.year == year,
+                orElse:
+                    () => RoadmapDeliverableItem(
+                      id: 0,
+                      deliverableDescription: '',
+                      year: year,
+                      kraDescription: row[2],
+                      isEnabler: false,
+                      isDeleted: false,
+                      rowVersion: '',
+                    ),
+              );
+              row[i] = match?.deliverableDescription ?? '';
+            }
 
+            tableControllers.add(
+              row.map((v) => TextEditingController(text: v)).toList(),
+            );
+            enablerStates.add(
+              List.generate(
+                headers.length,
+                (i) => i == 1 ? group.items?.first.isEnabler ?? false : false,
+              ),
+            );
+          }
+          for (final kpi in roadmapToEdit!.kpis ?? []) {
+            kpiControllers.add(TextEditingController(text: kpi.kpiDescription));
+          }
+        }
+
+        if (tableControllers.isEmpty) {
+          tableControllers.add(
+            List.generate(headers.length, (_) => TextEditingController()),
+          );
+          enablerStates.add(List.generate(headers.length, (_) => false));
+        }
+        if (kpiControllers.isEmpty) {
+          kpiControllers.add(TextEditingController());
+        }
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             final Map<int, TableColumnWidth> columnWidths = {
@@ -133,279 +182,360 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
               ),
               titlePadding: EdgeInsets.zero,
               title: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 20,
-                ),
-                decoration: const BoxDecoration(color: maroon),
+                padding: const EdgeInsets.all(16),
+                color: maroon,
                 child: Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                  style: const TextStyle(
                     color: Colors.white,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
-              content: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // KP section (unchanged)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Text(selectedKra?.strategicObjective ?? ''),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Table(
+                        border: TableBorder.all(
+                          color: Colors.grey.shade400,
+                          width: 1,
                         ),
-                        const SizedBox(width: 20),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                        columnWidths: const {
+                          0: FlexColumnWidth(3),
+                          1: FlexColumnWidth(1),
+                        },
+                        defaultVerticalAlignment:
+                            TableCellVerticalAlignment.middle,
+                        children: [
+                          TableRow(
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade200,
+                            ),
                             children: [
-                              const Text(
-                                "Key Priorities",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                              const SizedBox(height: 10),
-                              ...kpList.map(
-                                (kp) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 8.0),
-                                  child: TextField(
-                                    decoration: InputDecoration(
-                                      border: const OutlineInputBorder(),
-                                      hintText: kp,
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Tooltip(
+                                  message: 'Strategy Objective',
+                                  child: RichText(
+                                    text: TextSpan(
+                                      style: const TextStyle(
+                                        color: Colors.black,
+                                      ),
+                                      children: [
+                                        TextSpan(
+                                          text:
+                                              selectedKra?.strategicObjective ??
+                                              '',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ),
                               ),
-                              TextButton.icon(
-                                onPressed: () {
-                                  setStateDialog(() {
-                                    kpList.add("KP${kpList.length + 1}");
-                                  });
-                                },
-                                icon: const Icon(
-                                  Icons.add,
-                                  color: primaryColor,
-                                ),
-                                label: const Text(
-                                  "Add KP",
-                                  style: TextStyle(color: primaryColor),
+                              // KP Fields Column
+                              Padding(
+                                padding: const EdgeInsets.all(12),
+                                child: Column(
+                                  children: [
+                                    for (
+                                      int i = 0;
+                                      i < kpiControllers.length;
+                                      i++
+                                    )
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Text(
+                                              'KP ${i + 1}: ',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: TextField(
+                                                controller: kpiControllers[i],
+                                                decoration:
+                                                    const InputDecoration(
+                                                      isDense: true,
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                    ),
+                                              ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete,
+                                                color: Colors.red,
+                                              ),
+                                              onPressed: () {
+                                                setStateDialog(() {
+                                                  kpiControllers.removeAt(i);
+                                                });
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+
+                                    Align(
+                                      alignment: Alignment.centerLeft,
+                                      child: TextButton.icon(
+                                        onPressed: () {
+                                          setStateDialog(() {
+                                            kpiControllers.add(
+                                              TextEditingController(),
+                                            );
+                                          });
+                                        },
+                                        icon: const Icon(
+                                          Icons.add,
+                                          color: primaryColor,
+                                        ),
+                                        label: const Text(
+                                          'Add KPI',
+                                          style: TextStyle(color: primaryColor),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-
-                    // Table
-                    const Text(
-                      "Roadmap Table",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 10),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Table(
-                        border: TableBorder.all(),
-                        defaultVerticalAlignment:
-                            TableCellVerticalAlignment.middle,
-                        columnWidths: columnWidths,
-                        children: [
-                          // Header row
-                          TableRow(
-                            children:
-                                headers.map((header) {
-                                  return Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Text(
-                                      header,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                  );
-                                }).toList(),
-                          ),
-                          ...tableRows.asMap().entries.map((entry) {
-                            int rowIndex = entry.key;
-                            List<String> row = entry.value;
-
-                            return TableRow(
-                              children: List.generate(headers.length, (
-                                colIndex,
-                              ) {
-                                if (colIndex == 0) {
-                                  return IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: primaryColor,
-                                    ),
-                                    onPressed: () {
-                                      setStateDialog(() {
-                                        tableRows.removeAt(rowIndex);
-                                        enablerStates.removeAt(rowIndex);
-                                      });
-                                    },
-                                  );
-                                }
-
-                                if (colIndex == 1) {
-                                  return Checkbox(
-                                    value: enablerStates[rowIndex][colIndex],
-                                    onChanged: (val) {
-                                      setStateDialog(() {
-                                        enablerStates[rowIndex][colIndex] =
-                                            val ?? false;
-                                      });
-                                    },
-
-                                    activeColor: mainBgColor,
-                                    checkColor: Colors.black,
-                                  );
-                                }
-
-                                return Padding(
-                                  padding: const EdgeInsets.all(16),
-                                  child: TextField(
-                                    decoration: const InputDecoration(
-                                      border: OutlineInputBorder(),
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 20,
-                                        horizontal: 12,
-                                      ),
-                                    ),
-                                    onChanged: (value) {
-                                      row[colIndex] = value;
-                                    },
-                                  ),
-                                );
-                              }),
-                            );
-                          }),
                         ],
                       ),
-                    ),
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 20),
+                      SizedBox(
+                        height: 400,
+                        child: Scrollbar(
+                          thumbVisibility: true,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.vertical,
 
-                    Center(
-                      child: TextButton.icon(
-                        onPressed: () {
-                          setStateDialog(() {
-                            tableRows.add(
-                              List.generate(headers.length, (_) => ''),
-                            );
-                            enablerStates.add(
-                              List.generate(headers.length, (_) => false),
-                            );
-                          });
-                        },
-                        icon: const Icon(Icons.add, color: primaryColor),
-                        label: const Text(
-                          "Add Row to Table",
-                          style: TextStyle(color: primaryColor),
+                            child: Scrollbar(
+                              thumbVisibility: true,
+                              controller: _horizontalScrollController,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                controller: _horizontalScrollController,
+                                child: Table(
+                                  border: TableBorder.all(),
+                                  columnWidths: columnWidths,
+                                  defaultVerticalAlignment:
+                                      TableCellVerticalAlignment.middle,
+                                  children: [
+                                    // Header
+                                    TableRow(
+                                      children:
+                                          headers
+                                              .map(
+                                                (h) => Padding(
+                                                  padding: const EdgeInsets.all(
+                                                    12,
+                                                  ),
+                                                  child: Text(
+                                                    h,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ),
+                                              )
+                                              .toList(),
+                                    ),
+
+                                    // Table Rows
+                                    ...tableControllers.asMap().entries.map((
+                                      entry,
+                                    ) {
+                                      int rowIndex = entry.key;
+                                      final controllers = entry.value;
+
+                                      return TableRow(
+                                        children: List.generate(headers.length, (
+                                          col,
+                                        ) {
+                                          if (col == 0) {
+                                            return IconButton(
+                                              icon: const Icon(
+                                                Icons.delete,
+                                                color: Colors.red,
+                                              ),
+                                              onPressed: () {
+                                                setStateDialog(() {
+                                                  tableControllers.removeAt(
+                                                    rowIndex,
+                                                  );
+                                                  enablerStates.removeAt(
+                                                    rowIndex,
+                                                  );
+                                                });
+                                              },
+                                            );
+                                          }
+
+                                          if (col == 1) {
+                                            return Checkbox(
+                                              value:
+                                                  enablerStates[rowIndex][col],
+                                              onChanged: (v) {
+                                                setStateDialog(
+                                                  () =>
+                                                      enablerStates[rowIndex][col] =
+                                                          v ?? false,
+                                                );
+                                              },
+                                            );
+                                          }
+
+                                          return Padding(
+                                            padding: const EdgeInsets.all(8.0),
+                                            child: TextField(
+                                              controller: controllers[col],
+                                              decoration: const InputDecoration(
+                                                border: OutlineInputBorder(),
+                                              ),
+                                            ),
+                                          );
+                                        }),
+                                      );
+                                    }),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 12),
+                      Center(
+                        child: TextButton.icon(
+                          onPressed: () {
+                            setStateDialog(() {
+                              tableControllers.add(
+                                List.generate(
+                                  headers.length,
+                                  (_) => TextEditingController(),
+                                ),
+                              );
+                              enablerStates.add(
+                                List.generate(headers.length, (_) => false),
+                              );
+                            });
+                          },
+                          icon: const Icon(Icons.add, color: primaryColor),
+                          label: const Text(
+                            "Add Row to Table",
+                            style: TextStyle(color: primaryColor),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
               actions: [
                 TextButton(
+                  onPressed: () => Navigator.pop(context),
                   child: const Text(
                     "Cancel",
                     style: TextStyle(color: primaryColor),
                   ),
-                  onPressed: () => Navigator.pop(context),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 16,
-                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  child: const Text(
-                    "Save",
-                    style: TextStyle(color: Colors.white),
-                  ),
-
                   onPressed: () async {
-                    try {
-                      for (
-                        int rowIndex = 0;
-                        rowIndex < tableRows.length;
-                        rowIndex++
-                      ) {
-                        final row = tableRows[rowIndex];
+                    final List<DeliverableGroup> allDeliverableGroups = [];
 
-                        final String kraDescription = row[2];
+                    for (int r = 0; r < tableControllers.length; r++) {
+                      final controllers = tableControllers[r];
+                      final List<RoadmapDeliverableItem> items = [];
 
-                        final bool isEnabler = enablerStates[rowIndex][1];
-
-                        final List<RoadmapDeliverables> deliverables = [];
-
-                        for (
-                          int colIndex = 3;
-                          colIndex < headers.length;
-                          colIndex++
-                        ) {
-                          final text = row[colIndex];
-
-                          if (text.trim().isNotEmpty) {
-                            deliverables.add(
-                              RoadmapDeliverables(
-                                id: 0,
-                                description: text,
-                                year: yearColumns[colIndex - 3],
-                                isDeleted: false,
-                                rowVersion: '',
-                              ),
-                            );
-                          }
+                      for (int c = 3; c < headers.length; c++) {
+                        if (controllers[c].text.trim().isNotEmpty) {
+                          items.add(
+                            RoadmapDeliverableItem(
+                              id: 0,
+                              deliverableDescription: controllers[c].text,
+                              year: yearColumns[c - 3],
+                              kraDescription: controllers[2].text,
+                              isEnabler: enablerStates[r][1],
+                              isDeleted: false,
+                              rowVersion: '',
+                            ),
+                          );
                         }
+                      }
 
-                        final List<KpiRoadmap> kpis =
-                            kpList
-                                .map(
-                                  (kp) => KpiRoadmap(id: 0, kpiDescription: kp),
-                                )
-                                .toList();
-
-                        final roadmap = Roadmap(
-                          0,
-                          selectedKra!.id,
-                          selectedKra,
-                          period.id,
-                          period,
-                          kraDescription,
-                          isEnabler,
-                          deliverables,
-                          kpis,
-                          rowVersion: '',
-                          isDeleted: false,
+                      if (items.isNotEmpty) {
+                        allDeliverableGroups.add(
+                          DeliverableGroup(
+                            id: 0,
+                            kraDescription: controllers[2].text,
+                            items: items,
+                            isDeleted: false,
+                            rowVersion: '',
+                          ),
                         );
-                        await _roadmapService.createRoadmap(roadmap);
                       }
+                    }
+                    final roadmap = Roadmap(
+                      isEdit ? roadmapToEdit.id : 0,
+                      selectedKra!.id,
+                      selectedKra,
+                      period.id,
+                      period,
+                      allDeliverableGroups,
+                      kpList
+                          .map((k) => KpiRoadmap(id: 0, kpiDescription: k))
+                          .toList(),
+                      isDeleted: false,
+                      rowVersion: '',
+                    );
 
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                      }
-                    } catch (e, stack) {
-                      debugPrint("Error saving roadmap: $e");
-                      debugPrint(stack.toString());
+                    if (isEdit) {
+                      await _roadmapService.updateRoadmap(roadmap);
+
+                      MotionToast.success(
+                        toastAlignment: Alignment.topCenter,
+                        description: const Text('Updated successfully'),
+                      ).show(context);
+                    } else {
+                      await _roadmapService.createRoadmap(roadmap);
+
+                      MotionToast.success(
+                        toastAlignment: Alignment.topCenter,
+                        description: const Text('Saved successfully'),
+                      ).show(context);
+                    }
+                    setState(() {
+                      fetchRoadmap();
+                    });
+                    if (context.mounted) {
+                      Navigator.pop(context, true);
                     }
                   },
+
+                  child: Text(
+                    isEdit ? "Update" : "Save",
+                    style: const TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
@@ -418,6 +548,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   void showProcess() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
           title: const Text('Select Process (Core & Support)'),
@@ -463,6 +594,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
 
   void showPeriodPanel({KeyResultArea? selectedKra}) {
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -634,7 +766,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                   0,
                                   DateTime.now(),
                                   DateTime.now(),
-                                  false,
+                                  isDeleted: false,
+                                  rowVersion: '',
                                 ),
                           );
                           final startYear = matchedKraPeriod.startYear.year;
@@ -651,7 +784,11 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                     IconButton(
                                       icon: const Icon(Icons.edit),
                                       onPressed: () {
-                                        showRoadmapFormDialog(); // to be fixd
+                                        showRoadmapFormDialog(
+                                          matchedKraPeriod,
+                                          selectedKra: matchedKra,
+                                          roadmapToEdit: roadmap,
+                                        );
                                       },
                                     ),
                                     IconButton(
@@ -704,7 +841,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
           isMinimized
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
-                onPressed: () => showPeriodPanel(),
+                onPressed: () => showProcess(),
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,

@@ -400,7 +400,8 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                       int.tryParse(id ?? '0') ?? 0,
                       DateTime.parse(startDateController.text),
                       DateTime.parse(endDateController.text),
-                      false,
+                      isDeleted: false,
+                      rowVersion: '',
                     );
                     await _pgsPeriodService.createOrUpdateKraPeriod(period);
                     setState(() {
