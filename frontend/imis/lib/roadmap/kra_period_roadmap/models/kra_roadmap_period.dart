@@ -21,8 +21,8 @@ class KraRoadmapPeriod {
   KraRoadmapPeriod(
     this.id,
     this.startYear,
-    this.endYear,
-    this.isDeleted, {
+    this.endYear, {
+    this.isDeleted,
     this.rowVersion,
   });
 

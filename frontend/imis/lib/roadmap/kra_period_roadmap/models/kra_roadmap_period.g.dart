@@ -11,7 +11,7 @@ KraRoadmapPeriod _$KraRoadmapPeriodFromJson(Map<String, dynamic> json) =>
       (json['id'] as num).toInt(),
       const DateTimeConverter().fromJson(json['startYear'] as String),
       const DateTimeConverter().fromJson(json['endYear'] as String),
-      json['isDeleted'] as bool?,
+      isDeleted: json['isDeleted'] as bool?,
       rowVersion: json['rowVersion'] as String?,
     );
 
