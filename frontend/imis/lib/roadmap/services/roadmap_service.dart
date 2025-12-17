@@ -38,4 +38,22 @@ class RoadmapService {
       throw Exception('Failed to create roadmap');
     }
   }
+
+  Future<void> updateRoadmap(Roadmap roadmap) async {
+    if (roadmap.id == 0) {
+      throw Exception('Roadmap ID is required for update');
+    }
+
+    final url = '${ApiEndpoint().kraRoadMap}/${roadmap.id}';
+
+    final response = await AuthenticatedRequest.put(
+      dio,
+      url,
+      data: roadmap.toJson(),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to update roadmap');
+    }
+  }
 }
