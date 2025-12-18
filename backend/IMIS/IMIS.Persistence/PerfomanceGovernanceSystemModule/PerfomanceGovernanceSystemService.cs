@@ -432,7 +432,7 @@ namespace IMIS.Persistence.PgsModule
 
             entity.Office = office;
             entity.OfficeId = office.Id;
-            entity.PgsPeriod = pgsPeriod;
+            entity.PgsPeriod = pgsPeriod;          
 
             if (entity.PgsDeliverables != null)
             {
@@ -568,7 +568,8 @@ namespace IMIS.Persistence.PgsModule
                 }
 
                 _repository.GetDbContext().Entry(existing).CurrentValues.SetValues(entity);
-                existing.OfficeId = office.Id;
+                existing!.OfficeId = office.Id;
+                existing.PgsPeriod = pgsPeriod;
 
                 if (existing.PgsReadinessRating != null && entity.PgsReadinessRating != null)
                 {
