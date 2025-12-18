@@ -75,9 +75,32 @@ namespace IMIS.Presentation.KraRoadMapModule
                 return result ? Results.Ok(new { message = "Deleted successfully." })
                               : Results.NotFound(new { message = "RoadMap not found." });
             })
-          .WithTags(_kraRoadMap)
-          .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.Edit));
+            .WithTags(_kraRoadMap)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.Edit));
 
+            app.MapGet("/filter", async ([FromQuery] int kraId, [FromQuery] int year, [FromQuery] string kraDescription, [FromQuery] bool isDirect,
+            IKraRoadMapService service, CancellationToken cancellationToken) =>
+            {
+                if (string.IsNullOrWhiteSpace(kraDescription))                    
+                    return Results.BadRequest("kraDescription is required");
+
+                var result = await service.GetFilteredDeliverablesAsync(kraId, year, kraDescription, isDirect, cancellationToken).ConfigureAwait(false);
+
+                return Results.Ok(result);
+            })
+            .WithTags(_kraRoadMap)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
+
+            app.MapGet("/getAllkraDescriptions", async ([FromQuery] int kraId, IKraRoadMapService service, CancellationToken cancellationToken) =>
+            {
+                var result = await service.GetAllKraDescriptionsByKraIdAsync(kraId, cancellationToken).ConfigureAwait(false);
+
+                return Results.Ok(result);
+            })
+            .WithTags(_kraRoadMap)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
 
         }
     }

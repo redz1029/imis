@@ -17,6 +17,55 @@ namespace IMIS.Persistence.KraRoadMapModule
             return await ReadOnlyDbContext.Set<KraRoadMap>()
                 .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
         }
+        public async Task<IEnumerable<KraRoadMapDescriptionFilter>> GetKraDescriptionsByKraIdAsync(int kraId,
+        CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<KraRoadMap>()
+            .AsNoTracking()
+            .Where(rm => rm.KraId == kraId && rm.Deliverables != null)
+            .SelectMany(rm => rm.Deliverables!)
+            .Where(d => !string.IsNullOrEmpty(d.KraDescription))
+            .Select(d => new KraRoadMapDescriptionFilter { KraDescription = d.KraDescription! })
+            .Distinct()
+            .ToListAsync(cancellationToken)
+            .ConfigureAwait(false);
+        }
+        
+        public async Task<IEnumerable<KraRoadMapFilter>> GetByKraYearAndDescriptionAsync(
+        int kraId,
+        int year,
+        string kraDescription,
+        bool isDirect,
+        CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<KraRoadMap>()
+                .AsNoTracking()
+                .Where(rm =>                    
+                    rm.KraId == kraId &&
+                    rm.Deliverables != null
+                )
+                .SelectMany(rm => rm.Deliverables!
+                    .Where(d =>                      
+                        d.Year == year &&
+                        d.KraDescription == kraDescription
+                    )
+                    .Select(d => new KraRoadMapFilter
+                    {
+                        Id = d.Id,
+                        KraId = rm.KraId!.Value,
+                        KraRoadMapId = rm.Id,
+                        KraDescription = d.KraDescription!,
+                        Year = d.Year,
+
+                        DeliverableDescription = isDirect
+                            ? d.DeliverableDescription!
+                            : null
+                    })
+                )
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         public async Task<EntityPageList<KraRoadMap, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _entities

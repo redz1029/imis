@@ -24,6 +24,14 @@ namespace IMIS.Persistence.KraRoadMapModule
             _kraRepository = kraRepository;
             _kraRoadMapPeriodRepository = kraRoadMapPeriodRepository;
         }
+        public async Task<IEnumerable<KraRoadMapDescriptionFilter>> GetAllKraDescriptionsByKraIdAsync(int kraId, CancellationToken cancellationToken)
+        {
+            return await _repository.GetKraDescriptionsByKraIdAsync(kraId, cancellationToken);
+        }
+        public async Task<IEnumerable<KraRoadMapFilter>>GetFilteredDeliverablesAsync(int kraId, int year, string kraDescription, bool isDirect, CancellationToken cancellationToken)
+        {
+            return await _repository.GetByKraYearAndDescriptionAsync(kraId, year, kraDescription, isDirect, cancellationToken);
+        }
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             var kraRoadMapDto = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
@@ -168,7 +176,6 @@ namespace IMIS.Persistence.KraRoadMapModule
                 }
             }
         }
-
 
         private void UpdateKpis(KraRoadMap existing, KraRoadMap incoming)
         {
