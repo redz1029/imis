@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:imis/roadmap/models/kra_roadmap_filter.dart';
 import 'package:imis/roadmap/models/roadmap.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
@@ -55,5 +56,44 @@ class RoadmapService {
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to update roadmap');
     }
+  }
+
+  Future<void> deleteRoadmap(String roadMap) async {
+    final url = '${ApiEndpoint().kraRoadMap}/$roadMap';
+    await AuthenticatedRequest.delete(dio, url);
+  }
+
+  Future<List<dynamic>> getAllKraDescriptions({required int kraId}) async {
+    final url =
+        '${ApiEndpoint().kraRoadMap}/getAllkraDescriptions?kraId=$kraId';
+
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode == 200) {
+      return response.data;
+    } else {
+      throw Exception('Failed to fetch KRA descriptions');
+    }
+  }
+
+  Future<List<dynamic>> kraRoadmapFilter(KraRoadmapFilter filter) async {
+    final queryParams = {
+      'kraId': filter.kraId.toString(),
+      'year': filter.year.toString(),
+      'kraDescription': filter.kraDescription,
+      'isDirect': filter.isDirect.toString(),
+    };
+
+    final uri = Uri.parse(
+      '${ApiEndpoint().kraRoadMap}/filter',
+    ).replace(queryParameters: queryParams);
+
+    final response = await AuthenticatedRequest.get(dio, uri.toString());
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to filter KRA roadmap');
+    }
+
+    return List<Map<String, dynamic>>.from(response.data);
   }
 }
