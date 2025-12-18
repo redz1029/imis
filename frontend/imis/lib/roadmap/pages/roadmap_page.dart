@@ -262,7 +262,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                               ),
                                             ),
                                             Expanded(
-                                              child: TextField(
+                                              child: TextFormField(
+                                                maxLines: null,
                                                 controller: kpiControllers[i],
                                                 decoration:
                                                     const InputDecoration(
@@ -401,7 +402,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
 
                                           return Padding(
                                             padding: const EdgeInsets.all(8.0),
-                                            child: TextField(
+                                            child: TextFormField(
+                                              maxLines: null,
                                               controller: controllers[col],
                                               decoration: const InputDecoration(
                                                 border: OutlineInputBorder(),
@@ -436,7 +438,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                           },
                           icon: const Icon(Icons.add, color: primaryColor),
                           label: const Text(
-                            "Add Row to Table",
+                            "Add Row",
                             style: TextStyle(color: primaryColor),
                           ),
                         ),
@@ -733,7 +735,10 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                     ),
                     columns: const [
                       DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(label: Text('Kra'), size: ColumnSize.L),
+                      DataColumn2(
+                        label: Text('Process (Core & Support)'),
+                        size: ColumnSize.L,
+                      ),
                       DataColumn(label: Text('Period')),
                       DataColumn(label: Text('Actions')),
                     ],
@@ -797,7 +802,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         color: primaryColor,
                                       ),
                                       onPressed: () {
-                                        // showDeleteDialog(kra.id.toString());
+                                        showDeleteDialog(roadmap.id.toString());
                                       },
                                     ),
                                   ],
@@ -845,6 +850,49 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this Roadmap? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await _roadmapService.deleteRoadmap(id);
+                  await fetchRoadmap();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Delete'));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }
