@@ -2,6 +2,8 @@
 import 'package:data_table_2/data_table_2.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
+import 'package:imis/roadmap/models/kra_roadmap_filter.dart';
+import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/accomplishment_pgs_widget.dart';
@@ -51,6 +53,7 @@ class PerformanceGovernanceSystemPageState
     extends State<PerformanceGovernanceSystemPage> {
   late FilterSearchResultUtil<PerformanceGovernanceSystem> pgsSearchUtil;
   final _commonService = CommonService(Dio());
+  final _roadMapService = RoadmapService(Dio());
   final GlobalKey _menuKey = GlobalKey();
   final _formKey = GlobalKey<FormState>();
   final _dateConverter = const LongDateOnlyConverter();
@@ -97,6 +100,8 @@ class PerformanceGovernanceSystemPageState
   String? selectedOffice = "";
   String? _selectedOfficeId;
   String? selectedPeriodText;
+  Map<String, dynamic>? selectedPeriodObject;
+
   String? selectedEndDateText;
   String? selectedStartDateText;
   TextEditingController percentageDeliverables = TextEditingController();
@@ -124,6 +129,10 @@ class PerformanceGovernanceSystemPageState
   bool isMenuOpenOffice = false;
   bool isMenuOpenStartDate = false;
   bool isMenuOpenEndDate = false;
+
+  final Map<int, bool> isLoadingDescriptions = {};
+  final Map<int, List<dynamic>> kraDescriptionsByIndex = {};
+  final Map<int, Map<String, dynamic>?> selectedKraDescription = {};
 
   Map<int, bool> rowErrors = {};
   List<Office> officeList = [];
@@ -1923,7 +1932,7 @@ class PerformanceGovernanceSystemPageState
             );
             selectedStatus[i] = item.status;
             deliverableIds[i] = item.id ?? 0;
-            // selectedKRA[i] = item.kra!.id;
+
             selectedKRA[i] = item.kra!.id;
             final selectedKraId = item.kra!.id;
             final kraOption = options.firstWhere(
@@ -2072,7 +2081,8 @@ class PerformanceGovernanceSystemPageState
                                                       setState(() {
                                                         selectedPeriod =
                                                             newValue;
-                                                        final selected =
+
+                                                        selectedPeriodObject =
                                                             filteredListPeriod
                                                                 .firstWhere(
                                                                   (period) =>
@@ -2081,28 +2091,57 @@ class PerformanceGovernanceSystemPageState
                                                                   orElse:
                                                                       () => {},
                                                                 );
-                                                        if (selected
+
+                                                        if (selectedPeriodObject!
                                                             .isNotEmpty) {
                                                           final start =
-                                                              _dateConverter.toJson(
-                                                                _dateConverter
-                                                                    .fromJson(
-                                                                      selected['startDate'],
-                                                                    ),
-                                                              );
-                                                          final end = _dateConverter
-                                                              .toJson(
-                                                                _dateConverter
-                                                                    .fromJson(
-                                                                      selected['endDate'],
-                                                                    ),
-                                                              );
+                                                              selectedPeriodObject!['startDate'];
+                                                          final end =
+                                                              selectedPeriodObject!['endDate'];
+
                                                           selectedPeriodText =
-                                                              "$start to $end";
+                                                              "$start - $end"; // UI only
                                                         }
                                                       });
                                                     },
 
+                                            // onChanged:
+                                            //     id != null && orderLevel >= 1
+                                            //         ? null
+                                            //         : (int? newValue) {
+                                            //           setState(() {
+                                            //             selectedPeriod =
+                                            //                 newValue;
+                                            //             final selected =
+                                            //                 filteredListPeriod
+                                            //                     .firstWhere(
+                                            //                       (period) =>
+                                            //                           period['id'] ==
+                                            //                           newValue,
+                                            //                       orElse:
+                                            //                           () => {},
+                                            //                     );
+                                            //             if (selected
+                                            //                 .isNotEmpty) {
+                                            //               final start =
+                                            //                   _dateConverter.toJson(
+                                            //                     _dateConverter
+                                            //                         .fromJson(
+                                            //                           selected['startDate'],
+                                            //                         ),
+                                            //                   );
+                                            //               final end = _dateConverter
+                                            //                   .toJson(
+                                            //                     _dateConverter
+                                            //                         .fromJson(
+                                            //                           selected['endDate'],
+                                            //                         ),
+                                            //                   );
+                                            //               selectedPeriodText =
+                                            //                   "$start to $end";
+                                            //             }
+                                            //           });
+                                            //         },
                                             selectedItemBuilder: (
                                               BuildContext context,
                                             ) {
@@ -2619,6 +2658,7 @@ class PerformanceGovernanceSystemPageState
                       PermissionString.roleStandardUser,
                       PermissionString.serviceHead,
                       PermissionString.osm,
+                      PermissionString.roleAdmin,
                     ],
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
@@ -3030,7 +3070,79 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildtheme(
+  // Widget _buildProcess(
+  //   int index,
+  //   String? id,
+  //   Function setDialogState,
+  //   int orderLevel,
+  // ) {
+  //   if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
+  //     selectedKRA[index] = options.first['id'];
+  //     selectedKRAObjects[index] = options.first;
+  //   }
+
+  //   final selectedKraObject =
+  //       selectedKRAObjects[index] ??
+  //       (options.isNotEmpty ? options.first : null);
+
+  //   final kraTooltipMessage =
+  //       selectedKraObject?['remarks'] ?? 'No description available';
+
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         CustomTooltip(
+  //           key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
+  //           maxLines: 5,
+  //           message: kraTooltipMessage,
+  //           child: DropdownButtonFormField<int>(
+  //             dropdownColor: mainBgColor,
+  //             isExpanded: true,
+  //             value: selectedKRA[index],
+  //             onChanged:
+  //                 id != null && orderLevel >= 1
+  //                     ? null
+  //                     : (int? newValue) {
+  //                       if (newValue == null) return;
+  //                       setDialogState(() {
+  //                         selectedKRA[index] = newValue;
+  //                         final selectedOption = options.firstWhere(
+  //                           (option) => option['id'] == newValue,
+  //                           orElse:
+  //                               () => {
+  //                                 'id': -1,
+  //                                 'name': 'Unknown',
+  //                                 'remarks': 'Not found',
+  //                               },
+  //                         );
+
+  //                         selectedKRAObjects[index] = selectedOption;
+  //                       });
+  //                     },
+  //             items:
+  //                 options.map<DropdownMenuItem<int>>((option) {
+  //                   return DropdownMenuItem<int>(
+  //                     value: option['id'],
+  //                     child: Text(option['name']),
+  //                   );
+  //                 }).toList(),
+  //             decoration: const InputDecoration(
+  //               border: OutlineInputBorder(),
+  //               contentPadding: EdgeInsets.symmetric(
+  //                 horizontal: 12,
+  //                 vertical: 20,
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+  Widget _buildProcess(
     int index,
     String? id,
     Function setDialogState,
@@ -3064,10 +3176,12 @@ class PerformanceGovernanceSystemPageState
               onChanged:
                   id != null && orderLevel >= 1
                       ? null
-                      : (int? newValue) {
+                      : (int? newValue) async {
                         if (newValue == null) return;
+
                         setDialogState(() {
                           selectedKRA[index] = newValue;
+
                           final selectedOption = options.firstWhere(
                             (option) => option['id'] == newValue,
                             orElse:
@@ -3080,6 +3194,191 @@ class PerformanceGovernanceSystemPageState
 
                           selectedKRAObjects[index] = selectedOption;
                         });
+
+                        final data = await _roadMapService
+                            .getAllKraDescriptions(kraId: newValue);
+                        if (data.isNotEmpty) {
+                          if (data.isNotEmpty) {
+                            showDialog(
+                              context: context,
+                              builder:
+                                  (_) => AlertDialog(
+                                    title: Text(
+                                      selectedKRAObjects[index]?['name'] ??
+                                          'KRA Details',
+                                    ),
+                                    content: SizedBox(
+                                      width: 300,
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: data.length,
+                                        itemBuilder: (context, i) {
+                                          final description =
+                                              data[i]['kraDescription'] ?? '';
+                                          return ListTile(
+                                            title: Text(
+                                              description,
+                                              style: const TextStyle(
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                            onTap: () async {
+                                              setDialogState(() {
+                                                selectedKRAObjects[index]?['selectedDescription'] =
+                                                    description;
+                                              });
+
+                                              Navigator.pop(context);
+
+                                              int filterYear =
+                                                  DateTime.now().year;
+
+                                              if (selectedPeriodObject !=
+                                                      null &&
+                                                  selectedPeriodObject!['startDate'] !=
+                                                      null) {
+                                                final parsed = DateTime.tryParse(
+                                                  selectedPeriodObject!['startDate'],
+                                                );
+
+                                                if (parsed != null) {
+                                                  filterYear = parsed.year;
+                                                }
+                                              }
+
+                                              final filter = KraRoadmapFilter(
+                                                kraId:
+                                                    selectedKRAObjects[index]?['id'] ??
+                                                    0,
+                                                year: filterYear,
+                                                kraDescription: description,
+                                                isDirect: true,
+                                              );
+                                              try {
+                                                final result =
+                                                    await _roadMapService
+                                                        .kraRoadmapFilter(
+                                                          filter,
+                                                        );
+
+                                                setDialogState(() {
+                                                  if (result.isNotEmpty &&
+                                                      result.first['deliverableDescription'] !=
+                                                          null &&
+                                                      result
+                                                          .first['deliverableDescription']
+                                                          .toString()
+                                                          .trim()
+                                                          .isNotEmpty) {
+                                                    deliverablesControllers[index]
+                                                        ?.text = result
+                                                            .first['deliverableDescription'];
+                                                  } else {
+                                                    deliverablesControllers[index]
+                                                        ?.clear();
+                                                  }
+
+                                                  if (result.isNotEmpty &&
+                                                      result.first['kraDescription'] !=
+                                                          null &&
+                                                      result
+                                                          .first['kraDescription']
+                                                          .toString()
+                                                          .trim()
+                                                          .isNotEmpty) {
+                                                    kraDescriptionController[index]
+                                                        ?.text = result
+                                                            .first['kraDescription'];
+                                                  } else {
+                                                    kraDescriptionController[index]
+                                                        ?.clear();
+                                                  }
+                                                });
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  const SnackBar(
+                                                    content: Text(
+                                                      'KRA roadmap filtered successfully',
+                                                    ),
+                                                  ),
+                                                );
+                                              } catch (e) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'Failed to filter KRA roadmap: $e',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+
+                                              // try {
+                                              //   final result =
+                                              //       await _roadMapService
+                                              //           .kraRoadmapFilter(
+                                              //             filter,
+                                              //           );
+
+                                              //   if (result.isNotEmpty &&
+                                              //       result.first['deliverableDescription'] !=
+                                              //           null) {
+                                              //     setDialogState(() {
+                                              //       deliverablesControllers[index]
+                                              //           ?.text = result
+                                              //               .first['deliverableDescription'];
+                                              //     });
+                                              //   }
+
+                                              //   ScaffoldMessenger.of(
+                                              //     context,
+                                              //   ).showSnackBar(
+                                              //     const SnackBar(
+                                              //       content: Text(
+                                              //         'KRA roadmap filtered successfully',
+                                              //       ),
+                                              //     ),
+                                              //   );
+                                              // } catch (e) {
+                                              //   ScaffoldMessenger.of(
+                                              //     context,
+                                              //   ).showSnackBar(
+                                              //     SnackBar(
+                                              //       content: Text(
+                                              //         'Failed to filter KRA roadmap: $e',
+                                              //       ),
+                                              //     ),
+                                              //   );
+                                              // }
+                                            },
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('Close'),
+                                      ),
+                                    ],
+                                  ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('No KRA descriptions available.'),
+                              ),
+                            );
+                          }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('No KRA descriptions available.'),
+                            ),
+                          );
+                        }
                       },
               items:
                   options.map<DropdownMenuItem<int>>((option) {
@@ -3258,7 +3557,7 @@ class PerformanceGovernanceSystemPageState
     required bool showErrors,
   }) {
     deliverablesControllers.putIfAbsent(index, () => TextEditingController());
-    selectedDirect.putIfAbsent(index, () => false);
+    selectedDirect.putIfAbsent(index, () => true);
     selectedIndirect.putIfAbsent(index, () => false);
     selectedByWhen.putIfAbsent(index, () => '');
     final isDirectSelected = selectedDirect[index] ?? false;
@@ -3275,7 +3574,7 @@ class PerformanceGovernanceSystemPageState
       decoration: BoxDecoration(color: rowColor),
       children: [
         _buildNumbering(index),
-        _buildtheme(index, id, setDialogState, orderLevel),
+        _buildProcess(index, id, setDialogState, orderLevel),
         _buildDropdownKraCell(index, id, setDialogState, orderLevel),
         _buildCheckboxCell(
           index,
@@ -3593,7 +3892,7 @@ class PerformanceGovernanceSystemPageState
       decoration: BoxDecoration(color: rowColor),
       children: [
         _buildNumbering(index),
-        _buildtheme(index, id, setDialogState, orderLevel),
+        _buildProcess(index, id, setDialogState, orderLevel),
         _buildDropdownKraCellPGSDeliverableStatus(
           index,
           id,
