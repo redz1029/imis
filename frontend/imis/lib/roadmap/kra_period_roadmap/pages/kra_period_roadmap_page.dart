@@ -144,7 +144,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
         return AlertDialog(
           title: Text("Confirm Delete"),
           content: Text(
-            "Are you sure you want to delete this PGS Period? This action cannot be undone.",
+            "Are you sure you want to delete this KRA Period? This action cannot be undone.",
           ),
           actions: [
             TextButton(
@@ -159,11 +159,11 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                   await fetchPGSPeriods();
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Period deleted successfully'),
+                    description: Text('KRA Period deleted successfully'),
                   ).show(context);
                 } catch (e) {
                   MotionToast.error(
-                    description: Text('Failed to Delete Period'),
+                    description: Text('Failed to Delete KRA Period'),
                   );
                 }
               },
