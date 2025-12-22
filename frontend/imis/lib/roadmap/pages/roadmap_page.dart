@@ -553,7 +553,16 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
       barrierDismissible: false,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Select Process (Core & Support)'),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(child: Text('Select Process (Core & Support)')),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
           content: SizedBox(
             width: 400,
             child: FutureBuilder<List<KeyResultArea>>(
@@ -578,7 +587,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
 
                     return ListTile(
                       title: Text(kra.name),
-                      trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.pop(context);
                         showPeriodPanel(selectedKra: kra);
@@ -600,7 +608,17 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Select Roadmap Period'),
+          title: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Expanded(child: Text('Select Period')),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+
           content: SizedBox(
             width: 400,
             child: FutureBuilder<List<KraRoadmapPeriod>>(
@@ -627,7 +645,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                       title: Text(
                         '${period.startYear.year} - ${period.endYear.year}',
                       ),
-                      trailing: const Icon(Icons.chevron_right),
+
                       onTap: () {
                         Navigator.pop(context);
                         showRoadmapFormDialog(period, selectedKra: selectedKra);
