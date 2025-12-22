@@ -129,7 +129,7 @@ class PerformanceGovernanceSystemPageState
   bool isMenuOpenOffice = false;
   bool isMenuOpenStartDate = false;
   bool isMenuOpenEndDate = false;
-
+  Map<int, bool> hasDataMap = {};
   final Map<int, bool> isLoadingDescriptions = {};
   final Map<int, List<dynamic>> kraDescriptionsByIndex = {};
   final Map<int, Map<String, dynamic>?> selectedKraDescription = {};
@@ -3070,6 +3070,209 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
+  Widget _buildProcess(
+    int index,
+    String? id,
+    Function setDialogState,
+    int orderLevel,
+  ) {
+    if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
+      selectedKRA[index] = options.first['id'];
+      selectedKRAObjects[index] = options.first;
+    }
+
+    final selectedKraObject =
+        selectedKRAObjects[index] ??
+        (options.isNotEmpty ? options.first : null);
+
+    final kraTooltipMessage =
+        selectedKraObject?['remarks'] ?? 'No description available';
+    bool hasData = hasDataMap[index] ?? true;
+    if (!hasData) {
+      setDialogState(() {
+        deliverablesControllers[index]?.clear();
+        kraDescriptionController[index]?.clear();
+      });
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CustomTooltip(
+            key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
+            maxLines: 5,
+            message: kraTooltipMessage,
+            child: DropdownButtonFormField<int>(
+              dropdownColor: mainBgColor,
+              isExpanded: true,
+              value: selectedKRA[index],
+              onChanged:
+                  id != null && orderLevel >= 1
+                      ? null
+                      : (int? newValue) async {
+                        if (newValue == null) return;
+
+                        setDialogState(() {
+                          selectedKRA[index] = newValue;
+                          final selectedOption = options.firstWhere(
+                            (option) => option['id'] == newValue,
+                            orElse:
+                                () => {
+                                  'id': -1,
+                                  'name': 'Unknown',
+                                  'remarks': 'Not found',
+                                },
+                          );
+                          selectedKRAObjects[index] = selectedOption;
+                        });
+
+                        final data = await _roadMapService
+                            .getAllKraDescriptions(kraId: newValue);
+
+                        setDialogState(() {
+                          hasDataMap[index] = data.isNotEmpty;
+                        });
+
+                        if (data.isNotEmpty) {
+                          showDialog(
+                            context: context,
+                            builder:
+                                (_) => AlertDialog(
+                                  title: Text(
+                                    selectedKRAObjects[index]?['name'] ??
+                                        'KRA Details',
+                                  ),
+                                  content: SizedBox(
+                                    width: 300,
+                                    child: ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: data.length,
+                                      itemBuilder: (context, i) {
+                                        final description =
+                                            data[i]['kraDescription'] ?? '';
+                                        return ListTile(
+                                          title: Text(
+                                            description,
+                                            style: const TextStyle(
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                          onTap: () async {
+                                            setDialogState(() {
+                                              selectedKRAObjects[index]?['selectedDescription'] =
+                                                  description;
+                                            });
+                                            Navigator.pop(context);
+
+                                            int filterYear =
+                                                DateTime.now().year;
+
+                                            if (selectedPeriodObject != null &&
+                                                selectedPeriodObject!['startDate'] !=
+                                                    null) {
+                                              final parsed = DateTime.tryParse(
+                                                selectedPeriodObject!['startDate'],
+                                              );
+                                              if (parsed != null) {
+                                                filterYear = parsed.year;
+                                              }
+                                            }
+
+                                            final filter = KraRoadmapFilter(
+                                              kraId:
+                                                  selectedKRAObjects[index]?['id'] ??
+                                                  0,
+                                              year: filterYear,
+                                              kraDescription: description,
+                                              isDirect: true,
+                                            );
+
+                                            final result = await _roadMapService
+                                                .kraRoadmapFilter(filter);
+
+                                            setDialogState(() {
+                                              if (result.isNotEmpty &&
+                                                  result.first['deliverableDescription'] !=
+                                                      null &&
+                                                  result
+                                                      .first['deliverableDescription']
+                                                      .toString()
+                                                      .trim()
+                                                      .isNotEmpty) {
+                                                deliverablesControllers[index]
+                                                    ?.text = result
+                                                        .first['deliverableDescription'];
+                                              } else {
+                                                deliverablesControllers[index]
+                                                    ?.clear();
+                                              }
+
+                                              if (result.isNotEmpty &&
+                                                  result.first['kraDescription'] !=
+                                                      null &&
+                                                  result.first['kraDescription']
+                                                      .toString()
+                                                      .trim()
+                                                      .isNotEmpty) {
+                                                kraDescriptionController[index]
+                                                    ?.text = result
+                                                        .first['kraDescription'];
+                                              } else {
+                                                kraDescriptionController[index]
+                                                    ?.clear();
+                                              }
+                                            });
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ),
+
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                ),
+                          );
+                        }
+                      },
+              items:
+                  options.map<DropdownMenuItem<int>>((option) {
+                    return DropdownMenuItem<int>(
+                      value: option['id'],
+                      child: Text(option['name']),
+                    );
+                  }).toList(),
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 20,
+                ),
+              ),
+            ),
+          ),
+          if (!hasData)
+            const Padding(
+              padding: EdgeInsets.only(top: 8.0),
+              child: Text(
+                'No available data',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 14,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
   // Widget _buildProcess(
   //   int index,
   //   String? id,
@@ -3104,10 +3307,12 @@ class PerformanceGovernanceSystemPageState
   //             onChanged:
   //                 id != null && orderLevel >= 1
   //                     ? null
-  //                     : (int? newValue) {
+  //                     : (int? newValue) async {
   //                       if (newValue == null) return;
+
   //                       setDialogState(() {
   //                         selectedKRA[index] = newValue;
+
   //                         final selectedOption = options.firstWhere(
   //                           (option) => option['id'] == newValue,
   //                           orElse:
@@ -3120,6 +3325,119 @@ class PerformanceGovernanceSystemPageState
 
   //                         selectedKRAObjects[index] = selectedOption;
   //                       });
+
+  //                       final data = await _roadMapService
+  //                           .getAllKraDescriptions(kraId: newValue);
+  //                       if (data.isNotEmpty) {
+  //                         if (data.isNotEmpty) {
+  //                           showDialog(
+  //                             context: context,
+  //                             builder:
+  //                                 (_) => AlertDialog(
+  //                                   title: Text(
+  //                                     selectedKRAObjects[index]?['name'] ??
+  //                                         'KRA Details',
+  //                                   ),
+  //                                   content: SizedBox(
+  //                                     width: 300,
+  //                                     child: ListView.builder(
+  //                                       shrinkWrap: true,
+  //                                       itemCount: data.length,
+  //                                       itemBuilder: (context, i) {
+  //                                         final description =
+  //                                             data[i]['kraDescription'] ?? '';
+  //                                         return ListTile(
+  //                                           title: Text(
+  //                                             description,
+  //                                             style: const TextStyle(
+  //                                               fontSize: 14,
+  //                                             ),
+  //                                           ),
+  //                                           onTap: () async {
+  //                                             setDialogState(() {
+  //                                               selectedKRAObjects[index]?['selectedDescription'] =
+  //                                                   description;
+  //                                             });
+
+  //                                             Navigator.pop(context);
+
+  //                                             int filterYear =
+  //                                                 DateTime.now().year;
+
+  //                                             if (selectedPeriodObject !=
+  //                                                     null &&
+  //                                                 selectedPeriodObject!['startDate'] !=
+  //                                                     null) {
+  //                                               final parsed = DateTime.tryParse(
+  //                                                 selectedPeriodObject!['startDate'],
+  //                                               );
+
+  //                                               if (parsed != null) {
+  //                                                 filterYear = parsed.year;
+  //                                               }
+  //                                             }
+
+  //                                             final filter = KraRoadmapFilter(
+  //                                               kraId:
+  //                                                   selectedKRAObjects[index]?['id'] ??
+  //                                                   0,
+  //                                               year: filterYear,
+  //                                               kraDescription: description,
+  //                                               isDirect: true,
+  //                                             );
+
+  //                                             final result =
+  //                                                 await _roadMapService
+  //                                                     .kraRoadmapFilter(filter);
+
+  //                                             setDialogState(() {
+  //                                               if (result.isNotEmpty &&
+  //                                                   result.first['deliverableDescription'] !=
+  //                                                       null &&
+  //                                                   result
+  //                                                       .first['deliverableDescription']
+  //                                                       .toString()
+  //                                                       .trim()
+  //                                                       .isNotEmpty) {
+  //                                                 deliverablesControllers[index]
+  //                                                     ?.text = result
+  //                                                         .first['deliverableDescription'];
+  //                                               } else {
+  //                                                 deliverablesControllers[index]
+  //                                                     ?.clear();
+  //                                               }
+
+  //                                               if (result.isNotEmpty &&
+  //                                                   result.first['kraDescription'] !=
+  //                                                       null &&
+  //                                                   result
+  //                                                       .first['kraDescription']
+  //                                                       .toString()
+  //                                                       .trim()
+  //                                                       .isNotEmpty) {
+  //                                                 kraDescriptionController[index]
+  //                                                     ?.text = result
+  //                                                         .first['kraDescription'];
+  //                                               } else {
+  //                                                 kraDescriptionController[index]
+  //                                                     ?.clear();
+  //                                               }
+  //                                             });
+  //                                           },
+  //                                         );
+  //                                       },
+  //                                     ),
+  //                                   ),
+  //                                   actions: [
+  //                                     TextButton(
+  //                                       onPressed: () => Navigator.pop(context),
+  //                                       child: const Text('Close'),
+  //                                     ),
+  //                                   ],
+  //                                 ),
+  //                           );
+  //                         }
+  //                       }
   //                     },
   //             items:
   //                 options.map<DropdownMenuItem<int>>((option) {
@@ -3141,265 +3459,6 @@ class PerformanceGovernanceSystemPageState
   //     ),
   //   );
   // }
-
-  Widget _buildProcess(
-    int index,
-    String? id,
-    Function setDialogState,
-    int orderLevel,
-  ) {
-    if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
-      selectedKRA[index] = options.first['id'];
-      selectedKRAObjects[index] = options.first;
-    }
-
-    final selectedKraObject =
-        selectedKRAObjects[index] ??
-        (options.isNotEmpty ? options.first : null);
-
-    final kraTooltipMessage =
-        selectedKraObject?['remarks'] ?? 'No description available';
-
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CustomTooltip(
-            key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
-            maxLines: 5,
-            message: kraTooltipMessage,
-            child: DropdownButtonFormField<int>(
-              dropdownColor: mainBgColor,
-              isExpanded: true,
-              value: selectedKRA[index],
-              onChanged:
-                  id != null && orderLevel >= 1
-                      ? null
-                      : (int? newValue) async {
-                        if (newValue == null) return;
-
-                        setDialogState(() {
-                          selectedKRA[index] = newValue;
-
-                          final selectedOption = options.firstWhere(
-                            (option) => option['id'] == newValue,
-                            orElse:
-                                () => {
-                                  'id': -1,
-                                  'name': 'Unknown',
-                                  'remarks': 'Not found',
-                                },
-                          );
-
-                          selectedKRAObjects[index] = selectedOption;
-                        });
-
-                        final data = await _roadMapService
-                            .getAllKraDescriptions(kraId: newValue);
-                        if (data.isNotEmpty) {
-                          if (data.isNotEmpty) {
-                            showDialog(
-                              context: context,
-                              builder:
-                                  (_) => AlertDialog(
-                                    title: Text(
-                                      selectedKRAObjects[index]?['name'] ??
-                                          'KRA Details',
-                                    ),
-                                    content: SizedBox(
-                                      width: 300,
-                                      child: ListView.builder(
-                                        shrinkWrap: true,
-                                        itemCount: data.length,
-                                        itemBuilder: (context, i) {
-                                          final description =
-                                              data[i]['kraDescription'] ?? '';
-                                          return ListTile(
-                                            title: Text(
-                                              description,
-                                              style: const TextStyle(
-                                                fontSize: 14,
-                                              ),
-                                            ),
-                                            onTap: () async {
-                                              setDialogState(() {
-                                                selectedKRAObjects[index]?['selectedDescription'] =
-                                                    description;
-                                              });
-
-                                              Navigator.pop(context);
-
-                                              int filterYear =
-                                                  DateTime.now().year;
-
-                                              if (selectedPeriodObject !=
-                                                      null &&
-                                                  selectedPeriodObject!['startDate'] !=
-                                                      null) {
-                                                final parsed = DateTime.tryParse(
-                                                  selectedPeriodObject!['startDate'],
-                                                );
-
-                                                if (parsed != null) {
-                                                  filterYear = parsed.year;
-                                                }
-                                              }
-
-                                              final filter = KraRoadmapFilter(
-                                                kraId:
-                                                    selectedKRAObjects[index]?['id'] ??
-                                                    0,
-                                                year: filterYear,
-                                                kraDescription: description,
-                                                isDirect: true,
-                                              );
-                                              try {
-                                                final result =
-                                                    await _roadMapService
-                                                        .kraRoadmapFilter(
-                                                          filter,
-                                                        );
-
-                                                setDialogState(() {
-                                                  if (result.isNotEmpty &&
-                                                      result.first['deliverableDescription'] !=
-                                                          null &&
-                                                      result
-                                                          .first['deliverableDescription']
-                                                          .toString()
-                                                          .trim()
-                                                          .isNotEmpty) {
-                                                    deliverablesControllers[index]
-                                                        ?.text = result
-                                                            .first['deliverableDescription'];
-                                                  } else {
-                                                    deliverablesControllers[index]
-                                                        ?.clear();
-                                                  }
-
-                                                  if (result.isNotEmpty &&
-                                                      result.first['kraDescription'] !=
-                                                          null &&
-                                                      result
-                                                          .first['kraDescription']
-                                                          .toString()
-                                                          .trim()
-                                                          .isNotEmpty) {
-                                                    kraDescriptionController[index]
-                                                        ?.text = result
-                                                            .first['kraDescription'];
-                                                  } else {
-                                                    kraDescriptionController[index]
-                                                        ?.clear();
-                                                  }
-                                                });
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  const SnackBar(
-                                                    content: Text(
-                                                      'KRA roadmap filtered successfully',
-                                                    ),
-                                                  ),
-                                                );
-                                              } catch (e) {
-                                                ScaffoldMessenger.of(
-                                                  context,
-                                                ).showSnackBar(
-                                                  SnackBar(
-                                                    content: Text(
-                                                      'Failed to filter KRA roadmap: $e',
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-
-                                              // try {
-                                              //   final result =
-                                              //       await _roadMapService
-                                              //           .kraRoadmapFilter(
-                                              //             filter,
-                                              //           );
-
-                                              //   if (result.isNotEmpty &&
-                                              //       result.first['deliverableDescription'] !=
-                                              //           null) {
-                                              //     setDialogState(() {
-                                              //       deliverablesControllers[index]
-                                              //           ?.text = result
-                                              //               .first['deliverableDescription'];
-                                              //     });
-                                              //   }
-
-                                              //   ScaffoldMessenger.of(
-                                              //     context,
-                                              //   ).showSnackBar(
-                                              //     const SnackBar(
-                                              //       content: Text(
-                                              //         'KRA roadmap filtered successfully',
-                                              //       ),
-                                              //     ),
-                                              //   );
-                                              // } catch (e) {
-                                              //   ScaffoldMessenger.of(
-                                              //     context,
-                                              //   ).showSnackBar(
-                                              //     SnackBar(
-                                              //       content: Text(
-                                              //         'Failed to filter KRA roadmap: $e',
-                                              //       ),
-                                              //     ),
-                                              //   );
-                                              // }
-                                            },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('Close'),
-                                      ),
-                                    ],
-                                  ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('No KRA descriptions available.'),
-                              ),
-                            );
-                          }
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('No KRA descriptions available.'),
-                            ),
-                          );
-                        }
-                      },
-              items:
-                  options.map<DropdownMenuItem<int>>((option) {
-                    return DropdownMenuItem<int>(
-                      value: option['id'],
-                      child: Text(option['name']),
-                    );
-                  }).toList(),
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 20,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildDropdownKraCell(
     int index,
@@ -3624,7 +3683,8 @@ class PerformanceGovernanceSystemPageState
     required bool isDirect,
     required String? errorText,
   }) {
-    final enabled = id != null && orderLevel >= 1;
+    final bool disabled = id != null && orderLevel >= 1;
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -3635,35 +3695,81 @@ class PerformanceGovernanceSystemPageState
                 isDirect
                     ? 'Direct: Indicates if the deliverable is directly managed by the office.'
                     : 'Indirect: Indicates if the deliverable is indirectly supported by the office.',
-            child: Container(
-              decoration: BoxDecoration(borderRadius: BorderRadius.circular(4)),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 4.0,
-                ),
-                child: Center(
-                  child: Checkbox(
-                    value: selectedValues[index] ?? false,
-                    onChanged:
-                        enabled
-                            ? null
-                            : (bool? newValue) {
-                              if (newValue == null) return;
-                              setDialogState(() {
-                                selectedValues[index] = newValue;
-                                if (newValue) oppositeValues[index] = false;
-                              });
-                            },
+            child: Center(
+              child: Checkbox(
+                value: selectedValues[index] ?? false,
+                onChanged:
+                    disabled
+                        ? null
+                        : (bool? newValue) async {
+                          if (newValue == null) return;
 
-                    activeColor: Colors.white,
-                    checkColor: Colors.black,
-                  ),
-                ),
+                          setDialogState(() {
+                            selectedValues[index] = newValue;
+
+                            if (newValue) {
+                              oppositeValues[index] = false;
+                            }
+                          });
+
+                          final bool isDirectValue =
+                              selectedDirect[index] == true;
+
+                          int filterYear = DateTime.now().year;
+                          if (selectedPeriodObject != null &&
+                              selectedPeriodObject!['startDate'] != null) {
+                            final parsed = DateTime.tryParse(
+                              selectedPeriodObject!['startDate'],
+                            );
+                            if (parsed != null) filterYear = parsed.year;
+                          }
+
+                          final filter = KraRoadmapFilter(
+                            kraId: selectedKRAObjects[index]?['id'] ?? 0,
+                            year: filterYear,
+                            kraDescription:
+                                kraDescriptionController[index]?.text ?? '',
+                            isDirect: isDirectValue,
+                          );
+
+                          final result = await _roadMapService.kraRoadmapFilter(
+                            filter,
+                          );
+
+                          setDialogState(() {
+                            if (result.isNotEmpty &&
+                                result.first['deliverableDescription'] !=
+                                    null &&
+                                result.first['deliverableDescription']
+                                    .toString()
+                                    .trim()
+                                    .isNotEmpty) {
+                              deliverablesControllers[index]?.text =
+                                  result.first['deliverableDescription'];
+                            } else {
+                              deliverablesControllers[index]?.clear();
+                            }
+
+                            if (result.isNotEmpty &&
+                                result.first['kraDescription'] != null &&
+                                result.first['kraDescription']
+                                    .toString()
+                                    .trim()
+                                    .isNotEmpty) {
+                              kraDescriptionController[index]?.text =
+                                  result.first['kraDescription'];
+                            } else {
+                              kraDescriptionController[index]?.clear();
+                            }
+                          });
+                        },
+                activeColor: Colors.white,
+                checkColor: Colors.black,
               ),
             ),
           ),
-          if (errorText != null)
+
+          if (errorText != null && errorText.isNotEmpty)
             Padding(
               padding: const EdgeInsets.only(top: 4.0),
               child: Text(
