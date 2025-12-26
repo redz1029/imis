@@ -53,6 +53,7 @@ class ApiEndpoint {
   late String swotAnalysis;
   late String kraRoadMapPeriod;
   late String kraRoadMap;
+  late String kraRoadMapReport;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -104,6 +105,7 @@ class ApiEndpoint {
     swotAnalysis = '$baseUrl/swotAnalysis';
     kraRoadMapPeriod = '$baseUrl/kraRoadMapPeriod';
     kraRoadMap = '$baseUrl/kraRoadMap';
+    kraRoadMapReport = '$baseUrl/kraRoadMap/list-report/pdf';
   }
 
   static Future<void> setBaseUrl() async {
