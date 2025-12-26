@@ -8,6 +8,7 @@ import 'package:imis/performance_governance_system/key_result_area/models/key_re
 import 'package:imis/roadmap/models/kpi_roadmap.dart';
 import 'package:imis/roadmap/models/roadmap.dart';
 import 'package:imis/roadmap/models/roadmap_deliverables.dart';
+import 'package:imis/roadmap/pages/print_roadmap_page.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -151,7 +152,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
               ),
             );
           }
-          for (final kpi in roadmapToEdit!.kpis ?? []) {
+          for (final kpi in roadmapToEdit.kpis ?? []) {
             kpiControllers.add(TextEditingController(text: kpi.kpiDescription));
           }
         }
@@ -813,6 +814,30 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                           roadmapToEdit: roadmap,
                                         );
                                       },
+                                    ),
+                                    Tooltip(
+                                      message: 'Print Preview',
+
+                                      child: IconButton(
+                                        icon: const Icon(
+                                          Icons.description_outlined,
+                                        ),
+
+                                        onPressed: () async {
+                                          final roadMapId =
+                                              roadmap.id.toString();
+
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) => PrintRoadmapPage(
+                                                    roadmapId: roadMapId,
+                                                  ),
+                                            ),
+                                          );
+                                        },
+                                      ),
                                     ),
                                     IconButton(
                                       icon: const Icon(
