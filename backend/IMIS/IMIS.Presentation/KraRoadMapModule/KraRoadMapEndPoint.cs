@@ -1,7 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.KraRoadMapModule;
-using IMIS.Application.PgsModule;
 using IMIS.Infrastructure.Reports;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -104,7 +103,6 @@ namespace IMIS.Presentation.KraRoadMapModule
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
 
-
             app.MapGet("/list-report/pdf/{id}", async (int id, IKraRoadMapService service, HttpResponse response, CancellationToken cancellationToken) =>
             {
                 var reportKraRoadMapDto = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
@@ -114,14 +112,14 @@ namespace IMIS.Presentation.KraRoadMapModule
                     new List<ReportKraRoadMapDto> { reportKraRoadMapDto! },
                     "RoadmapReport",
                     cancellationToken
-                ).ConfigureAwait(false);
-                return Results.File(file, "application/pdf", $"ReportKraRoadMapDto_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                ).ConfigureAwait(false);               
 
                 //Force inline rendering in browser with dynamic timestamp filename
-                //var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                //response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
-                //return Results.File(file, "application/pdf");
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
 
+                //return Results.File(file, "application/pdf", $"ReportKraRoadMapDto_{DateTime.Now:yyyyMMddHHmmss}.pdf");
 
                 //var kraRoadMapDto = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 //return kraRoadMapDto != null ? Results.Ok(kraRoadMapDto) : Results.NotFound();
