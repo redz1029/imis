@@ -24,6 +24,12 @@ namespace IMIS.Persistence.KraRoadMapModule
             _kraRepository = kraRepository;
             _kraRoadMapPeriodRepository = kraRoadMapPeriodRepository;
         }
+
+        public async Task<ReportKraRoadMapDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository.GetByIdWithChildrenAsync(id, cancellationToken).ConfigureAwait(false);
+            return entity != null ? ReportMapToDto(entity) : null;
+        }
         public async Task<IEnumerable<KraRoadMapDescriptionFilter>> GetAllKraDescriptionsByKraIdAsync(int kraId, CancellationToken cancellationToken)
         {
             return await _repository.GetKraDescriptionsByKraIdAsync(kraId, cancellationToken);
@@ -70,6 +76,39 @@ namespace IMIS.Persistence.KraRoadMapModule
                     Items = g.ToList()
                 })
                 .ToList();
+
+            dto.Kpis = entity.Kpis?
+                .Where(k => !k.IsDeleted)
+                .Select(k => new KraRoadMapKpiDto
+                {
+                    Id = k.Id,
+                    KpiDescription = k.KpiDescription,
+                    IsDeleted = false,
+                    RowVersion = k.RowVersion
+                })
+                .ToList();
+
+            return dto;
+        }
+
+        private ReportKraRoadMapDto ReportMapToDto(KraRoadMap entity)
+        {
+            if (entity == null) return null!;
+
+            var dto = new ReportKraRoadMapDto(entity);
+           
+            dto.Deliverables = entity.Deliverables?
+            .Where(d => !d.IsDeleted)
+            .GroupBy(d => d.KraDescription)
+            .Select(g => new ReportKraRoadMapDeliverableGroupDto(
+                g.ToList(),         
+                entity.Deliverables?
+                    .Select(d => d.Year)
+                    .Distinct()
+                    .OrderBy(y => y)
+                    .ToList()        
+            ))
+            .ToList();
 
             dto.Kpis = entity.Kpis?
                 .Where(k => !k.IsDeleted)
