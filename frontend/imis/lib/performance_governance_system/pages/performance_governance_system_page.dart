@@ -3088,7 +3088,9 @@ class PerformanceGovernanceSystemPageState
 
     final kraTooltipMessage =
         selectedKraObject?['remarks'] ?? 'No description available';
+
     bool hasData = hasDataMap[index] ?? true;
+
     if (!hasData) {
       setDialogState(() {
         deliverablesControllers[index]?.clear();
@@ -3119,16 +3121,9 @@ class PerformanceGovernanceSystemPageState
 
                           setDialogState(() {
                             selectedKRA[index] = newValue;
-                            final selectedOption = options.firstWhere(
-                              (option) => option['id'] == newValue,
-                              orElse:
-                                  () => {
-                                    'id': -1,
-                                    'name': 'Unknown',
-                                    'remarks': 'Not found',
-                                  },
+                            selectedKRAObjects[index] = options.firstWhere(
+                              (o) => o['id'] == newValue,
                             );
-                            selectedKRAObjects[index] = selectedOption;
                           });
 
                           final data = await _roadMapService
@@ -3139,123 +3134,137 @@ class PerformanceGovernanceSystemPageState
                             kraDescriptionsByIndex[index] = data;
                           });
 
-                          if (data.isNotEmpty) {
-                            try {
-                              final key = kraDropdownKeys[index];
-                              final renderBox =
-                                  key?.currentContext?.findRenderObject()
-                                      as RenderBox?;
-                              final overlay =
-                                  Overlay.of(context).context.findRenderObject()
-                                      as RenderBox;
-                              if (renderBox != null) {
-                                final topRight = renderBox.localToGlobal(
-                                  Offset(renderBox.size.width, 0),
-                                  ancestor: overlay,
-                                );
-                                final rect = Rect.fromLTWH(
-                                  topRight.dx,
-                                  topRight.dy,
-                                  renderBox.size.width,
-                                  renderBox.size.height,
-                                );
-                                final position = RelativeRect.fromRect(
-                                  rect,
-                                  Offset.zero & overlay.size,
-                                );
+                          if (data.isEmpty) return;
 
-                                final selected = await showMenu<String>(
-                                  context: context,
-                                  position: position,
-                                  color: Colors.white,
-                                  items: [
-                                    PopupMenuItem<String>(
-                                      enabled: false,
-                                      child: Text(
-                                        'Select KRA from roadmap',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: grey,
+                          try {
+                            final key = kraDropdownKeys[index];
+                            final renderBox =
+                                key?.currentContext?.findRenderObject()
+                                    as RenderBox?;
+                            final overlay =
+                                Overlay.of(context).context.findRenderObject()
+                                    as RenderBox;
+
+                            if (renderBox == null) return;
+
+                            final topRight = renderBox.localToGlobal(
+                              Offset(renderBox.size.width, 0),
+                              ancestor: overlay,
+                            );
+
+                            final position = RelativeRect.fromRect(
+                              Rect.fromLTWH(
+                                topRight.dx,
+                                topRight.dy,
+                                renderBox.size.width,
+                                renderBox.size.height,
+                              ),
+                              Offset.zero & overlay.size,
+                            );
+
+                            // 🔒 BARRIER-DISMISSABLE = FALSE
+                            final selected = await showGeneralDialog<String>(
+                              context: context,
+                              barrierDismissible: false,
+                              barrierLabel: 'KRA Roadmap',
+                              barrierColor: Colors.transparent,
+                              pageBuilder: (_, __, ___) {
+                                return Stack(
+                                  children: [
+                                    Positioned(
+                                      left: position.left,
+                                      top: position.top,
+                                      width: renderBox.size.width,
+                                      child: Material(
+                                        elevation: 6,
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: ListView(
+                                          padding: EdgeInsets.zero,
+                                          shrinkWrap: true,
+                                          children: [
+                                            const Padding(
+                                              padding: EdgeInsets.all(12),
+                                              child: Text(
+                                                'Select KRA from roadmap',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.grey,
+                                                ),
+                                              ),
+                                            ),
+                                            ...data.map((d) {
+                                              final desc =
+                                                  d['kraDescription'] ?? '';
+                                              return ListTile(
+                                                title: Text(desc),
+                                                onTap: () {
+                                                  Navigator.of(
+                                                    context,
+                                                  ).pop(desc);
+                                                },
+                                              );
+                                            }),
+                                          ],
                                         ),
                                       ),
                                     ),
-
-                                    ...data.map<PopupMenuEntry<String>>((d) {
-                                      final description =
-                                          d['kraDescription'] ?? '';
-                                      return PopupMenuItem<String>(
-                                        value: description,
-                                        child: Text(
-                                          description,
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
-                                      );
-                                    }),
                                   ],
                                 );
+                              },
+                            );
 
-                                if (selected != null) {
-                                  setDialogState(() {
-                                    selectedKRAObjects[index]?['selectedDescription'] =
-                                        selected;
-                                  });
+                            if (selected == null) return;
 
-                                  int filterYear = DateTime.now().year;
-                                  if (selectedPeriodObject != null &&
-                                      selectedPeriodObject!['startDate'] !=
-                                          null) {
-                                    final parsed = DateTime.tryParse(
-                                      selectedPeriodObject!['startDate'],
-                                    );
-                                    if (parsed != null) {
-                                      filterYear = parsed.year;
-                                    }
-                                  }
+                            setDialogState(() {
+                              selectedKRAObjects[index]?['selectedDescription'] =
+                                  selected;
+                            });
 
-                                  final filter = KraRoadmapFilter(
-                                    kraId:
-                                        selectedKRAObjects[index]?['id'] ?? 0,
-                                    year: filterYear,
-                                    kraDescription: selected,
-                                    isDirect: true,
-                                  );
-
-                                  final result = await _roadMapService
-                                      .kraRoadmapFilter(filter);
-
-                                  setDialogState(() {
-                                    if (result.isNotEmpty &&
-                                        result.first['deliverableDescription'] !=
-                                            null &&
-                                        result.first['deliverableDescription']
-                                            .toString()
-                                            .trim()
-                                            .isNotEmpty) {
-                                      deliverablesControllers[index]?.text =
-                                          result
-                                              .first['deliverableDescription'];
-                                    } else {
-                                      deliverablesControllers[index]?.clear();
-                                    }
-
-                                    if (result.isNotEmpty &&
-                                        result.first['kraDescription'] !=
-                                            null &&
-                                        result.first['kraDescription']
-                                            .toString()
-                                            .trim()
-                                            .isNotEmpty) {
-                                      kraDescriptionController[index]?.text =
-                                          result.first['kraDescription'];
-                                    } else {
-                                      kraDescriptionController[index]?.clear();
-                                    }
-                                  });
-                                }
-                              }
-                            } catch (e) {
-                              // ignore positioning errors
+                            int filterYear = DateTime.now().year;
+                            if (selectedPeriodObject?['startDate'] != null) {
+                              final parsed = DateTime.tryParse(
+                                selectedPeriodObject!['startDate'],
+                              );
+                              if (parsed != null) filterYear = parsed.year;
                             }
+
+                            final filter = KraRoadmapFilter(
+                              kraId: selectedKRA[index]!,
+                              year: filterYear,
+                              kraDescription: selected,
+                              isDirect: true,
+                            );
+
+                            final result = await _roadMapService
+                                .kraRoadmapFilter(filter);
+
+                            setDialogState(() {
+                              if (result.isNotEmpty &&
+                                  result.first['deliverableDescription']
+                                          ?.toString()
+                                          .trim()
+                                          .isNotEmpty ==
+                                      true) {
+                                deliverablesControllers[index]!.text =
+                                    result.first['deliverableDescription'];
+                              } else {
+                                deliverablesControllers[index]?.clear();
+                              }
+
+                              if (result.isNotEmpty &&
+                                  result.first['kraDescription']
+                                          ?.toString()
+                                          .trim()
+                                          .isNotEmpty ==
+                                      true) {
+                                kraDescriptionController[index]!.text =
+                                    result.first['kraDescription'];
+                              } else {
+                                kraDescriptionController[index]?.clear();
+                              }
+                            });
+                          } catch (_) {
+                            // ignore overlay errors
                           }
                         },
                 items:
@@ -3277,12 +3286,12 @@ class PerformanceGovernanceSystemPageState
           ),
           if (!hasData)
             const Padding(
-              padding: EdgeInsets.only(top: 8.0),
+              padding: EdgeInsets.only(top: 8),
               child: Text(
                 'No KRA from roadmap',
                 style: TextStyle(
                   color: Colors.red,
-                  fontSize: 14,
+                  fontSize: 12,
                   fontStyle: FontStyle.italic,
                 ),
               ),
@@ -3291,6 +3300,228 @@ class PerformanceGovernanceSystemPageState
       ),
     );
   }
+
+  // Widget _buildProcess(
+  //   int index,
+  //   String? id,
+  //   Function setDialogState,
+  //   int orderLevel,
+  // ) {
+  //   if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
+  //     selectedKRA[index] = options.first['id'];
+  //     selectedKRAObjects[index] = options.first;
+  //   }
+
+  //   final selectedKraObject =
+  //       selectedKRAObjects[index] ??
+  //       (options.isNotEmpty ? options.first : null);
+
+  //   final kraTooltipMessage =
+  //       selectedKraObject?['remarks'] ?? 'No description available';
+  //   bool hasData = hasDataMap[index] ?? true;
+  //   if (!hasData) {
+  //     setDialogState(() {
+  //       deliverablesControllers[index]?.clear();
+  //       kraDescriptionController[index]?.clear();
+  //     });
+  //   }
+
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         CustomTooltip(
+  //           key: ValueKey('kra_tooltip_${selectedKRA[index]}'),
+  //           maxLines: 5,
+  //           message: kraTooltipMessage,
+  //           child: Container(
+  //             key: kraDropdownKeys.putIfAbsent(index, () => GlobalKey()),
+  //             child: DropdownButtonFormField<int>(
+  //               dropdownColor: mainBgColor,
+  //               isExpanded: true,
+  //               value: selectedKRA[index],
+  //               onChanged:
+  //                   id != null && orderLevel >= 1
+  //                       ? null
+  //                       : (int? newValue) async {
+  //                         if (newValue == null) return;
+
+  //                         setDialogState(() {
+  //                           selectedKRA[index] = newValue;
+  //                           final selectedOption = options.firstWhere(
+  //                             (option) => option['id'] == newValue,
+  //                             orElse:
+  //                                 () => {
+  //                                   'id': -1,
+  //                                   'name': 'Unknown',
+  //                                   'remarks': 'Not found',
+  //                                 },
+  //                           );
+  //                           selectedKRAObjects[index] = selectedOption;
+  //                         });
+
+  //                         final data = await _roadMapService
+  //                             .getAllKraDescriptions(kraId: newValue);
+
+  //                         setDialogState(() {
+  //                           hasDataMap[index] = data.isNotEmpty;
+  //                           kraDescriptionsByIndex[index] = data;
+  //                         });
+
+  //                         if (data.isNotEmpty) {
+  //                           try {
+  //                             final key = kraDropdownKeys[index];
+  //                             final renderBox =
+  //                                 key?.currentContext?.findRenderObject()
+  //                                     as RenderBox?;
+  //                             final overlay =
+  //                                 Overlay.of(context).context.findRenderObject()
+  //                                     as RenderBox;
+  //                             if (renderBox != null) {
+  //                               final topRight = renderBox.localToGlobal(
+  //                                 Offset(renderBox.size.width, 0),
+  //                                 ancestor: overlay,
+  //                               );
+  //                               final rect = Rect.fromLTWH(
+  //                                 topRight.dx,
+  //                                 topRight.dy,
+  //                                 renderBox.size.width,
+  //                                 renderBox.size.height,
+  //                               );
+  //                               final position = RelativeRect.fromRect(
+  //                                 rect,
+  //                                 Offset.zero & overlay.size,
+  //                               );
+
+  //                               final selected = await showMenu<String>(
+  //                                 context: context,
+  //                                 position: position,
+  //                                 color: Colors.white,
+
+  //                                 items: [
+  //                                   PopupMenuItem<String>(
+  //                                     enabled: false,
+  //                                     child: Text(
+  //                                       'Select KRA from roadmap',
+  //                                       style: TextStyle(
+  //                                         fontSize: 12,
+  //                                         color: grey,
+  //                                       ),
+  //                                     ),
+  //                                   ),
+
+  //                                   ...data.map<PopupMenuEntry<String>>((d) {
+  //                                     final description =
+  //                                         d['kraDescription'] ?? '';
+  //                                     return PopupMenuItem<String>(
+  //                                       value: description,
+  //                                       child: Text(
+  //                                         description,
+  //                                         style: const TextStyle(fontSize: 14),
+  //                                       ),
+  //                                     );
+  //                                   }),
+  //                                 ],
+  //                               );
+
+  //                               if (selected != null) {
+  //                                 setDialogState(() {
+  //                                   selectedKRAObjects[index]?['selectedDescription'] =
+  //                                       selected;
+  //                                 });
+
+  //                                 int filterYear = DateTime.now().year;
+  //                                 if (selectedPeriodObject != null &&
+  //                                     selectedPeriodObject!['startDate'] !=
+  //                                         null) {
+  //                                   final parsed = DateTime.tryParse(
+  //                                     selectedPeriodObject!['startDate'],
+  //                                   );
+  //                                   if (parsed != null) {
+  //                                     filterYear = parsed.year;
+  //                                   }
+  //                                 }
+
+  //                                 final filter = KraRoadmapFilter(
+  //                                   kraId:
+  //                                       selectedKRAObjects[index]?['id'] ?? 0,
+  //                                   year: filterYear,
+  //                                   kraDescription: selected,
+  //                                   isDirect: true,
+  //                                 );
+
+  //                                 final result = await _roadMapService
+  //                                     .kraRoadmapFilter(filter);
+
+  //                                 setDialogState(() {
+  //                                   if (result.isNotEmpty &&
+  //                                       result.first['deliverableDescription'] !=
+  //                                           null &&
+  //                                       result.first['deliverableDescription']
+  //                                           .toString()
+  //                                           .trim()
+  //                                           .isNotEmpty) {
+  //                                     deliverablesControllers[index]?.text =
+  //                                         result
+  //                                             .first['deliverableDescription'];
+  //                                   } else {
+  //                                     deliverablesControllers[index]?.clear();
+  //                                   }
+
+  //                                   if (result.isNotEmpty &&
+  //                                       result.first['kraDescription'] !=
+  //                                           null &&
+  //                                       result.first['kraDescription']
+  //                                           .toString()
+  //                                           .trim()
+  //                                           .isNotEmpty) {
+  //                                     kraDescriptionController[index]?.text =
+  //                                         result.first['kraDescription'];
+  //                                   } else {
+  //                                     kraDescriptionController[index]?.clear();
+  //                                   }
+  //                                 });
+  //                               }
+  //                             }
+  //                           } catch (e) {
+  //                             // ignore positioning errors
+  //                           }
+  //                         }
+  //                       },
+  //               items:
+  //                   options.map<DropdownMenuItem<int>>((option) {
+  //                     return DropdownMenuItem<int>(
+  //                       value: option['id'],
+  //                       child: Text(option['name']),
+  //                     );
+  //                   }).toList(),
+  //               decoration: const InputDecoration(
+  //                 border: OutlineInputBorder(),
+  //                 contentPadding: EdgeInsets.symmetric(
+  //                   horizontal: 12,
+  //                   vertical: 20,
+  //                 ),
+  //               ),
+  //             ),
+  //           ),
+  //         ),
+  //         if (!hasData)
+  //           const Padding(
+  //             padding: EdgeInsets.only(top: 8.0),
+  //             child: Text(
+  //               'No KRA from roadmap',
+  //               style: TextStyle(
+  //                 color: Colors.red,
+  //                 fontSize: 12,
+  //                 fontStyle: FontStyle.italic,
+  //               ),
+  //             ),
+  //           ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildDropdownKraCell(
     int index,
