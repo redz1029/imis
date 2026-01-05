@@ -634,7 +634,6 @@ class _DeliverableStatusMonitoringPageState
                                               ),
                                             ];
                                           },
-
                                           child: FilterButton(
                                             label:
                                                 _selectedOfficeId == null
@@ -841,7 +840,6 @@ class _DeliverableStatusMonitoringPageState
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: mainBgColor,
-
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4),
                           ),
