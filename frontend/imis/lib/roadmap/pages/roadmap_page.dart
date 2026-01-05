@@ -118,10 +118,16 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
         List<TextEditingController> kpiControllers = [];
         List<List<TextEditingController>> tableControllers = [];
         List<List<bool>> enablerStates = [];
+        List<DeliverableGroup?> existingGroups = [];
+
         if (isEdit) {
           final deliverables = roadmapToEdit.deliverables ?? [];
-          for (var group in deliverables) {
+
+          for (final group in deliverables) {
+            existingGroups.add(group);
+
             final row = List.generate(headers.length, (_) => '');
+
             row[2] = group.kraDescription ?? '';
 
             for (int i = 3; i < headers.length; i++) {
@@ -145,6 +151,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
             tableControllers.add(
               row.map((v) => TextEditingController(text: v)).toList(),
             );
+
             enablerStates.add(
               List.generate(
                 headers.length,
@@ -152,20 +159,23 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
               ),
             );
           }
+
           for (final kpi in roadmapToEdit.kpis ?? []) {
             kpiControllers.add(TextEditingController(text: kpi.kpiDescription));
           }
         }
-
         if (tableControllers.isEmpty) {
           tableControllers.add(
             List.generate(headers.length, (_) => TextEditingController()),
           );
           enablerStates.add(List.generate(headers.length, (_) => false));
+          existingGroups.add(null);
         }
+
         if (kpiControllers.isEmpty) {
           kpiControllers.add(TextEditingController());
         }
+
         return StatefulBuilder(
           builder: (context, setStateDialog) {
             final Map<int, TableColumnWidth> columnWidths = {
@@ -194,6 +204,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                   ),
                 ),
               ),
+
               content: SizedBox(
                 width: double.maxFinite,
                 child: SingleChildScrollView(
@@ -357,7 +368,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                               .toList(),
                                     ),
 
-                                    // Table Rows
                                     ...tableControllers.asMap().entries.map((
                                       entry,
                                     ) {
@@ -448,14 +458,16 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                   ),
                 ),
               ),
+
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text(
-                    "Cancel",
+                    'Cancel',
                     style: TextStyle(color: primaryColor),
                   ),
                 ),
+
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
@@ -463,82 +475,132 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                       borderRadius: BorderRadius.circular(4),
                     ),
                   ),
+                  child: Text(
+                    isEdit ? 'Update' : 'Save',
+                    style: const TextStyle(color: Colors.white),
+                  ),
                   onPressed: () async {
-                    final List<DeliverableGroup> allDeliverableGroups = [];
+                    bool? confirmAction = await showDialog<bool>(
+                      context: context,
+                      builder: (context) {
+                        return AlertDialog(
+                          title: Text(
+                            isEdit ? 'Confirm Update' : 'Confirm Save',
+                          ),
+                          content: Text(
+                            isEdit
+                                ? 'Are you sure you want to update this roadmap?'
+                                : 'Are you sure you want to save this roadmap?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: const Text(
+                                'Cancel',
+                                style: TextStyle(color: primaryColor),
+                              ),
+                            ),
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                              ),
+                              onPressed: () => Navigator.pop(context, true),
+                              child: const Text(
+                                'Confirm',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                    final List<DeliverableGroup> allGroups = [];
 
                     for (int r = 0; r < tableControllers.length; r++) {
                       final controllers = tableControllers[r];
+                      final existingGroup = existingGroups[r];
                       final List<RoadmapDeliverableItem> items = [];
 
                       for (int c = 3; c < headers.length; c++) {
-                        if (controllers[c].text.trim().isNotEmpty) {
-                          items.add(
-                            RoadmapDeliverableItem(
-                              id: 0,
-                              deliverableDescription: controllers[c].text,
-                              year: yearColumns[c - 3],
-                              kraDescription: controllers[2].text,
-                              isEnabler: enablerStates[r][1],
-                              isDeleted: false,
-                              rowVersion: '',
-                            ),
-                          );
-                        }
+                        if (controllers[c].text.trim().isEmpty) continue;
+
+                        final year = yearColumns[c - 3];
+                        final existingItem = existingGroup?.items?.firstWhere(
+                          (i) => i.year == year,
+                          orElse:
+                              () => RoadmapDeliverableItem(
+                                id: 0,
+                                deliverableDescription: '',
+                                year: year,
+                                kraDescription: controllers[2].text,
+                                isEnabler: false,
+                                isDeleted: false,
+                                rowVersion: '',
+                              ),
+                        );
+
+                        items.add(
+                          RoadmapDeliverableItem(
+                            id: isEdit ? existingItem?.id ?? 0 : 0,
+                            deliverableDescription: controllers[c].text,
+                            year: year,
+                            kraDescription: controllers[2].text,
+                            isEnabler: enablerStates[r][1],
+                            isDeleted: false,
+                            rowVersion: existingItem?.rowVersion ?? '',
+                          ),
+                        );
                       }
 
                       if (items.isNotEmpty) {
-                        allDeliverableGroups.add(
+                        allGroups.add(
                           DeliverableGroup(
-                            id: 0,
+                            id: isEdit ? existingGroup?.id ?? 0 : 0,
                             kraDescription: controllers[2].text,
                             items: items,
                             isDeleted: false,
-                            rowVersion: '',
+                            rowVersion: existingGroup?.rowVersion ?? '',
                           ),
                         );
                       }
                     }
-                    final roadmap = Roadmap(
-                      isEdit ? roadmapToEdit.id : 0,
-                      selectedKra!.id,
-                      selectedKra,
-                      period.id,
-                      period,
-                      allDeliverableGroups,
-                      kpList
-                          .map((k) => KpiRoadmap(id: 0, kpiDescription: k))
-                          .toList(),
-                      isDeleted: false,
-                      rowVersion: '',
-                    );
 
-                    if (isEdit) {
-                      await _roadmapService.updateRoadmap(roadmap);
+                    if (confirmAction == true) {
+                      final roadmap = Roadmap(
+                        isEdit ? roadmapToEdit.id : 0,
+                        selectedKra!.id,
+                        selectedKra,
+                        period.id,
+                        period,
+                        allGroups,
+                        kpiControllers
+                            .map(
+                              (c) => KpiRoadmap(id: 0, kpiDescription: c.text),
+                            )
+                            .toList(),
+                        isDeleted: false,
+                        rowVersion: roadmapToEdit?.rowVersion ?? '',
+                      );
 
-                      MotionToast.success(
-                        toastAlignment: Alignment.topCenter,
-                        description: const Text('Updated successfully'),
-                      ).show(context);
-                    } else {
                       await _roadmapService.createRoadmap(roadmap);
+                      setState(() {
+                        fetchRoadmap();
+                      });
 
                       MotionToast.success(
                         toastAlignment: Alignment.topCenter,
-                        description: const Text('Saved successfully'),
+                        description: Text(
+                          isEdit
+                              ? 'Updated successfully'
+                              : 'Saved successfully',
+                        ),
                       ).show(context);
-                    }
-                    setState(() {
-                      fetchRoadmap();
-                    });
-                    if (context.mounted) {
-                      Navigator.pop(context, true);
+                      Navigator.pop(context);
                     }
                   },
-
-                  child: Text(
-                    isEdit ? "Update" : "Save",
-                    style: const TextStyle(color: Colors.white),
-                  ),
                 ),
               ],
             );
