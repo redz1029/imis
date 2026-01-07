@@ -59,6 +59,7 @@ class PerformanceGovernanceSystemPageState
   final _dateConverter = const LongDateOnlyConverter();
   final _pgsService = PerformanceGovernanceSystemService(Dio());
   Map<int, TextEditingController> deliverablesControllers = {};
+  Map<int, TextEditingController> deliverablesRoadmapControllers = {};
   Map<int, TextEditingController> deliverablesControllersDisapproved = {};
   Map<int, bool> clearedOnDisapprove = {};
   Map<int, TextEditingController> signatoryControllers = {};
@@ -141,6 +142,7 @@ class PerformanceGovernanceSystemPageState
   final FocusNode isSearchFocus = FocusNode();
   Map<int, TextEditingController> reasonController = {};
   Map<int, TextEditingController> kraDescriptionController = {};
+  Map<int, TextEditingController> kraDescriptionRoadmapController = {};
   TextEditingController competenceScoreController = TextEditingController(
     text: '',
   );
@@ -1870,6 +1872,8 @@ class PerformanceGovernanceSystemPageState
         selectedStatus.clear();
         deliverableIds.clear();
         kraDescriptionController.clear();
+        kraDescriptionRoadmapController.clear();
+        deliverablesRoadmapControllers.clear();
         reasonController.clear();
         selectedDisapproved.clear();
       } else {
@@ -1909,6 +1913,8 @@ class PerformanceGovernanceSystemPageState
         selectedStatus.clear();
         deliverableIds.clear();
         kraDescriptionController.clear();
+        kraDescriptionRoadmapController.clear();
+        deliverablesRoadmapControllers.clear();
         reasonController.clear();
         selectedDisapproved.clear();
         clearedOnDisapprove.clear();
@@ -3094,6 +3100,8 @@ class PerformanceGovernanceSystemPageState
     if (!hasData) {
       setDialogState(() {
         deliverablesControllers[index]?.clear();
+        // deliverablesRoadmapControllers[index]?.clear();  last code
+        // kraDescriptionRoadmapController[index]?.clear(); last code
         kraDescriptionController[index]?.clear();
       });
     }
@@ -3164,7 +3172,7 @@ class PerformanceGovernanceSystemPageState
 
                             final selected = await showGeneralDialog<String>(
                               context: context,
-                              barrierDismissible: false,
+                              barrierDismissible: true,
                               barrierLabel: 'KRA Roadmap',
                               barrierColor: Colors.transparent,
                               pageBuilder: (_, __, ___) {
@@ -3250,6 +3258,30 @@ class PerformanceGovernanceSystemPageState
                                 deliverablesControllers[index]?.clear();
                               }
 
+                              // if (result.isNotEmpty &&
+                              //     result.first['deliverableDescription']
+                              //             ?.toString()
+                              //             .trim()
+                              //             .isNotEmpty ==
+                              //         true) {
+                              //   deliverablesRoadmapControllers[index]!.text =
+                              //       result.first['deliverableDescription'];
+                              // } else {
+                              //   deliverablesRoadmapControllers[index]?.clear();
+                              // }
+
+                              // if (result.isNotEmpty &&
+                              //     result.first['kraDescription']
+                              //             ?.toString()
+                              //             .trim()
+                              //             .isNotEmpty ==
+                              //         true) {
+                              //   kraDescriptionRoadmapController[index]!.text =
+                              //       result.first['kraDescription'];
+                              // } else {
+                              //   kraDescriptionRoadmapController[index]?.clear();
+                              // }
+
                               if (result.isNotEmpty &&
                                   result.first['kraDescription']
                                           ?.toString()
@@ -3300,6 +3332,49 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
+  // Widget _buildDropdownKraCell(
+  //   int index,
+  //   String? id,
+  //   Function setDialogState,
+  //   int orderLevel,
+  // ) {
+  //   if (!kraDescriptionController.containsKey(index)) {
+  //     kraDescriptionController[index] = TextEditingController();
+  //   }
+
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         CustomTooltip(
+  //           message:
+  //               'Enter a short description of what this KRA focuses on achieving.',
+  //           child: TextFormField(
+  //             readOnly: id != null && orderLevel >= 1,
+  //             controller: kraDescriptionController[index],
+  //             autovalidateMode: AutovalidateMode.onUserInteraction,
+  //             decoration: const InputDecoration(
+  //               hintText: "Enter your description here...",
+  //               border: OutlineInputBorder(),
+  //               focusedBorder: OutlineInputBorder(
+  //                 borderSide: BorderSide(color: Colors.grey),
+  //               ),
+  //             ),
+  //             validator: (value) {
+  //               if (value == null || value.isEmpty) {
+  //                 return "Please enter your KRA description";
+  //               }
+  //               return null;
+  //             },
+  //             maxLines: 3,
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   Widget _buildDropdownKraCell(
     int index,
     String? id,
@@ -3309,6 +3384,11 @@ class PerformanceGovernanceSystemPageState
     if (!kraDescriptionController.containsKey(index)) {
       kraDescriptionController[index] = TextEditingController();
     }
+
+    if (!kraDescriptionRoadmapController.containsKey(index)) {
+      kraDescriptionRoadmapController[index] = TextEditingController();
+    }
+
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -3337,6 +3417,17 @@ class PerformanceGovernanceSystemPageState
               maxLines: 3,
             ),
           ),
+
+          // gap12px,
+          // Text(
+          //   kraDescriptionRoadmapController[index]!.text.isNotEmpty
+          //       ? 'Sample KRA: ${kraDescriptionRoadmapController[index]!.text}'
+          //       : '',
+          //   style: const TextStyle(
+          //     fontStyle: FontStyle.italic,
+          //     color: Colors.red,
+          //   ),
+          // ),
         ],
       ),
     );
@@ -3567,6 +3658,9 @@ class PerformanceGovernanceSystemPageState
                           final filter = KraRoadmapFilter(
                             kraId: selectedKRAObjects[index]?['id'] ?? 0,
                             year: filterYear,
+                            // kraDescription:
+                            //     kraDescriptionRoadmapController[index]?.text ??
+                            //     '',
                             kraDescription:
                                 kraDescriptionController[index]?.text ?? '',
                             isDirect: isDirectValue,
@@ -3589,6 +3683,29 @@ class PerformanceGovernanceSystemPageState
                             } else {
                               deliverablesControllers[index]?.clear();
                             }
+                            // if (result.isNotEmpty &&
+                            //     result.first['deliverableDescription'] !=
+                            //         null &&
+                            //     result.first['deliverableDescription']
+                            //         .toString()
+                            //         .trim()
+                            //         .isNotEmpty) {
+                            //   deliverablesRoadmapControllers[index]?.text =
+                            //       result.first['deliverableDescription'];
+                            // } else {
+                            //   deliverablesRoadmapControllers[index]?.clear();
+                            // }
+                            // if (result.isNotEmpty &&
+                            //     result.first['kraDescription'] != null &&
+                            //     result.first['kraDescription']
+                            //         .toString()
+                            //         .trim()
+                            //         .isNotEmpty) {
+                            //   kraDescriptionRoadmapController[index]?.text =
+                            //       result.first['kraDescription'];
+                            // } else {
+                            //   kraDescriptionRoadmapController[index]?.clear();
+                            // }
 
                             if (result.isNotEmpty &&
                                 result.first['kraDescription'] != null &&
@@ -5061,6 +5178,10 @@ class PerformanceGovernanceSystemPageState
       deliverablesControllers[index] = TextEditingController();
     }
 
+    if (!deliverablesRoadmapControllers.containsKey(index)) {
+      deliverablesRoadmapControllers[index] = TextEditingController();
+    }
+
     bool showDisapproveControls = false;
     if (selectedDisapproved[index] == true && orderLevel == 0) {
       showDisapproveControls = true;
@@ -5129,6 +5250,16 @@ class PerformanceGovernanceSystemPageState
               ),
             ),
           ),
+          // gap12px,
+          // Text(
+          //   deliverablesRoadmapControllers[index]!.text.isNotEmpty
+          //       ? 'Sample deliverable: ${deliverablesRoadmapControllers[index]!.text}'
+          //       : '',
+          //   style: const TextStyle(
+          //     fontStyle: FontStyle.italic,
+          //     color: Colors.red,
+          //   ),
+          // ),
         ],
       ),
     );
