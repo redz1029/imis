@@ -40,14 +40,16 @@ namespace IMIS.Infrastructure.Auths
             await PermissionSeeder.SeedPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
                 new PerformanceGovernanceSystemPermission(),
                 new PgsSignatoryTemplatePermission(),
+                new PgsDeliverableAccomplishmentPermission(),
+                new PgsSummaryNarrativePermissions(),
+                new SWOTAnalysisPermission());
+
+            // This will seed view only permissions for a role
+            await PermissionSeeder.SeedViewOnlyPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
                 new PgsPeriodPermission(),
                 new OfficePermission(),
-                new PgsDeliverableAccomplishmentPermission(),
-                new PgsSummaryNarrativePermissions(),
-                new SWOTAnalysisPermission(),
                 new KraRoadMapPermission());
-
 
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),              
