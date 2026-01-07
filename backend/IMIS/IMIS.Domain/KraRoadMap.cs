@@ -10,5 +10,7 @@ namespace IMIS.Domain
         public KraRoadMapPeriod? KraRoadMapPeriod { get; set; }    
         public List<KraRoadMapDeliverable>? Deliverables { get; set; }
         public List<KraRoadMapKpi>? Kpis { get; set; }
+        public required string UserId { get; set; }
+        public User? User { get; set; }
     }
 }

@@ -112,7 +112,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                     new List<ReportKraRoadMapDto> { reportKraRoadMapDto! },
                     "RoadmapReport",
                     cancellationToken
-                ).ConfigureAwait(false);               
+                ).ConfigureAwait(false);
 
                 //Force inline rendering in browser with dynamic timestamp filename
                 var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
@@ -126,6 +126,16 @@ namespace IMIS.Presentation.KraRoadMapModule
             })
            .WithTags(_kraRoadMap)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true);
+
+            //// Get All roadmap User
+            app.MapGet("/userid", async (IKraRoadMapService service, CancellationToken cancellationToken) =>
+            {
+                var kraRoadMapDto = await service.GetAllRoadmapForUserAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(kraRoadMapDto);
+            })
+            .WithTags(_kraRoadMap)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true);
 
         }
     }

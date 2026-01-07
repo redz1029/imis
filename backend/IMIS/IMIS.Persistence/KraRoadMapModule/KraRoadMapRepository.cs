@@ -69,26 +69,37 @@ namespace IMIS.Persistence.KraRoadMapModule
         public async Task<EntityPageList<KraRoadMap, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _entities
-                .AsNoTracking()
-                .Include(x => x.Kra)
-                .Include(x => x.KraRoadMapPeriod)
-                .Include(x => x.Deliverables)
-                .Include(x => x.Kpis);
-
-            return await EntityPageList<KraRoadMap, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
-        }
-
-        public async Task<KraRoadMap?> GetByIdWithChildrenAsync(long id, CancellationToken cancellationToken = default)
-        {
-            return await _entities
+            .AsNoTracking()
             .Include(x => x.Kra)
             .Include(x => x.KraRoadMapPeriod)
             .Include(x => x.Deliverables)
-            .Include(x => x.Kpis)
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
-            .ConfigureAwait(false);
+            .Include(x => x.Kpis);
+
+            return await EntityPageList<KraRoadMap, long>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+        }
+        
+        public async Task<KraRoadMap?> GetByIdWithChildrenAsync(long id, CancellationToken cancellationToken = default)
+        {
+            var entity = await _entities
+                .Include(x => x.Kra)
+                .Include(x => x.KraRoadMapPeriod)
+                .Include(x => x.Deliverables)
+                .Include(x => x.Kpis)
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (entity?.Deliverables != null)
+            {
+                entity.Deliverables = entity.Deliverables
+                    .OrderBy(d => d.IsEnabler)  
+                    .ThenBy(d => d.Year)        
+                    .ToList();
+            }
+
+            return entity;
         }
 
+        // Get all for Admin StandardUser Role
         public async Task<IEnumerable<KraRoadMap>?> GetAll(CancellationToken cancellationToken)
         {
             return await _entities
@@ -100,5 +111,17 @@ namespace IMIS.Persistence.KraRoadMapModule
             .ToListAsync(cancellationToken)
             .ConfigureAwait(false);
         }
+
+        //Get for UserId Role     
+        public async Task<List<KraRoadMap>> GetAllForUserIdAsync(string userId, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<KraRoadMap>()
+            .Include(x => x.Kra)
+            .Include(x => x.KraRoadMapPeriod)
+            .Include(x => x.Deliverables)
+            .Include(x => x.Kpis)
+            .Where(x => x.UserId == userId)
+            .ToListAsync(cancellationToken);
+        }       
     }
 }

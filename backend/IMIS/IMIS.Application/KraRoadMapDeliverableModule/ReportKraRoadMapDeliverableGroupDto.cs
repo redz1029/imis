@@ -21,7 +21,7 @@ namespace IMIS.Application.KraRoadMapDeliverableModule
         public string? Year4Deliverable { get; set; }
         public string? Year5Deliverable { get; set; }
 
-        [SetsRequiredMembers] 
+        [SetsRequiredMembers]
         public ReportKraRoadMapDeliverableGroupDto(List<KraRoadMapDeliverable> items, List<int>? allYears)
         {
             if (items == null || items.Count == 0)
@@ -31,7 +31,7 @@ namespace IMIS.Application.KraRoadMapDeliverableModule
             KraDescription = items[0].KraDescription;
             Id = items[0].Id;
 
-            IsEnabler = Items.Any(x => x.IsEnabler);
+            IsEnabler = Items.Any(x => x.IsEnabler);         
 
             Year1 = allYears?.ElementAtOrDefault(0);
             Year2 = allYears?.ElementAtOrDefault(1);
