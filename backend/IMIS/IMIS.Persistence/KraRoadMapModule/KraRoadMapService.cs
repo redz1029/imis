@@ -1,4 +1,5 @@
-﻿using Base.Auths;
+﻿using System.Collections.Generic;
+using Base.Auths;
 using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
@@ -10,6 +11,7 @@ using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
+using VaultSharp.V1.SecretsEngines.Identity;
 
 namespace IMIS.Persistence.KraRoadMapModule
 {
@@ -193,10 +195,10 @@ namespace IMIS.Persistence.KraRoadMapModule
                 roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
             }
             else
-            {
+            { 
                 return new List<KraRoadMapDto>();
             }
-            return roadmaps.Select(r => new KraRoadMapDto(r)).ToList();
+            return roadmaps.Select(MapToDto).ToList();
         }
 
         public async Task<List<KraRoadMapDto>?> GetAll(CancellationToken cancellationToken)
