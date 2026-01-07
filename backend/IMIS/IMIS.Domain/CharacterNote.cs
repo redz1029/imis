@@ -9,7 +9,7 @@ namespace IMIS.Domain
         // Foreign key to Character (many notes to one Character)
         public long CharacterId { get; set; }
 
-        // Navigation
-        public required Character Character { get; set; }
+        // Navigation (optional)
+        public Character? Character { get; set; }
     }
 }

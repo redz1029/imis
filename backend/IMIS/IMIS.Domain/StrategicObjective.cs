@@ -9,7 +9,7 @@ namespace IMIS.Domain
         // FOREIGN KEY (One-to-One)
         public long CharacterId { get; set; }
 
-        // NAVIGATION (required)
-        public required Character Character { get; set; }
+        // NAVIGATION (optional)
+        public Character? Character { get; set; }
     }
 }
