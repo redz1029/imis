@@ -4,6 +4,6 @@ namespace IMIS.Infrastructure.Auths.Roles
 {
     public class TrainingOfficer : BaseRole
     {
-        public override string Name => "Trainng Officer";
+        public override string Name => "Training Officer";
     }
 }
