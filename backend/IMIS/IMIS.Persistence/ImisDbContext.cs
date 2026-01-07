@@ -18,7 +18,7 @@ namespace IMIS.Persistence
         public DbSet<AuditScheduleDetails> AuditScheduleDetails { get; set; }
         public DbSet<AuditableOffices> AuditableOffices { get; set; }
         public DbSet<PgsDeliverable> Deliverable { get; set; }  
-        public DbSet<KeyResultArea> KeyResultArea { get; set; }
+        public DbSet<KeyResultArea> KeyResultAreas { get; set; }
         public DbSet<PerfomanceGovernanceSystem> PerformanceGovernanceSystem { get; set; }
         public DbSet<PgsPeriod> PgsPeriod { get; set; }
         public DbSet<PgsReadinessRating> PgsReadiness { get; set; }
@@ -35,7 +35,11 @@ namespace IMIS.Persistence
         public DbSet<KraRoadMapKpi> KraRoadMapKPI { get; set; }
         public DbSet<KraRoadMapDeliverable> KraRoadMapDeliverable { get; set; }
         public DbSet<KraRoadMap> KraRoadMap { get; set; }
+        public DbSet<Character> Characters { get; set; }
+        public DbSet<StrategicObjective> StrategicObjectives { get; set; }
+        public DbSet<CharacterNote> CharacterNotes { get; set; }
         
+
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
         {
@@ -47,6 +51,20 @@ namespace IMIS.Persistence
         
             builder.Entity<User>().ToTable("AspNetUsers");
            
+            // Configure Character one-to-one with StrategicObjective
+            builder.Entity<Character>()
+                .HasOne(c => c.StrategicObjective)
+                .WithOne(so => so.Character)
+                .HasForeignKey<StrategicObjective>(so => so.CharacterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Character one-to-many with CharacterNote
+            builder.Entity<CharacterNote>()
+                .HasOne(n => n.Character)
+                .WithMany(c => c.Notes)
+                .HasForeignKey(n => n.CharacterId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             builder.Entity<AuditorOffices>(ao =>
             {                
                 ao.HasKey(x => x.Id);
