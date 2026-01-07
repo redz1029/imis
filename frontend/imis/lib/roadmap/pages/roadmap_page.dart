@@ -23,8 +23,9 @@ class RoadmapPage extends StatefulWidget {
 }
 
 class RoadmapDialogPageState extends State<RoadmapPage> {
-  List<String> kpList = ["KP1"];
   final FocusNode isSearchfocus = FocusNode();
+  final _commonService = CommonService(Dio());
+  final _roadmapService = RoadmapService(Dio());
   TextEditingController searchController = TextEditingController();
   List<Roadmap> filteredList = [];
   List<Roadmap> roadmapList = [];
@@ -32,14 +33,11 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-  final _commonService = CommonService(Dio());
-  final _roadmapService = RoadmapService(Dio());
   final dio = Dio();
   final List<DeliverableGroup> deliverables = [];
   List<KeyResultArea> kraList = [];
   List<KraRoadmapPeriod> kraPeriodList = [];
   final List<TextEditingController> kpiControllers = [];
-
   final ScrollController _horizontalScrollController = ScrollController();
   @override
   void initState() {
@@ -89,6 +87,58 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
     }
   }
 
+  Future<void> filterSearchResults(String query) async {
+    final q = query.trim().toLowerCase();
+
+    if (q.isEmpty) {
+      setState(() {
+        filteredList = List.from(roadmapList);
+      });
+      return;
+    }
+
+    final results =
+        roadmapList.where((r) {
+          final matchedKra = kraList.firstWhere(
+            (kra) => kra.id == r.kraId,
+            orElse:
+                () => KeyResultArea(
+                  0,
+                  'name',
+                  'remarks',
+                  'strategicObjective',
+                  false,
+                ),
+          );
+
+          final kraName = (matchedKra.name).toLowerCase();
+
+          final matchedKraPeriod = kraPeriodList.firstWhere(
+            (p) => p.id == r.kraRoadMapPeriodId,
+            orElse:
+                () => KraRoadmapPeriod(
+                  0,
+                  DateTime.now(),
+                  DateTime.now(),
+                  isDeleted: false,
+                  rowVersion: '',
+                ),
+          );
+          final periodString =
+              '${matchedKraPeriod.startYear.year} - ${matchedKraPeriod.endYear.year}';
+
+          final kpiMatch = (r.kpis ?? []).any(
+            (k) => (k.kpiDescription ?? '').toLowerCase().contains(q),
+          );
+
+          return kraName.contains(q) || periodString.contains(q) || kpiMatch;
+        }).toList();
+
+    setState(() {
+      filteredList = results;
+    });
+  }
+
   void showRoadmapFormDialog(
     KraRoadmapPeriod period, {
     KeyResultArea? selectedKra,
@@ -120,7 +170,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
         List<List<bool>> enablerStates = [];
         List<DeliverableGroup?> existingGroups = [];
         if (isEdit) {
-          final deliverables = roadmapToEdit!.deliverables ?? [];
+          final deliverables = roadmapToEdit.deliverables ?? [];
 
           for (final group in deliverables) {
             existingGroups.add(group);
@@ -192,15 +242,40 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
               ),
               titlePadding: EdgeInsets.zero,
               title: Container(
-                padding: const EdgeInsets.all(16),
-                color: maroon,
-                child: Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                padding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 16,
+                ),
+                decoration: BoxDecoration(
+                  color: maroon,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(12),
                   ),
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Title text
+                    Text(
+                      title,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+
+                    // Close button
+                    Positioned(
+                      right: 0,
+                      child: IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               content: SizedBox(
@@ -209,7 +284,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // KRA & KPI Table
                       Table(
                         border: TableBorder.all(
                           color: Colors.grey.shade400,
@@ -406,6 +480,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                       v ?? false;
                                                 });
                                               },
+                                              activeColor: mainBgColor,
+                                              checkColor: Colors.black,
                                             );
                                           }
 
@@ -771,7 +847,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                             horizontal: 5,
                           ),
                         ),
-                        // onChanged: filterSearchResults,
+                        onChanged: filterSearchResults,
                       ),
                     ),
                     if (!isMinimized)
