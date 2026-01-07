@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="12/18/2025 11:13:21" ReportInfo.Modified="12/26/2025 11:23:38" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="12/18/2025 11:13:21" ReportInfo.Modified="01/06/2026 14:14:25" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -41,7 +41,7 @@ namespace FastReport
     }
     
     
-    
+     
     
     private static bool shapePrinted = false;
 
@@ -120,7 +120,7 @@ namespace FastReport
       <LineObject Name="Line15" Left="736.75" Top="243.35" Height="33.65"/>
       <LineObject Name="Line16" Left="862.6" Top="243.25" Height="33.65"/>
       <TextObject Name="Text15" Left="59.35" Top="245.7" Width="197" Height="27.9" Text="KRA" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt"/>
-      <TextObject Name="Text16" Left="59.9" Top="161.1" Width="269.9" Height="76.35" Text="[ReportKraRoadMapDto.StrategicObjective]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text16" Left="59.9" Top="161.1" Width="283.9" Height="76.35" Text="[ReportKraRoadMapDto.StrategicObjective]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
       <TextObject Name="Text17" Left="356.2" Top="148.2" Width="627.9" Height="41.9" Text="[ReportKraRoadMapDto.Kpi1Description]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
       <TextObject Name="Text18" Left="357.2" Top="197.9" Width="626.45" Height="39.9" Text="[ReportKraRoadMapDto.Kpi2Description]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
       <TextObject Name="Text19" Left="353.3" Top="245.7" Width="119.5" Height="27.9" Text="[ReportKraRoadMapDto.Year1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
@@ -130,7 +130,7 @@ namespace FastReport
       <TextObject Name="Text23" Left="865.6" Top="245.7" Width="118.5" Height="27.9" Text="[ReportKraRoadMapDto.Year5]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
       <LineObject Name="Line22" Left="54.9" Top="235.25" Height="41.65"/>
       <LineObject Name="Line23" Left="989.5" Top="233.8" Height="42.65" CanGrow="true" GrowToBottom="true"/>
-      <TextObject Name="Text30" Left="59.9" Top="150.2" Width="269.75" Height="12.9" Text="(Strategic Contribution)" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt" TextFill.Color="Red"/>
+      <TextObject Name="Text30" Left="59.9" Top="150.2" Width="284.75" Height="12.9" Text="(Strategic Contribution)" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt" TextFill.Color="Red"/>
       <LineObject Name="Line24" Left="349.85" Top="243.25" Height="33.65"/>
       <TextObject Name="Text31" Left="263.1" Top="245.7" Width="84" Height="27.9" Text="ENABLERS" HorzAlign="Center" VertAlign="Center" Font="Arial, 10pt"/>
     </PageHeaderBand>
@@ -141,15 +141,17 @@ namespace FastReport
       <LineObject Name="Line19" Left="608.45" Top="-1.55" Height="24.65" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line20" Left="736.75" Top="-1.55" Height="24.65" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line21" Left="862.7" Top="-1.55" Height="24.65" CanGrow="true" GrowToBottom="true"/>
-      <TextObject Name="Text24" Left="59.55" Top="0.45" Width="197.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[ReportKraRoadMapDto.Deliverables.KraDescription]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 7pt"/>
+      <TextObject Name="Text24" Left="59.55" Top="0.45" Width="197.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[ReportKraRoadMapDto.Deliverables.KraDescription]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 8pt"/>
       <TextObject Name="Text25" Left="353.3" Top="0.45" Width="119.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[ReportKraRoadMapDto.Deliverables.Year1Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 7pt"/>
       <TextObject Name="Text26" Left="481.05" Top="0.45" Width="122.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[ReportKraRoadMapDto.Deliverables.Year2Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 7pt"/>
       <TextObject Name="Text27" Left="610.9" Top="0.45" Width="121.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[ReportKraRoadMapDto.Deliverables.Year3Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 7pt"/>
       <TextObject Name="Text28" Left="739.75" Top="0.45" Width="119.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[ReportKraRoadMapDto.Deliverables.Year4Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 7pt"/>
-      <TextObject Name="Text29" Left="865.6" Top="0.45" Width="119.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[ReportKraRoadMapDto.Deliverables.Year5Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 7pt"/>
+      <TextObject Name="Text29" Left="865.6" Top="0.45" Width="120.5" Height="20.9" CanGrow="true" GrowToBottom="true" Text="[ReportKraRoadMapDto.Deliverables.Year5Deliverable]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 7pt"/>
       <LineObject Name="Line25" Left="260.15" Top="-2" Height="24.65" CanGrow="true" GrowToBottom="true"/>
       <TextObject Name="txtEnablers" Left="262.6" Top="1" Width="84.15" Height="19.9" CanGrow="true" GrowToBottom="true" BeforePrintEvent="txtEnablers_BeforePrint" Text="[ReportKraRoadMapDto.Deliverables.IsEnabler]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 7pt"/>
     </DataBand>
-    <PageFooterBand Name="PageFooter1" Top="308.35" Width="1047.06"/>
+    <PageFooterBand Name="PageFooter1" Top="308.35" Width="1047.06" Height="14.35">
+      <TextObject Name="Text32" Left="53.7" Top="2.45" Width="937.55" Height="11.9" Text="[PageNofM]" HorzAlign="Center" VertAlign="Center" Font="Arial, 8pt"/>
+    </PageFooterBand>
   </ReportPage>
 </Report>
