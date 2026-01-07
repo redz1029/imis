@@ -46,6 +46,7 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSummaryNarrativePermissions(),
                 new SWOTAnalysisPermission());
 
+
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),              
                 new KeyResultAreaPermission(), 
