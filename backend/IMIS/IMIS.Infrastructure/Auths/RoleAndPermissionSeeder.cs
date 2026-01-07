@@ -44,7 +44,8 @@ namespace IMIS.Infrastructure.Auths
                 new OfficePermission(),
                 new PgsDeliverableAccomplishmentPermission(),
                 new PgsSummaryNarrativePermissions(),
-                new SWOTAnalysisPermission());
+                new SWOTAnalysisPermission(),
+                new KraRoadMapPermission());
 
 
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
@@ -120,7 +121,7 @@ namespace IMIS.Infrastructure.Auths
 
             await PermissionSeeder.SeedPermissionForRole<ResearchOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission());
-
+                
             await PermissionSeeder.SeedPermissionForRole<TrainingOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission());
 

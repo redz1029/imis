@@ -1,5 +1,6 @@
 ﻿using Base.Abstractions;
 using Base.Pagination;
+using IMIS.Application.OfficeModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.KraRoadMapModule
@@ -13,5 +14,6 @@ namespace IMIS.Application.KraRoadMapModule
         Task<IEnumerable<KraRoadMapFilter>>GetFilteredDeliverablesAsync(int kraId, int year, string kraDescription, bool isDirect, CancellationToken cancellationToken);
         Task<IEnumerable<KraRoadMapDescriptionFilter>> GetAllKraDescriptionsByKraIdAsync(int kraId, CancellationToken cancellationToken);
         Task<ReportKraRoadMapDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
+        Task<List<KraRoadMapDto>> GetAllRoadmapForUserAsync(CancellationToken cancellationToken);
     }
 }
