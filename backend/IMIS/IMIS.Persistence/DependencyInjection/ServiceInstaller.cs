@@ -8,6 +8,7 @@ using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
+using IMIS.Application.KraRoadMapRoleAssignmentModule;
 using IMIS.Application.OfficeModule;
 using IMIS.Application.OfficeTypeModule;
 using IMIS.Application.PgsDeliverableAccomplishmentModule;
@@ -31,6 +32,7 @@ using IMIS.Persistence.KraRoadMapDeliverableModule;
 using IMIS.Persistence.KraRoadMapKpiModule;
 using IMIS.Persistence.KraRoadMapModule;
 using IMIS.Persistence.KraRoadMapPeriodModule;
+using IMIS.Persistence.KraRoadMapRoleModule;
 using IMIS.Persistence.OfficeModule;
 using IMIS.Persistence.OfficeTypeModule;
 using IMIS.Persistence.PgsDeliverableAccomplishmentModule;
@@ -122,6 +124,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IkraRoadMapRepository, KraRoadMapRepository>();
             services.AddScoped<IKraRoadMapService, KraRoadMapService>();
+
+            services.AddScoped<IKraRoadMapRoleRepository, KraRoadMapRoleRepository>();
+            services.AddScoped<IKraRoadMapRoleService, KraRoadMapRoleService>();
 
             return services;
         }

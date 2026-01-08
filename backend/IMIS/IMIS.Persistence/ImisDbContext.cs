@@ -35,7 +35,8 @@ namespace IMIS.Persistence
         public DbSet<KraRoadMapKpi> KraRoadMapKPI { get; set; }
         public DbSet<KraRoadMapDeliverable> KraRoadMapDeliverable { get; set; }
         public DbSet<KraRoadMap> KraRoadMap { get; set; }
-        
+        public DbSet<KraRoadMapRole> KraRoadMapRole { get; set; }
+
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
         {
