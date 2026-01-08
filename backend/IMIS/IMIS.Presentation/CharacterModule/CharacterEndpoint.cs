@@ -63,7 +63,19 @@ namespace IMIS.Presentation.CharacterModule
             })
            .WithTags(_Character)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_Character), true);
-           
+
+            app.MapDelete("/{id:int}", async (int id, ICharacterService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_Character, cancellationToken);
+
+                return result ? Results.Ok(new { message = "Character deleted successfully." })
+                              : Results.NotFound(new { message = "Character not found." });
+            })
+                .WithTags(_Character);
+
+
         }
     }
 }

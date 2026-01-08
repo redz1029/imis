@@ -12,5 +12,6 @@ namespace IMIS.Application.CharacterModule
         Task<CharacterDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<List<CharacterDto>?> FilterByName(string name, int noOfResults, CancellationToken cancellationToken);
         public Task<DtoPageList<CharacterDto, Character, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
     }
 }

@@ -19,6 +19,11 @@ namespace IMIS.Persistence.CharacterModule
                .ConfigureAwait(false);
 
         }
+        public async Task<Character?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<Character>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
 
         public async Task<IEnumerable<Character>?> FilterByName(string name, int keyResultAreaNoOfResults, CancellationToken cancellationToken)
         {

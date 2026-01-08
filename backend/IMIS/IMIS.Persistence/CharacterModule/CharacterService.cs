@@ -1,8 +1,6 @@
-using Base.Abstractions;
 using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.CharacterModule;
-using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 
 namespace IMIS.Persistence.CharacterModule
@@ -21,6 +19,20 @@ namespace IMIS.Persistence.CharacterModule
             _characterRepository = characterRepository ?? throw new ArgumentNullException(nameof(characterRepository));
             _noteRepository = noteRepository ?? throw new ArgumentNullException(nameof(noteRepository));
             _objectiveRepository = objectiveRepository ?? throw new ArgumentNullException(nameof(objectiveRepository));
+        }
+
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var kra = await _characterRepository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (kra == null)
+                return false;
+
+            kra.IsDeleted = true;
+
+            var context = _characterRepository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
         }
 
         public async Task<List<CharacterDto>?> GetAllAsync(CancellationToken cancellationToken)
