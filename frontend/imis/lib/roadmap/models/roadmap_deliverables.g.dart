@@ -13,7 +13,7 @@ RoadmapDeliverableItem _$RoadmapDeliverableItemFromJson(
   deliverableDescription: json['deliverableDescription'] as String,
   year: (json['year'] as num).toInt(),
   kraDescription: json['kraDescription'] as String?,
-  isEnabler: json['isEnabler'] as bool?,
+  isEnabler: json['isEnabler'] as bool,
   isDeleted: json['isDeleted'] as bool?,
   rowVersion: json['rowVersion'] as String?,
 );

@@ -10,14 +10,14 @@ class RoadmapDeliverableItem {
   final String deliverableDescription;
   final int year;
   String? kraDescription;
-  bool? isEnabler;
+  bool isEnabler;
 
   RoadmapDeliverableItem({
     required this.id,
     required this.deliverableDescription,
     required this.year,
     this.kraDescription,
-    this.isEnabler,
+    required this.isEnabler,
     this.isDeleted,
     this.rowVersion,
   });
