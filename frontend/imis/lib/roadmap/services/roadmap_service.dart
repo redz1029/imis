@@ -18,7 +18,7 @@ class RoadmapService {
   }) async {
     final paginationUtil = PaginationUtil(dio);
     return await paginationUtil.fetchPaginatedData<Roadmap>(
-      endpoint: ApiEndpoint().kraRoadMap,
+      endpoint: ApiEndpoint().kraRoadMapUserId,
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
@@ -38,6 +38,18 @@ class RoadmapService {
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create roadmap');
     }
+  }
+
+  Future<Roadmap> getRoadmapId(int id) async {
+    final url = '${ApiEndpoint().kraRoadMap}/$id';
+
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to fetch roadmap');
+    }
+
+    return Roadmap.fromJson(response.data);
   }
 
   Future<void> deleteRoadmap(String roadMap) async {
