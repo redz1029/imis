@@ -96,4 +96,12 @@ class PermissionString {
       'Edit Pgs Deliverable Accomplishment';
   static const String viewAccomplishment =
       'View Pgs Deliverable Accomplishment';
+
+  //RoadMap
+  static const String addKraRoadmap = 'Add Kra Road Map';
+  static const String addKraRoadmapPeriod = 'Add Kra Road Map Period';
+  static const String editKraRoadmap = 'Edit Kra Road Map';
+  static const String editKraRoadmapPeriod = 'Edit Kra Road Map Period';
+  static const String viewKraRoadmap = 'View Kra Road Map';
+  static const String viewKraRoadmapPeriod = 'View Kra Road Map Period';
 }
