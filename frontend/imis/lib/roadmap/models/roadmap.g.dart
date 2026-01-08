@@ -24,6 +24,7 @@ Roadmap _$RoadmapFromJson(Map<String, dynamic> json) => Roadmap(
   (json['kpis'] as List<dynamic>?)
       ?.map((e) => KpiRoadmap.fromJson(e as Map<String, dynamic>))
       .toList(),
+  json['userId'] as String,
   rowVersion: json['rowVersion'] as String?,
   isDeleted: json['isDeleted'] as bool?,
 );
@@ -38,4 +39,5 @@ Map<String, dynamic> _$RoadmapToJson(Roadmap instance) => <String, dynamic>{
   'kraRoadMapPeriod': instance.kraRoadMapPeriod,
   'deliverables': instance.deliverables,
   'kpis': instance.kpis,
+  'userId': instance.userId,
 };
