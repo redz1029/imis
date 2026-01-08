@@ -1,4 +1,4 @@
-﻿
+﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.CharacterModule;
 using IMIS.Application.PgsKeyResultAreaModule;
@@ -32,12 +32,38 @@ namespace IMIS.Presentation.CharacterModule
 
             app.MapGet("/", async (ICharacterService service, CancellationToken cancellationToken) =>
             {
-                var keyResultAreaDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
-                return Results.Ok(keyResultAreaDto);
+                var CharacterDto = await service.GetAllAsync(cancellationToken).ConfigureAwait(false);
+                return Results.Ok(CharacterDto);
             })
            .WithTags(_Character)
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_Character), true)
-           ;
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_Character), true);
+
+            app.MapGet("/{id}", async (int id, ICharacterService service, CancellationToken cancellationToken) =>
+            {
+                var Character = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                return Character != null ? Results.Ok(Character) : Results.NotFound();
+            })
+           .WithTags(_Character)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_Character), true);
+
+
+            app.MapGet("/filter/{name}", async (string name, ICharacterService service, CancellationToken cancellationToken) =>
+            {
+                int CharacterNoOfResults = 10;
+                var Character = await service.FilterByName(name, CharacterNoOfResults, cancellationToken).ConfigureAwait(false);
+                return Character != null ? Results.Ok(Character) : Results.NoContent();
+            })
+            .WithTags(_Character)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_Character), true);
+
+            app.MapGet("/page", async (int page, int pageSize, ICharacterService service, CancellationToken cancellationToken) =>
+            {
+                var paginatedCharacter = await service.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+                return Results.Ok(paginatedCharacter);
+            })
+           .WithTags(_Character)
+           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_Character), true);
+           
         }
     }
 }

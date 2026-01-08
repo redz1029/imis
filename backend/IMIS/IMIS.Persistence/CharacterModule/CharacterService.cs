@@ -1,4 +1,5 @@
 using Base.Abstractions;
+using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.CharacterModule;
 using IMIS.Application.PgsKraModule;
@@ -24,11 +25,30 @@ namespace IMIS.Persistence.CharacterModule
 
         public async Task<List<CharacterDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var keyResultAreaDto = await _characterRepository.GetAll(cancellationToken).ConfigureAwait(false);
-            if (keyResultAreaDto == null)
+            var CharacterDto = await _characterRepository.GetAll(cancellationToken).ConfigureAwait(false);
+            if (CharacterDto == null)
                 return null;
 
-            return keyResultAreaDto.Select(o => new CharacterDto(o)).ToList();
+            return CharacterDto.Select(o => new CharacterDto(o)).ToList();
+        }
+
+        public async Task<CharacterDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var CharacterDto = await _characterRepository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+            return CharacterDto != null ? new CharacterDto(CharacterDto) : null;
+        }
+
+        public async Task<List<CharacterDto>?> FilterByName(string name, int CharacterNoOfResults, CancellationToken cancellationToken)
+        {
+            var Character = await _characterRepository.FilterByName(name, CharacterNoOfResults, cancellationToken).ConfigureAwait(false);
+            return Character != null && Character.Count() > 0 ? Character.Select(a => new CharacterDto(a)).ToList() : null;
+        }
+        public async Task<DtoPageList<CharacterDto, Character, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var Character = await _characterRepository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
+            if (Character.TotalCount == 0)
+                return null;
+            return DtoPageList<CharacterDto, Character, long>.Create(Character.Items, page, pageSize, Character.TotalCount);
         }
 
         public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
