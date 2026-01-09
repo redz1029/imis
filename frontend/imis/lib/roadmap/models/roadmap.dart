@@ -22,12 +22,12 @@ class Roadmap {
   Roadmap(
     this.id,
     this.kraId,
-    this.kra,
     this.kraRoadMapPeriodId,
     this.kraRoadMapPeriod,
     this.deliverables,
     this.kpis,
     this.userId, {
+    this.kra,
     this.rowVersion,
     this.isDeleted,
   });

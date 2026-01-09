@@ -9,9 +9,6 @@ part of 'roadmap.dart';
 Roadmap _$RoadmapFromJson(Map<String, dynamic> json) => Roadmap(
   (json['id'] as num?)?.toInt(),
   (json['kraId'] as num?)?.toInt(),
-  json['kra'] == null
-      ? null
-      : KeyResultArea.fromJson(json['kra'] as Map<String, dynamic>),
   (json['kraRoadMapPeriodId'] as num?)?.toInt(),
   json['kraRoadMapPeriod'] == null
       ? null
@@ -25,6 +22,10 @@ Roadmap _$RoadmapFromJson(Map<String, dynamic> json) => Roadmap(
       ?.map((e) => KpiRoadmap.fromJson(e as Map<String, dynamic>))
       .toList(),
   json['userId'] as String,
+  kra:
+      json['kra'] == null
+          ? null
+          : KeyResultArea.fromJson(json['kra'] as Map<String, dynamic>),
   rowVersion: json['rowVersion'] as String?,
   isDeleted: json['isDeleted'] as bool?,
 );
