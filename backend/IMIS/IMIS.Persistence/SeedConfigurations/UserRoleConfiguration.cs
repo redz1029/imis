@@ -36,6 +36,11 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             },
             new IdentityUserRole<string>
             {
+                UserId = "743b9807-3441-47c1-9285-5ff8dfd7acb9",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
                 UserId = "7acb06ae-c2de-4fa1-8b62-53c1d63121f0",
                 RoleId = "95f224dd-3973-42ef-b350-7af30f67c2ca"
             },
@@ -91,6 +96,11 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             },
             new IdentityUserRole<string>
             {
+                UserId = "399f5e43-93d8-4a28-b113-d23eccd2ea15",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
                 UserId = "e765e1f5-bc17-49b1-9c3f-8c5c2c18b420",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
             },
@@ -103,6 +113,11 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             {
                 UserId = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
             },
             new IdentityUserRole<string>
             {
@@ -231,6 +246,11 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             },
             new IdentityUserRole<string>
             {
+                UserId = "de17cb47-83e7-4a6b-b97c-13808e14a7ff",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
                 UserId = "0ed1f88a-8859-4d6c-9a1f-84aaf19cc45c",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
             },
@@ -284,6 +304,11 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
                 UserId = "2z9f8451-1n19-4b50-8432-4e23c164cs51",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
             },
+            new IdentityUserRole<string>
+            {
+                UserId = "2z9f8451-1n19-4b50-8432-4e23c164cs51",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },           
             new IdentityUserRole<string>
             {
                 UserId = "9c49e0f2-4cb0-45b1-9f0e-4fbd24d25368",
@@ -446,6 +471,11 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             },
             new IdentityUserRole<string>
             {
+                UserId = "dcf663a4-36f5-4fd6-b124-bae31e0c9e2e",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
                 UserId = "17793347-1bfa-4526-a0af-0ffcf374aa9a",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
             },
@@ -456,8 +486,18 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             },
             new IdentityUserRole<string>
             {
+                UserId = "6f34a16a-6e68-4d8b-9f6a-0e0c07a09ed8",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
                 UserId = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
             },
             new IdentityUserRole<string>
             {
@@ -528,6 +568,11 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             {
                 UserId = "a1e10c26-4d1d-4f9e-9378-1382457c82ad",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "a1e10c26-4d1d-4f9e-9378-1382457c82ad",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
             },
             new IdentityUserRole<string>
             {
@@ -608,6 +653,11 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             {
                 UserId = "7cfd0766-f3d3-47aa-9a48-53d437d6c232",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "7cfd0766-f3d3-47aa-9a48-53d437d6c232",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
             },
             new IdentityUserRole<string>
             {
@@ -850,6 +900,53 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
                 RoleId = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17"
             },
 
+            // ----------New User Roles 01/09/2026-----------
+            new IdentityUserRole<string>
+            {
+                UserId = "1k3bdpoy-1cb3-4c3b-1fp0-kff9k71h3ysg",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "4gghfkad-4xhj-4c3b-1fp0-damxmbak242V",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "8rrdhjqf-2xhj-4c3b-1fp0-hqvxadfh137e",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "813tyuio-7asd-1f7k-6kl0-aqFx134Tv190",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "924omboD-0Dvi-3fkhQ-blh6-yaFv1de62431",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "822rlioO-0Dvi-3fo9O-bjh8-ya846jg58t24",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "123rliom-2akV-cl381-uwe9-kah8h3f98632",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "234glioh-2akV-BL062-Hh28-LSJ2Gnj976w3",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "654hHioh-NkaH-jB19f-9uh12-33dFJnY823f2",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+
             // Point Person RoadMap 
             new IdentityUserRole<string>
             {
@@ -895,7 +992,7 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             {
                 UserId = "e9bcc340-e63f-40e6-8326-8fe86cbef923",
                 RoleId = "5c2e8b9f-6a1d-4e73-9f0b-1c7a4d3e8b52"
-            }
+            }           
        );
     }
 }
