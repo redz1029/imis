@@ -2333,9 +2333,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 PhoneNumber = "09273691473",
                 Position = "Head, Laundry and Linen Unit",
             }
-
-
-
         );
     }
 }
