@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:imis/roadmap/models/kra_roadmap_filter.dart';
+import 'package:imis/roadmap/models/kra_roadmap_role.dart';
 import 'package:imis/roadmap/models/roadmap.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
@@ -89,5 +90,19 @@ class RoadmapService {
     }
 
     return List<Map<String, dynamic>>.from(response.data);
+  }
+
+  Future<List<KraRoadmapRole>> getKraRoadmapByRoleId() async {
+    final url = ApiEndpoint().kraRoadmapRole;
+
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to fetch KRA roadmap by role');
+    }
+
+    return List<KraRoadmapRole>.from(
+      response.data.map((data) => KraRoadmapRole.fromJson(data)),
+    );
   }
 }
