@@ -42,7 +42,9 @@ namespace IMIS.Infrastructure.Auths
                 new PgsSignatoryTemplatePermission(),
                 new PgsDeliverableAccomplishmentPermission(),
                 new PgsSummaryNarrativePermissions(),
-                new SWOTAnalysisPermission());
+                new SWOTAnalysisPermission(),
+                new KraRoadMapPeriodPermission(),
+                new KeyResultAreaPermission());
 
             // This will seed view only permissions for a role
             await PermissionSeeder.SeedViewOnlyPermissionForRole<StandardUserRole, IdentityRole>(_roleManager,
