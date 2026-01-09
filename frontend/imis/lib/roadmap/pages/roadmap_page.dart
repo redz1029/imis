@@ -481,11 +481,15 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                 PermissionString.serviceOfficer,
                                                 PermissionString.financeOfficer,
                                                 PermissionString
+                                                    .researchOfficer,
+                                                PermissionString
                                                     .facilityOfficer,
                                                 PermissionString
                                                     .linkagesOfficer,
                                                 PermissionString
                                                     .informationOfficer,
+                                                PermissionString.safetyOfficer,
+                                                PermissionString.hrOfficer,
                                               ],
                                               child: IconButton(
                                                 icon: const Icon(
@@ -979,9 +983,12 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                           PermissionString.trainingOfficer,
                           PermissionString.serviceOfficer,
                           PermissionString.financeOfficer,
+                          PermissionString.researchOfficer,
                           PermissionString.facilityOfficer,
                           PermissionString.linkagesOfficer,
                           PermissionString.informationOfficer,
+                          PermissionString.safetyOfficer,
+                          PermissionString.hrOfficer,
                         ],
                         child: ElevatedButton.icon(
                           onPressed: () => showProcess(),
@@ -1126,9 +1133,12 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         PermissionString.trainingOfficer,
                                         PermissionString.serviceOfficer,
                                         PermissionString.financeOfficer,
+                                        PermissionString.researchOfficer,
                                         PermissionString.facilityOfficer,
                                         PermissionString.linkagesOfficer,
                                         PermissionString.informationOfficer,
+                                        PermissionString.safetyOfficer,
+                                        PermissionString.hrOfficer,
                                       ],
                                       child: IconButton(
                                         icon: const Icon(
@@ -1187,9 +1197,12 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                   PermissionString.trainingOfficer,
                   PermissionString.serviceOfficer,
                   PermissionString.financeOfficer,
+                  PermissionString.researchOfficer,
                   PermissionString.facilityOfficer,
                   PermissionString.linkagesOfficer,
                   PermissionString.informationOfficer,
+                  PermissionString.safetyOfficer,
+                  PermissionString.hrOfficer,
                 ],
                 child: FloatingActionButton(
                   backgroundColor: primaryColor,
