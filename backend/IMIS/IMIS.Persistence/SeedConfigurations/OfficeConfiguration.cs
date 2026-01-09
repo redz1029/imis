@@ -97,7 +97,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 new Office { Id = 76, Name = "Soccsksargen Regional Blood Center", OfficeTypeId = 3, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
                 new Office { Id = 77, Name = "Trauma Center", OfficeTypeId = 3, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
                 new Office { Id = 78, Name = "Burn Center", OfficeTypeId = 3, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
-                new Office { Id = 79, Name = "Cardiovascular Center", OfficeTypeId = 3, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
+                new Office { Id = 79, Name = "Cardiovascular Care", OfficeTypeId = 3, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
                 new Office { Id = 80, Name = "Renal Care and Transplant Unit", OfficeTypeId = 3, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
                 new Office { Id = 81, Name = "Cancer Institute", OfficeTypeId = 3, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
                 new Office { Id = 82, Name = "Medicine Intensive Care Unit", OfficeTypeId = 4, ParentOfficeId = 8, IsActive = true, IsDeleted = false },
@@ -144,7 +144,7 @@ namespace IMIS.Persistence.SeedConfigurations
                 new Office { Id = 123, Name = "Claims Unit", OfficeTypeId = 4, ParentOfficeId = 65, IsActive = true, IsDeleted = false },
                 new Office { Id = 124, Name = "Professional Education Training and Research Unit", OfficeTypeId = 4, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
                 new Office { Id = 125, Name = "Integrated Hospital Operations and Management Program", OfficeTypeId = 4, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
-                new Office { Id = 126, Name = "Legal Unit", OfficeTypeId = 4, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
+                new Office { Id = 126, Name = "Legal Affairs Unit", OfficeTypeId = 4, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
                 new Office { Id = 127, Name = "Public Assistance and Complaint Desk", OfficeTypeId = 4, ParentOfficeId = 1, IsActive = true, IsDeleted = false },
                 new Office { Id = 128, Name = "Surveillance Unit", OfficeTypeId = 4, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
                 new Office { Id = 129, Name = "Infectious Unit", OfficeTypeId = 4, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
@@ -204,7 +204,15 @@ namespace IMIS.Persistence.SeedConfigurations
                 new Office { Id = 183, Name = "Eye Care", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
                 new Office { Id = 184, Name = "Geriatric Care", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
                 new Office { Id = 185, Name = "Infectious Disease and Tropical Medicine", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
-                new Office { Id = 186, Name = "Lung Care", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false }
+                new Office { Id = 186, Name = "Lung Care", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false },
+                // --------------- New Offices ------------------
+                new Office { Id = 187, Name = "Clinical Departments", OfficeTypeId = 2, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
+                new Office { Id = 188, Name = "Critical Care Units", OfficeTypeId = 2, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
+                new Office { Id = 189, Name = "Isolation", OfficeTypeId = 2, ParentOfficeId = 3, IsActive = true, IsDeleted = false },
+                new Office { Id = 190, Name = "Mechanical Section", OfficeTypeId = 2, ParentOfficeId = 4, IsActive = true, IsDeleted = false },
+                new Office { Id = 191, Name = "Planning and Management Unit", OfficeTypeId = 2, ParentOfficeId = 5, IsActive = true, IsDeleted = false },
+                new Office { Id = 192, Name = "BUCAS Center", OfficeTypeId = 2, ParentOfficeId = 2, IsActive = true, IsDeleted = false }
+
             );
         }
     }
