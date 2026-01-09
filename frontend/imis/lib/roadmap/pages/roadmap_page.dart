@@ -364,7 +364,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         child: Row(
                                           children: [
                                             Text(
-                                              'KP ${i + 1}: ',
+                                              'KPI ${i + 1}: ',
                                               style: const TextStyle(
                                                 fontWeight: FontWeight.bold,
                                               ),
@@ -674,6 +674,17 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                 description: const Text(
                                   'Duplicate KRA found. Please ensure each KRA is unique.',
                                 ),
+                              ).show(context);
+                              return;
+                            }
+
+                            if (kpiControllers.length < 2) {
+                              MotionToast.warning(
+                                title: const Text("Insufficient KPI"),
+                                description: const Text(
+                                  "Please provide at least 2 KPI's.",
+                                ),
+                                toastAlignment: Alignment.center,
                               ).show(context);
                               return;
                             }
