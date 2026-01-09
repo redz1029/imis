@@ -354,7 +354,7 @@ class _DeliverableStatusMonitoringPageState
         numberColumnWidth + (dataColumns * dataColumnWidth) + 24.0;
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     bool hasPermission = permissionService.hasPermission(
-      PermissionString.viewPgsDeliverable,
+      PermissionString.viewPgsDeliverableMonitor,
     );
 
     if (!hasPermission) {

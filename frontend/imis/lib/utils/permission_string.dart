@@ -52,8 +52,10 @@ class PermissionString {
   static const String editPgsDeliverable = 'Edit Pgs Deliverable';
 
   // Deliverable Monitor
-  static const String viewPgsDeliverableMonitor = 'ViewPgsDeliverableMonitor';
-  static const String scorePgsDeliverableMonitor = 'ScorePgsDeliverableMonitor';
+  static const String viewPgsDeliverableMonitor =
+      'View Pgs Deliverable Monitor';
+  static const String scorePgsDeliverableMonitor =
+      'Score PgsDeliverableMonitor';
 
   // Signatory Template
   static const String addPgsSignatoryTemplate = 'Add Pgs Signatory Template';
@@ -104,4 +106,6 @@ class PermissionString {
   static const String editKraRoadmapPeriod = 'Edit Kra Road Map Period';
   static const String viewKraRoadmap = 'View Kra Road Map';
   static const String viewKraRoadmapPeriod = 'View Kra Road Map Period';
+
+  //Monitor
 }
