@@ -2656,6 +2656,11 @@ class PerformanceGovernanceSystemPageState
               ),
 
               actions: [
+                // if (((id == null && orderLevel == 0) ||
+                //         (id == null && orderLevel >= 1) ||
+                //         isAnyDisapproved ||
+                //         (signatories == null || signatories.isEmpty)) &&
+                //     !(isDraftSafe && orderLevel >= 1))
                 if ((id == null && orderLevel == 0) ||
                     (id == null && orderLevel >= 1) ||
                     isAnyDisapproved ||
@@ -2711,6 +2716,9 @@ class PerformanceGovernanceSystemPageState
                     ),
                   ),
 
+                // if ((isAnyDisapproved || id != null) &&
+                //     (signatories == null || signatories.isEmpty) &&
+                //     !(isDraftSafe && orderLevel >= 1))
                 if ((isAnyDisapproved || id != null) &&
                     (signatories == null || signatories.isEmpty))
                   PermissionWidget(
@@ -3097,15 +3105,6 @@ class PerformanceGovernanceSystemPageState
 
     bool hasData = hasDataMap[index] ?? true;
 
-    if (!hasData) {
-      setDialogState(() {
-        deliverablesControllers[index]?.clear();
-        // deliverablesRoadmapControllers[index]?.clear();  last code
-        // kraDescriptionRoadmapController[index]?.clear(); last code
-        kraDescriptionController[index]?.clear();
-      });
-    }
-
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -3141,6 +3140,15 @@ class PerformanceGovernanceSystemPageState
                             hasDataMap[index] = data.isNotEmpty;
                             kraDescriptionsByIndex[index] = data;
                           });
+
+                          if (!hasData) {
+                            setDialogState(() {
+                              deliverablesControllers[index]?.clear();
+                              // deliverablesRoadmapControllers[index]?.clear();  last code
+                              // kraDescriptionRoadmapController[index]?.clear(); last code
+                              kraDescriptionController[index]?.clear();
+                            });
+                          }
 
                           if (data.isEmpty) return;
 
