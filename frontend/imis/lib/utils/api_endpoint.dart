@@ -55,6 +55,7 @@ class ApiEndpoint {
   late String kraRoadMap;
   late String kraRoadMapUserId;
   late String kraRoadMapReport;
+  late String kraRoadmapRole;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -108,6 +109,7 @@ class ApiEndpoint {
     kraRoadMap = '$baseUrl/kraRoadMap';
     kraRoadMapUserId = '$baseUrl/kraRoadMap/userId';
     kraRoadMapReport = '$baseUrl/kraRoadMap/list-report/pdf';
+    kraRoadmapRole = '$baseUrl/kraRoadmapRole/roleid';
   }
 
   static Future<void> setBaseUrl() async {
