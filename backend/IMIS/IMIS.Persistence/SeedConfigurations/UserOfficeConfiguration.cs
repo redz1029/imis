@@ -134,7 +134,9 @@ namespace IMIS.Persistence.SeedConfigurations
                 new UserOffices { Id = 122, UserId = "234glioh-2akV-BL062-Hh28-LSJ2Gnj976w3", OfficeId = 185, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 123, UserId = "654hHioh-NkaH-jB19f-9uh12-33dFJnY823f2", OfficeId = 36, IsActive = true, IsDeleted = false, IsOfficeHead = true },
                 new UserOffices { Id = 124, UserId = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d", OfficeId = 36, IsActive = true, IsDeleted = false, IsOfficeHead = true },
-                new UserOffices { Id = 125, UserId = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f", OfficeId = 71, IsActive = true, IsDeleted = false, IsOfficeHead = true });
+                new UserOffices { Id = 125, UserId = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f", OfficeId = 71, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 126, UserId = "0020lEhG-NkaH-jB19f-9uh12-11dFwnTe6543", OfficeId = 119, IsActive = true, IsDeleted = false, IsOfficeHead = true },
+                new UserOffices { Id = 127, UserId = "0201JEhG-NkaH-jB19f-9uh12-22GYwrTr9872", OfficeId = 118, IsActive = true, IsDeleted = false, IsOfficeHead = true });
         }
     }
 }

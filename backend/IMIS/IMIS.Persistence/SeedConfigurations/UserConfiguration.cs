@@ -2302,6 +2302,36 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 PhoneNumber = "09171488596",
                 Position = "Head, Mental Health Unit",
                 Prefix = "Dr.",
+            },
+            new User
+            {
+                Id = "0020lEhG-NkaH-jB19f-9uh12-11dFwnTe6543",
+                UserName = "ramirez.ramil",
+                NormalizedUserName = "RAMIREZ.RAMIL",
+                Email = "ramilramirez097@gmail.com",
+                NormalizedEmail = "RAMILRAMIREZ097@GMAIL.COM",
+                PasswordHash = hasher.HashPassword(null!, defaultPassword),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+                LastName = "RAMIREZ",
+                FirstName = "RAMIL",
+                MiddleName = "LIMBAC",
+                PhoneNumber = "09065343887",
+                Position = "Head, Housekeeping Unit",               
+            },
+            new User
+            {
+                Id = "0201JEhG-NkaH-jB19f-9uh12-22GYwrTr9872",
+                UserName = "quilnet.gerry",
+                NormalizedUserName = "QUILNET.GERRY",
+                Email = "quilnetgerry@yahoo.com",
+                NormalizedEmail = "QUILNETGERRY@GMAIL.COM",
+                PasswordHash = hasher.HashPassword(null!, defaultPassword),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+                LastName = "QUILNET",
+                FirstName = "GERRY",
+                MiddleName = "APARECE",
+                PhoneNumber = "09273691473",
+                Position = "Head, Laundry and Linen Unit",
             }
 
 

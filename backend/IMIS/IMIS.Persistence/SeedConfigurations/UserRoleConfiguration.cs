@@ -111,12 +111,22 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<IdentityUserRole<s
             },
             new IdentityUserRole<string>
             {
+                UserId = "0201JEhG-NkaH-jB19f-9uh12-22GYwrTr9872",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
                 UserId = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
                 RoleId = "af7b586c7ee6490bbd878f46f6a47831"
             },
             new IdentityUserRole<string>
             {
                 UserId = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
+                RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
+            },
+            new IdentityUserRole<string>
+            {
+                UserId = "0020lEhG-NkaH-jB19f-9uh12-11dFwnTe6543",
                 RoleId = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd"
             },
             new IdentityUserRole<string>
