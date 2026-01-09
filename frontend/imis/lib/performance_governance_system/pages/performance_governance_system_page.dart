@@ -61,6 +61,8 @@ class PerformanceGovernanceSystemPageState
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> deliverablesRoadmapControllers = {};
   Map<int, TextEditingController> deliverablesControllersDisapproved = {};
+  // Tracks whether the deliverable text was edited by the user (true) or auto-filled from roadmap (false/null)
+  Map<int, bool> deliverableUserEdited = {};
   Map<int, bool> clearedOnDisapprove = {};
   Map<int, TextEditingController> signatoryControllers = {};
   Map<int, TextEditingController> selectedByWhenControllers = {};
@@ -3163,67 +3165,137 @@ class PerformanceGovernanceSystemPageState
 
                             if (renderBox == null) return;
 
-                            final topRight = renderBox.localToGlobal(
+                            renderBox.localToGlobal(
                               Offset(renderBox.size.width, 0),
                               ancestor: overlay,
                             );
 
-                            final position = RelativeRect.fromRect(
-                              Rect.fromLTWH(
-                                topRight.dx,
-                                topRight.dy,
-                                renderBox.size.width,
-                                renderBox.size.height,
-                              ),
-                              Offset.zero & overlay.size,
-                            );
-
+                            // final selected = await showGeneralDialog<String>(
+                            //   context: context,
+                            //   barrierDismissible: true,
+                            //   barrierLabel: 'KRA Roadmap',
+                            //   barrierColor: Colors.transparent,
+                            //   pageBuilder: (_, __, ___) {
+                            //     return Stack(
+                            //       children: [
+                            //         Positioned(
+                            //           left: position.left,
+                            //           top: position.top,
+                            //           width: renderBox.size.width,
+                            //           child: Material(
+                            //             elevation: 6,
+                            //             borderRadius: BorderRadius.circular(8),
+                            //             child: ListView(
+                            //               padding: EdgeInsets.zero,
+                            //               shrinkWrap: true,
+                            //               children: [
+                            //                 const Padding(
+                            //                   padding: EdgeInsets.all(12),
+                            //                   child: Text(
+                            //                     'Select KRA from roadmap',
+                            //                     style: TextStyle(
+                            //                       fontSize: 12,
+                            //                       color: Colors.grey,
+                            //                     ),
+                            //                   ),
+                            //                 ),
+                            //                 ...data.map((d) {
+                            //                   final desc =
+                            //                       d['kraDescription'] ?? '';
+                            //                   return ListTile(
+                            //                     title: Text(desc),
+                            //                     onTap: () {
+                            //                       Navigator.of(
+                            //                         context,
+                            //                       ).pop(desc);
+                            //                     },
+                            //                   );
+                            //                 }),
+                            //               ],
+                            //             ),
+                            //           ),
+                            //         ),
+                            //       ],
+                            //     );
+                            //   },
+                            // );
                             final selected = await showGeneralDialog<String>(
                               context: context,
-                              barrierDismissible: true,
+                              barrierDismissible: false,
                               barrierLabel: 'KRA Roadmap',
-                              barrierColor: Colors.transparent,
+                              barrierColor: Colors.black.withOpacity(0.4),
+                              transitionDuration: const Duration(
+                                milliseconds: 200,
+                              ),
                               pageBuilder: (_, __, ___) {
-                                return Stack(
-                                  children: [
-                                    Positioned(
-                                      left: position.left,
-                                      top: position.top,
-                                      width: renderBox.size.width,
-                                      child: Material(
-                                        elevation: 6,
-                                        borderRadius: BorderRadius.circular(8),
-                                        child: ListView(
-                                          padding: EdgeInsets.zero,
-                                          shrinkWrap: true,
-                                          children: [
-                                            const Padding(
-                                              padding: EdgeInsets.all(12),
-                                              child: Text(
-                                                'Select KRA from roadmap',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey,
-                                                ),
-                                              ),
+                                return Center(
+                                  child: Material(
+                                    elevation: 8,
+                                    borderRadius: BorderRadius.circular(12),
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                        maxWidth: 420,
+                                        maxHeight: 480,
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 16,
+                                              vertical: 12,
                                             ),
-                                            ...data.map((d) {
-                                              final desc =
-                                                  d['kraDescription'] ?? '';
-                                              return ListTile(
-                                                title: Text(desc),
-                                                onTap: () {
-                                                  Navigator.of(
-                                                    context,
-                                                  ).pop(desc);
-                                                },
-                                              );
-                                            }),
-                                          ],
-                                        ),
+                                            child: Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                const Text(
+                                                  'Select KRA from roadmap',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.w600,
+                                                  ),
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.close,
+                                                    size: 20,
+                                                  ),
+                                                  splashRadius: 18,
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                          const Divider(height: 1),
+
+                                          Expanded(
+                                            child: ListView(
+                                              padding: EdgeInsets.zero,
+                                              children:
+                                                  data.map((d) {
+                                                    final desc =
+                                                        d['kraDescription'] ??
+                                                        '';
+                                                    return ListTile(
+                                                      title: Text(desc),
+                                                      onTap: () {
+                                                        Navigator.of(
+                                                          context,
+                                                        ).pop(desc);
+                                                      },
+                                                    );
+                                                  }).toList(),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 );
                               },
                             );
@@ -3250,58 +3322,38 @@ class PerformanceGovernanceSystemPageState
                               isDirect: true,
                             );
 
-                            final result = await _roadMapService
-                                .kraRoadmapFilter(filter);
+                            try {
+                              final result = await _roadMapService
+                                  .kraRoadmapFilter(filter);
 
-                            setDialogState(() {
-                              if (result.isNotEmpty &&
-                                  result.first['deliverableDescription']
-                                          ?.toString()
-                                          .trim()
-                                          .isNotEmpty ==
-                                      true) {
-                                deliverablesControllers[index]!.text =
-                                    result.first['deliverableDescription'];
-                              } else {
-                                deliverablesControllers[index]?.clear();
-                              }
+                              setDialogState(() {
+                                if (result.isNotEmpty &&
+                                    result.first['deliverableDescription']
+                                            ?.toString()
+                                            .trim()
+                                            .isNotEmpty ==
+                                        true) {
+                                  deliverablesControllers[index]!.text =
+                                      result.first['deliverableDescription'];
+                                }
 
-                              // if (result.isNotEmpty &&
-                              //     result.first['deliverableDescription']
-                              //             ?.toString()
-                              //             .trim()
-                              //             .isNotEmpty ==
-                              //         true) {
-                              //   deliverablesRoadmapControllers[index]!.text =
-                              //       result.first['deliverableDescription'];
-                              // } else {
-                              //   deliverablesRoadmapControllers[index]?.clear();
-                              // }
-
-                              // if (result.isNotEmpty &&
-                              //     result.first['kraDescription']
-                              //             ?.toString()
-                              //             .trim()
-                              //             .isNotEmpty ==
-                              //         true) {
-                              //   kraDescriptionRoadmapController[index]!.text =
-                              //       result.first['kraDescription'];
-                              // } else {
-                              //   kraDescriptionRoadmapController[index]?.clear();
-                              // }
-
-                              if (result.isNotEmpty &&
-                                  result.first['kraDescription']
-                                          ?.toString()
-                                          .trim()
-                                          .isNotEmpty ==
-                                      true) {
-                                kraDescriptionController[index]!.text =
-                                    result.first['kraDescription'];
-                              } else {
-                                kraDescriptionController[index]?.clear();
-                              }
-                            });
+                                if (result.isNotEmpty &&
+                                    result.first['kraDescription']
+                                            ?.toString()
+                                            .trim()
+                                            .isNotEmpty ==
+                                        true) {
+                                  kraDescriptionController[index]!.text =
+                                      result.first['kraDescription'];
+                                }
+                              });
+                            } catch (e) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to filter KRA roadmap'),
+                                ),
+                              );
+                            }
                           } catch (_) {
                             // ignore overlay errors
                           }
@@ -3674,59 +3726,66 @@ class PerformanceGovernanceSystemPageState
                             isDirect: isDirectValue,
                           );
 
-                          final result = await _roadMapService.kraRoadmapFilter(
-                            filter,
-                          );
+                          try {
+                            // final result = await _roadMapService
+                            //     .kraRoadmapFilter(filter);
 
-                          setDialogState(() {
-                            if (result.isNotEmpty &&
-                                result.first['deliverableDescription'] !=
-                                    null &&
-                                result.first['deliverableDescription']
-                                    .toString()
-                                    .trim()
-                                    .isNotEmpty) {
-                              deliverablesControllers[index]?.text =
-                                  result.first['deliverableDescription'];
-                            } else {
-                              deliverablesControllers[index]?.clear();
-                            }
-                            // if (result.isNotEmpty &&
-                            //     result.first['deliverableDescription'] !=
-                            //         null &&
-                            //     result.first['deliverableDescription']
-                            //         .toString()
-                            //         .trim()
-                            //         .isNotEmpty) {
-                            //   deliverablesRoadmapControllers[index]?.text =
-                            //       result.first['deliverableDescription'];
-                            // } else {
-                            //   deliverablesRoadmapControllers[index]?.clear();
-                            // }
-                            // if (result.isNotEmpty &&
-                            //     result.first['kraDescription'] != null &&
-                            //     result.first['kraDescription']
-                            //         .toString()
-                            //         .trim()
-                            //         .isNotEmpty) {
-                            //   kraDescriptionRoadmapController[index]?.text =
-                            //       result.first['kraDescription'];
-                            // } else {
-                            //   kraDescriptionRoadmapController[index]?.clear();
-                            // }
+                            // setDialogState(() {
+                            //   if (result.isNotEmpty &&
+                            //       result.first['deliverableDescription'] !=
+                            //           null &&
+                            //       result.first['deliverableDescription']
+                            //           .toString()
+                            //           .trim()
+                            //           .isNotEmpty) {
+                            //     deliverablesControllers[index]?.text =
+                            //         result.first['deliverableDescription'];
+                            //   }
 
-                            if (result.isNotEmpty &&
-                                result.first['kraDescription'] != null &&
-                                result.first['kraDescription']
-                                    .toString()
-                                    .trim()
-                                    .isNotEmpty) {
-                              kraDescriptionController[index]?.text =
-                                  result.first['kraDescription'];
-                            } else {
-                              kraDescriptionController[index]?.clear();
-                            }
-                          });
+                            //   if (result.isNotEmpty &&
+                            //       result.first['kraDescription'] != null &&
+                            //       result.first['kraDescription']
+                            //           .toString()
+                            //           .trim()
+                            //           .isNotEmpty) {
+                            //     kraDescriptionController[index]?.text =
+                            //         result.first['kraDescription'];
+                            //   }
+                            // });
+
+                            final result = await _roadMapService
+                                .kraRoadmapFilter(filter);
+
+                            setDialogState(() {
+                              if (result.isNotEmpty &&
+                                  result.first['deliverableDescription']
+                                          ?.toString()
+                                          .trim()
+                                          .isNotEmpty ==
+                                      true) {
+                                deliverablesControllers[index]!.text =
+                                    result.first['deliverableDescription'];
+
+                                deliverableUserEdited[index] = false;
+                              } else {
+                                if (deliverableUserEdited[index] != true) {
+                                  deliverablesControllers[index]?.clear();
+                                }
+                              }
+
+                              if (result.isNotEmpty &&
+                                  result.first['kraDescription']
+                                          ?.toString()
+                                          .trim()
+                                          .isNotEmpty ==
+                                      true) {
+                                kraDescriptionController[index]!.text =
+                                    result.first['kraDescription'];
+                              }
+                            });
+                          } catch (e) {
+                            //uwu
+                          }
                         },
                 activeColor: Colors.white,
                 checkColor: Colors.black,
@@ -4909,6 +4968,7 @@ class PerformanceGovernanceSystemPageState
               contentPadding: EdgeInsets.all(8.0),
             ),
             onChanged: (value) {
+              deliverableUserEdited[index] = true;
               setState(() {});
             },
           ),
@@ -5254,6 +5314,9 @@ class PerformanceGovernanceSystemPageState
                         : "Please enter your deliverable";
                   }
                   return null;
+                },
+                onChanged: (val) {
+                  deliverableUserEdited[index] = true;
                 },
               ),
             ),

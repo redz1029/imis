@@ -8,7 +8,7 @@ class PerformanceGovernanceSystemService {
 
   PerformanceGovernanceSystemService(this.dio);
 
-  Future<List<T>> _fetchList<T>(
+  Future<List<T>> fetchList<T>(
     String url,
     T Function(Map<String, dynamic>) fromJson,
     String errorMessage,
