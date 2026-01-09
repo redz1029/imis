@@ -1,5 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
+using IMIS.Application.AuditorOfficesModule;
 using IMIS.Application.CharacterModule;
 using IMIS.Application.PgsKeyResultAreaModule;
 using IMIS.Application.PgsKraModule;
@@ -74,6 +75,20 @@ namespace IMIS.Presentation.CharacterModule
                               : Results.NotFound(new { message = "Character not found." });
             })
                 .WithTags(_Character);
+
+            app.MapPut("/{id}", async (int id, [FromBody] CharacterDto characterDto, ICharacterService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            {
+                var existingCharacter = await service.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
+                if (existingCharacter == null)
+                {
+                    return Results.NotFound($"Character with ID {id} not found.");
+                }
+                await service.SaveOrUpdateAsync(characterDto, cancellationToken).ConfigureAwait(false);
+                await cache.EvictByTagAsync(_Character, cancellationToken);
+                return Results.Ok(characterDto);
+            })
+        .WithTags(_Character);
+       
 
 
         }
