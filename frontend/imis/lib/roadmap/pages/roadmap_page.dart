@@ -61,11 +61,13 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
     () async {
       final kra = await _commonService.fetchKra();
       final kraPeriod = await _commonService.fetchKraPeriod();
+      final kraRoadmap = await _roadmapService.getKraRoadmapByRoleId();
       if (!mounted) return;
 
       setState(() {
         kraList = kra;
         kraPeriodList = kraPeriod;
+        kraListRoadmap = kraRoadmap;
       });
     }();
   }
@@ -733,8 +735,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
 
                             final roadmap = Roadmap(
                               isEdit ? roadmapToEdit.id : 0,
-                              selectedKra!.id,
-
+                              selectedKra!.kraId,
                               period.id,
                               period,
                               allGroups,
@@ -1036,7 +1037,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                           final kraName = matchedKra.name;
 
                           final matchedKraRoadmap = kraListRoadmap.firstWhere(
-                            (kra) => kra.id == roadmap.kraId,
+                            (kra) => kra.kraId == roadmap.kraId,
                             orElse:
                                 () => KraRoadmapRole(
                                   kraId: 0,
@@ -1070,20 +1071,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.edit),
-                                      // onPressed: () {
-                                      //     showRoadmapFormDialog(
-                                      //       matchedKraPeriod,
-                                      //       selectedKra: matchedKra,
-                                      //       roadmapToEdit: roadmap,
-                                      //     );
-                                      //     // _roadmapService.getRoadmapId(
-                                      //     //   roadmap.id!,
-                                      //     // );
-                                      //   },
-                                      // ),
 
-                                      // IconButton(
-                                      //   icon: const Icon(Icons.edit),
                                       onPressed: () async {
                                         final Roadmap roadmapDetails =
                                             await _roadmapService.getRoadmapId(
