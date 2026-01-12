@@ -749,6 +749,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                                 selectedRole ==
                                     PermissionString.roleStandardUser ||
                                 selectedRole == PermissionString.serviceHead ||
+                                selectedRole == PermissionString.mcc ||
                                 selectedRole == PermissionString.osm)
                             ? _buildListTile(
                               Icons.insert_drive_file_outlined,
