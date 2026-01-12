@@ -336,9 +336,10 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                       ),
                                       children: [
                                         TextSpan(
-                                          // text:
-                                          //     selectedKra?.strategicObjective ??
-                                          //     '',
+                                          text:
+                                              selectedKra
+                                                  ?.strategicObjectives ??
+                                              '',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w500,
                                           ),
@@ -1061,6 +1062,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                   kraId: 0,
                                   roleId: 'roleId',
                                   kraName: kraName,
+                                  strategicObjectives: '',
                                 ),
                           );
 

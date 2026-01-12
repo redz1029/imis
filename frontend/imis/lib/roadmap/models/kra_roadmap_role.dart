@@ -10,6 +10,7 @@ class KraRoadmapRole {
   String kraName;
   String? rowVersion;
   bool? isDeleted;
+  String? strategicObjectives;
 
   KraRoadmapRole({
     this.id,
@@ -18,6 +19,7 @@ class KraRoadmapRole {
     required this.kraId,
     required this.roleId,
     required this.kraName,
+    required this.strategicObjectives,
   });
 
   factory KraRoadmapRole.fromJson(Map<String, dynamic> json) =>

@@ -14,6 +14,7 @@ KraRoadmapRole _$KraRoadmapRoleFromJson(Map<String, dynamic> json) =>
       kraId: (json['kraId'] as num).toInt(),
       roleId: json['roleId'] as String,
       kraName: json['kraName'] as String,
+      strategicObjectives: json['strategicObjectives'] as String?,
     );
 
 Map<String, dynamic> _$KraRoadmapRoleToJson(KraRoadmapRole instance) =>
@@ -24,4 +25,5 @@ Map<String, dynamic> _$KraRoadmapRoleToJson(KraRoadmapRole instance) =>
       'kraName': instance.kraName,
       'rowVersion': instance.rowVersion,
       'isDeleted': instance.isDeleted,
+      'strategicObjectives': instance.strategicObjectives,
     };
