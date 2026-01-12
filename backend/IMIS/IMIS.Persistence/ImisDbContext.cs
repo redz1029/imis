@@ -138,6 +138,9 @@ namespace IMIS.Persistence
             builder.ApplyConfiguration(new PgsPeriodConfiguration());
             builder.ApplyConfiguration(new AuditorOfficeConfiguration());
             builder.ApplyConfiguration(new AuditorTeamsConfiguration());
+            builder.ApplyConfiguration(new KraRoadMapRoleConfiguration());
+            builder.ApplyConfiguration(new KraRoadMapPeriodConfiguration());
+
 
             // Apply global query filter for soft deletion
             // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false
