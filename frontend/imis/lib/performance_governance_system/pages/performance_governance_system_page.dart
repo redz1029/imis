@@ -1038,7 +1038,7 @@ class PerformanceGovernanceSystemPageState
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     bool hasPermission = permissionService.hasPermission(
-      PermissionString.viewSwot,
+      PermissionString.viewPerformanceGovernanceSystem,
     );
 
     if (!hasPermission) {
