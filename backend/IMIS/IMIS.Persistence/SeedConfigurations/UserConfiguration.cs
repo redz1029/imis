@@ -2333,21 +2333,21 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
                 PhoneNumber = "09273691473",
                 Position = "Head, Laundry and Linen Unit",
             },
-             new User
-             {
-                 Id = "7A91XEhQ-MpZ3-KL28-A9uT1-88HWrLQe5630",
-                 UserName = "abayon.ryan",
-                 NormalizedUserName = "ABAYON.RYAN",
-                 Email = "aryanrodereck@yahoo.com",
-                 NormalizedEmail = "ARYANRODERECK@YAHOO.COM",
-                 PasswordHash = hasher.HashPassword(null!, defaultPassword),
-                 ConcurrencyStamp = Guid.NewGuid().ToString(),
-                 LastName = "ABAYON",
-                 FirstName = "RYAN RODERECK",
-                 MiddleName = "ARCONADO",
-                 PhoneNumber = "9268336993",
-                 Position = "Head, Electrical Section",
-             }
+            new User
+            {
+                Id = "7A91XEhQ-MpZ3-KL28-A9uT1-88HWrLQe5630",
+                UserName = "abayon.ryan",
+                NormalizedUserName = "ABAYON.RYAN",
+                Email = "aryanrodereck@yahoo.com",
+                NormalizedEmail = "ARYANRODERECK@YAHOO.COM",
+                PasswordHash = hasher.HashPassword(null!, defaultPassword),
+                ConcurrencyStamp = Guid.NewGuid().ToString(),
+                LastName = "ABAYON",
+                FirstName = "RYAN RODERECK",
+                MiddleName = "ARCONADO",
+                PhoneNumber = "9268336993",
+                Position = "Head, Electrical Section",
+            }         
         );
     }
 }
