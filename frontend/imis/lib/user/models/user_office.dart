@@ -7,12 +7,12 @@ class UserOffice {
   final int id;
   final bool isDeleted;
   final String? rowVersion;
-  final String userId;
-  final int officeId;
+  final String? userId;
+  final int? officeId;
   final bool isActive;
-  final String firstName;
+  final String? firstName;
   final String? middleName;
-  final String lastName;
+  final String? lastName;
   final String? prefix;
   final String? suffix;
   final String? position;

@@ -61,7 +61,6 @@ class PerformanceGovernanceSystemPageState
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> deliverablesRoadmapControllers = {};
   Map<int, TextEditingController> deliverablesControllersDisapproved = {};
-  // Tracks whether the deliverable text was edited by the user (true) or auto-filled from roadmap (false/null)
   Map<int, bool> deliverableUserEdited = {};
   Map<int, bool> clearedOnDisapprove = {};
   Map<int, TextEditingController> signatoryControllers = {};
