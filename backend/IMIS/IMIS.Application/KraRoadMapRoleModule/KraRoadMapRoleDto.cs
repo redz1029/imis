@@ -9,6 +9,8 @@ namespace IMIS.Application.KraRoadMapRoleAssignmentModule
         public int? KraId { get; set; }      
         public string? RoleId { get; set; }
         public string? KraName { get; set; }
+        public string? StrategicObjectives { get; set; }
+
         public KraRoadMapRoleDto() { }
 
         [SetsRequiredMembers]
@@ -18,6 +20,7 @@ namespace IMIS.Application.KraRoadMapRoleAssignmentModule
             this.KraId = kraRoadMapRole.KraId;
             this.RoleId = kraRoadMapRole.RoleId;
             this.KraName = kraRoadMapRole.Kra?.Name;
+            this.StrategicObjectives = kraRoadMapRole.Kra?.StrategicObjective;
         }
 
         public override KraRoadMapRole ToEntity()
