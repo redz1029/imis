@@ -41,9 +41,7 @@ namespace IMIS.Infrastructure.Auths
                 new PerformanceGovernanceSystemPermission(),
                 new PgsSignatoryTemplatePermission(),
                 new PgsDeliverableAccomplishmentPermission(),
-                new PgsSummaryNarrativePermissions(),
                 new SWOTAnalysisPermission(),
-                new KraRoadMapPeriodPermission(),
                 new KeyResultAreaPermission());
 
             // This will seed view only permissions for a role
@@ -51,7 +49,9 @@ namespace IMIS.Infrastructure.Auths
                 new KeyResultAreaPermission(),
                 new PgsPeriodPermission(),
                 new OfficePermission(),
-                new KraRoadMapPermission());
+                new KraRoadMapPermission(),
+                new KraRoadMapPeriodPermission(),
+                new PgsSummaryNarrativePermissions());
 
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),              
