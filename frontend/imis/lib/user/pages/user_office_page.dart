@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:collection/collection.dart';
 import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
@@ -12,6 +13,7 @@ import 'package:imis/user/models/user_office.dart';
 import 'package:imis/user/services/user_office_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
+import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/custom_toggle.dart';
 import 'package:imis/widgets/pagination_controls.dart';
@@ -46,33 +48,73 @@ class UserOfficePageState extends State<UserOfficePage> {
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
+  List<UserOffice> _allUserOffice = [];
+  // Future<void> fetchUserOffice({int page = 1, String? searchQuery}) async {
+  //   if (_isLoading) return;
 
-  Future<void> fetchUserOffice({int page = 1, String? searchQuery}) async {
+  //   setState(() => _isLoading = true);
+
+  //   try {
+  //     final pageList = await _userOfficeService.getPgsPeriod(
+  //       page: page,
+  //       pageSize: _pageSize,
+  //       searchQuery: searchQuery,
+  //     );
+
+  //     if (mounted) {
+  //       setState(() {
+  //         _currentPage = pageList.page;
+  //         _totalCount = pageList.totalCount;
+  //         userOfficeList = pageList.items;
+  //         filteredList = List.from(userOfficeList);
+  //       });
+  //     }
+  //   } catch (e) {
+  //     debugPrint(e.toString());
+  //   } finally {
+  //     if (mounted) {
+  //       setState(() => _isLoading = false);
+  //     }
+  //   }
+  // }
+
+  Future<void> fetchUserOffice({int page = 1}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _userOfficeService.getPgsPeriod(
-        page: page,
-        pageSize: _pageSize,
-        searchQuery: searchQuery,
+      final response = await AuthenticatedRequest.get(
+        dio,
+        '${ApiEndpoint().useroffice}?page=1&pageSize=50',
       );
 
-      if (mounted) {
-        setState(() {
-          _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
-          userOfficeList = pageList.items;
-          filteredList = List.from(userOfficeList);
-        });
+      if (response.statusCode == 200 && response.data is List) {
+        // Removed the roles filter
+        List<UserOffice> allRoles =
+            (response.data as List)
+                .map((json) => UserOffice.fromJson(json))
+                .toList();
+
+        _allUserOffice = allRoles;
+        _totalCount = allRoles.length;
+
+        int start = (page - 1) * _pageSize;
+        int end = start + _pageSize;
+        if (end > _totalCount) end = _totalCount;
+
+        final pageRoles = allRoles.sublist(start, end);
+
+        if (mounted) {
+          setState(() {
+            userOfficeList = pageRoles;
+            filteredList = List.from(userOfficeList);
+            _currentPage = page;
+          });
+        }
       }
-    } catch (e) {
-      debugPrint(e.toString());
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -83,12 +125,6 @@ class UserOfficePageState extends State<UserOfficePage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
-    userOfficeSearchUtil = FilterSearchResultUtil<UserOffice>(
-      paginationUtils: _paginationUtils,
-      endpoint: ApiEndpoint().useroffice,
-      pageSize: _pageSize,
-      fromJson: (json) => UserOffice.fromJson(json),
-    );
 
     () async {
       final offices = await _commonService.fetchOffices();
@@ -141,16 +177,24 @@ class UserOfficePageState extends State<UserOfficePage> {
     }
   }
 
-  Future<void> filterSearchResults(String query) async {
-    final results = await userOfficeSearchUtil.filter(
-      query,
-      (useroffice, search) =>
-          (useroffice.firstName.toLowerCase().contains(search.toLowerCase())) ||
-          (useroffice.lastName.toLowerCase().contains(search.toLowerCase())),
-    );
+  void filterSearchResults(String query) {
+    final lowerQuery = query.toLowerCase().trim();
 
     setState(() {
-      filteredList = results;
+      if (lowerQuery.isEmpty) {
+        filteredList = List.from(userOfficeList);
+      } else {
+        filteredList =
+            _allUserOffice.where((userOffice) {
+              final user = userList.firstWhereOrNull(
+                (u) => u.id == userOffice.userId,
+              );
+
+              if (user == null) return false;
+
+              return user.fullName.toLowerCase().contains(lowerQuery);
+            }).toList();
+      }
     });
   }
 
