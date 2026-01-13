@@ -2542,90 +2542,92 @@ class PerformanceGovernanceSystemPageState
                                     //End Second Tab
 
                                     // Third Tab: PGS Deliverable Status
-                                    Expanded(
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          children: [
-                                            SizedBox(height: 20),
-
-                                            // MAIN HEADER TABLE
-                                            Table(
-                                              border: TableBorder.all(
-                                                color: Color.fromARGB(
-                                                  255,
-                                                  49,
-                                                  46,
-                                                  46,
-                                                ),
-                                                width: 1,
-                                              ),
-                                              columnWidths: const {
-                                                0: FlexColumnWidth(3.5),
-                                                1: FlexColumnWidth(1.0),
-                                                2: FlexColumnWidth(2.2),
-                                                3: FlexColumnWidth(2.2),
-                                              },
+                                    Column(
+                                      children: [
+                                        SizedBox(height: 20),
+                                        Expanded(
+                                          child: SingleChildScrollView(
+                                            child: Column(
                                               children: [
-                                                _PgsDeliverableHeader(
-                                                  officename:
-                                                      officename ??
-                                                      officeDisplay,
-                                                  orderLevel: orderLevel,
+                                                // MAIN HEADER TABLE
+                                                Table(
+                                                  border: TableBorder.all(
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      49,
+                                                      46,
+                                                      46,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(3.5),
+                                                    1: FlexColumnWidth(1.0),
+                                                    2: FlexColumnWidth(2.2),
+                                                    3: FlexColumnWidth(2.2),
+                                                  },
+                                                  children: [
+                                                    _PgsDeliverableHeader(
+                                                      officename:
+                                                          officename ??
+                                                          officeDisplay,
+                                                      orderLevel: orderLevel,
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
 
-                                            // SUB HEADER TABLE
-                                            Table(
-                                              border: TableBorder.all(
-                                                color: Color.fromARGB(
-                                                  255,
-                                                  49,
-                                                  46,
-                                                  46,
+                                                // SUB HEADER TABLE
+                                                Table(
+                                                  border: TableBorder.all(
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      49,
+                                                      46,
+                                                      46,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(0.2),
+                                                    1: FlexColumnWidth(1.8),
+                                                    2: FlexColumnWidth(1.5),
+                                                    3: FlexColumnWidth(0.5),
+                                                    4: FlexColumnWidth(0.5),
+                                                    5: FlexColumnWidth(2.2),
+                                                    6: FlexColumnWidth(1),
+                                                    7: FlexColumnWidth(1.2),
+                                                  },
+                                                  children: [
+                                                    _pgsBuildTableSubheader(),
+                                                  ],
                                                 ),
-                                                width: 1,
-                                              ),
-                                              columnWidths: const {
-                                                0: FlexColumnWidth(0.2),
-                                                1: FlexColumnWidth(1.8),
-                                                2: FlexColumnWidth(1.5),
-                                                3: FlexColumnWidth(0.5),
-                                                4: FlexColumnWidth(0.5),
-                                                5: FlexColumnWidth(2.2),
-                                                6: FlexColumnWidth(1),
-                                                7: FlexColumnWidth(1.2),
-                                              },
-                                              children: [
-                                                _pgsBuildTableSubheader(),
-                                              ],
-                                            ),
 
-                                            // ROWS TABLE
-                                            Table(
-                                              border: TableBorder.all(
-                                                color: Color.fromARGB(
-                                                  255,
-                                                  49,
-                                                  46,
-                                                  46,
-                                                ),
-                                                width: 1,
-                                              ),
-                                              columnWidths: const {
-                                                0: FlexColumnWidth(0.2),
-                                                1: FlexColumnWidth(1.8),
-                                                2: FlexColumnWidth(1.5),
-                                                3: FlexColumnWidth(0.5),
-                                                4: FlexColumnWidth(0.5),
-                                                5: FlexColumnWidth(2.2),
-                                                6: FlexColumnWidth(1),
-                                                7: FlexColumnWidth(1.2),
-                                              },
-                                              children: [
-                                                ...rows.map(
-                                                  (rowId) =>
-                                                      _buildTableRowStrategicPGSDeliverableStatus(
+                                                // ROWS TABLE
+                                                Table(
+                                                  border: TableBorder.all(
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      49,
+                                                      46,
+                                                      46,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(0.2),
+                                                    1: FlexColumnWidth(1.8),
+                                                    2: FlexColumnWidth(1.5),
+                                                    3: FlexColumnWidth(0.5),
+                                                    4: FlexColumnWidth(0.5),
+                                                    5: FlexColumnWidth(2.2),
+                                                    6: FlexColumnWidth(1),
+                                                    7: FlexColumnWidth(1.2),
+                                                  },
+                                                  children: [
+                                                    ...rows.map(
+                                                      (
+                                                        rowId,
+                                                      ) => _buildTableRowStrategicPGSDeliverableStatus(
                                                         rowId,
                                                         '',
                                                         '',
@@ -2637,12 +2639,14 @@ class PerformanceGovernanceSystemPageState
                                                             rowErrors[rowId] ??
                                                             false,
                                                       ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
-                                          ],
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                     ),
                                   ],
                                 ),
