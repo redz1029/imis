@@ -30,6 +30,7 @@ import 'package:imis/constant/constant.dart';
 import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/team/pages/team_page.dart';
+import 'package:imis/character/pages/character_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/utils/auth_util.dart';
@@ -707,6 +708,12 @@ class NavigationPanelState extends State<NavigationPanel> {
                     0,
                     () => _setScreen(HomePage(), 0),
                   ),
+                  _buildListTile(
+                    Icons.person_outline,
+                    'Character',
+                    99,
+                    () => _setScreen(CharacterPage(), 99),
+                  ),
                   PermissionWidget(
                     child:
                         (selectedRole == PermissionString.roleAdmin ||
@@ -960,6 +967,17 @@ class NavigationPanelState extends State<NavigationPanel> {
                                           'Team',
                                           13,
                                           () => _setScreen(TeamPage(), 13),
+                                        ),
+
+                                        _buildListTile(
+                                          Icons.person_outline,
+                                          hideIcon: true,
+                                          'Character',
+                                          18,
+                                          () => _setScreen(
+                                            CharacterPage(),
+                                            18,
+                                          ),
                                         ),
 
                                         _buildListTile(

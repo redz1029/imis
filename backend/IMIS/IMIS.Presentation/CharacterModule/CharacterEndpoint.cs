@@ -21,7 +21,7 @@ namespace IMIS.Presentation.CharacterModule
         {
             app.MapPost("/", async ([FromBody] CharacterDto dto, ICharacterService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                await service.SaveOrUpdateAsync(dto, cancellationToken);
+                await save(dto, service, cancellationToken);
                 await cache.EvictByTagAsync(_character, cancellationToken);
                 return Results.Ok(dto);
             })
@@ -87,6 +87,11 @@ namespace IMIS.Presentation.CharacterModule
        
 
 
+        }
+
+        private static Task save(CharacterDto dto, ICharacterService service, CancellationToken cancellationToken)
+        {
+            return service.SaveOrUpdateAsync(dto, cancellationToken);
         }
     }
 }

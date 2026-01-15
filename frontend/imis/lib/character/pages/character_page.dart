@@ -11,7 +11,9 @@ class CharacterPage extends StatefulWidget {
 
 class _CharacterPage extends State<CharacterPage> {
   final TextEditingController _nameController = TextEditingController();
-  String? _savedName;
+  final TextEditingController _remarksController = TextEditingController();
+  List<Map<String, dynamic>> _savedItems = <Map<String, dynamic>>[];
+  int? _editingId;
 
   @override
   void initState() {
@@ -20,12 +22,18 @@ class _CharacterPage extends State<CharacterPage> {
   }
 
   Future<void> _loadSaved() async {
-    final name = await CharacterService.getName();
+    final list = await CharacterService.getCharacters();
     if (!mounted) return;
     setState(() {
-      _savedName = name;
-      if (name != null && name.isNotEmpty) {
-        _nameController.text = name;
+      _savedItems = list;
+      // do not overwrite user input when loading the list; only set controllers
+      if (_savedItems.isNotEmpty) {
+        final first = _savedItems.last;
+        final name = first['name']?.toString() ?? '';
+        final remarks = first['remarks']?.toString() ?? '';
+        // keep controllers only if they're empty
+        if (_nameController.text.isEmpty) _nameController.text = name;
+        if (_remarksController.text.isEmpty) _remarksController.text = remarks;
       }
     });
   }
@@ -33,24 +41,76 @@ class _CharacterPage extends State<CharacterPage> {
   @override
   void dispose() {
     _nameController.dispose();
+    _remarksController.dispose();
     super.dispose();
   }
 
-  void _saveName() {
-    final value = _nameController.text.trim();
+  Future<void> _saveName() async {
+    final name = _nameController.text.trim();
+    final remarks = _remarksController.text.trim();
     final messenger = ScaffoldMessenger.of(context);
-    CharacterService.saveName(value).then((_) {
+    try {
+      await CharacterService.saveCharacter(name, remarks, id: _editingId);
       if (!mounted) return;
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
+        SnackBar(content: Text(_editingId == null ? 'Character saved' : 'Character updated')),
+      );
+      // reload full list so the new/updated item appears
+      await _loadSaved();
+      // clear input and editing state after save
+      _nameController.clear();
+      _remarksController.clear();
       setState(() {
-        _savedName = value.isEmpty ? null : value;
+        _editingId = null;
       });
+    } catch (e) {
+      final msg = e is Exception ? e.toString() : 'Unknown error';
       messenger.hideCurrentSnackBar();
       messenger.showSnackBar(
         SnackBar(
-          content: Text(_savedName == null ? 'Name cleared' : 'Name saved'),
+          content: Text('Failed to save: $msg'),
         ),
       );
-    });
+    }
+  }
+
+  Future<void> _deleteCharacter(int id) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await CharacterService.deleteCharacter(id: id);
+      if (!mounted) return;
+      await _loadSaved();
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(const SnackBar(content: Text('Character deleted')));
+    } catch (e) {
+      final msg = e is Exception ? e.toString() : 'Unknown error';
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(SnackBar(content: Text('Failed to delete: $msg')));
+    }
+  }
+
+  Future<void> _confirmAndDelete(int id) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Confirm delete'),
+        content: const Text('Are you sure you want to delete this character?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _deleteCharacter(id);
+    }
   }
 
   @override
@@ -71,11 +131,21 @@ class _CharacterPage extends State<CharacterPage> {
               ),
               const SizedBox(height: 12),
               SizedBox(
-                width: 300 ,
                 child: TextField(
                   controller: _nameController,
                   decoration: const InputDecoration(
                     labelText: 'Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  textInputAction: TextInputAction.next,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                child: TextField(
+                  controller: _remarksController,
+                  decoration: const InputDecoration(
+                    labelText: 'Remarks',
                     border: OutlineInputBorder(),
                   ),
                   textInputAction: TextInputAction.done,
@@ -87,21 +157,19 @@ class _CharacterPage extends State<CharacterPage> {
                 children: [
                   ElevatedButton(
                     onPressed: _saveName,
-                    child: const Text('Save'),
+                    child: Text(_editingId == null ? 'Save' : 'Update'),
                   ),
                   const SizedBox(width: 12),
                   OutlinedButton(
-                    onPressed: () async {
+                    onPressed: () {
                       _nameController.clear();
-                      final messenger = ScaffoldMessenger.of(context);
-                      await CharacterService.clearName();
-                      if (!mounted) return;
+                      _remarksController.clear();
                       setState(() {
-                        _savedName = null;
+                        _editingId = null;
                       });
-                      messenger.showSnackBar(
-                        const SnackBar(content: Text('Input cleared')),
-                      );
+                      final messenger = ScaffoldMessenger.of(context);
+                      if (!mounted) return;
+                      messenger.showSnackBar(const SnackBar(content: Text('Input cleared')));
                     },
                     child: const Text('Clear'),
                   ),
@@ -115,26 +183,60 @@ class _CharacterPage extends State<CharacterPage> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
               ),
               const SizedBox(height: 12),
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Row(
-                    children: [
-                      const Text(
-                        'Name:',
-                        style: TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          _savedName ?? 'Not set',
-                          style: const TextStyle(fontSize: 16),
+              const SizedBox(height: 8),
+              ..._savedItems.map((item) {
+                final id = item['id'] is int ? item['id'] as int : null;
+                final name = item['name']?.toString() ?? 'Not set';
+                final remarks = item['remarks']?.toString() ?? 'Not set';
+                return Card(
+                  key: ValueKey(id ?? name),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                              const SizedBox(height: 6),
+                              Text(remarks, style: const TextStyle(fontSize: 14)),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                        const SizedBox(width: 12),
+                        Column(
+                          children: [
+                            OutlinedButton(
+                              onPressed: id == null
+                                  ? null
+                                  : () {
+                                      // enter edit mode
+                                      setState(() {
+                                        _editingId = id;
+                                        _nameController.text = item['name']?.toString() ?? '';
+                                        _remarksController.text = item['remarks']?.toString() ?? '';
+                                      });
+                                      // scroll to top not implemented — user can see inputs above
+                                    },
+                              child: const Text('Edit'),
+                            ),
+                            const SizedBox(height: 6),
+                            OutlinedButton(
+                              onPressed: id == null
+                                  ? null
+                                  : () async {
+                                      await _confirmAndDelete(id);
+                                    },
+                              child: const Text('Delete'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              }).toList(),
             ],
           ),
         ),
