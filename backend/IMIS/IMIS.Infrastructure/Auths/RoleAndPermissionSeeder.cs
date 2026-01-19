@@ -53,6 +53,11 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapPeriodPermission(),
                 new PgsSummaryNarrativePermissions());
 
+            // This will seed specific permission to disapprove for MCC role
+            // This is only a sample implementation, @Wilbur please adjust as needed.
+            await PermissionSeeder.SeedSpecificPermssionsToRole<MCC, IdentityRole>(_roleManager,
+                new PerformanceGovernanceSystemPermission().Disapprove);
+
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),              
                 new KeyResultAreaPermission(), 
