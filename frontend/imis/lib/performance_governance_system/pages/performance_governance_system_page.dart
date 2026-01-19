@@ -58,6 +58,7 @@ class PerformanceGovernanceSystemPageState
   final _formKey = GlobalKey<FormState>();
   final _dateConverter = const LongDateOnlyConverter();
   final _pgsService = PerformanceGovernanceSystemService(Dio());
+  final ScrollController _tableScrollController = ScrollController();
   Map<int, TextEditingController> deliverablesControllers = {};
   Map<int, TextEditingController> deliverablesRoadmapControllers = {};
   Map<int, TextEditingController> deliverablesControllersDisapproved = {};
@@ -138,6 +139,7 @@ class PerformanceGovernanceSystemPageState
   final Map<int, Map<String, dynamic>?> selectedKraDescription = {};
 
   Map<int, bool> rowErrors = {};
+  Map<int, bool> selectedProcessErrors = {};
   List<Office> officeList = [];
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchFocus = FocusNode();
@@ -957,6 +959,17 @@ class PerformanceGovernanceSystemPageState
   void _addRow() {
     setState(() {
       rows.add(rows.length);
+    });
+
+    // Auto-scroll to bottom after frame renders
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_tableScrollController.hasClients) {
+        _tableScrollController.animateTo(
+          _tableScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
+      }
     });
   }
 
@@ -2253,6 +2266,7 @@ class PerformanceGovernanceSystemPageState
 
                                         Expanded(
                                           child: SingleChildScrollView(
+                                            controller: _tableScrollController,
                                             child: Column(
                                               children: [
                                                 // MAIN HEADER TABLE
@@ -2542,90 +2556,92 @@ class PerformanceGovernanceSystemPageState
                                     //End Second Tab
 
                                     // Third Tab: PGS Deliverable Status
-                                    Expanded(
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          children: [
-                                            SizedBox(height: 20),
-
-                                            // MAIN HEADER TABLE
-                                            Table(
-                                              border: TableBorder.all(
-                                                color: Color.fromARGB(
-                                                  255,
-                                                  49,
-                                                  46,
-                                                  46,
-                                                ),
-                                                width: 1,
-                                              ),
-                                              columnWidths: const {
-                                                0: FlexColumnWidth(3.5),
-                                                1: FlexColumnWidth(1.0),
-                                                2: FlexColumnWidth(2.2),
-                                                3: FlexColumnWidth(2.2),
-                                              },
+                                    Column(
+                                      children: [
+                                        SizedBox(height: 20),
+                                        Expanded(
+                                          child: SingleChildScrollView(
+                                            child: Column(
                                               children: [
-                                                _PgsDeliverableHeader(
-                                                  officename:
-                                                      officename ??
-                                                      officeDisplay,
-                                                  orderLevel: orderLevel,
+                                                // MAIN HEADER TABLE
+                                                Table(
+                                                  border: TableBorder.all(
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      49,
+                                                      46,
+                                                      46,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(3.5),
+                                                    1: FlexColumnWidth(1.0),
+                                                    2: FlexColumnWidth(2.2),
+                                                    3: FlexColumnWidth(2.2),
+                                                  },
+                                                  children: [
+                                                    _PgsDeliverableHeader(
+                                                      officename:
+                                                          officename ??
+                                                          officeDisplay,
+                                                      orderLevel: orderLevel,
+                                                    ),
+                                                  ],
                                                 ),
-                                              ],
-                                            ),
 
-                                            // SUB HEADER TABLE
-                                            Table(
-                                              border: TableBorder.all(
-                                                color: Color.fromARGB(
-                                                  255,
-                                                  49,
-                                                  46,
-                                                  46,
+                                                // SUB HEADER TABLE
+                                                Table(
+                                                  border: TableBorder.all(
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      49,
+                                                      46,
+                                                      46,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(0.2),
+                                                    1: FlexColumnWidth(1.8),
+                                                    2: FlexColumnWidth(1.5),
+                                                    3: FlexColumnWidth(0.5),
+                                                    4: FlexColumnWidth(0.5),
+                                                    5: FlexColumnWidth(2.2),
+                                                    6: FlexColumnWidth(1),
+                                                    7: FlexColumnWidth(1.2),
+                                                  },
+                                                  children: [
+                                                    _pgsBuildTableSubheader(),
+                                                  ],
                                                 ),
-                                                width: 1,
-                                              ),
-                                              columnWidths: const {
-                                                0: FlexColumnWidth(0.2),
-                                                1: FlexColumnWidth(1.8),
-                                                2: FlexColumnWidth(1.5),
-                                                3: FlexColumnWidth(0.5),
-                                                4: FlexColumnWidth(0.5),
-                                                5: FlexColumnWidth(2.2),
-                                                6: FlexColumnWidth(1),
-                                                7: FlexColumnWidth(1.2),
-                                              },
-                                              children: [
-                                                _pgsBuildTableSubheader(),
-                                              ],
-                                            ),
 
-                                            // ROWS TABLE
-                                            Table(
-                                              border: TableBorder.all(
-                                                color: Color.fromARGB(
-                                                  255,
-                                                  49,
-                                                  46,
-                                                  46,
-                                                ),
-                                                width: 1,
-                                              ),
-                                              columnWidths: const {
-                                                0: FlexColumnWidth(0.2),
-                                                1: FlexColumnWidth(1.8),
-                                                2: FlexColumnWidth(1.5),
-                                                3: FlexColumnWidth(0.5),
-                                                4: FlexColumnWidth(0.5),
-                                                5: FlexColumnWidth(2.2),
-                                                6: FlexColumnWidth(1),
-                                                7: FlexColumnWidth(1.2),
-                                              },
-                                              children: [
-                                                ...rows.map(
-                                                  (rowId) =>
-                                                      _buildTableRowStrategicPGSDeliverableStatus(
+                                                // ROWS TABLE
+                                                Table(
+                                                  border: TableBorder.all(
+                                                    color: Color.fromARGB(
+                                                      255,
+                                                      49,
+                                                      46,
+                                                      46,
+                                                    ),
+                                                    width: 1,
+                                                  ),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(0.2),
+                                                    1: FlexColumnWidth(1.8),
+                                                    2: FlexColumnWidth(1.5),
+                                                    3: FlexColumnWidth(0.5),
+                                                    4: FlexColumnWidth(0.5),
+                                                    5: FlexColumnWidth(2.2),
+                                                    6: FlexColumnWidth(1),
+                                                    7: FlexColumnWidth(1.2),
+                                                  },
+                                                  children: [
+                                                    ...rows.map(
+                                                      (
+                                                        rowId,
+                                                      ) => _buildTableRowStrategicPGSDeliverableStatus(
                                                         rowId,
                                                         '',
                                                         '',
@@ -2637,12 +2653,14 @@ class PerformanceGovernanceSystemPageState
                                                             rowErrors[rowId] ??
                                                             false,
                                                       ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ],
                                             ),
-                                          ],
+                                          ),
                                         ),
-                                      ),
+                                      ],
                                     ),
                                   ],
                                 ),
@@ -3092,19 +3110,13 @@ class PerformanceGovernanceSystemPageState
     Function setDialogState,
     int orderLevel,
   ) {
-    if (!selectedKRA.containsKey(index) && options.isNotEmpty) {
-      selectedKRA[index] = options.first['id'];
-      selectedKRAObjects[index] = options.first;
-    }
-
-    final selectedKraObject =
-        selectedKRAObjects[index] ??
-        (options.isNotEmpty ? options.first : null);
+    final selectedKraObject = selectedKRAObjects[index];
 
     final kraTooltipMessage =
         selectedKraObject?['remarks'] ?? 'No description available';
 
     bool hasData = hasDataMap[index] ?? true;
+    bool hasError = selectedProcessErrors[index] ?? false;
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -3117,10 +3129,11 @@ class PerformanceGovernanceSystemPageState
             message: kraTooltipMessage,
             child: Container(
               key: kraDropdownKeys.putIfAbsent(index, () => GlobalKey()),
-              child: DropdownButtonFormField<int>(
+              child: DropdownButtonFormField<int?>(
                 dropdownColor: mainBgColor,
                 isExpanded: true,
                 value: selectedKRA[index],
+                hint: const Text('--Select Process--'),
                 onChanged:
                     id != null && orderLevel >= 1
                         ? null
@@ -3129,6 +3142,7 @@ class PerformanceGovernanceSystemPageState
 
                           setDialogState(() {
                             selectedKRA[index] = newValue;
+                            selectedProcessErrors[index] = false;
                             selectedKRAObjects[index] = options.firstWhere(
                               (o) => o['id'] == newValue,
                             );
@@ -3144,10 +3158,8 @@ class PerformanceGovernanceSystemPageState
 
                           if (!hasData) {
                             setDialogState(() {
-                              deliverablesControllers[index]?.clear();
-                              // deliverablesRoadmapControllers[index]?.clear();  last code
-                              // kraDescriptionRoadmapController[index]?.clear(); last code
-                              kraDescriptionController[index]?.clear();
+                              deliverablesRoadmapControllers[index]?.clear();
+                              kraDescriptionRoadmapController[index]?.clear();
                             });
                           }
 
@@ -3169,55 +3181,6 @@ class PerformanceGovernanceSystemPageState
                               ancestor: overlay,
                             );
 
-                            // final selected = await showGeneralDialog<String>(
-                            //   context: context,
-                            //   barrierDismissible: true,
-                            //   barrierLabel: 'KRA Roadmap',
-                            //   barrierColor: Colors.transparent,
-                            //   pageBuilder: (_, __, ___) {
-                            //     return Stack(
-                            //       children: [
-                            //         Positioned(
-                            //           left: position.left,
-                            //           top: position.top,
-                            //           width: renderBox.size.width,
-                            //           child: Material(
-                            //             elevation: 6,
-                            //             borderRadius: BorderRadius.circular(8),
-                            //             child: ListView(
-                            //               padding: EdgeInsets.zero,
-                            //               shrinkWrap: true,
-                            //               children: [
-                            //                 const Padding(
-                            //                   padding: EdgeInsets.all(12),
-                            //                   child: Text(
-                            //                     'Select KRA from roadmap',
-                            //                     style: TextStyle(
-                            //                       fontSize: 12,
-                            //                       color: Colors.grey,
-                            //                     ),
-                            //                   ),
-                            //                 ),
-                            //                 ...data.map((d) {
-                            //                   final desc =
-                            //                       d['kraDescription'] ?? '';
-                            //                   return ListTile(
-                            //                     title: Text(desc),
-                            //                     onTap: () {
-                            //                       Navigator.of(
-                            //                         context,
-                            //                       ).pop(desc);
-                            //                     },
-                            //                   );
-                            //                 }),
-                            //               ],
-                            //             ),
-                            //           ),
-                            //         ),
-                            //       ],
-                            //     );
-                            //   },
-                            // );
                             final selected = await showGeneralDialog<String>(
                               context: context,
                               barrierDismissible: false,
@@ -3326,24 +3289,28 @@ class PerformanceGovernanceSystemPageState
                                   .kraRoadmapFilter(filter);
 
                               setDialogState(() {
-                                if (result.isNotEmpty &&
-                                    result.first['deliverableDescription']
-                                            ?.toString()
-                                            .trim()
-                                            .isNotEmpty ==
-                                        true) {
-                                  deliverablesControllers[index]!.text =
-                                      result.first['deliverableDescription'];
-                                }
+                                deliverablesRoadmapControllers[index]?.clear();
+                                kraDescriptionRoadmapController[index]?.clear();
 
-                                if (result.isNotEmpty &&
-                                    result.first['kraDescription']
-                                            ?.toString()
-                                            .trim()
-                                            .isNotEmpty ==
-                                        true) {
-                                  kraDescriptionController[index]!.text =
-                                      result.first['kraDescription'];
+                                if (result.isNotEmpty) {
+                                  if (result.first['deliverableDescription']
+                                          ?.toString()
+                                          .trim()
+                                          .isNotEmpty ==
+                                      true) {
+                                    deliverablesRoadmapControllers[index]!
+                                            .text =
+                                        result.first['deliverableDescription'];
+                                  }
+
+                                  if (result.first['kraDescription']
+                                          ?.toString()
+                                          .trim()
+                                          .isNotEmpty ==
+                                      true) {
+                                    kraDescriptionRoadmapController[index]!
+                                        .text = result.first['kraDescription'];
+                                  }
                                 }
                               });
                             } catch (e) {
@@ -3358,14 +3325,25 @@ class PerformanceGovernanceSystemPageState
                           }
                         },
                 items:
-                    options.map<DropdownMenuItem<int>>((option) {
-                      return DropdownMenuItem<int>(
+                    options.map<DropdownMenuItem<int?>>((option) {
+                      return DropdownMenuItem<int?>(
                         value: option['id'],
                         child: Text(option['name']),
                       );
                     }).toList(),
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
+                validator: (value) {
+                  if (value == null) {
+                    return "Please select process";
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                  border: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: hasError ? Colors.red : Colors.grey,
+                      width: hasError ? 2 : 1,
+                    ),
+                  ),
                   contentPadding: EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 20,
@@ -3374,6 +3352,14 @@ class PerformanceGovernanceSystemPageState
               ),
             ),
           ),
+          if (hasError)
+            const Padding(
+              padding: EdgeInsets.only(top: 8),
+              child: Text(
+                'Please select a process',
+                style: TextStyle(color: Colors.red, fontSize: 12),
+              ),
+            ),
           if (!hasData)
             const Padding(
               padding: EdgeInsets.only(top: 8),
@@ -3477,16 +3463,16 @@ class PerformanceGovernanceSystemPageState
             ),
           ),
 
-          // gap12px,
-          // Text(
-          //   kraDescriptionRoadmapController[index]!.text.isNotEmpty
-          //       ? 'Sample KRA: ${kraDescriptionRoadmapController[index]!.text}'
-          //       : '',
-          //   style: const TextStyle(
-          //     fontStyle: FontStyle.italic,
-          //     color: Colors.red,
-          //   ),
-          // ),
+          gap12px,
+          SelectableText(
+            kraDescriptionRoadmapController[index]!.text.isNotEmpty
+                ? 'Sample KRA: ${kraDescriptionRoadmapController[index]!.text}'
+                : '',
+            style: const TextStyle(
+              fontStyle: FontStyle.italic,
+              color: Colors.grey,
+            ),
+          ),
         ],
       ),
     );
@@ -3717,68 +3703,26 @@ class PerformanceGovernanceSystemPageState
                           final filter = KraRoadmapFilter(
                             kraId: selectedKRAObjects[index]?['id'] ?? 0,
                             year: filterYear,
-                            // kraDescription:
-                            //     kraDescriptionRoadmapController[index]?.text ??
-                            //     '',
                             kraDescription:
-                                kraDescriptionController[index]?.text ?? '',
+                                kraDescriptionRoadmapController[index]?.text ??
+                                '',
+                            // kraDescription:
+                            //     kraDescriptionController[index]?.text ?? '',
                             isDirect: isDirectValue,
                           );
 
                           try {
-                            // final result = await _roadMapService
-                            //     .kraRoadmapFilter(filter);
-
-                            // setDialogState(() {
-                            //   if (result.isNotEmpty &&
-                            //       result.first['deliverableDescription'] !=
-                            //           null &&
-                            //       result.first['deliverableDescription']
-                            //           .toString()
-                            //           .trim()
-                            //           .isNotEmpty) {
-                            //     deliverablesControllers[index]?.text =
-                            //         result.first['deliverableDescription'];
-                            //   }
-
-                            //   if (result.isNotEmpty &&
-                            //       result.first['kraDescription'] != null &&
-                            //       result.first['kraDescription']
-                            //           .toString()
-                            //           .trim()
-                            //           .isNotEmpty) {
-                            //     kraDescriptionController[index]?.text =
-                            //         result.first['kraDescription'];
-                            //   }
-                            // });
-
                             final result = await _roadMapService
                                 .kraRoadmapFilter(filter);
 
                             setDialogState(() {
-                              if (result.isNotEmpty &&
-                                  result.first['deliverableDescription']
-                                          ?.toString()
-                                          .trim()
-                                          .isNotEmpty ==
-                                      true) {
-                                deliverablesControllers[index]!.text =
-                                    result.first['deliverableDescription'];
-
-                                deliverableUserEdited[index] = false;
-                              } else {
-                                if (deliverableUserEdited[index] != true) {
-                                  deliverablesControllers[index]?.clear();
-                                }
-                              }
-
                               if (result.isNotEmpty &&
                                   result.first['kraDescription']
                                           ?.toString()
                                           .trim()
                                           .isNotEmpty ==
                                       true) {
-                                kraDescriptionController[index]!.text =
+                                kraDescriptionRoadmapController[index]!.text =
                                     result.first['kraDescription'];
                               }
                             });
@@ -4979,6 +4923,60 @@ class PerformanceGovernanceSystemPageState
   //End------------Pgs Deliverables Status----------------------------------------------
 
   // Removed Rows
+  void _removeRowAndRemap(int index, Function setDialogState) {
+    setDialogState(() {
+      rows.removeAt(index);
+      rows = List<int>.generate(rows.length, (i) => i + 0);
+
+      final allMapsToRemap = [
+        deliverablesControllers,
+        deliverablesRoadmapControllers,
+        deliverablesControllersDisapproved,
+        deliverableUserEdited,
+        clearedOnDisapprove,
+        selectedByWhenControllers,
+        selectedKRAObjects,
+        remarksControllers,
+        percentageControllers,
+        selectedStatus,
+        selectedValues,
+        selectedByWhen,
+        selectedStatusOptions,
+        selectedKRA,
+        selectedDirect,
+        selectedIndirect,
+        tempSelectedDirect,
+        tempSelectedIndirect,
+        deliverableIds,
+        signatoryIds,
+        hasDataMap,
+        isLoadingDescriptions,
+        kraDescriptionsByIndex,
+        kraDropdownKeys,
+        selectedKraDescription,
+        rowErrors,
+        reasonController,
+        kraDescriptionController,
+        kraDescriptionRoadmapController,
+        selectedDisapproved,
+      ];
+
+      for (final map in allMapsToRemap) {
+        map.remove(index);
+
+        final keysToRemap =
+            map.keys.where((key) => key > index).toList()..sort();
+
+        for (final oldKey in keysToRemap) {
+          final value = map.remove(oldKey);
+          if (value != null) {
+            map[oldKey - 1] = value;
+          }
+        }
+      }
+    });
+  }
+
   Widget _buildRemoveButton(int index, Function setDialogState) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -4988,14 +4986,36 @@ class PerformanceGovernanceSystemPageState
           tooltip: 'Remove row',
           icon: Icon(Icons.delete, color: Colors.red),
           onPressed: () {
-            setDialogState(() {
-              rows.removeAt(index);
-              rows = List<int>.generate(rows.length, (i) => i + 0);
-              deliverablesControllers.remove(index);
-              selectedKRA.remove(index);
-              selectedDirect.remove(index);
-              selectedIndirect.remove(index);
-            });
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: const Text('Confirm Delete'),
+                  content: const Text(
+                    'Are you sure you want to delete this row?',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(color: primaryColor),
+                      ),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        _removeRowAndRemap(index, setDialogState);
+                      },
+                      child: const Text(
+                        'Delete',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            );
           },
         ),
       ],
@@ -5320,16 +5340,16 @@ class PerformanceGovernanceSystemPageState
               ),
             ),
           ),
-          // gap12px,
-          // Text(
-          //   deliverablesRoadmapControllers[index]!.text.isNotEmpty
-          //       ? 'Sample deliverable: ${deliverablesRoadmapControllers[index]!.text}'
-          //       : '',
-          //   style: const TextStyle(
-          //     fontStyle: FontStyle.italic,
-          //     color: Colors.red,
-          //   ),
-          // ),
+          gap12px,
+          SelectableText(
+            deliverablesRoadmapControllers[index]!.text.isNotEmpty
+                ? 'Sample deliverable: ${deliverablesRoadmapControllers[index]!.text}'
+                : 'No sample deliverables',
+            style: const TextStyle(
+              fontStyle: FontStyle.italic,
+              color: Colors.grey,
+            ),
+          ),
         ],
       ),
     );
