@@ -48,6 +48,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   List<KraRoadmapPeriod> kraPeriodList = [];
   final List<TextEditingController> kpiControllers = [];
   final ScrollController _horizontalScrollController = ScrollController();
+  final ScrollController _verticalScrollController = ScrollController();
   final permissionService = PermissionService();
 
   @override
@@ -70,6 +71,13 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
         kraListRoadmap = kraRoadmap;
       });
     }();
+  }
+
+  @override
+  void dispose() {
+    _verticalScrollController.dispose();
+    _horizontalScrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadCurrentUserId() async {
@@ -430,6 +438,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                           thumbVisibility: true,
                           child: SingleChildScrollView(
                             scrollDirection: Axis.vertical,
+                            controller: _verticalScrollController,
                             child: Scrollbar(
                               thumbVisibility: true,
                               controller: _horizontalScrollController,
@@ -549,7 +558,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 16),
                       Center(
                         child: TextButton.icon(
                           onPressed: () {
@@ -565,6 +574,21 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               );
                               existingGroups.add(null);
                             });
+                            // Scroll to bottom to show the new row
+                            Future.delayed(
+                              const Duration(milliseconds: 100),
+                              () {
+                                if (_verticalScrollController.hasClients) {
+                                  _verticalScrollController.animateTo(
+                                    _verticalScrollController
+                                        .position
+                                        .maxScrollExtent,
+                                    duration: const Duration(milliseconds: 300),
+                                    curve: Curves.easeOut,
+                                  );
+                                }
+                              },
+                            );
                           },
                           icon: const Icon(Icons.add, color: primaryColor),
                           label: const Text(

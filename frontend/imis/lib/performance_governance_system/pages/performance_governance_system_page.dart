@@ -961,7 +961,6 @@ class PerformanceGovernanceSystemPageState
       rows.add(rows.length);
     });
 
-    // Auto-scroll to bottom after frame renders
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_tableScrollController.hasClients) {
         _tableScrollController.animateTo(

@@ -712,6 +712,8 @@ class NavigationPanelState extends State<NavigationPanel> {
                         (selectedRole == PermissionString.roleAdmin ||
                                 selectedRole ==
                                     PermissionString.roleStandardUser ||
+                                selectedRole == PermissionString.mcc ||
+                                selectedRole == PermissionString.osm ||
                                 selectedRole ==
                                     PermissionString.trainingOfficer ||
                                 selectedRole == PermissionString.hrOfficer ||
