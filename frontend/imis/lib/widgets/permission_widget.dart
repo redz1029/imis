@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:imis/utils/permission_service.dart';
 
+final permissionService = PermissionService();
+
 class PermissionWidget extends StatelessWidget {
   final String? permission;
   final List<String>? allowedRoles;
