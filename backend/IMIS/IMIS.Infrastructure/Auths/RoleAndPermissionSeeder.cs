@@ -56,7 +56,12 @@ namespace IMIS.Infrastructure.Auths
             // This will seed specific permission to disapprove for MCC role
             // This is only a sample implementation, @Wilbur please adjust as needed.
             await PermissionSeeder.SeedSpecificPermssionsToRole<MCC, IdentityRole>(_roleManager,
-                new PerformanceGovernanceSystemPermission().Disapprove);
+                new PerformanceGovernanceSystemPermission().Disapprove,
+                new PerformanceGovernanceSystemPermission().Confirm);
+
+            await PermissionSeeder.SeedSpecificPermssionsToRole<PgsServiceHead, IdentityRole>(_roleManager,
+              new PerformanceGovernanceSystemPermission().Disapprove,
+              new PerformanceGovernanceSystemPermission().Confirm);
 
             await PermissionSeeder.SeedPermissionForRole<PgsAuditorRole, IdentityRole>(_roleManager,
                 new PgsDeliverableAuditorPermission(),              
