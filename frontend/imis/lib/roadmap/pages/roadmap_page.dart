@@ -404,23 +404,28 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                           ],
                                         ),
                                       ),
-                                    Align(
-                                      alignment: Alignment.centerLeft,
-                                      child: TextButton.icon(
-                                        onPressed: () {
-                                          setStateDialog(() {
-                                            kpiControllers.add(
-                                              TextEditingController(),
-                                            );
-                                          });
-                                        },
-                                        icon: const Icon(
-                                          Icons.add,
-                                          color: primaryColor,
-                                        ),
-                                        label: const Text(
-                                          'Add KPI',
-                                          style: TextStyle(color: primaryColor),
+                                    Visibility(
+                                      visible: kpiControllers.length < 2,
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: TextButton.icon(
+                                          onPressed: () {
+                                            setStateDialog(() {
+                                              kpiControllers.add(
+                                                TextEditingController(),
+                                              );
+                                            });
+                                          },
+                                          icon: const Icon(
+                                            Icons.add,
+                                            color: primaryColor,
+                                          ),
+                                          label: const Text(
+                                            'Add KPI',
+                                            style: TextStyle(
+                                              color: primaryColor,
+                                            ),
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -1113,22 +1118,24 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               DataCell(
                                 Row(
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
+                                    if (userId == roadmap.userId ||
+                                        permissionService.currentRole ==
+                                            PermissionString.roleAdmin)
+                                      IconButton(
+                                        icon: const Icon(Icons.edit),
 
-                                      onPressed: () async {
-                                        final Roadmap roadmapDetails =
-                                            await _roadmapService.getRoadmapId(
-                                              roadmap.id!,
-                                            );
+                                        onPressed: () async {
+                                          final Roadmap roadmapDetails =
+                                              await _roadmapService
+                                                  .getRoadmapId(roadmap.id!);
 
-                                        showRoadmapFormDialog(
-                                          matchedKraPeriod,
-                                          selectedKra: matchedKraRoadmap,
-                                          roadmapToEdit: roadmapDetails,
-                                        );
-                                      },
-                                    ),
+                                          showRoadmapFormDialog(
+                                            matchedKraPeriod,
+                                            selectedKra: matchedKraRoadmap,
+                                            roadmapToEdit: roadmapDetails,
+                                          );
+                                        },
+                                      ),
                                     Tooltip(
                                       message: 'Print Preview',
 
@@ -1153,20 +1160,10 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         },
                                       ),
                                     ),
-                                    PermissionWidget(
-                                      allowedRoles: [
-                                        PermissionString.roleAdmin,
-                                        PermissionString.trainingOfficer,
-                                        PermissionString.serviceOfficer,
-                                        PermissionString.financeOfficer,
-                                        PermissionString.researchOfficer,
-                                        PermissionString.facilityOfficer,
-                                        PermissionString.linkagesOfficer,
-                                        PermissionString.informationOfficer,
-                                        PermissionString.safetyOfficer,
-                                        PermissionString.hrOfficer,
-                                      ],
-                                      child: IconButton(
+                                    if (userId == roadmap.userId ||
+                                        permissionService.currentRole ==
+                                            PermissionString.roleAdmin)
+                                      IconButton(
                                         icon: const Icon(
                                           Icons.delete,
                                           color: primaryColor,
@@ -1177,7 +1174,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                           );
                                         },
                                       ),
-                                    ),
                                   ],
                                 ),
                               ),

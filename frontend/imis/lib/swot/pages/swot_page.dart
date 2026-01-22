@@ -361,31 +361,51 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                   children: [
                                     IconButton(
                                       icon: const Icon(Icons.edit),
-                                      onPressed: () {
-                                        showSwotDialog(
-                                          id: swot.id.toString(),
-                                          strengths: swot.strengths,
-                                          weaknesses: swot.weaknesses,
-                                          opportunities: swot.opportunities,
-                                          threats: swot.threats,
-                                          longTermDepartmentStrategicPlan:
-                                              swot.longTermDepartmentStrategicPlan,
-                                          immediateNeedsToAchieveVision:
-                                              swot.immediateNeedsToAchieveVision,
-                                          departmentAchievementsAndBestPractices:
-                                              swot.departmentAchievementsAndBestPractices,
-                                        );
+                                      onPressed: () async {
+                                        try {
+                                          final fetchedSwot = await _swotService
+                                              .getSwotById(swot.id.toString());
+                                          showSwotDialog(
+                                            id: fetchedSwot.id.toString(),
+                                            userIds: userId,
+                                            strengths: fetchedSwot.strengths,
+                                            weaknesses: fetchedSwot.weaknesses,
+                                            opportunities:
+                                                fetchedSwot.opportunities,
+                                            threats: fetchedSwot.threats,
+                                            longTermDepartmentStrategicPlan:
+                                                fetchedSwot
+                                                    .longTermDepartmentStrategicPlan,
+                                            immediateNeedsToAchieveVision:
+                                                fetchedSwot
+                                                    .immediateNeedsToAchieveVision,
+                                            departmentAchievementsAndBestPractices:
+                                                fetchedSwot
+                                                    .departmentAchievementsAndBestPractices,
+                                            swotToEdit: fetchedSwot,
+                                          );
+                                        } catch (e) {
+                                          MotionToast.error(
+                                            description: const Text(
+                                              "Failed to fetch SWOT details",
+                                            ),
+                                            toastAlignment: Alignment.topCenter,
+                                          ).show(context);
+                                        }
                                       },
                                     ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
+                                    if (userId == swot.userId ||
+                                        permissionService.currentRole ==
+                                            PermissionString.roleAdmin)
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.delete,
+                                          color: primaryColor,
+                                        ),
+                                        onPressed: () {
+                                          showDeleteDialog(swot.id.toString());
+                                        },
                                       ),
-                                      onPressed: () {
-                                        showDeleteDialog(swot.id.toString());
-                                      },
-                                    ),
                                   ],
                                 ),
                               ),
@@ -404,6 +424,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
 
   void showSwotDialog({
     String? id,
+    String? userIds,
     String? strengths,
     String? weaknesses,
     String? opportunities,
@@ -411,6 +432,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
     String? longTermDepartmentStrategicPlan,
     String? immediateNeedsToAchieveVision,
     String? departmentAchievementsAndBestPractices,
+    Swot? swotToEdit,
   }) async {
     TextEditingController strengthController = TextEditingController(
       text: strengths,
@@ -430,6 +452,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
         TextEditingController(text: immediateNeedsToAchieveVision);
     TextEditingController questionBestPracticesController =
         TextEditingController(text: departmentAchievementsAndBestPractices);
+
     showDialog(
       barrierDismissible: true,
       context: context,
@@ -446,226 +469,283 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                     constraints: const BoxConstraints(maxWidth: 1200),
                     child: Form(
                       key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
+                      child: Stack(
                         children: [
-                          const Text(
-                            "SWOT Analysis",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          gap48px,
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
                             children: [
-                              // LEFT
-                              Expanded(
-                                child: Column(
-                                  children: [
-                                    _buildLabel("Strength"),
-                                    gap8px,
-                                    _buildColoredBox(
-                                      controller: strengthController,
-                                      bg: const Color(0xFFF5FFF7),
-                                      border: Colors.green,
-                                    ),
-                                    const SizedBox(height: 20),
-
-                                    _buildLabel("Weakness"),
-                                    gap8px,
-                                    _buildColoredBox(
-                                      controller: weaknessController,
-
-                                      bg: const Color(0xFFFFF5F5),
-                                      border: Colors.red,
-                                    ),
-                                  ],
+                              const Text(
+                                "SWOT Analysis",
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
                                 ),
                               ),
+                              gap48px,
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // LEFT
+                                  Expanded(
+                                    child: Column(
+                                      children: [
+                                        _buildLabel("Strength"),
+                                        gap8px,
+                                        _buildColoredBox(
+                                          controller: strengthController,
+                                          bg: const Color(0xFFF5FFF7),
+                                          border: Colors.green,
+                                        ),
+                                        const SizedBox(height: 20),
 
-                              const SizedBox(width: 16),
+                                        _buildLabel("Weakness"),
+                                        gap8px,
+                                        _buildColoredBox(
+                                          controller: weaknessController,
 
-                              Expanded(
-                                child: Column(
-                                  children: [
-                                    _buildLabel("Opportunities"),
-                                    gap8px,
-                                    _buildColoredBox(
-                                      controller: opportunityController,
-
-                                      bg: const Color(0xFFF5FBFF),
-                                      border: Colors.blue,
+                                          bg: const Color(0xFFFFF5F5),
+                                          border: Colors.red,
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(height: 20),
-
-                                    _buildLabel("Threats"),
-                                    gap8px,
-                                    _buildColoredBox(
-                                      controller: threatController,
-                                      bg: const Color(0xFFFFF3E0),
-
-                                      border: Colors.orange,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          gap48px,
-
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLabel(
-                                      "1. In 3 to 5 years, what is your vision or dream for your unit or department?",
-                                    ),
-                                    gap14px,
-                                    _buildSmallBox(
-                                      longTermDepartmentStrategicPlanController,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLabel(
-                                      "2. What do you think are your immediate needs to accomplish your dreams or vision?",
-                                    ),
-                                    gap14px,
-                                    _buildSmallBox(
-                                      immediateNeedsToAchieveVisionController,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 20),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _buildLabel(
-                                      "3. Enumerate the best practices/awards recieved by your department?",
-                                    ),
-                                    gap14px,
-                                    _buildSmallBox(
-                                      questionBestPracticesController,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          gap32px,
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              TextButton(
-                                child: const Text(
-                                  "Cancel",
-                                  style: TextStyle(color: primaryColor),
-                                ),
-                                onPressed: () => Navigator.pop(context),
-                              ),
-                              const SizedBox(width: 8),
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  shadowColor: Colors.transparent,
-                                  elevation: 0,
-                                  backgroundColor: primaryColor,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4),
                                   ),
-                                ),
-                                child: const Text(
-                                  "Save",
-                                  style: TextStyle(color: Colors.white),
-                                ),
-                                onPressed: () async {
-                                  if (_formKey.currentState!.validate()) {
-                                    bool?
-                                    confirmAction = await showDialog<bool>(
-                                      context: context,
-                                      builder: (context) {
-                                        return AlertDialog(
-                                          title: Text(
-                                            id == null
-                                                ? "Confirm Save"
-                                                : "Confirm Update",
-                                          ),
-                                          content: Text(
-                                            id == null
-                                                ? "Are you sure you want to save this record?"
-                                                : "Are you sure you want to update this record?",
-                                          ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () {},
-                                              child: Text(
-                                                "No",
-                                                style: TextStyle(
-                                                  color: primaryColor,
-                                                ),
-                                              ),
-                                            ),
-                                            TextButton(
-                                              onPressed: () {
-                                                if (_formKey.currentState!
-                                                    .validate()) {
-                                                  Navigator.pop(context, true);
-                                                }
-                                              },
-                                              child: Text(
-                                                "Yes",
-                                                style: TextStyle(
-                                                  color: primaryColor,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                    );
-                                    if (confirmAction == true) {
-                                      final swot = Swot(
-                                        int.tryParse(id ?? '0') ?? 0,
-                                        userId,
-                                        strengthController.text,
-                                        weaknessController.text,
-                                        opportunityController.text,
-                                        threatController.text,
-                                        longTermDepartmentStrategicPlanController
-                                            .text,
-                                        immediateNeedsToAchieveVisionController
-                                            .text,
-                                        questionBestPracticesController.text,
-                                        false,
-                                        DateTime.now(),
-                                      );
-                                      await _swotService.createSwot(swot);
-                                      setState(() {
-                                        fetchSwot();
-                                      });
-                                    }
-                                  }
-                                  MotionToast.success(
-                                    description: const Text(
-                                      "Saved successfully!",
+
+                                  const SizedBox(width: 16),
+
+                                  Expanded(
+                                    child: Column(
+                                      children: [
+                                        _buildLabel("Opportunities"),
+                                        gap8px,
+                                        _buildColoredBox(
+                                          controller: opportunityController,
+
+                                          bg: const Color(0xFFF5FBFF),
+                                          border: Colors.blue,
+                                        ),
+                                        const SizedBox(height: 20),
+
+                                        _buildLabel("Threats"),
+                                        gap8px,
+                                        _buildColoredBox(
+                                          controller: threatController,
+                                          bg: const Color(0xFFFFF3E0),
+
+                                          border: Colors.orange,
+                                        ),
+                                      ],
                                     ),
-                                    toastAlignment: Alignment.topCenter,
-                                  ).show(context);
-                                  Navigator.pop(context);
+                                  ),
+                                ],
+                              ),
+
+                              gap48px,
+
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildLabel(
+                                          "1. In 3 to 5 years, what is your vision or dream for your unit or department?",
+                                        ),
+                                        gap14px,
+                                        _buildSmallBox(
+                                          longTermDepartmentStrategicPlanController,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildLabel(
+                                          "2. What do you think are your immediate needs to accomplish your dreams or vision?",
+                                        ),
+                                        gap14px,
+                                        _buildSmallBox(
+                                          immediateNeedsToAchieveVisionController,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 20),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildLabel(
+                                          "3. Enumerate the best practices/awards received by your department?",
+                                        ),
+                                        gap14px,
+                                        _buildSmallBox(
+                                          questionBestPracticesController,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              gap32px,
+                              Builder(
+                                builder: (context) {
+                                  // final canEdit =
+                                  //     (id == null) ||
+                                  //     (userId == strengthController.text) ||
+                                  //     (permissionService.currentRole != null &&
+                                  //         permissionService.currentRole ==
+                                  //             PermissionString.roleAdmin);
+
+                                  final bool isEdit = swotToEdit != null;
+
+                                  final bool isOwner =
+                                      isEdit && swotToEdit.userId == userId;
+
+                                  final bool isAdmin =
+                                      permissionService.currentRole ==
+                                      PermissionString.roleAdmin;
+
+                                  final bool canSaveOrUpdate =
+                                      !isEdit || isOwner || isAdmin;
+                                  return Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      TextButton(
+                                        child: const Text(
+                                          "Cancel",
+                                          style: TextStyle(color: primaryColor),
+                                        ),
+                                        onPressed: () => Navigator.pop(context),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      if (canSaveOrUpdate)
+                                        ElevatedButton(
+                                          style: ElevatedButton.styleFrom(
+                                            shadowColor: Colors.transparent,
+                                            elevation: 0,
+                                            backgroundColor: primaryColor,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(4),
+                                            ),
+                                          ),
+                                          child: const Text(
+                                            "Save",
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          onPressed: () async {
+                                            if (_formKey.currentState!
+                                                .validate()) {
+                                              bool?
+                                              confirmAction = await showDialog<
+                                                bool
+                                              >(
+                                                context: context,
+                                                builder: (context) {
+                                                  return AlertDialog(
+                                                    title: Text(
+                                                      id == null
+                                                          ? "Confirm Save"
+                                                          : "Confirm Update",
+                                                    ),
+                                                    content: Text(
+                                                      id == null
+                                                          ? "Are you sure you want to save this record?"
+                                                          : "Are you sure you want to update this record?",
+                                                    ),
+                                                    actions: [
+                                                      TextButton(
+                                                        onPressed: () {},
+                                                        child: Text(
+                                                          "No",
+                                                          style: TextStyle(
+                                                            color: primaryColor,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      TextButton(
+                                                        onPressed: () {
+                                                          if (_formKey
+                                                              .currentState!
+                                                              .validate()) {
+                                                            Navigator.pop(
+                                                              context,
+                                                              true,
+                                                            );
+                                                          }
+                                                        },
+                                                        child: Text(
+                                                          "Yes",
+                                                          style: TextStyle(
+                                                            color: primaryColor,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  );
+                                                },
+                                              );
+                                              if (confirmAction == true) {
+                                                final swot = Swot(
+                                                  int.tryParse(id ?? '0') ?? 0,
+                                                  userId,
+                                                  strengthController.text,
+                                                  weaknessController.text,
+                                                  opportunityController.text,
+                                                  threatController.text,
+                                                  longTermDepartmentStrategicPlanController
+                                                      .text,
+                                                  immediateNeedsToAchieveVisionController
+                                                      .text,
+                                                  questionBestPracticesController
+                                                      .text,
+                                                  false,
+                                                  DateTime.now(),
+                                                );
+                                                await _swotService.createSwot(
+                                                  swot,
+                                                );
+                                                setState(() {
+                                                  fetchSwot();
+                                                });
+                                              }
+                                            }
+                                            MotionToast.success(
+                                              description: const Text(
+                                                "Saved successfully!",
+                                              ),
+                                              toastAlignment:
+                                                  Alignment.topCenter,
+                                            ).show(context);
+                                            Navigator.pop(context);
+                                          },
+                                        ),
+                                    ],
+                                  );
                                 },
                               ),
                             ],
+                          ),
+                          Align(
+                            alignment: Alignment.topRight,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                color: primaryTextColor,
+                                size: 32,
+                              ),
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                            ),
                           ),
                         ],
                       ),

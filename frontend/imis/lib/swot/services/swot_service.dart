@@ -48,4 +48,16 @@ class SwotService {
     final url = '${ApiEndpoint().swotAnalysis}/$swotId';
     await AuthenticatedRequest.delete(dio, url);
   }
+
+  Future<Swot> getSwotById(String swotId) async {
+    final url = '${ApiEndpoint().swotAnalysis}/$swotId';
+
+    final response = await AuthenticatedRequest.get(dio, url);
+
+    if (response.statusCode == 200 && response.data != null) {
+      return Swot.fromJson(response.data);
+    } else {
+      throw Exception('Failed to fetch SWOT by ID');
+    }
+  }
 }
