@@ -21,8 +21,12 @@ void main() async {
 
       for (var permission in data) {
         // Formats "user_read" into "static const String userRead = 'user_read';"
-        final variableName = _toCamelCase(permission.toString());
-        buffer.writeln("  static const String $variableName = '$permission';");
+        final variableName = _toCamelCase(
+          permission.toString(),
+        ).replaceAll(' ', '');
+        buffer.writeln(
+          "  static const String ${variableName} = '$permission';",
+        );
       }
 
       buffer.writeln('}');
