@@ -1671,8 +1671,8 @@ class PerformanceGovernanceSystemPageState
                                       ),
                                       PermissionWidget(
                                         permission:
-                                            PermissionString
-                                                .editPerformanceGovernanceSystem,
+                                            AppPermissions
+                                                .deletePerformanceGovernanceSystem,
                                         child: IconButton(
                                           icon: Icon(
                                             Icons.delete,
@@ -2826,9 +2826,19 @@ class PerformanceGovernanceSystemPageState
                 onPressed: () => Navigator.pop(context, false),
                 child: Text("No", style: TextStyle(color: primaryColor)),
               ),
-              TextButton(
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
                 onPressed: () => Navigator.pop(context, true),
-                child: Text("Yes", style: TextStyle(color: primaryColor)),
+                child: Text("Yes", style: TextStyle(color: Colors.white)),
               ),
             ],
           ),
