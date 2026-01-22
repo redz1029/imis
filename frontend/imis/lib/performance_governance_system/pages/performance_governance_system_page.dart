@@ -1,5 +1,6 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
 import 'package:data_table_2/data_table_2.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
 import 'package:imis/roadmap/models/kra_roadmap_filter.dart';
@@ -17,6 +18,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
+
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
@@ -128,6 +130,7 @@ class PerformanceGovernanceSystemPageState
   final int _pageSize = 30;
   int _totalCount = 0;
   bool _isLoading = false;
+  bool permissionsLoaded = false;
 
   bool isMenuOpenOffice = false;
   bool isMenuOpenStartDate = false;
@@ -1050,7 +1053,7 @@ class PerformanceGovernanceSystemPageState
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     bool hasPermission = permissionService.hasPermission(
-      PermissionString.viewPerformanceGovernanceSystem,
+      AppPermissions.viewPerformanceGovernanceSystem,
     );
 
     if (!hasPermission) {
@@ -1424,12 +1427,8 @@ class PerformanceGovernanceSystemPageState
 
                     if (!isMinimized)
                       PermissionWidget(
-                        allowedRoles: [
-                          PermissionString.roleAdmin,
-                          PermissionString.roleStandardUser,
-                          PermissionString.serviceHead,
-                          PermissionString.osm,
-                        ],
+                        permission:
+                            AppPermissions.addPerformanceGovernanceSystem,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryColor,
@@ -1583,72 +1582,66 @@ class PerformanceGovernanceSystemPageState
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.start,
                                     children: [
-                                      PermissionWidget(
-                                        permission:
-                                            PermissionString
-                                                .editPerformanceGovernanceSystem,
-                                        child: IconButton(
-                                          icon: Icon(Icons.edit),
+                                      IconButton(
+                                        icon: Icon(Icons.edit),
 
-                                          onPressed: () async {
-                                            try {
-                                              await AuthUtil.saveSelectedOfficeId(
-                                                pgsgovernancesystem['officeid']
-                                                    .toString(),
-                                              );
-                                              selectedOffice =
-                                                  await AuthUtil.fetchSelectedOfficeId();
+                                        onPressed: () async {
+                                          try {
+                                            await AuthUtil.saveSelectedOfficeId(
+                                              pgsgovernancesystem['officeid']
+                                                  .toString(),
+                                            );
+                                            selectedOffice =
+                                                await AuthUtil.fetchSelectedOfficeId();
 
-                                              final deliverables =
-                                                  await fetchDeliverables(
-                                                    pgsId:
-                                                        pgsgovernancesystem['id'],
-                                                  );
-                                              final signatory =
-                                                  await fetchSignatoryList(
-                                                    pgsId:
-                                                        pgsgovernancesystem['id'],
-                                                  );
-                                              await fetchSubmitUserId(
-                                                userId: userId,
-                                                pgsId:
-                                                    pgsgovernancesystem['id'],
-                                              );
+                                            final deliverables =
+                                                await fetchDeliverables(
+                                                  pgsId:
+                                                      pgsgovernancesystem['id'],
+                                                );
+                                            final signatory =
+                                                await fetchSignatoryList(
+                                                  pgsId:
+                                                      pgsgovernancesystem['id'],
+                                                );
+                                            await fetchSubmitUserId(
+                                              userId: userId,
+                                              pgsId: pgsgovernancesystem['id'],
+                                            );
 
-                                              final isDraftValue =
-                                                  pgsgovernancesystem['isDraft'] ??
-                                                  false;
+                                            final isDraftValue =
+                                                pgsgovernancesystem['isDraft'] ??
+                                                false;
 
-                                              showFormDialog(
-                                                userId:
-                                                    pgsgovernancesystem['userId'],
-                                                id: pgsgovernancesystem['id'],
-                                                officename:
-                                                    pgsgovernancesystem['name'],
-                                                officenameid:
-                                                    pgsgovernancesystem['officeid'],
-                                                competencescore:
-                                                    pgsgovernancesystem['competencescore'],
-                                                confidencescore:
-                                                    pgsgovernancesystem['confidencescore'],
-                                                resourcescore:
-                                                    pgsgovernancesystem['resourcescore'],
-                                                startDate:
-                                                    pgsgovernancesystem['startDate'],
-                                                endDate:
-                                                    pgsgovernancesystem['endDate'],
-                                                percentDeliverables:
-                                                    pgsgovernancesystem['percentDeliverables'],
-                                                deliverables: deliverables,
-                                                signatories: signatory,
-                                                isDraft: isDraftValue,
-                                                remarks:
-                                                    pgsgovernancesystem['remarks'],
-                                              );
-                                              // ignore: empty_catches
-                                            } catch (e) {}
-                                          },
-                                        ),
+                                            showFormDialog(
+                                              userId:
+                                                  pgsgovernancesystem['userId'],
+                                              id: pgsgovernancesystem['id'],
+                                              officename:
+                                                  pgsgovernancesystem['name'],
+                                              officenameid:
+                                                  pgsgovernancesystem['officeid'],
+                                              competencescore:
+                                                  pgsgovernancesystem['competencescore'],
+                                              confidencescore:
+                                                  pgsgovernancesystem['confidencescore'],
+                                              resourcescore:
+                                                  pgsgovernancesystem['resourcescore'],
+                                              startDate:
+                                                  pgsgovernancesystem['startDate'],
+                                              endDate:
+                                                  pgsgovernancesystem['endDate'],
+                                              percentDeliverables:
+                                                  pgsgovernancesystem['percentDeliverables'],
+                                              deliverables: deliverables,
+                                              signatories: signatory,
+                                              isDraft: isDraftValue,
+                                              remarks:
+                                                  pgsgovernancesystem['remarks'],
+                                            );
+                                            // ignore: empty_catches
+                                          } catch (e) {}
+                                        },
                                       ),
                                       Tooltip(
                                         message: 'Print Preview',
@@ -1737,27 +1730,31 @@ class PerformanceGovernanceSystemPageState
 
       floatingActionButton:
           isMinimized
-              ? FloatingActionButton(
-                backgroundColor: primaryColor,
-                onPressed: () async {
-                  selectedOffice = await AuthUtil.fetchSelectedOfficeId();
-
-                  if (selectedOffice == null || selectedOffice!.isEmpty) {
-                    await _selectOffice();
-
+              ? PermissionWidget(
+                permission: AppPermissions.addPerformanceGovernanceSystem,
+                child: FloatingActionButton(
+                  backgroundColor: primaryColor,
+                  onPressed: () async {
                     selectedOffice = await AuthUtil.fetchSelectedOfficeId();
 
-                    if (selectedOffice != null && selectedOffice!.isNotEmpty) {
-                      await _loadOfficeName();
+                    if (selectedOffice == null || selectedOffice!.isEmpty) {
+                      await _selectOffice();
 
+                      selectedOffice = await AuthUtil.fetchSelectedOfficeId();
+
+                      if (selectedOffice != null &&
+                          selectedOffice!.isNotEmpty) {
+                        await _loadOfficeName();
+
+                        showFormDialog();
+                      } else {}
+                    } else {
+                      await _loadOfficeName();
                       showFormDialog();
-                    } else {}
-                  } else {
-                    await _loadOfficeName();
-                    showFormDialog();
-                  }
-                },
-                child: Icon(Icons.add, color: Colors.white),
+                    }
+                  },
+                  child: Icon(Icons.add, color: Colors.white),
+                ),
               )
               : null,
     );
@@ -1978,6 +1975,9 @@ class PerformanceGovernanceSystemPageState
         }
       }
     });
+    bool hasEditPermission = permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
 
     return showDialog(
       context: context,
@@ -2095,7 +2095,7 @@ class PerformanceGovernanceSystemPageState
                                               ),
                                             ),
                                             onChanged:
-                                                id != null && orderLevel >= 1
+                                                !hasEditPermission
                                                     ? null
                                                     : (int? newValue) {
                                                       setState(() {
@@ -2120,48 +2120,11 @@ class PerformanceGovernanceSystemPageState
                                                               selectedPeriodObject!['endDate'];
 
                                                           selectedPeriodText =
-                                                              "$start - $end"; // UI only
+                                                              "$start - $end";
                                                         }
                                                       });
                                                     },
 
-                                            // onChanged:
-                                            //     id != null && orderLevel >= 1
-                                            //         ? null
-                                            //         : (int? newValue) {
-                                            //           setState(() {
-                                            //             selectedPeriod =
-                                            //                 newValue;
-                                            //             final selected =
-                                            //                 filteredListPeriod
-                                            //                     .firstWhere(
-                                            //                       (period) =>
-                                            //                           period['id'] ==
-                                            //                           newValue,
-                                            //                       orElse:
-                                            //                           () => {},
-                                            //                     );
-                                            //             if (selected
-                                            //                 .isNotEmpty) {
-                                            //               final start =
-                                            //                   _dateConverter.toJson(
-                                            //                     _dateConverter
-                                            //                         .fromJson(
-                                            //                           selected['startDate'],
-                                            //                         ),
-                                            //                   );
-                                            //               final end = _dateConverter
-                                            //                   .toJson(
-                                            //                     _dateConverter
-                                            //                         .fromJson(
-                                            //                           selected['endDate'],
-                                            //                         ),
-                                            //                   );
-                                            //               selectedPeriodText =
-                                            //                   "$start to $end";
-                                            //             }
-                                            //           });
-                                            //         },
                                             selectedItemBuilder: (
                                               BuildContext context,
                                             ) {
@@ -2290,7 +2253,6 @@ class PerformanceGovernanceSystemPageState
                                                       officename:
                                                           officename ??
                                                           officeDisplay,
-                                                      orderLevel: orderLevel,
                                                     ),
                                                   ],
                                                 ),
@@ -2584,7 +2546,6 @@ class PerformanceGovernanceSystemPageState
                                                       officename:
                                                           officename ??
                                                           officeDisplay,
-                                                      orderLevel: orderLevel,
                                                     ),
                                                   ],
                                                 ),
@@ -2674,22 +2635,11 @@ class PerformanceGovernanceSystemPageState
               ),
 
               actions: [
-                // if (((id == null && orderLevel == 0) ||
-                //         (id == null && orderLevel >= 1) ||
-                //         isAnyDisapproved ||
-                //         (signatories == null || signatories.isEmpty)) &&
-                //     !(isDraftSafe && orderLevel >= 1))
-                if ((id == null && orderLevel == 0) ||
-                    (id == null && orderLevel >= 1) ||
+                if ((id == null) ||
                     isAnyDisapproved ||
                     (signatories == null || signatories.isEmpty))
                   PermissionWidget(
-                    allowedRoles: [
-                      PermissionString.roleStandardUser,
-                      PermissionString.serviceHead,
-                      PermissionString.osm,
-                      PermissionString.roleAdmin,
-                    ],
+                    permission: AppPermissions.draftPerformanceGovernanceSystem,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         shadowColor: Colors.transparent,
@@ -2734,17 +2684,11 @@ class PerformanceGovernanceSystemPageState
                     ),
                   ),
 
-                // if ((isAnyDisapproved || id != null) &&
-                //     (signatories == null || signatories.isEmpty) &&
-                //     !(isDraftSafe && orderLevel >= 1))
                 if ((isAnyDisapproved || id != null) &&
                     (signatories == null || signatories.isEmpty))
                   PermissionWidget(
-                    allowedRoles: [
-                      PermissionString.roleStandardUser,
-                      PermissionString.serviceHead,
-                      PermissionString.osm,
-                    ],
+                    permission:
+                        AppPermissions.submitPerformanceGovernanceSystem,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
@@ -2799,12 +2743,8 @@ class PerformanceGovernanceSystemPageState
                   ),
                 if (showButton)
                   PermissionWidget(
-                    allowedRoles: [
-                      PermissionString.coreTeam,
-                      PermissionString.serviceHead,
-                      PermissionString.mcc,
-                      PermissionString.osm,
-                    ],
+                    permission:
+                        AppPermissions.confirmPerformanceGovernanceSystem,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
@@ -3026,12 +2966,11 @@ class PerformanceGovernanceSystemPageState
     }
   }
 
-  Widget _buildDatePickerCell(
-    int index,
-    String? id,
-    Function setDialogState,
-    int orderLevel,
-  ) {
+  Widget _buildDatePickerCell(int index, String? id, Function setDialogState) {
+    bool hasEditPermission = permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
+
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
 
     if (selectedByWhen[index] == null ||
@@ -3061,7 +3000,7 @@ class PerformanceGovernanceSystemPageState
             suffixIcon: Icon(Icons.calendar_today),
           ),
           onTap:
-              id != null && orderLevel >= 1
+              !hasEditPermission
                   ? null
                   : () async {
                     DateTime? pickedDate = await showDatePicker(
@@ -3103,12 +3042,7 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildProcess(
-    int index,
-    String? id,
-    Function setDialogState,
-    int orderLevel,
-  ) {
+  Widget _buildProcess(int index, String? id, Function setDialogState) {
     final selectedKraObject = selectedKRAObjects[index];
 
     final kraTooltipMessage =
@@ -3117,6 +3051,10 @@ class PerformanceGovernanceSystemPageState
     bool hasData = hasDataMap[index] ?? true;
     bool hasError = selectedProcessErrors[index] ?? false;
 
+    bool hasEditPermission = permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
+    debugPrint('Has edit permission: $hasEditPermission');
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -3134,7 +3072,7 @@ class PerformanceGovernanceSystemPageState
                 value: selectedKRA[index],
                 hint: const Text('--Select Process--'),
                 onChanged:
-                    id != null && orderLevel >= 1
+                    !hasEditPermission
                         ? null
                         : (int? newValue) async {
                           if (newValue == null) return;
@@ -3376,55 +3314,7 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  // Widget _buildDropdownKraCell(
-  //   int index,
-  //   String? id,
-  //   Function setDialogState,
-  //   int orderLevel,
-  // ) {
-  //   if (!kraDescriptionController.containsKey(index)) {
-  //     kraDescriptionController[index] = TextEditingController();
-  //   }
-
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         CustomTooltip(
-  //           message:
-  //               'Enter a short description of what this KRA focuses on achieving.',
-  //           child: TextFormField(
-  //             readOnly: id != null && orderLevel >= 1,
-  //             controller: kraDescriptionController[index],
-  //             autovalidateMode: AutovalidateMode.onUserInteraction,
-  //             decoration: const InputDecoration(
-  //               hintText: "Enter your description here...",
-  //               border: OutlineInputBorder(),
-  //               focusedBorder: OutlineInputBorder(
-  //                 borderSide: BorderSide(color: Colors.grey),
-  //               ),
-  //             ),
-  //             validator: (value) {
-  //               if (value == null || value.isEmpty) {
-  //                 return "Please enter your KRA description";
-  //               }
-  //               return null;
-  //             },
-  //             maxLines: 3,
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
-
-  Widget _buildDropdownKraCell(
-    int index,
-    String? id,
-    Function setDialogState,
-    int orderLevel,
-  ) {
+  Widget _buildDropdownKraCell(int index, String? id, Function setDialogState) {
     if (!kraDescriptionController.containsKey(index)) {
       kraDescriptionController[index] = TextEditingController();
     }
@@ -3432,6 +3322,10 @@ class PerformanceGovernanceSystemPageState
     if (!kraDescriptionRoadmapController.containsKey(index)) {
       kraDescriptionRoadmapController[index] = TextEditingController();
     }
+
+    bool hasEditPermission = permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -3442,7 +3336,7 @@ class PerformanceGovernanceSystemPageState
             message:
                 'Enter a short description of what this KRA focuses on achieving.',
             child: TextFormField(
-              readOnly: id != null && orderLevel >= 1,
+              readOnly: !hasEditPermission,
               controller: kraDescriptionController[index],
               autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
@@ -3479,10 +3373,11 @@ class PerformanceGovernanceSystemPageState
 
   TableRow _buildMainHeaderStrategic({
     String? officename,
-    String? id,
     String? percentDeliverables,
-    int? orderLevel,
   }) {
+    bool hasEditPermission = permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
 
@@ -3518,7 +3413,7 @@ class PerformanceGovernanceSystemPageState
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextFormField(
-                readOnly: id != null && orderLevel! >= 1,
+                readOnly: !hasEditPermission,
                 controller: percentageDeliverables,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 textAlign: TextAlign.center,
@@ -3601,22 +3496,23 @@ class PerformanceGovernanceSystemPageState
             ? 'Please select either Direct or Indirect.'
             : null;
 
-    // Define alternating row colors
+    bool hasDisapprovePermission = permissionService.hasPermission(
+      AppPermissions.disapprovePerformanceGovernanceSystem,
+    );
     Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
 
     return TableRow(
       decoration: BoxDecoration(color: rowColor),
       children: [
         _buildNumbering(index),
-        _buildProcess(index, id, setDialogState, orderLevel),
-        _buildDropdownKraCell(index, id, setDialogState, orderLevel),
+        _buildProcess(index, id, setDialogState),
+        _buildDropdownKraCell(index, id, setDialogState),
         _buildCheckboxCell(
           index,
           id,
           selectedDirect,
           selectedIndirect,
           setDialogState,
-          orderLevel,
           isDirect: true,
           errorText: errorText,
         ),
@@ -3626,12 +3522,11 @@ class PerformanceGovernanceSystemPageState
           selectedIndirect,
           selectedDirect,
           setDialogState,
-          orderLevel,
           isDirect: false,
           errorText: errorText,
         ),
-        _buildExpandableTextAreaCell(index, id, orderLevel, setDialogState),
-        _buildDatePickerCell(index, id, setDialogState, orderLevel),
+        _buildExpandableTextAreaCell(index, id, setDialogState),
+        _buildDatePickerCell(index, id, setDialogState),
         (id == null || orderLevel < 1)
             ? _buildRemoveButton(index, setDialogState)
             : _buildApprovedDisapprovedSignatory(index, setDialogState),
@@ -3653,12 +3548,13 @@ class PerformanceGovernanceSystemPageState
     String? id,
     Map<int, bool> selectedValues,
     Map<int, bool> oppositeValues,
-    Function setDialogState,
-    int orderLevel, {
+    Function setDialogState, {
     required bool isDirect,
     required String? errorText,
   }) {
-    final bool disabled = id != null && orderLevel >= 1;
+    bool hasEditPermission = permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -3674,7 +3570,7 @@ class PerformanceGovernanceSystemPageState
               child: Checkbox(
                 value: selectedValues[index] ?? false,
                 onChanged:
-                    disabled
+                    !hasEditPermission
                         ? null
                         : (bool? newValue) async {
                           if (newValue == null) return;
@@ -3857,9 +3753,10 @@ class PerformanceGovernanceSystemPageState
   TableRow _PgsDeliverableHeader({
     String? officename,
     String? percentDeliverables,
-    required int orderLevel,
-    String? id,
   }) {
+    bool hasEditPermission = permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
     return TableRow(
       children: [
         BuildHeaderCell(
@@ -3881,7 +3778,7 @@ class PerformanceGovernanceSystemPageState
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
               child: TextFormField(
-                readOnly: id != null && orderLevel >= 1,
+                readOnly: !hasEditPermission,
                 controller: percentageDeliverables,
                 textAlign: TextAlign.center,
                 keyboardType: TextInputType.number,
@@ -3964,7 +3861,7 @@ class PerformanceGovernanceSystemPageState
       decoration: BoxDecoration(color: rowColor),
       children: [
         _buildNumbering(index),
-        _buildProcess(index, id, setDialogState, orderLevel),
+        _buildProcess(index, id, setDialogState),
         _buildDropdownKraCellPGSDeliverableStatus(
           index,
           id,
@@ -3977,7 +3874,7 @@ class PerformanceGovernanceSystemPageState
           selectedDirect,
           selectedIndirect,
           setDialogState,
-          orderLevel,
+
           isDirect: true,
           errorText: '',
         ),
@@ -3988,7 +3885,6 @@ class PerformanceGovernanceSystemPageState
           selectedDirect,
 
           setDialogState,
-          orderLevel,
 
           isDirect: false,
           errorText: '',
@@ -5257,7 +5153,6 @@ class PerformanceGovernanceSystemPageState
   Widget _buildExpandableTextAreaCell(
     int index,
     String? id,
-    int orderLevel,
     Function setDialogState,
   ) {
     if (!deliverablesControllers.containsKey(index)) {
@@ -5268,8 +5163,12 @@ class PerformanceGovernanceSystemPageState
       deliverablesRoadmapControllers[index] = TextEditingController();
     }
 
+    bool hasEditPermission = permissionService.hasPermission(
+      AppPermissions.editPerformanceGovernanceSystem,
+    );
+
     bool showDisapproveControls = false;
-    if (selectedDisapproved[index] == true && orderLevel == 0) {
+    if (selectedDisapproved[index] == true && hasEditPermission) {
       showDisapproveControls = true;
     } else if (deliverablesList.isNotEmpty) {
       showDisapproveControls = deliverablesList.any(
@@ -5303,8 +5202,8 @@ class PerformanceGovernanceSystemPageState
               message:
                   'Specify the tangible results or outcomes tied to this responsibility.',
               child: TextFormField(
-                readOnly: id != null && orderLevel >= 1,
-                focusNode: FocusNode(canRequestFocus: orderLevel == 0),
+                readOnly: !hasEditPermission,
+                focusNode: FocusNode(canRequestFocus: hasEditPermission),
                 controller: deliverablesControllers[index],
                 autovalidateMode: AutovalidateMode.onUserInteraction,
                 maxLines: null,
@@ -5340,15 +5239,17 @@ class PerformanceGovernanceSystemPageState
             ),
           ),
           gap12px,
-          SelectableText(
-            deliverablesRoadmapControllers[index]!.text.isNotEmpty
-                ? 'Sample deliverable: ${deliverablesRoadmapControllers[index]!.text}'
-                : 'No sample deliverables',
-            style: const TextStyle(
-              fontStyle: FontStyle.italic,
-              color: Colors.grey,
+          if (deliverablesControllers[index]!.text.isEmpty &&
+              selectedKRA[index] != null)
+            SelectableText(
+              deliverablesRoadmapControllers[index]!.text.isNotEmpty
+                  ? 'Sample deliverable: ${deliverablesRoadmapControllers[index]!.text}'
+                  : 'No sample deliverables',
+              style: const TextStyle(
+                fontStyle: FontStyle.italic,
+                color: Colors.grey,
+              ),
             ),
-          ),
         ],
       ),
     );
