@@ -553,7 +553,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     _buildLabel(
-                                      "3. Enumerate the best practices/awards recieved by your department?",
+                                      "3. Enumerate the best practices/awards received by your department?",
                                     ),
                                     gap14px,
                                     _buildSmallBox(

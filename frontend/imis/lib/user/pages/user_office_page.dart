@@ -14,7 +14,6 @@ import 'package:imis/user/services/user_office_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/http_util.dart';
-import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/custom_toggle.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -29,7 +28,6 @@ class UserOfficePage extends StatefulWidget {
 class UserOfficePageState extends State<UserOfficePage> {
   final _commonService = CommonService(Dio());
   final _userOfficeService = UserOfficeService(Dio());
-  final _paginationUtils = PaginationUtil(Dio());
   late FilterSearchResultUtil<UserOffice> userOfficeSearchUtil;
   final _formKey = GlobalKey<FormState>();
   List<UserOffice> userOfficeList = [];
