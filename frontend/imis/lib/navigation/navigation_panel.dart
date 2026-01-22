@@ -730,7 +730,9 @@ class NavigationPanelState extends State<NavigationPanel> {
                                 selectedRole ==
                                     PermissionString.informationOfficer ||
                                 selectedRole ==
-                                    PermissionString.researchOfficer)
+                                    PermissionString.researchOfficer ||
+                                selectedRole == PermissionString.coreTeam ||
+                                selectedRole == PermissionString.serviceHead)
                             ? _buildListTile(
                               Icons.timeline_outlined,
 
@@ -776,7 +778,8 @@ class NavigationPanelState extends State<NavigationPanel> {
                                 selectedRole ==
                                     PermissionString.roleStandardUser ||
                                 selectedRole == PermissionString.serviceHead ||
-                                selectedRole == PermissionString.osm)
+                                selectedRole == PermissionString.osm ||
+                                selectedRole == PermissionString.coreTeam)
                             ? _buildListTile(
                               Icons.analytics_outlined,
                               selectedRole == PermissionString.roleAdmin
@@ -791,25 +794,6 @@ class NavigationPanelState extends State<NavigationPanel> {
                             : SizedBox.shrink(),
                   ),
 
-                  // PermissionWidget(
-                  //   child:
-                  //       [
-                  //             PermissionString.roleAdmin,
-                  //             PermissionString.serviceHead,
-                  //             PermissionString.mcc,
-                  //             PermissionString.osm,
-                  //             PermissionString.pgsAuditor,
-                  //             PermissionString.pgsHead,
-                  //             PermissionString.coreTeam,
-                  //           ].contains(selectedRole)
-                  //           ? _buildListTile(
-                  //             Icons.timeline_outlined,
-                  //             'Create Roadmap',
-                  //             25,
-                  //             () => _setScreen(RoadmapPage(), 25),
-                  //           )
-                  //           : SizedBox.shrink(),
-                  // ),
                   PermissionWidget(
                     child:
                         [
