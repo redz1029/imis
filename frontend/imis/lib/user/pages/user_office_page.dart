@@ -191,7 +191,6 @@ class UserOfficePageState extends State<UserOfficePage> {
               final office = officenameList.firstWhereOrNull(
                 (o) => o.id == int.tryParse(userOffice.officeId.toString()),
               );
-
               if (user == null) return false;
 
               return user.fullName.toLowerCase().contains(lowerQuery) ||
