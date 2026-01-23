@@ -188,9 +188,15 @@ class UserOfficePageState extends State<UserOfficePage> {
                 (u) => u.id == userOffice.userId,
               );
 
+              final office = officenameList.firstWhereOrNull(
+                (o) => o.id == int.tryParse(userOffice.officeId.toString()),
+              );
+
               if (user == null) return false;
 
-              return user.fullName.toLowerCase().contains(lowerQuery);
+              return user.fullName.toLowerCase().contains(lowerQuery) ||
+                  (office != null &&
+                      office.name.toLowerCase().contains(lowerQuery));
             }).toList();
       }
     });

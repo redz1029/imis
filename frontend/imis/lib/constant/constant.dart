@@ -148,6 +148,8 @@ class JobPositions {
     'Head, Credit and Collection Section',
     'Head, PACD',
     'HEAD, Family and Community Medicine',
+    'HEAD, Eye Care'
+    'Head, Soccsksargen Regional Blood Center'
   ];
 }
 
