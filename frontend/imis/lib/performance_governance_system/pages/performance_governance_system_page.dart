@@ -2846,14 +2846,64 @@ class PerformanceGovernanceSystemPageState
 
     if (confirm != true) return;
 
-    if (selectedPeriod == null ||
-        selectedDirect.isEmpty ||
-        selectedIndirect.isEmpty ||
-        deliverablesControllers.values.any((c) => c.text.trim().isEmpty) ||
-        percentageDeliverables.text.trim().isEmpty) {
+    if (selectedPeriod == null) {
       MotionToast.warning(
         title: const Text("Missing Fields"),
-        description: const Text("Please complete all required fields."),
+        description: const Text("Please select a period."),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    if (rows.isEmpty) {
+      MotionToast.warning(
+        title: const Text("Missing Fields"),
+        description: const Text("Please add at least one deliverable."),
+        toastAlignment: Alignment.center,
+      ).show(context);
+      return;
+    }
+
+    for (int i in rows) {
+      if (!deliverablesControllers.containsKey(i) ||
+          deliverablesControllers[i]!.text.trim().isEmpty) {
+        MotionToast.warning(
+          title: const Text("Missing Fields"),
+          description: const Text("Please fill in all deliverable names."),
+          toastAlignment: Alignment.center,
+        ).show(context);
+        return;
+      }
+
+      if (!selectedDirect.containsKey(i) && !selectedIndirect.containsKey(i)) {
+        MotionToast.warning(
+          title: const Text("Missing Fields"),
+          description: const Text(
+            "Please select Direct or Indirect for all deliverables.",
+          ),
+          toastAlignment: Alignment.center,
+        ).show(context);
+        return;
+      }
+
+      if (!selectedKRA.containsKey(i) || selectedKRA[i] == null) {
+        MotionToast.warning(
+          title: const Text("Missing Fields"),
+          description: const Text(
+            "Please select a process (KRA) for all deliverables.",
+          ),
+          toastAlignment: Alignment.center,
+        ).show(context);
+        return;
+      }
+    }
+
+    if (percentageDeliverables.text.trim().isEmpty) {
+      MotionToast.warning(
+        title: const Text("Missing Fields"),
+        description: const Text(
+          "Please enter the percentage for deliverables.",
+        ),
         toastAlignment: Alignment.center,
       ).show(context);
       return;
@@ -3324,6 +3374,27 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
+  Widget _buildProcessStatus(int index, String? id, Function setDialogState) {
+    final selectedValue = selectedKRA[index];
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: CustomTooltip(
+          key: ValueKey('kra_tooltip_status_$selectedValue'),
+          maxLines: 5,
+          message:
+              selectedKRAObjects[index]?['remarks'] ??
+              'No description available',
+          child: Text(
+            selectedKRAObjects[index]?['name'] ?? '',
+            style: const TextStyle(fontSize: 14, color: Colors.black),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildDropdownKraCell(int index, String? id, Function setDialogState) {
     if (!kraDescriptionController.containsKey(index)) {
       kraDescriptionController[index] = TextEditingController();
@@ -3371,9 +3442,9 @@ class PerformanceGovernanceSystemPageState
             kraDescriptionRoadmapController[index]!.text.isNotEmpty
                 ? 'Sample KRA: ${kraDescriptionRoadmapController[index]!.text}'
                 : '',
-            style: const TextStyle(
+            style: TextStyle(
               fontStyle: FontStyle.italic,
-              color: Colors.grey,
+              color: Colors.grey.shade500,
             ),
           ),
         ],
@@ -3834,7 +3905,7 @@ class PerformanceGovernanceSystemPageState
       ),
       children: [
         BuildHeaderCell(text: '#'),
-        BuildHeaderCell(text: 'THEME (PROCESS)'),
+        BuildHeaderCell(text: 'PROCESS (CORE & SUPPORT)'),
         BuildHeaderCell(text: 'KRA'),
         BuildHeaderCell(text: 'DIRECT'),
         BuildHeaderCell(text: 'INDIRECT'),
@@ -3871,20 +3942,23 @@ class PerformanceGovernanceSystemPageState
       decoration: BoxDecoration(color: rowColor),
       children: [
         _buildNumbering(index),
-        _buildProcess(index, id, setDialogState),
-        _buildDropdownKraCellPGSDeliverableStatus(
-          index,
-          id,
-          setDialogState,
-          orderLevel,
-        ),
+        // _buildProcess(index, id, setDialogState),
+        _buildProcessStatus(index, id, setDialogState),
+
+        // _buildDropdownKraCellPGSDeliverableStatus(
+        //   index,
+        //   id,
+        //   setDialogState,
+        //   orderLevel,
+        // ),
+        _buildKraDescriptionStatus(index, id, setDialogState),
+
         _buildCheckboxCell(
           index,
           id,
           selectedDirect,
           selectedIndirect,
           setDialogState,
-
           isDirect: true,
           errorText: '',
         ),
@@ -3893,18 +3967,17 @@ class PerformanceGovernanceSystemPageState
           id,
           selectedIndirect,
           selectedDirect,
-
           setDialogState,
-
           isDirect: false,
           errorText: '',
         ),
-        _buildExpandableTextAreaCellPGSDeliverable(
-          index,
-          id,
-          orderLevel,
-          setDialogState,
-        ),
+        // _buildExpandableTextAreaCellPGSDeliverable(
+        //   index,
+        //   id,
+        //   orderLevel,
+        //   setDialogState,
+        // ),
+        _buildExpandableTextAreaCelStatus(index, id, setDialogState),
         _buildDatePickerCellPgsDeliverableStatus(
           index,
           id,
@@ -4678,6 +4751,29 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
+  Widget _buildKraDescriptionStatus(
+    int index,
+    String? id,
+    Function setDialogState,
+  ) {
+    if (!kraDescriptionController.containsKey(index)) {
+      kraDescriptionController[index] = TextEditingController();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ValueListenableBuilder<TextEditingValue>(
+        valueListenable: kraDescriptionController[index]!,
+        builder: (context, value, child) {
+          return Text(
+            value.text,
+            style: const TextStyle(fontSize: 14, color: Colors.black),
+          );
+        },
+      ),
+    );
+  }
+
   //Start---------------------Pgs Deliverable datepicker status---------------------------------------
   Widget _buildDatePickerCellPgsDeliverableStatus(
     int index,
@@ -4821,6 +4917,29 @@ class PerformanceGovernanceSystemPageState
             },
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildExpandableTextAreaCelStatus(
+    int index,
+    String? id,
+    Function setDialogState,
+  ) {
+    if (!deliverablesControllers.containsKey(index)) {
+      deliverablesControllers[index] = TextEditingController();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ValueListenableBuilder<TextEditingValue>(
+        valueListenable: deliverablesControllers[index]!,
+        builder: (context, value, child) {
+          return Text(
+            value.text,
+            style: const TextStyle(fontSize: 14, color: Colors.black),
+          );
+        },
       ),
     );
   }
@@ -5255,9 +5374,9 @@ class PerformanceGovernanceSystemPageState
               deliverablesRoadmapControllers[index]!.text.isNotEmpty
                   ? 'Sample deliverable: ${deliverablesRoadmapControllers[index]!.text}'
                   : 'No sample deliverables',
-              style: const TextStyle(
+              style: TextStyle(
                 fontStyle: FontStyle.italic,
-                color: Colors.grey,
+                color: Colors.grey.shade500,
               ),
             ),
         ],
