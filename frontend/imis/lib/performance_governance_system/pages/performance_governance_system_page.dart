@@ -2869,17 +2869,21 @@ class PerformanceGovernanceSystemPageState
           deliverablesControllers[i]!.text.trim().isEmpty) {
         MotionToast.warning(
           title: const Text("Missing Fields"),
-          description: const Text("Please fill in all deliverable names."),
+          description: Text(
+            "Please fill in all deliverable names (Row ${i + 1}).",
+          ),
           toastAlignment: Alignment.center,
         ).show(context);
         return;
       }
 
-      if (!selectedDirect.containsKey(i) && !selectedIndirect.containsKey(i)) {
+      final isDirect = selectedDirect[i] ?? false;
+      final isIndirect = selectedIndirect[i] ?? false;
+      if (!isDirect && !isIndirect) {
         MotionToast.warning(
           title: const Text("Missing Fields"),
-          description: const Text(
-            "Please select Direct or Indirect for all deliverables.",
+          description: Text(
+            "Please select Direct or Indirect for Row ${i + 1}.",
           ),
           toastAlignment: Alignment.center,
         ).show(context);
@@ -2889,9 +2893,19 @@ class PerformanceGovernanceSystemPageState
       if (!selectedKRA.containsKey(i) || selectedKRA[i] == null) {
         MotionToast.warning(
           title: const Text("Missing Fields"),
-          description: const Text(
-            "Please select a process (KRA) for all deliverables.",
-          ),
+          description: Text("Please select a process (KRA) for Row ${i + 1}."),
+          toastAlignment: Alignment.center,
+        ).show(context);
+        return;
+      }
+
+      // Check "By When" date
+      if (!selectedByWhen.containsKey(i) ||
+          selectedByWhen[i] == null ||
+          selectedByWhen[i]!.isEmpty) {
+        MotionToast.warning(
+          title: const Text("Missing Fields"),
+          description: Text("Please set a date for Row ${i + 1}."),
           toastAlignment: Alignment.center,
         ).show(context);
         return;
