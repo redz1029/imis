@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:imis/user/pages/login_page.dart';
+import 'package:imis/user_guide/user_guide_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/navigation_utils.dart';
 
@@ -14,10 +15,13 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final uri = Uri.base;
+    final isUserGuidePage = uri.queryParameters['page'] == 'user-guide';
+
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      home: LoginPage(),
+      home: isUserGuidePage ? const UserGuidePage() : LoginPage(),
     );
   }
 }

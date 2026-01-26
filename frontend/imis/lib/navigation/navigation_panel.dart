@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
+import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:imis/announcements/pages/announcement_page.dart';
@@ -17,6 +18,7 @@ import 'package:imis/roles/models/roles.dart';
 import 'package:imis/swot/pages/swot_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
+import 'package:imis/user_guide/user_guide_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
@@ -734,7 +736,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                                 selectedRole == PermissionString.coreTeam ||
                                 selectedRole == PermissionString.serviceHead)
                             ? _buildListTile(
-                              Icons.timeline_outlined,
+                              Icons.map,
 
                               selectedRole == PermissionString.roleAdmin
                                   ? 'Create/View Roadmap'
@@ -756,7 +758,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                                 selectedRole == PermissionString.mcc ||
                                 selectedRole == PermissionString.osm)
                             ? _buildListTile(
-                              Icons.insert_drive_file_outlined,
+                              Icons.inventory_2_outlined,
                               selectedRole == PermissionString.roleAdmin
                                   ? 'Create/View Deliverables'
                                   : selectedRole ==
@@ -781,7 +783,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                                 selectedRole == PermissionString.osm ||
                                 selectedRole == PermissionString.coreTeam)
                             ? _buildListTile(
-                              Icons.analytics_outlined,
+                              Icons.trending_up_outlined,
                               selectedRole == PermissionString.roleAdmin
                                   ? 'Create/View SWOT'
                                   : selectedRole ==
@@ -1179,7 +1181,23 @@ class NavigationPanelState extends State<NavigationPanel> {
                                   mainAxisSize: MainAxisSize.min,
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
-                                    SizedBox(width: 4),
+                                    Tooltip(
+                                      message: 'User Guide',
+                                      child: IconButton(
+                                        onPressed: () {
+                                          // Open user guide in a new window
+                                          final url =
+                                              html.window.location.href +
+                                              '?page=user-guide';
+                                          html.window.open(url, '_blank');
+                                        },
+                                        icon: Icon(
+                                          Icons.help_outline,
+                                          size: 32,
+                                        ),
+                                      ),
+                                    ),
+                                    SizedBox(width: 16),
                                     Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
