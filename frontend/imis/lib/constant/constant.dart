@@ -149,18 +149,10 @@ class JobPositions {
     'Head, PACD',
     'HEAD, Family and Community Medicine',
     'HEAD, Eye Care'
-    'Head, Soccsksargen Regional Blood Center'
+        'Head, Soccsksargen Regional Blood Center',
   ];
 }
 
 class SwotYear {
-  static const List<String> years = [
-    '2024',
-    '2025',
-    '2026',
-    '2027',
-    '2028',
-    '2029',
-    '2030',
-  ];
+  static const List<String> years = ['2026', '2027', '2028', '2029', '2030'];
 }
