@@ -1,6 +1,6 @@
 name: imis
 description: "Integrated Management Information System"
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
@@ -43,7 +43,6 @@ dependencies:
   connectivity_plus: ^3.0.2
   file_picker: ^9.2.1
   data_table_2: ^2.5.12
-  
 
 dev_dependencies:
   flutter_test:
@@ -54,7 +53,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/CRMC.png 
+    - assets/CRMC.png
     - assets/logo.png
     - assets/lock.png
     - assets/profile.png
@@ -71,3 +70,16 @@ flutter:
     - assets/image3.png
     - assets/image4.png
     - assets/no_connection.png
+    - assets/roadmap1.png
+    - assets/roadmap2.png
+    - assets/roadmap3.png
+    - assets/roadmap4.png
+    - assets/roadmap5.png
+    - assets/roadmap6.png
+    - assets/roadmap7.png
+    - assets/roadmap8.png
+    - assets/swot1.png
+    - assets/swot2.png
+    - assets/swot3.png
+    - assets/swot4.png
+    - assets/swot5.png
