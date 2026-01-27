@@ -38,7 +38,8 @@ namespace IMIS.Persistence
         public DbSet<Character> Characters { get; set; }
         public DbSet<StrategicObjective> StrategicObjectives { get; set; }
         public DbSet<CharacterNote> CharacterNotes { get; set; }
-        
+        public DbSet<StandardVersion> StandardVersions { get; set; }
+        public DbSet<IsoStandard> IsoStandards { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
@@ -141,6 +142,19 @@ namespace IMIS.Persistence
                 .HasForeignKey(x => x.OfficeId)
                 .OnDelete(DeleteBehavior.NoAction);
 
+            // Configure ISO Standard relationships
+            builder.Entity<IsoStandard>()
+                .HasOne(iso => iso.Version)
+                .WithMany(sv => sv.IsoStandards)
+                .HasForeignKey(iso => iso.VersionID)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<StandardVersion>()
+                .HasKey(sv => sv.Id);
+
+            builder.Entity<IsoStandard>()
+                .HasKey(iso => iso.Id);
+               
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
             builder.ApplyConfiguration(new UserConfiguration());

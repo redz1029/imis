@@ -51,6 +51,7 @@ using Microsoft.Extensions.DependencyInjection;
 using IMIS.Persistence.StrategicObjectiveModule;
 using IMIS.Persistence.CharacterNoteModule;
 using IMIS.Application.StandardVersionModule;
+using IMIS.Persistence.StandardVersionModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {

@@ -6,13 +6,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.IsoStandardModule
 {
-    public class IsoStandardRepository : BaseRepository<Domain.IsoStandard, long, ImisDbContext>, IIsoStandardRepository
+    public class IsoStandardRepository : BaseRepository<IsoStandard, long, ImisDbContext>, IIsoStandardRepository
     {
         public IsoStandardRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
 
-        public async Task<IEnumerable<Domain.IsoStandard>> GetAll(CancellationToken cancellationToken)
+        public async Task<IEnumerable<IsoStandard>> GetAll(CancellationToken cancellationToken)
         {
             return await _entities
                 .Include(iso => iso.Version)
@@ -21,7 +21,7 @@ namespace IMIS.Persistence.IsoStandardModule
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Domain.IsoStandard>?> FilterByVersionId(int versionId, CancellationToken cancellationToken)
+        public async Task<IEnumerable<IsoStandard>?> FilterByVersionId(int versionId, CancellationToken cancellationToken)
         {
             return await _entities
                 .Where(iso => iso.VersionID == versionId && iso.isActive)
@@ -31,7 +31,7 @@ namespace IMIS.Persistence.IsoStandardModule
                 .ConfigureAwait(false);
         }
 
-        public async Task<IEnumerable<Domain.IsoStandard>?> FilterByClauseRef(string clauseRef, int noOfResults, CancellationToken cancellationToken)
+        public async Task<IEnumerable<IsoStandard>?> FilterByClauseRef(string clauseRef, int noOfResults, CancellationToken cancellationToken)
         {
             return await _entities
                 .Where(iso => EF.Functions.Like(iso.ClauseRef, $"{clauseRef}%") && iso.isActive)
@@ -42,26 +42,26 @@ namespace IMIS.Persistence.IsoStandardModule
                 .ConfigureAwait(false);
         }
 
-        public async Task<EntityPageList<Domain.IsoStandard, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<EntityPageList<IsoStandard, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _entities.Include(iso => iso.Version).AsNoTracking();
-            return await EntityPageList<Domain.IsoStandard, long>
+            return await EntityPageList<IsoStandard, long>
                 .CreateAsync(query, page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        public async Task<EntityPageList<Domain.IsoStandard, long>> GetPaginatedByVersionAsync(int versionId, int page, int pageSize, CancellationToken cancellationToken)
+        public async Task<EntityPageList<IsoStandard, long>> GetPaginatedByVersionAsync(int versionId, int page, int pageSize, CancellationToken cancellationToken)
         {
             var query = _entities
                 .Where(iso => iso.VersionID == versionId)
                 .Include(iso => iso.Version)
                 .AsNoTracking();
-            return await EntityPageList<Domain.IsoStandard, long>
+            return await EntityPageList<IsoStandard, long>
                 .CreateAsync(query, page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        public async Task<Domain.IsoStandard?> GetByIdWithVersionAsync(long id, CancellationToken cancellationToken)
+        public async Task<IsoStandard?> GetByIdWithVersionAsync(long id, CancellationToken cancellationToken)
         {
             return await _entities
                 .Include(iso => iso.Version)
