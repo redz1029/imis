@@ -44,7 +44,7 @@ namespace IMIS.Application.PgsModule
 
             this.ForSignature = false;                
             this.IsDeleted = perfomanceGovernanceSystem.IsDeleted;
-            this.RowVersion = perfomanceGovernanceSystem.RowVersion;
+            this.RowVersion = perfomanceGovernanceSystem.RowVersion;           
         }
 
         public override PerfomanceGovernanceSystem ToEntity()

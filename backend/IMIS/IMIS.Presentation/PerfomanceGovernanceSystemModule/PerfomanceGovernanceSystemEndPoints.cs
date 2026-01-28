@@ -65,10 +65,10 @@ namespace IMIS.Presentation.PgsModuleAPIs
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
-            app.MapGet("/filter", async ([AsParameters] PgsFilter filter, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapGet("/filter", async ([AsParameters] PgsFilter filter, string roleId, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var user = await CurrentUserHelper<User>.GetCurrentUserService().GetCurrentUserAsync().ConfigureAwait(false);
-                var pgs = await service.GetFilteredPGSAsync(filter, user!.Id, cancellationToken).ConfigureAwait(false);
+                var pgs = await service.GetFilteredPGSAsync(filter, user!.Id, roleId, cancellationToken).ConfigureAwait(false);
                 return Results.Ok(pgs);
             })
             .WithTags(_pgsTag)
@@ -84,9 +84,9 @@ namespace IMIS.Presentation.PgsModuleAPIs
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
 
-            app.MapGet("userId/{id}", async (string userId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            app.MapGet("userId/{id}", async (string userId, string roleId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
-                var performanceGovernanceSystem = await service.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+                var performanceGovernanceSystem = await service.GetByUserIdAsync(userId, roleId, cancellationToken).ConfigureAwait(false);
                 return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
             })
            .WithTags(_pgsTag)

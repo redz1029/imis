@@ -62,7 +62,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditTrails");
+                    b.ToTable("AuditTrails", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.Announcement", b =>
@@ -98,7 +98,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Announcement");
+                    b.ToTable("Announcement", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
@@ -132,7 +132,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditSchedules");
+                    b.ToTable("AuditSchedules", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
@@ -174,7 +174,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("AuditScheduleDetails");
+                    b.ToTable("AuditScheduleDetails", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditableOffices", b =>
@@ -189,7 +189,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("AuditableOffices");
+                    b.ToTable("AuditableOffices", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.Auditor", b =>
@@ -223,7 +223,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Auditors");
+                    b.ToTable("Auditors", (string)null);
 
                     b.HasData(
                         new
@@ -938,7 +938,7 @@ namespace IMIS.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[PgsPeriodId] IS NOT NULL");
 
-                    b.ToTable("AuditorOffices");
+                    b.ToTable("AuditorOffices", (string)null);
 
                     b.HasData(
                         new
@@ -5164,7 +5164,7 @@ namespace IMIS.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("[AuditorId] IS NOT NULL");
 
-                    b.ToTable("AuditorTeams");
+                    b.ToTable("AuditorTeams", (string)null);
 
                     b.HasData(
                         new
@@ -5954,7 +5954,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsDeliverableId");
 
-                    b.ToTable("BreakThroughScoring");
+                    b.ToTable("BreakThroughScoring", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.KeyResultArea", b =>
@@ -5986,7 +5986,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KeyResultArea");
+                    b.ToTable("KeyResultArea", (string)null);
 
                     b.HasData(
                         new
@@ -6097,7 +6097,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("KraRoadMap");
+                    b.ToTable("KraRoadMap", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMapDeliverable", b =>
@@ -6135,7 +6135,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("KraRoadMapId");
 
-                    b.ToTable("KraRoadMapDeliverable");
+                    b.ToTable("KraRoadMapDeliverable", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMapKpi", b =>
@@ -6164,7 +6164,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("KraRoadMapId");
 
-                    b.ToTable("KraRoadMapKPI");
+                    b.ToTable("KraRoadMapKPI", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMapPeriod", b =>
@@ -6191,7 +6191,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("KraRoadMapPeriod");
+                    b.ToTable("KraRoadMapPeriod", (string)null);
 
                     b.HasData(
                         new
@@ -6231,7 +6231,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("KraRoadMapRole");
+                    b.ToTable("KraRoadMapRole", (string)null);
 
                     b.HasData(
                         new
@@ -6334,7 +6334,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("ParentOfficeId");
 
-                    b.ToTable("Offices");
+                    b.ToTable("Offices", (string)null);
 
                     b.HasData(
                         new
@@ -8085,7 +8085,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("OfficeType");
+                    b.ToTable("OfficeType", (string)null);
 
                     b.HasData(
                         new
@@ -8160,7 +8160,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsReadinessRatingId");
 
-                    b.ToTable("PerformanceGovernanceSystem");
+                    b.ToTable("PerformanceGovernanceSystem", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
@@ -8225,7 +8225,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PerfomanceGovernanceSystemId");
 
-                    b.ToTable("Deliverable");
+                    b.ToTable("Deliverable", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsDeliverableAccomplishment", b =>
@@ -8272,7 +8272,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PgsDeliverableAccomplishment");
+                    b.ToTable("PgsDeliverableAccomplishment", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsPeriod", b =>
@@ -8302,7 +8302,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsPeriod");
+                    b.ToTable("PgsPeriod", (string)null);
 
                     b.HasData(
                         new
@@ -8342,7 +8342,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PgsReadiness");
+                    b.ToTable("PgsReadiness", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsSignatory", b =>
@@ -8382,7 +8382,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("SignatoryId");
 
-                    b.ToTable("PgsSignatory");
+                    b.ToTable("PgsSignatory", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.PgsSignatoryTemplate", b =>
@@ -8430,7 +8430,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("PgsSignatoryTemplate");
+                    b.ToTable("PgsSignatoryTemplate", (string)null);
 
                     b.HasData(
                         new
@@ -8743,7 +8743,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("PgsPeriodId");
 
-                    b.ToTable("PgsSummaryNarrative");
+                    b.ToTable("PgsSummaryNarrative", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.SWOTAnalysis", b =>
@@ -8794,7 +8794,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SWOTAnalysis");
+                    b.ToTable("SWOTAnalysis", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.Team", b =>
@@ -8822,7 +8822,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Teams");
+                    b.ToTable("Teams", (string)null);
 
                     b.HasData(
                         new
@@ -8958,7 +8958,7 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasIndex("OfficeId");
 
-                    b.ToTable("UserOffices");
+                    b.ToTable("UserOffices", (string)null);
 
                     b.HasData(
                         new
