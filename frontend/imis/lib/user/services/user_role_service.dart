@@ -46,10 +46,11 @@ class UserRoleService {
   Future<void> updatePermission(
     String userId,
     String userName,
+    String roleId,
     List<dynamic> permissions,
   ) async {
     final url = '${ApiEndpoint().users}/$userId/permissions';
-
+    // final url = '${ApiEndpoint().users}/$userId/roles/$roleId/permissions';
     final body = {
       "userId": userId,
       "userName": userName,
@@ -67,6 +68,7 @@ class UserRoleService {
     }
   }
 
+  //tama
   Future<List<dynamic>?> fetchPermissions(String userId, String roleId) async {
     final url = '${ApiEndpoint().users}/$userId/permissions?roleId=$roleId';
 
@@ -81,4 +83,19 @@ class UserRoleService {
     }
     return null;
   }
+
+  // Future<List<dynamic>?> fetchPermissions(String userId, String roleId) async {
+  //   final url = '${ApiEndpoint().users}/$userId/roles/$roleId/permissions';
+
+  //   try {
+  //     final response = await AuthenticatedRequest.get(dio, url);
+
+  //     if (response.statusCode == 200) {
+  //       return response.data['permissions'];
+  //     }
+  //   } catch (e) {
+  //     debugPrint('Failed to fetch permission: $e');
+  //   }
+  //   return null;
+  // }
 }

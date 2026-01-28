@@ -163,10 +163,11 @@ class AuthUtil {
         bool isRefreshTokenExpired = refreshToken.isExpired ?? true;
 
         if (isRefreshTokenExpired) {
-          final sharedPref = await SharedPreferences.getInstance();
-          await sharedPref.clear();
           if (context != null && context.mounted) {
-            await logout(context);
+            await _showSessionExpiredDialog(context);
+          } else {
+            final sharedPref = await SharedPreferences.getInstance();
+            await sharedPref.clear();
           }
           return null;
         }

@@ -9,6 +9,7 @@ class RolesPermissionsService {
     String userId,
     String roleId,
   ) async {
+    // final url = "${ApiEndpoint().users}/$userId/permissions?roleId=$roleId";
     final url = "${ApiEndpoint().users}/$userId/permissions?roleId=$roleId";
 
     try {

@@ -18,7 +18,6 @@ import 'package:imis/roles/models/roles.dart';
 import 'package:imis/swot/pages/swot_page.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/user/pages/change_password_page.dart';
-import 'package:imis/user_guide/user_guide_page.dart';
 import 'package:imis/user/pages/user_office_page.dart';
 import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
@@ -734,14 +733,21 @@ class NavigationPanelState extends State<NavigationPanel> {
                                 selectedRole ==
                                     PermissionString.researchOfficer ||
                                 selectedRole == PermissionString.coreTeam ||
-                                selectedRole == PermissionString.serviceHead)
+                                selectedRole == PermissionString.serviceHead ||
+                                selectedRole == PermissionString.mcc)
                             ? _buildListTile(
                               Icons.map,
 
                               selectedRole == PermissionString.roleAdmin
                                   ? 'Create/View Roadmap'
                                   : selectedRole ==
-                                      PermissionString.roleStandardUser
+                                          PermissionString.roleStandardUser ||
+                                      selectedRole ==
+                                          PermissionString.coreTeam ||
+                                      selectedRole == PermissionString.mcc ||
+                                      selectedRole ==
+                                          PermissionString.serviceHead ||
+                                      selectedRole == PermissionString.osm
                                   ? 'View Roadmap'
                                   : 'Create Roadmap',
                               25,
@@ -1167,6 +1173,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                     child: Scaffold(
                       appBar: AppBar(
                         backgroundColor: secondaryColor,
+
                         actions: [
                           MouseRegion(
                             cursor: SystemMouseCursors.click,
@@ -1185,10 +1192,8 @@ class NavigationPanelState extends State<NavigationPanel> {
                                       message: 'User Guide',
                                       child: IconButton(
                                         onPressed: () {
-                                          // Open user guide in a new window
                                           final url =
-                                              html.window.location.href +
-                                              '?page=user-guide';
+                                              '${html.window.location.href}?page=user-guide';
                                           html.window.open(url, '_blank');
                                         },
                                         icon: Icon(

@@ -11,6 +11,7 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/dynamic_side_column.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 
 class StandardUserDashboard extends StatefulWidget {
@@ -75,9 +76,26 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
       if (user == null) return;
 
+      String roleIdParam = "";
+      final prefs = await SharedPreferences.getInstance();
+      final String? selectedRoleName = prefs.getString('selectedRole');
+      final roles = await AuthUtil.fetchRoles();
+
+      if (roles != null && roles.isNotEmpty) {
+        var currentRole = roles.first;
+        if (selectedRoleName != null) {
+          try {
+            currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+          } catch (e) {
+            // keep first
+          }
+        }
+        roleIdParam = "&roleId=${currentRole.id}";
+      }
+
       final response = await AuthenticatedRequest.get(
         dio,
-        "${ApiEndpoint().performancegovernancesystem}/userId/${user.id}?userId=${user.id}",
+        "${ApiEndpoint().performancegovernancesystem}/userId/${user.id}?userId=${user.id}$roleIdParam",
       );
 
       if (response.statusCode == 200) {
