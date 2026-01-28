@@ -562,11 +562,28 @@ class PerformanceGovernanceSystemPageState
 
       setState(() => userId = user.id ?? "UserId");
 
+      String roleIdParam = "";
+      final prefs = await SharedPreferences.getInstance();
+      final String? selectedRoleName = prefs.getString('selectedRole');
+      final roles = await AuthUtil.fetchRoles();
+
+      if (roles != null && roles.isNotEmpty) {
+        var currentRole = roles.first;
+        if (selectedRoleName != null) {
+          try {
+            currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+          } catch (e) {
+            // keep first
+          }
+        }
+        roleIdParam = "&roleId=${currentRole.id}";
+      }
+
       final pageList = await _paginationUtils.fetchPaginatedData<
         PerformanceGovernanceSystem
       >(
         endpoint:
-            "${ApiEndpoint().performancegovernancesystem}/userId/$userId?userId=$userId",
+            "${ApiEndpoint().performancegovernancesystem}/userId/$userId?userId=$userId$roleIdParam",
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
@@ -650,9 +667,27 @@ class PerformanceGovernanceSystemPageState
     setState(() => _isLoading = true);
 
     try {
+      String roleIdParam = "";
+      final prefs = await SharedPreferences.getInstance();
+      final String? selectedRoleName = prefs.getString('selectedRole');
+      final roles = await AuthUtil.fetchRoles();
+
+      if (roles != null && roles.isNotEmpty) {
+        var currentRole = roles.first;
+        if (selectedRoleName != null) {
+          try {
+            currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+          } catch (e) {
+            // keep first
+          }
+        }
+        roleIdParam = currentRole.id;
+      }
+
       final Map<String, dynamic> queryParams = {
         'Page': page.toString(),
         'PageSize': pageSize.toString(),
+        'RoleId': roleIdParam,
         if (selectedStartPeriod != null)
           'FromDate': DateFormat(
             'yyyy-MM-dd',
@@ -3435,7 +3470,7 @@ class PerformanceGovernanceSystemPageState
               controller: kraDescriptionController[index],
               autovalidateMode: AutovalidateMode.onUserInteraction,
               decoration: const InputDecoration(
-                hintText: "Enter your description here...",
+                hintText: "Enter your KRA. (3 to 4 words)",
                 border: OutlineInputBorder(),
                 focusedBorder: OutlineInputBorder(
                   borderSide: BorderSide(color: Colors.grey),
@@ -3443,7 +3478,7 @@ class PerformanceGovernanceSystemPageState
               ),
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return "Please enter your KRA description";
+                  return "Please enter your KRA";
                 }
                 return null;
               },
