@@ -695,6 +695,10 @@ class _Logo extends StatelessWidget {
             'CPeMS',
             style: TextStyle(fontSize: 32, color: primaryColor),
           ),
+          Text(
+            'Centralized Performance Electronic Management System',
+            style: TextStyle(fontSize: 13),
+          ),
         ],
       ),
     );

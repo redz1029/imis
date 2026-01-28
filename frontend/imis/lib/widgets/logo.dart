@@ -10,7 +10,11 @@ class Logo extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Image.asset('assets/logo.png', width: 300),
-        Text('CPeMS', style: TextStyle(fontSize: 32, color: primaryColor)),
+        Text('CPeMS ', style: TextStyle(fontSize: 32, color: primaryColor)),
+        Text(
+          'Centralized Performance Electronic Management System',
+          style: TextStyle(fontSize: 13),
+        ),
       ],
     );
   }
