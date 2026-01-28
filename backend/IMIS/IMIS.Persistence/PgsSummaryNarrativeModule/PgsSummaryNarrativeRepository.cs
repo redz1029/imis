@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PgsSummaryNarrativeModule
 {
-    public class PgsSummaryNarrativeRepository : BaseRepository<PgsSummaryNarrative, int, ImisDbContext>, IPGSSummaryNarrativeRepository
+    public class PgsSummaryNarrativeRepository : BaseRepository<PgsSummaryNarrative, int, ImisDbContext, User>, IPGSSummaryNarrativeRepository
     {
         public PgsSummaryNarrativeRepository(ImisDbContext dbContext) : base(dbContext)
         {

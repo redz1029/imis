@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.OfficeTypeModule
 {
-    public class OfficeTypeRepository : BaseRepository<OfficeType, int, ImisDbContext>, IOfficeTypeRepository
+    public class OfficeTypeRepository : BaseRepository<OfficeType, int, ImisDbContext, User>, IOfficeTypeRepository
     {
         public OfficeTypeRepository(ImisDbContext dbContext) : base(dbContext)
         {

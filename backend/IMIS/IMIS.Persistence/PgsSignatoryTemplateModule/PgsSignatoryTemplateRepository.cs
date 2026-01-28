@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PgsSignatoryTemplateModule
 {
-    public class PgsSignatoryTemplateRepository : BaseRepository<PgsSignatoryTemplate, int, ImisDbContext>, IPgsSignatoryTemplateRepository
+    public class PgsSignatoryTemplateRepository : BaseRepository<PgsSignatoryTemplate, int, ImisDbContext, User>, IPgsSignatoryTemplateRepository
     {
         public PgsSignatoryTemplateRepository(ImisDbContext dbContext) : base(dbContext)
         {

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.BreakThroughScoringModule
 {
-    public class BreakThroughScoringRepository : BaseRepository<BreakThroughScoring, int, ImisDbContext>, IBreakThroughScoringRepository
+    public class BreakThroughScoringRepository : BaseRepository<BreakThroughScoring, int, ImisDbContext, User>, IBreakThroughScoringRepository
     {
         public BreakThroughScoringRepository(ImisDbContext dbContext) : base(dbContext)
         {

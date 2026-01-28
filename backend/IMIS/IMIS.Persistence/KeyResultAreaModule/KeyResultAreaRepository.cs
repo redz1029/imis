@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.KraModule
 {
-    public class KeyResultAreaRepository : BaseRepository<KeyResultArea, int, ImisDbContext>, IKeyResultAreaRepository
+    public class KeyResultAreaRepository : BaseRepository<KeyResultArea, int, ImisDbContext, User>, IKeyResultAreaRepository
     {       
         public KeyResultAreaRepository(ImisDbContext dbContext) : base(dbContext) { }
         public async Task<EntityPageList<KeyResultArea, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)

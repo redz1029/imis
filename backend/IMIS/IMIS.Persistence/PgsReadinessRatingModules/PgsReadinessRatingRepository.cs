@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PGSReadinessRatingCancerCareModule
 {
-    public class PgsReadinessRatingRepository : BaseRepository<PgsReadinessRating, long, ImisDbContext>, IPgsReadinessRatingRepository
+    public class PgsReadinessRatingRepository : BaseRepository<PgsReadinessRating, long, ImisDbContext, User>, IPgsReadinessRatingRepository
     {
         public PgsReadinessRatingRepository(ImisDbContext context) : base(context)
         {

@@ -1,4 +1,5 @@
 ﻿using Base.Abstractions;
+using Base.Auths;
 using Base.Utilities;
 using IMIS.Domain;
 using IMIS.Persistence.SeedConfigurations;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace IMIS.Persistence
 {
-    public class ImisDbContext : AuditableDbContext
+    public class ImisDbContext : AuditableDbContext<User>
     {
         public DbSet<Auditor> Auditors { get; set; }
         public DbSet<Office> Offices { get; set; }
@@ -36,6 +37,7 @@ namespace IMIS.Persistence
         public DbSet<KraRoadMapDeliverable> KraRoadMapDeliverable { get; set; }
         public DbSet<KraRoadMap> KraRoadMap { get; set; }
         public DbSet<KraRoadMapRole> KraRoadMapRole { get; set; }
+        public override DbSet<UserClaim<string>> UserClaims { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
@@ -140,7 +142,6 @@ namespace IMIS.Persistence
             builder.ApplyConfiguration(new AuditorTeamsConfiguration());
             builder.ApplyConfiguration(new KraRoadMapRoleConfiguration());
             builder.ApplyConfiguration(new KraRoadMapPeriodConfiguration());
-
 
             // Apply global query filter for soft deletion
             // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false

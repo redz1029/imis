@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IMIS.Persistence.PgsDeliverableAccomplishmentModule
 {
     public class PgsDeliverableAccomplishmentRepository(ImisDbContext dbContext)
-    : BaseRepository<PgsDeliverableAccomplishment, long, ImisDbContext>(dbContext), IPgsDeliverableAccomplishmentRepository
+    : BaseRepository<PgsDeliverableAccomplishment, long, ImisDbContext, User>(dbContext), IPgsDeliverableAccomplishmentRepository
     {
         public async Task<EntityPageList<PgsDeliverableAccomplishment, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {

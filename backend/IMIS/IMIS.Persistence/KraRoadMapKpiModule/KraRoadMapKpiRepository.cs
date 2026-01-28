@@ -4,7 +4,7 @@ using IMIS.Domain;
 
 namespace IMIS.Persistence.KraRoadMapKpiModule
 {
-    public class KraRoadMapKpiRepository : BaseRepository<KraRoadMapKpi, int, ImisDbContext>, IKraRoadMapKpiRepository
+    public class KraRoadMapKpiRepository : BaseRepository<KraRoadMapKpi, int, ImisDbContext, User>, IKraRoadMapKpiRepository
     {
         public KraRoadMapKpiRepository(ImisDbContext dbContext) : base(dbContext)
         {

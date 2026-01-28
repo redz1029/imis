@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.KraRoadMapPeriodModule
 {
-    public class KraRoadMapPeriodRepository : BaseRepository<KraRoadMapPeriod, int, ImisDbContext>, IKraRoadMapPeriodRepository
+    public class KraRoadMapPeriodRepository : BaseRepository<KraRoadMapPeriod, int, ImisDbContext, User>, IKraRoadMapPeriodRepository
     {
         public KraRoadMapPeriodRepository(ImisDbContext dbContext) : base(dbContext)
         {

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.AuditorOfficesModule
 {
-    public class AuditorOfficesRepository (ImisDbContext dbContext) : BaseRepository<AuditorOffices, int, ImisDbContext>(dbContext), IAuditorOfficesRepository
+    public class AuditorOfficesRepository (ImisDbContext dbContext) : BaseRepository<AuditorOffices, int, ImisDbContext, User>(dbContext), IAuditorOfficesRepository
     {
         public async Task<EntityPageList<AuditorOffices, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
