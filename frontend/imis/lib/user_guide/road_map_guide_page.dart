@@ -11,24 +11,6 @@ class RoadMapGuidePage extends StatefulWidget {
 class RoadMapGuidePageState extends State<RoadMapGuidePage> {
   String? selectedModule;
 
-  final List<ModuleItem> modules = [
-    ModuleItem(
-      name: 'ROADMAP',
-      icon: Icons.map,
-      description: 'How to create and manage project roadmaps and timelines.',
-    ),
-    ModuleItem(
-      name: 'DELIVERABLES',
-      icon: Icons.inventory_2_outlined,
-      description: 'How to track and manage project deliverables and outcomes.',
-    ),
-    ModuleItem(
-      name: 'SWOT',
-      icon: Icons.trending_up_outlined,
-      description: 'How to manage SWOT analysis for strategic planning.',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,7 +91,7 @@ class RoadMapGuidePageState extends State<RoadMapGuidePage> {
                 text: 'Roadmap',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800], // optional, for emphasis
+                  color: Colors.grey[800],
                 ),
               ),
               TextSpan(
@@ -368,7 +350,7 @@ class RoadMapGuidePageState extends State<RoadMapGuidePage> {
       padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       child: Center(
         child: Text(
-          '© 2024 CPeMS. All rights reserved.',
+          '© 2026 CPeMS. All rights reserved.',
           style: TextStyle(color: Colors.grey[400], fontSize: 14),
         ),
       ),

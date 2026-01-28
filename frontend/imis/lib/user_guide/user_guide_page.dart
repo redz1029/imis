@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/user_guide/road_map_guide_page.dart';
+import 'package:imis/user_guide/swot_guide_page.dart';
 
 class UserGuidePage extends StatefulWidget {
   const UserGuidePage({super.key});
@@ -119,7 +120,7 @@ class UserGuidePageState extends State<UserGuidePage> {
         Row(
           children: [
             Text(
-              'Welcome to the CPeMS User Guide',
+              'Welcome to the CPeMS (Centralized Performance Electronic Management System) User Guide',
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
@@ -282,6 +283,17 @@ class UserGuidePageState extends State<UserGuidePage> {
             selectedModule = module.name;
           });
         }
+
+        if (module.name == 'SWOT') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => SwotGuidePage()),
+          );
+        } else {
+          setState(() {
+            selectedModule = module.name;
+          });
+        }
       },
       child: Container(
         decoration: BoxDecoration(
@@ -329,7 +341,7 @@ class UserGuidePageState extends State<UserGuidePage> {
       padding: EdgeInsets.symmetric(horizontal: 32, vertical: 24),
       child: Center(
         child: Text(
-          '© 2024 CPeMS. All rights reserved.',
+          '© 2026 CPeMS. All rights reserved.',
           style: TextStyle(color: Colors.grey[400], fontSize: 14),
         ),
       ),

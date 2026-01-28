@@ -141,7 +141,7 @@ class SwotGuidePageState extends State<SwotGuidePage> {
         gap16px,
         Text.rich(
           TextSpan(
-            text: '• Select ',
+            text: '• You are currently in the ',
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey[600],
@@ -149,20 +149,20 @@ class SwotGuidePageState extends State<SwotGuidePage> {
             ),
             children: [
               TextSpan(
-                text: 'Process (Core & Support)',
+                text: 'SWOT',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey[800],
                 ),
               ),
-              TextSpan(text: ' from the panel.'),
+              TextSpan(text: ' template'),
             ],
           ),
         ),
         gap8px,
         Center(
           child: Image.asset(
-            'assets/roadmap3.png',
+            'assets/swot3.png',
             width: 1500,
             fit: BoxFit.contain,
           ),
@@ -170,124 +170,7 @@ class SwotGuidePageState extends State<SwotGuidePage> {
         gap16px,
         Text.rich(
           TextSpan(
-            text: '• Select ',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-              height: 1.5,
-            ),
-            children: [
-              TextSpan(
-                text: 'Roadmap Period.',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-            ],
-          ),
-        ),
-        gap8px,
-        Center(
-          child: Image.asset(
-            'assets/roadmap4.png',
-            width: 1500,
-            fit: BoxFit.contain,
-          ),
-        ),
-
-        gap16px,
-        Text.rich(
-          TextSpan(
-            text: '• Roadmap panel displayed. First, create a minimum of ',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-              height: 1.5,
-            ),
-            children: [
-              TextSpan(
-                text: '2 KPIs',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-              TextSpan(
-                text: '. Click ',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  height: 1.5,
-                ),
-              ),
-              TextSpan(
-                text: '‘Add KPI’ ',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-              TextSpan(
-                text: ' to add additional ones. ',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-        gap8px,
-        Center(
-          child: Image.asset(
-            'assets/roadmap5.png',
-            width: 1500,
-            fit: BoxFit.contain,
-          ),
-        ),
-        gap16px,
-        Text.rich(
-          TextSpan(
-            text:
-                '• Type your KRA and deliverables per year. After completing the entries, click ',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-              height: 1.5,
-            ),
-            children: [
-              TextSpan(
-                text: 'Add Row',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
-                ),
-              ),
-              TextSpan(
-                text: ' if you want to include more items.',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey[600],
-                  height: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ),
-        gap8px,
-        Center(
-          child: Image.asset(
-            'assets/roadmap6.png',
-            width: 1500,
-            fit: BoxFit.contain,
-          ),
-        ),
-        gap16px,
-        Text.rich(
-          TextSpan(
-            text: '• After you finish typing your entries, click ',
+            text: '• Complete all fields before proceeding and click ',
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey[600],
@@ -307,15 +190,16 @@ class SwotGuidePageState extends State<SwotGuidePage> {
         gap8px,
         Center(
           child: Image.asset(
-            'assets/roadmap7.png',
+            'assets/swot4.png',
             width: 1500,
             fit: BoxFit.contain,
           ),
         ),
+
         gap16px,
         Text.rich(
           TextSpan(
-            text: '• Then click ',
+            text: '• Click ',
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey[600],
@@ -323,7 +207,7 @@ class SwotGuidePageState extends State<SwotGuidePage> {
             ),
             children: [
               TextSpan(
-                text: 'Confirm',
+                text: 'Yes',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: Colors.grey[800],
@@ -335,11 +219,12 @@ class SwotGuidePageState extends State<SwotGuidePage> {
         gap8px,
         Center(
           child: Image.asset(
-            'assets/roadmap8.png',
+            'assets/swot5.png',
             width: 1500,
             fit: BoxFit.contain,
           ),
         ),
+        gap16px,
       ],
     );
   }
