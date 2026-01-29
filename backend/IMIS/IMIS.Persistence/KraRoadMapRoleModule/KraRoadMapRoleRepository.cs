@@ -10,14 +10,7 @@ namespace IMIS.Persistence.KraRoadMapRoleModule
         public KraRoadMapRoleRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
-
-        //public async Task<KraRoadMapRole?> GetByRoleIdAsync(string roleId, CancellationToken cancellationToken)
-        //{          
-        //    return await ReadOnlyDbContext.Set<KraRoadMapRole>()
-        //   .Include(x => x.Kra) 
-        //   .Where(x => x.RoleId == roleId)
-        //   .FirstOrDefaultAsync(cancellationToken);
-        //}
+      
         public async Task<List<KraRoadMapRole>> GetByRoleIdAsync(string roleId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<KraRoadMapRole>()
