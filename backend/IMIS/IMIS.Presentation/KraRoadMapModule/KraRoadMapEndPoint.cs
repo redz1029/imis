@@ -127,16 +127,15 @@ namespace IMIS.Presentation.KraRoadMapModule
            .WithTags(_kraRoadMap)
            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMap), true);
 
-            //// Get All roadmap User
-            app.MapGet("/userid", async (IKraRoadMapService service, CancellationToken cancellationToken) =>
+            ////// Get All roadmap Role        
+            app.MapGet("/roleid/{roleId}", async (string roleId, IKraRoadMapService service, CancellationToken cancellationToken) =>
             {
-                var kraRoadMapDto = await service.GetAllRoadmapForUserAsync(cancellationToken).ConfigureAwait(false);
-                return Results.Ok(kraRoadMapDto);
+                 var kraRoadMapDto = await service.GetAllRoadmapForUserAsync(roleId, cancellationToken).ConfigureAwait(false);
+                     return Results.Ok(kraRoadMapDto);
             })
             .WithTags(_kraRoadMap)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View))
+            .RequireAuthorization(e =>  e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true);
-
         }
     }
 }
