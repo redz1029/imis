@@ -113,14 +113,14 @@ namespace IMIS.Persistence.KraRoadMapModule
         }
 
         //Get for UserId Role     
-        public async Task<List<KraRoadMap>> GetAllForUserIdAsync(string userId, CancellationToken cancellationToken)
+        public async Task<List<KraRoadMap>> GetAllForUserIdAsync(string roleId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<KraRoadMap>()
             .Include(x => x.Kra)
             .Include(x => x.KraRoadMapPeriod)
             .Include(x => x.Deliverables)
             .Include(x => x.Kpis)
-            .Where(x => x.UserId == userId)
+            .Where(x => x.RoleId == roleId)
             .ToListAsync(cancellationToken);
         }       
     }

@@ -62,7 +62,7 @@ namespace IMIS.Application.KraRoadMapModule
                 .ToList();
 
             Kpis = entity.Kpis?.Select(k => new KraRoadMapKpiDto(k)).ToList();
-            UserId = entity.UserId;
+            UserId = entity.RoleId!;
         }
        
         public override KraRoadMap ToEntity()
@@ -74,7 +74,7 @@ namespace IMIS.Application.KraRoadMapModule
                 KraRoadMapPeriodId = KraRoadMapPeriodId,
                 Deliverables = Deliverables?.SelectMany(g => g.Items).ToList(),
                 Kpis = Kpis?.Select(k => k.ToEntity()).ToList(),
-                UserId = UserId
+                RoleId = UserId
             };
         }      
     }

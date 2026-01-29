@@ -1,4 +1,5 @@
 ﻿using Base.Primitives;
+using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Domain
 {
@@ -9,8 +10,8 @@ namespace IMIS.Domain
         public required int KraRoadMapPeriodId { get; set; }
         public KraRoadMapPeriod? KraRoadMapPeriod { get; set; }    
         public List<KraRoadMapDeliverable>? Deliverables { get; set; }
-        public List<KraRoadMapKpi>? Kpis { get; set; }
-        public required string UserId { get; set; }
-        public User? User { get; set; }
+        public List<KraRoadMapKpi>? Kpis { get; set; }      
+        public string? RoleId { get; set; }
+        public IdentityRole? Role { get; set; }
     }
 }

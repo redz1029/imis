@@ -12,6 +12,6 @@ namespace IMIS.Application.KraRoadMapModule
         Task<KraRoadMap?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
         Task<IEnumerable<KraRoadMapFilter>>GetByKraYearAndDescriptionAsync(int kraId, int year, string kraDescription, bool isDirect, CancellationToken cancellationToken);
         Task<IEnumerable<KraRoadMapDescriptionFilter>> GetKraDescriptionsByKraIdAsync(int kraId, CancellationToken cancellationToken);
-        Task<List<KraRoadMap>> GetAllForUserIdAsync(string userId, CancellationToken cancellationToken);
+        Task<List<KraRoadMap>> GetAllForUserIdAsync(string roleid, CancellationToken cancellationToken);
     }
 }

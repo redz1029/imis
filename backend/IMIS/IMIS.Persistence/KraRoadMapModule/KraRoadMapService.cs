@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Base.Auths;
+﻿using Base.Auths;
 using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
@@ -9,9 +8,7 @@ using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
-using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
-using VaultSharp.V1.SecretsEngines.Identity;
 
 namespace IMIS.Persistence.KraRoadMapModule
 {
@@ -21,16 +18,18 @@ namespace IMIS.Persistence.KraRoadMapModule
         private readonly IKeyResultAreaRepository _kraRepository;
         private readonly IKraRoadMapPeriodRepository _kraRoadMapPeriodRepository;
         private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
         public KraRoadMapService(
             IkraRoadMapRepository repository,
             IKeyResultAreaRepository kraRepository,
-            IKraRoadMapPeriodRepository kraRoadMapPeriodRepository, UserManager<User> userManager)
+            IKraRoadMapPeriodRepository kraRoadMapPeriodRepository, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             _repository = repository;
             _kraRepository = kraRepository;
             _kraRoadMapPeriodRepository = kraRoadMapPeriodRepository;
             _userManager = userManager;
+            _roleManager = roleManager;
         }
 
         public async Task<ReportKraRoadMapDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
@@ -141,65 +140,40 @@ namespace IMIS.Persistence.KraRoadMapModule
             var currentUserService = CurrentUserHelper<User>.GetCurrentUserService();
             return await currentUserService!.GetCurrentUserAsync();
         }
-        
-        public async Task<List<KraRoadMapDto>> GetAllRoadmapForUserAsync(CancellationToken cancellationToken)
+      
+        public async Task<List<KraRoadMapDto>> GetAllRoadmapForUserAsync(string roleId,  CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
                 return new List<KraRoadMapDto>();
 
-            var userRoles = await _userManager.GetRolesAsync(currentUser);
-
-            List<KraRoadMap> roadmaps = new();
-
-            if (userRoles.Any(r =>
-                r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                r.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = (await _repository.GetAll(cancellationToken)) ?.ToList() ?? new List<KraRoadMap>();
-            }
-            else if (userRoles.Any(r => r.Equals(new ServiceOfficer().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
-            }
-            else if (userRoles.Any(r => r.Equals(new ResearchOfficer().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
-            }
-            else if (userRoles.Any(r => r.Equals(new TrainingOfficer().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
-            }
-            else if (userRoles.Any(r => r.Equals(new LinkagesOfficer().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
-            }
-            else if (userRoles.Any(r => r.Equals(new FacilitiesOfficer().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
-            }
-            else if (userRoles.Any(r => r.Equals(new FinanceOfficer().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
-            }
-            else if (userRoles.Any(r => r.Equals(new InformationOfficer().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
-            }
-            else if (userRoles.Any(r => r.Equals(new HROfficer().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
-            }
-            else if (userRoles.Any(r => r.Equals(new SafetyOfficer().Name, StringComparison.OrdinalIgnoreCase)))
-            {
-                roadmaps = await _repository.GetAllForUserIdAsync(currentUser.Id, cancellationToken) ?? new List<KraRoadMap>();
-            }
-            else
-            { 
+            var role = await _roleManager.FindByIdAsync(roleId);
+            if (role == null)
                 return new List<KraRoadMapDto>();
+
+            if (!await _userManager.IsInRoleAsync(currentUser, role.Name!))
+                return new List<KraRoadMapDto>();
+
+            List<KraRoadMap> roadmaps;
+
+            if (
+                role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase)
+            )
+            {
+                roadmaps = (await _repository.GetAll(cancellationToken))
+                    ?.ToList() ?? new List<KraRoadMap>();
+            }          
+            else
+            {
+                roadmaps = await _repository
+                    .GetAllForUserIdAsync(role.Id, cancellationToken)
+                    ?? new List<KraRoadMap>();
             }
+
             return roadmaps.Select(MapToDto).ToList();
         }
+
 
         public async Task<List<KraRoadMapDto>?> GetAll(CancellationToken cancellationToken)
         {

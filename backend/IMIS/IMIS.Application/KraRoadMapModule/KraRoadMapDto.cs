@@ -16,7 +16,7 @@ namespace IMIS.Application.KraRoadMapModule
         public KraRoadMapPeriodDto? KraRoadMapPeriod { get; set; }
         public List<KraRoadMapDeliverableGroupDto>? Deliverables { get; set; }
         public List<KraRoadMapKpiDto>? Kpis { get; set; }
-        public required string UserId { get; set; }
+        public required string RoleId { get; set; }
 
         public KraRoadMapDto() { }
 
@@ -32,7 +32,7 @@ namespace IMIS.Application.KraRoadMapModule
             .Select(d => new KraRoadMapDeliverableGroupDto { Id = d.Id, KraDescription = d.KraDescription, Items = new List<KraRoadMapDeliverable> { d } })
             .ToList();
             this.Kpis = entity.Kpis?.Select(k => new KraRoadMapKpiDto(k)).ToList();
-            this.UserId = entity.UserId;
+            this.RoleId = entity.RoleId!;
         }      
         public override KraRoadMap ToEntity()
         {
@@ -50,7 +50,7 @@ namespace IMIS.Application.KraRoadMapModule
                     })
                     .ToList(),
                 Kpis = Kpis?.Select(k => k.ToEntity()).ToList(),
-                UserId = UserId,
+                RoleId = RoleId,
             };
         }
     }
