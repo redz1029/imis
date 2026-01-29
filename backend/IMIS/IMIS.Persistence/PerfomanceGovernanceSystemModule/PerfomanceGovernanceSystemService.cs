@@ -235,12 +235,20 @@ namespace IMIS.Persistence.PgsModule
             }).ToList();
 
             return clonedTemplates.OrderBy(t => t.OrderLevel);
-        }            
+        }   
+        
         public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(
         string userId, string roleId,
         CancellationToken cancellationToken)
         {
-           
+            // Get all if Role is either Admin, OSM and MCC. Add if needed
+
+            // If role is Service Head, retrieve only the PGS of offices under the user's service.
+            // Can be retrieved via PgsSignatoryTemplate joined to Office, User and UserRoles
+            // filtered by Order Level 1.
+
+            // If role is Standard User, retrieve only the PGS of offices where the user is assigned
+
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
                 return new List<PerfomanceGovernanceSystemDto>();
@@ -691,6 +699,14 @@ namespace IMIS.Persistence.PgsModule
                 return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
                     .Create(new List<PerfomanceGovernanceSystem>(), filter.Page, filter.PageSize, 0);
             }
+
+            // Get all if Role is either Admin, OSM and MCC. Add if needed
+
+            // If role is Service Head, retrieve only the PGS of offices under the user's service.
+            // Can be retrieved via PgsSignatoryTemplate joined to Office, User and UserRoles
+            // filtered by Order Level 1.
+
+            // If role is Standard User, retrieve only the PGS of offices where the user is assigned
 
             var role = await _roleManager.FindByIdAsync(roleId);
             if (role == null)
