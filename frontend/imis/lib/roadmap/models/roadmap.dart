@@ -17,7 +17,7 @@ class Roadmap {
   KraRoadmapPeriod? kraRoadMapPeriod;
   List<DeliverableGroup>? deliverables;
   List<KpiRoadmap>? kpis;
-  String userId;
+  String roleId;
 
   Roadmap(
     this.id,
@@ -26,7 +26,7 @@ class Roadmap {
     this.kraRoadMapPeriod,
     this.deliverables,
     this.kpis,
-    this.userId, {
+    this.roleId, {
     this.kra,
     this.rowVersion,
     this.isDeleted,
