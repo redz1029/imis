@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
  
 namespace IMIS.Persistence.AuditorTeamsModule
 {   
-    public class AuditorTeamsRepository : BaseRepository<AuditorTeams, int, ImisDbContext>, IAuditorTeamsRepository
+    public class AuditorTeamsRepository : BaseRepository<AuditorTeams, int, ImisDbContext, User>, IAuditorTeamsRepository
     {
     
         public AuditorTeamsRepository(ImisDbContext dbContext) : base(dbContext)

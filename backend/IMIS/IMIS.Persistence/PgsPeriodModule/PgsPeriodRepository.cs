@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.PgsPeriodModule
 {
-    public class PgsPeriodRepository : BaseRepository<PgsPeriod, int, ImisDbContext>, IPgsPeriodRepository
+    public class PgsPeriodRepository : BaseRepository<PgsPeriod, int, ImisDbContext, User>, IPgsPeriodRepository
     {
         public PgsPeriodRepository(ImisDbContext dbContext) : base(dbContext)
         {

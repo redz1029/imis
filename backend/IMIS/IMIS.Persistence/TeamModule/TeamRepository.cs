@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.TeamModule
 {
-    public class TeamRepository(ImisDbContext dbContext) : BaseRepository<Team, int, ImisDbContext>(dbContext), ITeamRepository
+    public class TeamRepository(ImisDbContext dbContext) : BaseRepository<Team, int, ImisDbContext, User>(dbContext), ITeamRepository
     {
         public async Task<EntityPageList<Team, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {          

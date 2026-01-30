@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
+using Base.Auths;
 using Base.Auths.Permissions;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths;
@@ -85,7 +86,7 @@ namespace IMIS.Presentation.UserModule
                     .Select(rc => rc.ClaimValue!)
                     .ToListAsync();
 
-                var userClaims = await db.Set<IdentityUserClaim<string>>()
+                var userClaims = await db.Set<UserClaim<string>>()
                     .Where(c => c.UserId == userId && c.ClaimType == PermissionClaimType.Claim)
                     .Select(c => c.ClaimValue!)
                     .ToListAsync();
@@ -124,7 +125,7 @@ namespace IMIS.Presentation.UserModule
                     return Results.NotFound(new { message = "User not found." });
 
                 // Get current user claims
-                var currentClaims = await db.Set<IdentityUserClaim<string>>()
+                var currentClaims = await db.Set<UserClaim<string>>()
                     .Where(c => c.UserId == userId && c.ClaimType == PermissionClaimType.Claim)
                     .ToListAsync();
 
@@ -138,20 +139,20 @@ namespace IMIS.Presentation.UserModule
                     {
                         if (existingClaim == null)
                         {
-                            var claim = new IdentityUserClaim<string>
+                            var claim = new UserClaim<string>
                             {
                                 UserId = userId,
                                 ClaimType = PermissionClaimType.Claim,
                                 ClaimValue = normalized
                             };
-                            db.Set<IdentityUserClaim<string>>().Add(claim);
+                            db.Set<UserClaim<string>>().Add(claim);
                         }
                     }
                     else
                     {
                         if (existingClaim != null)
                         {
-                            db.Set<IdentityUserClaim<string>>().Remove(existingClaim);
+                            db.Set<UserClaim<string>>().Remove(existingClaim);
                         }
                     }
                 }
@@ -334,7 +335,7 @@ namespace IMIS.Presentation.UserModule
                 .Select(rc => rc.ClaimValue!)
                 .ToListAsync();
 
-            var userClaims = await dbContext.Set<IdentityUserClaim<string>>()
+            var userClaims = await dbContext.Set<UserClaim<string>>()
                 .Where(c => c.UserId == user.Id && c.ClaimType == PermissionClaimType.Claim)
                 .Select(c => c.ClaimValue!)
                 .ToListAsync();
@@ -409,7 +410,7 @@ namespace IMIS.Presentation.UserModule
                 .Select(rc => rc.ClaimValue!)
                 .ToListAsync();
 
-            var userClaims = await dbContext.Set<IdentityUserClaim<string>>()
+            var userClaims = await dbContext.Set<UserClaim<string>>()
                 .Where(c => c.UserId == user.Id && c.ClaimType == PermissionClaimType.Claim)
                 .Select(c => c.ClaimValue!)
                 .ToListAsync();

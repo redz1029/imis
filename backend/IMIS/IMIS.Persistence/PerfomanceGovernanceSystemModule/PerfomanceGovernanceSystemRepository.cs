@@ -6,7 +6,7 @@ using IMIS.Domain;
 using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGovernanceSystem, long, ImisDbContext>, IPerfomanceGovernanceSystemRepository
+public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGovernanceSystem, long, ImisDbContext, User>, IPerfomanceGovernanceSystemRepository
 {
     public PerfomanceGovernanceSystemRepository(ImisDbContext dbContext) : base(dbContext) { }
 

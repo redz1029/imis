@@ -4,6 +4,7 @@ using IMIS.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IMIS.Persistence.Migrations
 {
     [DbContext(typeof(ImisDbContext))]
-    partial class ImisDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260128143742_OverrideUserClaims")]
+    partial class OverrideUserClaims
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -6115,6 +6118,10 @@ namespace IMIS.Persistence.Migrations
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("rowversion");
 
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("KraId");
@@ -6229,7 +6236,7 @@ namespace IMIS.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("IMIS.Domain.Office", b =>
+            modelBuilder.Entity("IMIS.Domain.KraRoadMapRole", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -6237,21 +6244,14 @@ namespace IMIS.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("OfficeTypeId")
+                    b.Property<int?>("KraId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("ParentOfficeId")
-                        .HasColumnType("int");
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -6260,9 +6260,9 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("OfficeTypeId");
+                    b.HasIndex("KraId");
 
-                    b.HasIndex("ParentOfficeId");
+                    b.HasIndex("RoleId");
 
                     b.ToTable("KraRoadMapRole");
 
@@ -6270,67 +6270,58 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = 1,
-                            IsActive = true,
                             IsDeleted = false,
-                            Name = "Medical Center Chief",
-                            OfficeTypeId = 1
+                            KraId = 1,
+                            RoleId = "4c1c9c2e-9e2b-4c88-8a94-6a7d3e4c5a01"
                         },
                         new
                         {
                             Id = 2,
-                            IsActive = true,
                             IsDeleted = false,
-                            Name = "Medical Service",
-                            OfficeTypeId = 1
+                            KraId = 2,
+                            RoleId = "9b7d2e11-6c3a-4f2e-a1d8-0f7c4b2e91a4"
                         },
                         new
                         {
                             Id = 3,
-                            IsActive = true,
                             IsDeleted = false,
-                            Name = "Nursing Service",
-                            OfficeTypeId = 1
+                            KraId = 3,
+                            RoleId = "2a6f5c90-1d3b-4e8f-9c42-7b1e5d0a83c2"
                         },
                         new
                         {
                             Id = 4,
-                            IsActive = true,
                             IsDeleted = false,
-                            Name = "Hospital Operations and Patient Support Service",
-                            OfficeTypeId = 1
+                            KraId = 4,
+                            RoleId = "e3f7a4c1-5b29-4a8e-9d10-8c6e2f91b4a7"
                         },
                         new
                         {
                             Id = 5,
-                            IsActive = true,
                             IsDeleted = false,
-                            Name = "Finance Service",
-                            OfficeTypeId = 1
+                            KraId = 5,
+                            RoleId = "7d8b0f3c-4a6e-4f9b-8c21-2e5a1d7b90f3"
                         },
                         new
                         {
                             Id = 6,
-                            IsActive = true,
                             IsDeleted = false,
-                            Name = "Lateral Entry",
-                            OfficeTypeId = 1
+                            KraId = 6,
+                            RoleId = "5c2e8b9f-6a1d-4e73-9f0b-1c7a4d3e8b52"
                         },
                         new
                         {
                             Id = 7,
-                            IsActive = true,
                             IsDeleted = false,
-                            Name = "Allied/Ancillary",
-                            OfficeTypeId = 1
+                            KraId = 7,
+                            RoleId = "f0a8d2c7-1e9b-4c5a-8f63-7b4e2d9c1a30"
                         },
                         new
                         {
                             Id = 8,
-                            IsActive = true,
                             IsDeleted = false,
-                            Name = "Department of Internal Medicine",
-                            OfficeTypeId = 2,
-                            ParentOfficeId = 2
+                            KraId = 8,
+                            RoleId = "3e1b5f2c-9d8a-4a07-8c64-fb2e9d7a1c50"
                         },
                         new
                         {
@@ -7079,7 +7070,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 79,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Cardiovascular Center",
+                            Name = "Cardiovascular Care",
                             OfficeTypeId = 3,
                             ParentOfficeId = 1
                         },
@@ -7502,7 +7493,7 @@ namespace IMIS.Persistence.Migrations
                             Id = 126,
                             IsActive = true,
                             IsDeleted = false,
-                            Name = "Legal Unit",
+                            Name = "Legal Affairs Unit",
                             OfficeTypeId = 4,
                             ParentOfficeId = 1
                         },
@@ -8043,6 +8034,60 @@ namespace IMIS.Persistence.Migrations
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Lung Care",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 2
+                        },
+                        new
+                        {
+                            Id = 187,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Clinical Departments",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 3
+                        },
+                        new
+                        {
+                            Id = 188,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Critical Care Units",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 3
+                        },
+                        new
+                        {
+                            Id = 189,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Isolation",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 3
+                        },
+                        new
+                        {
+                            Id = 190,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Mechanical Section",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 4
+                        },
+                        new
+                        {
+                            Id = 191,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "Planning and Management Unit",
+                            OfficeTypeId = 2,
+                            ParentOfficeId = 5
+                        },
+                        new
+                        {
+                            Id = 192,
+                            IsActive = true,
+                            IsDeleted = false,
+                            Name = "BUCAS Center",
                             OfficeTypeId = 2,
                             ParentOfficeId = 2
                         });
@@ -14827,28 +14872,6 @@ namespace IMIS.Persistence.Migrations
                     b.Navigation("PgsDeliverable");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.CharacterNote", b =>
-                {
-                    b.HasOne("IMIS.Domain.Character", "Character")
-                        .WithMany("Notes")
-                        .HasForeignKey("CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.IsoStandard", b =>
-                {
-                    b.HasOne("IMIS.Domain.StandardVersion", "Version")
-                        .WithMany("IsoStandards")
-                        .HasForeignKey("VersionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Version");
-                });
-
             modelBuilder.Entity("IMIS.Domain.KraRoadMap", b =>
                 {
                     b.HasOne("IMIS.Domain.KeyResultArea", "Kra")
@@ -14861,9 +14884,17 @@ namespace IMIS.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("IMIS.Domain.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Kra");
 
                     b.Navigation("KraRoadMapPeriod");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMapDeliverable", b =>
@@ -14878,6 +14909,21 @@ namespace IMIS.Persistence.Migrations
                     b.HasOne("IMIS.Domain.KraRoadMap", null)
                         .WithMany("Kpis")
                         .HasForeignKey("KraRoadMapId");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.KraRoadMapRole", b =>
+                {
+                    b.HasOne("IMIS.Domain.KeyResultArea", "Kra")
+                        .WithMany()
+                        .HasForeignKey("KraId");
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId");
+
+                    b.Navigation("Kra");
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Office", b =>
@@ -15027,17 +15073,6 @@ namespace IMIS.Persistence.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("IMIS.Domain.StrategicObjective", b =>
-                {
-                    b.HasOne("IMIS.Domain.Character", "Character")
-                        .WithOne("StrategicObjective")
-                        .HasForeignKey("IMIS.Domain.StrategicObjective", "CharacterId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Character");
-                });
-
             modelBuilder.Entity("IMIS.Domain.UserOffices", b =>
                 {
                     b.HasOne("IMIS.Domain.Office", null)
@@ -15089,16 +15124,6 @@ namespace IMIS.Persistence.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("IMIS.Domain.AuditPlanEntry", b =>
-                {
-                    b.Navigation("Standards");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.AuditPlanHeader", b =>
-                {
-                    b.Navigation("Entries");
-                });
-
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
                 {
                     b.Navigation("AuditSchduleDetails");
@@ -15111,13 +15136,6 @@ namespace IMIS.Persistence.Migrations
                     b.Navigation("AuditorOffices");
 
                     b.Navigation("AuditorTeams");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.Character", b =>
-                {
-                    b.Navigation("Notes");
-
-                    b.Navigation("StrategicObjective");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMap", b =>
@@ -15153,11 +15171,6 @@ namespace IMIS.Persistence.Migrations
             modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
                 {
                     b.Navigation("PgsDeliverableAccomplishments");
-                });
-
-            modelBuilder.Entity("IMIS.Domain.StandardVersion", b =>
-                {
-                    b.Navigation("IsoStandards");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Team", b =>

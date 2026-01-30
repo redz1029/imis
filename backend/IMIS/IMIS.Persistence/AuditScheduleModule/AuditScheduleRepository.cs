@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.AuditScheduleModule
 {
-    public class AuditScheduleRepository(ImisDbContext dbContext) : BaseRepository<AuditSchedule, int, ImisDbContext>(dbContext), IAuditScheduleRepository
+    public class AuditScheduleRepository(ImisDbContext dbContext) : BaseRepository<AuditSchedule, int, ImisDbContext, User>(dbContext), IAuditScheduleRepository
     {
         public async Task<List<int>> GetExistingAuditableOfficeIdsAsync(long auditScheduleId, CancellationToken cancellationToken)
         {         

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IMIS.Persistence.PGSModules
 {
     public class PGSDeliverableRepository(ImisDbContext dbContext)
-    : BaseRepository<PgsDeliverable, long, ImisDbContext>(dbContext), IPGSDeliverableRepository
+    : BaseRepository<PgsDeliverable, long, ImisDbContext, User>(dbContext), IPGSDeliverableRepository
     {
         public async Task<long?> GetCurrentYearPeriodIdAsync(int currentYear, CancellationToken cancellationToken)
         {

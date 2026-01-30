@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.SWOTAnalysisModule
 {
-    public class SWOTAnalysisRepository : BaseRepository<SWOTAnalysis, int, ImisDbContext>, ISWOTAnalysisRepository
+    public class SWOTAnalysisRepository : BaseRepository<SWOTAnalysis, int, ImisDbContext, User>, ISWOTAnalysisRepository
     {
         public SWOTAnalysisRepository(ImisDbContext dbContext) : base(dbContext)
         {

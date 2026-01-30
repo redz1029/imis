@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 namespace IMIS.Persistence.AuditScheduleModule
 {
 
-    public class AuditScheduleDetailRepository(ImisDbContext dbContext) : BaseRepository<AuditScheduleDetails, int, ImisDbContext>(dbContext), IAuditScheduleDetailRepository
+    public class AuditScheduleDetailRepository(ImisDbContext dbContext) : BaseRepository<AuditScheduleDetails, int, ImisDbContext, User>(dbContext), IAuditScheduleDetailRepository
     {    
         public async Task<AuditScheduleDetails?> GetOverlappingAuditAsync(int officeId, DateTime startDate, DateTime endDate, int currentAuditId)
         {

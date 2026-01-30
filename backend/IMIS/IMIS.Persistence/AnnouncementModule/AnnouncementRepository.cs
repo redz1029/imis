@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.AnnouncementModule
 {
-    public class AnnouncementRepository : BaseRepository<Announcement, int, ImisDbContext>, IAnnouncementRepository
+    public class AnnouncementRepository : BaseRepository<Announcement, int, ImisDbContext, User>, IAnnouncementRepository
     {
         public AnnouncementRepository(ImisDbContext dbContext) : base(dbContext)
         {

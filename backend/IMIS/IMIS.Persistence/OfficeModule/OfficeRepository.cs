@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.OfficeModule
 {
-    public class OfficeRepository(ImisDbContext dbContext) : BaseRepository<Office, int, ImisDbContext>(dbContext), IOfficeRepository
+    public class OfficeRepository(ImisDbContext dbContext) : BaseRepository<Office, int, ImisDbContext, User>(dbContext), IOfficeRepository
     {
         public async Task<EntityPageList<Office, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {

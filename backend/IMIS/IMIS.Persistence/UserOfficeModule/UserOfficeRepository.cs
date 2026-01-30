@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.UserOfficeModule  
 {
-    public class UserOfficeRepository : BaseRepository<UserOffices, int, ImisDbContext>, IUserOfficeRepository
+    public class UserOfficeRepository : BaseRepository<UserOffices, int, ImisDbContext, User>, IUserOfficeRepository
     {       
         public UserOfficeRepository(ImisDbContext dbContext) : base(dbContext)
         {
