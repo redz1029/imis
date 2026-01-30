@@ -8,6 +8,7 @@ using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
 
 namespace IMIS.Persistence.KraRoadMapModule
@@ -158,7 +159,11 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             if (
                 role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase)
+                role.Name.Equals(new StandardUserRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new MCC().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new OSM().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase)
             )
             {
                 roadmaps = (await _repository.GetAll(cancellationToken))
