@@ -11,13 +11,13 @@ import 'package:imis/roadmap/models/roadmap.dart';
 import 'package:imis/roadmap/models/roadmap_deliverables.dart';
 import 'package:imis/roadmap/pages/print_roadmap_page.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
-import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/utils/permission_service.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../common_services/common_service.dart';
 import '../../utils/auth_util.dart';
 import '../kra_period_roadmap/models/kra_roadmap_period.dart';
@@ -41,7 +41,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   int _totalCount = 0;
   bool _isLoading = false;
   final dio = Dio();
-  String userId = "";
+  String roleId = "";
   final List<DeliverableGroup> deliverables = [];
   List<KeyResultArea> kraList = [];
   List<KraRoadmapRole> kraListRoadmap = [];
@@ -54,8 +54,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   @override
   void initState() {
     super.initState();
-    fetchRoadmap();
-    _loadCurrentUserId();
+    _loadCurrentRoleId();
     isSearchfocus.addListener(() {
       setState(() {});
     });
@@ -80,25 +79,45 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
     super.dispose();
   }
 
-  Future<void> _loadCurrentUserId() async {
-    UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
+  Future<void> _loadCurrentRoleId() async {
+    await AuthUtil.processTokenValidity(dio, context);
+    final roles = await AuthUtil.fetchRoles();
+    final prefs = await SharedPreferences.getInstance();
+    final String? selectedRoleName = prefs.getString('selectedRole');
 
-    setState(() {
-      userId = user!.id ?? "UserId";
-    });
+    String tempRoleId = "";
+
+    if (roles != null && roles.isNotEmpty) {
+      var currentRole = roles.first;
+      if (selectedRoleName != null) {
+        try {
+          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
+        } catch (e) {
+          // keep first
+        }
+      }
+      tempRoleId = currentRole.id;
+    }
 
     if (mounted) {
-      setState(() {});
+      setState(() {
+        roleId = tempRoleId;
+      });
+      
+      if (roleId.isNotEmpty) {
+        fetchRoadmap();
+      }
     }
   }
 
   Future<void> fetchRoadmap({int page = 1, String? searchQuery}) async {
-    if (_isLoading) return;
+    if (_isLoading || roleId.isEmpty) return;
 
     setState(() => _isLoading = true);
 
     try {
       final pageList = await _roadmapService.getRoadmap(
+        roleId: roleId,
         page: page,
         pageSize: _pageSize,
         searchQuery: searchQuery,
@@ -612,7 +631,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                   builder: (context) {
                     final canEdit =
                         (roadmapToEdit == null) ||
-                        (userId == roadmapToEdit.userId) ||
+                        (roleId == roadmapToEdit.roleId) ||
                         (permissionService.currentRole != null &&
                             permissionService.currentRole ==
                                 PermissionString.roleAdmin);
@@ -792,7 +811,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                     ),
                                   )
                                   .toList(),
-                              userId,
+                              roleId,
                               isDeleted: false,
                               rowVersion: roadmapToEdit?.rowVersion ?? '',
                             );
@@ -1118,7 +1137,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               DataCell(
                                 Row(
                                   children: [
-                                    if (userId == roadmap.userId ||
+                                    if (roleId == roadmap.roleId ||
                                         permissionService.currentRole ==
                                             PermissionString.roleAdmin)
                                       IconButton(
@@ -1160,7 +1179,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         },
                                       ),
                                     ),
-                                    if (userId == roadmap.userId ||
+                                    if (roleId == roadmap.roleId ||
                                         permissionService.currentRole ==
                                             PermissionString.roleAdmin)
                                       IconButton(
