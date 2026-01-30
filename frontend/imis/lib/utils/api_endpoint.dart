@@ -53,7 +53,7 @@ class ApiEndpoint {
   late String swotAnalysis;
   late String kraRoadMapPeriod;
   late String kraRoadMap;
-  late String kraRoadMapUserId;
+  late String kraRoadMapRoleId;
   late String kraRoadMapReport;
   late String kraRoadmapRole;
   ApiEndpoint() {
@@ -107,7 +107,7 @@ class ApiEndpoint {
     swotAnalysis = '$baseUrl/swotAnalysis';
     kraRoadMapPeriod = '$baseUrl/kraRoadMapPeriod';
     kraRoadMap = '$baseUrl/kraRoadMap';
-    kraRoadMapUserId = '$baseUrl/kraRoadMap/userId';
+    kraRoadMapRoleId = '$baseUrl/KRARoadmapRole/roleid';
     kraRoadMapReport = '$baseUrl/kraRoadMap/list-report/pdf';
     kraRoadmapRole = '$baseUrl/kraRoadmapRole/roleid';
   }
