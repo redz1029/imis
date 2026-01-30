@@ -13,13 +13,14 @@ class RoadmapService {
   RoadmapService(this.dio);
 
   Future<PageList<Roadmap>> getRoadmap({
+    required String roleId,
     int page = 1,
     int pageSize = 15,
     String? searchQuery,
   }) async {
     final paginationUtil = PaginationUtil(dio);
     return await paginationUtil.fetchPaginatedData<Roadmap>(
-      endpoint: ApiEndpoint().kraRoadMapUserId,
+      endpoint: '${ApiEndpoint().kraRoadMap}/roleid/$roleId',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
