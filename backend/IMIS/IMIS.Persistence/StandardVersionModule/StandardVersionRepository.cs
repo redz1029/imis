@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.StandardVersionModule
 {
-    public class StandardVersionRepository : BaseRepository<StandardVersion, int, ImisDbContext>, IStandardVersionRepository
+    public class StandardVersionRepository : BaseRepository<StandardVersion, int, ImisDbContext, User>, IStandardVersionRepository
     {
         public StandardVersionRepository(ImisDbContext dbContext) : base(dbContext)
         {

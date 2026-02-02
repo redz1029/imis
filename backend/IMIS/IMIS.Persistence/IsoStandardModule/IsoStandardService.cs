@@ -136,5 +136,15 @@ namespace IMIS.Persistence.IsoStandardModule
                 await SaveOrUpdateAsync(isoDto, cancellationToken).ConfigureAwait(false);
             }
         }
+
+        public Task CreateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task UpdateAsync(long id, IsoStandardDto dto, CancellationToken cancellationToken)
+        {
+            throw new NotImplementedException();
+        }
     }
 }
