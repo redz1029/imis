@@ -5,6 +5,7 @@ using IMIS.Domain;
 using IMIS.Persistence.SeedConfigurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Reflection.Emit;
 
 namespace IMIS.Persistence
 {
@@ -135,12 +136,6 @@ namespace IMIS.Persistence
                 .HasForeignKey(iso => iso.VersionID)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<StandardVersion>()
-                .HasKey(sv => sv.Id);
-
-            builder.Entity<IsoStandard>()
-                .HasKey(iso => iso.Id);
-               
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
             builder.ApplyConfiguration(new UserConfiguration());
