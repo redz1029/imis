@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="AuditPlanModule\**" />
+    <EmbeddedResource Remove="AuditPlanModule\**" />
+    <None Remove="AuditPlanModule\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="DotNetEnv" Version="3.1.1" />
     <PackageReference Include="FastReport.OpenSource" Version="2025.2.0" />
     <PackageReference Include="FastReport.OpenSource.Export.PdfSimple" Version="2025.2.0" />
@@ -25,10 +31,6 @@
     <ProjectReference Include="..\IMIS.Application\IMIS.Application.csproj" />
     <ProjectReference Include="..\IMIS.Domain\IMIS.Domain.csproj" />
     <ProjectReference Include="..\IMIS.Infrastructure\IMIS.Infrastructure.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="AuditPlanModule\" />
   </ItemGroup>
 
 </Project>
