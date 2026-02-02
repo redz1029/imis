@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.IsoStandardModule
 {
-    public class IsoStandardRepository : BaseRepository<IsoStandard, long, ImisDbContext>, IIsoStandardRepository
+    public class IsoStandardRepository : BaseRepository<IsoStandard, long, ImisDbContext, User>, IIsoStandardRepository
     {
         public IsoStandardRepository(ImisDbContext dbContext) : base(dbContext)
         {
