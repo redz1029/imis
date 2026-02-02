@@ -1,7 +1,8 @@
-using Base.Pagination;
+﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.IsoStandardModule;
 using IMIS.Domain;
+using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.IsoStandardModule
 {
@@ -63,19 +64,54 @@ namespace IMIS.Persistence.IsoStandardModule
             return DtoPageList<IsoStandardDto, Domain.IsoStandard, long>.Create(standards.Items, page, pageSize, standards.TotalCount);
         }
 
+        //public async Task SaveOrUpdateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
+        //{
+        //    if (dto == null)
+        //        throw new ArgumentNullException(nameof(dto));
+
+        //    var entity = dto.ToEntity();
+
+        //    if (entity.Id == 0)
+        //        _repository.Add(entity);
+        //    else
+        //        await _repository.UpdateAsync(entity, entity.Id, cancellationToken).ConfigureAwait(false);
+
+        //    var context = _repository.GetDbContext();
+        //    await context.SaveChangesAsync(cancellationToken);
+        //}
+
         public async Task SaveOrUpdateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
         {
             if (dto == null)
                 throw new ArgumentNullException(nameof(dto));
 
-            var entity = dto.ToEntity();
-
-            if (entity.Id == 0)
-                _repository.Add(entity);
-            else
-                await _repository.UpdateAsync(entity, entity.Id, cancellationToken).ConfigureAwait(false);
-
             var context = _repository.GetDbContext();
+
+            if (dto.Id == 0)
+            {
+                // CREATE (this part is fine)
+                var entity = dto.ToEntity();
+                _repository.Add(entity);
+            }
+            else
+            {
+                // ✅ UPDATE — LOAD TRACKED ENTITY
+                var entity = await context.Set<IsoStandard>()
+                    .FirstOrDefaultAsync(x => x.Id == dto.Id, cancellationToken);
+
+                if (entity == null)
+                    throw new Exception("IsoStandard not found.");
+
+                // ✅ UPDATE PROPERTIES ONLY
+                entity.VersionID = dto.VersionID;
+                entity.ClauseRef = dto.ClauseRef;
+                entity.Description = dto.Description;
+                entity.isActive = dto.IsActive;
+
+                // ❌ DO NOT call Update()
+                // ❌ DO NOT touch entity.Version
+            }
+
             await context.SaveChangesAsync(cancellationToken);
         }
 

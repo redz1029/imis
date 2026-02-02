@@ -19,11 +19,13 @@ namespace IMIS.Application.StandardVersionModule
             this.Id = version.Id;
             this.VersionName = version.VersionName;
             this.IsActive = version.isActive;
-            if (version.IsoStandards != null)
+            if (version?.IsoStandards != null && version.IsoStandards.Count > 0)
             {
-                IsoStandards = version.IsoStandards
-                    .Select(iso => new IsoStandardDto(iso))
-                    .ToList();
+                IsoStandards = new List<IsoStandardDto>();
+                foreach (var iso in version.IsoStandards)
+                {
+                    IsoStandards.Add(new IsoStandardDto(iso));
+                }
             }
         }
 
@@ -33,8 +35,8 @@ namespace IMIS.Application.StandardVersionModule
             {
                 Id = Id,
                 VersionName = VersionName,
-                isActive = IsActive,
-                IsoStandards = IsoStandards?.Select(iso => iso.ToEntity()).ToList()
+                isActive = IsActive
+                //IsoStandards = IsoStandards?.Select(iso => iso.ToEntity()).ToList()
             };
         }
     }
