@@ -278,7 +278,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
 
                   gap8px,
                   Text(
-                    "Welcome to CPeMS - CRMC Performance Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
+                    "Welcome to CPeMS - Centralized Performance Electronic Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.9),
                       fontSize: 14,
@@ -406,7 +406,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                   subtitle: office.join(', '),
                   count: "$total",
                   color: Colors.black,
-                  icon: Icons.show_chart,
+                  icon: Icons.inventory_outlined,
                 ),
               ),
 
@@ -415,7 +415,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                   title: "Direct Deliverables",
                   count: "$direct",
                   color: primaryColor,
-                  icon: Icons.people_outline,
+                  icon: Icons.directions_outlined,
                   progress: total > 0 ? direct / total : 0,
                 ),
               ),
