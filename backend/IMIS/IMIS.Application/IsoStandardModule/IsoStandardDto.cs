@@ -23,16 +23,15 @@ namespace IMIS.Application.IsoStandardModule
             this.ClauseRef = isoStandard.ClauseRef;
             this.Description = isoStandard.Description;
             this.IsActive = isoStandard.isActive;
-            
-            // Only include Version metadata, NOT nested IsoStandards to avoid circular reference
-            if (isoStandard?.Version != null)
+
+            if (isoStandard.Version != null)
             {
                 this.Version = new StandardVersionDto()
                 {
                     Id = isoStandard.Version.Id,
                     VersionName = isoStandard.Version.VersionName,
                     IsActive = isoStandard.Version.isActive,
-                    IsoStandards = null // IMPORTANT: Don't include nested list to prevent circular refs
+                    IsoStandards = null // Keep this null to break the chain
                 };
             }
         }

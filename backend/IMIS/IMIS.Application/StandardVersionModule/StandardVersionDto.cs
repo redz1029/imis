@@ -1,7 +1,8 @@
 using Base.Primitives;
-using System.Diagnostics.CodeAnalysis;
-using IMIS.Domain;
 using IMIS.Application.IsoStandardModule;
+using IMIS.Domain;
+using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 
 namespace IMIS.Application.StandardVersionModule
 {
@@ -9,6 +10,9 @@ namespace IMIS.Application.StandardVersionModule
     {
         public required string VersionName { get; set; }
         public bool IsActive { get; set; }
+
+        // This prevents the serializer from looking back at the standards list
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public List<IsoStandardDto>? IsoStandards { get; set; }
 
         public StandardVersionDto() { }

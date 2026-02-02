@@ -137,14 +137,18 @@ namespace IMIS.Persistence.IsoStandardModule
             }
         }
 
-        public Task CreateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
+        public async Task CreateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            // Ensure Id is 0 for a true "Create" operation
+            dto.Id = 0;
+            await SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
         }
 
-        public Task UpdateAsync(long id, IsoStandardDto dto, CancellationToken cancellationToken)
+        public async Task UpdateAsync(long id, IsoStandardDto dto, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException();
+            // Ensure the DTO Id matches the route Id
+            dto.Id = id;
+            await SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
         }
     }
 }

@@ -29,9 +29,11 @@ namespace IMIS.Presentation.IsoStandardModule
             {
                 await service.CreateAsync(dto, cancellationToken);
                 await cache.EvictByTagAsync(_tag, cancellationToken);
-                return Results.Ok();
-            });
 
+                // Return a 201 Created status
+                return Results.Created($"/IsoStandard/{dto.Id}", dto);
+            })
+.WithTags(_tag); // <--- Add this so it shows up in Swagger correctly
 
             app.MapGet("/", async (IIsoStandardService service, CancellationToken cancellationToken) =>
             {
