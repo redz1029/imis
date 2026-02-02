@@ -12,19 +12,26 @@ namespace IMIS.Presentation.IsoStandardModule
     {
         private const string _tag = "IsoStandard";
 
-        public IsoStandardEndpoint() : base("/api/IsoStandard")
+        public IsoStandardEndpoint() : base("IsoStandard")
         {
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
+            //app.MapPost("/", async ([FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            //{
+            //    await service.SaveOrUpdateAsync(dto, cancellationToken);
+            //    await cache.EvictByTagAsync(_tag, cancellationToken);
+            //    return Results.Ok(dto);
+            //})
+            //.WithTags(_tag);
             app.MapPost("/", async ([FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                await service.SaveOrUpdateAsync(dto, cancellationToken);
+                await service.CreateAsync(dto, cancellationToken);
                 await cache.EvictByTagAsync(_tag, cancellationToken);
-                return Results.Ok(dto);
-            })
-            .WithTags(_tag);
+                return Results.Ok();
+            });
+
 
             app.MapGet("/", async (IIsoStandardService service, CancellationToken cancellationToken) =>
             {
