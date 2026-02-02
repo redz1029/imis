@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace IMIS.Persistence.Migrations
 {
     [DbContext(typeof(ImisDbContext))]
-    [Migration("20260128072315_changeUserIdToRoleIdfromKraRoadmap")]
-    partial class changeUserIdToRoleIdfromKraRoadmap
+    [Migration("20260202054244_changeUserIdToRoleIdfromKraRoadmapAndAddIsoStandards")]
+    partial class changeUserIdToRoleIdfromKraRoadmapAndAddIsoStandards
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -66,6 +66,36 @@ namespace IMIS.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("AuditTrails");
+                });
+
+            modelBuilder.Entity("Base.Auths.UserClaim<string>", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AspNetUserClaims", (string)null);
                 });
 
             modelBuilder.Entity("IMIS.Domain.Announcement", b =>
@@ -5960,6 +5990,42 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("BreakThroughScoring");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.IsoStandard", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("ClauseRef")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int>("VersionID")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("isActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("VersionID");
+
+                    b.ToTable("IsoStandards");
+                });
+
             modelBuilder.Entity("IMIS.Domain.KeyResultArea", b =>
                 {
                     b.Property<int>("Id")
@@ -8799,6 +8865,34 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("SWOTAnalysis");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.StandardVersion", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("VersionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("isActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("StandardVersions");
+                });
+
             modelBuilder.Entity("IMIS.Domain.Team", b =>
                 {
                     b.Property<int>("Id")
@@ -8924,6 +9018,3338 @@ namespace IMIS.Persistence.Migrations
                             IsActive = true,
                             IsDeleted = false,
                             Name = "Team 14"
+                        });
+                });
+
+            modelBuilder.Entity("IMIS.Domain.User", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AccessFailedCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("LockoutEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LockoutEnd")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("MiddleName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NormalizedEmail")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("NormalizedUserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("PasswordHash")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("PhoneNumberConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Position")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Prefix")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Suffix")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("UserName")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedEmail")
+                        .HasDatabaseName("EmailIndex");
+
+                    b.HasIndex("NormalizedUserName")
+                        .IsUnique()
+                        .HasDatabaseName("UserNameIndex")
+                        .HasFilter("[NormalizedUserName] IS NOT NULL");
+
+                    b.ToTable("AspNetUsers", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "50ab722e-3f34-479a-90f5-6f087a0a95c6",
+                            Email = "marcrejohncastillano@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Marc Rejohn",
+                            LastName = "Castillano",
+                            LockoutEnabled = false,
+                            MiddleName = "Ballares",
+                            NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
+                            NormalizedUserName = "CASTILLANO.MRB",
+                            PasswordHash = "AQAAAAIAAYagAAAAEC9OC3VMvzdq2S82dDnEEOnJ3jZS25nSmMwLriEhBUgvUShzzXmaxyECHgvN4Y08aw==",
+                            PhoneNumber = "09959283775",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "fc3ae13d-b6e5-424f-aa70-22c6bf868f1d",
+                            TwoFactorEnabled = false,
+                            UserName = "castillano.mrb"
+                        },
+                        new
+                        {
+                            Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "fc3311c7-bbf1-4838-b6ad-5163ca830153",
+                            Email = "earlmaerama@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Earlene Mae",
+                            LastName = "Rama",
+                            LockoutEnabled = false,
+                            MiddleName = "Gallos",
+                            NormalizedEmail = "EARLMAERAMA@GMAIL.COM",
+                            NormalizedUserName = "RAMA.EMG",
+                            PasswordHash = "AQAAAAIAAYagAAAAEC2aDBcqbJmWbSrAVv4ENDLcBx0Jv5EbceHXyXArH7b566VVBZAWByBZd2vNNFtDnw==",
+                            PhoneNumber = "09128293036",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "b6e31713-3019-4872-9bbb-5d7fd3bcef95",
+                            TwoFactorEnabled = false,
+                            UserName = "rama.emg"
+                        },
+                        new
+                        {
+                            Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "47925b60-45ec-4cb4-848d-f6b353398ab3",
+                            Email = "wilburpimentel09@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Wilbur",
+                            LastName = "Pimentel",
+                            LockoutEnabled = false,
+                            MiddleName = "Bello",
+                            NormalizedEmail = "WILBURPIMENTEL09@GMAIL.COM",
+                            NormalizedUserName = "PIMENTEL.WB",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBU5+oguGo1j+pvLX7F63mNn+G44wW56T0BG5rdQlc0rmuJLSRqPVUGKmYw9lDez3w==",
+                            PhoneNumber = "09069043375",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "dd340ce5-0451-4db1-8ad8-25b050811640",
+                            TwoFactorEnabled = false,
+                            UserName = "pimentel.wb"
+                        },
+                        new
+                        {
+                            Id = "537d9fcd-b505-4f93-afc6-17eb8eddff83",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "2c83e4f2-e2db-487a-8696-98c75316ba88",
+                            Email = "Nolan1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Nolan",
+                            LastName = "Avanzado",
+                            LockoutEnabled = false,
+                            MiddleName = "",
+                            NormalizedEmail = "NOLAN1234@GMAIL.COM",
+                            NormalizedUserName = "NOLAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAELMlhzDss9cW/1MWmr3KwYoUlWYUUfJeuCXxaQesg12eY44NR7vPdWnPM9M0tWNONQ==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Integrated Hospital Operations and Management Program",
+                            Prefix = "Mr.",
+                            SecurityStamp = "8724fa23-86e3-4b0b-8768-32e100b4957e",
+                            TwoFactorEnabled = false,
+                            UserName = "Nolan"
+                        },
+                        new
+                        {
+                            Id = "743b9807-3441-47c1-9285-5ff8dfd7acb9",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "b95d8cd2-ce95-478d-b885-559ec045e840",
+                            Email = "Sheila1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Sheila farisha",
+                            LastName = "Mangelen",
+                            LockoutEnabled = false,
+                            MiddleName = "K.",
+                            NormalizedEmail = "SHEILA1234@GMAIL.COM",
+                            NormalizedUserName = "SHEILA",
+                            PasswordHash = "AQAAAAIAAYagAAAAED02Ze83w60khEGAGAH7mFhXXthq9SholQ8b22k1UeUL4XPchmUiYLCSonxb3lSmhA==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Office for Strategy Management",
+                            Prefix = "Dr.",
+                            SecurityStamp = "1dad6fae-3896-406b-b7c0-26a65ba649d9",
+                            TwoFactorEnabled = false,
+                            UserName = "Sheila"
+                        },
+                        new
+                        {
+                            Id = "7acb06ae-c2de-4fa1-8b62-53c1d63121f0",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "cf2ee5e2-a1e4-4948-ac04-6a46f6519185",
+                            Email = "Johari1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Johari",
+                            LastName = "Casan",
+                            LockoutEnabled = false,
+                            MiddleName = "P.",
+                            NormalizedEmail = "JOHARI1234@GMAIL.COM",
+                            NormalizedUserName = "JOHARI",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ8dGjC2v83cW7g1fWMC0bThGAIslMO6uMowdwaKh/fcFQusi31Dxu0YELL08ndHXg==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Prefix = "Atty.",
+                            SecurityStamp = "dea001d0-4383-41be-8307-862e635d8c56",
+                            TwoFactorEnabled = false,
+                            UserName = "Johari"
+                        },
+                        new
+                        {
+                            Id = "7eee5b08-df0d-4ac0-a8db-39d924dd30b7",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "00600225-6870-4018-9f32-5608352d4113",
+                            Email = "Linda1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Linda",
+                            LastName = "Garde",
+                            LockoutEnabled = false,
+                            MiddleName = "P.",
+                            NormalizedEmail = "LINDA1234@GMAIL.COM",
+                            NormalizedUserName = "LINDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBgDG8qahFJHNp8F1mfJA8LFSoe8BwsMmOji7/c3YR8TGujb+Cl31FyHetPkE3APDA==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Budget Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "8b1fd51f-090a-4a59-98b9-ad54d6cb4c6b",
+                            TwoFactorEnabled = false,
+                            UserName = "Linda"
+                        },
+                        new
+                        {
+                            Id = "8fa3f3e4-b8a2-4375-9dc8-91b6fbc55e4a",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "563906fe-4f50-442f-9d5d-cb79e4d137e5",
+                            Email = "Java1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Sergio",
+                            LastName = "Java",
+                            LockoutEnabled = false,
+                            MiddleName = "C.",
+                            NormalizedEmail = "JAVA1234@GMAIL.COM",
+                            NormalizedUserName = "JAVA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIeaCz2D9BZSXtP86scSCVIVglk624PgT3jNbhXvr7crQS/khqg9wthhUDBzQIVRsQ==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Chief Administrative Officer",
+                            Prefix = "Mr.",
+                            SecurityStamp = "0ee8a9ab-352c-4be9-b152-d8841e6caf3d",
+                            TwoFactorEnabled = false,
+                            UserName = "Java"
+                        },
+                        new
+                        {
+                            Id = "a6866933-92a9-41e7-9100-8bee51ed0ada",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "6e2216b7-5a7e-48b2-a4ba-606ca13bbec8",
+                            Email = "John1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "John",
+                            LastName = "Maliga",
+                            LockoutEnabled = false,
+                            MiddleName = "O.",
+                            NormalizedEmail = "JOHN1234@GMAIL.COM",
+                            NormalizedUserName = "JOHN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEORKnGM/yj2AzHJ/Tebok5vEw7gXrfaTYITo2s2C9zhmzQAWP6Hp2udbPO5Cv12VZA==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Prefix = "Dr.",
+                            SecurityStamp = "bb5e9243-3791-4435-85fd-241bcd246811",
+                            TwoFactorEnabled = false,
+                            UserName = "John"
+                        },
+                        new
+                        {
+                            Id = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "8ce7f6f3-abdd-477e-a792-210bcb4937cf",
+                            Email = "scibrahimtan@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Scheherazade",
+                            LastName = "TAN",
+                            LockoutEnabled = false,
+                            MiddleName = "I.",
+                            NormalizedEmail = "SCRIBRAHIMTAN@GMAIL.COM",
+                            NormalizedUserName = "TAN.SI",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFXIxjELVLXLMWDujPSmpNwOcsopHpG18781NBsteIh7+jdxSvcsYP/hBpkAofuYSA==",
+                            PhoneNumber = "09178663037",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Out-Patient Department",
+                            Prefix = "Dr.",
+                            SecurityStamp = "d90e91e2-0f7e-428d-82a5-ed88f8a6a304",
+                            TwoFactorEnabled = false,
+                            UserName = "tan.si"
+                        },
+                        new
+                        {
+                            Id = "e1a3ac20-1d20-4f37-8826-242657a746c7",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "b384371c-c5a3-458e-842c-9f8614665663",
+                            Email = "Dimaren1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Ishmael",
+                            LastName = "Dimaren",
+                            LockoutEnabled = false,
+                            MiddleName = "R.",
+                            NormalizedEmail = "DIMAREN1234@GMAIL.COM",
+                            NormalizedUserName = "DIMAREN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPapzotakuyljNzCADIutGw3oVu1+1bXUHwZAjI0cjb5a5kmPmeQVD6tFS0+WySCBA==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Medical Center Chief II",
+                            Prefix = "Dr.",
+                            SecurityStamp = "c8d69353-464f-4161-b341-3f567f33e629",
+                            TwoFactorEnabled = false,
+                            UserName = "Dimaren"
+                        },
+                        new
+                        {
+                            Id = "e9bcc340-e63f-40e6-8326-8fe86cbef923",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "99b35078-ebca-40fc-8ebc-bea72fc3b1e4",
+                            Email = "Precious1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Precious Love",
+                            LastName = "Esquillo",
+                            LockoutEnabled = false,
+                            MiddleName = "Y.",
+                            NormalizedEmail = "PRECIOUS1234@GMAIL.COM",
+                            NormalizedUserName = "PRECIOUS",
+                            PasswordHash = "AQAAAAIAAYagAAAAEF8hLU/a8uijfR+vSzJNLi41U/zgQ9FuWw6Aq/sOIQss7eZT1ECMgJTLzUpFQoBhsQ==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Chief Administrative Officer",
+                            Prefix = "Ms.",
+                            SecurityStamp = "74d6407c-81da-4725-9ed0-2ab46001e0b4",
+                            TwoFactorEnabled = false,
+                            UserName = "Precious"
+                        },
+                        new
+                        {
+                            Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ffe7ebe5-cd67-4b58-aac8-efe6604f2f31",
+                            Email = "Singgon1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Bai Samirah",
+                            LastName = "Singgon",
+                            LockoutEnabled = false,
+                            MiddleName = "A.",
+                            NormalizedEmail = "SINGGON1234@GMAIL.COM",
+                            NormalizedUserName = "SINGGON",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBXWdHR3gnpxcKFfMsTHG9QyeRekuZaGP+zhlNUejXtBL5jZfUGGSflUsf/KM0TpzQ==",
+                            PhoneNumber = "09177220668",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Department of Pediatrics",
+                            Prefix = "Dr.",
+                            SecurityStamp = "c7901118-478f-4d47-9038-df73c3478f8e",
+                            TwoFactorEnabled = false,
+                            UserName = "Singgon"
+                        },
+                        new
+                        {
+                            Id = "399f5e43-93d8-4a28-b113-d23eccd2ea15",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "2e998e46-8610-4fd6-922d-561608e1d296",
+                            Email = "npmangansakan@rocketmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "NORHAN",
+                            LastName = "MANGANSAKAN",
+                            LockoutEnabled = false,
+                            MiddleName = "PIANG",
+                            NormalizedEmail = "NPMANGANSAKAN@ROCKETMAIL.COM",
+                            NormalizedUserName = "MANGANSAKAN.NORHAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEO/jiQOXE+knz2d0Ztm+i1ykc90gedRhh0Pfg2jMgJA2A81ZodA7VSPQIHz6R3gu5A==",
+                            PhoneNumber = "09166629909",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "26a67512-aff6-40eb-a638-76e4b453607f",
+                            TwoFactorEnabled = false,
+                            UserName = "mangansakan.norhan"
+                        },
+                        new
+                        {
+                            Id = "e765e1f5-bc17-49b1-9c3f-8c5c2c18b420",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "013d4fc9-f371-4e59-9a57-d251131996f7",
+                            Email = "nurlinda_06@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "NURLINDA",
+                            LastName = "ARUMPAC",
+                            LockoutEnabled = false,
+                            MiddleName = "PANGILAN",
+                            NormalizedEmail = "NURLINDA_06@YAHOO.COM",
+                            NormalizedUserName = "ARUMPAC.NURLINDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHyLc1O9a6V4PYB1jV9AFeieZz+5LbHmzTuELIdPEKAJYz8DLCNZzAEMgYR72tHk7Q==",
+                            PhoneNumber = "09177266885",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Women and Child Protection Unit",
+                            Prefix = "Dr.",
+                            SecurityStamp = "ff0ac479-af66-4c85-b32d-6e4cda45f810",
+                            TwoFactorEnabled = false,
+                            UserName = "arumpac.nurlinda"
+                        },
+                        new
+                        {
+                            Id = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "48da31de-29dc-40ea-8ecf-3e56dc903648",
+                            Email = "jrbedol@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "LINTANG",
+                            LastName = "BEDOL",
+                            LockoutEnabled = false,
+                            MiddleName = "BUAN",
+                            NormalizedEmail = "JRBEDOL@GMAIL.COM",
+                            NormalizedUserName = "BEDOL.LINTANG",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK84hDshEwJvvpYy5PLXBjKmXuSTnJuFZbNAWyBFEuYss1LHaL6jXSB31VnCUbE+Ug==",
+                            PhoneNumber = "09226218394",
+                            PhoneNumberConfirmed = false,
+                            Prefix = "Dr.",
+                            SecurityStamp = "216f4fa4-bf78-437e-bd32-c3c019feb0a5",
+                            TwoFactorEnabled = false,
+                            UserName = "bedol.lintang"
+                        },
+                        new
+                        {
+                            Id = "f8a17354-91b3-4c0e-9b71-d6af05f4e11e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "207f47a3-86ab-4c20-8dbe-1260de0e65de",
+                            Email = "rhkadil@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "RONALD",
+                            LastName = "KADIL",
+                            LockoutEnabled = false,
+                            MiddleName = "HIPONIA",
+                            NormalizedEmail = "RHKADIL@GMAIL.COM",
+                            NormalizedUserName = "KADIL.RONALD",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ/RL17ATmvkCFwvEI8ll4f7Q98bFBy9EtYQ17F8vUzReDmz1tcPIR5t4O6nXJPLcw==",
+                            PhoneNumber = "09175333922",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4f8b49a9-b467-4fc6-91e7-4e40980ae7fc",
+                            TwoFactorEnabled = false,
+                            UserName = "kadil.ronald"
+                        },
+                        new
+                        {
+                            Id = "9b6d73e5-ff27-44bb-a9d0-f7c58b31c4a1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c0c9402c-77be-4eeb-b8a2-f5d96157ca8f",
+                            Email = "madz.karao@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "MOHAMAD",
+                            LastName = "KARAO",
+                            LockoutEnabled = false,
+                            MiddleName = "DUMBI",
+                            NormalizedEmail = "MADZ.KARAO@GMAIL.COM",
+                            NormalizedUserName = "KARAO.MOHAMAD",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDccWovuGEyWtFxMaOQmsQBt2EaekqMYAjoJ+6hLEsMQOI9LcgI6jrknc144+hom2g==",
+                            PhoneNumber = "09363769315",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Public Health Unit-Health Promotion Unit",
+                            Prefix = "Mr.",
+                            SecurityStamp = "daeb4364-f9f6-4a20-8877-1ba26ee38ac6",
+                            TwoFactorEnabled = false,
+                            UserName = "karao.mohamad"
+                        },
+                        new
+                        {
+                            Id = "a1f6d353-df11-4a17-b2be-49371b8c223d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "488a8c16-6728-41a5-8fc1-85043f4d42e9",
+                            Email = "don_astillero@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "ADONIS",
+                            LastName = "ASTILLERO",
+                            LockoutEnabled = false,
+                            MiddleName = "CHAN",
+                            NormalizedEmail = "DON_ASTILLERO@YAHOO.COM",
+                            NormalizedUserName = "ASTILLERO.ADONIS",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOSx8p+Jcaj4m7O+Foamdw7+LMSINpv7BrJQEZFaXiV+sDLgzFnPVA4PF8Q/Q8RLOg==",
+                            PhoneNumber = "09176261812",
+                            PhoneNumberConfirmed = false,
+                            Prefix = "Mr.",
+                            SecurityStamp = "5c6fbd52-98fb-4ad0-afba-0737fe0b2cbc",
+                            TwoFactorEnabled = false,
+                            UserName = "astillero.adonis"
+                        },
+                        new
+                        {
+                            Id = "f2b28c8e-58cf-47b2-8245-33a7a98a7344",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "e8280b74-7689-41fd-918f-9fc83dae67db",
+                            Email = "abantasfaizah@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "BBGIRL FAIZAH",
+                            LastName = "ABANTAS",
+                            LockoutEnabled = false,
+                            MiddleName = "SHARIF",
+                            NormalizedEmail = "ABANTASFAIZAH@GMAIL.COM",
+                            NormalizedUserName = "ABANTAS.BBGIRL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEO/XkMS/njvkyZFqpYRFb0vMKxp+DqARI0gYEZRUo/HMBOzKcyrElnvFKxdIhCYyyQ==",
+                            PhoneNumber = "09618235949",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Claims Section",
+                            Prefix = "Dr.",
+                            SecurityStamp = "680027b7-a45b-4cb5-8da9-e448a3937430",
+                            TwoFactorEnabled = false,
+                            UserName = "abantas.bbgirl"
+                        },
+                        new
+                        {
+                            Id = "6db39f4a-9d19-4fc2-b3ab-2aa37851bb71",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c9af394d-f863-4184-bd79-f48bb7f22e80",
+                            Email = "anidaabubakar5@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ANIDA",
+                            LastName = "ABUBAKAR",
+                            LockoutEnabled = false,
+                            MiddleName = "PENDALIDAY",
+                            NormalizedEmail = "ANIDAABUBAKAR5@GMAIL.COM",
+                            NormalizedUserName = "ABUBAKAR.ANIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAxIHlxhWNgw9OB8Ls5Gti5AShaDff7j3oEXTZA9UJkPMQeybNrESewJwphSTs7zDw==",
+                            PhoneNumber = "09177234338",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Emergency Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "cd8532ff-bc5c-4a6f-98bf-c84391c40f8a",
+                            TwoFactorEnabled = false,
+                            UserName = "abubakar.anida"
+                        },
+                        new
+                        {
+                            Id = "c54d18f2-9a21-4f72-92eb-1f5d6e8f58de",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "866ecffb-91ce-4c37-b369-e0a291c23dc7",
+                            Email = "bashegal23@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ALIBASHER",
+                            LastName = "ADANG",
+                            LockoutEnabled = false,
+                            MiddleName = "ABO",
+                            NormalizedEmail = "BASHEGAL23@GMAIL.COM",
+                            NormalizedUserName = "ADANG.ALIBASHER",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKSjI7F9obLiozXggvd/fvB3EUAZKkGCxHdwpkVG1IUTCqFO3I+iVUWhl25j5sPPCQ==",
+                            PhoneNumber = "09369833653",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "a19c3d25-2de7-4055-98b9-f7a4c7ea5304",
+                            TwoFactorEnabled = false,
+                            UserName = "adang.alibasher"
+                        },
+                        new
+                        {
+                            Id = "a1a6e8f1-4749-4a8e-8f9b-0b6b2f05f38b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "daf5e796-382d-41ed-8a0a-b3581f3c45ef",
+                            Email = "lailakaliaagting@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "LAILA",
+                            LastName = "AGTING",
+                            LockoutEnabled = false,
+                            MiddleName = "KALI",
+                            NormalizedEmail = "LAILAKALIAAGTING@GMAIL.COM",
+                            NormalizedUserName = "AGTING.LAILA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHrjcZr2xbea9TVGbwtNbqFcd7MYfkdMckHQEd4OgME4aPrZIZNLn18ljPlcCrZuRw==",
+                            PhoneNumber = "09177124579",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Sec. Ona Wing",
+                            Prefix = "Ms.",
+                            SecurityStamp = "92641e63-6c50-4383-8953-523dabc0f333",
+                            TwoFactorEnabled = false,
+                            UserName = "agting.laila"
+                        },
+                        new
+                        {
+                            Id = "f79e34aa-f6a2-4ff1-b2e0-4a7c8194e61c",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a6b206ef-2cda-40a3-b7a4-9997680ded74",
+                            Email = "miemarandakan@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "AMERA",
+                            LastName = "AKMAD",
+                            LockoutEnabled = false,
+                            MiddleName = "MARANDACAN",
+                            NormalizedEmail = "MIEMARANDAKAN@GMAIL.COM",
+                            NormalizedUserName = "AKMAD.AMERA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEvPMfmjv/3Yvq8NFcMYwY87aH9Uj3yxE97WcsiZhJpZxmqyAWSZ5UJYx9/hn9uD1A==",
+                            PhoneNumber = "09560537326",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d744e6cb-54bb-49ff-b3a2-a55ed262d7a2",
+                            TwoFactorEnabled = false,
+                            UserName = "akmad.amera"
+                        },
+                        new
+                        {
+                            Id = "1b8a5144-b8a6-4df5-bb98-0136d7ebdf24",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "63c1bf8f-b089-4d5f-a4d1-604df3e8bb2f",
+                            Email = "maraguia44@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ABDUL",
+                            LastName = "AKMAD",
+                            LockoutEnabled = false,
+                            MiddleName = "MARAGUIAL",
+                            NormalizedEmail = "MARAGUIA44@GMAIL.COM",
+                            NormalizedUserName = "AKMAD.ABDUL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKVbrwCQDbeSKBke2jUiFj1dAUa1/wRSvZ1xLVk1rL8NlHFrzC8+IA8X37HKtC0Wew==",
+                            PhoneNumber = "09209177429",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, EEG",
+                            SecurityStamp = "23d4dc71-2311-4cf2-ae41-a8def8e24474",
+                            TwoFactorEnabled = false,
+                            UserName = "akmad.abdul"
+                        },
+                        new
+                        {
+                            Id = "6c8454ef-fd19-4db5-9f88-dcd7b13e5c55",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ab9869c1-ded0-4ea8-a853-2e5dffbb8c73",
+                            Email = "rosarioalojipan@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ROSARIO",
+                            LastName = "ALOJIPAN",
+                            LockoutEnabled = false,
+                            MiddleName = "DELA CRUZ",
+                            NormalizedEmail = "ROSARIOALOJIPAN@GMAIL.COM",
+                            NormalizedUserName = "ALOJIPAN.ROSARIO",
+                            PasswordHash = "AQAAAAIAAYagAAAAEM7/BqZqjw3lzk+EdVxVzomO23mblynpZwHsVdwpWldaJZycMQvhUhv0p9KWdxBEOQ==",
+                            PhoneNumber = "09178202970",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Operating Room",
+                            Prefix = "Ms.",
+                            SecurityStamp = "9492b4de-d8b7-45ba-84e9-e1bb400e9629",
+                            TwoFactorEnabled = false,
+                            UserName = "alojipan.rosario"
+                        },
+                        new
+                        {
+                            Id = "4f5b9c31-d406-4036-b8cd-37cb92d6b211",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "89fb5bd8-a698-4f8d-b83a-c5e2dc01c512",
+                            Email = "yashou_07@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "YASSER FARID",
+                            LastName = "ANDAL",
+                            LockoutEnabled = false,
+                            MiddleName = "MAMA",
+                            NormalizedEmail = "YASHOU_07@YAHOO.COM",
+                            NormalizedUserName = "ANDAL.YASSER",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPUgnZGYet7fZsgZVii+6PYVF03h/lV8WYdFiAcJobMCdwHesgAcOKygxxri7Sri6Q==",
+                            PhoneNumber = "09173085559",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "6bf41148-24ab-44e0-9b3f-41a52f9ef3b9",
+                            TwoFactorEnabled = false,
+                            UserName = "andal.yasser"
+                        },
+                        new
+                        {
+                            Id = "0b91d20a-0ab3-4820-b3f2-fbcf01c0af26",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "e9c12873-b9eb-4d18-9a47-e73def844039",
+                            Email = "racsandamen13@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "RAHMA",
+                            LastName = "ANDAMEN",
+                            LockoutEnabled = false,
+                            MiddleName = "KALID",
+                            NormalizedEmail = "RACSANDAMEN13@GMAIL.COM",
+                            NormalizedUserName = "ANDAMEN.RAHMA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEtq+ATelHbl2xakAaV5IkRIIMAuBFArbdaJo6FxDn45viMoAvnjQ+pJtuOPEL0xRA==",
+                            PhoneNumber = "09456829380",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "64cfe52e-79c7-45c9-8ae2-0464cce33a68",
+                            TwoFactorEnabled = false,
+                            UserName = "andamen.rahma"
+                        },
+                        new
+                        {
+                            Id = "2489fce0-858f-43af-b82a-65ee42cb2e33",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9b39ff88-1149-41ed-b2b5-597f07ff587f",
+                            Email = "aljazzerangas@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "AL-JAZZER",
+                            LastName = "ANGAS",
+                            LockoutEnabled = false,
+                            MiddleName = "MAULANA",
+                            NormalizedEmail = "ALJAZZERANGAS@YAHOO.COM",
+                            NormalizedUserName = "ANGAS.AL-JAZZER",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHrxnGQZY+LT6OoXVSNbbKriPqdy1WkiH4MTgzrRk2w+UYjbZUgyrkuzJORK+HUj9Q==",
+                            PhoneNumber = "09179755770",
+                            PhoneNumberConfirmed = false,
+                            Prefix = "Dr.",
+                            SecurityStamp = "5623b163-2308-45f1-bab9-ea0631085ba3",
+                            TwoFactorEnabled = false,
+                            UserName = "angas.al-jazzer"
+                        },
+                        new
+                        {
+                            Id = "5ff58cb5-9d0c-44b2-bc2a-5f96a3c9d621",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "4fe19f0c-022d-405a-a5af-2fc1e4677ecb",
+                            EmailConfirmed = false,
+                            FirstName = "RENANTE",
+                            LastName = "ARIAS",
+                            LockoutEnabled = false,
+                            MiddleName = "ZIA",
+                            NormalizedUserName = "ARIAS.RENANTE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKM+lc7y1NLcTt7lx80kS9UVo2z0sHjCr4TG4nwUmLzQPiS5aXySQluWZaV3p5jgOQ==",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "74d59891-5d4d-4af2-9a17-b81247ffa693",
+                            TwoFactorEnabled = false,
+                            UserName = "arias.renante"
+                        },
+                        new
+                        {
+                            Id = "cc505df2-3586-41a1-9d44-b5fc8f28e3a9",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "72b38c8d-2627-48b2-a284-40cccc4c91f4",
+                            Email = "shiedhe@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "SHIEDHE",
+                            LastName = "BANGEN",
+                            LockoutEnabled = false,
+                            MiddleName = "KEMBUAN",
+                            NormalizedEmail = "SHIEDHE@YAHOO.COM",
+                            NormalizedUserName = "BANGEN.SHIEDHE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGj6B3BnosR4UuhTGcGpUUclu/zdzakGR1MHiqe/e4sNh+FX8/AvUoOz/VtHLXJiVw==",
+                            PhoneNumber = "09396526665",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Procurement Department",
+                            Prefix = "Mr.",
+                            SecurityStamp = "32e01aeb-52d4-41b3-bafd-2cac9f10f407",
+                            TwoFactorEnabled = false,
+                            UserName = "bangen.shiedhe"
+                        },
+                        new
+                        {
+                            Id = "8ea08a3f-066a-41ac-9ef0-ffb47d3657d9",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c3c9e396-9e1f-4511-a471-b25db3ca4eca",
+                            Email = "dannyfherbantilan@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "DANNY FHER",
+                            LastName = "BANTILAN",
+                            LockoutEnabled = false,
+                            MiddleName = "BANQUIAO",
+                            NormalizedEmail = "DANNYFHERBANTILAN@YAHOO.COM",
+                            NormalizedUserName = "BANTILAN.DANNY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMKI+O58YmcSrWUxlCchmxXHQZSg5IKrOhFgY+dDGA+Ddz3hOOG2UlUDhdnz+izzFw==",
+                            PhoneNumber = "09272727645",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "c1612be0-4274-47bb-b7da-0e81cdef7504",
+                            TwoFactorEnabled = false,
+                            UserName = "bantilan.danny"
+                        },
+                        new
+                        {
+                            Id = "c79be729-47b3-4907-88e1-0a67dd4e48b1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "bd5cbc42-b4dd-4bed-ad42-56bb3d9255e1",
+                            Email = "zahidabationgbassal2018@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ZAHIDA",
+                            LastName = "BASSAL",
+                            LockoutEnabled = false,
+                            MiddleName = "BATIONG",
+                            NormalizedEmail = "ZAHIDABATIONGBASSAL2018@GMAIL.COM",
+                            NormalizedUserName = "BASSAL.ZAHIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAELt6xRenJLSIrp4QhDBOk0WVyKlT00fYDJzXD4V2LXfwC6tozdK6E7HwziSp+wzC7g==",
+                            PhoneNumber = "09161012599",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "444496ed-4688-49d6-b091-6bd1100f5c77",
+                            TwoFactorEnabled = false,
+                            UserName = "bassal.zahida"
+                        },
+                        new
+                        {
+                            Id = "de17cb47-83e7-4a6b-b97c-13808e14a7ff",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "87d4ed1c-fb6b-45fc-bdcf-1c45d304c14b",
+                            Email = "acocalbo@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "ANABELLE",
+                            LastName = "BONES",
+                            LockoutEnabled = false,
+                            MiddleName = "COCAL",
+                            NormalizedEmail = "ACOCALBO@YAHOO.COM",
+                            NormalizedUserName = "BONES.ANABELLE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIYO3dHwjqjG6DbzKEfSlJpgUBHHx9Vrd2M1TaOL/MvBfB1LzqBKJYhglQ7QJyAB9w==",
+                            PhoneNumber = "09483207824",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "29d473a9-7901-46da-97ae-d70c0837cc12",
+                            TwoFactorEnabled = false,
+                            UserName = "bones.anabelle"
+                        },
+                        new
+                        {
+                            Id = "0ed1f88a-8859-4d6c-9a1f-84aaf19cc45c",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "67055c29-7cf1-4232-b42a-342bc2a73586",
+                            Email = "amybonite09@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "EMELIA",
+                            LastName = "BONITE",
+                            LockoutEnabled = false,
+                            MiddleName = "YU",
+                            NormalizedEmail = "AMYBONITE09@YAHOO.COM",
+                            NormalizedUserName = "BONITE.EMELIA",
+                            PasswordHash = "AQAAAAIAAYagAAAAENO05UxeyrFLigPbvIzhvgd1ccitD+EuCCw7nCpo58ZWpIW6lkGV21bdO0S6WvsSEw==",
+                            PhoneNumber = "09055207141",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Billing Section",
+                            Prefix = "Ms.",
+                            SecurityStamp = "b15d25c7-9774-4fd2-8b7c-dd1f21d6d358",
+                            TwoFactorEnabled = false,
+                            UserName = "bonite.emelia"
+                        },
+                        new
+                        {
+                            Id = "74c35794-54d9-44a4-baf0-b8fa23e2d481",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "6037e688-595a-4180-8bcd-a31983a0d215",
+                            Email = "Mulcaldea@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "MAYLENE",
+                            LastName = "CALDEA",
+                            LockoutEnabled = false,
+                            MiddleName = "ULOG",
+                            NormalizedEmail = "MULCALDEA@GMAIL.COM",
+                            NormalizedUserName = "CALDEA.MAYLENE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMw3uQEw9OLLID9OlbtkHkMW9RhzPIHpq5JZG6KSEvF64piMnUk+4H8t9n07ZOs12Q==",
+                            PhoneNumber = "09953048269",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "fe001ccc-a518-494a-808b-8d6001e07821",
+                            TwoFactorEnabled = false,
+                            UserName = "caldea.maylene"
+                        },
+                        new
+                        {
+                            Id = "53a2b071-d36f-4f1f-bf8e-3f7dbf7b8c7b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9d4521df-12ec-4503-8903-21df1be26c03",
+                            Email = "naughty_candao@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "ABDULBAYAN",
+                            LastName = "CANDAO",
+                            LockoutEnabled = false,
+                            MiddleName = "BAYAO",
+                            NormalizedEmail = "NAUGHTY_CANDAO@YAHOO.COM",
+                            NormalizedUserName = "CANDÃO.ABDULBAYAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ7tUM5HOXQqeiN8i+lA7ZJBd8iVuo+U/6h9LQbZqflDSrYioI6otrqeO+txdc6EYQ==",
+                            PhoneNumber = "09564021897",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "96d56b72-052e-464c-b47d-36207560e674",
+                            TwoFactorEnabled = false,
+                            UserName = "candao.abdulbayan"
+                        },
+                        new
+                        {
+                            Id = "28a2a313-bc8e-4225-b8c2-85c2935b315e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "1c222c51-f392-4089-a87a-bb493c802774",
+                            Email = "marcrejohncastillano@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "MARC REJOHN",
+                            LastName = "CASTILLANO",
+                            LockoutEnabled = false,
+                            MiddleName = "BALLARES",
+                            NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
+                            NormalizedUserName = "CASTILLANO.MARC",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAKOh4Ua6VS/cvaYBykskTnUhuNun9ndFi21OmptfPg3Esm7hPH7xnGbz5omAUGWbQ==",
+                            PhoneNumber = "09959283775",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "5ad527db-325c-43dd-be1e-62c72620791c",
+                            TwoFactorEnabled = false,
+                            UserName = "castillano.marc"
+                        },
+                        new
+                        {
+                            Id = "35159a7c-2120-46f6-9135-8a8469b9c7b1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "803a136f-e51c-4fbe-9ba7-e21a98fa070c",
+                            EmailConfirmed = false,
+                            FirstName = "JOBERT",
+                            LastName = "CASTILLON",
+                            LockoutEnabled = false,
+                            MiddleName = "ARMADA",
+                            NormalizedUserName = "CASTILLON.JOBERT",
+                            PasswordHash = "AQAAAAIAAYagAAAAEG1OsLU8aUJGDIFkdfFh4c0v7fHL8I7WbGluYPvz+cyLmKfJhJRqhUD0awb4oLX87w==",
+                            PhoneNumber = "09395055897",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "0dcf9fd8-3693-47fa-b573-756a4f2aadd1",
+                            TwoFactorEnabled = false,
+                            UserName = "castillon.jobert"
+                        },
+                        new
+                        {
+                            Id = "ec4219b7-dfc6-4966-bf2a-3f1eecf17391",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c814b30c-50f2-45bd-9d66-d401551fd789",
+                            Email = "rndmpa@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ANTHONY",
+                            LastName = "CUYONG",
+                            LockoutEnabled = false,
+                            MiddleName = "CULAB",
+                            NormalizedEmail = "RNDMPA@GMAIL.COM",
+                            NormalizedUserName = "CUYONG.ANTHONY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOzywHRfHbWBB1TgSR/+LuwwKs0pKdYRFyx7akP4U8oWo9Zdkw9I3+rwLgNr5dOesQ==",
+                            PhoneNumber = "09453040405",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9cc81b3b-bdcd-4d90-9944-532033ef1968",
+                            TwoFactorEnabled = false,
+                            UserName = "cuyong.anthony"
+                        },
+                        new
+                        {
+                            Id = "1a9d8654-1c19-4b60-9491-4e33c176cc64",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "861a3140-7c42-4772-a1d7-a85b59204b44",
+                            Email = "gloriacalubiran79@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "GLORIA",
+                            LastName = "DELOS REYES",
+                            LockoutEnabled = false,
+                            MiddleName = "CALUBIRAN",
+                            NormalizedEmail = "GLORIACALUBIRAN79@GMAIL.COM",
+                            NormalizedUserName = "DELOSREYES.GLORIA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGpsMw9nGYYjskiQ+r44tx07IczRr/48hQT51cZU01uN4ArfZdzwZYmIIajZsnDQEA==",
+                            PhoneNumber = "09363304534",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, SHTH",
+                            Prefix = "Ms.",
+                            SecurityStamp = "e25ba34a-0e57-495a-b205-050c2ad182c9",
+                            TwoFactorEnabled = false,
+                            UserName = "delosreyes.gloria"
+                        },
+                        new
+                        {
+                            Id = "1a9d8654-1c19-4b50-9431-4e23c174cc60",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "4c7d0f03-a664-4802-a9e5-dd53e7fda5e8",
+                            Email = "Biloa1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Andul Hanif",
+                            LastName = "Bilao",
+                            LockoutEnabled = false,
+                            MiddleName = "B.",
+                            NormalizedEmail = "BILAO1234@GMAIL.COM",
+                            NormalizedUserName = "BILAO.ABDULHANIF",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHg3fejnU8XKqTSSLVD3lddCbsKgrzVlyDHvAV6oeoigr7m55r+nXBS296/xv/iDIw==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "f60b62b8-98da-4dca-adf1-de72441c391f",
+                            TwoFactorEnabled = false,
+                            UserName = "bilao.abdulhanif"
+                        },
+                        new
+                        {
+                            Id = "2z9f8451-1n19-4b50-8432-4e23c164cs51",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "6db13bc5-6645-48db-aeca-918c0ad9a600",
+                            Email = "Caoagdan1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Socorro",
+                            LastName = "Caoagdan",
+                            LockoutEnabled = false,
+                            MiddleName = "A.",
+                            NormalizedEmail = "CAOAGDAN1234@GMAIL.COM",
+                            NormalizedUserName = "CAOAGDAN.SOCORRO",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGhCgVTlNI2u4ICLnqpo19yO6NvWtGMcqQwwlemQwEN9tu5KTZz2l8PaO005mgBT9A==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "5ff0fd05-bb3e-45c5-aab9-1f930772708b",
+                            TwoFactorEnabled = false,
+                            UserName = "caoagdan.socorro"
+                        },
+                        new
+                        {
+                            Id = "9c49e0f2-4cb0-45b1-9f0e-4fbd24d25368",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "73cb9176-4051-431c-8420-ef83baea37aa",
+                            Email = "graceenlayo@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "HONEY GRACE",
+                            LastName = "ENLAYO-APA-AP",
+                            LockoutEnabled = false,
+                            MiddleName = "ROMASANTA",
+                            NormalizedEmail = "GRACEENLAYO@GMAIL.COM",
+                            NormalizedUserName = "ENLAYOAPAAP.HONEYGRACE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDa+8tQLGsuDk/Bf26Qdo8/GRyKrpqzpcxLd5xYtRFvoCjLRf9+LITkk7BBmIuZOFA==",
+                            PhoneNumber = "09754948544",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "e3384fac-9bb3-467c-99db-5e2e2620bbb7",
+                            TwoFactorEnabled = false,
+                            UserName = "enlayoapaap.honeygrace"
+                        },
+                        new
+                        {
+                            Id = "33a13c76-041f-4d68-8f67-41b7dd60c408",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "6f36938d-d9df-44f7-ae43-97bafa32bfd0",
+                            Email = "henesijesmundo27@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "HENESI JEM",
+                            LastName = "ESMUNDO",
+                            LockoutEnabled = false,
+                            MiddleName = "GAUDIANO",
+                            NormalizedEmail = "HENESIJESMUNDO27@GMAIL.COM",
+                            NormalizedUserName = "ESMUNDO.HENESIJEM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBNQ3+TECHHvgYtkBWwe/G2qWQR5+hQmj0ofROnY6xiK3Y6jqTJWmM4XXvLdy9qE0g==",
+                            PhoneNumber = "09354975202",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9a876087-97c7-451e-92a3-18e3ffe37afd",
+                            TwoFactorEnabled = false,
+                            UserName = "esmundo.henesijem"
+                        },
+                        new
+                        {
+                            Id = "43cd6e17-9d86-4cb9-8d84-298e43a23450",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "adaba86f-f4d1-49b7-8cc4-14b5bc1ba0bd",
+                            Email = "jesryll.tupas@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "JESRYLL LEANA",
+                            LastName = "FACTORA",
+                            LockoutEnabled = false,
+                            MiddleName = "TUPAS",
+                            NormalizedEmail = "JESRYLL.TUPAS@YAHOO.COM",
+                            NormalizedUserName = "FACTORA.JESRYLLLEANA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDqyD9XOTo6iTZMJj8xAQFtZJoCW8HcAXJE31raLVjyRQYIpzekH8u+otC2EDM64nQ==",
+                            PhoneNumber = "09176111210",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "c4bbddfc-0cff-45f5-bfe4-655683178fb8",
+                            TwoFactorEnabled = false,
+                            UserName = "factora.jesryllleana"
+                        },
+                        new
+                        {
+                            Id = "c77b5df0-836a-4f9e-9f29-d2f6c6cf4074",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a538b164-904f-48f3-b9ba-fa5f06b99f6f",
+                            Email = "cherfer22@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "CHERYL",
+                            LastName = "FERRER",
+                            LockoutEnabled = false,
+                            MiddleName = "MAGBANUA",
+                            NormalizedEmail = "CHERFER22@YAHOO.COM",
+                            NormalizedUserName = "FERRER.CHERYL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN1h+/TkzVa9KD3pCgERHVNFROBO4cEkcyewY4RCP6PLS3Jr46CgftRUUXM7+EkioA==",
+                            PhoneNumber = "09276048113",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Paritoneal Dialysis Clinic",
+                            Prefix = "Ms.",
+                            SecurityStamp = "6fa11815-43d1-4d5d-b502-5e8904400ec1",
+                            TwoFactorEnabled = false,
+                            UserName = "ferrer.cheryl"
+                        },
+                        new
+                        {
+                            Id = "5d8a2197-b38b-40b2-940a-845e2a44b622",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "886c02cb-ce0c-4bf4-ac78-988166838331",
+                            Email = "resildago1212@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "RESILDA",
+                            LastName = "GO",
+                            LockoutEnabled = false,
+                            MiddleName = "BAGGAYAN",
+                            NormalizedEmail = "RESILDAGO1212@GMAIL.COM",
+                            NormalizedUserName = "GO.RESILDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAENgpUfvJ+xrHvlvo0HHQaTjkdySbEu+jsduoeHb7ArJqmF34Y7xwU9ZhQPZrJnGEHw==",
+                            PhoneNumber = "09062249400",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "61ce6a66-1e49-4064-9029-70e6d01a71bb",
+                            TwoFactorEnabled = false,
+                            UserName = "go.resilda"
+                        },
+                        new
+                        {
+                            Id = "c79c6433-d1ad-46a3-ae87-84edb44476de",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "aaec326d-7e4e-4373-b1c1-8ac65db73549",
+                            Email = "rendtesy0620@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "RENETTE",
+                            LastName = "GONZALES",
+                            LockoutEnabled = false,
+                            MiddleName = "SUDARIO",
+                            NormalizedEmail = "RENDTSEY0620@GMAIL.COM",
+                            NormalizedUserName = "GONZALES.RENETTE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHRipqiSEyO+nCdhN71q4ELw/KlsAQi22OtUzIROAJ9iW1Fh/YeyryQw/3aPDmEl/g==",
+                            PhoneNumber = "09166248783",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Medicine Ward",
+                            Prefix = "Ms.",
+                            SecurityStamp = "80b5c05a-5cd3-4e63-897e-b33a82910518",
+                            TwoFactorEnabled = false,
+                            UserName = "gonzales.renette"
+                        },
+                        new
+                        {
+                            Id = "f03cf528-c2a5-4820-91a5-6821dc5350f8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "061868d5-dbfe-44c8-a0a3-2652a5535659",
+                            Email = "espurakoy@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "GABRIEL",
+                            LastName = "SERO",
+                            LockoutEnabled = false,
+                            MiddleName = "BLANCO",
+                            NormalizedEmail = "ESPURAKOY@YAHOO.COM",
+                            NormalizedUserName = "SERO.GABRIEL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPegH486IEJwznPGpkDUdGmtU3mY0ycrMBbP/TVHpUn7SIBv5gBEFfpQJQqChJvXRg==",
+                            PhoneNumber = "09177239443",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9e1abb9e-42d5-43cb-8352-969eff472560",
+                            TwoFactorEnabled = false,
+                            UserName = "sero.gabriel"
+                        },
+                        new
+                        {
+                            Id = "5f33b779-c424-4e4d-89a9-7b8e5ac3e98d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "92f9d597-16ac-4159-bfeb-78d211279d99",
+                            Email = "jettFTS@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "JARRETT",
+                            LastName = "SABRINE",
+                            LockoutEnabled = false,
+                            MiddleName = "DORONILLA",
+                            NormalizedEmail = "JETTFTS@GMAIL.COM",
+                            NormalizedUserName = "SABRINE.JARRETT",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFYF+qoI5mzgwbDZ/XVn6owYgqdTFElq9gAlqkE86FmPKiE3i69Y53HUIHkahLHZ4Q==",
+                            PhoneNumber = "09162012248",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "8ee4c37d-d752-4bf6-9ae2-70108e379c03",
+                            TwoFactorEnabled = false,
+                            UserName = "sabrine.jarrett"
+                        },
+                        new
+                        {
+                            Id = "baf0a172-7e0a-4999-8c03-8f9bfb62150b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d32c71c2-c17c-4635-830b-8acdfaf4eb71",
+                            EmailConfirmed = false,
+                            FirstName = "FAISAL",
+                            LastName = "SALIK",
+                            LockoutEnabled = false,
+                            MiddleName = "ONG",
+                            NormalizedUserName = "SALIK.FAISAL",
+                            PasswordHash = "AQAAAAIAAYagAAAAENQlWES37h/Y6n/6qkaMxicCBccgYa/Jn61kopiRJNMWmQ6HfZ9ZrvoB3VLgqoG2XQ==",
+                            PhoneNumber = "09773262708",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "96cef33b-b265-45dd-b885-70d431648826",
+                            TwoFactorEnabled = false,
+                            UserName = "salik.faisal"
+                        },
+                        new
+                        {
+                            Id = "88a1a0b3-943d-47a2-b0bb-f1c8763acaf4",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "cc6e1779-4074-404b-918b-fdf54aa9387d",
+                            Email = "tardz03@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "GERALD",
+                            LastName = "SORIANO",
+                            LockoutEnabled = false,
+                            MiddleName = "VEN",
+                            NormalizedEmail = "TARDZ03@YAHOO.COM",
+                            NormalizedUserName = "SORIANO.GERALD",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMGGr/q/t2YYrWs39Jamh1wfpdzFFfK+aGJW0GpluBJOXBn9WZYAMzu2s8YN5+qUsA==",
+                            PhoneNumber = "09224339675",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "9ddbe76a-c42d-4ee9-a0d8-7dc2297a072f",
+                            TwoFactorEnabled = false,
+                            UserName = "soriano.gerald"
+                        },
+                        new
+                        {
+                            Id = "0ff9af54-f57a-4d1b-a2d6-679b3a4b8c30",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9750f736-7185-4c86-8f3b-4c5f07924767",
+                            Email = "abigailsaveland@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "MA. ABIGAIL",
+                            LastName = "SALVATIERRA",
+                            LockoutEnabled = false,
+                            MiddleName = "YU",
+                            NormalizedEmail = "ABIGAILSAVELAND@GMAIL.COM",
+                            NormalizedUserName = "SALVATIERRA.MA.ABIGAIL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGfZUCzY7Uq9wPj1XGQz0dTlPyftJbPKtVdcH/EUApRThBrSSeN1YG5xMvKBlTl4mQ==",
+                            PhoneNumber = "09088931724",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4ea48504-f013-4ce7-bb43-67349d7b7f3e",
+                            TwoFactorEnabled = false,
+                            UserName = "salvatierra.ma.abigail"
+                        },
+                        new
+                        {
+                            Id = "59b4a3e6-30c2-4a8c-8851-78b95cf11f5b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "dd678c73-dd58-480c-8103-1ebc1ac8173a",
+                            Email = "jomedellesampulna13@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "JOMEDELLE",
+                            LastName = "SAMPULNA",
+                            LockoutEnabled = false,
+                            MiddleName = "CHIO",
+                            NormalizedEmail = "JOMEDELLESAMPULNA13@GMAIL.COM",
+                            NormalizedUserName = "SAMPULNA.JOMEDELLE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEVSjIME7jekvCiCoGA0GtFeaop1I01QFt73tDPfgRHHkAnWhBB9k1AZ/xCv8NJ1lQ==",
+                            PhoneNumber = "09673774366",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "51081b82-ceb6-48b6-a162-5ef3bfcb98ca",
+                            TwoFactorEnabled = false,
+                            UserName = "sampulna.jomedelle"
+                        },
+                        new
+                        {
+                            Id = "3db6b5af-4b42-4747-a3f0-3a60b3e36a56",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "871f8e3b-8130-4526-9ad2-9a29cd9889ee",
+                            Email = "omaldetj9@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "TERRY JANE",
+                            LastName = "SAPI",
+                            LockoutEnabled = false,
+                            MiddleName = "OMALDE",
+                            NormalizedEmail = "OMALDETJ9@YAHOO.COM",
+                            NormalizedUserName = "SAPI.TERRYJANE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIPWz5KX8RiXLRM/R1qi7sxfeF4T61GekIqdC86EFxT67o74hTzIX3X1ZqvRqu31/g==",
+                            PhoneNumber = "09458244916",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, TTMF",
+                            Prefix = "Ms.",
+                            SecurityStamp = "c341c9db-9436-44ff-b234-a6d6ad52e471",
+                            TwoFactorEnabled = false,
+                            UserName = "sapi.terryjane"
+                        },
+                        new
+                        {
+                            Id = "7gf2b7zj-4b42-2476-f3f3-1x72b3e34aq68",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d94fceca-8ba0-4ae1-861c-06cf46805e68",
+                            Email = "saliling1234@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "Floredliza",
+                            LastName = "Saliling-Alta",
+                            LockoutEnabled = false,
+                            MiddleName = "J.",
+                            NormalizedEmail = "SALILING@YAHOO.COM",
+                            NormalizedUserName = "SALILING.FLOREDLIZA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGViUIxndAx4+ALpC2Ud1csdG/nI0jh8MF1Ilj1yjWJvFK7SfWrOJWIn5O0gPt0bNw==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4e56c3d5-1122-4492-b8e8-5fccb7bca049",
+                            TwoFactorEnabled = false,
+                            UserName = "saliling.floredliza"
+                        },
+                        new
+                        {
+                            Id = "b83670e3-3d7c-40a4-8d07-5a3c3f6bde91",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "6f54a103-bfd7-4fe6-be42-4abf23c3aebd",
+                            Email = "paogratuito@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "JOHN PAUL",
+                            LastName = "GRATUITO",
+                            LockoutEnabled = false,
+                            MiddleName = "CHOA KHAO UY",
+                            NormalizedEmail = "PAOGRATUITO@GMAIL.COM",
+                            NormalizedUserName = "GRATUITO.JOHNPAUL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOpCuUt2hnAoen4BUtjiKNzpW4IAutZ97VYZpRbR7NWj1+yUv/mCzpSZqeFBfdiJ9A==",
+                            PhoneNumber = "09177027392",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "caeda867-121e-43ca-939f-f638a85f4fe6",
+                            TwoFactorEnabled = false,
+                            UserName = "gratuito.johnpaul"
+                        },
+                        new
+                        {
+                            Id = "3a4c88b0-5f73-41f0-82e7-255e19e8d9d1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "f9dbd711-3b83-4502-adcc-6d6db5afb97c",
+                            Email = "leyn0426@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "AILEEN",
+                            LastName = "GUMAPAC",
+                            LockoutEnabled = false,
+                            MiddleName = "SANTIAGO",
+                            NormalizedEmail = "LEYN0426@YAHOO.COM",
+                            NormalizedUserName = "GUMAPAC.AILEEN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEI/fvv/HZYaPpxS339626+YFjuNeMAxg+qeDmDd5bqKGghOxQ/n/RcoU3tYXm4AZ8g==",
+                            PhoneNumber = "09274449665",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "a0be5863-276f-4a63-996c-6142d86ae665",
+                            TwoFactorEnabled = false,
+                            UserName = "gumapac.aileen"
+                        },
+                        new
+                        {
+                            Id = "c0b41f2c-0f8d-4a53-b0a9-5cfa02b6a851",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "3be1a842-6680-4f60-978c-d555636f61a8",
+                            Email = "jaheerhusseinismael@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "AMIR HUSSEIN",
+                            LastName = "ISMAEL",
+                            LockoutEnabled = false,
+                            MiddleName = "MACAPENDENG",
+                            NormalizedEmail = "JAHEERHUSSEINISMAEL@GMAIL.COM",
+                            NormalizedUserName = "ISMAEL.AMIRHUSSEIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAECknOoVqgrWlFfOhUgR+jlhsJI9XCApIJrGh9t1/6cLuRkiAaxQsPbnwmENKWcW6eQ==",
+                            PhoneNumber = "09564020491",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "8ca48f93-c363-4618-9778-82627e6b9b88",
+                            TwoFactorEnabled = false,
+                            UserName = "ismael.amirhussein"
+                        },
+                        new
+                        {
+                            Id = "c171e56e-b2e0-43f2-91f1-8f258417bc3d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "1d89aa2a-ca59-40e5-963a-3b32128cd033",
+                            Email = "shingdumama@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SHARINAH",
+                            LastName = "IBRAHIM-DUMAMA",
+                            LockoutEnabled = false,
+                            MiddleName = "CATALAN",
+                            NormalizedEmail = "SHINGDUMAMA@GMAIL.COM",
+                            NormalizedUserName = "IBRAHIMDUMAMA.SHARINAH",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJSh8WEdQLJ3RevrzL2yCdRUBqdGFiQbUwdhTl7rDN4hh82i0QNkn4Ma5N6Akqdxow==",
+                            PhoneNumber = "09177263399",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "74efb200-10b9-4f48-a221-d7dd762eb781",
+                            TwoFactorEnabled = false,
+                            UserName = "ibrahimdumama.sharinah"
+                        },
+                        new
+                        {
+                            Id = "43f6a708-995c-4a07-9e90-6d0a5efc32d5",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "f4829c68-8747-4b79-82cf-350b687eeb86",
+                            Email = "baiyasminjaynonjuanday@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "BAI YASMIN",
+                            LastName = "JUANDAY",
+                            LockoutEnabled = false,
+                            MiddleName = "JAYNON",
+                            NormalizedEmail = "BAIYASMINJAYNONJUANDAY@GMAIL.COM",
+                            NormalizedUserName = "JUANDAY.BAIYASMIN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH8ZJZ2V5t8ZzEGAfLToSVIVK9wx1ZVutrt1l9phmvPgsHW6dnt9tLLUfq7dnXCELw==",
+                            PhoneNumber = "09260474812",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "bc5ff27c-e4fc-45ae-9a83-556046faa4b0",
+                            TwoFactorEnabled = false,
+                            UserName = "juanday.baiyasmin"
+                        },
+                        new
+                        {
+                            Id = "21d7b7dc-3425-464f-96d5-f6784b19b4cf",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "78b43721-8edd-440a-a6de-2c4077611538",
+                            Email = "lenzkylu@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "LEONITA",
+                            LastName = "LU",
+                            LockoutEnabled = false,
+                            MiddleName = "CHUA",
+                            NormalizedEmail = "LENZKYLU@GMAIL.COM",
+                            NormalizedUserName = "LU.LEONITA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHw28j0SHORadv77xN0TCpgnbWO+Ne58O1LFwoBWf6F3xTnYbzIvQf8JRC6k7VbC6w==",
+                            PhoneNumber = "09178732580",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "66e0f1a3-5ed1-45b2-8583-a0973c32f9ca",
+                            TwoFactorEnabled = false,
+                            UserName = "lu.leonita"
+                        },
+                        new
+                        {
+                            Id = "c8dc080e-2c5f-4a8e-b0e0-9c29dc45a31f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c2ccb7d7-4398-4756-9c08-9188cda8678f",
+                            Email = "rbmaputi@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ROWENA",
+                            LastName = "LU",
+                            LockoutEnabled = false,
+                            MiddleName = "MAPUTI",
+                            NormalizedEmail = "RBMAPUTI@GMAIL.COM",
+                            NormalizedUserName = "LU.ROWENA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAAhDAPf+TdYt8lw3FmFeayTlriWYK4qbCL6XvfC13zgeADJqGWThxdtr8z8wo5org==",
+                            PhoneNumber = "09173000155",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Health Information Management Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "e8a7969a-f125-46be-aa9a-3f9a6b8a8044",
+                            TwoFactorEnabled = false,
+                            UserName = "lu.rowena"
+                        },
+                        new
+                        {
+                            Id = "13ab0a0e-5d9a-4e53-a5f0-5cb11a775fe3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "7bb0a945-6d8a-401e-bdfd-b41d8e009d8d",
+                            Email = "rosalieluces05@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ROSALIE",
+                            LastName = "LUCES",
+                            LockoutEnabled = false,
+                            MiddleName = "OREJUDOS",
+                            NormalizedEmail = "ROSALIELUCES05@GMAIL.COM",
+                            NormalizedUserName = "LUCES.ROSALIE",
+                            PasswordHash = "AQAAAAIAAYagAAAAENHX65ZC1NSHSxZ2B1qj1RKlrreBqLcLNt63+lYkvN3WkSjinvp7J0AlNJsdeg0C1Q==",
+                            PhoneNumber = "09109099656",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, General Extension Ward",
+                            Prefix = "Ms.",
+                            SecurityStamp = "e3bd1cab-fa22-4628-b180-9a52adcdf0a7",
+                            TwoFactorEnabled = false,
+                            UserName = "luces.rosalie"
+                        },
+                        new
+                        {
+                            Id = "a2a9b64b-1b54-4c49-90e2-4dbf1e59a98e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "cc6d4ef3-b5f5-4920-bef5-b60bbf56f4ab",
+                            Email = "mabangsigrid@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SIGRID",
+                            LastName = "MABANG",
+                            LockoutEnabled = false,
+                            MiddleName = "BARAGUIR",
+                            NormalizedEmail = "MABANGSIGRID@GMAIL.COM",
+                            NormalizedUserName = "MABANG.SIGRID",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIDS6k1km19kFUoU4sHAw9RcbdiBR0ZWmKOotlgS2S0xihAD8Hh+ZjwyThJzOtfjhw==",
+                            PhoneNumber = "09351488175",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "8e07ec31-7c00-473c-af31-bbc1cb7184c7",
+                            TwoFactorEnabled = false,
+                            UserName = "mabang.sigrid"
+                        },
+                        new
+                        {
+                            Id = "49180f4a-cbe7-489b-8fd1-901e79dfe2f5",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ed91c6d7-12ce-4fa3-ad62-a209137a6e7f",
+                            Email = "sacamaglangit.md@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SITTIE ANEZA CAMILLE",
+                            LastName = "MAGLANGIT",
+                            LockoutEnabled = false,
+                            MiddleName = "AMAD",
+                            NormalizedEmail = "SACAMAGLANGIT.MD@GMAIL.COM",
+                            NormalizedUserName = "MAGLANGIT.SITTIEANEZA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKI0uGY/G6Rw6KCVUhtRZrtOz5lnXy26x3BL78KvOmSbLlYJXDrfoxCNHdnYtdmCsQ==",
+                            PhoneNumber = "09989913196",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Cancer Institute",
+                            Prefix = "Dr.",
+                            SecurityStamp = "d7e59d54-e36f-4591-a078-82d3db58e7f9",
+                            TwoFactorEnabled = false,
+                            UserName = "maglangit.sittieaneza"
+                        },
+                        new
+                        {
+                            Id = "dcf663a4-36f5-4fd6-b124-bae31e0c9e2e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ae01a428-80d6-4b69-af79-b89a800c6d21",
+                            Email = "jayjay_malana@hotmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "JAY-JAY",
+                            LastName = "MALANA",
+                            LockoutEnabled = false,
+                            MiddleName = "MALANNAG",
+                            NormalizedEmail = "JAYJAY_MALANA@HOTMAIL.COM",
+                            NormalizedUserName = "MALANA.JAYJAY",
+                            PasswordHash = "AQAAAAIAAYagAAAAENkjiSuC6U9kFgCq76KTTM7RlgH58MtbHj7q2Yd6lmzb+dT9s0g80aLNtF+SLy3u6w==",
+                            PhoneNumber = "09274171288",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "eb1733f0-2700-4726-b817-02a6721d5650",
+                            TwoFactorEnabled = false,
+                            UserName = "malana.jayjay"
+                        },
+                        new
+                        {
+                            Id = "17793347-1bfa-4526-a0af-0ffcf374aa9a",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "16b45d2f-7e19-4bd1-b827-c354609a4e50",
+                            Email = "marjorenecorpuz@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "MARJORENE",
+                            LastName = "MANAOIS",
+                            LockoutEnabled = false,
+                            MiddleName = "CORPUZ",
+                            NormalizedEmail = "MARJORENECORPUZ@YAHOO.COM",
+                            NormalizedUserName = "MANAOIS.MARJORENE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN0GuKv01QhvOkzwWy11ODkr6QMF3LDhXwdNT+MSvjI4v8Tk9wbwp7jgRzJYuOweUQ==",
+                            PhoneNumber = "09072856158",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "fa8bbace-e3e9-44ce-b2e6-e093ea45cfd7",
+                            TwoFactorEnabled = false,
+                            UserName = "manaois.marjorene"
+                        },
+                        new
+                        {
+                            Id = "6f34a16a-6e68-4d8b-9f6a-0e0c07a09ed8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "68628103-593f-4fec-9f7e-94f558f84291",
+                            Email = "farizahm@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "FARIZAH",
+                            LastName = "MAMALUBA",
+                            LockoutEnabled = false,
+                            MiddleName = "MODIARAT",
+                            NormalizedEmail = "FARIZAHM@YAHOO.COM",
+                            NormalizedUserName = "MAMALUBA.FARIZAH",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPPXmi1+tEworiiD9Opmn+ixcYa0rEjK4HHiy/9arL6uCAxu0C9vNFvMzwVQ0O3cew==",
+                            PhoneNumber = "09168372024",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "13fe326e-4910-4d09-8f24-0eca92df3a93",
+                            TwoFactorEnabled = false,
+                            UserName = "mamaluba.farizah"
+                        },
+                        new
+                        {
+                            Id = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d8e26c91-699c-42b8-852a-7250a3d0b4a3",
+                            Email = "hunnyresquites88@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "HONEYLET",
+                            LastName = "MANGULAMAS",
+                            LockoutEnabled = false,
+                            MiddleName = "RESQUITES",
+                            NormalizedEmail = "HUNNYRESQUITES88@YAHOO.COM",
+                            NormalizedUserName = "MANGULAMAS.HONEYLET",
+                            PasswordHash = "AQAAAAIAAYagAAAAEERIuUrfehwsO6uSDiNFInv/NHjsbVrAhUZzo9Qi7PdrVv7Lxjvl2Sn13Di1Xu33WA==",
+                            PhoneNumber = "09776146365",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "1a1b0d00-73a8-4401-80f3-19a5864285bd",
+                            TwoFactorEnabled = false,
+                            UserName = "mangulamas.honeylet"
+                        },
+                        new
+                        {
+                            Id = "53ac9d08-f52f-4a25-92d7-10de53f612fa",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "6204acbf-5e67-45cc-a499-6184182b018a",
+                            Email = "rodelynmartinez619@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "RODELYN",
+                            LastName = "MARTINEZ",
+                            LockoutEnabled = false,
+                            MiddleName = "CORTEZ",
+                            NormalizedEmail = "RODELYNMARTINEZ619@GMAIL.COM",
+                            NormalizedUserName = "MARTINEZ.RODELYN",
+                            PasswordHash = "AQAAAAIAAYagAAAAENXqBfqtA2GN6HPdR3a6zEanad8xGN6vIGuaLwFXudBHlqwEd9DXY1SkmbNlcg5zUA==",
+                            PhoneNumber = "09177188038",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "465377ad-8249-4712-885f-bdc79604b050",
+                            TwoFactorEnabled = false,
+                            UserName = "martinez.rodelyn"
+                        },
+                        new
+                        {
+                            Id = "827e71e5-479c-47a7-8f91-16327825a02d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "17275b82-b774-4a61-904e-9d22462918f3",
+                            Email = "faridaolama@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "FARIDA",
+                            LastName = "MEDITAR",
+                            LockoutEnabled = false,
+                            MiddleName = "OLAMA",
+                            NormalizedEmail = "FARIDAOLAMA@GMAIL.COM",
+                            NormalizedUserName = "MEDITAR.FARIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAECL7VDZl8mQmPCKiwhGaNO3838ObCisFK+m9oqpb+1/daez/PICWUz5PnLrGGUn/FQ==",
+                            PhoneNumber = "09606059079",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, OB-Gyne Ward",
+                            Prefix = "Ms.",
+                            SecurityStamp = "5ce27965-0735-41f2-9d6e-5f7b8be14efa",
+                            TwoFactorEnabled = false,
+                            UserName = "meditar.farida"
+                        },
+                        new
+                        {
+                            Id = "dfb15a5f-9f4e-48e6-b781-f4a62c5bfb0a",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "565021fc-0f5a-4471-b95f-9009f312adc2",
+                            Email = "midtimbangbebot@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "BEBOT",
+                            LastName = "MIDTIMBANG",
+                            LockoutEnabled = false,
+                            MiddleName = "USOP",
+                            NormalizedEmail = "MIDTIMBANGBEBOT@GMAIL.COM",
+                            NormalizedUserName = "MIDTIMBANG.BEBOT",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH3IkTw43BRsT2Fn1waBYeqxpe8ZC6TDAODao5+THkZtUoSr5gTil7H1hF/6EgZDog==",
+                            PhoneNumber = "09755272044",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Delivery Room",
+                            Prefix = "Ms.",
+                            SecurityStamp = "441c0cc1-e04d-468a-b199-793ca642bdb5",
+                            TwoFactorEnabled = false,
+                            UserName = "midtimbang.bebot"
+                        },
+                        new
+                        {
+                            Id = "12183b62-26ee-459b-a859-88a94e86c117",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "88939436-624c-4a8c-a730-c3c9095da43a",
+                            Email = "NA",
+                            EmailConfirmed = false,
+                            FirstName = "JOCELYN",
+                            LastName = "MOJADO",
+                            LockoutEnabled = false,
+                            MiddleName = "BAJAO",
+                            NormalizedEmail = "NA",
+                            NormalizedUserName = "MOJADO.JOCELYN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP/J1uE8OFb2g1JMzvjk1/IT5GuVdaLVg9JFRXbe0SbnJpdVUB1r2vmYeSgH3ardzQ==",
+                            PhoneNumber = "NA",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Hemodialysis-Main",
+                            Prefix = "Ms.",
+                            SecurityStamp = "33d34539-bbad-4ccd-bba6-337076582616",
+                            TwoFactorEnabled = false,
+                            UserName = "mojado.jocelyn"
+                        },
+                        new
+                        {
+                            Id = "ef529a6b-b381-4db1-a204-913ba73a6721",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "e3f222e0-af75-4c3f-a5d4-cd0edab99b27",
+                            Email = "iamarielolivo@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ARIEL",
+                            LastName = "OLIVO",
+                            LockoutEnabled = false,
+                            MiddleName = "MELOCOTON",
+                            NormalizedEmail = "IAMARIELOLIVO@GMAIL.COM",
+                            NormalizedUserName = "OLIVO.ARIEL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEF/Jv3QhSBH5MQoqvahnz5eqNth5w1/3vCQ4dXGZrLsKs1SNBfgPz3jT1Y7whuL8AA==",
+                            PhoneNumber = "09084724708",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "48d835e4-e230-4ae3-b2b6-22e1c3c82acc",
+                            TwoFactorEnabled = false,
+                            UserName = "olivo.ariel"
+                        },
+                        new
+                        {
+                            Id = "969fb51f-26aa-4637-8a8a-96247c7a67a4",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "89ca474d-85a9-49ca-b3da-8bddaaed03f4",
+                            Email = "hasmiamdo@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "HASMIA",
+                            LastName = "OMAR",
+                            LockoutEnabled = false,
+                            MiddleName = "DATUMANONG",
+                            NormalizedEmail = "HASMIAMDO@GMAIL.COM",
+                            NormalizedUserName = "OMAR.HASMIA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK/8JAUT9Jz4ePVrs1cTdbvL+WwRwpyRV7f/fLjNqVkppuZB3M475yLGnU4IMsni7w==",
+                            PhoneNumber = "09365268695",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d9f0a132-1691-4ba7-a3aa-d7134883b57c",
+                            TwoFactorEnabled = false,
+                            UserName = "omar.hasmia"
+                        },
+                        new
+                        {
+                            Id = "b5870b06-0240-4d35-a6b1-54a76c1e09fc",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "be47fe52-2312-417a-835d-8afc33f36c16",
+                            Email = "apple_foj@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "MARIVETTE",
+                            LastName = "ONDOY",
+                            LockoutEnabled = false,
+                            MiddleName = "TABUGO",
+                            NormalizedEmail = "APPLE_FOJ@YAHOO.COM",
+                            NormalizedUserName = "ONDOY.MARIVETTE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA0vI9UwNDuzqta0HxebmUZz4DOg5ZFfo624G4Clbsg5pLgTC4GmGmqf2tAkIcDXdA==",
+                            PhoneNumber = "09177228527",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "5a020bb3-2702-4879-a8e1-add1cdc480ba",
+                            TwoFactorEnabled = false,
+                            UserName = "ondoy.marivette"
+                        },
+                        new
+                        {
+                            Id = "bb22c692-bc14-44db-9a6e-5b0196c9a8c2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "447e71a3-74fb-49ec-ae39-24be915dad37",
+                            Email = "origmonaliza@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "MONALIZA",
+                            LastName = "ORIG",
+                            LockoutEnabled = false,
+                            MiddleName = "NOR",
+                            NormalizedEmail = "ORIGMONALIZA@GMAIL.COM",
+                            NormalizedUserName = "ORIG.MONALIZA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIfojOpW6HMtUYV/FLQlKhCNGimC1g6cx629yd+pkxD5NKxmaN7Mpl5KqT376Jig5A==",
+                            PhoneNumber = "09274704538",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "df1f8294-1cca-4eae-bac9-37dd045faf16",
+                            TwoFactorEnabled = false,
+                            UserName = "orig.monaliza"
+                        },
+                        new
+                        {
+                            Id = "5b7ff0c8-b6f9-489c-9f1d-9faadf9e6c6f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "8325ea77-cc34-47ea-88c6-429e09175b7b",
+                            Email = "hor_he@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "JORGE",
+                            LastName = "PADILLA",
+                            LockoutEnabled = false,
+                            MiddleName = "LAMPITOC",
+                            NormalizedEmail = "HOR_HE@YAHOO.COM",
+                            NormalizedUserName = "PADILLA.JORGE",
+                            PasswordHash = "AQAAAAIAAYagAAAAENHH8OB/ZLd/bk9p0xJ8GFy3BGmD2yVcVHqxOwCYsuz0DLaGUm2gJ/JO4haxc31R8Q==",
+                            PhoneNumber = "09177900470",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "dbd20967-f971-4e78-bc76-f2125aa9c264",
+                            TwoFactorEnabled = false,
+                            UserName = "padilla.jorge"
+                        },
+                        new
+                        {
+                            Id = "d65e3f58-b23d-4b83-8b15-15e66565d29f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "0cc96781-ed8b-4403-88ed-a888ea301082",
+                            Email = "shpagayao@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SANDRA",
+                            LastName = "PANTARAN",
+                            LockoutEnabled = false,
+                            MiddleName = "PAGAYAO",
+                            NormalizedEmail = "SHPAGAYAO@GMAIL.COM",
+                            NormalizedUserName = "PANTARAN.SANDRA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEM/k/4p8BEd9kBTxHimJXFp2jGxtMC1Fv52oyPXZgEV8Vp1kl3m6MWP2cEdhuJp37A==",
+                            PhoneNumber = "09163771505",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "ca193ee6-eaa6-4fca-ad01-ec9adb3a2a4c",
+                            TwoFactorEnabled = false,
+                            UserName = "pantaran.sandra"
+                        },
+                        new
+                        {
+                            Id = "a1e10c26-4d1d-4f9e-9378-1382457c82ad",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "4e799433-8c64-430d-95dd-75def080a552",
+                            Email = "beeyoupee@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "BAITAYAN",
+                            LastName = "PINGUIAMAN",
+                            LockoutEnabled = false,
+                            MiddleName = "UNTONG",
+                            NormalizedEmail = "BEEYOUPEE@GMAIL.COM",
+                            NormalizedUserName = "PINGUIAMAN.BAITAYAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAQ+VHXoDYDyvxdz9mnfO9kfEuk/w3O17g0WINchLwHmeTXT2BSLv/3ono5SeBgnrw==",
+                            PhoneNumber = "09056377715",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "fc6fac8d-81f1-4679-afa5-ae56ac4f358d",
+                            TwoFactorEnabled = false,
+                            UserName = "pinguiaman.baitayan"
+                        },
+                        new
+                        {
+                            Id = "dfc40941-0cfb-46ed-8991-e285aa08c20e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "df6a72d4-e9e9-4ace-9945-ed9cd9881b68",
+                            Email = "quinto.jennifer82@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "JENNIFER",
+                            LastName = "QUINTO",
+                            LockoutEnabled = false,
+                            MiddleName = "CATBAGAN",
+                            NormalizedEmail = "QUINTO.JENNIFER82@GMAIL.COM",
+                            NormalizedUserName = "QUINTO.JENNIFER",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMFOkpqnl1hfNWV/y5RUDZDqgs7bhGXaaZMiCZXzQrF21LQlVOKwFBAvK66ptvpYRw==",
+                            PhoneNumber = "09272708149",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "4fc023a5-9b5e-4c9f-8043-81a289e5a0fb",
+                            TwoFactorEnabled = false,
+                            UserName = "quinto.jennifer"
+                        },
+                        new
+                        {
+                            Id = "f23ac0c6-68ac-41c8-94ff-383acbfc3e41",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "87ba24b2-5826-47ab-b0da-38dbe9b9f3f1",
+                            Email = "estrellavsreal@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "VIVIAN",
+                            LastName = "REAL",
+                            LockoutEnabled = false,
+                            MiddleName = "SARATAO",
+                            NormalizedEmail = "ESTRELLAVSREAL@YAHOO.COM",
+                            NormalizedUserName = "REAL.VIVIAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIE2+iwdsDiauBEAwKsSqyBy+2y5/5U0wUEUZyLv2krm9OITeUrt0/n9zrFVG01lVg==",
+                            PhoneNumber = "09171027173",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Department of Dental Medicine",
+                            Prefix = "Dr.",
+                            SecurityStamp = "099f3cfa-e3d3-4624-a613-8e3b10a63381",
+                            TwoFactorEnabled = false,
+                            UserName = "real.vivian"
+                        },
+                        new
+                        {
+                            Id = "50e3ff41-8195-4d52-805a-d55efb68f08a",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d58a6d25-eeaf-42fa-989a-b50be552fc4a",
+                            Email = "lienocius@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "NEIL ALFONSO",
+                            LastName = "SUICO",
+                            LockoutEnabled = false,
+                            MiddleName = "VIRAY",
+                            NormalizedEmail = "LIENOCIUS@GMAIL.COM",
+                            NormalizedUserName = "SUICO.NEILALFONSO",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMTj6dk9pPCM/T86DbcRUcs4AeP84Is8c9lqlHJxlYuLmtl08ChygLqyXRGdjdopAQ==",
+                            PhoneNumber = "09260398619",
+                            PhoneNumberConfirmed = false,
+                            Prefix = "Mr.",
+                            SecurityStamp = "db0e0521-2450-4aff-9b60-1ac49934f57c",
+                            TwoFactorEnabled = false,
+                            UserName = "suico.neilalfonso"
+                        },
+                        new
+                        {
+                            Id = "55c79a0c-4f48-472f-9d13-1801e2e5c167",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "dbb09b7e-ba59-4bad-8795-2a16fbed64df",
+                            Email = "janesuperales27@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "MARY JANE",
+                            LastName = "SUPERALES",
+                            LockoutEnabled = false,
+                            MiddleName = "ORTEGA",
+                            NormalizedEmail = "JANESUPERALES27@GMAIL.COM",
+                            NormalizedUserName = "SUPERALES.MARYJANE",
+                            PasswordHash = "AQAAAAIAAYagAAAAELgW3bTDRR3SAymolYkdBACDn5fBCkb8lOB0IsVnUxS755kK55Wgr56HE55Ip+xANQ==",
+                            PhoneNumber = "09162424748",
+                            PhoneNumberConfirmed = false,
+                            Prefix = "Ms.",
+                            SecurityStamp = "e8e6aa10-e5bb-4120-82d9-48cd66b5060e",
+                            TwoFactorEnabled = false,
+                            UserName = "superales.maryjane"
+                        },
+                        new
+                        {
+                            Id = "2e889d55-159e-44a0-b9c9-44cc9f25c66b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "10664968-df90-4fde-92b4-cd96d5e97ba0",
+                            Email = "suzettetocao@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SUZETTE",
+                            LastName = "TOCAO",
+                            LockoutEnabled = false,
+                            MiddleName = "COMPLETANO",
+                            NormalizedEmail = "SUZETTE TOCAO@GMAIL.COM",
+                            NormalizedUserName = "TOCAO.SUZETTE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGKzOkUpFm/GDMDoxic2MkYZcBe1CkBuHyxVju5nD0MKmllWlMg9EPuEHMwif8XkzQ==",
+                            PhoneNumber = "09219908520",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "e0a91ee4-ae1c-44a5-9e4e-b7e453a91786",
+                            TwoFactorEnabled = false,
+                            UserName = "tocao.suzette"
+                        },
+                        new
+                        {
+                            Id = "2ec1e24b-50c6-48b7-8e9c-18c64a42e172",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "668b904e-4373-469b-97ab-faca765260de",
+                            Email = "ashmatik23@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ASWARFY",
+                            LastName = "USMAN",
+                            LockoutEnabled = false,
+                            MiddleName = "MOHAMAD",
+                            NormalizedEmail = "ASHMATIK23@GMAIL.COM",
+                            NormalizedUserName = "USMAN.ASWARFY",
+                            PasswordHash = "AQAAAAIAAYagAAAAENhAa4wgaTooL8/tBjoRtzVTOxq5HAEVK3PmmSiK9mnQS3RoOIoSHZbbEFMeuZ097w==",
+                            PhoneNumber = "09173383890",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "d07f1b01-303f-41cd-bc0e-f26644fba366",
+                            TwoFactorEnabled = false,
+                            UserName = "usman.aswarfy"
+                        },
+                        new
+                        {
+                            Id = "87234d0c-41c3-44e5-8cb7-5d7a7a9209c8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "e0a07905-bb43-4bcd-a096-ae07d2f7b7f1",
+                            Email = "hamidadubali@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "HAMIDA",
+                            LastName = "USMAN-BALI",
+                            LockoutEnabled = false,
+                            MiddleName = "DATUMANONG",
+                            NormalizedEmail = "HAMIDADUBALI@GMAIL.COM",
+                            NormalizedUserName = "USMANBALI.HAMIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGqsOIpyBoZmU/Kmqa7x41XTLoxksuQbV+DzIGbe9xkEPYmwAP/90A45hTwUcFsJQQ==",
+                            PhoneNumber = "09368159393",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Materials and Supplies Management Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "00378713-0f62-4a73-bc00-98a3d08c5770",
+                            TwoFactorEnabled = false,
+                            UserName = "usmanbali.hamida"
+                        },
+                        new
+                        {
+                            Id = "39987409-6b12-4a73-a9a3-61c7f117dcab",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "ca86b2a2-e0d6-488f-b378-bb39400e2780",
+                            Email = "claurencevasay@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "CLAURENCE",
+                            LastName = "VASAY",
+                            LockoutEnabled = false,
+                            MiddleName = "ACHAS",
+                            NormalizedEmail = "CLAURENCEVASAY@GMAIL.COM",
+                            NormalizedUserName = "VASAY.CLAURENCE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH3lnOue268I31rqiXLcVFevi5oeSinFOknLlz04oK26uzc1EICwSBcCvoRl3PvEcw==",
+                            PhoneNumber = "09555765345",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "86337dad-0a1b-457a-95a8-2c995e783765",
+                            TwoFactorEnabled = false,
+                            UserName = "vasay.claurence"
+                        },
+                        new
+                        {
+                            Id = "56731842-6b12-9a46-k9h2-61c7f212hyex",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "0ca7b69b-6755-4b4c-8cad-730d34c549ed",
+                            Email = "Silvestre1234@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "Chrislen Lee",
+                            LastName = "Silvestre",
+                            LockoutEnabled = false,
+                            MiddleName = "C.",
+                            NormalizedEmail = "SILVESTRE1234@GMAIL.COM",
+                            NormalizedUserName = "SILVESTRE.CHRISLENLEE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIjS+bqsQIgTkjF7/VHgiicpRLds7oXStKSL+IKkUeKK64WwS2+tJ6iEI8pU1xFlGA==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "7544b37f-b9fd-4c0a-91af-1044a3aadf78",
+                            TwoFactorEnabled = false,
+                            UserName = "silvestre.chrislenlee"
+                        },
+                        new
+                        {
+                            Id = "c8463e9f-8ac6-40c3-91b1-2385f6a91eb4",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "30fd1ec5-0e45-444c-9b15-8713cdf5672a",
+                            Email = "holy_voltz771989@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "RUSSEL KIRK",
+                            LastName = "VILLA",
+                            LockoutEnabled = false,
+                            MiddleName = "GUALINGCO",
+                            NormalizedEmail = "HOLY_VOLTZ771989@YAHOO.COM",
+                            NormalizedUserName = "VILLA.RUSSELKIRK",
+                            PasswordHash = "AQAAAAIAAYagAAAAECLpUsiYw0Gh745J51epjCMLtYpb6TBZIR1eOFa2UvPQlZ575A3MQJVaLAamSZHMNQ==",
+                            PhoneNumber = "09095412351",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "3327a44b-4c4a-42c5-bd47-fa42e04c7268",
+                            TwoFactorEnabled = false,
+                            UserName = "villa.russelkirk"
+                        },
+                        new
+                        {
+                            Id = "abfc1b6f-9f29-44dd-9c45-cdcddaa6eb83",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "46c6abee-efaf-4d35-baca-756e69217c8e",
+                            Email = "ruby012770@outlook.com",
+                            EmailConfirmed = false,
+                            FirstName = "RUBY",
+                            LastName = "VILLANUEVA",
+                            LockoutEnabled = false,
+                            MiddleName = "ELEVAZO",
+                            NormalizedEmail = "RUBY012770@OUTLOOK.COM",
+                            NormalizedUserName = "VILLANUEVA.RUBY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEM/4PGlJ1fFPgecK+YFs0+B1EFWbCnP/JSL7I88oS0kD178KBqeNaRBj6BvaYryTdQ==",
+                            PhoneNumber = "09173510613",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Credit and Collection Section",
+                            Prefix = "Ms.",
+                            SecurityStamp = "c7e94a3c-af16-4654-b956-59a5fba67bdf",
+                            TwoFactorEnabled = false,
+                            UserName = "villanueva.ruby"
+                        },
+                        new
+                        {
+                            Id = "db7fba3d-88fc-47cf-b119-f868d9196f02",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "cf7eee32-2e23-4f19-840a-637223e0ff91",
+                            Email = "ronfaith2003@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "RONNIE",
+                            LastName = "VILLAROSA",
+                            LockoutEnabled = false,
+                            MiddleName = "GREGORIO",
+                            NormalizedEmail = "RONFAITH2003@GMAIL.COM",
+                            NormalizedUserName = "VILLAROSA.RONNIE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPRM9NaY0Hq0j7vUmzTTBG2YYo08IZ7T14Z6h7mSEOkacJMwMw/WlYGApYg2X3GExg==",
+                            PhoneNumber = "09956598896",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "b668b714-cab6-47de-ada5-d327a6cc6093",
+                            TwoFactorEnabled = false,
+                            UserName = "villarosa.ronnie"
+                        },
+                        new
+                        {
+                            Id = "7cfd0766-f3d3-47aa-9a48-53d437d6c232",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "fb27a5a0-a889-4ef7-9f53-7cbaf839a6a1",
+                            Email = "wahidamaniala@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "WAHIDA",
+                            LastName = "ZAMAN",
+                            LockoutEnabled = false,
+                            MiddleName = "MANIALA",
+                            NormalizedEmail = "WAHIDAMANIALA@GMAIL.COM",
+                            NormalizedUserName = "ZAMAN.WAHIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKZeAJD8izhfS4LW1d+QPIGsrDH2tOEIcMbzwH9xcECrGAC8ls8MpQ/dCu8Ji+GZWw==",
+                            PhoneNumber = "09065830887",
+                            PhoneNumberConfirmed = false,
+                            SecurityStamp = "fb709cdb-c5e9-4ded-a11c-d2b56d400c0e",
+                            TwoFactorEnabled = false,
+                            UserName = "zaman.wahida"
+                        },
+                        new
+                        {
+                            Id = "9821dbf5-0f70-4630-8c68-f2077a3abf08",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "0f30cd67-8667-4c97-8547-ed6bf58ff16d",
+                            Email = "ZAMBRANO.REHABMD@GMAIL.COM",
+                            EmailConfirmed = false,
+                            FirstName = "JHOANA MARIE",
+                            LastName = "ZAMBRANO",
+                            LockoutEnabled = false,
+                            MiddleName = "JUANEZA",
+                            NormalizedEmail = "ZAMBRANO.REHABMD@GMAIL.COM",
+                            NormalizedUserName = "ZAMBRANO.JHOANAMARIE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPYrXrHUXEJWP18KH2wp/3ZFnO+jOwgWLhPQDEmqvcji9WmCWgQ41fM8xLXQseFMyg==",
+                            PhoneNumber = "09178470437",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Physical Medicine and Rehabilitation Department",
+                            Prefix = "Dr.",
+                            SecurityStamp = "9dc404a6-64ce-4d86-9b50-e9f6f80dffd4",
+                            TwoFactorEnabled = false,
+                            UserName = "zambrano.jhoanamarie"
+                        },
+                        new
+                        {
+                            Id = "8e4f430c-72da-4142-83d9-cd9d9c6f2a6e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9603b3af-f52c-43fb-bfa0-fd0f85f0fe41",
+                            Email = "sittierayhana@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SITTIE RAYHANA",
+                            LastName = "SANTURING",
+                            LockoutEnabled = false,
+                            MiddleName = "MARICOR",
+                            NormalizedEmail = "SITTIERAYHANA@GMAIL.COM",
+                            NormalizedUserName = "SANTURING.SITTIE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEG4pQGEhw1d9iDAyF2KHammqXaWZsu7YKAu+dA7reDFXHegQDiaZes7kuTRr3/htsw==",
+                            PhoneNumber = "09451067619",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Legal Unit",
+                            Prefix = "Atty.",
+                            SecurityStamp = "f91babbe-e30c-4016-9e88-55e2e8125f7c",
+                            TwoFactorEnabled = false,
+                            UserName = "santuring.sittie"
+                        },
+                        new
+                        {
+                            Id = "4e21fe59-4f5e-46b3-82b7-28df270038da",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "acf37c60-fdba-418e-8722-abc94910d4aa",
+                            Email = "norainekansimd@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "NOR-AINE",
+                            LastName = "KANSI",
+                            LockoutEnabled = false,
+                            MiddleName = "PENDONG",
+                            NormalizedEmail = "NORAINEKANSIMD@GMAIL.COM",
+                            NormalizedUserName = "KANSI.NORAINE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEC8E+WmpkM20+/MOHa3HL0sGiPK4mz4kK1EMIwPOp/UCS2+QhKS0rbxllVEESEaeig==",
+                            PhoneNumber = "0917846224",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Hospital Epidemiology and Surveillance Unit",
+                            Prefix = "Dr.",
+                            SecurityStamp = "7c7bd5b2-3f89-4012-b155-747f521266b1",
+                            TwoFactorEnabled = false,
+                            UserName = "kansi.noraine"
+                        },
+                        new
+                        {
+                            Id = "b582fc78-cd33-46d4-a994-8c43789600ff",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c7cd53cc-c49f-41be-a1c9-92a3c35e689d",
+                            Email = "fasl.buenaflor@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "FASL GOLDANNE",
+                            LastName = "BUENAFLOR",
+                            LockoutEnabled = false,
+                            MiddleName = "BIRUAR",
+                            NormalizedEmail = "FASL.BUENAFLOR@GMAIL.COM",
+                            NormalizedUserName = "BUENAFLOR.FASL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAQGJb2e5gKG+DyHIBjOTqyerxDUzbM3iuBOTRoA/lnlOHCSNMSy2Hngk6PCoeGXfA==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Professional Education Training Development Unit",
+                            Prefix = "Dr.",
+                            SecurityStamp = "1624cdc4-3e66-4a42-bb13-3a8f534ea5af",
+                            TwoFactorEnabled = false,
+                            UserName = "buenaflor.fasl"
+                        },
+                        new
+                        {
+                            Id = "0301f6de-6d6d-448f-a46c-2bb32ba97a28",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "98931beb-3e3b-447f-9db2-cf3394296dfc",
+                            Email = "sigmundprabago@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SIGMUND",
+                            LastName = "RABAGO",
+                            LockoutEnabled = false,
+                            MiddleName = "PASCUAL",
+                            NormalizedEmail = "SIGMUNDRABAGO@GMAIL.COM",
+                            NormalizedUserName = "RABAGO.SIGMUND",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJDctdYR36algRhfH1KHx3H1ccBvpu2+zW7jSjDOK3SloyyWcORhY5QRDDfsiqFP1w==",
+                            PhoneNumber = "09682425921",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Public Assistance and Complaint Desk",
+                            Prefix = "Mr.",
+                            SecurityStamp = "3b00f967-ecad-4871-a6e6-eeb13282848e",
+                            TwoFactorEnabled = false,
+                            UserName = "rabago.sigmund"
+                        },
+                        new
+                        {
+                            Id = "eeadfae2-544f-4a5d-9027-808537e694b1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "53235303-13e1-47ce-abce-0ea778dfd1ea",
+                            Email = "",
+                            EmailConfirmed = false,
+                            FirstName = "FAISAL",
+                            LastName = "ROMANCAP",
+                            LockoutEnabled = false,
+                            MiddleName = "KASID",
+                            NormalizedEmail = "",
+                            NormalizedUserName = "ROMANCAP.FAISAL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEK9VBPUv/zZsXoiIU6vFJL7c4EkzaK3ek+Tije6gPbyFtlZm33x6FycsOgiJKIFFLw==",
+                            PhoneNumber = "09176339433",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Department of Surgery",
+                            Prefix = "Dr.",
+                            SecurityStamp = "87f5d982-6657-42a4-ac02-37ec1adf61af",
+                            TwoFactorEnabled = false,
+                            UserName = "romancap.faisal"
+                        },
+                        new
+                        {
+                            Id = "562a00d1-f6de-4c44-bfc2-b55e99074bcf",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9c3b7613-f27d-4c07-b0ad-0563e47a936f",
+                            Email = "mokibox2@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "MOCTAR",
+                            LastName = "MABANG",
+                            LockoutEnabled = false,
+                            MiddleName = "MOPAC",
+                            NormalizedEmail = "MOKIBOX2@GMAIL.COM",
+                            NormalizedUserName = "MABANG.MOCTAR",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDwmMTQdxoC3uTw2Y/sNq56ue2BwpZlO2v10ujNLCb2gUUMpMdKIDkzVeFM7OfI01Q==",
+                            PhoneNumber = "09177237960",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Research Institute",
+                            Prefix = "Dr.",
+                            SecurityStamp = "ffa241e8-14d3-49a9-b936-3467f42ae1fc",
+                            TwoFactorEnabled = false,
+                            UserName = "mabang.moctar"
+                        },
+                        new
+                        {
+                            Id = "ba16dd9a-fbdb-4ed6-9cfa-b972bda73917",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "1c0340b7-91a6-4256-9d86-fb8999a6fcdc",
+                            Email = "flickersps@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SHIRLEY",
+                            LastName = "SALIK",
+                            LockoutEnabled = false,
+                            MiddleName = "PULIDO",
+                            NormalizedEmail = "FLICKERSPS@GMAIL.COM",
+                            NormalizedUserName = "SALIK.SHIRLEY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGjKYqsCsZc2Mgi8+H5v3OHarOHDwHERK+OuPVNJE46bid6vMUlo9A6FJBJGOiAkzg==",
+                            PhoneNumber = "09177229341",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Medical Social Work Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "206b4cb1-5d0d-4f92-b027-e24872b90252",
+                            TwoFactorEnabled = false,
+                            UserName = "salik.shirley"
+                        },
+                        new
+                        {
+                            Id = "bacdfd11-acd7-40fe-9fb3-b8831f94d7de",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "f7295d28-5454-499f-96f3-60a97feec631",
+                            Email = "fsornd@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "FEBE",
+                            LastName = "ONG",
+                            LockoutEnabled = false,
+                            MiddleName = "SUYO",
+                            NormalizedEmail = "FSORND@GMAIL.COM",
+                            NormalizedUserName = "ONG.FEBE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDXqLG0KgvsAO6/BbmuVYvsAGUbuZaxZ5gRCWTHjZcG5Yd5WTz7jBqOj1lK8cJL3Rg==",
+                            PhoneNumber = "09422188023",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Nutrition and Dietetics Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "f0d6336a-0e93-43db-8555-a40b4f404f05",
+                            TwoFactorEnabled = false,
+                            UserName = "ong.febe"
+                        },
+                        new
+                        {
+                            Id = "75228ef1-9a3f-4a55-8181-b1794ec72e8d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "3976de1f-0743-48cf-bee3-57fbb9a03023",
+                            Email = "sofia_alfonso64@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SOFIA",
+                            LastName = "ALFONSO",
+                            LockoutEnabled = false,
+                            MiddleName = "DUMAMA",
+                            NormalizedEmail = "SOFIA_ALFONSO64@GMAIL.COM",
+                            NormalizedUserName = "ALFONSO.SOFIA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFTaEp6ZrG/UoGxHFcxXToc/nRZulXl+VNnhWLovOiPZ02wS7LSBn+sFj+C3OCwZUQ==",
+                            PhoneNumber = "09176338010",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Pharmacy Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "0bc7d13a-d100-405a-996d-8c0978e1fbf8",
+                            TwoFactorEnabled = false,
+                            UserName = "alfonso.sofia"
+                        },
+                        new
+                        {
+                            Id = "0c0e6892-41a4-4536-bda7-757dd5aeb4ee",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a323b0c1-3e8c-4bd3-9d39-685cbfac7005",
+                            Email = "almarodriguez1969@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "ALMA ROSARIO",
+                            LastName = "RODRIGUEZ",
+                            LockoutEnabled = false,
+                            MiddleName = "PIOQUINTO",
+                            NormalizedEmail = "ALMARODRIGUEZ1969@YAHOO.COM",
+                            NormalizedUserName = "RODRIGUEZ.ALMA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHS5KbBoQBGWuDmdpnjZGZ5sa02wLn3rz+6p15XMlRX3UruUUXAKPT7ubTrXVl2jiA==",
+                            PhoneNumber = "093233910958",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Human Resource Management Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "787869fb-bc2c-4d18-b582-c05647eb6a38",
+                            TwoFactorEnabled = false,
+                            UserName = "rodriguez.alma"
+                        },
+                        new
+                        {
+                            Id = "576fc42f-b0f9-433b-907a-29d98ebf7af6",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a12cc295-17c5-4914-9042-5ade76b0a2e4",
+                            Email = "",
+                            EmailConfirmed = false,
+                            FirstName = "RONALD BENEDICK",
+                            LastName = "JULIANO",
+                            LockoutEnabled = false,
+                            MiddleName = "RIVERO",
+                            NormalizedEmail = "",
+                            NormalizedUserName = "JULIANO.RONALD",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPvkxQKTkohVPRZ+ssn7JdZlqND5KJmyuEQaJwbLBEdpcbG6tUrTsJ+fPyRYl6oosg==",
+                            PhoneNumber = "09393704748",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Engineering and Facilities Management Department",
+                            Prefix = "Engr.",
+                            SecurityStamp = "82c2e2b5-01aa-4488-9114-f7bbd1102396",
+                            TwoFactorEnabled = false,
+                            UserName = "juliano.ronald"
+                        },
+                        new
+                        {
+                            Id = "aa704a60-ad3d-4148-90c0-316803202de6",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "3e5232a6-8862-4c7a-b353-69d56bcc48a0",
+                            Email = "sheryllbargo041388@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SHERYLL",
+                            LastName = "BARGO",
+                            LockoutEnabled = false,
+                            MiddleName = "LUMACAD",
+                            NormalizedEmail = "SHERYLLBARGO041388@GMAIL.COM",
+                            NormalizedUserName = "BARGO.SHERYLL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEiQM/D8KRAUZvsePBGWU1d+WUnJnzIHA8SYyLhYjhyoLyu+vVy+iR5SjqOhaLOahQ==",
+                            PhoneNumber = "09178319784",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Accounting Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "90c789d4-448b-40e6-9649-7b5db2b1ea17",
+                            TwoFactorEnabled = false,
+                            UserName = "bargo.sheryll"
+                        },
+                        new
+                        {
+                            Id = "08a7ead1-5c61-4207-8ea5-aec3d6b691d0",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "3cd7e002-e7a6-4098-b9fe-cd6afb89fcf6",
+                            Email = "pong_rg@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "FELISA",
+                            LastName = "GECOSALA",
+                            LockoutEnabled = false,
+                            MiddleName = "RODRIGUEZ",
+                            NormalizedEmail = "PONG_RG@YAHOO.COM",
+                            NormalizedUserName = "GECOSALA.FELISA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFB1Si4sdge8CxOvkvNPzgIxH1Uj7ZwueGDJuhJ223W961sQ1Fs8Ek2/OXPOcT5Ggg==",
+                            PhoneNumber = "09227487001",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Cash Operations Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "75f65e0e-f61d-4cde-ae29-5a634d2a30b7",
+                            TwoFactorEnabled = false,
+                            UserName = "gecosala.felisa"
+                        },
+                        new
+                        {
+                            Id = "d55b7093-1298-42fb-96b2-b12edb1cf49f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "bc9852da-0b12-4b9b-8068-4a5efc7b61cc",
+                            Email = "paridasatol@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "PARIDA",
+                            LastName = "SATOL",
+                            LockoutEnabled = false,
+                            MiddleName = "KIMAMAO",
+                            NormalizedEmail = "PARIDASATOL@YAHOO.COM",
+                            NormalizedUserName = "SATOL.PARIDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGnvAImTOAwH2ev5BsAmiaXW5QbAjOzfIVRQ9XrntTC0Ezfo8tjh7hBSWYumdBbMNg==",
+                            PhoneNumber = "09174470268",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Out-Patient Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "0be73452-bcd4-46e8-955d-464057706d0a",
+                            TwoFactorEnabled = false,
+                            UserName = "satol.parida"
+                        },
+                        new
+                        {
+                            Id = "35035c73-8072-4005-85bb-0a91cd97741b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "2336b885-6a99-4274-8677-15955a89e57c",
+                            Email = "rotchelcambri38@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ROTCHEL",
+                            LastName = "CAMBRI",
+                            LockoutEnabled = false,
+                            MiddleName = "GUIAMAD",
+                            NormalizedEmail = "ROTCHELCAMBRI38@GMAIL.COM",
+                            NormalizedUserName = "CAMBRI.ROTCHEL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEB8MOhqu6oaq1CuJ2amjen1BgIix2uM9FvmhXgTw/s5C6xVGdJXtoxIVKzadmLSQgg==",
+                            PhoneNumber = "09171280911",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Central Supply and Sterilization Room",
+                            Prefix = "Ms.",
+                            SecurityStamp = "3439d7bf-1386-4430-86ea-d42bbbe5109e",
+                            TwoFactorEnabled = false,
+                            UserName = "cambri.rotchel"
+                        },
+                        new
+                        {
+                            Id = "b1ec6cc6-9920-4df6-bce0-b22b107a476d",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9c48aa9d-4031-4772-828b-2799e48cd02f",
+                            Email = "vernon_uy@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "VERNON",
+                            LastName = "UY",
+                            LockoutEnabled = false,
+                            MiddleName = "LIM",
+                            NormalizedEmail = "VERNON_UY@YAHOO.COM",
+                            NormalizedUserName = "UY.VERNON",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL6D90p7NMDJ41j/PpCq+O/D8uw1+m+Gs7r6vgNO6nu7hV5fNW1N+n4+ntj7FQ6ReQ==",
+                            PhoneNumber = "09177227460",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Pediatrics Ward",
+                            Prefix = "Mr.",
+                            SecurityStamp = "ac4d1e4a-bd09-4b9c-9d38-7ca253ba3294",
+                            TwoFactorEnabled = false,
+                            UserName = "uy.vernon"
+                        },
+                        new
+                        {
+                            Id = "31298867-e329-4dbf-8c68-2e557d98e864",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "df6ca85f-fb4f-441f-a637-c4bc8b42cd32",
+                            Email = "chiquivsongcayauon@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "CHIQUI",
+                            LastName = "SONGCAYAUON",
+                            LockoutEnabled = false,
+                            MiddleName = "VILLANUEVA",
+                            NormalizedEmail = "CHIQUIVSONGCAYAUON@GMAIL.COM",
+                            NormalizedUserName = "SONGCAYAUON.CHIQUI",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJ4O6S4ETJozQTYsFo7Sq/cwoLrsCsdUAVITCtwBoOVbaxdu2KDgKmoGvwCXRHD7Wg==",
+                            PhoneNumber = "09568141482",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Surgery Wing",
+                            Prefix = "Ms.",
+                            SecurityStamp = "7a6911c2-fb7b-4f13-a6d4-265a56150875",
+                            TwoFactorEnabled = false,
+                            UserName = "songcayauon.chiqui"
+                        },
+                        new
+                        {
+                            Id = "86e65501-a4a6-438c-abe7-5ec802032bd4",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "5161f908-1426-4bb6-b505-f437f5591cb8",
+                            Email = "g_lou08@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "MARILOU",
+                            LastName = "LAMPITCO",
+                            LockoutEnabled = false,
+                            MiddleName = "ACEJO",
+                            NormalizedEmail = "G_LOU08@YAHOO.COM",
+                            NormalizedUserName = "LAMPITCO.MARILOU",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMSgBsrioCQUwmVinsKc273vAZOeP6LWklIp8nOoYcuaFPM3YwiMxVpJZXt3bPlgDQ==",
+                            PhoneNumber = "09157358418",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Oncology Ward",
+                            Prefix = "Ms.",
+                            SecurityStamp = "cce67c5e-3e7d-4d68-84ca-08fe86c9d57e",
+                            TwoFactorEnabled = false,
+                            UserName = "lampitco.marilou"
+                        },
+                        new
+                        {
+                            Id = "60cbc60f-8572-47ba-b70c-cc328c363bd7",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "3adfd453-cc94-4580-bb09-df65504b0f60",
+                            Email = "shanarizza@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "SHANA RIZZA",
+                            LastName = "DUMAMA-REMO",
+                            LockoutEnabled = false,
+                            MiddleName = "BIRUAR",
+                            NormalizedEmail = "SHANARIZZA@YAHOO.COM",
+                            NormalizedUserName = "DUMAMA-REMO.SHANA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFhUdMkUISaCD41voD2u8yqJSahKqwLw3AzUmtasta/9yE0S9/N7QP4ipxDVj/QS7Q==",
+                            PhoneNumber = "09175277669",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Department of Internal Medicine",
+                            Prefix = "Dr.",
+                            SecurityStamp = "737d88f1-425a-4738-92d3-fc5e6d6ae0a0",
+                            TwoFactorEnabled = false,
+                            UserName = "dumama-remo.shana"
+                        },
+                        new
+                        {
+                            Id = "6ccacdfe-d21f-404a-a09a-fbb0a8027c9e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d887c44a-62bf-4daf-bd2b-2e45246ff281",
+                            Email = "ljalao28@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "LOUELLA JEANNE",
+                            LastName = "LAO",
+                            LockoutEnabled = false,
+                            MiddleName = "AGDEPPA",
+                            NormalizedEmail = "LJALAO28@YAHOO.COM",
+                            NormalizedUserName = "LAO.LOUELLA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAWzhP46aEL53yOejUPvDFbW56V0r+ZaWYNSQ3AlFMVQoKBVk7/DChtfBaJnv/N6KQ==",
+                            PhoneNumber = "09177267389",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Department of Obstetics-Gynecology",
+                            Prefix = "Dr.",
+                            SecurityStamp = "6d912df0-7f00-463f-8a78-0169313d1c01",
+                            TwoFactorEnabled = false,
+                            UserName = "lao.louella"
+                        },
+                        new
+                        {
+                            Id = "2902eb0b-328f-4c82-a37b-e6b67c1e7770",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "22696d66-6cde-4584-91d1-165ed7f25287",
+                            Email = "hazel_calingasan@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "HAZEL",
+                            LastName = "CALINGASAN",
+                            LockoutEnabled = false,
+                            MiddleName = "LOPEZ",
+                            NormalizedEmail = "HAZEL_CALINGASAN@YAHOO.COM",
+                            NormalizedUserName = "CALINGASAN.HAZEL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJl2xQGtM6sHe2eqPF/cZdhkUUe76d5jOI7az9/fgZcOBNp65+ApfZT2+l0X1GG/2Q==",
+                            PhoneNumber = "09173228233",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Department of Anesthesiology",
+                            Prefix = "Dr.",
+                            SecurityStamp = "cb8aafa2-d335-48fc-8d83-49cde56d1a8b",
+                            TwoFactorEnabled = false,
+                            UserName = "calingasan.hazel"
+                        },
+                        new
+                        {
+                            Id = "756c27c7-7637-4525-9b85-c1f41c0c5a8f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "87d558cc-9a8f-425c-8e07-2833974e7e0d",
+                            Email = "cheridinemd@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "CHERIDINE",
+                            LastName = "ORO-JOSEF",
+                            LockoutEnabled = false,
+                            MiddleName = "PAGARIGAN",
+                            NormalizedEmail = "CHERIDINEMD@GMAIL.COM",
+                            NormalizedUserName = "ORO-JOSEF.CHERIDINE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPO5l8cPCEUepolszciCg+iQrflJxSffERVECkyxc2mK5Zg227WLvFMj80isFCMmfA==",
+                            PhoneNumber = "09228270573",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Department of Family and Community Medicine",
+                            Prefix = "Dr.",
+                            SecurityStamp = "37402f25-681c-4203-932e-f8af58b8b8f1",
+                            TwoFactorEnabled = false,
+                            UserName = "oro-josef.cheridine"
+                        },
+                        new
+                        {
+                            Id = "32074da3-f8f8-4755-8cd5-f2aabba599e2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "15c2f4f5-96df-4e70-b7fe-09aa30b21b9e",
+                            Email = "veniciusdoruelo@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "VENICIUS",
+                            LastName = "DORUELO",
+                            LockoutEnabled = false,
+                            MiddleName = "PADUA",
+                            NormalizedEmail = "VENICIUSDORUELO@YAHOO.COM",
+                            NormalizedUserName = "DORUELO.VENICIUS",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDH/6WBoRU4VZbX5lCdtz3NVdt4hUICSuFgELxxWFpz1dZBwUvF+qVAWpep+xzqkxg==",
+                            PhoneNumber = "09173012016",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Department of Diagnostic and Therapuetic Radiology",
+                            Prefix = "Dr.",
+                            SecurityStamp = "24b89979-22b7-4388-8e54-df3a6ff0f454",
+                            TwoFactorEnabled = false,
+                            UserName = "doruelo.venicius"
+                        },
+                        new
+                        {
+                            Id = "a452e452-d791-439e-b390-d80dba5ffbc0",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "574ea72b-6819-4edf-9276-3a46bbb0e8a5",
+                            Email = "rocelynmbarrientos@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ROCELYN",
+                            LastName = "SANTOS",
+                            LockoutEnabled = false,
+                            MiddleName = "BARRIENTOS",
+                            NormalizedEmail = "ROCELYNMBARRIENTOS@GMAIL.COM",
+                            NormalizedUserName = "SANTOS.ROCELYN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHejySgiO5OZXfWOy5ijO6KN9KfBPL+c5QnpK8XGa2thjna81fn4KOxIS7+AB3HH3g==",
+                            PhoneNumber = "09176592255",
+                            PhoneNumberConfirmed = false,
+                            Position = "OIC-Head, Department of Pathology",
+                            Prefix = "Dr.",
+                            SecurityStamp = "40107efe-d6f1-4197-be63-d3cdefcbbb27",
+                            TwoFactorEnabled = false,
+                            UserName = "santos.rocelyn"
+                        },
+                        new
+                        {
+                            Id = "6517b46b-eade-4618-984b-525a31aec14f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "db662650-d6d0-41ef-a65c-8cbebcc5b0df",
+                            Email = "lhemy_K@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "HALIMA",
+                            LastName = "MOKAMAD-ROMANCAP",
+                            LockoutEnabled = false,
+                            MiddleName = "OMAR",
+                            NormalizedEmail = "LHEMY_K@YAHOO.COM",
+                            NormalizedUserName = "MOKAMAD-ROMANCAP.HALIMA",
+                            PasswordHash = "AQAAAAIAAYagAAAAELaCXfP8odb7bJr9w51W6CtekPHolLR91QCe9AkiajZbHhl7T1V2qaexaJCAyTpsIw==",
+                            PhoneNumber = "09173049710",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Emergency Department",
+                            Prefix = "Dr.",
+                            SecurityStamp = "5b7035d8-b74b-4422-9b30-e95f257cf33d",
+                            TwoFactorEnabled = false,
+                            UserName = "mokamad-romancap.halima"
+                        },
+                        new
+                        {
+                            Id = "3cfa9401-553a-4ac5-ab8d-3d65899090b3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "fb3ffe3f-cc40-4959-8879-65dc9a7dc0d7",
+                            Email = "mar23md@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "MILDRED",
+                            LastName = "APOSTOL",
+                            LockoutEnabled = false,
+                            MiddleName = "VINLUAN",
+                            NormalizedEmail = "MAR23MD@YAHOO.COM",
+                            NormalizedUserName = "APOSTOL.MILDRED",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMAwiN+Z9hBPMkUgoz+24IA83qTqeVEAv93QoRXQpflbUnUj0Jlylu7DrfTPsSXvLQ==",
+                            PhoneNumber = "09177068296",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Mental Health Unit",
+                            Prefix = "Dr.",
+                            SecurityStamp = "77c57b86-48a5-40e2-8261-14a136b0e7ed",
+                            TwoFactorEnabled = false,
+                            UserName = "apostol.mildred"
+                        },
+                        new
+                        {
+                            Id = "45fm8462-553a-4ac5-ap8i-3d65879641h8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "2c4dc2e8-e0e4-4371-b3ff-37cfa511f87e",
+                            Email = "manilyn.hong@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "MANILYN ANNE",
+                            LastName = "HONG",
+                            LockoutEnabled = false,
+                            MiddleName = "CONSTANTINO",
+                            NormalizedEmail = "MANILYN.HONG@GMAIL.COM",
+                            NormalizedUserName = "HONG.MANILYN",
+                            PasswordHash = "AQAAAAIAAYagAAAAENi7qtKdcFfLu42UAs/HRU5exJFMoaYwql6dNhVe9+S1wq7ueLorl4n3u0q5xfehSA==",
+                            PhoneNumber = "09664010006",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Brain and Spine Care",
+                            Prefix = "Dr.",
+                            SecurityStamp = "184fc8cd-b61b-4181-a221-d5304434c461",
+                            TwoFactorEnabled = false,
+                            UserName = "hong.manilyn"
+                        },
+                        new
+                        {
+                            Id = "21ag1234-884k-0ak8-ap8i-2y54768532d2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "7386d07c-0c43-4bb4-90c4-dcf40793fe4d",
+                            Email = "janefabrienne@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "JANE FABRIENNE",
+                            LastName = "GARCIA",
+                            LockoutEnabled = false,
+                            MiddleName = "SAGPAO",
+                            NormalizedEmail = "JANEFABRIENNE@GMAIL.COM",
+                            NormalizedUserName = "GARCIA.JANE",
+                            PasswordHash = "AQAAAAIAAYagAAAAELK49u6DFpW3FFnjb47coR/bnldkBwV9Q4FuW0ADYgFh6kg2WvhGZcWeyWrpqq8ZWQ==",
+                            PhoneNumber = "09177248567",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Brain and Spine Care",
+                            SecurityStamp = "28230221-2fd1-4069-bf43-beb647b81a72",
+                            TwoFactorEnabled = false,
+                            UserName = "garcia.jane"
+                        },
+                        new
+                        {
+                            Id = "66fg1385-86sd-8aw9-vm5g-1s87643521j5",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "72bd821e-1420-4493-bd09-8ba75744f430",
+                            Email = "jedjumaoas.md@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "JED WAYLON",
+                            LastName = "JUMAO-AS",
+                            LockoutEnabled = false,
+                            MiddleName = "LIM",
+                            NormalizedEmail = "JEDJUMAOAS.MD@YAHOO.COM",
+                            NormalizedUserName = "JUMAO-AS.JED",
+                            PasswordHash = "AQAAAAIAAYagAAAAENpLdpsRiaz5xKQvBygZC5tWJvHQmF7+30YvejjGy9hvmdhYLyd8oZXU2NayyDDJEQ==",
+                            PhoneNumber = "09224969711",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Burn Care",
+                            Prefix = "Dr.",
+                            SecurityStamp = "5cc04d1e-2d26-4575-b5bd-8b59cb0b8eba",
+                            TwoFactorEnabled = false,
+                            UserName = "jumao-as.jed"
+                        },
+                        new
+                        {
+                            Id = "f82a9135-7bdf-4ca1-9ea2-2c8b63a1d7f9",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c0490cc0-ea6b-43a9-908f-76ba48843af4",
+                            Email = "",
+                            EmailConfirmed = false,
+                            FirstName = "HASSANA",
+                            LastName = "ONTOK-MANGINDRA",
+                            LockoutEnabled = false,
+                            MiddleName = "DIALO",
+                            NormalizedEmail = "",
+                            NormalizedUserName = "ONTOK-MANGINDRA.HASSANA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHWLZjrJItwAk7zRvhaYwyRzVd7x0c1ZOAxVTP0bIMBiuQvL5oEVy6FjkzKN9RaTOw==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Carsdiovascular Center",
+                            SecurityStamp = "0ee540da-ab77-4aaa-a8db-b8a6cf96404e",
+                            TwoFactorEnabled = false,
+                            UserName = "ontok-mangindra.hassana"
+                        },
+                        new
+                        {
+                            Id = "c63b2e15-8ad4-45b8-bfd1-3a98216c5ea4",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "52c22cb4-641a-4e88-b2f3-0eb1e66ecc69",
+                            Email = "princesaportia_md@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "PORTIA CHARISMA RUTH",
+                            LastName = "ORTIZ",
+                            LockoutEnabled = false,
+                            MiddleName = "AGDEPPA",
+                            NormalizedEmail = "PRINCESAPORTIA_MD@YAHOO.COM",
+                            NormalizedUserName = "ORTIZ.PORTIA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKo4k6OL1VhnojDtTArk8fNN4Q2ISEvE+1iLhgKIL3YLOJ2DQ+YgF4vRNH/LHhY9/g==",
+                            PhoneNumber = "09279667275",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Dermatology",
+                            Prefix = "Dr.",
+                            SecurityStamp = "bb4cb5b1-6b40-4d6e-a4df-be3f443300a9",
+                            TwoFactorEnabled = false,
+                            UserName = "ortiz.portia"
+                        },
+                        new
+                        {
+                            Id = "b7f4e831-25ad-48a9-91d3-7e26f53a4db2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "5e08c424-93f6-44e7-86ea-3ec60d1a962a",
+                            Email = "bomsiao.mariano@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SHALAM",
+                            LastName = "SIAO",
+                            LockoutEnabled = false,
+                            MiddleName = "BACAR",
+                            NormalizedEmail = "BOMSIAO.MARIANO@GMAIL.COM",
+                            NormalizedUserName = "SIAO.SHALAM",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJQz1yTgsdrx/5/YdyM019WGr2rAXpZt2foqhWSC0J5r2ieyT8aKSatEfcVPu4M40Q==",
+                            PhoneNumber = "09175483387",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Eye Care",
+                            Prefix = "Dr.",
+                            SecurityStamp = "fa86ecda-1885-48af-a194-e5a4549ef7a6",
+                            TwoFactorEnabled = false,
+                            UserName = "siao.shalam"
+                        },
+                        new
+                        {
+                            Id = "a1c7d995-3f89-4fcb-86c4-4d8d193b57a3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "77f88ffe-3299-4f77-b7af-30a3833f6849",
+                            Email = "maylilene@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "MAYLILENE",
+                            LastName = "FUENTES",
+                            LockoutEnabled = false,
+                            MiddleName = "BUHAT",
+                            NormalizedEmail = "MAYLILENE@GMAIL.COM",
+                            NormalizedUserName = "FUENTES.MAYLILENE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJQU6SMWP2qlPtYU0Td11cxYsEaUh7NvWKVUZVw3iHIlQmLl2BkdnaiL68/hT9kZsQ==",
+                            PhoneNumber = "09154206679",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Geriatric Care",
+                            SecurityStamp = "b4ec219b-58a1-4c68-a358-62904908da78",
+                            TwoFactorEnabled = false,
+                            UserName = "fuentes.maylilene"
+                        },
+                        new
+                        {
+                            Id = "d5e2c4f8-95b1-47b9-bc12-8c4f9d8e2b17",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "d7e042e3-d857-4e7f-b490-48191f218c79",
+                            Email = "abenojarmd@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "EMELYN",
+                            LastName = "ABENOJAR-CONCON",
+                            LockoutEnabled = false,
+                            MiddleName = "NOBLE",
+                            NormalizedEmail = "ABENOJARMD@GMAIL.COM",
+                            NormalizedUserName = "ABENOJAR-CONCON.EMELYN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJmjv/OiVkZ5FSwtPafe8B5MMfcfWH1ZslLnRqTeECy/+T8Y9Ju8pQfmOii8uyMBIQ==",
+                            PhoneNumber = "09178202383",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Lung Care",
+                            Prefix = "Dr.",
+                            SecurityStamp = "554929b5-3445-43b5-a4d9-45bf2e894cfa",
+                            TwoFactorEnabled = false,
+                            UserName = "abenojar-concon.emelyn"
+                        },
+                        new
+                        {
+                            Id = "e4b3a611-7c8a-4f9b-83a6-2a5b9e61d4c8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "3542b4a4-150c-47fd-9359-1bdd55cda913",
+                            Email = "jdesaca@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "JONAH ANN",
+                            LastName = "BESANA",
+                            LockoutEnabled = false,
+                            MiddleName = "DESACA",
+                            NormalizedEmail = "JDESACA@YAHOO.COM",
+                            NormalizedUserName = "BESANA.JONAH",
+                            PasswordHash = "AQAAAAIAAYagAAAAELtpSij7hQaq6smTM5Je/kD3YwACANR6gAsCB2AgaQ7LJB97mSUsl12j5/ttaOTyJw==",
+                            PhoneNumber = "09277197299",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Noenatal Care",
+                            Prefix = "Dr.",
+                            SecurityStamp = "6a791fab-6cd7-453b-bd75-8325fc6f6427",
+                            TwoFactorEnabled = false,
+                            UserName = "besana.jonah"
+                        },
+                        new
+                        {
+                            Id = "9f3b1c52-2e4a-4d65-8d13-6f2c7a9b5f42",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "9426418a-ca32-4931-9563-56113b6798b9",
+                            Email = "dulce_doy@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "LYNN SARAH",
+                            LastName = "AGDEPPA",
+                            LockoutEnabled = false,
+                            MiddleName = "ANIÑON",
+                            NormalizedEmail = "DULCE_DOY@YAHOO.COM",
+                            NormalizedUserName = "AGDEPPA.LYNN",
+                            PasswordHash = "AQAAAAIAAYagAAAAENJ3yEqNRzz8actHOeh/cfW38BKgMs3ZzmrAdLI/GRvRN2nk4JuQv4Of160OfkchWQ==",
+                            PhoneNumber = "09177260949",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Orthopedic Care",
+                            Prefix = "Dr.",
+                            SecurityStamp = "7bee145d-7fa1-4ce6-bbb4-757ac484ff1b",
+                            TwoFactorEnabled = false,
+                            UserName = "agdeppa.lynn"
+                        },
+                        new
+                        {
+                            Id = "2e9a6b74-7a21-4d33-9a84-5b9f1e8a3d27",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "f8b21af7-331a-43e2-acc5-97c313a9193f",
+                            Email = "xin_ya314@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "MARY ANNE",
+                            LastName = "LU",
+                            LockoutEnabled = false,
+                            MiddleName = "CHONG",
+                            NormalizedEmail = "XIN_YA314@YAHOO.COM",
+                            NormalizedUserName = "LU.MARY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPUH6Sal3UEnIJrrSy5F7x77EgVV2BNsLhXNeCa7vkzhW5pgTlVSf5cC+QVtG3w2Ww==",
+                            PhoneNumber = "09175114716",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Renal Care and Kidney Transplant",
+                            Prefix = "Dr.",
+                            SecurityStamp = "7a5b5810-5489-4e3b-9912-cfc4c992ffea",
+                            TwoFactorEnabled = false,
+                            UserName = "lu.mary"
+                        },
+                        new
+                        {
+                            Id = "8c1f5b93-4e7a-4f18-b3c9-1a2d5f84c9e1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "f2464b11-4c45-4921-b1b3-d0f47ac38bc8",
+                            Email = "",
+                            EmailConfirmed = false,
+                            FirstName = "MUHAMMAD SIDIK",
+                            LastName = "DIMALEN",
+                            LockoutEnabled = false,
+                            MiddleName = "MANALASAL",
+                            NormalizedEmail = "",
+                            NormalizedUserName = "DIMALEN.MUHAMMAD",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMPyNpnffo3ijkhaymDzdFR7szUP5QjMTP6Y3b0WyyBDzAZjiJpCuxk/DEpFEiXtfw==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Renal Care and Kidney Transplant",
+                            SecurityStamp = "aee59a8c-e191-4a5f-ac70-c6a45ac414b9",
+                            TwoFactorEnabled = false,
+                            UserName = "dimalen.muhammad"
+                        },
+                        new
+                        {
+                            Id = "7e4c8a59-1b9d-4c5e-ae31-8c2f3d5b7a61",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "2c202e79-c3cc-488f-8cf9-03f6a279aab9",
+                            Email = "",
+                            EmailConfirmed = false,
+                            FirstName = "PISCES RAYMOND",
+                            LastName = "LUMAQUE",
+                            LockoutEnabled = false,
+                            MiddleName = "YUMANG",
+                            NormalizedEmail = "",
+                            NormalizedUserName = "LUMAQUE.PISCES",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFZD4Dz742cW5Tb9dAWPdSkswcuVqHX6QZkSuJ0MDDYeE6cKoXPgixzF2atU++39Bg==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Renal Care and Kidney Transplant",
+                            SecurityStamp = "4f308f8f-e9c3-4460-a7ee-d6b16fb70b43",
+                            TwoFactorEnabled = false,
+                            UserName = "lumaque.pisces"
+                        },
+                        new
+                        {
+                            Id = "1a9e3f84-2b4d-45a8-9e3f-7b6c8d1e2f94",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "bdb97ae1-4bc9-4c4d-b2eb-8d6ec0f750cb",
+                            Email = "",
+                            EmailConfirmed = false,
+                            FirstName = "Ella Joy",
+                            LastName = "Nogas",
+                            LockoutEnabled = false,
+                            MiddleName = "",
+                            NormalizedEmail = "",
+                            NormalizedUserName = "NOGAS.ELLA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEApCzg54Y+GXH7i+o5iwU6WTqB+lHR7Z8XByVV5UgY5mEDYK+tbHq36HdDnYpMYgiA==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Toxicology",
+                            Prefix = "Dr.",
+                            SecurityStamp = "f3b5e6ac-3809-464a-aa01-8c2af4bf8526",
+                            TwoFactorEnabled = false,
+                            UserName = "nogas.ella"
+                        },
+                        new
+                        {
+                            Id = "6b3f8d72-9a1e-4c65-bd43-2e9c7f4b6a85",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "3ac255ec-11db-41b9-b38a-66b563d6513e",
+                            Email = "adlynbeabernaldez@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ADLYN BEA",
+                            LastName = "BERNALDEZ",
+                            LockoutEnabled = false,
+                            MiddleName = "ALBESA",
+                            NormalizedEmail = "ADLYNBEABERNALDEZ@GMAIL.COM",
+                            NormalizedUserName = "BERNALDEZ.ADLYN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHKpsNCuASBoA2QSy9m0YdFi591Nqree0dFL24e8NuI4bGoeGcB34MHI1s7JtPXKlQ==",
+                            PhoneNumber = "09171340137",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Toxicology",
+                            SecurityStamp = "f9dc3d39-faf1-49d6-aa73-1cc8ef411f4a",
+                            TwoFactorEnabled = false,
+                            UserName = "bernaldez.adlyn"
+                        },
+                        new
+                        {
+                            Id = "1a7c3e9b-42f8-4b25-9f81-7cd92c84b9a3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "72a729ac-0ddf-45f2-8828-53c03b977af8",
+                            Email = "dats_88@yahoo.com/yoshiokadat88@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "ABDULKADIR",
+                            LastName = "DATUMANONG",
+                            LockoutEnabled = false,
+                            MiddleName = "YOSHIOKA",
+                            NormalizedEmail = "DATS_88@YAHOO.COM/YOSHIOKADAT88@GMAIL.COM",
+                            NormalizedUserName = "DATUMANONG.ABDULKADIR",
+                            PasswordHash = "AQAAAAIAAYagAAAAEORAKyQNSXSexMwMEZ+xZ37N7PoqBdJf7FVwHQyvtUcehDPH4Jdu69Afbo5J9kvGIQ==",
+                            PhoneNumber = "09053278687",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, ICU Complex",
+                            Prefix = "Mr.",
+                            SecurityStamp = "002596e0-7d99-41af-a3f1-18e0342b014e",
+                            TwoFactorEnabled = false,
+                            UserName = "datumanong.abdulkadir"
+                        },
+                        new
+                        {
+                            Id = "c5e81f9d-73a0-4b93-b6fc-97c72e3c15e8",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "4b8e9d48-deef-4ffe-8a04-a6a506876785",
+                            Email = "peria_cynthia@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "CYNTHIA",
+                            LastName = "PERIA",
+                            LockoutEnabled = false,
+                            MiddleName = "BADE",
+                            NormalizedEmail = "PERIA_CYNTHIA@YAHOO.COM",
+                            NormalizedUserName = "PERIA.CYNTHIA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJtPPbySrrqy8qAMIduyNJaKvjlgD+4Bt0TMqhnH1BXo4GUJ5yxSnE0WE43jRI1oZQ==",
+                            PhoneNumber = "09167805311",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Neonatal Intensive Care Unit",
+                            Prefix = "Ms.",
+                            SecurityStamp = "b03e1664-fce2-4488-b984-2bc16d7f0a94",
+                            TwoFactorEnabled = false,
+                            UserName = "peria.cynthia"
+                        },
+                        new
+                        {
+                            Id = "8d9a1b3f-0c84-46a7-b932-13cf8d05f2a1",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "246617da-bdf8-4a9d-bc06-2371224b8338",
+                            Email = "geraldine_navarra@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "GERALDINE",
+                            LastName = "NAVARRA",
+                            LockoutEnabled = false,
+                            MiddleName = "ABOGHO",
+                            NormalizedEmail = "GERALDINE_NAVARRA@YAHOO.COM",
+                            NormalizedUserName = "NAVARRA.GERALDINE",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL+dzGap8LeVVdpNsnM6eEAUEv8Q/etIELcMP58ibbB9c+gjR/SPLZNaEVfAc5A6aw==",
+                            PhoneNumber = "09177272645",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, TB-Isolation",
+                            Prefix = "Ms.",
+                            SecurityStamp = "17b8e77a-1246-4c23-98b4-c2d21aa19308",
+                            TwoFactorEnabled = false,
+                            UserName = "navarra.geraldine"
+                        },
+                        new
+                        {
+                            Id = "c4bd9e2a-1cb3-4c3b-9d0c-2ff2e43c7d1b",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "17e8a40c-5e38-48c4-acf0-0fcd782461fe",
+                            Email = "ryanchrisolero@outlook.com",
+                            EmailConfirmed = false,
+                            FirstName = "RYAN CHRIS",
+                            LastName = "OLERO",
+                            LockoutEnabled = false,
+                            MiddleName = "ELEVAZO",
+                            NormalizedEmail = "RYANCHRISOLERO@OUTLOOK.COM",
+                            NormalizedUserName = "OLERO.RYAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEmSeiOej8XxytZWmDBB3gXo498gn6T029ABgC86KFXffZUs8lNQUwXKuaCyZYTV0Q==",
+                            PhoneNumber = "09175170327",
+                            PhoneNumberConfirmed = false,
+                            Position = "Computer Maintenance Technologist II",
+                            SecurityStamp = "f54c1e32-50d0-4ab2-9b4d-90e3f1b37c21",
+                            TwoFactorEnabled = false,
+                            UserName = "olero.ryan"
+                        },
+                        new
+                        {
+                            Id = "m3xzke5a-1cb3-4c3b-9d0o-9kk8f72v8j5f",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "c1d50191-f03e-4a94-9f8a-45ef4142e4c3",
+                            Email = "doc_annie@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "ANNELYN GRACE",
+                            LastName = "SABANAL-AMOC",
+                            LockoutEnabled = false,
+                            MiddleName = "COCAL",
+                            NormalizedEmail = "DOC_ANNIE@YAHOO.COM",
+                            NormalizedUserName = "SABANAL.ANNELYN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFwh/6mM7/ZpLKxD+q0OvWMDNcJV4Xut8FLRDn9LyexjVx+ODbVE9CZjKmY2kjos0w==",
+                            PhoneNumber = "09176348295",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Dental Department",
+                            Prefix = "Dr.",
+                            SecurityStamp = "b75801ea-6ad8-4308-b2b7-3338856ffc1f",
+                            TwoFactorEnabled = false,
+                            UserName = "sabanal.annelyn"
+                        },
+                        new
+                        {
+                            Id = "1k3bdpoy-1cb3-4c3b-1fp0-kff9k71h3ysg",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "49d11177-3c02-4843-bd15-76b034b7ee87",
+                            Email = "honeyletchristie@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "HONEYLET CHRISTIE",
+                            LastName = "TADINA",
+                            LockoutEnabled = false,
+                            MiddleName = "MAGHANOY",
+                            NormalizedEmail = "HONRYLETCHRISTTIE@YAHOO.COM",
+                            NormalizedUserName = "TADINA.HONEYLET",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH1gfqRfy0Tb8bZdmOJfaDNE4acr7Z7Hw6dVhA8gUT0HAh9l2vszGe1xJz96meG78w==",
+                            PhoneNumber = "09359763862",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Budget Department",
+                            Prefix = "Ms.",
+                            SecurityStamp = "5c55ed24-7735-4a36-9e46-9f3331f7d9bb",
+                            TwoFactorEnabled = false,
+                            UserName = "tadina.honeylet"
+                        },
+                        new
+                        {
+                            Id = "4gghfkad-4xhj-4c3b-1fp0-damxmbak242V",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "6a0e7189-73d2-49e5-b480-2a4b3a87768d",
+                            Email = "",
+                            EmailConfirmed = false,
+                            FirstName = "MINDA",
+                            LastName = "CARE-IT",
+                            LockoutEnabled = false,
+                            MiddleName = "BADILLES",
+                            NormalizedEmail = "",
+                            NormalizedUserName = "CARE-IT.MINDA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHq48lBaJzD9V1TPo1Xih8TxZOniMTmvayTMFPqVDS441xc4Qa0Yq//7X6JBHuwdYA==",
+                            PhoneNumber = "09326564879",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Planning and Management Unit",
+                            Prefix = "Ms.",
+                            SecurityStamp = "d823ed8f-701e-4f0c-bf39-3c2bce919354",
+                            TwoFactorEnabled = false,
+                            UserName = "care-it.minda"
+                        },
+                        new
+                        {
+                            Id = "8rrdhjqf-2xhj-4c3b-1fp0-hqvxadfh137e",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "da61b0a6-5e6a-4b6b-8127-383a2a8b0bbc",
+                            Email = "sherjank@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SHERJAN",
+                            LastName = "KALIM",
+                            LockoutEnabled = false,
+                            MiddleName = "PANGATO",
+                            NormalizedEmail = "SHERJANK@GMAIL.COM",
+                            NormalizedUserName = "KALIM.SHERJAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEElGmXYIYgXMpoyo4yPV+S2fjpXaVRYEI4srwOc6ffUe/VXFl3fzST50zlijLY+8dw==",
+                            PhoneNumber = "09179713201",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Soccsksargen Regional Blood Center",
+                            Prefix = "Dr.",
+                            SecurityStamp = "146e4179-6c15-4442-9ca5-ac4ed2fde2c1",
+                            TwoFactorEnabled = false,
+                            UserName = "kalim.sherjan"
+                        },
+                        new
+                        {
+                            Id = "813tyuio-7asd-1f7k-6kl0-aqFx134Tv190",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "e6106a6c-359d-48dc-9a6f-9429af07409b",
+                            Email = "somairha@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "PRECIOUS SOMAIRHA",
+                            LastName = "GIO",
+                            LockoutEnabled = false,
+                            MiddleName = "ALIBASA",
+                            NormalizedEmail = "SOMAIRHA@GMAIL.COM",
+                            NormalizedUserName = "GIO.PRECIOUS",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJVhmWFkXvCHMc9mK+Qq8UWT7xVtwnYx3FAucSMm64nEC+llWlAZHF6wdvK5/df78g==",
+                            PhoneNumber = "09171237248",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Emergency Medicine",
+                            Prefix = "Dr.",
+                            SecurityStamp = "db615ce5-36ef-4739-9603-a65c107ba047",
+                            TwoFactorEnabled = false,
+                            UserName = "gio.precious"
+                        },
+                        new
+                        {
+                            Id = "924omboD-0Dvi-3fkhQ-blh6-yaFv1de62431",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "a62165f3-20ea-456b-9d6c-594c06a527a1",
+                            Email = "cpulauban@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "CHEERILOU",
+                            LastName = "LAUBAN",
+                            LockoutEnabled = false,
+                            MiddleName = "UKO",
+                            NormalizedEmail = "CPULAIBAN@YAHOO.COM",
+                            NormalizedUserName = "LAUBAN.CHEERILOU",
+                            PasswordHash = "AQAAAAIAAYagAAAAENGNsAjx43bqJGMIuBVImT518LcxchvQJc9G8sHvJnSMJbv3L1XTp32VDem4HP3lCA==",
+                            PhoneNumber = "09171237248",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Medical Insurance Evaluation and Reconcillation Unit",
+                            Prefix = "Dr.",
+                            SecurityStamp = "44136f37-dcec-4385-947e-5930c0b2011d",
+                            TwoFactorEnabled = false,
+                            UserName = "lauban.cheerilou"
+                        },
+                        new
+                        {
+                            Id = "822rlioO-0Dvi-3fo9O-bjh8-ya846jg58t24",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "0c53e8fe-1532-418b-832a-c435b6589051",
+                            Email = "mtmadeha@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "MADEHA",
+                            LastName = "MADID",
+                            LockoutEnabled = false,
+                            MiddleName = "TAHAL",
+                            NormalizedEmail = "MTMADEHA@YAHOO.COM",
+                            NormalizedUserName = "MADID.MADEHA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMRXVuj2k9dRZUqkfp44ANqsf7U2bnaG24j2FHOclIpL3382y+WRuZAHt7dk914v1g==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Geriatric Care",
+                            Prefix = "Dr.",
+                            SecurityStamp = "981a965e-c3a3-426a-8ddf-60c12bd9007b",
+                            TwoFactorEnabled = false,
+                            UserName = "madid.madeha"
+                        },
+                        new
+                        {
+                            Id = "123rliom-2akV-cl381-uwe9-kah8h3f98632",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "0959b13d-db41-4c0d-8eb1-1bae7a5429c1",
+                            Email = "sonjaandsanji@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "SONJA",
+                            LastName = "ESCARA",
+                            LockoutEnabled = false,
+                            MiddleName = "DE LUNA",
+                            NormalizedEmail = "SONJAANDSANJI@GMAIL.COM",
+                            NormalizedUserName = "ESCARA.SONJA",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMiL0YEgfCToP5/Nkek9yHTJH4R2LiDg5AmRZ/0v5U1DyBTyU+/79ZUabYmCxF6dYg==",
+                            PhoneNumber = "",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Infectious Disease and Tropical Medicine",
+                            Prefix = "Dr.",
+                            SecurityStamp = "cc10ef8d-3b86-445c-9e1f-f345617c8d4d",
+                            TwoFactorEnabled = false,
+                            UserName = "escara.sonja"
+                        },
+                        new
+                        {
+                            Id = "234glioh-2akV-BL062-Hh28-LSJ2Gnj976w3",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "507f9928-7737-4070-86b0-5a2e2efa6857",
+                            Email = "alnazaer1994@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "AL-NAZAER",
+                            LastName = "USOP",
+                            LockoutEnabled = false,
+                            MiddleName = "ABAS",
+                            NormalizedEmail = "ALNAZAER1994@GMAIL.COM",
+                            NormalizedUserName = "USOP.AL-NAZAER",
+                            PasswordHash = "AQAAAAIAAYagAAAAENTqIulCxnhFwD3tV+2I2x7NZVRczjQgVHckeXSiSu6insTGhc5mgyxa6YluHKJicA==",
+                            PhoneNumber = "09458250199",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Infectious Disease and Tropical Medicine",
+                            Prefix = "Dr.",
+                            SecurityStamp = "d4d8f7b6-c39c-4e72-9538-5b2d7c09e2fc",
+                            TwoFactorEnabled = false,
+                            UserName = "usop.al-nazaer"
+                        },
+                        new
+                        {
+                            Id = "654hHioh-NkaH-jB19f-9uh12-33dFJnY823f2",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "1b4c61f1-9457-486e-8504-1ed0c4bda53d",
+                            Email = "aprilglimada01@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "APRIL AISHA",
+                            LastName = "GLIMADA",
+                            LockoutEnabled = false,
+                            MiddleName = "MACAVINTA",
+                            NormalizedEmail = "APRILGLIMADA01@GMAIL.COM",
+                            NormalizedUserName = "GLIMADA.APRIL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMoZ7AmSuvRJlRDOMOCtK+wRw6kUyL/r+jgs3LQz1LBEdwysxrmHxYfDtS+2vcP1Ig==",
+                            PhoneNumber = "09171488596",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Mental Health Unit",
+                            Prefix = "Dr.",
+                            SecurityStamp = "0459c9ed-a9c6-4fdc-a01a-0240d218837f",
+                            TwoFactorEnabled = false,
+                            UserName = "glimada.april"
+                        },
+                        new
+                        {
+                            Id = "0020lEhG-NkaH-jB19f-9uh12-11dFwnTe6543",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "1cef702e-c8c8-4b6d-9671-d178a4dfc4bf",
+                            Email = "ramilramirez097@gmail.com",
+                            EmailConfirmed = false,
+                            FirstName = "RAMIL",
+                            LastName = "RAMIREZ",
+                            LockoutEnabled = false,
+                            MiddleName = "LIMBAC",
+                            NormalizedEmail = "RAMILRAMIREZ097@GMAIL.COM",
+                            NormalizedUserName = "RAMIREZ.RAMIL",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOyzQRv03E0TDK6MAag/FKZOiz97maS1HDJ7+GLKmltSv+v2MePqrKU5yaHFm0dgFA==",
+                            PhoneNumber = "09065343887",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Housekeeping Unit",
+                            SecurityStamp = "61a5f597-7793-412f-b240-40654afb7166",
+                            TwoFactorEnabled = false,
+                            UserName = "ramirez.ramil"
+                        },
+                        new
+                        {
+                            Id = "0201JEhG-NkaH-jB19f-9uh12-22GYwrTr9872",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "b565ba73-f360-4d28-bf18-26ce324e2b2d",
+                            Email = "quilnetgerry@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "GERRY",
+                            LastName = "QUILNET",
+                            LockoutEnabled = false,
+                            MiddleName = "APARECE",
+                            NormalizedEmail = "QUILNETGERRY@GMAIL.COM",
+                            NormalizedUserName = "QUILNET.GERRY",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDcq+mEYbsrJwUSVdMWEtjU2xZWv0Daz/Nvw95hoXberM/x8fB2/65/cJJpgUKZDeQ==",
+                            PhoneNumber = "09273691473",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Laundry and Linen Unit",
+                            SecurityStamp = "e93df7f0-1443-43f0-b7e1-03838e0f1430",
+                            TwoFactorEnabled = false,
+                            UserName = "quilnet.gerry"
+                        },
+                        new
+                        {
+                            Id = "7A91XEhQ-MpZ3-KL28-A9uT1-88HWrLQe5630",
+                            AccessFailedCount = 0,
+                            ConcurrencyStamp = "90f8e4c5-2923-40c4-91b4-e685e8c02b1d",
+                            Email = "aryanrodereck@yahoo.com",
+                            EmailConfirmed = false,
+                            FirstName = "RYAN RODERECK",
+                            LastName = "ABAYON",
+                            LockoutEnabled = false,
+                            MiddleName = "ARCONADO",
+                            NormalizedEmail = "ARYANRODERECK@YAHOO.COM",
+                            NormalizedUserName = "ABAYON.RYAN",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDDIm+71rgsW8GvjOLx7+6gaGVbBNgPcvvRtclS9TFXWQj2g5txJdCPNoigsPDc8mA==",
+                            PhoneNumber = "9268336993",
+                            PhoneNumberConfirmed = false,
+                            Position = "Head, Electrical Section",
+                            SecurityStamp = "8075fa98-ca1a-4f45-8f43-4f923955b34f",
+                            TwoFactorEnabled = false,
+                            UserName = "abayon.ryan"
                         });
                 });
 
@@ -10117,7 +13543,7 @@ namespace IMIS.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<string>", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -10125,6 +13551,11 @@ namespace IMIS.Persistence.Migrations
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasMaxLength(21)
+                        .HasColumnType("nvarchar(21)");
 
                     b.Property<string>("Name")
                         .HasMaxLength(256)
@@ -10143,133 +13574,9 @@ namespace IMIS.Persistence.Migrations
 
                     b.ToTable("AspNetRoles", (string)null);
 
-                    b.HasData(
-                        new
-                        {
-                            Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
-                            ConcurrencyStamp = "283ad68d-d28a-41d0-86b9-34d63ea6b1f9",
-                            Name = "Administrator",
-                            NormalizedName = "ADMINISTRATOR"
-                        },
-                        new
-                        {
-                            Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                            ConcurrencyStamp = "be839f7c-6bf5-4ac1-93cf-cbf5bfca0a18",
-                            Name = "PGS Core Team",
-                            NormalizedName = "PGS CORE TEAM"
-                        },
-                        new
-                        {
-                            Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            ConcurrencyStamp = "61a82820-c123-49b9-9ac7-102d9a92645a",
-                            Name = "Standard User",
-                            NormalizedName = "STANDARD USER"
-                        },
-                        new
-                        {
-                            Id = "af7b586c7ee6490bbd878f46f6a47831",
-                            ConcurrencyStamp = "794e1e57-d3e3-49dc-bbe6-3791ed38f14f",
-                            Name = "Auditor",
-                            NormalizedName = "AUDITOR"
-                        },
-                        new
-                        {
-                            Id = "95f224dd-3973-42ef-b350-7af30f67c2ca",
-                            ConcurrencyStamp = "8c21a20f-4c13-4ca0-a533-3296c45aef5b",
-                            Name = "Service Head",
-                            NormalizedName = "SERVICE HEAD"
-                        },
-                        new
-                        {
-                            Id = "b6b97a7d-23b0-4c2f-9f9a-54d4f67b1234",
-                            ConcurrencyStamp = "7b22c8c6-d59d-45c7-8074-0df5eaefd8c9",
-                            Name = "PGS Head",
-                            NormalizedName = "PGS HEAD"
-                        },
-                        new
-                        {
-                            Id = "e2a6a3fc-1f3a-4e9e-9df0-5f4a6e1f8c21",
-                            ConcurrencyStamp = "6eb190ed-7bd2-42d0-b5cf-10454270ccf0",
-                            Name = "MCC",
-                            NormalizedName = "MCC"
-                        },
-                        new
-                        {
-                            Id = "a3c8f0de-45d7-49ab-9c3f-8e25b5e7d421",
-                            ConcurrencyStamp = "62fc3026-d271-486a-8a1f-591fc1d1e5b9",
-                            Name = "OSM",
-                            NormalizedName = "OSM"
-                        },
-                        new
-                        {
-                            Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
-                            ConcurrencyStamp = "749f918a-a820-41fd-924d-d2e4c6678f13",
-                            Name = "PGS Auditor Head",
-                            NormalizedName = "PGS AUDITOR HEAD"
-                        },
-                        new
-                        {
-                            Id = "4c1c9c2e-9e2b-4c88-8a94-6a7d3e4c5a01",
-                            ConcurrencyStamp = "20199d5e-043a-4b5d-884a-b88d289e4c41",
-                            Name = "Service Officer",
-                            NormalizedName = "SERVICE OFFICER"
-                        },
-                        new
-                        {
-                            Id = "9b7d2e11-6c3a-4f2e-a1d8-0f7c4b2e91a4",
-                            ConcurrencyStamp = "c993f51d-533b-4116-9493-f8156fbbda63",
-                            Name = "Research Officer",
-                            NormalizedName = "RESEARCH OFFICER"
-                        },
-                        new
-                        {
-                            Id = "2a6f5c90-1d3b-4e8f-9c42-7b1e5d0a83c2",
-                            ConcurrencyStamp = "658c988f-84c6-4c5c-bdbe-d6e45a140426",
-                            Name = "Training Officer",
-                            NormalizedName = "TRAINING OFFICER"
-                        },
-                        new
-                        {
-                            Id = "e3f7a4c1-5b29-4a8e-9d10-8c6e2f91b4a7",
-                            ConcurrencyStamp = "00060925-d0ee-43a0-b599-6fba9dfe862a",
-                            Name = "Linkages Officer",
-                            NormalizedName = "LINKAGES OFFICER"
-                        },
-                        new
-                        {
-                            Id = "7d8b0f3c-4a6e-4f9b-8c21-2e5a1d7b90f3",
-                            ConcurrencyStamp = "110a2758-6435-4993-9f85-feba7e702a88",
-                            Name = "Facilities Officer",
-                            NormalizedName = "FACILITIES OFFICER"
-                        },
-                        new
-                        {
-                            Id = "5c2e8b9f-6a1d-4e73-9f0b-1c7a4d3e8b52",
-                            ConcurrencyStamp = "e0468f38-a4b9-4cfe-a05c-7e71dad17f2e",
-                            Name = "Finance Officer",
-                            NormalizedName = "FINANCE OFFICER"
-                        },
-                        new
-                        {
-                            Id = "f0a8d2c7-1e9b-4c5a-8f63-7b4e2d9c1a30",
-                            ConcurrencyStamp = "14bb4a5a-f620-4d62-b790-2a84f71d6ee0",
-                            Name = "Information Officer",
-                            NormalizedName = "INFORMATION OFFICER"
-                        },
-                        new
-                        {
-                            Id = "3e1b5f2c-9d8a-4a07-8c64-fb2e9d7a1c50",
-                            ConcurrencyStamp = "320df408-478a-4f1d-9a24-25c919307303",
-                            Name = "HR Officer",
-                            NormalizedName = "HR OFFICER"
-                        },
-                        new
-                        {
-                            Id = "6b7f1c2e-8a4d-4f90-9e53-0d3a5c2b718f",
-                            ConcurrencyStamp = "56cb6ff8-bd54-41a5-ad55-14a7dc5fad2f",
-                            Name = "Safety Officer",
-                            NormalizedName = "SAFETY OFFICER"
-                        });
+                    b.HasDiscriminator().HasValue("IdentityRole<string>");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -10295,105 +13602,6 @@ namespace IMIS.Persistence.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AspNetRoleClaims", (string)null);
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUser", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("AccessFailedCount")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ConcurrencyStamp")
-                        .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("nvarchar(13)");
-
-                    b.Property<string>("Email")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<bool>("EmailConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("LockoutEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTimeOffset?>("LockoutEnd")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<string>("NormalizedEmail")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("NormalizedUserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("PhoneNumberConfirmed")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SecurityStamp")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("UserName")
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("NormalizedEmail")
-                        .HasDatabaseName("EmailIndex");
-
-                    b.HasIndex("NormalizedUserName")
-                        .IsUnique()
-                        .HasDatabaseName("UserNameIndex")
-                        .HasFilter("[NormalizedUserName] IS NOT NULL");
-
-                    b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasDiscriminator().HasValue("IdentityUser");
-
-                    b.UseTphMappingStrategy();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("AspNetUserClaims", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
@@ -11459,3280 +14667,162 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("IMIS.Domain.User", b =>
+            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
-                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityUser");
+                    b.HasBaseType("Microsoft.AspNetCore.Identity.IdentityRole<string>");
 
-                    b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MiddleName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Position")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Prefix")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Suffix")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasDiscriminator().HasValue("User");
+                    b.HasDiscriminator().HasValue("IdentityRole");
 
                     b.HasData(
                         new
                         {
+                            Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
+                            ConcurrencyStamp = "9b2d6451-9025-436a-8537-d54d62aadc0a",
+                            Name = "Administrator",
+                            NormalizedName = "ADMINISTRATOR"
+                        },
+                        new
+                        {
+                            Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
+                            ConcurrencyStamp = "1c9bed4b-f17b-490e-a31c-7b880273ff26",
+                            Name = "PGS Core Team",
+                            NormalizedName = "PGS CORE TEAM"
+                        },
+                        new
+                        {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "72541796-ecec-436d-9ede-9ef54d97c809",
-                            Email = "marcrejohncastillano@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
-                            NormalizedUserName = "CASTILLANO.MRB",
-                            PasswordHash = "AQAAAAIAAYagAAAAELopE6JdInzl+Em1Hh2pxpxv+dSh6rnVj1YfCegfrwaVhqxd/p/XKgsY209B6WqFnQ==",
-                            PhoneNumber = "09959283775",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "23e309d9-7624-47ef-9c64-7c83c92fac24",
-                            TwoFactorEnabled = false,
-                            UserName = "castillano.mrb",
-                            FirstName = "Marc Rejohn",
-                            LastName = "Castillano",
-                            MiddleName = "Ballares"
+                            ConcurrencyStamp = "f028e2b4-0961-4289-b01b-fda3b9c96562",
+                            Name = "Standard User",
+                            NormalizedName = "STANDARD USER"
                         },
                         new
                         {
-                            Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "351c0dc2-e95b-4058-916f-589a70b0f05c",
-                            Email = "earlmaerama@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "EARLMAERAMA@GMAIL.COM",
-                            NormalizedUserName = "RAMA.EMG",
-                            PasswordHash = "AQAAAAIAAYagAAAAECEZNWo6H5fV3ZQ9ROa7H5b/26XyzNgAVjEClhkIF1a54nlG4u/wdAGBut9WknnGEQ==",
-                            PhoneNumber = "09128293036",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "1b138835-107b-4e57-88d2-7243a9b8a308",
-                            TwoFactorEnabled = false,
-                            UserName = "rama.emg",
-                            FirstName = "Earlene Mae",
-                            LastName = "Rama",
-                            MiddleName = "Gallos"
+                            Id = "af7b586c7ee6490bbd878f46f6a47831",
+                            ConcurrencyStamp = "13a90fba-a774-4d37-993f-2ac77d865741",
+                            Name = "Auditor",
+                            NormalizedName = "AUDITOR"
                         },
                         new
                         {
-                            Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "04fc948f-0947-4787-a752-16cc4103dec1",
-                            Email = "wilburpimentel09@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "WILBURPIMENTEL09@GMAIL.COM",
-                            NormalizedUserName = "PIMENTEL.WB",
-                            PasswordHash = "AQAAAAIAAYagAAAAEN5vJvZT8jyms32XfSDWRuAofyx3AfBXWFgAfJPb/SXAyyKgvTOmh/GiRjN3RGC0KA==",
-                            PhoneNumber = "09069043375",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "b7ff4957-0274-42c8-8a1a-4ac4fd4cf3ab",
-                            TwoFactorEnabled = false,
-                            UserName = "pimentel.wb",
-                            FirstName = "Wilbur",
-                            LastName = "Pimentel",
-                            MiddleName = "Bello"
+                            Id = "95f224dd-3973-42ef-b350-7af30f67c2ca",
+                            ConcurrencyStamp = "4aaf15c6-4d4e-4770-af04-95c84879abdd",
+                            Name = "Service Head",
+                            NormalizedName = "SERVICE HEAD"
                         },
                         new
                         {
-                            Id = "537d9fcd-b505-4f93-afc6-17eb8eddff83",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "2f98596a-14f8-4531-a5d9-3b5ac8f6fbaa",
-                            Email = "Nolan1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "NOLAN1234@GMAIL.COM",
-                            NormalizedUserName = "NOLAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPBMtnKN596T2Di0DdjLlPcN9wpBG2rnJ9SKVYk4lrbaikQBNMz29XvhzMjj0vSU0w==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "22df6d8a-0278-4ada-88a7-e34df4e7bca6",
-                            TwoFactorEnabled = false,
-                            UserName = "Nolan",
-                            FirstName = "Nolan",
-                            LastName = "Avanzado",
-                            MiddleName = "",
-                            Position = "Head, Integrated Hospital Operations and Management Program",
-                            Prefix = "Mr."
+                            Id = "b6b97a7d-23b0-4c2f-9f9a-54d4f67b1234",
+                            ConcurrencyStamp = "ad67e9b1-b795-4df9-ad6e-bbe772d84c08",
+                            Name = "PGS Head",
+                            NormalizedName = "PGS HEAD"
                         },
                         new
                         {
-                            Id = "743b9807-3441-47c1-9285-5ff8dfd7acb9",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "aa147c25-dcfb-4ea7-91c7-a7a03f45cedf",
-                            Email = "Sheila1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SHEILA1234@GMAIL.COM",
-                            NormalizedUserName = "SHEILA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMlpOr0rQvzN49hWYfjdnXvoeoaYWaHq70pCxHuv1bFlg5DBFv4WYzV4Hvik06PZMg==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "0228dc76-4097-4028-b240-0ee309d22062",
-                            TwoFactorEnabled = false,
-                            UserName = "Sheila",
-                            FirstName = "Sheila farisha",
-                            LastName = "Mangelen",
-                            MiddleName = "K.",
-                            Position = "Head, Office for Strategy Management",
-                            Prefix = "Dr."
+                            Id = "e2a6a3fc-1f3a-4e9e-9df0-5f4a6e1f8c21",
+                            ConcurrencyStamp = "0cf6bf9d-0b49-4dbc-ac69-f30d7269231e",
+                            Name = "MCC",
+                            NormalizedName = "MCC"
                         },
                         new
                         {
-                            Id = "7acb06ae-c2de-4fa1-8b62-53c1d63121f0",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "d059b4fe-3927-496d-8c89-5d3940fdb7ea",
-                            Email = "Johari1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JOHARI1234@GMAIL.COM",
-                            NormalizedUserName = "JOHARI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGw249xIaGlcWTq4anllyBy0czH4cUOn830cNToJga+8Tq5bQBcpGk4MgfcM+oBa1g==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "abf6d52e-e206-4bc3-9cba-ef9e45c57a68",
-                            TwoFactorEnabled = false,
-                            UserName = "Johari",
-                            FirstName = "Johari",
-                            LastName = "Casan",
-                            MiddleName = "P.",
-                            Prefix = "Atty."
-                        },
-                        new
-                        {
-                            Id = "7eee5b08-df0d-4ac0-a8db-39d924dd30b7",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "8c6babc5-2e51-489e-9d49-32d65ef77089",
-                            Email = "Linda1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "LINDA1234@GMAIL.COM",
-                            NormalizedUserName = "LINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPFr+UyAW+qjfgyMRp4vhvqoyHJQAldGoUEkjaZC5hYSolMXkWP0DPWtH889B7eHIw==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "21821606-0f05-4822-98ef-d00b3034cee7",
-                            TwoFactorEnabled = false,
-                            UserName = "Linda",
-                            FirstName = "Linda",
-                            LastName = "Garde",
-                            MiddleName = "P.",
-                            Position = "Head, Budget Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "8fa3f3e4-b8a2-4375-9dc8-91b6fbc55e4a",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "20c2b60f-8a98-477f-b71c-15ca0e7ac1d2",
-                            Email = "Java1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JAVA1234@GMAIL.COM",
-                            NormalizedUserName = "JAVA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGXjo/7Iaqm2iJectAn9KzXbDDWesyCEgPqQynA6032ku9jCHEu7JYFMN1novkIi2A==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "bf693e79-f091-4bb8-9707-25c6acdd62d9",
-                            TwoFactorEnabled = false,
-                            UserName = "Java",
-                            FirstName = "Sergio",
-                            LastName = "Java",
-                            MiddleName = "C.",
-                            Position = "Chief Administrative Officer",
-                            Prefix = "Mr."
-                        },
-                        new
-                        {
-                            Id = "a6866933-92a9-41e7-9100-8bee51ed0ada",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "8706deeb-54a0-4ddc-b21a-dd531e60a3f7",
-                            Email = "John1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JOHN1234@GMAIL.COM",
-                            NormalizedUserName = "JOHN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP05RgEd/jT6XU55Y/uBOd+jzpPWLxYyqu7E4vlAfXbPAT6kaa9eSbQKDJuYKnmkcg==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "89cb062c-5c48-4b84-86db-e9227e03de40",
-                            TwoFactorEnabled = false,
-                            UserName = "John",
-                            FirstName = "John",
-                            LastName = "Maliga",
-                            MiddleName = "O.",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "93610e2c-21eb-443b-988d-28f79ff2731e",
-                            Email = "scibrahimtan@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SCRIBRAHIMTAN@GMAIL.COM",
-                            NormalizedUserName = "TAN.SI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPRAnix9lEeY2bsVYs5WolB1MhTCxKTlUPyTxaYTvQLlcGo2Xdole7JOn9PhtvJP/A==",
-                            PhoneNumber = "09178663037",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "5437a29e-fc2d-4ba6-b64b-a940a81981e1",
-                            TwoFactorEnabled = false,
-                            UserName = "tan.si",
-                            FirstName = "Scheherazade",
-                            LastName = "TAN",
-                            MiddleName = "I.",
-                            Position = "Head, Out-Patient Department",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "e1a3ac20-1d20-4f37-8826-242657a746c7",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ecfd61b2-52a2-43c5-8e62-1d4401f08b3e",
-                            Email = "Dimaren1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "DIMAREN1234@GMAIL.COM",
-                            NormalizedUserName = "DIMAREN",
-                            PasswordHash = "AQAAAAIAAYagAAAAENBe7+IlFmHJmG+m3GmRtGG2fwy2VCXtSqFVE1KzUy2frCp5/V0ST0UTHaDhiWUBWg==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "5daa26a4-9d7f-4d9f-b576-aed9e9c7e783",
-                            TwoFactorEnabled = false,
-                            UserName = "Dimaren",
-                            FirstName = "Ishmael",
-                            LastName = "Dimaren",
-                            MiddleName = "R.",
-                            Position = "Medical Center Chief II",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "e9bcc340-e63f-40e6-8326-8fe86cbef923",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "5218e055-e111-42a0-b028-96a2a5eaa0c2",
-                            Email = "Precious1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "PRECIOUS1234@GMAIL.COM",
-                            NormalizedUserName = "PRECIOUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOl9bcZ3/9cdi+HoAR2Io98HUgygPZ68FW4Hw7rcwf/lt1VipbHYQNRHnS4Xq3DHzw==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "f838ef15-2a5b-4398-9c9d-a1d815305180",
-                            TwoFactorEnabled = false,
-                            UserName = "Precious",
-                            FirstName = "Precious Love",
-                            LastName = "Esquillo",
-                            MiddleName = "Y.",
-                            Position = "Chief Administrative Officer",
-                            Prefix = "Ms."
+                            Id = "a3c8f0de-45d7-49ab-9c3f-8e25b5e7d421",
+                            ConcurrencyStamp = "caaeb800-b869-4f11-9013-b2ef91d21c9c",
+                            Name = "OSM",
+                            NormalizedName = "OSM"
                         },
                         new
                         {
                             Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "8f29c45e-f454-4659-88eb-cd5991ff8130",
-                            Email = "Singgon1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SINGGON1234@GMAIL.COM",
-                            NormalizedUserName = "SINGGON",
-                            PasswordHash = "AQAAAAIAAYagAAAAEN5NSWd1UZVETnWPb5VirwVGCvhW1dvKF17Bq0RTKezbJbjiC/cDd+O5lzxUK0MGXA==",
-                            PhoneNumber = "09177220668",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "530da547-8704-471a-8b14-9cd8efbd3cbe",
-                            TwoFactorEnabled = false,
-                            UserName = "Singgon",
-                            FirstName = "Bai Samirah",
-                            LastName = "Singgon",
-                            MiddleName = "A.",
-                            Position = "Head, Department of Pediatrics",
-                            Prefix = "Dr."
+                            ConcurrencyStamp = "75ce9743-e7a5-4438-8e20-d90beeb65c68",
+                            Name = "PGS Auditor Head",
+                            NormalizedName = "PGS AUDITOR HEAD"
                         },
                         new
                         {
-                            Id = "399f5e43-93d8-4a28-b113-d23eccd2ea15",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "e914dd1f-a9bb-4b0f-9d9a-a4c929fd211a",
-                            Email = "npmangansakan@rocketmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "NPMANGANSAKAN@ROCKETMAIL.COM",
-                            NormalizedUserName = "MANGANSAKAN.NORHAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJn3KCItfUQRS2GyoBVIbwK6+gfSaJi3VkZHdC37RO+Teh+Wp9P+eUpKbdD+QLb5+Q==",
-                            PhoneNumber = "09166629909",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "9ca7ddf0-1c9d-402b-be9e-cb8b3e135f82",
-                            TwoFactorEnabled = false,
-                            UserName = "mangansakan.norhan",
-                            FirstName = "NORHAN",
-                            LastName = "MANGANSAKAN",
-                            MiddleName = "PIANG"
+                            Id = "4c1c9c2e-9e2b-4c88-8a94-6a7d3e4c5a01",
+                            ConcurrencyStamp = "94d20b0c-bfa9-495b-8adf-7946c13f044b",
+                            Name = "Service Officer",
+                            NormalizedName = "SERVICE OFFICER"
                         },
                         new
                         {
-                            Id = "e765e1f5-bc17-49b1-9c3f-8c5c2c18b420",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "0b13d0db-121a-4ba4-b0c3-49572c43e56d",
-                            Email = "nurlinda_06@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "NURLINDA_06@YAHOO.COM",
-                            NormalizedUserName = "ARUMPAC.NURLINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPd8Q3RKpu0OaH+sAPaOmvZh9b3qHGym2g9WrkryhNadAfoAOqcYWFcoxb5GEE3k8Q==",
-                            PhoneNumber = "09177266885",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "8120b36f-dd41-4b64-aea4-1e1d913d3f26",
-                            TwoFactorEnabled = false,
-                            UserName = "arumpac.nurlinda",
-                            FirstName = "NURLINDA",
-                            LastName = "ARUMPAC",
-                            MiddleName = "PANGILAN",
-                            Position = "Head, Women and Child Protection Unit",
-                            Prefix = "Dr."
+                            Id = "9b7d2e11-6c3a-4f2e-a1d8-0f7c4b2e91a4",
+                            ConcurrencyStamp = "c1ecee99-1e69-4492-ad34-ec6cf988869d",
+                            Name = "Research Officer",
+                            NormalizedName = "RESEARCH OFFICER"
                         },
                         new
                         {
-                            Id = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "72557751-2a7e-4bf9-8020-1473c811a7c1",
-                            Email = "jrbedol@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JRBEDOL@GMAIL.COM",
-                            NormalizedUserName = "BEDOL.LINTANG",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJ5J5gJ+cu4sOBQ0sPZyAcIWLJaAf8xJeh6zXA7uT4a4ln20fLDeCd6/7HvES6vDFA==",
-                            PhoneNumber = "09226218394",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "3fc49844-7c2f-448f-8c5f-6a15a6aceb58",
-                            TwoFactorEnabled = false,
-                            UserName = "bedol.lintang",
-                            FirstName = "LINTANG",
-                            LastName = "BEDOL",
-                            MiddleName = "BUAN",
-                            Prefix = "Dr."
+                            Id = "2a6f5c90-1d3b-4e8f-9c42-7b1e5d0a83c2",
+                            ConcurrencyStamp = "fb2b5dc9-d447-44b2-a8a3-f7e857493706",
+                            Name = "Training Officer",
+                            NormalizedName = "TRAINING OFFICER"
                         },
                         new
                         {
-                            Id = "f8a17354-91b3-4c0e-9b71-d6af05f4e11e",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "18fb6602-2077-4b2c-a1dc-9664498ce907",
-                            Email = "rhkadil@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RHKADIL@GMAIL.COM",
-                            NormalizedUserName = "KADIL.RONALD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPVyfr2Y08GiHykhMzF7ZMxE0mZovr0pdjln1akuxSLkVXfayfHMy2lhzrJFC1uaCQ==",
-                            PhoneNumber = "09175333922",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "f00ca95a-e37f-4671-9dd9-3e9ddd52986a",
-                            TwoFactorEnabled = false,
-                            UserName = "kadil.ronald",
-                            FirstName = "RONALD",
-                            LastName = "KADIL",
-                            MiddleName = "HIPONIA"
+                            Id = "e3f7a4c1-5b29-4a8e-9d10-8c6e2f91b4a7",
+                            ConcurrencyStamp = "4d819502-c758-4e70-8a26-0f5a97c92cc2",
+                            Name = "Linkages Officer",
+                            NormalizedName = "LINKAGES OFFICER"
                         },
                         new
                         {
-                            Id = "9b6d73e5-ff27-44bb-a9d0-f7c58b31c4a1",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "d04532ff-5f67-4b02-8066-8563b88997a0",
-                            Email = "madz.karao@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MADZ.KARAO@GMAIL.COM",
-                            NormalizedUserName = "KARAO.MOHAMAD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGot70lXbuMs3QarI47MuK5yJre9dCI3Vl0PJmqaieyAJkrkWN6QlFKa9UuOLu0gRw==",
-                            PhoneNumber = "09363769315",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "17e16a87-f770-4bae-9660-6e55069380af",
-                            TwoFactorEnabled = false,
-                            UserName = "karao.mohamad",
-                            FirstName = "MOHAMAD",
-                            LastName = "KARAO",
-                            MiddleName = "DUMBI",
-                            Position = "Head, Public Health Unit-Health Promotion Unit",
-                            Prefix = "Mr."
+                            Id = "7d8b0f3c-4a6e-4f9b-8c21-2e5a1d7b90f3",
+                            ConcurrencyStamp = "b60a2629-5ffd-4dca-8974-f1bf69047be6",
+                            Name = "Facilities Officer",
+                            NormalizedName = "FACILITIES OFFICER"
                         },
                         new
                         {
-                            Id = "a1f6d353-df11-4a17-b2be-49371b8c223d",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "7965ea69-f5d1-4bc1-b569-eb18956b395a",
-                            Email = "don_astillero@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "DON_ASTILLERO@YAHOO.COM",
-                            NormalizedUserName = "ASTILLERO.ADONIS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGBiZEa1hJb1ogW1Eqwc8JqJ398vcrz/ASamS5nBk1TBJE6r08iqNBz8yv0y9Ue21g==",
-                            PhoneNumber = "09176261812",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "467d4a5e-0b1e-457f-bf2a-38d127811c72",
-                            TwoFactorEnabled = false,
-                            UserName = "astillero.adonis",
-                            FirstName = "ADONIS",
-                            LastName = "ASTILLERO",
-                            MiddleName = "CHAN",
-                            Prefix = "Mr."
+                            Id = "5c2e8b9f-6a1d-4e73-9f0b-1c7a4d3e8b52",
+                            ConcurrencyStamp = "33d468bb-d490-4e5f-9338-686fe3275dbc",
+                            Name = "Finance Officer",
+                            NormalizedName = "FINANCE OFFICER"
                         },
                         new
                         {
-                            Id = "f2b28c8e-58cf-47b2-8245-33a7a98a7344",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ed3edef3-fa30-487f-8d9f-93f66c04f0d5",
-                            Email = "abantasfaizah@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ABANTASFAIZAH@GMAIL.COM",
-                            NormalizedUserName = "ABANTAS.BBGIRL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIf6yEdiayd0XryLCJldEs2qHXdRaMy6o8LO6KCdhgdthDG0K6rvGxNaer8OQzlp2w==",
-                            PhoneNumber = "09618235949",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "9c01125e-9233-456f-95b8-8220d546c23c",
-                            TwoFactorEnabled = false,
-                            UserName = "abantas.bbgirl",
-                            FirstName = "BBGIRL FAIZAH",
-                            LastName = "ABANTAS",
-                            MiddleName = "SHARIF",
-                            Position = "Head, Claims Section",
-                            Prefix = "Dr."
+                            Id = "f0a8d2c7-1e9b-4c5a-8f63-7b4e2d9c1a30",
+                            ConcurrencyStamp = "30037d19-81d7-4cc4-ac64-6dd12fd94bb3",
+                            Name = "Information Officer",
+                            NormalizedName = "INFORMATION OFFICER"
                         },
                         new
                         {
-                            Id = "6db39f4a-9d19-4fc2-b3ab-2aa37851bb71",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "a4fc7371-bab0-41bf-82e8-4b8043f8f51b",
-                            Email = "anidaabubakar5@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ANIDAABUBAKAR5@GMAIL.COM",
-                            NormalizedUserName = "ABUBAKAR.ANIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDGMpU+jror2pkMJIzVcI0GuA6qdeMhX8flqq7bMSPf527Sn2eHQ42GZv7MKqJuPfQ==",
-                            PhoneNumber = "09177234338",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "d76d40ca-d79a-4389-b744-70cea0a28112",
-                            TwoFactorEnabled = false,
-                            UserName = "abubakar.anida",
-                            FirstName = "ANIDA",
-                            LastName = "ABUBAKAR",
-                            MiddleName = "PENDALIDAY",
-                            Position = "Head, Emergency Department",
-                            Prefix = "Ms."
+                            Id = "3e1b5f2c-9d8a-4a07-8c64-fb2e9d7a1c50",
+                            ConcurrencyStamp = "2847eda7-2501-4fda-bba6-40e3d576027a",
+                            Name = "HR Officer",
+                            NormalizedName = "HR OFFICER"
                         },
                         new
                         {
-                            Id = "c54d18f2-9a21-4f72-92eb-1f5d6e8f58de",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "e2eaaa10-b0d7-4fff-a3ad-c0203dc4e9d4",
-                            Email = "bashegal23@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "BASHEGAL23@GMAIL.COM",
-                            NormalizedUserName = "ADANG.ALIBASHER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGSXbJ144ggwgCEapWc3iCZgbpXS0b/nS/1+3zxaho7fpIYR0zqinIP97Lx34wIT4Q==",
-                            PhoneNumber = "09369833653",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "60143cfc-5f33-4404-abdd-22e13ddaed26",
-                            TwoFactorEnabled = false,
-                            UserName = "adang.alibasher",
-                            FirstName = "ALIBASHER",
-                            LastName = "ADANG",
-                            MiddleName = "ABO"
+                            Id = "6b7f1c2e-8a4d-4f90-9e53-0d3a5c2b718f",
+                            ConcurrencyStamp = "ecf26ad8-f2db-4c17-be0d-f211914f8514",
+                            Name = "Safety Officer",
+                            NormalizedName = "SAFETY OFFICER"
                         },
                         new
                         {
-                            Id = "a1a6e8f1-4749-4a8e-8f9b-0b6b2f05f38b",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "2fb1ce5c-82e7-4999-a891-fe46706e9b9c",
-                            Email = "lailakaliaagting@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "LAILAKALIAAGTING@GMAIL.COM",
-                            NormalizedUserName = "AGTING.LAILA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJnTyva9IaHIJ18Vty21l9zAMUND0WmjqcOXJh44988rh4kMKNw1m522zP6PUoHGOA==",
-                            PhoneNumber = "09177124579",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "fe861bff-cb3e-496d-95b3-db5ad3e182cb",
-                            TwoFactorEnabled = false,
-                            UserName = "agting.laila",
-                            FirstName = "LAILA",
-                            LastName = "AGTING",
-                            MiddleName = "KALI",
-                            Position = "Head, Sec. Ona Wing",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "f79e34aa-f6a2-4ff1-b2e0-4a7c8194e61c",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "7a8b1b79-d5d1-4621-b513-129325890490",
-                            Email = "miemarandakan@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MIEMARANDAKAN@GMAIL.COM",
-                            NormalizedUserName = "AKMAD.AMERA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMpNSPLTCPVb3bIYze2+ej+qonnWTnUh9LNgL3KGwzFypGEx0Bc6QGAv2ea4R2txkg==",
-                            PhoneNumber = "09560537326",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "2da08bb1-d53a-4ddc-b642-a87fea3a1934",
-                            TwoFactorEnabled = false,
-                            UserName = "akmad.amera",
-                            FirstName = "AMERA",
-                            LastName = "AKMAD",
-                            MiddleName = "MARANDACAN"
-                        },
-                        new
-                        {
-                            Id = "1b8a5144-b8a6-4df5-bb98-0136d7ebdf24",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "e556242d-7a9b-44f6-9c8d-375c01d740fe",
-                            Email = "maraguia44@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MARAGUIA44@GMAIL.COM",
-                            NormalizedUserName = "AKMAD.ABDUL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHUqvBcEgsZOyN/UZ02G1T01lNlO3K+qiuZa3hMGOb5tdRrsG5ah/mYchLmvtmbSgA==",
-                            PhoneNumber = "09209177429",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "ceb77cc1-d68e-4348-a7d7-8d80b05a8f8a",
-                            TwoFactorEnabled = false,
-                            UserName = "akmad.abdul",
-                            FirstName = "ABDUL",
-                            LastName = "AKMAD",
-                            MiddleName = "MARAGUIAL",
-                            Position = "Head, EEG"
-                        },
-                        new
-                        {
-                            Id = "6c8454ef-fd19-4db5-9f88-dcd7b13e5c55",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "650f275a-94ed-47d6-85eb-3ff8857ed95b",
-                            Email = "rosarioalojipan@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ROSARIOALOJIPAN@GMAIL.COM",
-                            NormalizedUserName = "ALOJIPAN.ROSARIO",
-                            PasswordHash = "AQAAAAIAAYagAAAAEK/XNg3itOaFu4GV3MjR28Lh7JhHqaz6EzbLTsj0xSxuuKU5LGmZFkGFzxtJgVBj/Q==",
-                            PhoneNumber = "09178202970",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "7c09954c-cd80-4a85-b825-399e9d65fc4b",
-                            TwoFactorEnabled = false,
-                            UserName = "alojipan.rosario",
-                            FirstName = "ROSARIO",
-                            LastName = "ALOJIPAN",
-                            MiddleName = "DELA CRUZ",
-                            Position = "Head, Operating Room",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "4f5b9c31-d406-4036-b8cd-37cb92d6b211",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "9af4ca37-03f4-4b8a-9276-4b037ad6dd05",
-                            Email = "yashou_07@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "YASHOU_07@YAHOO.COM",
-                            NormalizedUserName = "ANDAL.YASSER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFWLnrP6TqBZHLHAXFgZjq1xLMWVnQF3q1rrY91gu9F0NopLU+xPfJusmwzc5pWkow==",
-                            PhoneNumber = "09173085559",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "d423053a-257b-4cc7-be45-6c6b61cc2d72",
-                            TwoFactorEnabled = false,
-                            UserName = "andal.yasser",
-                            FirstName = "YASSER FARID",
-                            LastName = "ANDAL",
-                            MiddleName = "MAMA"
-                        },
-                        new
-                        {
-                            Id = "0b91d20a-0ab3-4820-b3f2-fbcf01c0af26",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "632da442-ef1b-48ef-b429-2bc65fa0e3be",
-                            Email = "racsandamen13@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RACSANDAMEN13@GMAIL.COM",
-                            NormalizedUserName = "ANDAMEN.RAHMA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEC5G6Lao7Z9w5oiA9yt61bButB3rQqsPXjVrQfj+iQoMhy6wVz5LlHolxBLN6efozw==",
-                            PhoneNumber = "09456829380",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "1396740d-62e4-4c02-ab35-0fe849919eaf",
-                            TwoFactorEnabled = false,
-                            UserName = "andamen.rahma",
-                            FirstName = "RAHMA",
-                            LastName = "ANDAMEN",
-                            MiddleName = "KALID"
-                        },
-                        new
-                        {
-                            Id = "2489fce0-858f-43af-b82a-65ee42cb2e33",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "2d249377-5b4d-450b-a7be-ff1d87124547",
-                            Email = "aljazzerangas@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ALJAZZERANGAS@YAHOO.COM",
-                            NormalizedUserName = "ANGAS.AL-JAZZER",
-                            PasswordHash = "AQAAAAIAAYagAAAAENcaAM5kKmtQpiTBbvRnFfPt0po0QXT0TDRtneRTsKUsC8TcNS1lSfLdr44jf4HASg==",
-                            PhoneNumber = "09179755770",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "33152c7d-fd0b-40e5-95c4-55064c74af46",
-                            TwoFactorEnabled = false,
-                            UserName = "angas.al-jazzer",
-                            FirstName = "AL-JAZZER",
-                            LastName = "ANGAS",
-                            MiddleName = "MAULANA",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "5ff58cb5-9d0c-44b2-bc2a-5f96a3c9d621",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "1ffe14a0-ebfb-47f7-852c-7e17539aded7",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedUserName = "ARIAS.RENANTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO554G8q/DHDufAo3FdJyS4niAY7+zJXiyfV/JXPDTnBisgbpw6WnTRVrKC4jlrTxA==",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "a30ec600-6638-412d-bbe9-36cb1d5bbf9c",
-                            TwoFactorEnabled = false,
-                            UserName = "arias.renante",
-                            FirstName = "RENANTE",
-                            LastName = "ARIAS",
-                            MiddleName = "ZIA"
-                        },
-                        new
-                        {
-                            Id = "cc505df2-3586-41a1-9d44-b5fc8f28e3a9",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "9ad2d352-672b-4984-8695-bbe5b9fd4787",
-                            Email = "shiedhe@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SHIEDHE@YAHOO.COM",
-                            NormalizedUserName = "BANGEN.SHIEDHE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOAQ9Gxc7LTUvX1VD6vlo3vncanQcHgEnskuFpB+kyNLgsfeb4PuVKNMA0LXfAlscg==",
-                            PhoneNumber = "09396526665",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "788d9aab-5218-48f1-8662-9fb62b9a8336",
-                            TwoFactorEnabled = false,
-                            UserName = "bangen.shiedhe",
-                            FirstName = "SHIEDHE",
-                            LastName = "BANGEN",
-                            MiddleName = "KEMBUAN",
-                            Position = "Head, Procurement Department",
-                            Prefix = "Mr."
-                        },
-                        new
-                        {
-                            Id = "8ea08a3f-066a-41ac-9ef0-ffb47d3657d9",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "53e3c1fd-43d4-4889-a501-0d2832ac4c33",
-                            Email = "dannyfherbantilan@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "DANNYFHERBANTILAN@YAHOO.COM",
-                            NormalizedUserName = "BANTILAN.DANNY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDsR6NHAdqqAuyc5WjIqIORF48YANZuBxOXU1scCc6cK/+nv7o1AQwZPeK0LkQUmQg==",
-                            PhoneNumber = "09272727645",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "3cd9e542-a09c-42cd-8cac-b5d93ca33518",
-                            TwoFactorEnabled = false,
-                            UserName = "bantilan.danny",
-                            FirstName = "DANNY FHER",
-                            LastName = "BANTILAN",
-                            MiddleName = "BANQUIAO"
-                        },
-                        new
-                        {
-                            Id = "c79be729-47b3-4907-88e1-0a67dd4e48b1",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "1e6d8851-c941-42f3-9deb-b3a982248f60",
-                            Email = "zahidabationgbassal2018@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ZAHIDABATIONGBASSAL2018@GMAIL.COM",
-                            NormalizedUserName = "BASSAL.ZAHIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEGmr8XZwcOOT4jv/1NKVvomm9mf9NRfq3ies6XIdEx3miBkMG4ImB6IywvGFwpGeg==",
-                            PhoneNumber = "09161012599",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "50c74925-136a-4674-a134-25e6e124ff54",
-                            TwoFactorEnabled = false,
-                            UserName = "bassal.zahida",
-                            FirstName = "ZAHIDA",
-                            LastName = "BASSAL",
-                            MiddleName = "BATIONG"
-                        },
-                        new
-                        {
-                            Id = "de17cb47-83e7-4a6b-b97c-13808e14a7ff",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "975fe927-f588-432e-864f-330fdaf1dcca",
-                            Email = "acocalbo@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ACOCALBO@YAHOO.COM",
-                            NormalizedUserName = "BONES.ANABELLE",
-                            PasswordHash = "AQAAAAIAAYagAAAAELl4c5zqL/Df1SS6NoQGTQHhttoOS8RsTl7v3Snlny5Sw/sgC/qDXm1nL73j6mP2GA==",
-                            PhoneNumber = "09483207824",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "d6e8b99a-7aa8-4b46-9479-8a2e71780ea0",
-                            TwoFactorEnabled = false,
-                            UserName = "bones.anabelle",
-                            FirstName = "ANABELLE",
-                            LastName = "BONES",
-                            MiddleName = "COCAL"
-                        },
-                        new
-                        {
-                            Id = "0ed1f88a-8859-4d6c-9a1f-84aaf19cc45c",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "51dce22c-7279-4cb7-9896-f2c629099db9",
-                            Email = "amybonite09@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "AMYBONITE09@YAHOO.COM",
-                            NormalizedUserName = "BONITE.EMELIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAKGrVHFS8P3lHd51WaV0/GuAnYuJaBUTHt4YzHHuXKvllJJtcvTduCUN+czHuJ3mQ==",
-                            PhoneNumber = "09055207141",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "1098fa4f-4b6c-4b66-8bd5-9a8e35184e47",
-                            TwoFactorEnabled = false,
-                            UserName = "bonite.emelia",
-                            FirstName = "EMELIA",
-                            LastName = "BONITE",
-                            MiddleName = "YU",
-                            Position = "Head, Billing Section",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "74c35794-54d9-44a4-baf0-b8fa23e2d481",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "a97c99e1-a31d-47c1-9cf8-efb3f6263d09",
-                            Email = "Mulcaldea@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MULCALDEA@GMAIL.COM",
-                            NormalizedUserName = "CALDEA.MAYLENE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHerLiaZ7bul7eozRthEDFhiPimr4Q9CE0UHzoclwMHy8KksobSR8VIFUK/sOErzWg==",
-                            PhoneNumber = "09953048269",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "eab037e0-5aff-4440-ae0a-707d8c55e7f3",
-                            TwoFactorEnabled = false,
-                            UserName = "caldea.maylene",
-                            FirstName = "MAYLENE",
-                            LastName = "CALDEA",
-                            MiddleName = "ULOG"
-                        },
-                        new
-                        {
-                            Id = "53a2b071-d36f-4f1f-bf8e-3f7dbf7b8c7b",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "9085469e-7662-4cee-ba95-4968ca5fb572",
-                            Email = "naughty_candao@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "NAUGHTY_CANDAO@YAHOO.COM",
-                            NormalizedUserName = "CANDÃO.ABDULBAYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEH73n49cDn4xKs3FUXLUrybGtWgFZ5+rvjzCTFQz+LcvmhjcVO9/LnoEVSzKJ3zUNw==",
-                            PhoneNumber = "09564021897",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "641c39fc-fa89-47c0-8fdd-77d9ce281b2e",
-                            TwoFactorEnabled = false,
-                            UserName = "candao.abdulbayan",
-                            FirstName = "ABDULBAYAN",
-                            LastName = "CANDAO",
-                            MiddleName = "BAYAO"
-                        },
-                        new
-                        {
-                            Id = "28a2a313-bc8e-4225-b8c2-85c2935b315e",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ae14ffce-6852-4c4b-b1fa-b47fde0bb6d6",
-                            Email = "marcrejohncastillano@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
-                            NormalizedUserName = "CASTILLANO.MARC",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDAXekAh/t0EfthldbS/GHghinUbwql660qg1bhQQnkh84DTojCrqlf5UgHcygbc9A==",
-                            PhoneNumber = "09959283775",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "cad337c4-620d-4eb2-81a5-cc804c2a4234",
-                            TwoFactorEnabled = false,
-                            UserName = "castillano.marc",
-                            FirstName = "MARC REJOHN",
-                            LastName = "CASTILLANO",
-                            MiddleName = "BALLARES"
-                        },
-                        new
-                        {
-                            Id = "35159a7c-2120-46f6-9135-8a8469b9c7b1",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "0386e89b-8b02-44ad-8451-0cdf2f476f80",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedUserName = "CASTILLON.JOBERT",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP//pxUV4MIkc+qPaHA+sd/z6aZjJtdcA9hHRVacypa0gRHtSIKdDOnzOoDR2oa7Lg==",
-                            PhoneNumber = "09395055897",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "55d5157d-d3a1-4683-aab0-682146291e88",
-                            TwoFactorEnabled = false,
-                            UserName = "castillon.jobert",
-                            FirstName = "JOBERT",
-                            LastName = "CASTILLON",
-                            MiddleName = "ARMADA"
-                        },
-                        new
-                        {
-                            Id = "ec4219b7-dfc6-4966-bf2a-3f1eecf17391",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "1c83a920-8d8b-4fb7-9cdf-7ba6f10a8092",
-                            Email = "rndmpa@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RNDMPA@GMAIL.COM",
-                            NormalizedUserName = "CUYONG.ANTHONY",
-                            PasswordHash = "AQAAAAIAAYagAAAAELqUyld79ZFEbezyXePCnaEmzGf7Gmx0tIexB44SzUoYmB20rzj251wOFJ+L92x0bg==",
-                            PhoneNumber = "09453040405",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "327013d7-3bf4-4776-aea8-502064b264b7",
-                            TwoFactorEnabled = false,
-                            UserName = "cuyong.anthony",
-                            FirstName = "ANTHONY",
-                            LastName = "CUYONG",
-                            MiddleName = "CULAB"
-                        },
-                        new
-                        {
-                            Id = "1a9d8654-1c19-4b60-9491-4e33c176cc64",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "eeb57a2f-3cb9-4abc-836e-d340d1f7aa9f",
-                            Email = "gloriacalubiran79@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "GLORIACALUBIRAN79@GMAIL.COM",
-                            NormalizedUserName = "DELOSREYES.GLORIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAED55gXN/vulC7qlkPumXB8g1ENuTZPqdNd7aYtJ00TyMg7WZXeJVe9upNc6EDff0rg==",
-                            PhoneNumber = "09363304534",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "89e7dfbc-e6b9-42ae-9357-5a71a4b43983",
-                            TwoFactorEnabled = false,
-                            UserName = "delosreyes.gloria",
-                            FirstName = "GLORIA",
-                            LastName = "DELOS REYES",
-                            MiddleName = "CALUBIRAN",
-                            Position = "Head, SHTH",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "1a9d8654-1c19-4b50-9431-4e23c174cc60",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "2a583d76-8147-4b18-bfae-4921a0829d17",
-                            Email = "Biloa1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "BILAO1234@GMAIL.COM",
-                            NormalizedUserName = "BILAO.ABDULHANIF",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGNcRf9yYh9Ul8bemMmXpPXoOhHDfWxb6D9mrOtzTouj8eHhmR6zpNN2tC/mBs7FIw==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "c41dcb83-628c-45f8-98a7-907015902961",
-                            TwoFactorEnabled = false,
-                            UserName = "bilao.abdulhanif",
-                            FirstName = "Andul Hanif",
-                            LastName = "Bilao",
-                            MiddleName = "B."
-                        },
-                        new
-                        {
-                            Id = "2z9f8451-1n19-4b50-8432-4e23c164cs51",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ab1931da-cb41-4fd8-92b1-780d33309694",
-                            Email = "Caoagdan1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "CAOAGDAN1234@GMAIL.COM",
-                            NormalizedUserName = "CAOAGDAN.SOCORRO",
-                            PasswordHash = "AQAAAAIAAYagAAAAEK94Ec+5whkdtk4CQOpzLqBeUhb4RW4ufX5EahC+KR05sOvtWkVdnpbo5vjg/22NOQ==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "52ce1987-dcd4-43b4-a1cd-03b8c8942e14",
-                            TwoFactorEnabled = false,
-                            UserName = "caoagdan.socorro",
-                            FirstName = "Socorro",
-                            LastName = "Caoagdan",
-                            MiddleName = "A."
-                        },
-                        new
-                        {
-                            Id = "9c49e0f2-4cb0-45b1-9f0e-4fbd24d25368",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "353558da-a666-4a78-9f45-03b85134ba4c",
-                            Email = "graceenlayo@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "GRACEENLAYO@GMAIL.COM",
-                            NormalizedUserName = "ENLAYOAPAAP.HONEYGRACE",
-                            PasswordHash = "AQAAAAIAAYagAAAAECGX1XW8S1E4BhIpaMdOrNrLQz/azYZIjLvraADTVKeaCs1XopuCW8YTxoiFceoyNw==",
-                            PhoneNumber = "09754948544",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "afcb0971-92e3-4090-8ac1-f0bf5c815a10",
-                            TwoFactorEnabled = false,
-                            UserName = "enlayoapaap.honeygrace",
-                            FirstName = "HONEY GRACE",
-                            LastName = "ENLAYO-APA-AP",
-                            MiddleName = "ROMASANTA"
-                        },
-                        new
-                        {
-                            Id = "33a13c76-041f-4d68-8f67-41b7dd60c408",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "6ecb5df8-deae-4bca-a5e4-b93ecd32d484",
-                            Email = "henesijesmundo27@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "HENESIJESMUNDO27@GMAIL.COM",
-                            NormalizedUserName = "ESMUNDO.HENESIJEM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIt22PW8IKt94ziJM0rJ1WZJU2T8ZTVZrIQYCHyhSlCVJyHva5D5b7C6P8HT/+ydzQ==",
-                            PhoneNumber = "09354975202",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "c69b3384-98f3-4bbe-b3d4-e28814bde03c",
-                            TwoFactorEnabled = false,
-                            UserName = "esmundo.henesijem",
-                            FirstName = "HENESI JEM",
-                            LastName = "ESMUNDO",
-                            MiddleName = "GAUDIANO"
-                        },
-                        new
-                        {
-                            Id = "43cd6e17-9d86-4cb9-8d84-298e43a23450",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "d70ca5a1-962b-4e70-b1af-be70c1645669",
-                            Email = "jesryll.tupas@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JESRYLL.TUPAS@YAHOO.COM",
-                            NormalizedUserName = "FACTORA.JESRYLLLEANA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGI80BN0SlrmnXiufd96xwZ1Hj0g2wnbizUj7hccIpTzI2NehnLG1636hB0NGDdutA==",
-                            PhoneNumber = "09176111210",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "baf4ee7e-15d4-4d17-a378-cdab52603764",
-                            TwoFactorEnabled = false,
-                            UserName = "factora.jesryllleana",
-                            FirstName = "JESRYLL LEANA",
-                            LastName = "FACTORA",
-                            MiddleName = "TUPAS"
-                        },
-                        new
-                        {
-                            Id = "c77b5df0-836a-4f9e-9f29-d2f6c6cf4074",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "72dd40af-64f0-4f58-9dc0-ee44a2d6540f",
-                            Email = "cherfer22@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "CHERFER22@YAHOO.COM",
-                            NormalizedUserName = "FERRER.CHERYL",
-                            PasswordHash = "AQAAAAIAAYagAAAAENn9cSgYD/QSICRZAHmb64kEscpO/cQhf9/QnaZBAQJ3ak6n7IGBY0ijIe4+DaPVrg==",
-                            PhoneNumber = "09276048113",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "26e34d33-2ad3-4045-aa67-8496a2d1b354",
-                            TwoFactorEnabled = false,
-                            UserName = "ferrer.cheryl",
-                            FirstName = "CHERYL",
-                            LastName = "FERRER",
-                            MiddleName = "MAGBANUA",
-                            Position = "Head, Paritoneal Dialysis Clinic",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "5d8a2197-b38b-40b2-940a-845e2a44b622",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "5e0bcfc1-cd04-43b7-94f0-aa0b5a8a6546",
-                            Email = "resildago1212@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RESILDAGO1212@GMAIL.COM",
-                            NormalizedUserName = "GO.RESILDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEONoybp3PfAHQJZEGehQVHIj3Js5/V3hdqASgY+aqk/WXVBMJDytU0IKS24YMKYuHw==",
-                            PhoneNumber = "09062249400",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "65212913-240f-46f1-86e7-fbf3fa7b6cea",
-                            TwoFactorEnabled = false,
-                            UserName = "go.resilda",
-                            FirstName = "RESILDA",
-                            LastName = "GO",
-                            MiddleName = "BAGGAYAN"
-                        },
-                        new
-                        {
-                            Id = "c79c6433-d1ad-46a3-ae87-84edb44476de",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "096e05d7-9475-4727-b828-81053e07b50d",
-                            Email = "rendtesy0620@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RENDTSEY0620@GMAIL.COM",
-                            NormalizedUserName = "GONZALES.RENETTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGhwJJLf9fLnyXAumDeOg7SnMviVk58sHsjWV1kWRJnN+1GwC334EVBICegLdAFj8A==",
-                            PhoneNumber = "09166248783",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "f753a513-2d70-4a3a-8f05-16fc4f3342b5",
-                            TwoFactorEnabled = false,
-                            UserName = "gonzales.renette",
-                            FirstName = "RENETTE",
-                            LastName = "GONZALES",
-                            MiddleName = "SUDARIO",
-                            Position = "Head, Medicine Ward",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "f03cf528-c2a5-4820-91a5-6821dc5350f8",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "eb467293-7cd1-4848-9076-9c33d7ffac15",
-                            Email = "espurakoy@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ESPURAKOY@YAHOO.COM",
-                            NormalizedUserName = "SERO.GABRIEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFI/DgCPkntF/XKvGEFCgnVZjl47QqwvVODJbM9Q8DhXFEcNrzXwpwrf/jYQmNzVMA==",
-                            PhoneNumber = "09177239443",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "2a7e3408-e774-402e-b6cd-2a7ac3693901",
-                            TwoFactorEnabled = false,
-                            UserName = "sero.gabriel",
-                            FirstName = "GABRIEL",
-                            LastName = "SERO",
-                            MiddleName = "BLANCO"
-                        },
-                        new
-                        {
-                            Id = "5f33b779-c424-4e4d-89a9-7b8e5ac3e98d",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "adfb382f-ac2e-43b4-bfa4-e1249dfd2ca5",
-                            Email = "jettFTS@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JETTFTS@GMAIL.COM",
-                            NormalizedUserName = "SABRINE.JARRETT",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFgg+MMMuL2logriA7qjp4nIRl7V8/mXEaMLDwyPhPk3JKOviwivcMTuz32BqzmNmg==",
-                            PhoneNumber = "09162012248",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "9c6cdb27-7321-4819-afbe-5f2d14a56a15",
-                            TwoFactorEnabled = false,
-                            UserName = "sabrine.jarrett",
-                            FirstName = "JARRETT",
-                            LastName = "SABRINE",
-                            MiddleName = "DORONILLA"
-                        },
-                        new
-                        {
-                            Id = "baf0a172-7e0a-4999-8c03-8f9bfb62150b",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "fc672288-738c-4f18-8745-99366556a300",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedUserName = "SALIK.FAISAL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFIS6aeKDYOjBBFY9+8qVkpXAWK8scSoWG8tDNrWcAoc6ZpAarxy1HM9nf7jxkJVIQ==",
-                            PhoneNumber = "09773262708",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "ae673314-f1f3-4bec-8040-64993f2c21cd",
-                            TwoFactorEnabled = false,
-                            UserName = "salik.faisal",
-                            FirstName = "FAISAL",
-                            LastName = "SALIK",
-                            MiddleName = "ONG"
-                        },
-                        new
-                        {
-                            Id = "88a1a0b3-943d-47a2-b0bb-f1c8763acaf4",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "70f66fd6-e003-4605-93e9-af29553a411a",
-                            Email = "tardz03@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "TARDZ03@YAHOO.COM",
-                            NormalizedUserName = "SORIANO.GERALD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEItu8Sd/q+MJgF5Ft7sGqg2Okla4O6v7MnC1XzyPVMSCouOyySnO1QegthXUHoMDHg==",
-                            PhoneNumber = "09224339675",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "6361a415-8009-4422-9903-c5379c32064d",
-                            TwoFactorEnabled = false,
-                            UserName = "soriano.gerald",
-                            FirstName = "GERALD",
-                            LastName = "SORIANO",
-                            MiddleName = "VEN"
-                        },
-                        new
-                        {
-                            Id = "0ff9af54-f57a-4d1b-a2d6-679b3a4b8c30",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "255cbf61-bae6-426a-b9ab-dbbd8804b36e",
-                            Email = "abigailsaveland@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ABIGAILSAVELAND@GMAIL.COM",
-                            NormalizedUserName = "SALVATIERRA.MA.ABIGAIL",
-                            PasswordHash = "AQAAAAIAAYagAAAAENWSHc50RofZ6yM5c/F3+9oapyXkif9BfpQLxfzXOCspt/YY7acVIAJb0kVzv/oMOQ==",
-                            PhoneNumber = "09088931724",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "a77f7ad6-0bc8-4ee1-9440-2057b902e06b",
-                            TwoFactorEnabled = false,
-                            UserName = "salvatierra.ma.abigail",
-                            FirstName = "MA. ABIGAIL",
-                            LastName = "SALVATIERRA",
-                            MiddleName = "YU"
-                        },
-                        new
-                        {
-                            Id = "59b4a3e6-30c2-4a8c-8851-78b95cf11f5b",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "523dc1cf-588c-4023-b0d4-a1794f9f7264",
-                            Email = "jomedellesampulna13@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JOMEDELLESAMPULNA13@GMAIL.COM",
-                            NormalizedUserName = "SAMPULNA.JOMEDELLE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJUCjp+yQ5fN8/cwNEjncsOSoK/qnVxAQaR+EVakUPAeSo7GbpvCpQUIVp/exxfRlQ==",
-                            PhoneNumber = "09673774366",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "af04ee91-75fb-4ac5-9925-13a59b7d0fcd",
-                            TwoFactorEnabled = false,
-                            UserName = "sampulna.jomedelle",
-                            FirstName = "JOMEDELLE",
-                            LastName = "SAMPULNA",
-                            MiddleName = "CHIO"
-                        },
-                        new
-                        {
-                            Id = "3db6b5af-4b42-4747-a3f0-3a60b3e36a56",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "96ecca92-f7d8-4c92-b78f-74085412c49c",
-                            Email = "omaldetj9@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "OMALDETJ9@YAHOO.COM",
-                            NormalizedUserName = "SAPI.TERRYJANE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIyikj1JeotJ5dsFLseFMuw/0bAskyNtL+0PKbXtqBkEqTSAj5vx31pXHIqLzm5YLA==",
-                            PhoneNumber = "09458244916",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "5df76a75-b889-4323-9346-4ce1c2a1e646",
-                            TwoFactorEnabled = false,
-                            UserName = "sapi.terryjane",
-                            FirstName = "TERRY JANE",
-                            LastName = "SAPI",
-                            MiddleName = "OMALDE",
-                            Position = "Head, TTMF",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "7gf2b7zj-4b42-2476-f3f3-1x72b3e34aq68",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "53065ffd-6b20-4ebe-a482-957d55ceb200",
-                            Email = "saliling1234@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SALILING@YAHOO.COM",
-                            NormalizedUserName = "SALILING.FLOREDLIZA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEA0HQJQnKbwE4GmA1rXZVHy0fJECTdYlijkHWwiKATueZCoY0QpIetVFjpKyzVri1g==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "594ea76b-3de8-4ed5-9c5a-94cb8101ae21",
-                            TwoFactorEnabled = false,
-                            UserName = "saliling.floredliza",
-                            FirstName = "Floredliza",
-                            LastName = "Saliling-Alta",
-                            MiddleName = "J."
-                        },
-                        new
-                        {
-                            Id = "b83670e3-3d7c-40a4-8d07-5a3c3f6bde91",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "6edc8011-c70f-44a2-800f-bdf47f06c26e",
-                            Email = "paogratuito@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "PAOGRATUITO@GMAIL.COM",
-                            NormalizedUserName = "GRATUITO.JOHNPAUL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDxtyXyPuWmzimW3+yD+4chri/LLUDZIZlnpO/n0JrnJui+LVbf/eMnu3PTtUwtJpQ==",
-                            PhoneNumber = "09177027392",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "a3ca561b-2b8e-4242-934c-707cbbf91b5c",
-                            TwoFactorEnabled = false,
-                            UserName = "gratuito.johnpaul",
-                            FirstName = "JOHN PAUL",
-                            LastName = "GRATUITO",
-                            MiddleName = "CHOA KHAO UY"
-                        },
-                        new
-                        {
-                            Id = "3a4c88b0-5f73-41f0-82e7-255e19e8d9d1",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "541f9b94-fd38-426a-9714-4422b99819a9",
-                            Email = "leyn0426@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "LEYN0426@YAHOO.COM",
-                            NormalizedUserName = "GUMAPAC.AILEEN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMpFV9RWH4CLorzbkWlL6XkbOBXhsczLtLNFLt1n+V/i95Bx2CcyFDR4n0QccxlKWw==",
-                            PhoneNumber = "09274449665",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "0859d3d7-865c-4422-9a14-0002e0ce65b8",
-                            TwoFactorEnabled = false,
-                            UserName = "gumapac.aileen",
-                            FirstName = "AILEEN",
-                            LastName = "GUMAPAC",
-                            MiddleName = "SANTIAGO"
-                        },
-                        new
-                        {
-                            Id = "c0b41f2c-0f8d-4a53-b0a9-5cfa02b6a851",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "6adc75a6-9df3-44d9-ba83-f0d2330e6f5b",
-                            Email = "jaheerhusseinismael@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JAHEERHUSSEINISMAEL@GMAIL.COM",
-                            NormalizedUserName = "ISMAEL.AMIRHUSSEIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEC3LHEGMf4uThvqQO4rK8A4JUxpnkai65jYDqtFJCDGJguFQfahrujeuV0i4+uXyxg==",
-                            PhoneNumber = "09564020491",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "055fc3e9-8ea2-4c01-8757-02bec760c537",
-                            TwoFactorEnabled = false,
-                            UserName = "ismael.amirhussein",
-                            FirstName = "AMIR HUSSEIN",
-                            LastName = "ISMAEL",
-                            MiddleName = "MACAPENDENG"
-                        },
-                        new
-                        {
-                            Id = "c171e56e-b2e0-43f2-91f1-8f258417bc3d",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ec83c47e-cb6c-476b-8b64-c5d730fbe8f8",
-                            Email = "shingdumama@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SHINGDUMAMA@GMAIL.COM",
-                            NormalizedUserName = "IBRAHIMDUMAMA.SHARINAH",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGMYGvkFST7qUAUPZyknRdLXellHXto9LPYVWosekadDqa+xr5/WKndIlt393g6Etg==",
-                            PhoneNumber = "09177263399",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "e8059ccb-185d-42c5-9a11-584a0d5f3147",
-                            TwoFactorEnabled = false,
-                            UserName = "ibrahimdumama.sharinah",
-                            FirstName = "SHARINAH",
-                            LastName = "IBRAHIM-DUMAMA",
-                            MiddleName = "CATALAN"
-                        },
-                        new
-                        {
-                            Id = "43f6a708-995c-4a07-9e90-6d0a5efc32d5",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ac8cbaa5-c3e2-4944-ae6a-d3cb68f70ea0",
-                            Email = "baiyasminjaynonjuanday@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "BAIYASMINJAYNONJUANDAY@GMAIL.COM",
-                            NormalizedUserName = "JUANDAY.BAIYASMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIbTvsdRTNvnRb266DeMD2T/peDeHjunP8kSzWwMzWBeMkU6phsaxD4f52Ulk5HYVQ==",
-                            PhoneNumber = "09260474812",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "d80efea2-87ed-4bf4-bf8c-4e8670d5daa2",
-                            TwoFactorEnabled = false,
-                            UserName = "juanday.baiyasmin",
-                            FirstName = "BAI YASMIN",
-                            LastName = "JUANDAY",
-                            MiddleName = "JAYNON"
-                        },
-                        new
-                        {
-                            Id = "21d7b7dc-3425-464f-96d5-f6784b19b4cf",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "b6b180a0-fec3-4f50-bcf5-8d241f074dcf",
-                            Email = "lenzkylu@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "LENZKYLU@GMAIL.COM",
-                            NormalizedUserName = "LU.LEONITA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMADMPWCknlMMLqBWHLYc8GV9ekrTJ+JiL6v1r6gLZQMiTUx1Y53Z1WbFmRTliR1gA==",
-                            PhoneNumber = "09178732580",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "110ae34d-4804-485a-a6ac-c3d00fe53bd5",
-                            TwoFactorEnabled = false,
-                            UserName = "lu.leonita",
-                            FirstName = "LEONITA",
-                            LastName = "LU",
-                            MiddleName = "CHUA"
-                        },
-                        new
-                        {
-                            Id = "c8dc080e-2c5f-4a8e-b0e0-9c29dc45a31f",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ea5db0b5-2b0c-45c7-8a98-275e28a8031e",
-                            Email = "rbmaputi@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RBMAPUTI@GMAIL.COM",
-                            NormalizedUserName = "LU.ROWENA",
-                            PasswordHash = "AQAAAAIAAYagAAAAELNbLJZZmE9haHLzn7Qd4llOZoLZ4FcZMp+EX9NCbRfuzOWbZJfynNSWYQ7IpGyZww==",
-                            PhoneNumber = "09173000155",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "61ca0713-d9b5-4e77-a4df-01c74e3702f6",
-                            TwoFactorEnabled = false,
-                            UserName = "lu.rowena",
-                            FirstName = "ROWENA",
-                            LastName = "LU",
-                            MiddleName = "MAPUTI",
-                            Position = "Head, Health Information Management Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "13ab0a0e-5d9a-4e53-a5f0-5cb11a775fe3",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "f4f46f1d-2bfe-4116-a33d-8897ab55dbb5",
-                            Email = "rosalieluces05@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ROSALIELUCES05@GMAIL.COM",
-                            NormalizedUserName = "LUCES.ROSALIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAECQsQWDsF8yrHa+IOuHUKXgbhaO+CNmh5p7x05v5ZDgjK33rD9VccpjB65Gv/Yh/mA==",
-                            PhoneNumber = "09109099656",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "5f8f1203-4da4-4a64-bd25-4f4cb3970128",
-                            TwoFactorEnabled = false,
-                            UserName = "luces.rosalie",
-                            FirstName = "ROSALIE",
-                            LastName = "LUCES",
-                            MiddleName = "OREJUDOS",
-                            Position = "Head, General Extension Ward",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "a2a9b64b-1b54-4c49-90e2-4dbf1e59a98e",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "128ccf96-10c1-462b-abae-6b10f5cdde84",
-                            Email = "mabangsigrid@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MABANGSIGRID@GMAIL.COM",
-                            NormalizedUserName = "MABANG.SIGRID",
-                            PasswordHash = "AQAAAAIAAYagAAAAENpmsuiZCtCcgWXlw//SVbTdSiLFxTzQxMbesMzvSX4Pyiia0NfvUOCzN8fXim1gvQ==",
-                            PhoneNumber = "09351488175",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "3ad78751-2bbd-4369-a6d2-3124d474ba84",
-                            TwoFactorEnabled = false,
-                            UserName = "mabang.sigrid",
-                            FirstName = "SIGRID",
-                            LastName = "MABANG",
-                            MiddleName = "BARAGUIR"
-                        },
-                        new
-                        {
-                            Id = "49180f4a-cbe7-489b-8fd1-901e79dfe2f5",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "f43ef1d5-29c7-4fa9-9bac-7cc7dd54dc00",
-                            Email = "sacamaglangit.md@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SACAMAGLANGIT.MD@GMAIL.COM",
-                            NormalizedUserName = "MAGLANGIT.SITTIEANEZA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOUkAxhWyp/upmzHIRERquQj3cn9+nFA+eUaQHwpKwZibEwPBTU0dRh0UVK76qEjAQ==",
-                            PhoneNumber = "09989913196",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "6c86d15c-5ec4-42b2-a62a-fd8bebd29fac",
-                            TwoFactorEnabled = false,
-                            UserName = "maglangit.sittieaneza",
-                            FirstName = "SITTIE ANEZA CAMILLE",
-                            LastName = "MAGLANGIT",
-                            MiddleName = "AMAD",
-                            Position = "Head, Cancer Institute",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "dcf663a4-36f5-4fd6-b124-bae31e0c9e2e",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ef60e49d-b812-4dda-a05e-6b192262c138",
-                            Email = "jayjay_malana@hotmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JAYJAY_MALANA@HOTMAIL.COM",
-                            NormalizedUserName = "MALANA.JAYJAY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBaCZ2gkf8ExOj5Q4yzFQhh4bDPc0vcQzOwHb/hd4m3Q6JSRyFywzPblHl977+/51Q==",
-                            PhoneNumber = "09274171288",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "a8b8002c-6a37-4961-aabd-b58b27cfee58",
-                            TwoFactorEnabled = false,
-                            UserName = "malana.jayjay",
-                            FirstName = "JAY-JAY",
-                            LastName = "MALANA",
-                            MiddleName = "MALANNAG"
-                        },
-                        new
-                        {
-                            Id = "17793347-1bfa-4526-a0af-0ffcf374aa9a",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "971c1fb6-f00b-4332-be05-61269f9c5d0e",
-                            Email = "marjorenecorpuz@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MARJORENECORPUZ@YAHOO.COM",
-                            NormalizedUserName = "MANAOIS.MARJORENE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKFenS2ZJ/heFI1wPVGB/GnI3ksmfYSRce3TIX2kmVTYKnxbSa2ox7gN9Nepqrd+Ng==",
-                            PhoneNumber = "09072856158",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "fde0b500-f59f-4be4-8fc2-924057af858c",
-                            TwoFactorEnabled = false,
-                            UserName = "manaois.marjorene",
-                            FirstName = "MARJORENE",
-                            LastName = "MANAOIS",
-                            MiddleName = "CORPUZ"
-                        },
-                        new
-                        {
-                            Id = "6f34a16a-6e68-4d8b-9f6a-0e0c07a09ed8",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "23ced461-5929-44d0-bbfe-a8fe5a633722",
-                            Email = "farizahm@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "FARIZAHM@YAHOO.COM",
-                            NormalizedUserName = "MAMALUBA.FARIZAH",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJUPKKm527KvtNk1kerElUm1DGFV2RPwDuWQeRsK4b8HpWJHBxV+P9muJu0wmaBJLQ==",
-                            PhoneNumber = "09168372024",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "8815dbfe-04c1-433b-b7d6-35de1bc75541",
-                            TwoFactorEnabled = false,
-                            UserName = "mamaluba.farizah",
-                            FirstName = "FARIZAH",
-                            LastName = "MAMALUBA",
-                            MiddleName = "MODIARAT"
-                        },
-                        new
-                        {
-                            Id = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "06ed714c-8829-476e-9972-eab0759e210f",
-                            Email = "hunnyresquites88@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "HUNNYRESQUITES88@YAHOO.COM",
-                            NormalizedUserName = "MANGULAMAS.HONEYLET",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJNJqtvHjsLDbb6OhejdoYJKojUQT4+yWLob8PQ/7XFTJT/jqrVkuBfxhbgDQS+reQ==",
-                            PhoneNumber = "09776146365",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "a29c1cbf-ceea-4ba1-8c73-6197feedf1b9",
-                            TwoFactorEnabled = false,
-                            UserName = "mangulamas.honeylet",
-                            FirstName = "HONEYLET",
-                            LastName = "MANGULAMAS",
-                            MiddleName = "RESQUITES"
-                        },
-                        new
-                        {
-                            Id = "53ac9d08-f52f-4a25-92d7-10de53f612fa",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "3fc15ebb-7b19-490a-b23d-1688e47952b9",
-                            Email = "rodelynmartinez619@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RODELYNMARTINEZ619@GMAIL.COM",
-                            NormalizedUserName = "MARTINEZ.RODELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJeIVtLmj4p6UEjbDIt0qvARsh/0RveiA8y0QOli3F+qox9R1aa1XY3URL+4tPvECg==",
-                            PhoneNumber = "09177188038",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "77f4afa1-3202-4e59-b04a-2f6bcdebdb91",
-                            TwoFactorEnabled = false,
-                            UserName = "martinez.rodelyn",
-                            FirstName = "RODELYN",
-                            LastName = "MARTINEZ",
-                            MiddleName = "CORTEZ"
-                        },
-                        new
-                        {
-                            Id = "827e71e5-479c-47a7-8f91-16327825a02d",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ae97c8a7-09c2-4e22-83aa-d7be5cb07d1a",
-                            Email = "faridaolama@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "FARIDAOLAMA@GMAIL.COM",
-                            NormalizedUserName = "MEDITAR.FARIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEI+vjXvqHF4R2GcD66pF1HPbGjgwIzsOByNMZLn3gn7o+sQGZTo/CnhkY8OXenKygw==",
-                            PhoneNumber = "09606059079",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "c9fcb8d9-a3ce-4d78-944c-dd19dde0ecd7",
-                            TwoFactorEnabled = false,
-                            UserName = "meditar.farida",
-                            FirstName = "FARIDA",
-                            LastName = "MEDITAR",
-                            MiddleName = "OLAMA",
-                            Position = "Head, OB-Gyne Ward",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "dfb15a5f-9f4e-48e6-b781-f4a62c5bfb0a",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "19a47f9e-2ec4-4962-bf32-8729b942a737",
-                            Email = "midtimbangbebot@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MIDTIMBANGBEBOT@GMAIL.COM",
-                            NormalizedUserName = "MIDTIMBANG.BEBOT",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKQ+QVepPnWm8EInyqKnYVREZmqrRjnbSXU6Q5LzPtH7gLGlyXlXvdUL9pfY55drQA==",
-                            PhoneNumber = "09755272044",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "41801d63-0988-4256-a223-3a435619ba49",
-                            TwoFactorEnabled = false,
-                            UserName = "midtimbang.bebot",
-                            FirstName = "BEBOT",
-                            LastName = "MIDTIMBANG",
-                            MiddleName = "USOP",
-                            Position = "Head, Delivery Room",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "12183b62-26ee-459b-a859-88a94e86c117",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "95ae7592-7af0-4f95-abca-f1e9ca262479",
-                            Email = "NA",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "NA",
-                            NormalizedUserName = "MOJADO.JOCELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGsxklN/fNOIexXEKyHuyVKV0lBnXziduE19boBQEkGzO0vWsLXgv3HuysmqRqe8sg==",
-                            PhoneNumber = "NA",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "d1a3d09b-9709-497e-bd07-0193a3e98743",
-                            TwoFactorEnabled = false,
-                            UserName = "mojado.jocelyn",
-                            FirstName = "JOCELYN",
-                            LastName = "MOJADO",
-                            MiddleName = "BAJAO",
-                            Position = "Head, Hemodialysis-Main",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "ef529a6b-b381-4db1-a204-913ba73a6721",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "36153745-8e24-4854-97cf-2abf4585e56f",
-                            Email = "iamarielolivo@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "IAMARIELOLIVO@GMAIL.COM",
-                            NormalizedUserName = "OLIVO.ARIEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEB5G+Kc2t4xTXy6IShMbxx1RNjZUkyU60NGFcDr+5C6tRadAhyPWb2147KPChfF8lw==",
-                            PhoneNumber = "09084724708",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "35168ea9-4061-46df-8b68-0656382e891b",
-                            TwoFactorEnabled = false,
-                            UserName = "olivo.ariel",
-                            FirstName = "ARIEL",
-                            LastName = "OLIVO",
-                            MiddleName = "MELOCOTON"
-                        },
-                        new
-                        {
-                            Id = "969fb51f-26aa-4637-8a8a-96247c7a67a4",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "e38d087e-121c-4f3c-8f90-41b70c3d8e58",
-                            Email = "hasmiamdo@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "HASMIAMDO@GMAIL.COM",
-                            NormalizedUserName = "OMAR.HASMIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEI12zifGBM3bgNdKbsq9QM+njWmv6134RDJ2TmqSCq5tq8pSOCosplb2KTXgBv0A7w==",
-                            PhoneNumber = "09365268695",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "5d161107-bfbf-4afe-888e-600ac94c7074",
-                            TwoFactorEnabled = false,
-                            UserName = "omar.hasmia",
-                            FirstName = "HASMIA",
-                            LastName = "OMAR",
-                            MiddleName = "DATUMANONG"
-                        },
-                        new
-                        {
-                            Id = "b5870b06-0240-4d35-a6b1-54a76c1e09fc",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "611f2423-ad74-4b8d-ae5a-a67d7560cfd1",
-                            Email = "apple_foj@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "APPLE_FOJ@YAHOO.COM",
-                            NormalizedUserName = "ONDOY.MARIVETTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAvm21jJGbhNX6rWnwgOPcVc5EXAauppfp769ZL3S3+XqEnw6WnfIqvfCKZVlJuaTw==",
-                            PhoneNumber = "09177228527",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "a1ed59a8-fbfe-41d5-9f65-773167fe8979",
-                            TwoFactorEnabled = false,
-                            UserName = "ondoy.marivette",
-                            FirstName = "MARIVETTE",
-                            LastName = "ONDOY",
-                            MiddleName = "TABUGO"
-                        },
-                        new
-                        {
-                            Id = "bb22c692-bc14-44db-9a6e-5b0196c9a8c2",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "50357c98-8040-445a-b2e5-0693b5f9e1c4",
-                            Email = "origmonaliza@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ORIGMONALIZA@GMAIL.COM",
-                            NormalizedUserName = "ORIG.MONALIZA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEK9tM+4IefjDaxJP7lv/+UNYhv3ngXyWaISy93zdmB5p6EdPpe3aARZF/xB/8U1T+w==",
-                            PhoneNumber = "09274704538",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "8cb05757-7c9d-4250-b6df-3bce6a7ba867",
-                            TwoFactorEnabled = false,
-                            UserName = "orig.monaliza",
-                            FirstName = "MONALIZA",
-                            LastName = "ORIG",
-                            MiddleName = "NOR"
-                        },
-                        new
-                        {
-                            Id = "5b7ff0c8-b6f9-489c-9f1d-9faadf9e6c6f",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "35986cee-49c8-4fc3-b61b-80cddf51e454",
-                            Email = "hor_he@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "HOR_HE@YAHOO.COM",
-                            NormalizedUserName = "PADILLA.JORGE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBHpQyXKdMu1Nmd1nots4PeQtSHYyzO5r621gnfGR2BD10zXrm61Nl4cXTaUB4hGVQ==",
-                            PhoneNumber = "09177900470",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "1cd1bf34-84f4-4525-92a6-42c38e62692f",
-                            TwoFactorEnabled = false,
-                            UserName = "padilla.jorge",
-                            FirstName = "JORGE",
-                            LastName = "PADILLA",
-                            MiddleName = "LAMPITOC"
-                        },
-                        new
-                        {
-                            Id = "d65e3f58-b23d-4b83-8b15-15e66565d29f",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "b19e6811-4c3c-476e-9051-e6bc8532cb74",
-                            Email = "shpagayao@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SHPAGAYAO@GMAIL.COM",
-                            NormalizedUserName = "PANTARAN.SANDRA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOCpdSXd8uG/9QAHESIqaUW+Q475mVUIABnm72UdaACtuRVGc5na/IpMIEsqKWLfjw==",
-                            PhoneNumber = "09163771505",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "ad4224fd-863e-4678-9af1-8b13950f7741",
-                            TwoFactorEnabled = false,
-                            UserName = "pantaran.sandra",
-                            FirstName = "SANDRA",
-                            LastName = "PANTARAN",
-                            MiddleName = "PAGAYAO"
-                        },
-                        new
-                        {
-                            Id = "a1e10c26-4d1d-4f9e-9378-1382457c82ad",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "f01f51b1-2fcb-4b8d-8333-aef97dc119f0",
-                            Email = "beeyoupee@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "BEEYOUPEE@GMAIL.COM",
-                            NormalizedUserName = "PINGUIAMAN.BAITAYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJ4hz+kkZlYPnMM6am7A6Oty2iUlrdsF22ciE/eKd+efB0MMglEFgiiTiuRKefIDHA==",
-                            PhoneNumber = "09056377715",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "e984d257-4fba-4699-b7fc-76e05f19357f",
-                            TwoFactorEnabled = false,
-                            UserName = "pinguiaman.baitayan",
-                            FirstName = "BAITAYAN",
-                            LastName = "PINGUIAMAN",
-                            MiddleName = "UNTONG"
-                        },
-                        new
-                        {
-                            Id = "dfc40941-0cfb-46ed-8991-e285aa08c20e",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "38d9aaa6-9de4-4f01-b1fd-32963734af74",
-                            Email = "quinto.jennifer82@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "QUINTO.JENNIFER82@GMAIL.COM",
-                            NormalizedUserName = "QUINTO.JENNIFER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGCcaObvhuLzCnU/upm2tXH/WAgemO48ignEMnwPJm4OZwECSUAdXGxyhr+oQemFUw==",
-                            PhoneNumber = "09272708149",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "cd5a782d-0760-47e6-8e1e-49986d2e34c9",
-                            TwoFactorEnabled = false,
-                            UserName = "quinto.jennifer",
-                            FirstName = "JENNIFER",
-                            LastName = "QUINTO",
-                            MiddleName = "CATBAGAN"
-                        },
-                        new
-                        {
-                            Id = "f23ac0c6-68ac-41c8-94ff-383acbfc3e41",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "1c8e02a5-4dc5-4aa1-a7cc-5632762779da",
-                            Email = "estrellavsreal@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ESTRELLAVSREAL@YAHOO.COM",
-                            NormalizedUserName = "REAL.VIVIAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAENbR5LXAnzP3+9+YtdDjV/LcWQtS6bTt/HrlhTIplfUnJRFuBwUEnxQKPsz+cICBOA==",
-                            PhoneNumber = "09171027173",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "cfe21325-476c-4c22-94c1-542778b4bad9",
-                            TwoFactorEnabled = false,
-                            UserName = "real.vivian",
-                            FirstName = "VIVIAN",
-                            LastName = "REAL",
-                            MiddleName = "SARATAO",
-                            Position = "Head, Department of Dental Medicine",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "50e3ff41-8195-4d52-805a-d55efb68f08a",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "f794efc0-e1b7-4a4c-a9c7-eacebca98f3d",
-                            Email = "lienocius@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "LIENOCIUS@GMAIL.COM",
-                            NormalizedUserName = "SUICO.NEILALFONSO",
-                            PasswordHash = "AQAAAAIAAYagAAAAEN8wtDtmVf73hUZXE6bv3xs3j0KG9FWQG6loPUqpEoGZ2Pn+uXrFsvZw4Cfaz8tADw==",
-                            PhoneNumber = "09260398619",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "5edc0d1b-aa3f-4d1b-8da3-316ba82d040a",
-                            TwoFactorEnabled = false,
-                            UserName = "suico.neilalfonso",
-                            FirstName = "NEIL ALFONSO",
-                            LastName = "SUICO",
-                            MiddleName = "VIRAY",
-                            Prefix = "Mr."
-                        },
-                        new
-                        {
-                            Id = "55c79a0c-4f48-472f-9d13-1801e2e5c167",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "bb6b615d-2b34-41db-abde-4c3c2efd79df",
-                            Email = "janesuperales27@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JANESUPERALES27@GMAIL.COM",
-                            NormalizedUserName = "SUPERALES.MARYJANE",
-                            PasswordHash = "AQAAAAIAAYagAAAAECyUOWgk95rmRcs9gKp9CHN3TD2MRF+IMIO/sPrvPi/QHzD5dJyVTw1bkEVeNk4B5g==",
-                            PhoneNumber = "09162424748",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "d7b7a8c4-28de-4863-9e07-85e0ead299f7",
-                            TwoFactorEnabled = false,
-                            UserName = "superales.maryjane",
-                            FirstName = "MARY JANE",
-                            LastName = "SUPERALES",
-                            MiddleName = "ORTEGA",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "2e889d55-159e-44a0-b9c9-44cc9f25c66b",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "52c67ee5-d5d7-4978-8a27-96489abaa940",
-                            Email = "suzettetocao@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SUZETTE TOCAO@GMAIL.COM",
-                            NormalizedUserName = "TOCAO.SUZETTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMg984EqsZrEd+QpBvIrCpFRhhXCjTyrdlankPbodZypK4CxNwk2pYAllu3zCKk1Wg==",
-                            PhoneNumber = "09219908520",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "c7e19661-a26f-414d-a131-4eaffa0bf329",
-                            TwoFactorEnabled = false,
-                            UserName = "tocao.suzette",
-                            FirstName = "SUZETTE",
-                            LastName = "TOCAO",
-                            MiddleName = "COMPLETANO"
-                        },
-                        new
-                        {
-                            Id = "2ec1e24b-50c6-48b7-8e9c-18c64a42e172",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "0f4f0c27-191f-4817-b8f7-eb08bca58c10",
-                            Email = "ashmatik23@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ASHMATIK23@GMAIL.COM",
-                            NormalizedUserName = "USMAN.ASWARFY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPJde2kbopcO180bUqGy9vjKppe+P83aBsVjkTWE/SMZ5k+GxjXLFQLjBbjoMQC3oA==",
-                            PhoneNumber = "09173383890",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "79afa9a7-a049-4a69-b60b-82ec80cf0104",
-                            TwoFactorEnabled = false,
-                            UserName = "usman.aswarfy",
-                            FirstName = "ASWARFY",
-                            LastName = "USMAN",
-                            MiddleName = "MOHAMAD"
-                        },
-                        new
-                        {
-                            Id = "87234d0c-41c3-44e5-8cb7-5d7a7a9209c8",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "88a5dee9-0e14-4343-a69b-13b3e07093fb",
-                            Email = "hamidadubali@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "HAMIDADUBALI@GMAIL.COM",
-                            NormalizedUserName = "USMANBALI.HAMIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFanc/38e9U0xk9VaK+tbowL+OBxpPWDT/v8LUGpyS8KLNEVmp2FkQaibMH3PggV2w==",
-                            PhoneNumber = "09368159393",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "43c8ccd1-a679-4e0c-937d-be838f36cdf2",
-                            TwoFactorEnabled = false,
-                            UserName = "usmanbali.hamida",
-                            FirstName = "HAMIDA",
-                            LastName = "USMAN-BALI",
-                            MiddleName = "DATUMANONG",
-                            Position = "Head, Materials and Supplies Management Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "39987409-6b12-4a73-a9a3-61c7f117dcab",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "8c58bbb4-80b6-47b2-9f9c-30bf1904c32a",
-                            Email = "claurencevasay@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "CLAURENCEVASAY@GMAIL.COM",
-                            NormalizedUserName = "VASAY.CLAURENCE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHFIdtgpfP5XVUqWXnQXpv1LgxUVtHsyrHiducEG0QCtZ1Zxbiednt36rD8oeEIabA==",
-                            PhoneNumber = "09555765345",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "faa51075-5d97-4302-8e82-d7ff125eeb4f",
-                            TwoFactorEnabled = false,
-                            UserName = "vasay.claurence",
-                            FirstName = "CLAURENCE",
-                            LastName = "VASAY",
-                            MiddleName = "ACHAS"
-                        },
-                        new
-                        {
-                            Id = "56731842-6b12-9a46-k9h2-61c7f212hyex",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "3b97ec7a-9612-4dc2-94ae-1b2789b35fe7",
-                            Email = "Silvestre1234@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SILVESTRE1234@GMAIL.COM",
-                            NormalizedUserName = "SILVESTRE.CHRISLENLEE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJfGElvpywjBZC1yoQHAUH1nwTLxVQ9XlwMMVk+8za95JFPguyPCTzmQIvPxK6oVdA==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "f94e431c-bea3-4882-9ce7-f04b79e31337",
-                            TwoFactorEnabled = false,
-                            UserName = "silvestre.chrislenlee",
-                            FirstName = "Chrislen Lee",
-                            LastName = "Silvestre",
-                            MiddleName = "C."
-                        },
-                        new
-                        {
-                            Id = "c8463e9f-8ac6-40c3-91b1-2385f6a91eb4",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "29f61118-a680-4678-bd77-301e94e48803",
-                            Email = "holy_voltz771989@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "HOLY_VOLTZ771989@YAHOO.COM",
-                            NormalizedUserName = "VILLA.RUSSELKIRK",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBG7tlMD04hOIyh+FBS21JkwbvDd5Ad9hjlPoXQH61ehbl2R9BL0g9bM6LuYFgYrQg==",
-                            PhoneNumber = "09095412351",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "c8dcb03a-0310-47c0-83cc-6ff7119d83f3",
-                            TwoFactorEnabled = false,
-                            UserName = "villa.russelkirk",
-                            FirstName = "RUSSEL KIRK",
-                            LastName = "VILLA",
-                            MiddleName = "GUALINGCO"
-                        },
-                        new
-                        {
-                            Id = "abfc1b6f-9f29-44dd-9c45-cdcddaa6eb83",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "360be89c-28f5-4c3f-a467-cbbd91298f9e",
-                            Email = "ruby012770@outlook.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RUBY012770@OUTLOOK.COM",
-                            NormalizedUserName = "VILLANUEVA.RUBY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFlrk19oMUTa5XPtkcRCr9bHRmDpNZffVUkNJT1C8q8iq2YqZbJkD1gmhWPK3pspcg==",
-                            PhoneNumber = "09173510613",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "91306b94-3b58-43c3-9988-cfb044416337",
-                            TwoFactorEnabled = false,
-                            UserName = "villanueva.ruby",
-                            FirstName = "RUBY",
-                            LastName = "VILLANUEVA",
-                            MiddleName = "ELEVAZO",
-                            Position = "Head, Credit and Collection Section",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "db7fba3d-88fc-47cf-b119-f868d9196f02",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "8df65edf-0a35-43d8-b7aa-eafff5c4f247",
-                            Email = "ronfaith2003@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RONFAITH2003@GMAIL.COM",
-                            NormalizedUserName = "VILLAROSA.RONNIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOYLWyoCxD6axXAL6622/F1yCkYb/lhu6uvgqOpnTaa532REDNvUWuWVZtMa5roVRw==",
-                            PhoneNumber = "09956598896",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "ae21612d-6c25-4452-8657-08f87d72f64b",
-                            TwoFactorEnabled = false,
-                            UserName = "villarosa.ronnie",
-                            FirstName = "RONNIE",
-                            LastName = "VILLAROSA",
-                            MiddleName = "GREGORIO"
-                        },
-                        new
-                        {
-                            Id = "7cfd0766-f3d3-47aa-9a48-53d437d6c232",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "7e4f2615-8cc4-45b5-ae1a-f815c0093b8c",
-                            Email = "wahidamaniala@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "WAHIDAMANIALA@GMAIL.COM",
-                            NormalizedUserName = "ZAMAN.WAHIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIdnO5/K6IPmt7kDX9B2JiZmrqdgAGkYdAO5VS4CAYoLFL9/Ppp0EYvIarzwSNWBtw==",
-                            PhoneNumber = "09065830887",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "2ca01c28-436f-4f00-8d4e-43d517ceca17",
-                            TwoFactorEnabled = false,
-                            UserName = "zaman.wahida",
-                            FirstName = "WAHIDA",
-                            LastName = "ZAMAN",
-                            MiddleName = "MANIALA"
-                        },
-                        new
-                        {
-                            Id = "9821dbf5-0f70-4630-8c68-f2077a3abf08",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "8def9c84-49ab-4ef4-99e8-c777ec245a13",
-                            Email = "ZAMBRANO.REHABMD@GMAIL.COM",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ZAMBRANO.REHABMD@GMAIL.COM",
-                            NormalizedUserName = "ZAMBRANO.JHOANAMARIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPlnQPtl0FUhb9hZWEaDc4/8pNd8/ySQ6tAJQu//6ezNqOI280kACCCTf/KyTyBlfw==",
-                            PhoneNumber = "09178470437",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "5f26e323-bf60-47ce-bde3-04b00a6e1c32",
-                            TwoFactorEnabled = false,
-                            UserName = "zambrano.jhoanamarie",
-                            FirstName = "JHOANA MARIE",
-                            LastName = "ZAMBRANO",
-                            MiddleName = "JUANEZA",
-                            Position = "Head, Physical Medicine and Rehabilitation Department",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "8e4f430c-72da-4142-83d9-cd9d9c6f2a6e",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "2cb5fecb-57d4-4982-b4b4-a2e855453641",
-                            Email = "sittierayhana@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SITTIERAYHANA@GMAIL.COM",
-                            NormalizedUserName = "SANTURING.SITTIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMYuxrLBCXzTnikGoW9bhJlN6grVBRZC8I/UkyIqoMshomcsUaVzriHP2YxWE/gqXw==",
-                            PhoneNumber = "09451067619",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "8424e037-b7e7-4cfa-92b5-7400688fd85c",
-                            TwoFactorEnabled = false,
-                            UserName = "santuring.sittie",
-                            FirstName = "SITTIE RAYHANA",
-                            LastName = "SANTURING",
-                            MiddleName = "MARICOR",
-                            Position = "Head, Legal Unit",
-                            Prefix = "Atty."
-                        },
-                        new
-                        {
-                            Id = "4e21fe59-4f5e-46b3-82b7-28df270038da",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "a268ff38-3b12-4e9b-a48f-84b74ce3359a",
-                            Email = "norainekansimd@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "NORAINEKANSIMD@GMAIL.COM",
-                            NormalizedUserName = "KANSI.NORAINE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJTcgjVmWoElxPNzf3bwxKgw1UI0cXfkiyyBCVnjjfIZxXRB+ItO277s2BpJOT5a+g==",
-                            PhoneNumber = "0917846224",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "19bedf60-889c-4236-99a4-bf0291d33f0b",
-                            TwoFactorEnabled = false,
-                            UserName = "kansi.noraine",
-                            FirstName = "NOR-AINE",
-                            LastName = "KANSI",
-                            MiddleName = "PENDONG",
-                            Position = "Head, Hospital Epidemiology and Surveillance Unit",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "b582fc78-cd33-46d4-a994-8c43789600ff",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "c921049e-e5f3-413d-b5b3-68f2254553cf",
-                            Email = "fasl.buenaflor@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "FASL.BUENAFLOR@GMAIL.COM",
-                            NormalizedUserName = "BUENAFLOR.FASL",
-                            PasswordHash = "AQAAAAIAAYagAAAAELsAbMIkYjxY+fOi5P9hdboPDJcMDs+njAYf4wU1dSXlKp9n5iQkLwe0PsLJEjHksQ==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "da63d244-158d-49f7-bb4c-c04995c7ed35",
-                            TwoFactorEnabled = false,
-                            UserName = "buenaflor.fasl",
-                            FirstName = "FASL GOLDANNE",
-                            LastName = "BUENAFLOR",
-                            MiddleName = "BIRUAR",
-                            Position = "Head, Professional Education Training Development Unit",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "0301f6de-6d6d-448f-a46c-2bb32ba97a28",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "fb536dc2-5ef5-4dd7-b772-8f9c6dff40c0",
-                            Email = "sigmundprabago@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SIGMUNDRABAGO@GMAIL.COM",
-                            NormalizedUserName = "RABAGO.SIGMUND",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKB3XlGWIsE3IYdJMf0mNBVk5HZLRmdNx6ahv+KonmluUZRKcwuCQvYC6UARge+R9Q==",
-                            PhoneNumber = "09682425921",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "876339c7-1a54-44f1-b29a-71b4bdc2b7e0",
-                            TwoFactorEnabled = false,
-                            UserName = "rabago.sigmund",
-                            FirstName = "SIGMUND",
-                            LastName = "RABAGO",
-                            MiddleName = "PASCUAL",
-                            Position = "Head, Public Assistance and Complaint Desk",
-                            Prefix = "Mr."
-                        },
-                        new
-                        {
-                            Id = "eeadfae2-544f-4a5d-9027-808537e694b1",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "4b121341-b69a-44f8-b361-6b82f0118288",
-                            Email = "",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "",
-                            NormalizedUserName = "ROMANCAP.FAISAL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEN6MiWi1Oklr+7lGRyZsQxXSdZnw/OGzv+b5X5tO6vF01KlQeldS65+joZgilbik5w==",
-                            PhoneNumber = "09176339433",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "4cadb03b-1a25-4dfb-be13-1f1642f37cd7",
-                            TwoFactorEnabled = false,
-                            UserName = "romancap.faisal",
-                            FirstName = "FAISAL",
-                            LastName = "ROMANCAP",
-                            MiddleName = "KASID",
-                            Position = "Head, Department of Surgery",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "562a00d1-f6de-4c44-bfc2-b55e99074bcf",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "592c081d-647f-46c0-9eed-ebe285d616f3",
-                            Email = "mokibox2@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MOKIBOX2@GMAIL.COM",
-                            NormalizedUserName = "MABANG.MOCTAR",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOFOobPGQJ6EB6azoBrDbwmvGQBm4BWyPIus+apyQ0oujfxSCSg6NUv/a2fgCQmoGg==",
-                            PhoneNumber = "09177237960",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "eeb6c4fe-a9c0-48e5-af5a-a29bf2670008",
-                            TwoFactorEnabled = false,
-                            UserName = "mabang.moctar",
-                            FirstName = "MOCTAR",
-                            LastName = "MABANG",
-                            MiddleName = "MOPAC",
-                            Position = "Head, Research Institute",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "ba16dd9a-fbdb-4ed6-9cfa-b972bda73917",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "4b9ebb01-2724-4d6b-8335-4baf172a4a13",
-                            Email = "flickersps@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "FLICKERSPS@GMAIL.COM",
-                            NormalizedUserName = "SALIK.SHIRLEY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKW4xwaxlJ73sukIqWn8A9+Ql1zSCfujB72yXcWBn1E1OxO3SLLzAnX0nAaUiY2NJQ==",
-                            PhoneNumber = "09177229341",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "83450152-4b9a-4e39-b5a8-a8992cc974f8",
-                            TwoFactorEnabled = false,
-                            UserName = "salik.shirley",
-                            FirstName = "SHIRLEY",
-                            LastName = "SALIK",
-                            MiddleName = "PULIDO",
-                            Position = "Head, Medical Social Work Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "bacdfd11-acd7-40fe-9fb3-b8831f94d7de",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "dd3874dc-0501-4424-b6fc-a9977f8a9bf2",
-                            Email = "fsornd@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "FSORND@GMAIL.COM",
-                            NormalizedUserName = "ONG.FEBE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJngX/LKUadSgBOUC8kt09EPgu7w7DgQHiSN8+Wbvf+xMK5QL0pFcE8ojvFnauSevA==",
-                            PhoneNumber = "09422188023",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "34828739-e198-451e-918a-9321fbf7e0da",
-                            TwoFactorEnabled = false,
-                            UserName = "ong.febe",
-                            FirstName = "FEBE",
-                            LastName = "ONG",
-                            MiddleName = "SUYO",
-                            Position = "Head, Nutrition and Dietetics Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "75228ef1-9a3f-4a55-8181-b1794ec72e8d",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "1bc0f33a-b3a9-4b38-9d5f-a5691e2694d8",
-                            Email = "sofia_alfonso64@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SOFIA_ALFONSO64@GMAIL.COM",
-                            NormalizedUserName = "ALFONSO.SOFIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJXSkCHRzNSMCNcSgCvjH06cFSbpktj+CLgpPQBNNktzsebKF9gZSaX0FbrKAZhGsw==",
-                            PhoneNumber = "09176338010",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "37b68a86-871a-45b6-8d54-b639b9eaf1bb",
-                            TwoFactorEnabled = false,
-                            UserName = "alfonso.sofia",
-                            FirstName = "SOFIA",
-                            LastName = "ALFONSO",
-                            MiddleName = "DUMAMA",
-                            Position = "Head, Pharmacy Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "0c0e6892-41a4-4536-bda7-757dd5aeb4ee",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "60c2d53a-5ad5-4e6e-8fc6-d7062cd558f2",
-                            Email = "almarodriguez1969@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ALMARODRIGUEZ1969@YAHOO.COM",
-                            NormalizedUserName = "RODRIGUEZ.ALMA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGwmEfmmJGh+dz0l2ACYIMTHXGlPoPny0jnN8j5HbqTG18QwgnfCHQ2sQnXZ8UHL4Q==",
-                            PhoneNumber = "093233910958",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "b9abbc3c-166a-404f-8193-055a9e040e2e",
-                            TwoFactorEnabled = false,
-                            UserName = "rodriguez.alma",
-                            FirstName = "ALMA ROSARIO",
-                            LastName = "RODRIGUEZ",
-                            MiddleName = "PIOQUINTO",
-                            Position = "Head, Human Resource Management Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "576fc42f-b0f9-433b-907a-29d98ebf7af6",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "a907d8dd-cf8e-4e3b-9ca9-2ac7faa7d174",
-                            Email = "",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "",
-                            NormalizedUserName = "JULIANO.RONALD",
-                            PasswordHash = "AQAAAAIAAYagAAAAELDkOFuOYIUCHoHZBYXNlFZ2tQgQbTJaVXEwkj4TRwo0wGdMYx8i1V7Dt0eqqYJ6pg==",
-                            PhoneNumber = "09393704748",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "bdda7b0b-7f23-45ee-a178-781a61ce2612",
-                            TwoFactorEnabled = false,
-                            UserName = "juliano.ronald",
-                            FirstName = "RONALD BENEDICK",
-                            LastName = "JULIANO",
-                            MiddleName = "RIVERO",
-                            Position = "Head, Engineering and Facilities Management Department",
-                            Prefix = "Engr."
-                        },
-                        new
-                        {
-                            Id = "aa704a60-ad3d-4148-90c0-316803202de6",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "0e834cee-f2f2-4f6d-b1a1-773abd636e43",
-                            Email = "sheryllbargo041388@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SHERYLLBARGO041388@GMAIL.COM",
-                            NormalizedUserName = "BARGO.SHERYLL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDcokkJnk882D0W4xPjBjNipKl3FLEmDdodHbEZ73OjQNhnE1SEyjymQMyG1I0TmMQ==",
-                            PhoneNumber = "09178319784",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "342e213b-b3cb-4293-8ac4-63c57ac00eb9",
-                            TwoFactorEnabled = false,
-                            UserName = "bargo.sheryll",
-                            FirstName = "SHERYLL",
-                            LastName = "BARGO",
-                            MiddleName = "LUMACAD",
-                            Position = "Head, Accounting Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "08a7ead1-5c61-4207-8ea5-aec3d6b691d0",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "386674c5-b061-4176-b044-a818b463126f",
-                            Email = "pong_rg@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "PONG_RG@YAHOO.COM",
-                            NormalizedUserName = "GECOSALA.FELISA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDLs5YvWUsMSARB/LPyW6iKygAA2ds86sfwp1c4yZ78Sv/wh69VCS/OHCQrzxZjrUg==",
-                            PhoneNumber = "09227487001",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "0d6e26a0-323f-4bbc-85e9-b1d365aed493",
-                            TwoFactorEnabled = false,
-                            UserName = "gecosala.felisa",
-                            FirstName = "FELISA",
-                            LastName = "GECOSALA",
-                            MiddleName = "RODRIGUEZ",
-                            Position = "Head, Cash Operations Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "d55b7093-1298-42fb-96b2-b12edb1cf49f",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "88fe2cdb-cf7a-4edf-be23-a17f87cb129e",
-                            Email = "paridasatol@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "PARIDASATOL@YAHOO.COM",
-                            NormalizedUserName = "SATOL.PARIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEABMtEhhjIBJuR7OrCcg6Ns30IDVt6gArMy6tG5tEMtR4K4XtqLrM3huViEX11iw+A==",
-                            PhoneNumber = "09174470268",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "6a0db9d9-9fef-42c9-9c13-41a427d6b93c",
-                            TwoFactorEnabled = false,
-                            UserName = "satol.parida",
-                            FirstName = "PARIDA",
-                            LastName = "SATOL",
-                            MiddleName = "KIMAMAO",
-                            Position = "Head, Out-Patient Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "35035c73-8072-4005-85bb-0a91cd97741b",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "c99de253-0104-44c5-8c3d-e9354402fe8d",
-                            Email = "rotchelcambri38@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ROTCHELCAMBRI38@GMAIL.COM",
-                            NormalizedUserName = "CAMBRI.ROTCHEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEE5ECOqA6ip9iTBxI8kf9ULoT4QoquOeuNpk2upSIrfpKLUuIfclp0Ro5l5QhHWcEA==",
-                            PhoneNumber = "09171280911",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "2a56e05b-75bf-4e7c-afb3-43f732c41555",
-                            TwoFactorEnabled = false,
-                            UserName = "cambri.rotchel",
-                            FirstName = "ROTCHEL",
-                            LastName = "CAMBRI",
-                            MiddleName = "GUIAMAD",
-                            Position = "Head, Central Supply and Sterilization Room",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "b1ec6cc6-9920-4df6-bce0-b22b107a476d",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "885a8bb4-a335-46da-86ac-f570aa158194",
-                            Email = "vernon_uy@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "VERNON_UY@YAHOO.COM",
-                            NormalizedUserName = "UY.VERNON",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAkyvW5sFqQnnhKNLqI51uKCxFxrC3sfrJcowqWjITHmfdKbyK/Jpa+xuwZrFffcxQ==",
-                            PhoneNumber = "09177227460",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "56160f0f-15de-4a76-adf1-5e2adac708db",
-                            TwoFactorEnabled = false,
-                            UserName = "uy.vernon",
-                            FirstName = "VERNON",
-                            LastName = "UY",
-                            MiddleName = "LIM",
-                            Position = "Head, Pediatrics Ward",
-                            Prefix = "Mr."
-                        },
-                        new
-                        {
-                            Id = "31298867-e329-4dbf-8c68-2e557d98e864",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "29b722c7-5aef-4773-9fd7-403edd903fd7",
-                            Email = "chiquivsongcayauon@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "CHIQUIVSONGCAYAUON@GMAIL.COM",
-                            NormalizedUserName = "SONGCAYAUON.CHIQUI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKAzafAOeJBMguecLVmQCI5TX6pXc950SHq7QWsCONOhzCYqItWWs+VhKoD55vL+zA==",
-                            PhoneNumber = "09568141482",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "e398ea60-8699-45ea-918a-325de1b898ce",
-                            TwoFactorEnabled = false,
-                            UserName = "songcayauon.chiqui",
-                            FirstName = "CHIQUI",
-                            LastName = "SONGCAYAUON",
-                            MiddleName = "VILLANUEVA",
-                            Position = "Head, Surgery Wing",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "86e65501-a4a6-438c-abe7-5ec802032bd4",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "e57cc960-1e3c-483f-b7e1-c8daef067eb8",
-                            Email = "g_lou08@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "G_LOU08@YAHOO.COM",
-                            NormalizedUserName = "LAMPITCO.MARILOU",
-                            PasswordHash = "AQAAAAIAAYagAAAAEB00ob5wU8mzg+N7i2vvp7YoTCJRk7R/grsWmHvgHWneJZ5PbilcVUUPWaorLFZW/Q==",
-                            PhoneNumber = "09157358418",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "74407f51-b13c-45de-8586-513b5a974093",
-                            TwoFactorEnabled = false,
-                            UserName = "lampitco.marilou",
-                            FirstName = "MARILOU",
-                            LastName = "LAMPITCO",
-                            MiddleName = "ACEJO",
-                            Position = "Head, Oncology Ward",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "60cbc60f-8572-47ba-b70c-cc328c363bd7",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "fb67c98c-626b-45b0-a0ab-7510cb033cd7",
-                            Email = "shanarizza@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SHANARIZZA@YAHOO.COM",
-                            NormalizedUserName = "DUMAMA-REMO.SHANA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMpldN10snnHG6F4hnTPW6oUyi6k+y301V+l60dSyIM0GtFCmloyj7SkBGLU1hrFAQ==",
-                            PhoneNumber = "09175277669",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "c013e124-e01a-4407-840a-9d255a32e058",
-                            TwoFactorEnabled = false,
-                            UserName = "dumama-remo.shana",
-                            FirstName = "SHANA RIZZA",
-                            LastName = "DUMAMA-REMO",
-                            MiddleName = "BIRUAR",
-                            Position = "Head, Department of Internal Medicine",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "6ccacdfe-d21f-404a-a09a-fbb0a8027c9e",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "1a5b7533-c49b-46d9-84f8-9558c8ef8a94",
-                            Email = "ljalao28@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "LJALAO28@YAHOO.COM",
-                            NormalizedUserName = "LAO.LOUELLA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGexyL1ygwWuarmBCEHSmIS1Pq8tuVnmD45WZaE+upS3a46X7/S+QDyaGsSwA8Pqpg==",
-                            PhoneNumber = "09177267389",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "8400540d-7b97-4185-96ef-88ac9f0610bd",
-                            TwoFactorEnabled = false,
-                            UserName = "lao.louella",
-                            FirstName = "LOUELLA JEANNE",
-                            LastName = "LAO",
-                            MiddleName = "AGDEPPA",
-                            Position = "Head, Department of Obstetics-Gynecology",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "2902eb0b-328f-4c82-a37b-e6b67c1e7770",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "57cc9983-cdc5-48b8-9067-4d2e1791a1e5",
-                            Email = "hazel_calingasan@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "HAZEL_CALINGASAN@YAHOO.COM",
-                            NormalizedUserName = "CALINGASAN.HAZEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAECkHkEnuHqZ2h4HJQXQenX7MlLtzUfe+/0nNh59rYyhGAVLpgizhevrZf1/yzhjFEw==",
-                            PhoneNumber = "09173228233",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "03d07be3-0790-4c69-9832-f87959e068df",
-                            TwoFactorEnabled = false,
-                            UserName = "calingasan.hazel",
-                            FirstName = "HAZEL",
-                            LastName = "CALINGASAN",
-                            MiddleName = "LOPEZ",
-                            Position = "Head, Department of Anesthesiology",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "756c27c7-7637-4525-9b85-c1f41c0c5a8f",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "308674da-a81d-40ac-ba24-3c038975ec66",
-                            Email = "cheridinemd@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "CHERIDINEMD@GMAIL.COM",
-                            NormalizedUserName = "ORO-JOSEF.CHERIDINE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIpoP205FOLeLIrcAFbudozTXnFCDjDGUJZrzPMoEsOxw3a9lmcyZvnIZIUxqPXkoA==",
-                            PhoneNumber = "09228270573",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "dccf5313-5b16-4cf6-b346-b51b3bf560d0",
-                            TwoFactorEnabled = false,
-                            UserName = "oro-josef.cheridine",
-                            FirstName = "CHERIDINE",
-                            LastName = "ORO-JOSEF",
-                            MiddleName = "PAGARIGAN",
-                            Position = "Head, Department of Family and Community Medicine",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "32074da3-f8f8-4755-8cd5-f2aabba599e2",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "fb6a079e-5e9d-4f5c-8ad0-6237cda69157",
-                            Email = "veniciusdoruelo@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "VENICIUSDORUELO@YAHOO.COM",
-                            NormalizedUserName = "DORUELO.VENICIUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJ52WNe1gI0Rm+7WAslLLqX0Yvwby1cr4dW7x3V5IftB88j97i7kUn8KAlkNRnA2jA==",
-                            PhoneNumber = "09173012016",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "7d22d97e-0fc4-4b6f-af43-f18cbf7f31d9",
-                            TwoFactorEnabled = false,
-                            UserName = "doruelo.venicius",
-                            FirstName = "VENICIUS",
-                            LastName = "DORUELO",
-                            MiddleName = "PADUA",
-                            Position = "Head, Department of Diagnostic and Therapuetic Radiology",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "a452e452-d791-439e-b390-d80dba5ffbc0",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "b2e2e0ff-2cfb-4cce-abc8-5b60a5776464",
-                            Email = "rocelynmbarrientos@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ROCELYNMBARRIENTOS@GMAIL.COM",
-                            NormalizedUserName = "SANTOS.ROCELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKTiloEIWhw2WUCn9xVgNRHqBtm8/x9hr4UeW2S84+VwaZnc0CnxZL9d3vdVu676Yg==",
-                            PhoneNumber = "09176592255",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "44104706-e811-4590-8155-f1d0e2037699",
-                            TwoFactorEnabled = false,
-                            UserName = "santos.rocelyn",
-                            FirstName = "ROCELYN",
-                            LastName = "SANTOS",
-                            MiddleName = "BARRIENTOS",
-                            Position = "OIC-Head, Department of Pathology",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "6517b46b-eade-4618-984b-525a31aec14f",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "c7e35b39-834f-4fc8-942c-0c8fa75db0b8",
-                            Email = "lhemy_K@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "LHEMY_K@YAHOO.COM",
-                            NormalizedUserName = "MOKAMAD-ROMANCAP.HALIMA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJPgFBj4zt2Mhm2UOa81tCeia3WPPAEsmHmmxsFGvIRMhH7AFz5nVYy1NLKQi3XzuQ==",
-                            PhoneNumber = "09173049710",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "162fe98d-5e3b-40d8-8da6-7003bbf2706c",
-                            TwoFactorEnabled = false,
-                            UserName = "mokamad-romancap.halima",
-                            FirstName = "HALIMA",
-                            LastName = "MOKAMAD-ROMANCAP",
-                            MiddleName = "OMAR",
-                            Position = "Head, Emergency Department",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "3cfa9401-553a-4ac5-ab8d-3d65899090b3",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "b02ea443-e581-42cc-8fdc-dc2a5bd75bdb",
-                            Email = "mar23md@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MAR23MD@YAHOO.COM",
-                            NormalizedUserName = "APOSTOL.MILDRED",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFWlBqsV6Wa34YEBibov3wHWkCVZmf/pTbqsXIWbD6Fvx9vfnb3xrMYLNXblo2gmRA==",
-                            PhoneNumber = "09177068296",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "d07606db-63e1-46a9-9c03-57787180883e",
-                            TwoFactorEnabled = false,
-                            UserName = "apostol.mildred",
-                            FirstName = "MILDRED",
-                            LastName = "APOSTOL",
-                            MiddleName = "VINLUAN",
-                            Position = "Head, Mental Health Unit",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "45fm8462-553a-4ac5-ap8i-3d65879641h8",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "1a3612cb-c663-495d-a292-020d74e2aceb",
-                            Email = "manilyn.hong@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MANILYN.HONG@GMAIL.COM",
-                            NormalizedUserName = "HONG.MANILYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJZbMc0vex19yemqnUT9wsHDo6iNQUfZn61+Xfytk+9cW7QOiF9YgW+FIkUS+eRwBg==",
-                            PhoneNumber = "09664010006",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "6b5a141c-9cfe-4128-8f33-f40fd4d604cd",
-                            TwoFactorEnabled = false,
-                            UserName = "hong.manilyn",
-                            FirstName = "MANILYN ANNE",
-                            LastName = "HONG",
-                            MiddleName = "CONSTANTINO",
-                            Position = "Head, Brain and Spine Care",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "21ag1234-884k-0ak8-ap8i-2y54768532d2",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "26560b8a-7376-4306-971b-a1ea5a47453e",
-                            Email = "janefabrienne@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JANEFABRIENNE@GMAIL.COM",
-                            NormalizedUserName = "GARCIA.JANE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHjzz2zZ6mBKSnW4i+N0xPMJSdD8VXZzuSLsyy8IYWRG+jbxwORiWUoN+jw1cPuwDQ==",
-                            PhoneNumber = "09177248567",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "fc76b832-6c4a-4dc9-b517-bc1ed8dee689",
-                            TwoFactorEnabled = false,
-                            UserName = "garcia.jane",
-                            FirstName = "JANE FABRIENNE",
-                            LastName = "GARCIA",
-                            MiddleName = "SAGPAO",
-                            Position = "Head, Brain and Spine Care"
-                        },
-                        new
-                        {
-                            Id = "66fg1385-86sd-8aw9-vm5g-1s87643521j5",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "c3dc748b-a701-4afb-bb29-68b5ecf3fcba",
-                            Email = "jedjumaoas.md@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JEDJUMAOAS.MD@YAHOO.COM",
-                            NormalizedUserName = "JUMAO-AS.JED",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMv94Fb2KdMmjlBDQ705WKaZpdb00ucHOm+YeZUK6BuP9e9E1yQTLG/gqaf0WKgXcg==",
-                            PhoneNumber = "09224969711",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "f893d99d-0036-490c-8697-2840abf58cd7",
-                            TwoFactorEnabled = false,
-                            UserName = "jumao-as.jed",
-                            FirstName = "JED WAYLON",
-                            LastName = "JUMAO-AS",
-                            MiddleName = "LIM",
-                            Position = "Head, Burn Care",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "f82a9135-7bdf-4ca1-9ea2-2c8b63a1d7f9",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "68035612-169e-4e59-acb0-de2c58e931f5",
-                            Email = "",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "",
-                            NormalizedUserName = "ONTOK-MANGINDRA.HASSANA",
-                            PasswordHash = "AQAAAAIAAYagAAAAECjrgDJmsk60WQPzx6tiqUjuFwGylOfS1aOpp7ChWonL+1rbBTGdkQotERXkN2Bv1w==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "62469cf5-bc9b-4cb7-8312-51bf47aff27f",
-                            TwoFactorEnabled = false,
-                            UserName = "ontok-mangindra.hassana",
-                            FirstName = "HASSANA",
-                            LastName = "ONTOK-MANGINDRA",
-                            MiddleName = "DIALO",
-                            Position = "Head, Carsdiovascular Center"
-                        },
-                        new
-                        {
-                            Id = "c63b2e15-8ad4-45b8-bfd1-3a98216c5ea4",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "3b8115b2-77b0-4e41-b067-c80bcd778b4c",
-                            Email = "princesaportia_md@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "PRINCESAPORTIA_MD@YAHOO.COM",
-                            NormalizedUserName = "ORTIZ.PORTIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPe4LtIdlcNR3wSPrAGDD5w/fyxeKJQYMi2ZKrKXKhTh2wjJwRDhD8DQEmUENY5tjQ==",
-                            PhoneNumber = "09279667275",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "fd96dc46-b79e-4c91-89a1-ec4c539c85c4",
-                            TwoFactorEnabled = false,
-                            UserName = "ortiz.portia",
-                            FirstName = "PORTIA CHARISMA RUTH",
-                            LastName = "ORTIZ",
-                            MiddleName = "AGDEPPA",
-                            Position = "Head, Dermatology",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "b7f4e831-25ad-48a9-91d3-7e26f53a4db2",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "c7f1c847-44a0-4d0c-814a-bec8f23e40a9",
-                            Email = "bomsiao.mariano@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "BOMSIAO.MARIANO@GMAIL.COM",
-                            NormalizedUserName = "SIAO.SHALAM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEIjqTh6BAk6mDHcugYnJno9Q5eZmJFCwKoDec/PbEP6jt6SCXaYEZ9MxdwoO3JKzQ==",
-                            PhoneNumber = "09175483387",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "ae1994a4-a7f6-4fbb-b125-de2d0735657c",
-                            TwoFactorEnabled = false,
-                            UserName = "siao.shalam",
-                            FirstName = "SHALAM",
-                            LastName = "SIAO",
-                            MiddleName = "BACAR",
-                            Position = "Head, Eye Care",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "a1c7d995-3f89-4fcb-86c4-4d8d193b57a3",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "609466b2-3e0a-4f48-a5dd-758cabdad3f0",
-                            Email = "maylilene@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MAYLILENE@GMAIL.COM",
-                            NormalizedUserName = "FUENTES.MAYLILENE",
-                            PasswordHash = "AQAAAAIAAYagAAAAED5/+DO0DgPvHAbOs1ntTW9ioWd1CC1PZbM5LIHM5XnPRCFNX1QELPtNhI18OkxAJg==",
-                            PhoneNumber = "09154206679",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "26518ecc-300c-48ae-a5b4-972f40a4deb3",
-                            TwoFactorEnabled = false,
-                            UserName = "fuentes.maylilene",
-                            FirstName = "MAYLILENE",
-                            LastName = "FUENTES",
-                            MiddleName = "BUHAT",
-                            Position = "Head, Geriatric Care"
-                        },
-                        new
-                        {
-                            Id = "d5e2c4f8-95b1-47b9-bc12-8c4f9d8e2b17",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "3019d734-03b4-43c5-8b00-612707ca9664",
-                            Email = "abenojarmd@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ABENOJARMD@GMAIL.COM",
-                            NormalizedUserName = "ABENOJAR-CONCON.EMELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJqs9jDmhdeDURIOWCE34E5QX6rFImX15WHa7+DidGObRG+QGSpwm2/dbCqeCnAB0A==",
-                            PhoneNumber = "09178202383",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "01a0cf32-11b7-4e45-8ff5-1cd7d5378d15",
-                            TwoFactorEnabled = false,
-                            UserName = "abenojar-concon.emelyn",
-                            FirstName = "EMELYN",
-                            LastName = "ABENOJAR-CONCON",
-                            MiddleName = "NOBLE",
-                            Position = "Head, Lung Care",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "e4b3a611-7c8a-4f9b-83a6-2a5b9e61d4c8",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "5403085b-ddaa-4261-97cb-15a330f580f6",
-                            Email = "jdesaca@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "JDESACA@YAHOO.COM",
-                            NormalizedUserName = "BESANA.JONAH",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBgKbDgQD06hbZo8I/E94l7MGn3rxiZIaBS9WwVETGO2/qc1ePq/CZeSStVTTdMtSw==",
-                            PhoneNumber = "09277197299",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "1e635220-54f9-49c7-ad68-33e8508c2460",
-                            TwoFactorEnabled = false,
-                            UserName = "besana.jonah",
-                            FirstName = "JONAH ANN",
-                            LastName = "BESANA",
-                            MiddleName = "DESACA",
-                            Position = "Head, Noenatal Care",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "9f3b1c52-2e4a-4d65-8d13-6f2c7a9b5f42",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "d45df37a-b369-43b3-8f93-a18c17534dca",
-                            Email = "dulce_doy@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "DULCE_DOY@YAHOO.COM",
-                            NormalizedUserName = "AGDEPPA.LYNN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEZ9vImxPgp2lG+Ehv9Kp8H7mjH8UAUMUeS0NptOIgbNv4rnLzq+E5KW4R2MkQO8NA==",
-                            PhoneNumber = "09177260949",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "bbc3b780-d890-4c08-a9e5-252197013a87",
-                            TwoFactorEnabled = false,
-                            UserName = "agdeppa.lynn",
-                            FirstName = "LYNN SARAH",
-                            LastName = "AGDEPPA",
-                            MiddleName = "ANIÑON",
-                            Position = "Head, Orthopedic Care",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "2e9a6b74-7a21-4d33-9a84-5b9f1e8a3d27",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "0c5b9550-dcdd-40b2-90d9-fbb12883ae9f",
-                            Email = "xin_ya314@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "XIN_YA314@YAHOO.COM",
-                            NormalizedUserName = "LU.MARY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL+uWFTfDwQluAaA0W917v2U7DY4v0trxiP60lZUjEhcvN/yoRRq4qUEzpt60B26kw==",
-                            PhoneNumber = "09175114716",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "dd6ced2c-f735-438f-a911-9b6c40e37d72",
-                            TwoFactorEnabled = false,
-                            UserName = "lu.mary",
-                            FirstName = "MARY ANNE",
-                            LastName = "LU",
-                            MiddleName = "CHONG",
-                            Position = "Head, Renal Care and Kidney Transplant",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "8c1f5b93-4e7a-4f18-b3c9-1a2d5f84c9e1",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "f291e574-3e01-472f-8abc-ff7ebea2e48d",
-                            Email = "",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "",
-                            NormalizedUserName = "DIMALEN.MUHAMMAD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHVv/VJ4DNp57AgWTT9DRBhlxdHXwHBofyCftbftmvPSZQNtbqdT/E/i2flsFuM6Iw==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "f98aae52-5ba0-4ae9-8885-ed3e1c0866d1",
-                            TwoFactorEnabled = false,
-                            UserName = "dimalen.muhammad",
-                            FirstName = "MUHAMMAD SIDIK",
-                            LastName = "DIMALEN",
-                            MiddleName = "MANALASAL",
-                            Position = "Head, Renal Care and Kidney Transplant"
-                        },
-                        new
-                        {
-                            Id = "7e4c8a59-1b9d-4c5e-ae31-8c2f3d5b7a61",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "c72c6009-fadc-4f21-b161-c6b3074e6a90",
-                            Email = "",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "",
-                            NormalizedUserName = "LUMAQUE.PISCES",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP6ga+CDig7L67ImAI3uWYpE/U3WzEcYeWeEmqmT7CP/RwMZKObG5I+hvBgLujSELg==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "ad50f55f-24ae-4ded-a49a-f88bff91afaa",
-                            TwoFactorEnabled = false,
-                            UserName = "lumaque.pisces",
-                            FirstName = "PISCES RAYMOND",
-                            LastName = "LUMAQUE",
-                            MiddleName = "YUMANG",
-                            Position = "Head, Renal Care and Kidney Transplant"
-                        },
-                        new
-                        {
-                            Id = "1a9e3f84-2b4d-45a8-9e3f-7b6c8d1e2f94",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "e8d44ca7-4c02-4d77-bd41-a1236a9c7835",
-                            Email = "",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "",
-                            NormalizedUserName = "NOGAS.ELLA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGZ39pHK2WHn6EI4YP9lJ8l+KU9aDcfEOrvdQgFTYVCjKPO/F7W5i3hFbAC+qNsaXQ==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "85d78362-4f1b-4337-a7b1-4b6a25d98f97",
-                            TwoFactorEnabled = false,
-                            UserName = "nogas.ella",
-                            FirstName = "Ella Joy",
-                            LastName = "Nogas",
-                            MiddleName = "",
-                            Position = "Head, Toxicology",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "6b3f8d72-9a1e-4c65-bd43-2e9c7f4b6a85",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "c90b34b5-8bbc-4742-9eca-10e6011b08ec",
-                            Email = "adlynbeabernaldez@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ADLYNBEABERNALDEZ@GMAIL.COM",
-                            NormalizedUserName = "BERNALDEZ.ADLYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAli8VqutQEFblNJoOmLVqPxzYn6bZQMxliJSNU686NsLyqmw58FCSrEBbEjruFaNg==",
-                            PhoneNumber = "09171340137",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "cc5d28cd-0b26-4564-9ecf-097d4022cc75",
-                            TwoFactorEnabled = false,
-                            UserName = "bernaldez.adlyn",
-                            FirstName = "ADLYN BEA",
-                            LastName = "BERNALDEZ",
-                            MiddleName = "ALBESA",
-                            Position = "Head, Toxicology"
-                        },
-                        new
-                        {
-                            Id = "1a7c3e9b-42f8-4b25-9f81-7cd92c84b9a3",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "667c83d7-a9dc-4a5d-8948-33538daf2e1c",
-                            Email = "dats_88@yahoo.com/yoshiokadat88@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "DATS_88@YAHOO.COM/YOSHIOKADAT88@GMAIL.COM",
-                            NormalizedUserName = "DATUMANONG.ABDULKADIR",
-                            PasswordHash = "AQAAAAIAAYagAAAAENWXmd171oipQ5OALUzSjUrArTsNrFBV754Odklow7r0NBEQoL5nXCV6gD+PG/+v+Q==",
-                            PhoneNumber = "09053278687",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "5cc4bf74-bfaa-461b-bac6-55781c0cff55",
-                            TwoFactorEnabled = false,
-                            UserName = "datumanong.abdulkadir",
-                            FirstName = "ABDULKADIR",
-                            LastName = "DATUMANONG",
-                            MiddleName = "YOSHIOKA",
-                            Position = "Head, ICU Complex",
-                            Prefix = "Mr."
-                        },
-                        new
-                        {
-                            Id = "c5e81f9d-73a0-4b93-b6fc-97c72e3c15e8",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "0102f04d-0e1a-48da-ad7b-e6a787f739d4",
-                            Email = "peria_cynthia@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "PERIA_CYNTHIA@YAHOO.COM",
-                            NormalizedUserName = "PERIA.CYNTHIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDe1SClpFvpO2Xh2sYOLIv/9JmGFm58d4yudiPNvVO3wN7pYN45phtnHUtzWizlMGw==",
-                            PhoneNumber = "09167805311",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "fb9ebf83-1762-470a-95ca-e3006333009e",
-                            TwoFactorEnabled = false,
-                            UserName = "peria.cynthia",
-                            FirstName = "CYNTHIA",
-                            LastName = "PERIA",
-                            MiddleName = "BADE",
-                            Position = "Head, Neonatal Intensive Care Unit",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "8d9a1b3f-0c84-46a7-b932-13cf8d05f2a1",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "9a7ecb2b-ab0b-4dea-bd38-e1ccfe248f00",
-                            Email = "geraldine_navarra@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "GERALDINE_NAVARRA@YAHOO.COM",
-                            NormalizedUserName = "NAVARRA.GERALDINE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIKNsxGY2bPhehpejcTok3ub6tMiXrdLm8a/sJ9KGGZ6CYHVGBNUgDWKV0ZDfUsIIA==",
-                            PhoneNumber = "09177272645",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "a4f32252-4e18-4240-979e-5c8bcdc317ee",
-                            TwoFactorEnabled = false,
-                            UserName = "navarra.geraldine",
-                            FirstName = "GERALDINE",
-                            LastName = "NAVARRA",
-                            MiddleName = "ABOGHO",
-                            Position = "Head, TB-Isolation",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "c4bd9e2a-1cb3-4c3b-9d0c-2ff2e43c7d1b",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "d3e6ff62-4dfd-49dc-9298-aec09c9cbbfe",
-                            Email = "ryanchrisolero@outlook.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RYANCHRISOLERO@OUTLOOK.COM",
-                            NormalizedUserName = "OLERO.RYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPDcjRYXEsOPFAi87073aV3dcbYfvM2gvErR1b/BBRdZoqSIMGMasRYr3jYTwgvUyw==",
-                            PhoneNumber = "09175170327",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "af36fbf8-d55a-4ed4-a6fd-f0d80ac217cd",
-                            TwoFactorEnabled = false,
-                            UserName = "olero.ryan",
-                            FirstName = "RYAN CHRIS",
-                            LastName = "OLERO",
-                            MiddleName = "ELEVAZO",
-                            Position = "Computer Maintenance Technologist II"
-                        },
-                        new
-                        {
-                            Id = "m3xzke5a-1cb3-4c3b-9d0o-9kk8f72v8j5f",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "416252bf-493a-4b9c-a47f-b3e7d979a749",
-                            Email = "doc_annie@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "DOC_ANNIE@YAHOO.COM",
-                            NormalizedUserName = "SABANAL.ANNELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEjtACAVY/36uZKerQNHRCX2hqwD81wecd5RLL2Tvd1T3BOh3rOg/jr8cwtkzeBiyQ==",
-                            PhoneNumber = "09176348295",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "68415a63-1a4f-4c7b-bff4-d4638544b4b6",
-                            TwoFactorEnabled = false,
-                            UserName = "sabanal.annelyn",
-                            FirstName = "ANNELYN GRACE",
-                            LastName = "SABANAL-AMOC",
-                            MiddleName = "COCAL",
-                            Position = "Head, Dental Department",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "1k3bdpoy-1cb3-4c3b-1fp0-kff9k71h3ysg",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "e2078bf0-0fdc-4092-827f-6c4e1fa3b115",
-                            Email = "honeyletchristie@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "HONRYLETCHRISTTIE@YAHOO.COM",
-                            NormalizedUserName = "TADINA.HONEYLET",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGxNoeeR+KNzNOcS46w1E4T9yaTvNfmiN1+mq+1CHBa+jKvNdoliLmbT2TsxvTEkPg==",
-                            PhoneNumber = "09359763862",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "e5b429e1-bd7a-4217-a527-692dcb3c756e",
-                            TwoFactorEnabled = false,
-                            UserName = "tadina.honeylet",
-                            FirstName = "HONEYLET CHRISTIE",
-                            LastName = "TADINA",
-                            MiddleName = "MAGHANOY",
-                            Position = "Head, Budget Department",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "4gghfkad-4xhj-4c3b-1fp0-damxmbak242V",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "ee9c73a3-adff-471d-9bcb-7f9aa7b5c0b1",
-                            Email = "",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "",
-                            NormalizedUserName = "CARE-IT.MINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO740PJDSXYGFErLBX8ZvmXHNUEFz7jZ67xxfmdh2pVM8LR5yVal+AkWuVbaHufV/w==",
-                            PhoneNumber = "09326564879",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "110b60de-8914-45c5-af4e-5de704182d25",
-                            TwoFactorEnabled = false,
-                            UserName = "care-it.minda",
-                            FirstName = "MINDA",
-                            LastName = "CARE-IT",
-                            MiddleName = "BADILLES",
-                            Position = "Head, Planning and Management Unit",
-                            Prefix = "Ms."
-                        },
-                        new
-                        {
-                            Id = "8rrdhjqf-2xhj-4c3b-1fp0-hqvxadfh137e",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "3890bd41-9a6b-4a9e-9d92-d1b546c3b56b",
-                            Email = "sherjank@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SHERJANK@GMAIL.COM",
-                            NormalizedUserName = "KALIM.SHERJAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIMonNwUCPGpNkZGzRUkxFHAz+5QuANNtGI/gBVmQUeBAId101kJWqGsMzHXp5MzvA==",
-                            PhoneNumber = "09179713201",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "087d7956-f474-4a9b-a3d9-5b35d4e5af94",
-                            TwoFactorEnabled = false,
-                            UserName = "kalim.sherjan",
-                            FirstName = "SHERJAN",
-                            LastName = "KALIM",
-                            MiddleName = "PANGATO",
-                            Position = "Head, Soccsksargen Regional Blood Center",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "813tyuio-7asd-1f7k-6kl0-aqFx134Tv190",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "a2da94da-da30-4420-b17f-dc682812fbcc",
-                            Email = "somairha@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SOMAIRHA@GMAIL.COM",
-                            NormalizedUserName = "GIO.PRECIOUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAELzC+6eI33MSx/e5PbJF8ZRihml4lIP3WemXgqPgvkDywgMwRJ92Y1f/R+xMv5LUtQ==",
-                            PhoneNumber = "09171237248",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "3ef90a54-c817-4e46-bf15-7030d81cb4a5",
-                            TwoFactorEnabled = false,
-                            UserName = "gio.precious",
-                            FirstName = "PRECIOUS SOMAIRHA",
-                            LastName = "GIO",
-                            MiddleName = "ALIBASA",
-                            Position = "Head, Emergency Medicine",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "924omboD-0Dvi-3fkhQ-blh6-yaFv1de62431",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "583956b6-b525-4833-8652-46710303017b",
-                            Email = "cpulauban@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "CPULAIBAN@YAHOO.COM",
-                            NormalizedUserName = "LAUBAN.CHEERILOU",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIFS6tASWBhz/kJ3dW94AZa8sUjNGSpbGoLloI+L1wgFmgm/RaYfiodbN8DzevxZrw==",
-                            PhoneNumber = "09171237248",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "f79e5be4-d450-44eb-9e1a-cf2c9b99f595",
-                            TwoFactorEnabled = false,
-                            UserName = "lauban.cheerilou",
-                            FirstName = "CHEERILOU",
-                            LastName = "LAUBAN",
-                            MiddleName = "UKO",
-                            Position = "Head, Medical Insurance Evaluation and Reconcillation Unit",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "822rlioO-0Dvi-3fo9O-bjh8-ya846jg58t24",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "0274c68b-b2a7-4d9d-8d61-ceee3046fd9c",
-                            Email = "mtmadeha@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "MTMADEHA@YAHOO.COM",
-                            NormalizedUserName = "MADID.MADEHA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDtGxM4uLZxlP7uTZF1coTymElj8KoK5ixHPhV1taAVSkfDCLsW+BdHdgV5rJzsyBA==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "fda4ca39-82b4-4b1e-8d8f-9123c863fcc2",
-                            TwoFactorEnabled = false,
-                            UserName = "madid.madeha",
-                            FirstName = "MADEHA",
-                            LastName = "MADID",
-                            MiddleName = "TAHAL",
-                            Position = "Head, Geriatric Care",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "123rliom-2akV-cl381-uwe9-kah8h3f98632",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "50f4e89e-5b7d-4413-8a9b-8b9ad365d248",
-                            Email = "sonjaandsanji@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "SONJAANDSANJI@GMAIL.COM",
-                            NormalizedUserName = "ESCARA.SONJA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMLBBq2WRYn/AqsHatBdWUD6eNjmrIKgEixwh4KbljaVbIzgG9BonE24/xlIzaKEjA==",
-                            PhoneNumber = "",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "50046083-2157-4eac-b39b-1318723e39b2",
-                            TwoFactorEnabled = false,
-                            UserName = "escara.sonja",
-                            FirstName = "SONJA",
-                            LastName = "ESCARA",
-                            MiddleName = "DE LUNA",
-                            Position = "Head, Infectious Disease and Tropical Medicine",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "234glioh-2akV-BL062-Hh28-LSJ2Gnj976w3",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "39bded12-212c-4a70-b8ce-f002b5dad60a",
-                            Email = "alnazaer1994@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ALNAZAER1994@GMAIL.COM",
-                            NormalizedUserName = "USOP.AL-NAZAER",
-                            PasswordHash = "AQAAAAIAAYagAAAAENabeV7eDXaVCiWWGjVIJjZDnRmuOEKGmD4wNAJMMRrJdrfgm5O7mAcFJgYQwIoChg==",
-                            PhoneNumber = "09458250199",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "72b212a8-f410-4845-b06a-f069f729c8ec",
-                            TwoFactorEnabled = false,
-                            UserName = "usop.al-nazaer",
-                            FirstName = "AL-NAZAER",
-                            LastName = "USOP",
-                            MiddleName = "ABAS",
-                            Position = "Head, Infectious Disease and Tropical Medicine",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "654hHioh-NkaH-jB19f-9uh12-33dFJnY823f2",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "97aa15cf-eff0-4636-bd96-9e0e5eb24bae",
-                            Email = "aprilglimada01@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "APRILGLIMADA01@GMAIL.COM",
-                            NormalizedUserName = "GLIMADA.APRIL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJJFvh1TqESAPXMdDXWPMPjXB9E2H7fYHoe0OhAoUjzFZ8XJq/Q+sMkYST6qOBYSiQ==",
-                            PhoneNumber = "09171488596",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "4f0c9e8f-6e4a-4995-8ace-11e032904968",
-                            TwoFactorEnabled = false,
-                            UserName = "glimada.april",
-                            FirstName = "APRIL AISHA",
-                            LastName = "GLIMADA",
-                            MiddleName = "MACAVINTA",
-                            Position = "Head, Mental Health Unit",
-                            Prefix = "Dr."
-                        },
-                        new
-                        {
-                            Id = "0020lEhG-NkaH-jB19f-9uh12-11dFwnTe6543",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "53bdeb2c-c085-4551-9411-1f289b28fb39",
-                            Email = "ramilramirez097@gmail.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "RAMILRAMIREZ097@GMAIL.COM",
-                            NormalizedUserName = "RAMIREZ.RAMIL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMDEmm/ZV3lmfZcB+iU51EudDJIUypeMI2Aq40C/WtWuWfveD1MrfqoGIGWMvzDCKA==",
-                            PhoneNumber = "09065343887",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "ad449383-2f89-4bfc-af8e-adf3a47858c9",
-                            TwoFactorEnabled = false,
-                            UserName = "ramirez.ramil",
-                            FirstName = "RAMIL",
-                            LastName = "RAMIREZ",
-                            MiddleName = "LIMBAC",
-                            Position = "Head, Housekeeping Unit"
-                        },
-                        new
-                        {
-                            Id = "0201JEhG-NkaH-jB19f-9uh12-22GYwrTr9872",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "7e6eb548-e6af-480f-b11f-c9fd894c9594",
-                            Email = "quilnetgerry@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "QUILNETGERRY@GMAIL.COM",
-                            NormalizedUserName = "QUILNET.GERRY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO9zH62tRUiYdumJxxQq/SkOwfaD8cpvlGWCjjxF4g1Padx83HRVJCI6vEKmMHlnCA==",
-                            PhoneNumber = "09273691473",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "8e392292-7431-4c8e-9d4e-46cd4f517b76",
-                            TwoFactorEnabled = false,
-                            UserName = "quilnet.gerry",
-                            FirstName = "GERRY",
-                            LastName = "QUILNET",
-                            MiddleName = "APARECE",
-                            Position = "Head, Laundry and Linen Unit"
-                        },
-                        new
-                        {
-                            Id = "7A91XEhQ-MpZ3-KL28-A9uT1-88HWrLQe5630",
-                            AccessFailedCount = 0,
-                            ConcurrencyStamp = "3b6e0b51-1150-4e78-b104-6604397ba313",
-                            Email = "aryanrodereck@yahoo.com",
-                            EmailConfirmed = false,
-                            LockoutEnabled = false,
-                            NormalizedEmail = "ARYANRODERECK@YAHOO.COM",
-                            NormalizedUserName = "ABAYON.RYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAECCgRn8jHO5cQmc6sfY306IjZBvxdRIg/zf/fDlfjecCp4CMqKqyMLa70xqA78xaow==",
-                            PhoneNumber = "9268336993",
-                            PhoneNumberConfirmed = false,
-                            SecurityStamp = "393c0dbc-18a0-4558-96f1-719fababc767",
-                            TwoFactorEnabled = false,
-                            UserName = "abayon.ryan",
-                            FirstName = "RYAN RODERECK",
-                            LastName = "ABAYON",
-                            MiddleName = "ARCONADO",
-                            Position = "Head, Electrical Section"
+                            Id = "5ef7f4d6-712b-4a7c-94d0-cc0fc6a16f88",
+                            ConcurrencyStamp = "292a6f77-d3db-4317-83f1-b458cb23d13e",
+                            Name = "Multi-specialty Governance Council Officer",
+                            NormalizedName = "MULTI-SPECIALTY GOVERNANCE COUNCIL OFFICER"
                         });
+                });
+
+            modelBuilder.Entity("Base.Auths.UserClaim<string>", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<string>", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("IMIS.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
@@ -14843,6 +14933,17 @@ namespace IMIS.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("PgsDeliverable");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.IsoStandard", b =>
+                {
+                    b.HasOne("IMIS.Domain.StandardVersion", "Version")
+                        .WithMany("IsoStandards")
+                        .HasForeignKey("VersionID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Version");
                 });
 
             modelBuilder.Entity("IMIS.Domain.KraRoadMap", b =>
@@ -15055,25 +15156,16 @@ namespace IMIS.Persistence.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<string>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("IMIS.Domain.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -15082,13 +15174,13 @@ namespace IMIS.Persistence.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<string>", null)
                         .WithMany()
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("IMIS.Domain.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -15097,7 +15189,7 @@ namespace IMIS.Persistence.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityUser", null)
+                    b.HasOne("IMIS.Domain.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -15151,6 +15243,11 @@ namespace IMIS.Persistence.Migrations
             modelBuilder.Entity("IMIS.Domain.PgsDeliverable", b =>
                 {
                     b.Navigation("PgsDeliverableAccomplishments");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.StandardVersion", b =>
+                {
+                    b.Navigation("IsoStandards");
                 });
 
             modelBuilder.Entity("IMIS.Domain.Team", b =>

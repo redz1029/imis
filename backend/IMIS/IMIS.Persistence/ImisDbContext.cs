@@ -5,6 +5,7 @@ using IMIS.Domain;
 using IMIS.Persistence.SeedConfigurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using System.Reflection.Emit;
 
 namespace IMIS.Persistence
 {
@@ -38,6 +39,8 @@ namespace IMIS.Persistence
         public DbSet<KraRoadMap> KraRoadMap { get; set; }
         public DbSet<KraRoadMapRole> KraRoadMapRole { get; set; }
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
+        public DbSet<StandardVersion> StandardVersions { get; set; }
+        public DbSet<IsoStandard> IsoStandards { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
@@ -125,6 +128,13 @@ namespace IMIS.Persistence
                 .WithMany(o => o.UserOffices)
                 .HasForeignKey(x => x.OfficeId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            // Configure ISO Standard relationships
+            builder.Entity<IsoStandard>()
+                .HasOne(iso => iso.Version)
+                .WithMany(sv => sv.IsoStandards)
+                .HasForeignKey(iso => iso.VersionID)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());

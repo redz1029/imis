@@ -12,17 +12,15 @@ PerformanceGovernanceSystem _$PerformanceGovernanceSystemFromJson(
   id: (json['id'] as num).toInt(),
   office: Office.fromJson(json['office'] as Map<String, dynamic>),
   pgsPeriod: PgsPeriod.fromJson(json['pgsPeriod'] as Map<String, dynamic>),
-  pgsDeliverables:
-      (json['pgsDeliverables'] as List<dynamic>?)
-          ?.map((e) => PgsDeliverables.fromJson(e as Map<String, dynamic>))
-          .toList(),
+  pgsDeliverables: (json['pgsDeliverables'] as List<dynamic>?)
+      ?.map((e) => PgsDeliverables.fromJson(e as Map<String, dynamic>))
+      .toList(),
   pgsReadinessRating: PgsReadiness.fromJson(
     json['pgsReadinessRating'] as Map<String, dynamic>,
   ),
-  pgsSignatories:
-      (json['pgsSignatories'] as List<dynamic>?)
-          ?.map((e) => PgsSignatory.fromJson(e as Map<String, dynamic>))
-          .toList(),
+  pgsSignatories: (json['pgsSignatories'] as List<dynamic>?)
+      ?.map((e) => PgsSignatory.fromJson(e as Map<String, dynamic>))
+      .toList(),
   isDeleted: json['isDeleted'] as bool,
   isDraft: json['isDraft'] as bool?,
   remarks: json['remarks'] as String? ?? '',

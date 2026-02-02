@@ -21,6 +21,7 @@ using IMIS.Application.PgsSummaryNarrativeModule;
 using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
+using IMIS.Application.IsoStandardModule;
 using IMIS.Persistence.AnnouncementModule;
 using IMIS.Persistence.AuditorModule;
 using IMIS.Persistence.AuditorOfficesModule;
@@ -45,7 +46,10 @@ using IMIS.Persistence.PgsSummaryNarrativeModule;
 using IMIS.Persistence.SWOTAnalysisModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
+using IMIS.Persistence.IsoStandardModule;
 using Microsoft.Extensions.DependencyInjection;
+using IMIS.Application.StandardVersionModule;
+using IMIS.Persistence.StandardVersionModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -127,6 +131,12 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IKraRoadMapRoleRepository, KraRoadMapRoleRepository>();
             services.AddScoped<IKraRoadMapRoleService, KraRoadMapRoleService>();
+
+            // ISO Standard module registrations
+            services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();
+            services.AddScoped<IStandardVersionService, StandardVersionService>();
+            services.AddScoped<IIsoStandardRepository, IsoStandardRepository>();
+            services.AddScoped<IIsoStandardService, IsoStandardService>();
 
             return services;
         }
