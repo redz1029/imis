@@ -16,9 +16,7 @@ import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:imis/constant/constant.dart';
-
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
@@ -33,7 +31,6 @@ import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/utils/range_input_formatter.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -174,6 +171,7 @@ class PerformanceGovernanceSystemPageState
   }
 
   final dio = Dio();
+  int? _lastResponseStatusCode;
 
   Future<void> _loadCurrentUserId() async {
     UserRegistration? user = await AuthUtil.processTokenValidity(dio, context);
@@ -189,12 +187,13 @@ class PerformanceGovernanceSystemPageState
 
   //Save as draft pgs
 
-  Future<void> pgsSaveAsDraft(PerformanceGovernanceSystem audit) async {
+  Future<bool> pgsSaveAsDraft(PerformanceGovernanceSystem audit) async {
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
 
       if (user == null || user.id == null || user.id!.isEmpty) {
-        return;
+        _lastResponseStatusCode = 401;
+        return false;
       }
 
       final prefs = await SharedPreferences.getInstance();
@@ -221,25 +220,32 @@ class PerformanceGovernanceSystemPageState
 
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
+        _lastResponseStatusCode = response.statusCode;
+        return true;
       } else {
         debugPrint("Failed to submit PGS data");
+        _lastResponseStatusCode = response.statusCode;
+        return false;
       }
     } on DioException catch (e) {
       debugPrint("Dio Error");
-      if (e.response != null) {}
+      _lastResponseStatusCode = e.response?.statusCode;
+      return false;
     } catch (e) {
       debugPrint("Unexpected Error: $e");
+      return false;
     }
   }
 
-  Future<void> submitPGS({
+  Future<bool> submitPGS({
     String? pgsId,
     required String userId,
     required PerformanceGovernanceSystem updatePgs,
   }) async {
     UserRegistration? user = await AuthUtil.fetchLoggedUser();
     if (user == null) {
-      return;
+      _lastResponseStatusCode = 401;
+      return false;
     }
 
     final url = '${ApiEndpoint().pgsSubmit}?userId=${user.id}';
@@ -251,7 +257,8 @@ class PerformanceGovernanceSystemPageState
       );
 
       if (signatoryResponse.statusCode != 200) {
-        return;
+        _lastResponseStatusCode = signatoryResponse.statusCode;
+        return false;
       }
 
       final signatoryData = PerformanceGovernanceSystem.fromJson(
@@ -279,13 +286,20 @@ class PerformanceGovernanceSystemPageState
         });
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
+        _lastResponseStatusCode = response.statusCode;
+        return true;
       } else {
         debugPrint("Failed to update PGS");
+        _lastResponseStatusCode = response.statusCode;
+        return false;
       }
     } on DioException catch (e) {
       debugPrint("Dio error: ${e.message}");
+      _lastResponseStatusCode = e.response?.statusCode;
+      return false;
     } catch (e) {
       debugPrint("Unexpected error: $e");
+      return false;
     }
   }
 
@@ -874,10 +888,10 @@ class PerformanceGovernanceSystemPageState
 
     List<PgsSignatory> existingSignatories = const [],
   }) {
-    double percentDeliverables = 0.0;
+    // double percentDeliverables = 0.0;
 
     try {
-      percentDeliverables = double.tryParse(percentageDeliverables.text) ?? 0.0;
+      // percentDeliverables = double.tryParse(percentageDeliverables.text) ?? 0.0;
     } catch (e) {
       debugPrint("Error parsing percentDeliverables");
     }
@@ -917,7 +931,7 @@ class PerformanceGovernanceSystemPageState
       isDraft: false,
       remarks: "",
       rowVersion: "",
-      percentDeliverables: percentDeliverables,
+      percentDeliverables: 40,
       forSignature: false,
     );
   }
@@ -950,10 +964,10 @@ class PerformanceGovernanceSystemPageState
       final isDirect = selectedDirect[index] ?? false;
       final byWhen =
           DateTime.tryParse(selectedByWhen[index] ?? '') ?? DateTime.now();
-      double percentDeliverables =
-          (percentageControllers[index]?.text.isNotEmpty ?? false)
-              ? double.tryParse(percentageControllers[index]!.text) ?? 0.0
-              : 0.0;
+      // double percentDeliverables =
+      //     (percentageControllers[index]?.text.isNotEmpty ?? false)
+      //         ? double.tryParse(percentageControllers[index]!.text) ?? 0.0
+      //         : 0.0;
       final disapprovalRemarksText = reasonController[index]?.text ?? '';
       final isDisapproved = selectedDisapproved[index] ?? false;
       final statusIndex =
@@ -980,7 +994,7 @@ class PerformanceGovernanceSystemPageState
           kraDescriptionText,
           isDirect,
           byWhen,
-          percentDeliverables,
+          40,
           disapprovalRemarksText,
           isDisapproved,
           status,
@@ -1680,12 +1694,10 @@ class PerformanceGovernanceSystemPageState
                                       ),
                                       Tooltip(
                                         message: 'Print Preview',
-
                                         child: IconButton(
                                           icon: const Icon(
                                             Icons.description_outlined,
                                           ),
-
                                           onPressed: () async {
                                             final pgsId =
                                                 pgsgovernancesystem['id']
@@ -1905,7 +1917,7 @@ class PerformanceGovernanceSystemPageState
         confidenceScore.value = 0.0;
         selectedPeriod = null;
         selectedPeriodText = null;
-        percentageDeliverables.clear();
+        percentageDeliverables.text = '40';
         clearedOnDisapprove.clear();
         deliverablesControllers.clear();
         selectedKRA.clear();
@@ -2722,8 +2734,7 @@ class PerformanceGovernanceSystemPageState
                 if ((isAnyDisapproved || id != null) &&
                     (signatories == null || signatories.isEmpty))
                   PermissionWidget(
-                    permission:
-                        AppPermissions.submitPerformanceGovernanceSystem,
+                    permission: AppPermissions.draftPerformanceGovernanceSystem,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
@@ -2947,17 +2958,6 @@ class PerformanceGovernanceSystemPageState
       }
     }
 
-    if (percentageDeliverables.text.trim().isEmpty) {
-      MotionToast.warning(
-        title: const Text("Missing Fields"),
-        description: const Text(
-          "Please enter the percentage for deliverables.",
-        ),
-        toastAlignment: Alignment.center,
-      ).show(context);
-      return;
-    }
-
     if ((actionType != ActionType.draft) && (id == null || id.isEmpty)) {
       MotionToast.error(
         description: Text("PGS ID is missing. Cannot proceed."),
@@ -2978,44 +2978,79 @@ class PerformanceGovernanceSystemPageState
 
     try {
       if (actionType == ActionType.draft) {
-        setState(() {
-          final deliverables = pgs.pgsDeliverables;
-          if (deliverables != null) {
-            for (final deliverable in deliverables) {
-              deliverable.isDisapproved = false;
-              deliverable.disapprovalRemarks = '';
-            }
+        final deliverables = pgs.pgsDeliverables;
+        if (deliverables != null) {
+          for (final deliverable in deliverables) {
+            deliverable.isDisapproved = false;
+            deliverable.disapprovalRemarks = '';
           }
-
-          pgsSaveAsDraft(pgs);
-        });
-        // await pgsSaveAsDraft(pgs);
+        }
+        final success = await pgsSaveAsDraft(pgs);
+        if (!success) {
+          final msg =
+              _lastResponseStatusCode == 403
+                  ? "You don't have permission to save as draft."
+                  : "Failed to save draft!";
+          MotionToast.error(
+            description: Text(msg),
+            toastAlignment: Alignment.center,
+          ).show(context);
+          return;
+        }
       } else if (actionType == ActionType.submit) {
         final currentUser = await AuthUtil.fetchLoggedUser();
         final currentUserId = currentUser?.id;
-        setState(() {
-          final deliverables = pgs.pgsDeliverables;
-          if (deliverables != null) {
-            for (final deliverable in deliverables) {
-              deliverable.isDisapproved = false;
-              deliverable.disapprovalRemarks = '';
-            }
+        final deliverables = pgs.pgsDeliverables;
+        if (deliverables != null) {
+          for (final deliverable in deliverables) {
+            deliverable.isDisapproved = false;
+            deliverable.disapprovalRemarks = '';
           }
-          submitPGS(
-            pgsId: id!,
-            updatePgs: pgs,
-            userId: currentUserId.toString(),
-          );
-        });
-      } else {
-        final currentUser = await AuthUtil.fetchLoggedUser();
-        final currentUserId = currentUser?.id;
-
-        await submitPGS(
+        }
+        final success = await submitPGS(
           pgsId: id!,
           updatePgs: pgs,
           userId: currentUserId.toString(),
         );
+        if (!success) {
+          final msg =
+              _lastResponseStatusCode == 403
+                  ? "You don't have permission to submit."
+                  : (orderLevel >= 1
+                      ? "Failed to Confirm!"
+                      : "Failed to submit!");
+          MotionToast.error(
+            description: Text(msg),
+            toastAlignment: Alignment.center,
+          ).show(context);
+          return;
+        }
+      } else {
+        final currentUser = await AuthUtil.fetchLoggedUser();
+        final currentUserId = currentUser?.id;
+
+        final success = await submitPGS(
+          pgsId: id!,
+          updatePgs: pgs,
+          userId: currentUserId.toString(),
+        );
+        if (!success) {
+          final msg =
+              _lastResponseStatusCode == 403
+                  ? "You don't have permission to approve/disapprove."
+                  : (actionType == ActionType.approve
+                      ? "Failed to approve!"
+                      : "Failed to disapprove!");
+          MotionToast.error(
+            description: Text(msg),
+            toastAlignment: Alignment.center,
+          ).show(context);
+          if (actionType != ActionType.draft) {
+            await Future.delayed(const Duration(milliseconds: 1500));
+          }
+          Navigator.pop(context);
+          return;
+        }
       }
 
       String successMessage;
@@ -3501,13 +3536,7 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  TableRow _buildMainHeaderStrategic({
-    String? officename,
-    String? percentDeliverables,
-  }) {
-    bool hasEditPermission = permissionService.hasPermission(
-      AppPermissions.editPerformanceGovernanceSystem,
-    );
+  TableRow _buildMainHeaderStrategic({String? officename}) {
     return TableRow(
       decoration: BoxDecoration(color: primaryLightColor),
 
@@ -3536,47 +3565,66 @@ class PerformanceGovernanceSystemPageState
           fontStyle: FontStyle.normal,
         ),
 
+        // TableCell(
+        //   child: Padding(
+        //     padding: const EdgeInsets.all(8.0),
+        //     child: Tooltip(
+        //       message:
+        //           'This percentage is used during performance reviews to determine how each output affects your overall results.',
+        //       child: TextFormField(
+        //         readOnly: !hasEditPermission,
+        //         controller: percentageDeliverables,
+        //         autovalidateMode: AutovalidateMode.onUserInteraction,
+        //         textAlign: TextAlign.center,
+        //         keyboardType: TextInputType.number,
+        //         style: TextStyle(
+        //           color: secondaryColor,
+        //           fontSize: 20,
+        //           fontStyle: FontStyle.normal,
+        //         ),
+        //         validator: (value) {
+        //           if (value == null || value.isEmpty) {
+        //             return "Please enter percentage";
+        //           }
+        //           return null;
+        //         },
+        //         inputFormatters: [
+        //           FilteringTextInputFormatter.digitsOnly,
+        //           LengthLimitingTextInputFormatter(2),
+        //           RangeInputFormatter(1, 40),
+        //         ],
+
+        //         decoration: InputDecoration(
+        //           labelText: percentDeliverables,
+        //           hintText: '0',
+        //           suffixText: '%',
+        //           border: OutlineInputBorder(),
+        //           suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),
+        //           hintStyle: TextStyle(color: Colors.white),
+        //           enabledBorder: OutlineInputBorder(
+        //             borderSide: BorderSide(color: Colors.white),
+        //           ),
+        //           focusedBorder: OutlineInputBorder(
+        //             borderSide: BorderSide(color: Colors.white),
+        //           ),
+        //         ),
+        //       ),
+        //     ),
+        //   ),
+        // ),
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Tooltip(
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
-              child: TextFormField(
-                readOnly: !hasEditPermission,
-                controller: percentageDeliverables,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                style: TextStyle(
-                  color: secondaryColor,
-                  fontSize: 20,
-                  fontStyle: FontStyle.normal,
-                ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return "Please enter percentage";
-                  }
-                  return null;
-                },
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(2),
-                  RangeInputFormatter(1, 40),
-                ],
-
-                decoration: InputDecoration(
-                  labelText: percentDeliverables,
-                  hintText: '0',
-                  suffixText: '%',
-                  border: OutlineInputBorder(),
-                  suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),
-                  hintStyle: TextStyle(color: Colors.white),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
+              child: Center(
+                child: Text(
+                  '40%',
+                  style: TextStyle(
+                    color: secondaryColor,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ),
@@ -3626,9 +3674,9 @@ class PerformanceGovernanceSystemPageState
             ? 'Please select either Direct or Indirect.'
             : null;
 
-    bool hasDisapprovePermission = permissionService.hasPermission(
-      AppPermissions.disapprovePerformanceGovernanceSystem,
-    );
+    // bool hasDisapprovePermission = permissionService.hasPermission(
+    //   AppPermissions.disapprovePerformanceGovernanceSystem,
+    // );
     Color rowColor = (index % 2 == 0) ? mainBgColor : Colors.white;
 
     return TableRow(
@@ -3880,13 +3928,7 @@ class PerformanceGovernanceSystemPageState
 
   //PGS DELIVERABLES STATUS
   // ignore: non_constant_identifier_names
-  TableRow _PgsDeliverableHeader({
-    String? officename,
-    String? percentDeliverables,
-  }) {
-    bool hasEditPermission = permissionService.hasPermission(
-      AppPermissions.editPerformanceGovernanceSystem,
-    );
+  TableRow _PgsDeliverableHeader({String? officename}) {
     return TableRow(
       children: [
         BuildHeaderCell(
@@ -3901,43 +3943,58 @@ class PerformanceGovernanceSystemPageState
           fontStyle: FontStyle.normal,
         ),
 
+        // TableCell(
+        //   child: Padding(
+        //     padding: const EdgeInsets.all(8.0),
+        //     child: Tooltip(
+        //       message:
+        //           'This percentage is used during performance reviews to determine how each output affects your overall results.',
+        //       child: TextFormField(
+        //         readOnly: !hasEditPermission,
+        //         controller: percentageDeliverables,
+        //         textAlign: TextAlign.center,
+        //         keyboardType: TextInputType.number,
+        //         style: TextStyle(
+        //           color: const Color.fromARGB(255, 10, 7, 1),
+        //           fontSize: 20,
+        //           fontStyle: FontStyle.normal,
+        //         ),
+        //         inputFormatters: [
+        //           FilteringTextInputFormatter.digitsOnly,
+        //           LengthLimitingTextInputFormatter(2),
+        //           RangeInputFormatter(1, 40),
+        //         ],
+
+        //         decoration: InputDecoration(
+        //           labelText: percentDeliverables,
+        //           hintText: '0',
+        //           suffixText: '%',
+        //           suffixStyle: TextStyle(
+        //             color: const Color.fromARGB(255, 15, 11, 1),
+        //             fontSize: 20,
+        //           ),
+        //           hintStyle: TextStyle(color: Colors.white),
+        //           enabledBorder: OutlineInputBorder(
+        //             borderSide: BorderSide(color: Colors.white),
+        //           ),
+        //           focusedBorder: OutlineInputBorder(
+        //             borderSide: BorderSide(color: Colors.white),
+        //           ),
+        //         ),
+        //       ),
+        //     ),
+        //   ),
+        // ),
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Tooltip(
               message:
                   'This percentage is used during performance reviews to determine how each output affects your overall results.',
-              child: TextFormField(
-                readOnly: !hasEditPermission,
-                controller: percentageDeliverables,
-                textAlign: TextAlign.center,
-                keyboardType: TextInputType.number,
-                style: TextStyle(
-                  color: const Color.fromARGB(255, 10, 7, 1),
-                  fontSize: 20,
-                  fontStyle: FontStyle.normal,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.digitsOnly,
-                  LengthLimitingTextInputFormatter(2),
-                  RangeInputFormatter(1, 40),
-                ],
-
-                decoration: InputDecoration(
-                  labelText: percentDeliverables,
-                  hintText: '0',
-                  suffixText: '%',
-                  suffixStyle: TextStyle(
-                    color: const Color.fromARGB(255, 15, 11, 1),
-                    fontSize: 20,
-                  ),
-                  hintStyle: TextStyle(color: Colors.white),
-                  enabledBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: Colors.white),
-                  ),
+              child: Center(
+                child: Text(
+                  '40%',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -4768,37 +4825,37 @@ class PerformanceGovernanceSystemPageState
     );
   }
 
-  Widget _buildDropdownKraCellPGSDeliverableStatus(
-    int index,
-    String? id,
-    Function setDialogState,
-    int orderLevel,
-  ) {
-    if (!kraDescriptionController.containsKey(index)) {
-      kraDescriptionController[index] = TextEditingController();
-    }
+  // Widget _buildDropdownKraCellPGSDeliverableStatus(
+  //   int index,
+  //   String? id,
+  //   Function setDialogState,
+  //   int orderLevel,
+  // ) {
+  //   if (!kraDescriptionController.containsKey(index)) {
+  //     kraDescriptionController[index] = TextEditingController();
+  //   }
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Tooltip(
-            message:
-                'Enter a short description of what this KRA focuses on achieving.',
-            child: TextFormField(
-              readOnly: id != null && orderLevel >= 1,
-              controller: kraDescriptionController[index],
-              decoration: const InputDecoration(
-                hintText: "Enter your description here...",
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Tooltip(
+  //           message:
+  //               'Enter a short description of what this KRA focuses on achieving.',
+  //           child: TextFormField(
+  //             readOnly: id != null && orderLevel >= 1,
+  //             controller: kraDescriptionController[index],
+  //             decoration: const InputDecoration(
+  //               hintText: "Enter your description here...",
+  //               border: OutlineInputBorder(),
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildKraDescriptionStatus(
     int index,
@@ -4933,42 +4990,42 @@ class PerformanceGovernanceSystemPageState
   // End-----------------------PGS Deliverable Status---------------------
 
   //Start------------Pgs Deliverables Status----------------------------------------------
-  Widget _buildExpandableTextAreaCellPGSDeliverable(
-    int index,
-    String? id,
-    int orderLevel,
-    Function setDialogState,
-  ) {
-    if (!deliverablesControllers.containsKey(index)) {
-      deliverablesControllers[index] = TextEditingController();
-    }
+  // Widget _buildExpandableTextAreaCellPGSDeliverable(
+  //   int index,
+  //   String? id,
+  //   int orderLevel,
+  //   Function setDialogState,
+  // ) {
+  //   if (!deliverablesControllers.containsKey(index)) {
+  //     deliverablesControllers[index] = TextEditingController();
+  //   }
 
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ConstrainedBox(
-        constraints: BoxConstraints(minHeight: 50.0),
-        child: Tooltip(
-          message:
-              'Specify the tangible results or outcomes tied to this responsibility.',
-          child: TextFormField(
-            readOnly: id != null && orderLevel >= 1,
-            controller: deliverablesControllers[index],
-            maxLines: null,
-            keyboardType: TextInputType.multiline,
-            style: TextStyle(fontSize: 14.0),
-            decoration: InputDecoration(
-              border: OutlineInputBorder(),
-              contentPadding: EdgeInsets.all(8.0),
-            ),
-            onChanged: (value) {
-              deliverableUserEdited[index] = true;
-              setState(() {});
-            },
-          ),
-        ),
-      ),
-    );
-  }
+  //   return Padding(
+  //     padding: const EdgeInsets.all(8.0),
+  //     child: ConstrainedBox(
+  //       constraints: BoxConstraints(minHeight: 50.0),
+  //       child: Tooltip(
+  //         message:
+  //             'Specify the tangible results or outcomes tied to this responsibility.',
+  //         child: TextFormField(
+  //           readOnly: id != null && orderLevel >= 1,
+  //           controller: deliverablesControllers[index],
+  //           maxLines: null,
+  //           keyboardType: TextInputType.multiline,
+  //           style: TextStyle(fontSize: 14.0),
+  //           decoration: InputDecoration(
+  //             border: OutlineInputBorder(),
+  //             contentPadding: EdgeInsets.all(8.0),
+  //           ),
+  //           onChanged: (value) {
+  //             deliverableUserEdited[index] = true;
+  //             setState(() {});
+  //           },
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
   Widget _buildExpandableTextAreaCelStatus(
     int index,
@@ -5345,10 +5402,24 @@ class PerformanceGovernanceSystemPageState
       AppPermissions.editPerformanceGovernanceSystem,
     );
 
+    bool hasDisapprovePermission = permissionService.hasPermission(
+      AppPermissions.disapprovePerformanceGovernanceSystem,
+    );
+
+    final currentSignatory = signatoryList.firstWhere(
+      (signatory) => signatory['signatoryId'].toString() == userId.toString(),
+      orElse: () => {'id': 0, 'orderLevel': 0},
+    );
+    final orderLevel = currentSignatory['orderLevel'] ?? 0;
+
     bool showDisapproveControls = false;
-    if (selectedDisapproved[index] == true && hasEditPermission) {
+    if (selectedDisapproved[index] == true &&
+        hasDisapprovePermission &&
+        orderLevel == 0) {
       showDisapproveControls = true;
-    } else if (deliverablesList.isNotEmpty) {
+    } else if (deliverablesList.isNotEmpty &&
+        hasDisapprovePermission &&
+        orderLevel == 0) {
       showDisapproveControls = deliverablesList.any(
         (deliverable) =>
             deliverable.id == deliverableIds[index] &&

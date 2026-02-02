@@ -49,8 +49,8 @@ class UserRoleService {
     String roleId,
     List<dynamic> permissions,
   ) async {
-    final url = '${ApiEndpoint().users}/$userId/permissions';
-    // final url = '${ApiEndpoint().users}/$userId/roles/$roleId/permissions';
+    // final url = '${ApiEndpoint().users}/$userId/permissions';
+    final url = '${ApiEndpoint().users}/$userId/$roleId/permissions';
     final body = {
       "userId": userId,
       "userName": userName,
