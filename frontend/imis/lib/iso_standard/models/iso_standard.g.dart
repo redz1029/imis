@@ -13,7 +13,7 @@ IsoStandard _$IsoStandardFromJson(Map<String, dynamic> json) => IsoStandard(
   description: json['description'] as String,
   rowVersion: json['rowVersion'] as String?,
   version: StandardVersion.fromJson(json['version'] as Map<String, dynamic>),
-  isdelete: json['isdelete'] as bool?,
+  isdelete: json['isdelete'] as bool? ?? false,
   isActive: json['isActive'] as bool? ?? true,
 );
 

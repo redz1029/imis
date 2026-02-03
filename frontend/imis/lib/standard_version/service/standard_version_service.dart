@@ -25,7 +25,9 @@ class StandardVersionService {
     );
   }
 
-  Future<void> createOrUpdateStandardVersion(StandardVersion standardVersion) async {
+  Future<void> createOrUpdateStandardVersion(
+    StandardVersion standardVersion,
+  ) async {
     var url = ApiEndpoint().standardVersion;
 
     try {

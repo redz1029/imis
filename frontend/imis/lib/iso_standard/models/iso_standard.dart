@@ -5,7 +5,6 @@ part 'iso_standard.g.dart';
 
 @JsonSerializable()
 class IsoStandard {
-
   final int id;
   final int versionID;
   final String clauseRef;
@@ -24,7 +23,7 @@ class IsoStandard {
     required this.version,
     this.isdelete = false,
     this.isActive = true,
-  }); 
+  });
 
   factory IsoStandard.fromJson(Map<String, dynamic> json) =>
       _$IsoStandardFromJson(json);
