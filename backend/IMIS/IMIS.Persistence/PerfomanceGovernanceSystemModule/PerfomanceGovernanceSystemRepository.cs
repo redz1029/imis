@@ -14,7 +14,16 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
     {
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
             .FirstOrDefaultAsync(d => d.Id == deliverableId, cancellationToken);
+    }  
+    public async Task<List<PgsSignatoryTemplate>> GetTemplatesByServiceHeadAsync(string userId,  CancellationToken cancellationToken)
+    {
+        return await ReadOnlyDbContext.Set<PgsSignatoryTemplate>()
+            .Include(pt => pt.Office)
+               .ThenInclude(o => o!.UserOffices)
+            .Where(pt => pt.DefaultSignatoryId == userId && pt.OrderLevel == 1)
+            .ToListAsync(cancellationToken);
     }
+
     public async Task<List<PerfomanceGovernanceSystem>> GetByOfficeIdsAsync(List<int> officeIds, CancellationToken cancellationToken)
     {
         return await ReadOnlyDbContext.Set<PerfomanceGovernanceSystem>()
@@ -36,7 +45,30 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
                .Include(p => p.Office)
                .Include(p => p.PgsPeriod)
             .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
-    }   
+    }
+
+    public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserOfficeOnlyAsync(string userId, CancellationToken cancellationToken)
+    {
+        var userOfficeIds = await ReadOnlyDbContext.Set<UserOffices>()
+            .Where(u => u.UserId == userId)
+            .Select(u => u.OfficeId)
+            .ToListAsync(cancellationToken);
+
+        if (!userOfficeIds.Any())
+            return Enumerable.Empty<PerfomanceGovernanceSystem>();
+
+        return await _entities
+            .Where(p => userOfficeIds.Contains(p.OfficeId))
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+             .ThenInclude(o => o.UserOffices)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories)
+            .Include(p => p.PgsDeliverables)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<IEnumerable<PerfomanceGovernanceSystem>> GetByUserIdAsync(string userId, CancellationToken cancellationToken)
     {      
         var userOfficeIds = await ReadOnlyDbContext.Set<UserOffices>()

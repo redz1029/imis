@@ -235,85 +235,62 @@ namespace IMIS.Persistence.PgsModule
             }).ToList();
 
             return clonedTemplates.OrderBy(t => t.OrderLevel);
-        }   
-        
-        public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(
-        string userId, string roleId,
-        CancellationToken cancellationToken)
+        }
+
+        public async Task<List<PerfomanceGovernanceSystemDto>?> GetByUserIdAsync(string userId, string roleId, CancellationToken cancellationToken)
         {
-            // Get all if Role is either Admin, OSM and MCC. Add if needed
-
-            // If role is Service Head, retrieve only the PGS of offices under the user's service.
-            // Can be retrieved via PgsSignatoryTemplate joined to Office, User and UserRoles
-            // filtered by Order Level 1.
-
-            // If role is Standard User, retrieve only the PGS of offices where the user is assigned
-
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
-                return new List<PerfomanceGovernanceSystemDto>();
+                return new();
 
             var role = await _roleManager.FindByIdAsync(roleId);
             if (role == null)
-                return new List<PerfomanceGovernanceSystemDto>();
+                return new();
 
-            var isUserInRole = await _userManager.IsInRoleAsync(currentUser, role.Name!);
-            if (!isUserInRole)
-                return new List<PerfomanceGovernanceSystemDto>();
+            if (!await _userManager.IsInRoleAsync(currentUser, role.Name!))
+                return new();
 
-            var activeRoleName = role.Name; 
-
-            if (
-                activeRoleName!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                activeRoleName.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase)
-            )
+            // ================= ADMIN / PGS CORE TEAM =================
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase))
+                
             {
-                var allRecords = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-
-                var tempList = new List<PerfomanceGovernanceSystemDto>();
-
-                foreach (var pgs in allRecords)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken)
-                        .ConfigureAwait(false);
-
-                    dto.PgsDeliverables = dto.PgsDeliverables?
-                        .Where(d => !d.IsDeleted)
-                        .ToList() ?? new List<PGSDeliverableDto>();
-
-                    tempList.Add(dto);
-                }
-
-                return tempList
-                    .OrderByDescending(dto =>
-                        dto.PgsSignatories!.Any(s => s.SignatoryId == userId && s.IsNextStatus))
-                    .ThenBy(dto => dto.PgsPeriod?.StartDate)
-                    .ToList();
+                var allRecords = await _repository.GetAll(cancellationToken);
+                return await BuildDtos(allRecords, userId, cancellationToken);
             }
 
+            // ================= SERVICE HEAD =================
+            if (role.Name.Equals(new PgsServiceHead().Name, StringComparison.OrdinalIgnoreCase))
+            {
+                return await GetServiceHeadPgsAsync(userId, cancellationToken);
+            }
+           
+            // ================= STANDARD USER =================
+            return await GetStandardUserPgsAsync(userId, cancellationToken);
+        }
 
-            var records = await _repository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        private async Task<List<PerfomanceGovernanceSystemDto>> GetServiceHeadPgsAsync(string userId, CancellationToken cancellationToken)
+        {
+            var records = await _repository.GetByUserIdAsync(userId, cancellationToken);
+            var result = new List<PerfomanceGovernanceSystemDto>();
 
-            var filtered = new List<PerfomanceGovernanceSystemDto>();
             if (records == null || !records.Any())
-                return filtered;
+                return result;
 
             foreach (var pgs in records)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken).ConfigureAwait(false);
-
-                dto.PgsDeliverables = dto.PgsDeliverables?
-                    .Where(d => !d.IsDeleted)
-                    .ToList() ?? new List<PGSDeliverableDto>();
+                var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken);
+                dto.PgsDeliverables = dto.PgsDeliverables?.Where(d => !d.IsDeleted).ToList() ?? new();
 
                 var isUserAssignedToOffice = pgs.Office.UserOffices?.Any(u => u.UserId == userId) ?? false;
-                
+
+                // ===== Draft =====
                 var isDraft = dto.PgsSignatories == null || !dto.PgsSignatories.Any(s => s.Id > 0);
+
                 dto.IsDraft = isDraft;
+
                 if (isDraft)
                 {
                     var templates = (await GetInheritedSignatoryTemplatesAsync(pgs.Office, cancellationToken))
@@ -321,58 +298,78 @@ namespace IMIS.Persistence.PgsModule
                         .ToList();
 
                     var firstTemplate = templates.FirstOrDefault();
-                    var officeHead = pgs.Office.UserOffices?.FirstOrDefault(u => u.IsOfficeHead);
+                    var officeHead = pgs.Office.UserOffices?
+                        .FirstOrDefault(u => u.IsOfficeHead);
 
-                    var canDraftView = (firstTemplate?.DefaultSignatoryId == userId) || (officeHead?.UserId == userId);
-
-                    if (isUserAssignedToOffice || canDraftView)
-                        filtered.Add(dto);
+                    if (isUserAssignedToOffice || firstTemplate?.DefaultSignatoryId == userId || officeHead?.UserId == userId)
+                    {
+                        result.Add(dto);
+                    }
 
                     continue;
                 }
 
+                // ======== Workflow =========
                 var isNext = dto.PgsSignatories?.Any(s => s.SignatoryId == userId && s.IsNextStatus) ?? false;
-                var isSubmittedBy = dto.PgsSignatories?.Any(s =>
-                    s.SignatoryId == userId &&
-                    s.Status!.Equals(PgsStatus.Prepared, StringComparison.OrdinalIgnoreCase)) ?? false;
 
-                var lastSubmitted = dto.PgsSignatories!
-                    .Where(s => s.Status!.Equals(PgsStatus.Prepared, StringComparison.OrdinalIgnoreCase))
-                    .OrderByDescending(s => s.OrderLevel)
-                    .FirstOrDefault();
+                bool canViewAsParent = pgs.Office.ParentOffice?.UserOffices?.Any(u => u.UserId == userId) ?? false;
 
-                bool canViewAsParent = false;
-
-                if (lastSubmitted != null)
-                {
-                    var nextSignatory = dto.PgsSignatories!
-                        .Where(s => s.OrderLevel > lastSubmitted.OrderLevel)
-                        .OrderBy(s => s.OrderLevel)
-                        .FirstOrDefault();
-
-                    if (nextSignatory != null && nextSignatory.IsNextStatus)
-                    {
-                        var parentUser = pgs.Office.ParentOffice?.UserOffices?.Any(u => u.UserId == userId) ?? false;
-
-                        if (parentUser && nextSignatory.SignatoryId == userId)
-                        {
-                            canViewAsParent = true;
-                        }
-                    }
-                }
-
-                if (isUserAssignedToOffice)
-                {
-                    filtered.Add(dto);
-                }
-                else if (isNext || canViewAsParent)
-                {
-                    filtered.Add(dto);
-                }
+                if (isUserAssignedToOffice || isNext || canViewAsParent)
+                    result.Add(dto);
             }
 
-            return filtered;
+            return result;
         }
+       
+        private async Task<List<PerfomanceGovernanceSystemDto>> GetStandardUserPgsAsync(string userId, CancellationToken cancellationToken)
+        {
+            var records = await _repository.GetByUserOfficeOnlyAsync(userId, cancellationToken);
+            var result = new List<PerfomanceGovernanceSystemDto>();
+
+            foreach (var pgs in records)
+            {
+                var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken);
+                dto.PgsDeliverables = dto.PgsDeliverables?.Where(d => !d.IsDeleted).ToList() ?? new();
+
+                var isDraft = dto.PgsSignatories == null || !dto.PgsSignatories.Any(s => s.Id > 0);
+
+                dto.IsDraft = isDraft;
+
+                if (isDraft)
+                {
+                    result.Add(dto);
+                    continue;
+                }
+
+                var isNext = dto.PgsSignatories!.Any(s => s.SignatoryId == userId && s.IsNextStatus);
+
+                var hasAlreadySubmitted = dto.PgsSignatories!.Any(s => s.SignatoryId == userId && !string.IsNullOrEmpty(s.Status) && !s.IsNextStatus);
+
+                if (isNext || hasAlreadySubmitted)
+                    result.Add(dto);
+            }
+
+            return result;
+        }
+
+        // ================= Helper =================
+        private async Task<List<PerfomanceGovernanceSystemDto>> BuildDtos(IEnumerable<PerfomanceGovernanceSystem> records, string userId, CancellationToken cancellationToken)
+        {
+            var result = new List<PerfomanceGovernanceSystemDto>();
+
+            foreach (var pgs in records)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken);
+                dto.PgsDeliverables = dto.PgsDeliverables?.Where(d => !d.IsDeleted).ToList() ?? new();
+
+                result.Add(dto);
+            }
+
+            return result.OrderByDescending(d => d.PgsSignatories!.Any(s => s.SignatoryId == userId && s.IsNextStatus)).ThenBy(d => d.PgsPeriod?.StartDate).ToList();
+        }
+
         private async Task<IEnumerable<PgsSignatoryTemplate>> GetSignatoryTemplates(Office office, CancellationToken cancellationToken)
         {
             // Try to get custom template or specific template of an office.
@@ -690,7 +687,7 @@ namespace IMIS.Persistence.PgsModule
             pgs.PgsSignatories = new List<PgsSignatoryDto>();
             return await SaveOrUpdateAsync(pgs, cancellationToken).ConfigureAwait(false);
         }
-      
+             
         public async Task<DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>> GetFilteredPGSAsync(PgsFilter filter, string userId, string roleId, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
@@ -699,15 +696,7 @@ namespace IMIS.Persistence.PgsModule
                 return DtoPageList<PerfomanceGovernanceSystemDto, PerfomanceGovernanceSystem, long>
                     .Create(new List<PerfomanceGovernanceSystem>(), filter.Page, filter.PageSize, 0);
             }
-
-            // Get all if Role is either Admin, OSM and MCC. Add if needed
-
-            // If role is Service Head, retrieve only the PGS of offices under the user's service.
-            // Can be retrieved via PgsSignatoryTemplate joined to Office, User and UserRoles
-            // filtered by Order Level 1.
-
-            // If role is Standard User, retrieve only the PGS of offices where the user is assigned
-
+         
             var role = await _roleManager.FindByIdAsync(roleId);
             if (role == null)
             {
@@ -844,11 +833,10 @@ namespace IMIS.Persistence.PgsModule
                 }
 
                 item.IsDraft = !item.PgsSignatories.Any(s => s.Id > 0);
-               
+
             }
 
             return pagedPgs;
         }
-
     }
 }
