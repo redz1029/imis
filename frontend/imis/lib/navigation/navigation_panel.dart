@@ -762,6 +762,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                                     PermissionString.roleStandardUser ||
                                 selectedRole == PermissionString.serviceHead ||
                                 selectedRole == PermissionString.mcc ||
+                                selectedRole == PermissionString.coreTeam ||
                                 selectedRole == PermissionString.osm)
                             ? _buildListTile(
                               Icons.inventory_2_outlined,

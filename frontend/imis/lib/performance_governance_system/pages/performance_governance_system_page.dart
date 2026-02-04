@@ -1716,27 +1716,29 @@ class PerformanceGovernanceSystemPageState
                                           },
                                         ),
                                       ),
-                                      PermissionWidget(
-                                        permission:
-                                            AppPermissions
-                                                .deletePerformanceGovernanceSystem,
-                                        child: IconButton(
-                                          icon: Icon(
-                                            Icons.delete,
-                                            color: Color.fromARGB(
-                                              255,
-                                              221,
-                                              79,
-                                              79,
-                                            ),
-                                          ),
-                                          onPressed:
-                                              () => showDeleteDialog(
-                                                pgsgovernancesystem['id']
-                                                    .toString(),
+                                      if (status != 'Approved' &&
+                                          status != 'For Approval')
+                                        PermissionWidget(
+                                          permission:
+                                              AppPermissions
+                                                  .deletePerformanceGovernanceSystem,
+                                          child: IconButton(
+                                            icon: Icon(
+                                              Icons.delete,
+                                              color: Color.fromARGB(
+                                                255,
+                                                221,
+                                                79,
+                                                79,
                                               ),
+                                            ),
+                                            onPressed:
+                                                () => showDeleteDialog(
+                                                  pgsgovernancesystem['id']
+                                                      .toString(),
+                                                ),
+                                          ),
                                         ),
-                                      ),
                                     ],
                                   ),
                                 ),
@@ -5402,10 +5404,6 @@ class PerformanceGovernanceSystemPageState
       AppPermissions.editPerformanceGovernanceSystem,
     );
 
-    bool hasDisapprovePermission = permissionService.hasPermission(
-      AppPermissions.disapprovePerformanceGovernanceSystem,
-    );
-
     final currentSignatory = signatoryList.firstWhere(
       (signatory) => signatory['signatoryId'].toString() == userId.toString(),
       orElse: () => {'id': 0, 'orderLevel': 0},
@@ -5413,13 +5411,9 @@ class PerformanceGovernanceSystemPageState
     final orderLevel = currentSignatory['orderLevel'] ?? 0;
 
     bool showDisapproveControls = false;
-    if (selectedDisapproved[index] == true &&
-        hasDisapprovePermission &&
-        orderLevel == 0) {
+    if (selectedDisapproved[index] == true && orderLevel == 0) {
       showDisapproveControls = true;
-    } else if (deliverablesList.isNotEmpty &&
-        hasDisapprovePermission &&
-        orderLevel == 0) {
+    } else if (deliverablesList.isNotEmpty) {
       showDisapproveControls = deliverablesList.any(
         (deliverable) =>
             deliverable.id == deliverableIds[index] &&
