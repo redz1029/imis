@@ -7,7 +7,7 @@ namespace IMIS.Application.PgsModule
 {
     public interface IPerfomanceGovernanceSystemRepository : IRepository<PerfomanceGovernanceSystem, long>
     {
-        Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken);
+        Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(int pgsId, CancellationToken cancellationToken);
         Task<IEnumerable<PerfomanceGovernanceSystem>> GetAll(CancellationToken cancellationToken);
         Task<PerfomanceGovernanceSystem?> GetByIdAsync(int id, CancellationToken cancellationToken);
         Task<PerfomanceGovernanceSystem?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);

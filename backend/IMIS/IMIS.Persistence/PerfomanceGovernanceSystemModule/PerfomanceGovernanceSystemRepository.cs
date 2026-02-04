@@ -124,33 +124,22 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .Include(p => p.PgsSignatories!)                
         .FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
     }
-    public async Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
+   
+    public async Task<PerfomanceGovernanceSystem?> GetByUserIdAndPgsIdAsync(int pgsId, CancellationToken cancellationToken)
     {
-        var pgs = await _entities
-         .Where(p => p.Id == pgsId)
-         .Include(p => p.PgsPeriod)
-         .Include(p => p.PgsReadinessRating)
-         .Include(p => p.PgsSignatories)
-         .Include(p => p.PgsDeliverables)
-             .ThenInclude(d => d.Kra)
-         .Include(p => p.Office)
-             .ThenInclude(o => o.UserOffices)
-         .Include(p => p.Office)
-             .ThenInclude(o => o.ParentOffice)
-                 .ThenInclude(po => po!.UserOffices)
-         .FirstOrDefaultAsync(cancellationToken);
-        
-        if (pgs != null)
-        {
-            var inChildOffice = pgs.Office.UserOffices!.Any(u => u.UserId == userId);
-            var inParentOffice = pgs.Office.ParentOffice?.UserOffices!.Any(u => u.UserId == userId) == true;
-
-            if (!inChildOffice && !inParentOffice)
-                return null;
-        }
-
-        return pgs;
-
+        return await _entities
+            .Where(p => p.Id == pgsId)
+            .Include(p => p.PgsPeriod)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories)
+            .Include(p => p.PgsDeliverables)
+                .ThenInclude(d => d.Kra)
+            .Include(p => p.Office)
+                .ThenInclude(o => o.UserOffices)
+            .Include(p => p.Office)
+                .ThenInclude(o => o.ParentOffice)
+                    .ThenInclude(po => po!.UserOffices)
+            .FirstOrDefaultAsync(cancellationToken);
     }
 
     //Get Pgs Report: Filter by Id

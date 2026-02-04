@@ -64,14 +64,27 @@ namespace IMIS.Persistence.PgsModule
             var pgs = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
             return pgs != null ? new PerfomanceGovernanceSystemDto(pgs) : null;
         }
+       
         public async Task<PerfomanceGovernanceSystemDto?> GetByUserIdAndPgsIdAsync(string userId, int pgsId, CancellationToken cancellationToken)
         {
-            var pgs = await _repository.GetByUserIdAndPgsIdAsync(userId, pgsId, cancellationToken);
-            if (pgs == null) return null;
+            var pgs = await _repository.GetByUserIdAndPgsIdAsync(pgsId, cancellationToken);
+            if (pgs == null)
+                return null;
 
             var dto = await ProcessPGSSignatories(pgs, userId, cancellationToken);
+
+            var inChildOffice = pgs.Office.UserOffices?.Any(u => u.UserId == userId) == true;
+
+            var inParentOffice = pgs.Office.ParentOffice?.UserOffices?.Any(u => u.UserId == userId) == true;
+
+            var isNextSignatory = dto.PgsSignatories!.Any(s => s.SignatoryId == userId && s.IsNextStatus);
+
+            if (!inChildOffice && !inParentOffice && !isNextSignatory)
+                return null;
+
             return dto;
-        }    
+        }
+
         private async Task<PerfomanceGovernanceSystemDto> ProcessPGSSignatories(
         PerfomanceGovernanceSystem pgs,
         string userId,
