@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/dashboard/admin_dashboard.dart';
+import 'package:imis/dashboard/officer_dashboard.dart';
 import 'package:imis/dashboard/standard_user_dashboard.dart';
+import 'package:imis/user/models/user_office.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 final GlobalKey<HomePageState> homePageKey = GlobalKey();
@@ -50,6 +52,10 @@ class HomePageState extends State<HomePage> {
 
     if (_userRoles!.contains("Administrator")) {
       return const AdminDashboard();
+    }
+
+    if (_userRoles!.contains("Service Officer")) {
+      return const OfficerDashboard();
     }
 
     return const StandardUserDashboard();

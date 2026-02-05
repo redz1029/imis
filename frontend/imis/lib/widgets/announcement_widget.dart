@@ -122,7 +122,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
                 if (announcements.isEmpty) {
                   return const Center(
                     child: Text(
-                      'No active announcements at the moment.',
+                      'No announcements at the moment.',
                       style: TextStyle(color: Colors.grey),
                     ),
                   );
@@ -297,7 +297,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
     String? endDate,
     String? description,
     bool isActive = false,
-    Function()? onSaved, // << Callback to refresh parent dialog
+    Function()? onSaved,
   }) {
     TextEditingController titleController = TextEditingController(text: title);
     TextEditingController descriptionController = TextEditingController(

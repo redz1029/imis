@@ -324,7 +324,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                         ),
                         gap8px,
                         Text(
-                          "Welcome to CPeMS - CRMC Performance Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
+                          "Welcome to CPeMS - Centralized Performance Electronic Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.9),
                             fontSize: 14,
@@ -375,7 +375,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                 title: "Direct Deliverables",
                 count: "$direct",
                 color: primaryColor,
-                icon: Icons.people_outline,
+                icon: Icons.directions_outlined,
                 progress: total > 0 ? direct / total : 0,
               ),
               buildDashboardBox(
@@ -467,7 +467,7 @@ Widget buildDashboardBox({
     ),
     child: Container(
       width: 317,
-      height: 170,
+      constraints: const BoxConstraints(minHeight: 170),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: Column(
@@ -524,6 +524,8 @@ Widget buildDashboardBox({
             const SizedBox(height: 8),
             Text(
               subtitle,
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 12, color: Colors.black54),
             ),
           ],
