@@ -328,11 +328,17 @@ namespace IMIS.Presentation.UserModule
                 }
             }
 
-            var offices = dbContext.UserOffices
-                .Where(uo => uo.UserId == user.Id)
-                .Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id, (uo, o) => new { o.Id, o.Name })
-                .Distinct()
-                .ToList();
+            var offices = dbContext.UserOffices.Where(uo => uo.UserId == user.Id && uo.IsActive)
+                .Join(dbContext.Offices, uo => uo.OfficeId, o => o.Id,
+                (uo, o) => new
+                {
+                    o.Id,
+                    o.Name,
+                    uo.IsOfficeHead
+                }
+            )
+            .Distinct()
+            .ToList();
 
             var roleIds = roleList.Select(r => (string)r.GetType().GetProperty("id")!.GetValue(r)!).ToList();
 
