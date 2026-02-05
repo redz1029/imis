@@ -13,7 +13,7 @@ IsoStandard _$IsoStandardFromJson(Map<String, dynamic> json) => IsoStandard(
   description: json['description'] as String,
   rowVersion: json['rowVersion'] as String?,
   version: StandardVersion.fromJson(json['version'] as Map<String, dynamic>),
-  isdelete: json['isdelete'] as bool?,
+  isDeleted: json['isDeleted'] as bool? ?? false,
   isActive: json['isActive'] as bool? ?? true,
 );
 
@@ -25,6 +25,6 @@ Map<String, dynamic> _$IsoStandardToJson(IsoStandard instance) =>
       'description': instance.description,
       'rowVersion': instance.rowVersion,
       'version': instance.version,
-      'isdelete': instance.isdelete,
+      'isDeleted': instance.isDeleted,
       'isActive': instance.isActive,
     };

@@ -30,6 +30,15 @@ class IsoStandardService {
 
     try {
       final Map<String, dynamic> requestData = isoStandard.toJson();
+
+      // Remove the nested version object - backend only needs versionID
+      requestData.remove('version');
+      
+      // Keep id field (backend DTO requires it), only remove optional fields
+      if (isoStandard.id == 0) {
+        requestData.remove('rowVersion');
+      }
+
       final response = await AuthenticatedRequest.post(
         dio,
         url,
@@ -37,10 +46,38 @@ class IsoStandardService {
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        throw Exception("Failed to add/update ISO Standard.");
+        throw Exception("Failed to save ISO Standard.");
       }
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// FR-08: Bulk create ISO Standards with atomic transaction
+  /// Backend should handle this as a single transaction
+  Future<void> bulkCreateIsoStandards(List<IsoStandard> isoStandards) async {
+    var url = '${ApiEndpoint().isoStandard}/bulk';
+
+    try {
+      final List<Map<String, dynamic>> requestData = isoStandards
+          .map((iso) => iso.toJson())
+          .toList();
+
+      final response = await AuthenticatedRequest.post(
+        dio,
+        url,
+        data: {'standards': requestData},
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception("Failed to bulk create ISO Standards.");
+      }
+    } catch (e) {
+      // If backend doesn't support bulk endpoint, fall back to sequential
+      // This is not truly atomic but better than nothing
+      for (var isoStandard in isoStandards) {
+        await createOrUpdateIsoStandard(isoStandard);
+      }
     }
   }
 

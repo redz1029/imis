@@ -1,9 +1,11 @@
-﻿using IMIS.Application.AnnouncementModule;
+﻿using Base.Abstractions;
+using IMIS.Application.AnnouncementModule;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.AuditorOfficesModule;
 using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.BreakThroughScoringModule;
+using IMIS.Application.IsoStandardModule;
 using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
@@ -18,16 +20,17 @@ using IMIS.Application.PgsPeriodModule;
 using IMIS.Application.PGSReadinessRatingCancerCareModule;
 using IMIS.Application.PgsSignatoryTemplateModule;
 using IMIS.Application.PgsSummaryNarrativeModule;
+using IMIS.Application.StandardVersionModule;
 using IMIS.Application.SWOTAnalysisModule;
 using IMIS.Application.TeamModule;
 using IMIS.Application.UserOfficeModule;
-using IMIS.Application.IsoStandardModule;
 using IMIS.Persistence.AnnouncementModule;
 using IMIS.Persistence.AuditorModule;
 using IMIS.Persistence.AuditorOfficesModule;
 using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.BreakThroughScoringModule;
+using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.KraRoadMapDeliverableModule;
 using IMIS.Persistence.KraRoadMapKpiModule;
@@ -43,13 +46,11 @@ using IMIS.Persistence.PgsPeriodModule;
 using IMIS.Persistence.PGSReadinessRatingCancerCareModule;
 using IMIS.Persistence.PgsSignatoryTemplateModule;
 using IMIS.Persistence.PgsSummaryNarrativeModule;
+using IMIS.Persistence.StandardVersionModule;
 using IMIS.Persistence.SWOTAnalysisModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
-using IMIS.Persistence.IsoStandardModule;
 using Microsoft.Extensions.DependencyInjection;
-using IMIS.Application.StandardVersionModule;
-using IMIS.Persistence.StandardVersionModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -135,8 +136,10 @@ namespace IMIS.Persistence.DependencyInjection
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();
             services.AddScoped<IStandardVersionService, StandardVersionService>();
+
             services.AddScoped<IIsoStandardRepository, IsoStandardRepository>();
             services.AddScoped<IIsoStandardService, IsoStandardService>();
+           
 
             return services;
         }

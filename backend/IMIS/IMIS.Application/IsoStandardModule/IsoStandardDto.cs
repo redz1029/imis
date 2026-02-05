@@ -31,7 +31,7 @@ namespace IMIS.Application.IsoStandardModule
                     Id = isoStandard.Version.Id,
                     VersionName = isoStandard.Version.VersionName,
                     IsActive = isoStandard.Version.isActive,
-                    IsoStandards = null // Keep this null to break the chain
+                    //IsoStandards = null // Keep this null to break the chain
                 };
             }
         }

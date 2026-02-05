@@ -12,7 +12,7 @@ class IsoStandard {
   final String description;
   final String? rowVersion;
   final StandardVersion version;
-  final bool? isdelete;
+  final bool? isDeleted;
   final bool isActive;
 
   IsoStandard({
@@ -22,7 +22,7 @@ class IsoStandard {
     required this.description,
     this.rowVersion,
     required this.version,
-    this.isdelete = false,
+    this.isDeleted = false,
     this.isActive = true,
   }); 
 

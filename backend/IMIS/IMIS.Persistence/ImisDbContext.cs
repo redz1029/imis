@@ -130,11 +130,7 @@ namespace IMIS.Persistence
                 .OnDelete(DeleteBehavior.NoAction);
 
             // Configure ISO Standard relationships
-            builder.Entity<IsoStandard>()
-                .HasOne(iso => iso.Version)
-                .WithMany(sv => sv.IsoStandards)
-                .HasForeignKey(iso => iso.VersionID)
-                .OnDelete(DeleteBehavior.Cascade);
+        
 
             // Apply seed configurations
             builder.ApplyConfiguration(new RoleConfiguration());
