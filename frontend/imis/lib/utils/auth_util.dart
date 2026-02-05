@@ -10,7 +10,6 @@ import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:jwt_decode_full/jwt_decode_full.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../constant/constant.dart';
 
 class AuthUtil {
@@ -47,6 +46,11 @@ class AuthUtil {
 
       await sharedPref.setStringList(officeNamesKey, officeNames);
       await sharedPref.setStringList(officeIdsKey, officeIds);
+
+      Map<String, bool> officeHeadMap = {
+        for (var o in offices) o['id'].toString(): o['isOfficeHead'] ?? false,
+      };
+      await sharedPref.setString('officeHeadMap', jsonEncode(officeHeadMap));
     }
     await sharedPref.setString(userKey, jsonEncode(user.toJson()));
 
@@ -92,6 +96,15 @@ class AuthUtil {
   static Future<List<String>?> fetchOfficeIds() async {
     final sharedPref = await SharedPreferences.getInstance();
     return sharedPref.getStringList(officeIdsKey);
+  }
+
+  static Future<bool?> getIsOfficeHead(String officeId) async {
+    final prefs = await SharedPreferences.getInstance();
+    final officeHeadMapJson = prefs.getString('officeHeadMap');
+    if (officeHeadMapJson == null) return null;
+
+    final Map<String, dynamic> officeHeadMap = jsonDecode(officeHeadMapJson);
+    return officeHeadMap[officeId] as bool?;
   }
 
   static Future<String?> fetchSelectedOfficeId() async {

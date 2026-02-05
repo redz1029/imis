@@ -404,7 +404,118 @@ class PerformanceGovernanceSystemPageState
     return deliverablesListHistory;
   }
 
-  Future<String?> _selectOffice() async {
+  // Future<String?> _selectOffice() async {
+  //   final officeNames = await AuthUtil.fetchOfficeNames();
+  //   final officeIds = await AuthUtil.fetchOfficeIds();
+
+  //   if (officeNames == null ||
+  //       officeIds == null ||
+  //       officeNames.isEmpty ||
+  //       officeIds.isEmpty) {
+  //     MotionToast.error(
+  //       title: const Text("Office Not Found"),
+  //       description: const Text(
+  //         "The selected office ID does not match any known office.\nPlease contact the administrator.",
+  //       ),
+  //       toastDuration: const Duration(seconds: 10),
+  //       toastAlignment: Alignment.topCenter,
+  //     ).show(context);
+  //     return null;
+  //   }
+
+  //   String? selectedOffice = await showDialog<String>(
+  //     context: context,
+  //     barrierDismissible: false,
+  //     builder: (BuildContext context) {
+  //       return Dialog(
+  //         backgroundColor: mainBgColor,
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(12),
+  //         ),
+  //         child: Container(
+  //           padding: const EdgeInsets.all(20),
+  //           constraints: const BoxConstraints(maxHeight: 450, maxWidth: 500),
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               Align(
+  //                 alignment: Alignment.topRight,
+  //                 child: IconButton(
+  //                   icon: Icon(Icons.close, color: Colors.grey.shade600),
+
+  //                   onPressed: () async {
+  //                     final prefs = await SharedPreferences.getInstance();
+  //                     await prefs.remove('selectedOfficeId');
+  //                     await prefs.remove('selectedOfficeName');
+
+  //                     Navigator.pop(context, null);
+  //                   },
+  //                 ),
+  //               ),
+  //               // Title
+  //               Text(
+  //                 "Select Office",
+  //                 style: TextStyle(
+  //                   fontSize: 20,
+  //                   fontWeight: FontWeight.bold,
+  //                   color: primaryTextColor,
+  //                 ),
+  //               ),
+  //               const SizedBox(height: 10),
+  //               const Divider(),
+  //               const SizedBox(height: 8),
+  //               // List of offices
+  //               Expanded(
+  //                 child: ListView.separated(
+  //                   itemCount: officeNames.length,
+  //                   separatorBuilder: (_, __) => const SizedBox(height: 6),
+  //                   itemBuilder: (context, index) {
+  //                     return Card(
+  //                       color: mainBgColor,
+  //                       shape: RoundedRectangleBorder(
+  //                         borderRadius: BorderRadius.circular(0.1),
+  //                         side: const BorderSide(
+  //                           color: primaryTextColor,
+  //                           width: 0.5,
+  //                         ),
+  //                       ),
+  //                       child: ListTile(
+  //                         contentPadding: const EdgeInsets.symmetric(
+  //                           horizontal: 16,
+  //                           vertical: 10,
+  //                         ),
+  //                         leading: Icon(
+  //                           Icons.apartment_rounded,
+  //                           color: primaryColor,
+  //                         ),
+  //                         title: Text(
+  //                           officeNames[index],
+  //                           style: const TextStyle(fontSize: 16),
+  //                         ),
+  //                         onTap: () => Navigator.pop(context, officeIds[index]),
+  //                         hoverColor: primaryColor.withValues(alpha: 0.1),
+  //                       ),
+  //                     );
+  //                   },
+  //                 ),
+  //               ),
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+
+  //   if (selectedOffice == null || selectedOffice == '-1') {
+  //     await AuthUtil.removeSelectedOfficeId();
+  //     return null;
+  //   }
+
+  //   await AuthUtil.saveSelectedOfficeId(selectedOffice);
+  //   return selectedOffice;
+  // }
+
+  Future<Map<String, dynamic>?> _selectOffice() async {
     final officeNames = await AuthUtil.fetchOfficeNames();
     final officeIds = await AuthUtil.fetchOfficeIds();
 
@@ -423,7 +534,27 @@ class PerformanceGovernanceSystemPageState
       return null;
     }
 
-    String? selectedOffice = await showDialog<String>(
+    List<String> filteredOfficeIds = [];
+    List<String> filteredOfficeNames = [];
+    for (int i = 0; i < officeIds.length; i++) {
+      bool? isHead = await AuthUtil.getIsOfficeHead(officeIds[i]);
+      if (isHead == true) {
+        filteredOfficeIds.add(officeIds[i]);
+        filteredOfficeNames.add(officeNames[i]);
+      }
+    }
+
+    if (filteredOfficeIds.isEmpty) {
+      MotionToast.info(
+        title: const Text("No Office Available"),
+        description: const Text("You are not the head of any office."),
+        toastDuration: const Duration(seconds: 5),
+        toastAlignment: Alignment.topCenter,
+      ).show(context);
+      return null;
+    }
+
+    String? selectedOfficeId = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
@@ -442,17 +573,15 @@ class PerformanceGovernanceSystemPageState
                   alignment: Alignment.topRight,
                   child: IconButton(
                     icon: Icon(Icons.close, color: Colors.grey.shade600),
-
                     onPressed: () async {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.remove('selectedOfficeId');
                       await prefs.remove('selectedOfficeName');
-
+                      await prefs.remove('isOfficeHead');
                       Navigator.pop(context, null);
                     },
                   ),
                 ),
-                // Title
                 Text(
                   "Select Office",
                   style: TextStyle(
@@ -464,10 +593,9 @@ class PerformanceGovernanceSystemPageState
                 const SizedBox(height: 10),
                 const Divider(),
                 const SizedBox(height: 8),
-                // List of offices
                 Expanded(
                   child: ListView.separated(
-                    itemCount: officeNames.length,
+                    itemCount: filteredOfficeNames.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 6),
                     itemBuilder: (context, index) {
                       return Card(
@@ -489,11 +617,15 @@ class PerformanceGovernanceSystemPageState
                             color: primaryColor,
                           ),
                           title: Text(
-                            officeNames[index],
+                            filteredOfficeNames[index],
                             style: const TextStyle(fontSize: 16),
                           ),
-                          onTap: () => Navigator.pop(context, officeIds[index]),
-                          hoverColor: primaryColor.withValues(alpha: 0.1),
+                          onTap:
+                              () => Navigator.pop(
+                                context,
+                                filteredOfficeIds[index],
+                              ),
+                          hoverColor: primaryColor.withOpacity(0.1),
                         ),
                       );
                     },
@@ -506,13 +638,23 @@ class PerformanceGovernanceSystemPageState
       },
     );
 
-    if (selectedOffice == null || selectedOffice == '-1') {
+    if (selectedOfficeId == null || selectedOfficeId == '-1') {
       await AuthUtil.removeSelectedOfficeId();
       return null;
     }
 
-    await AuthUtil.saveSelectedOfficeId(selectedOffice);
-    return selectedOffice;
+    await AuthUtil.saveSelectedOfficeId(selectedOfficeId);
+
+    bool? isHead = await AuthUtil.getIsOfficeHead(selectedOfficeId);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isOfficeHead', isHead ?? false);
+
+    return {
+      'officeId': selectedOfficeId,
+      'officeName':
+          filteredOfficeNames[filteredOfficeIds.indexOf(selectedOfficeId)],
+      'isOfficeHead': isHead ?? false,
+    };
   }
 
   Map<String, dynamic> _mapPgsToListItem(
