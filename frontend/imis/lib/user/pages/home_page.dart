@@ -54,7 +54,19 @@ class HomePageState extends State<HomePage> {
       return const AdminDashboard();
     }
 
-    if (_userRoles!.contains("Service Officer")) {
+    final officerRoles = [
+      "Service Officer",
+      "Training Officer",
+      "Research Officer",
+      "Information Officer",
+      "Linkages Officer",
+      "Facilities Officer",
+      "Safety Officer",
+      "HR Officer",
+      "Finance Officer",
+    ];
+
+    if (_userRoles!.any((role) => officerRoles.contains(role))) {
       return const OfficerDashboard();
     }
 
