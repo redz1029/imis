@@ -19,14 +19,6 @@ class PermissionService {
         perm['permission'] as String: perm['isAssigned'] as bool,
     };
     _roleName = roleName;
-
-    debugPrint('===== PERMISSIONS LOADED =====');
-    debugPrint('Role: $_roleName');
-    debugPrint('Total permissions loaded: ${_permissions.length}');
-    _permissions.forEach((key, value) {
-      debugPrint('  $key: $value');
-    });
-    debugPrint('=============================');
   }
 
   bool hasPermission(String permission, {List<String>? allowedRoles}) {
