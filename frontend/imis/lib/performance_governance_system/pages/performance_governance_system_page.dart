@@ -1286,7 +1286,7 @@ class PerformanceGovernanceSystemPageState
                               ),
                             ),
                             PermissionWidget(
-                              permission: PermissionString.viewOffice,
+                              permission: AppPermissions.viewOffice,
                               child: Padding(
                                 padding: const EdgeInsets.only(right: 8.0),
                                 child: Column(
@@ -2289,9 +2289,11 @@ class PerformanceGovernanceSystemPageState
                                                 !hasEditPermission
                                                     ? null
                                                     : (int? newValue) {
-                                                      setState(() {
-                                                        selectedPeriod =
-                                                            newValue;
+                                                      setDialogState(() {
+                                                        setState(() {
+                                                          selectedPeriod =
+                                                              newValue;
+                                                        });
 
                                                         selectedPeriodObject =
                                                             filteredListPeriod
@@ -2312,6 +2314,22 @@ class PerformanceGovernanceSystemPageState
 
                                                           selectedPeriodText =
                                                               "$start - $end";
+
+                                                          if (id == null) {
+                                                            selectedByWhen
+                                                                .clear();
+                                                            selectedByWhenControllers
+                                                                .forEach(
+                                                                  (
+                                                                    key,
+                                                                    controller,
+                                                                  ) =>
+                                                                      controller
+                                                                          .clear(),
+                                                                );
+                                                            selectedByWhenControllers
+                                                                .clear();
+                                                          }
                                                         }
                                                       });
                                                     },
@@ -3261,14 +3279,37 @@ class PerformanceGovernanceSystemPageState
 
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
 
+    DateTime periodStartDate = DateTime(2000);
+    DateTime periodEndDate = DateTime(2100);
+
+    if (selectedPeriodObject != null && selectedPeriodObject!.isNotEmpty) {
+      try {
+        final startDateJson = selectedPeriodObject!['startDate'];
+        final endDateJson = selectedPeriodObject!['endDate'];
+
+        if (startDateJson != null) {
+          periodStartDate = _dateConverter.fromJson(startDateJson.toString());
+        }
+        if (endDateJson != null) {
+          periodEndDate = _dateConverter.fromJson(endDateJson.toString());
+        }
+      } catch (e) {
+        debugPrint('Error parsing period dates: $e');
+      }
+    }
+
     if (selectedByWhen[index] == null ||
         selectedByWhenControllers[index]?.text.isEmpty == true) {
-      DateTime now = DateTime.now();
-      String defaultDate = DateFormat('yyyy-MM-dd').format(now);
-      selectedByWhen[index] = defaultDate;
-      selectedByWhenControllers[index]?.text = DateFormat(
-        'MMMM yyyy',
-      ).format(now);
+      if (selectedPeriod != null &&
+          selectedPeriodObject != null &&
+          selectedPeriodObject!.isNotEmpty) {
+        DateTime defaultDateTime = periodStartDate;
+        String defaultDate = DateFormat('yyyy-MM-dd').format(defaultDateTime);
+        selectedByWhen[index] = defaultDate;
+        selectedByWhenControllers[index]?.text = DateFormat(
+          'MMMM yyyy',
+        ).format(defaultDateTime);
+      }
     }
 
     return Padding(
@@ -3288,14 +3329,16 @@ class PerformanceGovernanceSystemPageState
             suffixIcon: Icon(Icons.calendar_today),
           ),
           onTap:
-              !hasEditPermission
+              !hasEditPermission || selectedPeriod == null
                   ? null
                   : () async {
+                    DateTime initialDate = periodStartDate;
+
                     DateTime? pickedDate = await showDatePicker(
                       context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
+                      initialDate: initialDate,
+                      firstDate: periodStartDate,
+                      lastDate: periodEndDate,
                       builder: (context, child) {
                         return Theme(
                           data: Theme.of(context).copyWith(
@@ -5033,14 +5076,40 @@ class PerformanceGovernanceSystemPageState
   ) {
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
 
+    // Extract period dates from selectedPeriodObject
+    DateTime periodStartDate = DateTime(2000);
+    DateTime periodEndDate = DateTime(2100);
+
+    if (selectedPeriodObject != null && selectedPeriodObject!.isNotEmpty) {
+      try {
+        final startDateJson = selectedPeriodObject!['startDate'];
+        final endDateJson = selectedPeriodObject!['endDate'];
+
+        if (startDateJson != null) {
+          periodStartDate = _dateConverter.fromJson(startDateJson.toString());
+        }
+        if (endDateJson != null) {
+          periodEndDate = _dateConverter.fromJson(endDateJson.toString());
+        }
+      } catch (e) {
+        debugPrint('Error parsing period dates: $e');
+      }
+    }
+
     if (selectedByWhen[index] == null ||
         selectedByWhenControllers[index]?.text.isEmpty == true) {
-      DateTime now = DateTime.now();
-      String defaultDate = DateFormat('yyyy-MM-dd').format(now);
-      selectedByWhen[index] = defaultDate;
-      selectedByWhenControllers[index]?.text = DateFormat(
-        'MMMM yyyy',
-      ).format(now);
+      // Only set default if a period is actually selected
+      if (selectedPeriod != null &&
+          selectedPeriodObject != null &&
+          selectedPeriodObject!.isNotEmpty) {
+        DateTime defaultDateTime = periodStartDate;
+        String defaultDate = DateFormat('yyyy-MM-dd').format(defaultDateTime);
+        selectedByWhen[index] = defaultDate;
+        selectedByWhenControllers[index]?.text = DateFormat(
+          'MMMM yyyy',
+        ).format(defaultDateTime);
+      }
+      // If no period selected, leave empty
     }
 
     return Padding(
@@ -5061,14 +5130,16 @@ class PerformanceGovernanceSystemPageState
             suffixIcon: Icon(Icons.calendar_today),
           ),
           onTap:
-              id != null && orderLevel >= 1
+              (id != null && orderLevel >= 1) || selectedPeriod == null
                   ? null
                   : () async {
+                    DateTime initialDate = periodStartDate;
+
                     DateTime? pickedDate = await showDatePicker(
                       context: context,
-                      initialDate: DateTime.now(),
-                      firstDate: DateTime(2000),
-                      lastDate: DateTime(2100),
+                      initialDate: initialDate,
+                      firstDate: periodStartDate,
+                      lastDate: periodEndDate,
                       builder: (context, child) {
                         return Theme(
                           data: Theme.of(context).copyWith(
