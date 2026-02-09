@@ -3,6 +3,7 @@
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
@@ -354,7 +355,7 @@ class _DeliverableStatusMonitoringPageState
         numberColumnWidth + (dataColumns * dataColumnWidth) + 24.0;
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     bool hasPermission = permissionService.hasPermission(
-      PermissionString.viewPgsDeliverableMonitor,
+      AppPermissions.viewPgsDeliverableMonitor,
     );
 
     if (!hasPermission) {
@@ -1041,78 +1042,82 @@ class _DeliverableStatusMonitoringPageState
                   ),
                   child: Text('Cancel', style: TextStyle(color: primaryColor)),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(4),
+                PermissionWidget(
+                  permission: AppPermissions.addPgsDeliverableAccomplishment,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
-                  onPressed: () async {
-                    if (_formKey.currentState!.validate()) {
-                      bool? confirmAction = await showDialog<bool>(
-                        context: context,
-                        builder: (context) {
-                          return AlertDialog(
-                            title: const Text("Confirm Update"),
-                            content: const Text(
-                              "Are you sure you want to update this record?",
-                            ),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: Text(
-                                  "No",
-                                  style: TextStyle(color: primaryColor),
-                                ),
+                    onPressed: () async {
+                      if (_formKey.currentState!.validate()) {
+                        bool? confirmAction = await showDialog<bool>(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              title: const Text("Confirm Update"),
+                              content: const Text(
+                                "Are you sure you want to update this record?",
                               ),
-                              TextButton(
-                                onPressed: () {
-                                  Navigator.pop(context, true);
-                                },
-                                child: Text(
-                                  "Yes",
-                                  style: TextStyle(color: primaryColor),
+                              actions: [
+                                TextButton(
+                                  onPressed:
+                                      () => Navigator.pop(context, false),
+                                  child: Text(
+                                    "No",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
                                 ),
-                              ),
-                            ],
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, true);
+                                  },
+                                  child: Text(
+                                    "Yes",
+                                    style: TextStyle(color: primaryColor),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+                        if (confirmAction == true) {
+                          final summaryNarrative = PgsSummaryNarrative(
+                            0,
+                            int.tryParse(_selectedPeriod ?? '0') ?? 0,
+                            _findingsController.text,
+                            _recommendationsController.text,
+                            _conclusionsController.text,
+                            int.tryParse(_selectedOffice ?? '0') ?? 0,
+                            isDeleted: false,
+                            rowVersion: '',
                           );
-                        },
-                      );
 
-                      if (confirmAction == true) {
-                        final summaryNarrative = PgsSummaryNarrative(
-                          0,
-                          int.tryParse(_selectedPeriod ?? '0') ?? 0,
-                          _findingsController.text,
-                          _recommendationsController.text,
-                          _conclusionsController.text,
-                          int.tryParse(_selectedOffice ?? '0') ?? 0,
-                          isDeleted: false,
-                          rowVersion: '',
-                        );
-
-                        await _summaryNarrativeService.addSummaryNarrative(
-                          summaryNarrative,
-                        );
-                        _findingsController.clear();
-                        _recommendationsController.clear();
-                        _conclusionsController.clear();
-                        _selectedOffice = null;
-                        _selectedPeriod = null;
-                        officeId = null;
-                        periodId = null;
-                        MotionToast.success(
-                          description: const Text("Saved Successfully"),
-                          toastAlignment: Alignment.topCenter,
-                        ).show(context);
-                        Navigator.pop(context);
+                          await _summaryNarrativeService.addSummaryNarrative(
+                            summaryNarrative,
+                          );
+                          _findingsController.clear();
+                          _recommendationsController.clear();
+                          _conclusionsController.clear();
+                          _selectedOffice = null;
+                          _selectedPeriod = null;
+                          officeId = null;
+                          periodId = null;
+                          MotionToast.success(
+                            description: const Text("Saved Successfully"),
+                            toastAlignment: Alignment.topCenter,
+                          ).show(context);
+                          Navigator.pop(context);
+                        }
                       }
-                    }
-                  },
-                  child: const Text(
-                    'Save',
-                    style: TextStyle(color: Colors.white),
+                    },
+                    child: const Text(
+                      'Save',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
               ],

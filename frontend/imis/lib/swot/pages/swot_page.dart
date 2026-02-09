@@ -4,6 +4,7 @@ import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/swot/models/swot.dart';
 import 'package:imis/swot/services/swot_service.dart';
 import 'package:imis/user/models/user.dart';
@@ -130,7 +131,7 @@ class SwotDialogResponsiveState extends State<SwotPage> {
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     bool hasPermission = permissionService.hasPermission(
-      PermissionString.viewSwot,
+      AppPermissions.viewSWOTAnalysis,
     );
 
     if (!hasPermission) {

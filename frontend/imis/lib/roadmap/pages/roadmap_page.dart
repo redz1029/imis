@@ -4,6 +4,7 @@ import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/roadmap/models/kpi_roadmap.dart';
 import 'package:imis/roadmap/models/kra_roadmap_role.dart';
@@ -103,7 +104,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
       setState(() {
         roleId = tempRoleId;
       });
-      
+
       if (roleId.isNotEmpty) {
         fetchRoadmap();
       }
@@ -966,7 +967,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   Widget build(BuildContext context) {
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     bool hasPermission = permissionService.hasPermission(
-      PermissionString.viewKraRoadmap,
+      AppPermissions.viewKraRoadMap,
     );
 
     if (!hasPermission) {

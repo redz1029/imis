@@ -6,6 +6,7 @@ import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:imis/constant/permissions.dart';
 import 'package:imis/navigation/navigation_panel.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
@@ -17,7 +18,6 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -332,7 +332,7 @@ class ManageSummaryNarrativeReportPageState
 
                                     PermissionWidget(
                                       permission:
-                                          PermissionString
+                                          AppPermissions
                                               .editPerformanceGovernanceSystem,
                                       child: IconButton(
                                         icon: Icon(
