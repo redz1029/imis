@@ -54,6 +54,7 @@ class NavigationPanelState extends State<NavigationPanel> {
       GlobalKey<ScaffoldMessengerState>();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   bool _isLoading = false;
+  bool _isSidebarHidden = false;
   String userId = "userId";
   String firstName = "firstName";
   String middleName = "middleName";
@@ -152,6 +153,12 @@ class NavigationPanelState extends State<NavigationPanel> {
   Future<void> _initializeDashboard() async {
     await _loadUserName();
     await _checkSelectedRole();
+  }
+
+  void _toggleSidebar() {
+    setState(() {
+      _isSidebarHidden = !_isSidebarHidden;
+    });
   }
 
   void _setScreen(Widget screen, int index) {
@@ -687,13 +694,34 @@ class NavigationPanelState extends State<NavigationPanel> {
       color: secondaryColor,
       child: Column(
         children: [
-          DrawerHeader(
-            child: Column(
+          Container(
+            height: 150,
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(color: secondaryColor),
+            child: Stack(
               children: [
-                Image.asset('assets/CRMC.png', width: 100),
-                Text(
-                  'CPeMS',
-                  style: TextStyle(color: primaryTextColor, fontSize: 18),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/CRMC.png', width: 100),
+                      SizedBox(height: 8),
+                      Text(
+                        'CPeMS',
+                        style: TextStyle(color: primaryColor, fontSize: 18),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: IconButton(
+                    icon: Icon(Icons.menu_open, color: primaryTextColor),
+                    onPressed: _toggleSidebar,
+                    tooltip: 'Hide Sidebar',
+                    padding: EdgeInsets.all(8),
+                  ),
                 ),
               ],
             ),
@@ -1144,7 +1172,6 @@ class NavigationPanelState extends State<NavigationPanel> {
 
   @override
   Widget build(BuildContext context) {
-    // Get the screen index from arguments if provided
     final args = ModalRoute.of(context)?.settings.arguments;
     if (args is int && _selectedIndex != args) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1169,11 +1196,22 @@ class NavigationPanelState extends State<NavigationPanel> {
               key: _scaffoldKey,
               body: Row(
                 children: [
-                  if (isWideScreen) _buildSidebar(),
+                  if (isWideScreen && !_isSidebarHidden) _buildSidebar(),
                   Expanded(
                     child: Scaffold(
                       appBar: AppBar(
                         backgroundColor: secondaryColor,
+                        leading:
+                            isWideScreen && _isSidebarHidden
+                                ? IconButton(
+                                  icon: Icon(
+                                    Icons.menu,
+                                    color: primaryTextColor,
+                                  ),
+                                  onPressed: _toggleSidebar,
+                                  tooltip: 'Show Sidebar',
+                                )
+                                : null,
 
                         actions: [
                           MouseRegion(
