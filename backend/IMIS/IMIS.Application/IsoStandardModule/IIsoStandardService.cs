@@ -14,11 +14,7 @@ namespace IMIS.Application.IsoStandardModule
         Task<List<IsoStandardDto>?> FilterByClauseRef(string clauseRef, int noOfResults, CancellationToken cancellationToken);
         Task<DtoPageList<IsoStandardDto, IsoStandard, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
         Task<DtoPageList<IsoStandardDto, IsoStandard, long>> GetPaginatedByVersionAsync(int versionId, int page, int pageSize, CancellationToken cancellationToken);
-
-        // WRITE
-        Task CreateAsync(IsoStandardDto dto, CancellationToken cancellationToken);
-        Task UpdateAsync(long id, IsoStandardDto dto, CancellationToken cancellationToken);
-        Task<bool> DeleteAsync(long id, CancellationToken cancellationToken);
+        Task<bool> SoftDeleteAsync(long id, CancellationToken cancellationToken);
     }
 
 }

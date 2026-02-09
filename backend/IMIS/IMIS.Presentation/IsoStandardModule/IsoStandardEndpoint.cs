@@ -1,10 +1,13 @@
+using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.IsoStandardModule;
+using IMIS.Application.PgsModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
+using System.Text.Json;
 
 namespace IMIS.Presentation.IsoStandardModule
 {
@@ -18,22 +21,28 @@ namespace IMIS.Presentation.IsoStandardModule
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            //app.MapPost("/", async ([FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
-            //{
-            //    await service.SaveOrUpdateAsync(dto, cancellationToken);
-            //    await cache.EvictByTagAsync(_tag, cancellationToken);
-            //    return Results.Ok(dto);
-            //})
-            //.WithTags(_tag);
-            app.MapPost("/", async ([FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+
+
+            app.MapPost("/", async ([FromBody] List<IsoStandardDto> isoDtos,IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                await service.CreateAsync(dto, cancellationToken);
+                if (isoDtos == null || !isoDtos.Any())
+                {
+                    return Results.BadRequest("ISO data list is required.");
+                }
+
+                var createdIsoList = new List<IsoStandardDto>();
+                foreach (var isoDto in isoDtos)
+                {
+                    await service.SaveOrUpdateAsync(isoDto, cancellationToken);
+                }
+
                 await cache.EvictByTagAsync(_tag, cancellationToken);
 
-                // Return a 201 Created status
-                return Results.Created($"/IsoStandard/{dto.Id}", dto);
-            })
-.WithTags(_tag); // <--- Add this so it shows up in Swagger correctly
+                return Results.Ok();
+            })      
+            .WithTags(_tag);
+
+
 
             app.MapGet("/", async (IIsoStandardService service, CancellationToken cancellationToken) =>
             {
@@ -97,17 +106,19 @@ namespace IMIS.Presentation.IsoStandardModule
             })
             .WithTags(_tag);
 
-            app.MapDelete("/{id}", async (long id, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapDelete("/{id:long}", async (long id, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
-                var result = await service.DeleteAsync(id, cancellationToken);
-                if (result)
-                {
-                    await cache.EvictByTagAsync(_tag, cancellationToken);
-                    return Results.Ok(new { message = "IsoStandard deleted successfully." });
-                }
-                return Results.NotFound(new { message = "IsoStandard not found." });
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_tag, cancellationToken);
+
+                return result
+                    ? Results.Ok(new { message = "IsoStandard deleted successfully." })
+                    : Results.NotFound(new { message = "IsoStandard not found." });
             })
             .WithTags(_tag);
+         
+
         }
     }
 }

@@ -17,6 +17,7 @@ import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/dotted_button.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// ISO Standards Settings Page implementing SRS requirements
 /// FR-01 to FR-11, NFR: Performance, Security, Audit Trail
@@ -45,6 +46,9 @@ class IsoStandardPageState extends State<IsoStandardPage> {
   int _totalCount = 0;
   bool _isLoading = false;
 
+  // Track deleted item IDs to filter them out permanently
+  final Set<String> _deletedIds = {};
+
   // Bulk Add Mode State (FR-03, FR-04)
   List<Map<String, dynamic>> _bulkRows = [];
 
@@ -63,8 +67,7 @@ class IsoStandardPageState extends State<IsoStandardPage> {
   @override
   void initState() {
     super.initState();
-    fetchIsoStandards();
-    fetchStandardVersions();
+    _initialize();
     isoStandardSearchUtil = FilterSearchResultUtil<IsoStandard>(
       paginationUtils: _paginationUtils,
       endpoint: ApiEndpoint().isoStandard,
@@ -74,6 +77,26 @@ class IsoStandardPageState extends State<IsoStandardPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+  }
+
+  /// Initialize data - load deleted IDs then fetch data
+  Future<void> _initialize() async {
+    await _loadDeletedIds();
+    fetchIsoStandards();
+    fetchStandardVersions();
+  }
+
+  /// Load deleted IDs from SharedPreferences
+  Future<void> _loadDeletedIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    final deletedList = prefs.getStringList('iso_deleted_ids') ?? [];
+    _deletedIds.addAll(deletedList);
+  }
+
+  /// Save deleted IDs to SharedPreferences
+  Future<void> _saveDeletedIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList('iso_deleted_ids', _deletedIds.toList());
   }
 
   /// Fetch all available Standard Versions (FR-05)
@@ -138,15 +161,27 @@ class IsoStandardPageState extends State<IsoStandardPage> {
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
-          _totalCount = pageList.totalCount;
-          isoStandardList = pageList.items;
+          // Show all items (both active and inactive) but filter out deleted ones
+          isoStandardList = pageList.items
+              .where((item) => !_deletedIds.contains(item.id.toString()))
+              .toList();
           filteredList = List.from(isoStandardList);
+
+          // Calculate actual total count based on items received
+          // If we got less than a full page, we're on the last page
+          if (isoStandardList.length < _pageSize) {
+            _totalCount =
+                ((_currentPage - 1) * _pageSize) + isoStandardList.length;
+          } else {
+            // Subtract deleted items from total count
+            _totalCount = pageList.totalCount - _deletedIds.length;
+          }
         });
       }
     } catch (e) {
       debugPrint(e.toString());
     } finally {
-      if (mounted) {
+      if (mounted) { 
         setState(() => _isLoading = false);
       }
     }
@@ -436,11 +471,13 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                         );
 
                         if (isDuplicate) {
-                          MotionToast.error(
-                            description: Text(
-                              'Clause "${clauseRefController.text}" already exists for ${selectedVersion!.versionName}',
-                            ),
-                          ).show(context);
+                          if (mounted) {
+                            MotionToast.error(
+                              description: Text(
+                                'Clause "${clauseRefController.text}" already exists for ${selectedVersion!.versionName}',
+                              ),
+                            ).show(context);
+                          }
                           return;
                         }
                       }
@@ -522,14 +559,16 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                               } catch (e) {
                                 debugPrint('Error creating version: $e');
                                 if (!mounted) return;
-                                
+
                                 // Show specific error about version creation
-                                MotionToast.error(
-                                  toastAlignment: Alignment.topCenter,
-                                  description: Text(
-                                    'Failed to create version "$typedVersionName": ${e.toString()}',
-                                  ),
-                                ).show(context);
+                                if (mounted) {
+                                  MotionToast.error(
+                                    toastAlignment: Alignment.topCenter,
+                                    description: Text(
+                                      'Failed to create version "$typedVersionName": ${e.toString()}',
+                                    ),
+                                  ).show(context);
+                                }
                                 return; // Stop the save process
                               }
                             } else {
@@ -557,25 +596,29 @@ class IsoStandardPageState extends State<IsoStandardPage> {
 
                           await fetchIsoStandards();
 
-                          MotionToast.success(
-                            toastAlignment: Alignment.topCenter,
-                            description: Text(
-                              id == null
-                                  ? 'ISO Standard created successfully'
-                                  : 'ISO Standard updated successfully',
-                            ),
-                          ).show(context);
+                          if (mounted) {
+                            MotionToast.success(
+                              toastAlignment: Alignment.topCenter,
+                              description: Text(
+                                id == null
+                                    ? 'ISO Standard created successfully'
+                                    : 'ISO Standard updated successfully',
+                              ),
+                            ).show(context);
+                          }
                         } catch (e) {
                           if (!mounted) return;
 
                           Navigator.pop(context);
 
-                          MotionToast.error(
-                            toastAlignment: Alignment.topCenter,
-                            description: Text(
-                              'Failed to save: ${e.toString()}',
-                            ),
-                          ).show(context);
+                          if (mounted) {
+                            MotionToast.error(
+                              toastAlignment: Alignment.topCenter,
+                              description: Text(
+                                'Failed to save: ${e.toString()}',
+                              ),
+                            ).show(context);
+                          }
 
                           debugPrint('Error saving ISO standard: $e');
                         }
@@ -888,11 +931,13 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                           row['hasError'] = true;
                         });
                         hasErrors = true;
-                        MotionToast.error(
-                          description: Text(
-                            'Duplicate: "$clauseRef" in ${version.versionName}',
-                          ),
-                        ).show(context);
+                        if (mounted) {
+                          MotionToast.error(
+                            description: Text(
+                              'Duplicate: "$clauseRef" in ${version.versionName}',
+                            ),
+                          ).show(context);
+                        }
                         continue;
                       }
 
@@ -911,18 +956,22 @@ class IsoStandardPageState extends State<IsoStandardPage> {
 
                     // FR-08: Block submission if any row has errors
                     if (hasErrors) {
-                      MotionToast.error(
-                        description: Text(
-                          'Please fix all errors before saving (highlighted in red)',
-                        ),
-                      ).show(context);
+                      if (mounted) {
+                        MotionToast.error(
+                          description: Text(
+                            'Please fix all errors before saving (highlighted in red)',
+                          ),
+                        ).show(context);
+                      }
                       return;
                     }
 
                     if (standardsToSave.isEmpty) {
-                      MotionToast.warning(
-                        description: Text('No valid records to save'),
-                      ).show(context);
+                      if (mounted) {
+                        MotionToast.warning(
+                          description: Text('No valid records to save'),
+                        ).show(context);
+                      }
                       return;
                     }
 
@@ -954,28 +1003,35 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                           standardsToSave,
                         );
 
+                        if (!mounted) return;
+
                         await fetchIsoStandards();
 
-                        MotionToast.success(
-                          toastAlignment: Alignment.topCenter,
-                          description: Text(
-                            '${standardsToSave.length} records saved successfully',
-                          ),
-                        ).show(context);
+                        if (mounted) {
+                          MotionToast.success(
+                            toastAlignment: Alignment.topCenter,
+                            description: Text(
+                              '${standardsToSave.length} records saved successfully',
+                            ),
+                          ).show(context);
 
-                        // Clear and close
-                        for (var row in _bulkRows) {
-                          (row['clauseRef'] as TextEditingController).dispose();
-                          (row['description'] as TextEditingController)
-                              .dispose();
+                          // Clear and close
+                          for (var row in _bulkRows) {
+                            (row['clauseRef'] as TextEditingController)
+                                .dispose();
+                            (row['description'] as TextEditingController)
+                                .dispose();
+                          }
+                          Navigator.pop(context);
                         }
-                        Navigator.pop(context);
                       } catch (e) {
-                        MotionToast.error(
-                          description: Text(
-                            'Bulk save failed: ${e.toString()}',
-                          ),
-                        ).show(context);
+                        if (mounted) {
+                          MotionToast.error(
+                            description: Text(
+                              'Bulk save failed: ${e.toString()}',
+                            ),
+                          ).show(context);
+                        }
                       }
                     }
                   },
@@ -1077,48 +1133,78 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                     if (!isMinimized)
                       Row(
                         children: [
-                          // FR-03: Bulk Add button (only if Add permission)
+                          // Combined Add button with dropdown (only if Add permission)
                           if (hasAddPermission)
-                            ElevatedButton.icon(
-                              onPressed: showBulkAddDialog,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.green,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 16,
+                            PopupMenuButton<String>(
+                              onSelected: (value) {
+                                if (value == 'single') {
+                                  showFormDialog();
+                                } else if (value == 'bulk') {
+                                  showBulkAddDialog();
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'single',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.add,
+                                        color: primaryColor,
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text('Add Single Entry'),
+                                    ],
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
+                                PopupMenuItem(
+                                  value: 'bulk',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.playlist_add,
+                                        color: Colors.green,
+                                        size: 20,
+                                      ),
+                                      SizedBox(width: 8),
+                                      Text('Bulk Add Entries'),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              icon: const Icon(
-                                Icons.playlist_add,
-                                color: Colors.white,
-                              ),
-                              label: const Text(
-                                'Bulk Add',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          if (hasAddPermission) SizedBox(width: 8),
-                          // FR-01, FR-03: Add New button (only if Add permission)
-                          if (hasAddPermission)
-                            ElevatedButton.icon(
-                              onPressed: () => showFormDialog(),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: primaryColor,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 10,
-                                  horizontal: 16,
+                              ],
+                              child: ElevatedButton.icon(
+                                onPressed: null,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryColor,
+                                  disabledBackgroundColor: primaryColor,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                    horizontal: 16,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                 ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
+                                icon: const Icon(
+                                  Icons.add,
+                                  color: Colors.white,
                                 ),
-                              ),
-                              icon: const Icon(Icons.add, color: Colors.white),
-                              label: const Text(
-                                'Add New',
-                                style: TextStyle(color: Colors.white),
+                                label: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      'Add New',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
+                                    SizedBox(width: 4),
+                                    Icon(
+                                      Icons.arrow_drop_down,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                         ],
@@ -1127,128 +1213,166 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: [
-                      DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(
-                        label: Text('Clause Reference'),
-                        size: ColumnSize.L,
-                      ),
-                      DataColumn(label: Text('Version Name')),
-                      DataColumn(label: Text('Description')),
-                      DataColumn(label: Text('Status')),
-                      // FR-02, FR-10: Show Actions only if has Edit permission
-                      if (hasEditPermission) DataColumn(label: Text('Actions')),
-                    ],
-                    rows: filteredList.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      var isoStandard = entry.value;
-                      int itemNumber =
-                          ((_currentPage - 1) * _pageSize) + index + 1;
-
-                      return DataRow(
-                        cells: [
-                          DataCell(Text(itemNumber.toString())),
-                          DataCell(Text(isoStandard.clauseRef)),
-                          DataCell(Text(isoStandard.version.versionName)),
-                          DataCell(
-                            Text(
-                              isoStandard.description.length > 50
-                                  ? '${isoStandard.description.substring(0, 50)}...'
-                                  : isoStandard.description,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          DataCell(
-                            Container(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                  child: filteredList.isEmpty && !_isLoading
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.description_outlined,
+                                size: 64,
+                                color: grey,
                               ),
-                              decoration: BoxDecoration(
-                                color: isoStandard.isActive
-                                    ? Colors.green.shade100
-                                    : Colors.red.shade100,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                isoStandard.isActive ? 'Active' : 'Inactive',
+                              SizedBox(height: 16),
+                              Text(
+                                'No ISO Standards found',
                                 style: TextStyle(
-                                  fontSize: 12,
-                                  color: isoStandard.isActive
-                                      ? Colors.green.shade800
-                                      : Colors.red.shade800,
+                                  fontSize: 18,
+                                  color: grey,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Add new standards to get started',
+                                style: TextStyle(fontSize: 14, color: grey),
+                              ),
+                            ],
+                          ),
+                        )
+                      : DataTable2(
+                          columnSpacing: isMobile ? 16 : 40,
+                          headingRowColor: WidgetStatePropertyAll(
+                            secondaryColor,
+                          ),
+                          dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                          headingTextStyle: const TextStyle(color: grey),
+                          horizontalMargin: 12,
+                          minWidth: constraints.maxWidth,
+                          fixedTopRows: 1,
+                          border: TableBorder(
+                            horizontalInside: BorderSide(
+                              color: Colors.grey.shade100,
                             ),
                           ),
-                          // FR-10: Edit and Delete buttons (only if has Edit permission)
-                          if (hasEditPermission)
-                            DataCell(
-                              Row(
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit),
-                                    onPressed: () => showFormDialog(
-                                      id: isoStandard.id.toString(),
-                                      clauseRef: isoStandard.clauseRef,
-                                      description: isoStandard.description,
-                                      version: isoStandard.version,
-                                      versionID: isoStandard.versionID,
-                                      isActive: isoStandard.isActive,
-                                    ),
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete,
-                                      color: primaryColor,
-                                    ),
-                                    onPressed: () {
-                                      showDeleteDialog(
-                                        isoStandard.id.toString(),
-                                      );
-                                    },
-                                  ),
-                                ],
-                              ),
+                          columns: [
+                            DataColumn2(label: Text('#'), fixedWidth: 40),
+                            DataColumn2(
+                              label: Text('Clause Reference'),
+                              size: ColumnSize.L,
                             ),
-                        ],
-                      );
-                    }).toList(),
-                  ),
+                            DataColumn(label: Text('Version Name')),
+                            DataColumn(label: Text('Description')),
+                            DataColumn(label: Text('Status')),
+                            // FR-02, FR-10: Show Actions only if has Edit permission
+                            if (hasEditPermission)
+                              DataColumn(label: Text('Actions')),
+                          ],
+                          rows: filteredList.asMap().entries.map((entry) {
+                            int index = entry.key;
+                            var isoStandard = entry.value;
+                            int itemNumber =
+                                ((_currentPage - 1) * _pageSize) + index + 1;
+
+                            return DataRow(
+                              cells: [
+                                DataCell(Text(itemNumber.toString())),
+                                DataCell(Text(isoStandard.clauseRef)),
+                                DataCell(Text(isoStandard.version.versionName)),
+                                DataCell(
+                                  Text(
+                                    isoStandard.description.length > 50
+                                        ? '${isoStandard.description.substring(0, 50)}...'
+                                        : isoStandard.description,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                DataCell(
+                                  Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: isoStandard.isActive
+                                          ? Colors.green.shade100
+                                          : Colors.red.shade100,
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      isoStandard.isActive
+                                          ? 'Active'
+                                          : 'Inactive',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: isoStandard.isActive
+                                            ? Colors.green.shade800
+                                            : Colors.red.shade800,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // FR-10: Edit and Delete buttons (only if has Edit permission)
+                                if (hasEditPermission)
+                                  DataCell(
+                                    Row(
+                                      children: [
+                                        IconButton(
+                                          icon: const Icon(Icons.edit),
+                                          onPressed: () => showFormDialog(
+                                            id: isoStandard.id.toString(),
+                                            clauseRef: isoStandard.clauseRef,
+                                            description:
+                                                isoStandard.description,
+                                            version: isoStandard.version,
+                                            versionID: isoStandard.versionID,
+                                            isActive: isoStandard.isActive,
+                                          ),
+                                        ),
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: primaryColor,
+                                          ),
+                                          onPressed: () {
+                                            showDeleteDialog(
+                                              isoStandard.id.toString(),
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                 ),
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                      ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchIsoStandards(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
+                // Only show pagination if there are items
+                if (_totalCount > 0)
+                  Container(
+                    padding: EdgeInsets.all(10),
+                    color: secondaryColor,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        PaginationInfo(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                        ),
+                        PaginationControls(
+                          currentPage: _currentPage,
+                          totalItems: _totalCount,
+                          itemsPerPage: _pageSize,
+                          isLoading: _isLoading,
+                          onPageChanged: (page) =>
+                              fetchIsoStandards(page: page),
+                        ),
+                        Container(width: 60),
+                      ],
+                    ),
                   ),
-                ),
               ],
             ),
           );
@@ -1273,10 +1397,13 @@ class IsoStandardPageState extends State<IsoStandardPage> {
       return;
     }
 
+    // Capture the page context before showing dialog
+    final pageContext = context;
+
     showDialog(
       barrierDismissible: false,
       context: context,
-      builder: (context) {
+      builder: (dialogContext) {
         return AlertDialog(
           title: Text("Confirm Delete"),
           content: Text(
@@ -1284,23 +1411,76 @@ class IsoStandardPageState extends State<IsoStandardPage> {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () => Navigator.pop(dialogContext),
               child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
             ),
             TextButton(
               onPressed: () async {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
+
+                // Save the item being deleted for potential rollback
+                final itemToDelete = isoStandardList.firstWhere(
+                  (item) => item.id.toString() == id,
+                  orElse: () => filteredList.firstWhere(
+                    (item) => item.id.toString() == id,
+                  ),
+                );
+                final indexInList = isoStandardList.indexWhere(
+                  (item) => item.id.toString() == id,
+                );
+
                 try {
+                  // Call delete API first
                   await _isoStandardService.deleteIsoStandard(id);
-                  await fetchIsoStandards();
-                  MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('ISO Standard deleted successfully'),
-                  ).show(context);
+                  if (!mounted) return;
+
+                  // Add to deleted IDs set so it stays removed
+                  _deletedIds.add(id);
+                  await _saveDeletedIds(); // Persist to local storage
+
+                  // Calculate new total count
+                  final newTotalCount = _totalCount > 0 ? _totalCount - 1 : 0;
+
+                  // Calculate total pages with new count
+                  final totalPages = (newTotalCount / _pageSize).ceil();
+
+                  // If current page exceeds total pages, go to the last valid page
+                  int pageToFetch = _currentPage;
+                  if (_currentPage > totalPages && totalPages > 0) {
+                    pageToFetch = totalPages;
+                  } else if (totalPages == 0) {
+                    pageToFetch = 1;
+                  }
+
+                  // Update UI and fetch the appropriate page
+                  if (mounted) {
+                    // If we need to navigate to a different page, fetch it
+                    if (pageToFetch != _currentPage) {
+                      await fetchIsoStandards(page: pageToFetch);
+                    } else {
+                      // Just remove from current page
+                      setState(() {
+                        isoStandardList.removeWhere(
+                          (item) => item.id.toString() == id,
+                        );
+                        filteredList.removeWhere(
+                          (item) => item.id.toString() == id,
+                        );
+                        _totalCount = newTotalCount;
+                      });
+                    }
+
+                    MotionToast.success(
+                      toastAlignment: Alignment.topCenter,
+                      description: Text('ISO Standard deleted successfully'),
+                    ).show(pageContext);
+                  }
                 } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete ISO Standard'),
-                  ).show(context);
+                  if (mounted) {
+                    MotionToast.error(
+                      description: Text('Failed to Delete ISO Standard'),
+                    ).show(pageContext);
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(

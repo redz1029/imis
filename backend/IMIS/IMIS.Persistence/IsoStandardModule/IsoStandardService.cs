@@ -1,6 +1,7 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.IsoStandardModule;
+using IMIS.Application.PgsModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
 
@@ -64,91 +65,38 @@ namespace IMIS.Persistence.IsoStandardModule
             return DtoPageList<IsoStandardDto, Domain.IsoStandard, long>.Create(standards.Items, page, pageSize, standards.TotalCount);
         }
 
-        //public async Task SaveOrUpdateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
-        //{
-        //    if (dto == null)
-        //        throw new ArgumentNullException(nameof(dto));
-
-        //    var entity = dto.ToEntity();
-
-        //    if (entity.Id == 0)
-        //        _repository.Add(entity);
-        //    else
-        //        await _repository.UpdateAsync(entity, entity.Id, cancellationToken).ConfigureAwait(false);
-
-        //    var context = _repository.GetDbContext();
-        //    await context.SaveChangesAsync(cancellationToken);
-        //}
-
-        public async Task SaveOrUpdateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken) where TEntity : Entity<TId>
         {
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto));
+            var ODto = dto as IsoStandardDto;
+            var IsoStandardDto = ODto!.ToEntity();
 
-            var context = _repository.GetDbContext();
-
-            if (dto.Id == 0)
-            {
-                // CREATE (this part is fine)
-                var entity = dto.ToEntity();
-                _repository.Add(entity);
-            }
+            if (IsoStandardDto.Id == 0)
+                _repository.Add(IsoStandardDto);
             else
-            {
-                // ✅ UPDATE — LOAD TRACKED ENTITY
-                var entity = await context.Set<IsoStandard>()
-                    .FirstOrDefaultAsync(x => x.Id == dto.Id, cancellationToken);
+                await _repository.UpdateAsync(IsoStandardDto, IsoStandardDto.Id, cancellationToken).ConfigureAwait(false);
 
-                if (entity == null)
-                    throw new Exception("IsoStandard not found.");
-
-                // ✅ UPDATE PROPERTIES ONLY
-                entity.VersionID = dto.VersionID;
-                entity.ClauseRef = dto.ClauseRef;
-                entity.Description = dto.Description;
-                entity.isActive = dto.IsActive;
-
-                // ❌ DO NOT call Update()
-                // ❌ DO NOT touch entity.Version
-            }
-
-            await context.SaveChangesAsync(cancellationToken);
+            await _repository.SaveOrUpdateAsync(IsoStandardDto, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<bool> DeleteAsync(long id, CancellationToken cancellationToken)
+       
+
+        public async Task<bool> SoftDeleteAsync(long id, CancellationToken cancellationToken)
         {
-            var standard = await _repository.GetByIdAsync(id, cancellationToken).ConfigureAwait(false);
-            if (standard == null)
+            var context = _repository.GetDbContext();
+
+            var entity = await context.Set<Domain.IsoStandard>()
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+            if (entity == null)
                 return false;
 
-            var context = _repository.GetDbContext();
-            context.Set<Domain.IsoStandard>().Remove(standard);
-            await context.SaveChangesAsync(cancellationToken);
+            // SOFT DELETE
+           
 
+            await context.SaveChangesAsync(cancellationToken);
             return true;
         }
 
-        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
-            where TEntity : Entity<TId>
-        {
-            if (dto is IsoStandardDto isoDto)
-            {
-                await SaveOrUpdateAsync(isoDto, cancellationToken).ConfigureAwait(false);
-            }
-        }
-
-        public async Task CreateAsync(IsoStandardDto dto, CancellationToken cancellationToken)
-        {
-            // Ensure Id is 0 for a true "Create" operation
-            dto.Id = 0;
-            await SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
-        }
-
-        public async Task UpdateAsync(long id, IsoStandardDto dto, CancellationToken cancellationToken)
-        {
-            // Ensure the DTO Id matches the route Id
-            dto.Id = id;
-            await SaveOrUpdateAsync(dto, cancellationToken).ConfigureAwait(false);
-        }
+        
     }
 }
