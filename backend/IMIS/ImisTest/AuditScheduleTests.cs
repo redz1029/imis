@@ -288,6 +288,7 @@ namespace ImisTest
                         Name = auditor.Name, 
                         IsActive = auditor.IsActive ,
                         UserId = auditor.UserId,
+                        ImprovementType = auditor.ImprovementType
                     });
                     noOfAuditorsToGenerate--;
                 }

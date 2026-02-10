@@ -20,7 +20,11 @@ namespace IMIS.Persistence.IsoStandardModule
                 .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
-
+        public async Task<IsoStandard?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            return await ReadOnlyDbContext.Set<IsoStandard>()
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
         public async Task<IEnumerable<IsoStandard>?> FilterByVersionId(int versionId, CancellationToken cancellationToken)
         {
             return await _entities

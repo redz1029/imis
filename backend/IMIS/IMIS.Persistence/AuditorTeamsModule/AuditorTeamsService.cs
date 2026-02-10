@@ -58,6 +58,8 @@ namespace IMIS.Application.AuditorTeamsModule
                             IsTeamLeader = at.IsTeamLeader,
                             IsActive = at.Auditor.IsActive,
                             UserId = at.Auditor.UserId,
+                            ImprovementType = at.Auditor.ImprovementType
+
                         })
                         .ToList(),
                     IsActive = group.FirstOrDefault()?.IsActive ?? false
@@ -87,7 +89,8 @@ namespace IMIS.Application.AuditorTeamsModule
                         Name = at.Auditor.Name,
                         IsTeamLeader = at.IsTeamLeader,
                         IsActive = at.Auditor.IsActive,
-                        UserId = at.Auditor.UserId
+                        UserId = at.Auditor.UserId,
+                        ImprovementType = at.Auditor.ImprovementType
                     })
                     .ToList(),
                 IsActive = auditorTeams.First().IsActive

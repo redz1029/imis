@@ -10,6 +10,10 @@ namespace IMIS.Domain
         public Auditor? Auditor { get; set; }
         public bool IsTeamLeader { get; set; }
         public bool IsActive { get; set; }
+
+
+
+
     }
 }
 

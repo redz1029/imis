@@ -106,7 +106,7 @@ namespace IMIS.Presentation.IsoStandardModule
             })
             .WithTags(_tag);
 
-            app.MapDelete("/{id:long}", async (long id, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapDelete("/{id:long}", async (int id, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 var result = await service.SoftDeleteAsync(id, cancellationToken);
 

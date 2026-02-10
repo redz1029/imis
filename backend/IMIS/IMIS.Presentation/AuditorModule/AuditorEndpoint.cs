@@ -26,8 +26,8 @@ namespace IMIS.Presentation.AuditorModule
                 await cache.EvictByTagAsync(_auditorTag, cancellationToken);
                 return Results.Ok(auditor);
             })
-            .WithTags(_auditorTag)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.Add));
+            .WithTags(_auditorTag);
+            //.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _auditorPermission.Add));
 
             app.MapGet("/", async (IAuditorService service, CancellationToken cancellationToken) =>
             {

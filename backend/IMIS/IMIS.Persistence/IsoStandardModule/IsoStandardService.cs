@@ -1,8 +1,9 @@
 ﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.IsoStandardModule;
-using IMIS.Application.PgsModule;
 using IMIS.Domain;
+using IMIS.Infrastructure.Auths.Roles;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.IsoStandardModule
@@ -10,19 +11,35 @@ namespace IMIS.Persistence.IsoStandardModule
     public class IsoStandardService : IIsoStandardService
     {
         private readonly IIsoStandardRepository _repository;
+        private readonly ImisDbContext _dbContext;
 
-        public IsoStandardService(IIsoStandardRepository repository)
+
+        public IsoStandardService(IIsoStandardRepository repository, ImisDbContext dbContext)
         {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
+            _repository = repository;
+            _dbContext = dbContext;
         }
 
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        {
+            var standard = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (standard == null)
+                return false;
+
+            standard.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
+            return true;
+        }
         public async Task<List<IsoStandardDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var standards = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            if (standards == null || !standards.Any())
+            var standard = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
+            if (standard == null || !standard.Any())
                 return null;
 
-            return standards.Select(s => new IsoStandardDto(s)).ToList();
+            return standard.Select(s =>  new IsoStandardDto(s)).ToList();
         }
 
         public async Task<IsoStandardDto?> GetByIdAsync(long id, CancellationToken cancellationToken)
@@ -78,25 +95,25 @@ namespace IMIS.Persistence.IsoStandardModule
             await _repository.SaveOrUpdateAsync(IsoStandardDto, cancellationToken).ConfigureAwait(false);
         }
 
+
+
+        //public async Task<bool> SoftDeleteAsync(long id, CancellationToken cancellationToken)
+        //{
+        //    var context = _repository.GetDbContext();
+
+        //    var entity = await context.Set<Domain.IsoStandard>()
+        //        .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+
+        //    if (entity == null)
+        //        return false;
+
+        //    // SOFT DELETE
+        //    //entity.isActive = false;
+        //    var context = _repository.GetDbContext();
+        //    await context.SaveChangesAsync(cancellationToken);
+        //    return true;
+        //}
        
 
-        public async Task<bool> SoftDeleteAsync(long id, CancellationToken cancellationToken)
-        {
-            var context = _repository.GetDbContext();
-
-            var entity = await context.Set<Domain.IsoStandard>()
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-
-            if (entity == null)
-                return false;
-
-            // SOFT DELETE
-           
-
-            await context.SaveChangesAsync(cancellationToken);
-            return true;
-        }
-
-        
     }
 }

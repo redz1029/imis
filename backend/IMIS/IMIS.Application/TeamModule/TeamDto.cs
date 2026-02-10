@@ -23,6 +23,7 @@ namespace IMIS.Application.TeamModule
                 IsActive = a.Auditor!.IsActive,
                 Name = a.Auditor!.Name,
                 UserId = a.Auditor!.UserId,
+                ImprovementType = a.Auditor!.ImprovementType
             }).ToList();
         }
         public override Team ToEntity()

@@ -11,6 +11,7 @@ namespace IMIS.Application.AuditorModule
         public bool IsTeamLeader { get; set; }
         public bool IsOfficeHead { get; set; }
         public required string UserId { get; set; }
+        public required OrganizationImprovementType ImprovementType { get; set; }
         public AuditorDto() { }
         [SetsRequiredMembers]
         public AuditorDto(Auditor auditor)
@@ -21,11 +22,12 @@ namespace IMIS.Application.AuditorModule
                 Name = auditor.Name;
                 IsActive = auditor.IsActive;
                 UserId = auditor.UserId;
+                ImprovementType = auditor.ImprovementType;
             }
         }
         public override Auditor ToEntity()
         {
-            return new Auditor() { Id = Id, Name = Name, IsActive = IsActive, UserId = UserId };
+            return new Auditor() { Id = Id, Name = Name, IsActive = IsActive, UserId = UserId, ImprovementType = ImprovementType };
         }
     }
 }
