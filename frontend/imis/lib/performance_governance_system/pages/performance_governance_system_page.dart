@@ -5076,7 +5076,6 @@ class PerformanceGovernanceSystemPageState
   ) {
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
 
-    // Extract period dates from selectedPeriodObject
     DateTime periodStartDate = DateTime(2000);
     DateTime periodEndDate = DateTime(2100);
 
@@ -5098,7 +5097,6 @@ class PerformanceGovernanceSystemPageState
 
     if (selectedByWhen[index] == null ||
         selectedByWhenControllers[index]?.text.isEmpty == true) {
-      // Only set default if a period is actually selected
       if (selectedPeriod != null &&
           selectedPeriodObject != null &&
           selectedPeriodObject!.isNotEmpty) {
@@ -5109,7 +5107,6 @@ class PerformanceGovernanceSystemPageState
           'MMMM yyyy',
         ).format(defaultDateTime);
       }
-      // If no period selected, leave empty
     }
 
     return Padding(
