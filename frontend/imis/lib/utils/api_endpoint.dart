@@ -57,6 +57,7 @@ class ApiEndpoint {
   late String kraRoadMapReport;
   late String kraRoadmapRole;
   late String standardVersion;
+  late String scorecardMonitoringFilter;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -112,6 +113,7 @@ class ApiEndpoint {
     kraRoadMapReport = '$baseUrl/kraRoadMap/list-report/pdf';
     kraRoadmapRole = '$baseUrl/kraRoadmapRole/roleid';
     standardVersion = '$baseUrl/api/standardVersion';
+    scorecardMonitoringFilter = '$baseUrl/kraRoadMap/filter';
   }
 
   static Future<void> setBaseUrl() async {
