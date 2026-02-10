@@ -32,6 +32,44 @@ namespace IMIS.Persistence.KraRoadMapModule
             _userManager = userManager;
             _roleManager = roleManager;
         }
+        
+        public async Task<List<FilterKraPeriodKraDeliverableDto>> GetGroupedDeliverablesAsync(int? kraid, int? year, CancellationToken cancellationToken)
+        {
+            var deliverables = await _repository.GetDeliverablesAsync(kraid, year, cancellationToken);
+
+            if (!deliverables.Any())
+                return new List<FilterKraPeriodKraDeliverableDto>();
+
+            var grouped = deliverables
+                .GroupBy(d => new { d.Year, d.KraDescription })
+                .Select(g => new FilterKraPeriodKraDeliverableDto
+                {
+                    Id = g.Min(x => (int)x.Id),
+                    KraDescription = g.Key.KraDescription,
+                    DeliverableDescription = string.Join(", ", g.Select(x => x.DeliverableDescription)),
+                    Year = g.Key.Year
+                })
+                .ToList();
+
+            return grouped;
+        }
+
+        public async Task<List<KraRoadMapKpiDto>> GetKpiDeliverableAsync(int? kraid, CancellationToken cancellationToken)
+        {
+            var kpis = await _repository.GetKpisAsync(kraid, cancellationToken);
+
+            if (!kpis.Any())
+                return new List<KraRoadMapKpiDto>();
+
+            var result = kpis.Select(k => new KraRoadMapKpiDto
+            {
+                Id = k.Id,
+                KpiDescription = k.KpiDescription
+            }).ToList();
+
+            return result;
+        }
+
 
         public async Task<ReportKraRoadMapDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
         {

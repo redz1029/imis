@@ -12,6 +12,54 @@ namespace IMIS.Persistence.KraRoadMapModule
         public KraRoadMapRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
+
+        public async Task<List<KraRoadMapKpi>> GetKpisAsync(int? kraid, CancellationToken cancellationToken)
+        {
+            var roadMapQuery = ReadOnlyDbContext.Set<KraRoadMap>()
+                .AsNoTracking()
+                .Where(r => !r.IsDeleted);
+
+            if (kraid.HasValue)
+                roadMapQuery = roadMapQuery.Where(r => r.KraId == kraid.Value);
+
+            var roadMapIds = await roadMapQuery
+                .Select(r => r.Id)
+                .ToListAsync(cancellationToken);
+
+            if (!roadMapIds.Any())
+                return new List<KraRoadMapKpi>();
+
+            var kpiQuery = ReadOnlyDbContext.Set<KraRoadMapKpi>()
+                .AsNoTracking()
+                .Where(k => !k.IsDeleted && roadMapIds.Contains(k.KraRoadMapId));
+
+            return await kpiQuery.ToListAsync(cancellationToken);
+        }
+
+
+        public async Task<List<KraRoadMapDeliverable>> GetDeliverablesAsync(int? kraid, int? year, CancellationToken cancellationToken)
+        {
+            var roadMapQuery = ReadOnlyDbContext.Set<KraRoadMap>()
+                .AsNoTracking();
+            
+            if (kraid.HasValue)
+                roadMapQuery = roadMapQuery.Where(r => r.KraId == kraid.Value);
+
+            var roadMapIds = await roadMapQuery.Select(r => r.Id).ToListAsync(cancellationToken);
+
+            if (!roadMapIds.Any())
+                return new List<KraRoadMapDeliverable>();
+
+            var deliverablesQuery = ReadOnlyDbContext.Set<KraRoadMapDeliverable>()
+                .AsNoTracking()
+                .Where(d => !d.IsDeleted && roadMapIds.Contains(d.KraRoadMapId));
+
+            if (year.HasValue)
+                deliverablesQuery = deliverablesQuery.Where(d => d.Year == year.Value);
+
+            return await deliverablesQuery.ToListAsync(cancellationToken);
+        }
+
         public async Task<KraRoadMap?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<KraRoadMap>()

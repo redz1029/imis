@@ -13,5 +13,8 @@ namespace IMIS.Application.KraRoadMapModule
         Task<IEnumerable<KraRoadMapFilter>>GetByKraYearAndDescriptionAsync(int kraId, int year, string kraDescription, bool isDirect, CancellationToken cancellationToken);
         Task<IEnumerable<KraRoadMapDescriptionFilter>> GetKraDescriptionsByKraIdAsync(int kraId, CancellationToken cancellationToken);
         Task<List<KraRoadMap>> GetAllForUserIdAsync(string roleid, CancellationToken cancellationToken);
+        Task<List<KraRoadMapDeliverable>> GetDeliverablesAsync(int? kraid, int? year, CancellationToken cancellationToken);
+        Task<List<KraRoadMapKpi>> GetKpisAsync(int? kraid, CancellationToken cancellationToken);
+
     }
 }

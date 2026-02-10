@@ -8,5 +8,6 @@ namespace IMIS.Domain
         public string? DeliverableDescription { get; set; }
         public required int Year { get; set; }
         public bool IsEnabler { get; set; }
+        public long KraRoadMapId { get; set; }
     }
 }

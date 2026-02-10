@@ -11,8 +11,8 @@ namespace IMIS.Application.KraRoadMapDeliverableModule
         public required int Year { get; set; }
         public bool IsEnabler { get; set; }
 
-
         public KraRoadMapDeliverableDto() { }
+
         [SetsRequiredMembers]
         public KraRoadMapDeliverableDto(KraRoadMapDeliverable kraRoadMapDeliverableDto)
         {
@@ -22,6 +22,7 @@ namespace IMIS.Application.KraRoadMapDeliverableModule
             this.Year = kraRoadMapDeliverableDto.Year;
             this.IsEnabler = kraRoadMapDeliverableDto.IsEnabler;
         }
+        
         public override KraRoadMapDeliverable ToEntity()
         {
             return new KraRoadMapDeliverable()
