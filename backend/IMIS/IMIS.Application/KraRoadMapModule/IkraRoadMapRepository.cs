@@ -16,5 +16,14 @@ namespace IMIS.Application.KraRoadMapModule
         Task<List<KraRoadMapDeliverable>> GetDeliverablesAsync(int? kraid, int? year, CancellationToken cancellationToken);
         Task<List<KraRoadMapKpi>> GetKpisAsync(int? kraid, CancellationToken cancellationToken);
 
+        Task<List<KraRoadMapDeliverable>> GetDeliverablesByRoleAsync(
+        int? kraId,
+        int? year,
+        string roleId,
+        CancellationToken cancellationToken);
+
+        Task<List<KraRoadMapKpi>> GetKpisByRoleAsync(int? kraid, string roleId, CancellationToken cancellationToken);
+
+
     }
 }

@@ -6,5 +6,7 @@
         public string? KraDescription { get; set; }
         public string? DeliverableDescription { get; set; }
         public required int Year { get; set; }
+        public string? KraPeriod { get; set; }
+
     }
 }
