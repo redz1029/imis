@@ -3,6 +3,7 @@ using Base.Auths.Permissions;
 using Base.Auths.Roles;
 using IMIS.Application.AnnouncementModule;
 using IMIS.Application.BreakThroughScoringModule;
+using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Application.KraRoadMapModule;
 using IMIS.Application.KraRoadMapPeriodModule;
 using IMIS.Application.OfficeModule;
@@ -83,7 +84,8 @@ namespace IMIS.Infrastructure.Auths
                 new PgsDeliverableAccomplishmentPermission(),
                 new SWOTAnalysisPermission(),
                 new KraRoadMapPermission(),
-                new KraRoadMapPeriodPermission());
+                new KraRoadMapPeriodPermission(),
+                new  KraRoadMapAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsServiceHead, IdentityRole>(_roleManager,
                 new PerformanceGovernanceSystemPermission(),
@@ -147,42 +149,50 @@ namespace IMIS.Infrastructure.Auths
             await PermissionSeeder.SeedPermissionForRole<ResearchOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission());
+                new KeyResultAreaPermission(),
+                new KraRoadMapAccomplishmentPermission());
                 
             await PermissionSeeder.SeedPermissionForRole<TrainingOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission());
+                new KeyResultAreaPermission(),
+                new KraRoadMapAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<LinkagesOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission());
+                new KeyResultAreaPermission(), 
+                new KraRoadMapAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<FacilitiesOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission());
+                new KeyResultAreaPermission(), 
+                new KraRoadMapAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<FinanceOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission());
+                new KeyResultAreaPermission(), 
+                new KraRoadMapAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<InformationOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission());
+                new KeyResultAreaPermission(),
+                new KraRoadMapAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<HROfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission());
+                new KeyResultAreaPermission(), 
+                new KraRoadMapAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<SafetyOfficer, IdentityRole>(_roleManager,
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new KeyResultAreaPermission());
+                new KeyResultAreaPermission(),
+                new KraRoadMapAccomplishmentPermission());
 
             // This will seed all roles and permissions for the default users
             await PermissionSeeder.SeedAdminRolesAndPermissionsForDefaultUsers<IdentityRole, User>(
