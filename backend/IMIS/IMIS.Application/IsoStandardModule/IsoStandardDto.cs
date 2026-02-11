@@ -7,8 +7,8 @@ namespace IMIS.Application.IsoStandardModule
 {
     public class IsoStandardDto : BaseDto<IsoStandard, long>
     {
-        public required int VersionID { get; set; }
-        public required string ClauseRef { get; set; }
+        public new required int VersionID { get; set; }
+        public new required string ClauseRef { get; set; }
         public string? Description { get; set; }
         public bool IsActive { get; set; }
         public StandardVersionDto? Version { get; set; }
@@ -32,6 +32,7 @@ namespace IMIS.Application.IsoStandardModule
                     VersionName = isoStandard.Version.VersionName,
                     IsActive = isoStandard.Version.isActive,
                     //IsoStandards = null // Keep this null to break the chain
+                    
                 };
             }
         }

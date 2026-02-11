@@ -10,7 +10,8 @@ namespace IMIS.Domain
 
     public class Auditor : Entity<int>
     {
-        public required string Name { get; set; }
+        public OrganizationImprovementType ImprovementType;
+
         public required bool IsActive { get; set; }
         public required string UserId { get; set; }
         public User? User { get; set; }
@@ -18,8 +19,8 @@ namespace IMIS.Domain
         public ICollection<AuditorOffices>? AuditorOffices { get; set; }
         public ICollection<AuditorTeams>? AuditorTeams { get; set; }
 
-        // Tagging auditors with their improvement type
-        public required OrganizationImprovementType ImprovementType { get; set; }
+        
+
     }
    
 

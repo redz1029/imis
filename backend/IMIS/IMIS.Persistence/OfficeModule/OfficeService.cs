@@ -62,11 +62,10 @@ namespace IMIS.Persistence.OfficeModule
                     .Select(a => new AuditorDto()
                     {
                         Id = a.AuditorId,
-                        Name = a.Auditor!.Name,
                         IsActive = a.Auditor.IsActive,
                         UserId = a.Auditor.UserId,
                         IsOfficeHead = a.IsOfficeHead,
-                        ImprovementType = a.Auditor.ImprovementType
+                        
                     }).ToList()
             };
         }

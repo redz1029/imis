@@ -21,18 +21,18 @@ namespace IMIS.Application.TeamModule
             {
                 Id = a.AuditorId ?? 0,
                 IsActive = a.Auditor!.IsActive,
-                Name = a.Auditor!.Name,
-                UserId = a.Auditor!.UserId,
-                ImprovementType = a.Auditor!.ImprovementType
+                UserId = a.Auditor!.UserId
+                
+                
             }).ToList();
         }
         public override Team ToEntity()
         {
             return new Team()
-            { 
-              Id = Id, 
-              Name = Name, 
-              IsActive = IsActive
+            {
+                Id = Id,
+                IsActive = IsActive,
+                Name  = Name
             };
         }
     }

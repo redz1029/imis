@@ -2,6 +2,7 @@
 using Base.Primitives;
 using IMIS.Application.AuditorModule;
 using IMIS.Domain;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace IMIS.Application.AuditorTeamsModule
 {
@@ -54,12 +55,10 @@ namespace IMIS.Application.AuditorTeamsModule
                         .Select(at => new AuditorDto
                         {
                             Id = at.Auditor!.Id,
-                            Name = at.Auditor.Name,
                             IsTeamLeader = at.IsTeamLeader,
                             IsActive = at.Auditor.IsActive,
                             UserId = at.Auditor.UserId,
-                            ImprovementType = at.Auditor.ImprovementType
-
+                            ImprovementType = at.ImprovementType
                         })
                         .ToList(),
                     IsActive = group.FirstOrDefault()?.IsActive ?? false
@@ -86,7 +85,6 @@ namespace IMIS.Application.AuditorTeamsModule
                     .Select(at => new AuditorDto
                     {
                         Id = at.Auditor!.Id,
-                        Name = at.Auditor.Name,
                         IsTeamLeader = at.IsTeamLeader,
                         IsActive = at.Auditor.IsActive,
                         UserId = at.Auditor.UserId,
@@ -125,7 +123,8 @@ namespace IMIS.Application.AuditorTeamsModule
                         TeamId = auditorTeamEntity.TeamId,       
                         AuditorId = auditorDto.Id,               
                         IsTeamLeader = auditorDto.IsTeamLeader,
-                        IsActive = auditorTeamEntity.IsActive
+                        IsActive = auditorTeamEntity.IsActive,
+                        ImprovementType = auditorTeamEntity.ImprovementType
                     };
 
                     await context.AddAsync(newTeam, cancellationToken).ConfigureAwait(false);

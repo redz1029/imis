@@ -11,6 +11,8 @@ namespace IMIS.Domain
         public bool IsTeamLeader { get; set; }
         public bool IsActive { get; set; }
 
+        public required OrganizationImprovementType ImprovementType { get; set; }
+        public ICollection<Auditor>? Auditors { get; set; }
 
 
 

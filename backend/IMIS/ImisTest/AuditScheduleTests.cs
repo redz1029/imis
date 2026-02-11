@@ -226,7 +226,6 @@ namespace ImisTest
             {
                 var noOfTeamsToGenerate = noOfTeams - teams?.Count;
                 var teamFaker = new Faker<TeamDto>()
-                    .RuleFor(t => t.Name, f => f.Lorem.Word())
                     .RuleFor(t => t.IsActive, true);
 
                 while(noOfTeamsToGenerate > 0)
@@ -273,7 +272,7 @@ namespace ImisTest
             {
                 var noOfAuditorsToGenerate = noOfAuditors - auditors?.Count;
                 var auditorFaker = new Faker<AuditorDto>()
-                    .RuleFor(a => a.Name, f => f.Person.FullName)
+                    //.RuleFor(a => a.Name, f => f.Person.FullName)
                     .RuleFor(a => a.IsActive, true);
 
                 while(noOfAuditorsToGenerate > 0)
@@ -285,10 +284,9 @@ namespace ImisTest
                     auditors!.Add(new AuditorDto() 
                     { 
                         Id = auditor.Id, 
-                        Name = auditor.Name, 
                         IsActive = auditor.IsActive ,
                         UserId = auditor.UserId,
-                        ImprovementType = auditor.ImprovementType
+                        
                     });
                     noOfAuditorsToGenerate--;
                 }
