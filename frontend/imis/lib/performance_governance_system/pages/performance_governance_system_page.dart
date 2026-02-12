@@ -3294,7 +3294,29 @@ class PerformanceGovernanceSystemPageState
           periodEndDate = _dateConverter.fromJson(endDateJson.toString());
         }
       } catch (e) {
-        debugPrint('Error parsing period dates: $e');
+        debugPrint('Error parsing period dates from selectedPeriodObject: $e');
+      }
+    }
+
+    if ((selectedPeriodObject == null || selectedPeriodObject!.isEmpty) &&
+        selectedPeriod != null) {
+      try {
+        final selected = filteredListPeriod.firstWhere(
+          (p) => p['id'] == selectedPeriod,
+          orElse: () => {},
+        );
+        if (selected.isNotEmpty) {
+          final startStr = selected['startDate'];
+          final endStr = selected['endDate'];
+          if (startStr != null && startStr is String && startStr.isNotEmpty) {
+            periodStartDate = DateTime.parse(startStr);
+          }
+          if (endStr != null && endStr is String && endStr.isNotEmpty) {
+            periodEndDate = DateTime.parse(endStr);
+          }
+        }
+      } catch (e) {
+        debugPrint('Error parsing period dates from filteredListPeriod: $e');
       }
     }
 
@@ -3303,6 +3325,13 @@ class PerformanceGovernanceSystemPageState
       if (selectedPeriod != null &&
           selectedPeriodObject != null &&
           selectedPeriodObject!.isNotEmpty) {
+        DateTime defaultDateTime = periodStartDate;
+        String defaultDate = DateFormat('yyyy-MM-dd').format(defaultDateTime);
+        selectedByWhen[index] = defaultDate;
+        selectedByWhenControllers[index]?.text = DateFormat(
+          'MMMM yyyy',
+        ).format(defaultDateTime);
+      } else if (selectedPeriod != null) {
         DateTime defaultDateTime = periodStartDate;
         String defaultDate = DateFormat('yyyy-MM-dd').format(defaultDateTime);
         selectedByWhen[index] = defaultDate;
@@ -3752,53 +3781,6 @@ class PerformanceGovernanceSystemPageState
           fontStyle: FontStyle.normal,
         ),
 
-        // TableCell(
-        //   child: Padding(
-        //     padding: const EdgeInsets.all(8.0),
-        //     child: Tooltip(
-        //       message:
-        //           'This percentage is used during performance reviews to determine how each output affects your overall results.',
-        //       child: TextFormField(
-        //         readOnly: !hasEditPermission,
-        //         controller: percentageDeliverables,
-        //         autovalidateMode: AutovalidateMode.onUserInteraction,
-        //         textAlign: TextAlign.center,
-        //         keyboardType: TextInputType.number,
-        //         style: TextStyle(
-        //           color: secondaryColor,
-        //           fontSize: 20,
-        //           fontStyle: FontStyle.normal,
-        //         ),
-        //         validator: (value) {
-        //           if (value == null || value.isEmpty) {
-        //             return "Please enter percentage";
-        //           }
-        //           return null;
-        //         },
-        //         inputFormatters: [
-        //           FilteringTextInputFormatter.digitsOnly,
-        //           LengthLimitingTextInputFormatter(2),
-        //           RangeInputFormatter(1, 40),
-        //         ],
-
-        //         decoration: InputDecoration(
-        //           labelText: percentDeliverables,
-        //           hintText: '0',
-        //           suffixText: '%',
-        //           border: OutlineInputBorder(),
-        //           suffixStyle: TextStyle(color: secondaryColor, fontSize: 20),
-        //           hintStyle: TextStyle(color: Colors.white),
-        //           enabledBorder: OutlineInputBorder(
-        //             borderSide: BorderSide(color: Colors.white),
-        //           ),
-        //           focusedBorder: OutlineInputBorder(
-        //             borderSide: BorderSide(color: Colors.white),
-        //           ),
-        //         ),
-        //       ),
-        //     ),
-        //   ),
-        // ),
         TableCell(
           child: Padding(
             padding: const EdgeInsets.all(8.0),
@@ -4264,12 +4246,7 @@ class PerformanceGovernanceSystemPageState
           isDirect: false,
           errorText: '',
         ),
-        // _buildExpandableTextAreaCellPGSDeliverable(
-        //   index,
-        //   id,
-        //   orderLevel,
-        //   setDialogState,
-        // ),
+
         _buildExpandableTextAreaCelStatus(index, id, setDialogState),
         _buildDatePickerCellPgsDeliverableStatus(
           index,
@@ -5075,169 +5052,25 @@ class PerformanceGovernanceSystemPageState
     int orderLevel,
   ) {
     selectedByWhenControllers.putIfAbsent(index, () => TextEditingController());
-
-    DateTime periodStartDate = DateTime(2000);
-    DateTime periodEndDate = DateTime(2100);
-
-    if (selectedPeriodObject != null && selectedPeriodObject!.isNotEmpty) {
-      try {
-        final startDateJson = selectedPeriodObject!['startDate'];
-        final endDateJson = selectedPeriodObject!['endDate'];
-
-        if (startDateJson != null) {
-          periodStartDate = _dateConverter.fromJson(startDateJson.toString());
-        }
-        if (endDateJson != null) {
-          periodEndDate = _dateConverter.fromJson(endDateJson.toString());
-        }
-      } catch (e) {
-        debugPrint('Error parsing period dates: $e');
-      }
-    }
-
-    if (selectedByWhen[index] == null ||
-        selectedByWhenControllers[index]?.text.isEmpty == true) {
-      if (selectedPeriod != null &&
-          selectedPeriodObject != null &&
-          selectedPeriodObject!.isNotEmpty) {
-        DateTime defaultDateTime = periodStartDate;
-        String defaultDate = DateFormat('yyyy-MM-dd').format(defaultDateTime);
-        selectedByWhen[index] = defaultDate;
-        selectedByWhenControllers[index]?.text = DateFormat(
-          'MMMM yyyy',
-        ).format(defaultDateTime);
-      }
-    }
-
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Tooltip(
         message:
             'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
-        child: TextFormField(
-          controller: selectedByWhenControllers[index],
-          readOnly: true,
-          style: TextStyle(fontSize: 13.50),
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: primaryColor),
-            ),
-            contentPadding: EdgeInsets.all(8.0),
-            suffixIcon: Icon(Icons.calendar_today),
-          ),
-          onTap:
-              (id != null && orderLevel >= 1) || selectedPeriod == null
-                  ? null
-                  : () async {
-                    DateTime initialDate = periodStartDate;
-
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: initialDate,
-                      firstDate: periodStartDate,
-                      lastDate: periodEndDate,
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: primaryColor,
-                              onPrimary: secondaryColor,
-                            ),
-                            textButtonTheme: TextButtonThemeData(
-                              style: TextButton.styleFrom(
-                                foregroundColor: primaryColor,
-                              ),
-                            ),
-                          ),
-                          child: child!,
-                        );
-                      },
-                    );
-                    if (pickedDate != null) {
-                      String formattedDate = DateFormat(
-                        'yyyy-MM-dd',
-                      ).format(pickedDate);
-                      setDialogState(() {
-                        selectedByWhen[index] = formattedDate;
-                        selectedByWhenControllers[index]?.text = DateFormat(
-                          'MMMM yyyy',
-                        ).format(pickedDate);
-                      });
-                    }
-                  },
+        child: ValueListenableBuilder<TextEditingValue>(
+          valueListenable: selectedByWhenControllers[index]!,
+          builder: (context, value, child) {
+            return Center(
+              child: Text(
+                value.text,
+                style: const TextStyle(fontSize: 14, color: Colors.black),
+              ),
+            );
+          },
         ),
       ),
     );
   }
-  //End---------------------Pgs Deliverable Status---------------------------------------
-
-  // Start-----------------------PGS Deliverable Status---------------------
-  // Dropdown field that allows changing PgsStatus for each row
-  // Widget _buildDropdownCellStatusPgsDeliverableStatus(
-  //   int index,
-  //   VoidCallback setDialogState,
-  // ) {
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child: DropdownButtonFormField<PgsStatus>(
-  //       value: selectedStatus[index] ?? PgsStatus.notStarted,
-  //       onChanged: null,
-  //       isExpanded: true,
-  //       decoration: const InputDecoration(
-  //         border: OutlineInputBorder(),
-  //         contentPadding: EdgeInsets.all(8.0),
-  //       ),
-
-  //       items:
-  //           PgsStatus.values.map((PgsStatus value) {
-  //             return DropdownMenuItem<PgsStatus>(
-  //               value: value,
-  //               child: Text(value.name, style: const TextStyle(fontSize: 13)),
-  //             );
-  //           }).toList(),
-  //     ),
-  //   );
-  // }
-  // End-----------------------PGS Deliverable Status---------------------
-
-  //Start------------Pgs Deliverables Status----------------------------------------------
-  // Widget _buildExpandableTextAreaCellPGSDeliverable(
-  //   int index,
-  //   String? id,
-  //   int orderLevel,
-  //   Function setDialogState,
-  // ) {
-  //   if (!deliverablesControllers.containsKey(index)) {
-  //     deliverablesControllers[index] = TextEditingController();
-  //   }
-
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child: ConstrainedBox(
-  //       constraints: BoxConstraints(minHeight: 50.0),
-  //       child: Tooltip(
-  //         message:
-  //             'Specify the tangible results or outcomes tied to this responsibility.',
-  //         child: TextFormField(
-  //           readOnly: id != null && orderLevel >= 1,
-  //           controller: deliverablesControllers[index],
-  //           maxLines: null,
-  //           keyboardType: TextInputType.multiline,
-  //           style: TextStyle(fontSize: 14.0),
-  //           decoration: InputDecoration(
-  //             border: OutlineInputBorder(),
-  //             contentPadding: EdgeInsets.all(8.0),
-  //           ),
-  //           onChanged: (value) {
-  //             deliverableUserEdited[index] = true;
-  //             setState(() {});
-  //           },
-  //         ),
-  //       ),
-  //     ),
-  //   );
-  // }
 
   Widget _buildExpandableTextAreaCelStatus(
     int index,
@@ -5253,9 +5086,11 @@ class PerformanceGovernanceSystemPageState
       child: ValueListenableBuilder<TextEditingValue>(
         valueListenable: deliverablesControllers[index]!,
         builder: (context, value, child) {
-          return Text(
-            value.text,
-            style: const TextStyle(fontSize: 14, color: Colors.black),
+          return Center(
+            child: Text(
+              value.text,
+              style: const TextStyle(fontSize: 14, color: Colors.black),
+            ),
           );
         },
       ),
