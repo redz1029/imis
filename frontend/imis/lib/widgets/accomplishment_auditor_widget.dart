@@ -10,11 +10,11 @@ import 'package:dio/dio.dart';
 import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
+import '../constant/permissions.dart';
 import '../performance_governance_system/enum/pgs_status.dart';
 
 final Dio dio = Dio();
@@ -153,6 +153,72 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
     }
   }
 
+  Widget _buildEditablePercentage(PgsStatus status) {
+    final row =
+        achievementsList[widget.deliverableId]!.rows[widget.periodIndex];
+    final percentageController = row.percentageController;
+    final selectedStatus = row.status;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 30,
+          child: TextField(
+            controller: percentageController,
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12),
+            keyboardType: TextInputType.number,
+            readOnly: status == PgsStatus.notStarted,
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              isDense: true,
+            ),
+
+            onTap: () {
+              if (status == PgsStatus.onGoing) {
+                _showTooltip(context, 'Enter value from 1–99 only');
+              } else if (status == PgsStatus.completed) {
+                _showTooltip(context, 'Enter value from 100–999 only');
+              }
+            },
+
+            onChanged: (val) {
+              if (val.isEmpty) return;
+
+              int parsed = int.tryParse(val) ?? 0;
+
+              if (selectedStatus.value == PgsStatus.completed) {
+                if (parsed < 100) {
+                  percentageController.text = '100';
+                } else if (parsed > 999) {
+                  percentageController.text = '999';
+                }
+              } else if (selectedStatus.value == PgsStatus.onGoing) {
+                if (parsed < 1) {
+                  percentageController.text = '1';
+                } else if (parsed > 99) {
+                  percentageController.text = '99';
+                }
+              } else {
+                percentageController.text = '0';
+              }
+
+              percentageController.selection = TextSelection.collapsed(
+                offset: percentageController.text.length,
+              );
+            },
+          ),
+        ),
+
+        const Text(
+          '%',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+        ),
+      ],
+    );
+  }
+
   void _showTooltip(BuildContext context, String message) {
     _removeTooltip();
 
@@ -235,6 +301,9 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
       PgsStatus.completed:
           "Deliverable has been finished and meets PGS requirements",
     };
+    final canEdit = permissionService.hasPermission(
+      AppPermissions.editPgsDeliverableAccomplishment,
+    );
     final statusDisplayNames = {
       PgsStatus.notStarted: "Not Started",
       PgsStatus.onGoing: "On Going",
@@ -255,408 +324,162 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
               ),
             ),
           ),
-          PermissionWidget(
-            allowedRoles: [PermissionString.roleAdmin],
-            child: Expanded(
-              flex: 2,
-              child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                child: ValueListenableBuilder<PgsStatus>(
-                  valueListenable: selectedStatus,
-                  builder: (context, status, _) {
-                    return DropdownButtonFormField<PgsStatus>(
-                      value: status,
-
-                      onChanged: (PgsStatus? newValue) {
-                        if (newValue != null) {
-                          selectedStatus.value = newValue;
-
-                          if (newValue == PgsStatus.completed) {
-                            percentageController.text = '100';
-                          } else if (newValue == PgsStatus.notStarted) {
-                            percentageController.text = '0';
-                          } else if (newValue == PgsStatus.onGoing) {
-                            if (percentageController.text == '100') {
-                              percentageController.text = '1';
-                            }
-                          }
-                        }
-                      },
-
-                      isExpanded: true,
-                      decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.all(8.0),
-                      ),
-                      items:
-                          PgsStatus.values.map((value) {
-                            return DropdownMenuItem<PgsStatus>(
-                              value: value,
-                              child: Tooltip(
-                                message:
-                                    statusDescriptions[value] ??
-                                    statusDisplayNames[value],
-                                child: Text(
-                                  statusDisplayNames[value]!,
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ),
-          PermissionWidget(
-            allowedRoles: [
-              PermissionString.serviceHead,
-              PermissionString.mcc,
-              PermissionString.osm,
-              PermissionString.pgsAuditor,
-              PermissionString.pgsHead,
-              PermissionString.coreTeam,
-              PermissionString.headAuditor,
-              PermissionString.roleStandardUser,
-            ],
-            child: Expanded(
-              flex: 2,
-              child: Center(
-                child: ValueListenableBuilder<PgsStatus>(
-                  valueListenable: selectedStatus,
-                  builder: (context, status, _) {
-                    return Tooltip(
+          Expanded(
+            flex: 2,
+            child: ValueListenableBuilder<PgsStatus>(
+              valueListenable: selectedStatus,
+              builder: (context, status, _) {
+                if (!canEdit) {
+                  return Center(
+                    child: Tooltip(
                       message:
                           statusDescriptions[status] ??
                           statusDisplayNames[status]!,
                       child: Text(statusDisplayNames[status]!),
-                    );
-                  },
-                ),
-              ),
+                    ),
+                  );
+                }
+
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 6),
+                  child: DropdownButtonFormField<PgsStatus>(
+                    value: status,
+                    isExpanded: true,
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.all(8.0),
+                    ),
+                    onChanged: (newValue) {
+                      if (newValue == null) return;
+
+                      selectedStatus.value = newValue;
+
+                      if (newValue == PgsStatus.completed) {
+                        percentageController.text = '100';
+                      } else if (newValue == PgsStatus.notStarted) {
+                        percentageController.text = '0';
+                      } else if (newValue == PgsStatus.onGoing &&
+                          percentageController.text == '100') {
+                        percentageController.text = '1';
+                      }
+                    },
+                    items:
+                        PgsStatus.values.map((value) {
+                          return DropdownMenuItem<PgsStatus>(
+                            value: value,
+                            child: Tooltip(
+                              message:
+                                  statusDescriptions[value] ??
+                                  statusDisplayNames[value],
+                              child: Text(
+                                statusDisplayNames[value]!,
+                                style: const TextStyle(fontSize: 13),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                  ),
+                );
+              },
             ),
           ),
-          PermissionWidget(
-            allowedRoles: [PermissionString.roleAdmin],
-            child: Expanded(
-              flex: 2,
-              child: ValueListenableBuilder<PgsStatus>(
-                valueListenable: selectedStatus,
-                builder: (context, status, _) {
-                  return ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: percentageController,
-                    builder: (context, value, __) {
-                      int progress = int.tryParse(value.text) ?? 0;
-                      double progressFraction;
-                      Color progressColor;
 
-                      if (status == PgsStatus.onGoing && progress == 0) {
-                        progressFraction = 0.0;
-                        progressColor = Colors.orange;
-                      } else if (progress >= 100) {
-                        progressFraction = 1.0;
-                        progressColor = Colors.green;
-                      } else if (progress == 0) {
-                        progressFraction = 1.0;
-                        progressColor = Colors.red;
-                      } else {
-                        progressFraction = progress / 100.0;
-                        progressColor = Colors.orange;
-                      }
+          Expanded(
+            flex: 2,
+            child: ValueListenableBuilder<PgsStatus>(
+              valueListenable: selectedStatus,
+              builder: (context, status, _) {
+                if (status == PgsStatus.onGoing &&
+                    percentageController.text == '0') {
+                  percentageController.text = '1';
+                } else if (status == PgsStatus.notStarted &&
+                    percentageController.text != '0') {
+                  percentageController.text = '0';
+                } else if (status == PgsStatus.completed &&
+                    (int.tryParse(percentageController.text) ?? 0) < 100) {
+                  percentageController.text = '100';
+                }
+                return ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: percentageController,
+                  builder: (context, value, __) {
+                    int progress = int.tryParse(value.text) ?? 0;
+                    double progressFraction;
+                    Color progressColor;
 
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              SizedBox(
-                                width: 60,
-                                height: 60,
-                                child: CircularProgressIndicator(
-                                  value: progressFraction,
-                                  strokeWidth: 6,
-                                  backgroundColor: Colors.grey[300],
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    progressColor,
-                                  ),
+                    if (status == PgsStatus.onGoing && progress == 0) {
+                      progressFraction = 0.0;
+                      progressColor = Colors.orange;
+                    } else if (progress == 100) {
+                      progressFraction = 1.0;
+                      progressColor = Colors.green;
+                    } else if (progress == 0) {
+                      progressFraction = 1.0;
+                      progressColor = Colors.red;
+                    } else {
+                      progressFraction = progress / 100.0;
+                      progressColor = Colors.orange;
+                    }
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            SizedBox(
+                              width: 60,
+                              height: 60,
+                              child: CircularProgressIndicator(
+                                value: progressFraction,
+                                strokeWidth: 6,
+                                backgroundColor: Colors.grey[300],
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  progressColor,
                                 ),
                               ),
-                              SizedBox(
-                                width: 40,
-                                height: 40,
-                                child: Center(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Focus(
-                                        onFocusChange: (hasFocus) {
-                                          if (hasFocus &&
-                                              status == PgsStatus.onGoing) {
-                                            _showTooltip(
-                                              context,
-                                              'Enter value from 1–99 only',
-                                            );
-                                          }
-                                        },
-                                        child: SizedBox(
-                                          width: 30,
-                                          child: TextField(
-                                            controller: percentageController,
-                                            textAlign: TextAlign.center,
-                                            style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                            keyboardType: TextInputType.number,
-                                            readOnly:
-                                                selectedStatus.value ==
-                                                PgsStatus.notStarted,
-                                            decoration: const InputDecoration(
-                                              border: InputBorder.none,
-                                              isDense: true,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    horizontal: 0,
-                                                    vertical: 12,
-                                                  ),
-                                            ),
-                                            onTap: () {
-                                              if (status == PgsStatus.onGoing) {
-                                                _showTooltip(
-                                                  context,
-                                                  'Enter value from 1–99 only',
-                                                );
-                                              }
-                                              if (status ==
-                                                  PgsStatus.completed) {
-                                                _showTooltip(
-                                                  context,
-                                                  'Enter value from 100–999 only',
-                                                );
-                                              }
-                                            },
-                                            onChanged: (val) {
-                                              if (status == PgsStatus.onGoing) {
-                                                _showTooltip(
-                                                  context,
-                                                  'Enter score from 1–99 only',
-                                                );
-                                              }
-                                              if (status ==
-                                                  PgsStatus.completed) {
-                                                _showTooltip(
-                                                  context,
-                                                  'Enter score from 100–999 only',
-                                                );
-                                              }
-                                              if (val.isEmpty) return;
-                                              int parsed =
-                                                  int.tryParse(val) ?? 0;
+                            ),
 
-                                              if (selectedStatus.value ==
-                                                  PgsStatus.completed) {
-                                                if (parsed < 100 &&
-                                                    val.length >= 3) {
-                                                  percentageController.text =
-                                                      '100';
-                                                } else if (parsed > 999) {
-                                                  percentageController.text =
-                                                      '999';
-                                                }
-                                              } else if (selectedStatus.value ==
-                                                  PgsStatus.onGoing) {
-                                                if (parsed < 1 &&
-                                                    val.isNotEmpty) {
-                                                  percentageController.text =
-                                                      '1';
-                                                } else if (parsed > 99) {
-                                                  percentageController.text =
-                                                      '99';
-                                                }
-                                              } else if (selectedStatus.value ==
-                                                  PgsStatus.notStarted) {
-                                                if (parsed != 0) {
-                                                  percentageController.text =
-                                                      '0';
-                                                }
-                                              }
-
-                                              percentageController.selection =
-                                                  TextSelection.fromPosition(
-                                                    TextPosition(
-                                                      offset:
-                                                          percentageController
-                                                              .text
-                                                              .length,
-                                                    ),
-                                                  );
-                                            },
+                            SizedBox(
+                              width: 40,
+                              height: 40,
+                              child: Center(
+                                child:
+                                    canEdit
+                                        ? _buildEditablePercentage(status)
+                                        : Text(
+                                          '${value.text}%',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                      ),
-                                      const Text(
-                                        '%',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
                               ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
-          PermissionWidget(
-            allowedRoles: [
-              PermissionString.serviceHead,
-              PermissionString.mcc,
-              PermissionString.osm,
-              PermissionString.pgsAuditor,
-              PermissionString.pgsHead,
-              PermissionString.coreTeam,
-              PermissionString.headAuditor,
-              PermissionString.roleStandardUser,
-            ],
-            child: Expanded(
-              flex: 2,
-              child: ValueListenableBuilder<PgsStatus>(
-                valueListenable: selectedStatus,
-                builder: (context, status, _) {
-                  return ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: percentageController,
-                    builder: (context, value, __) {
-                      int progress = int.tryParse(value.text) ?? 0;
-                      double progressFraction;
-                      Color progressColor;
-
-                      if (status == PgsStatus.onGoing && progress == 0) {
-                        progressFraction = 0.0;
-                        progressColor = Colors.orange;
-                      } else if (progress >= 100) {
-                        progressFraction = 1.0;
-                        progressColor = Colors.green;
-                      } else if (progress == 0) {
-                        progressFraction = 1.0;
-                        progressColor = Colors.red;
-                      } else {
-                        progressFraction = progress / 100.0;
-                        progressColor = Colors.orange;
-                      }
-
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              SizedBox(
-                                width: 60,
-                                height: 60,
-                                child: CircularProgressIndicator(
-                                  value: progressFraction,
-                                  strokeWidth: 6,
-                                  backgroundColor: Colors.grey[300],
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    progressColor,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                width: 40,
-                                height: 40,
-                                child: Center(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.center,
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Text(
-                                        '${value.text}%',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-          ),
-
-          PermissionWidget(
-            allowedRoles: [PermissionString.roleAdmin],
-            child: Expanded(
-              flex: 3,
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 50.0),
-                child: TextField(
-                  controller: remarksController,
-                  maxLines: null,
-                  keyboardType: TextInputType.multiline,
-                  style: const TextStyle(fontSize: 14.0),
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(color: grey),
-                    ),
-                    contentPadding: const EdgeInsets.all(8.0),
-                    focusedBorder: OutlineInputBorder(
-                      borderSide: BorderSide(color: primaryColor),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          PermissionWidget(
-            allowedRoles: [
-              PermissionString.serviceHead,
-              PermissionString.mcc,
-              PermissionString.osm,
-              PermissionString.pgsAuditor,
-              PermissionString.pgsHead,
-              PermissionString.coreTeam,
-              PermissionString.headAuditor,
-              PermissionString.roleStandardUser,
-            ],
-            child: Expanded(
-              flex: 3,
-              child: Center(
-                child: ValueListenableBuilder<TextEditingValue>(
-                  valueListenable: remarksController,
-                  builder: (context, value, _) {
-                    return Text(
-                      value.text.isEmpty ? '' : value.text,
-                      style: const TextStyle(fontSize: 14.0),
+                            ),
+                          ],
+                        ),
+                      ],
                     );
                   },
+                );
+              },
+            ),
+          ),
+
+          Expanded(
+            flex: 3,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: 50.0),
+              child: Center(
+                child: Text(
+                  remarksController.text.isEmpty
+                      ? "No remarks"
+                      : remarksController.text,
+                  style: const TextStyle(fontSize: 14),
                 ),
               ),
             ),
           ),
+
           SizedBox(width: 20),
           Expanded(
             flex: 2,
@@ -784,7 +607,7 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
                               Icons.upload_file_outlined,
                               color: Colors.blue,
                             ),
-                            onPressed: pickFile,
+                            onPressed: canEdit ? pickFile : null,
                           ),
                           Text(
                             'Upload 1 supported file: PDF, document, or image: Max 10 MB',
@@ -797,22 +620,32 @@ class _TrackingRowWidgetState extends State<TrackingRowWidget> {
           Expanded(
             flex: 3,
             child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 50.0),
-              child: TextField(
-                controller: remarksControllerAuditor,
-                maxLines: null,
-                keyboardType: TextInputType.multiline,
-                style: const TextStyle(fontSize: 14.0),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide(color: grey),
-                  ),
-                  contentPadding: const EdgeInsets.all(8.0),
-                  focusedBorder: OutlineInputBorder(
-                    borderSide: BorderSide(color: primaryColor),
-                  ),
-                ),
-              ),
+              constraints: BoxConstraints(minHeight: 50.0),
+              child:
+                  canEdit
+                      ? TextField(
+                        controller: remarksControllerAuditor,
+                        maxLines: null,
+                        keyboardType: TextInputType.multiline,
+                        style: TextStyle(fontSize: 14.0),
+                        decoration: InputDecoration(
+                          border: OutlineInputBorder(
+                            borderSide: BorderSide(color: grey),
+                          ),
+                          contentPadding: EdgeInsets.all(8.0),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
+                          ),
+                        ),
+                      )
+                      : Center(
+                        child: Text(
+                          remarksControllerAuditor.text.isEmpty
+                              ? "No remarks"
+                              : remarksControllerAuditor.text,
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                      ),
             ),
           ),
         ],
