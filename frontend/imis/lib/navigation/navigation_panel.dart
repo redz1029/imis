@@ -858,7 +858,6 @@ class NavigationPanelState extends State<NavigationPanel> {
                     child:
                         [
                               PermissionString.roleAdmin,
-                              PermissionString.pgsAuditor,
                               PermissionString.trainingOfficer,
                               PermissionString.hrOfficer,
                               PermissionString.serviceOfficer,

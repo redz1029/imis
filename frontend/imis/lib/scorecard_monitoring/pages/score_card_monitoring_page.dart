@@ -3,9 +3,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/permissions.dart';
-import 'package:imis/performance_governance_system/deliverable_status_monitoring/models/pgs_deliverable_accomplishment.dart';
-import 'package:imis/performance_governance_system/deliverable_status_monitoring/models/pgs_filter.dart';
-import 'package:imis/performance_governance_system/deliverable_status_monitoring/services/deliverable_status_monitoring_service.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -14,13 +11,12 @@ import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/widgets/scorecard_monitoring_accomplishment_widget.dart';
+import 'package:imis/scorecard_monitoring/services/score_card_monitoring_services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../common_services/common_service.dart';
 import '../../../user/models/user_registration.dart';
-import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
-import '../../../utils/http_util.dart';
 
 class ScoreCardMonitoringPage extends StatefulWidget {
   const ScoreCardMonitoringPage({super.key});
@@ -43,9 +39,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   final double actionColumnWidth = 120;
   final dio = Dio();
   final _commonService = CommonService(Dio());
-  final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
-    Dio(),
-  );
+  final _scorecardService = ScoreCardMonitoringServices(Dio());
   final permissionService = PermissionService();
   List<Map<String, dynamic>> kpiList = [];
   List<Map<String, dynamic>> roadmapList = [];
@@ -87,8 +81,19 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
 
       final period = await _commonService.fetchPgsPeriod();
       final kra = await _commonService.fetchKra();
-      await fetchRoadmap();
-      await fetchKpi();
+
+      List<Map<String, dynamic>> roadmapData = [];
+      List<Map<String, dynamic>> kpiData = [];
+      try {
+        roadmapData = await _scorecardService.fetchRoadmapFiltered(
+          kraId: selectedKra,
+          year: _selectedPeriod,
+        );
+        kpiData = await _scorecardService.fetchKpiFiltered(kraId: selectedKra);
+      } catch (e) {
+        debugPrint("Error preloading roadmap/KPI");
+      }
+
       await _loadCurrentUserId();
 
       if (!mounted) return;
@@ -96,6 +101,9 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
       setState(() {
         periodList = period;
         kraListOptions = kra;
+        roadmapList = roadmapData;
+        kpiList = kpiData;
+        filteredList = List.from(roadmapData);
         isLoading = false;
       });
     }();
@@ -125,196 +133,12 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
     }
   }
 
-  Future<void> checkDeliverablesAvailability(Function setDialogState) async {
-    if (_selectedPeriod == null) {
-      setState(() {
-        hasAvailableDeliverables = false;
-      });
-      return;
-    }
-
-    try {
-      periodId = int.tryParse(_selectedPeriod!) ?? 0;
-
-      final filter = PgsFilter(
-        periodId,
-        officeId,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-      );
-
-      final queryParams =
-          filter.toJson()..removeWhere((key, value) => value == null);
-
-      final response = await AuthenticatedRequest.get(
-        dio,
-        ApiEndpoint().filterBy,
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        final items = data["items"] as List<dynamic>? ?? [];
-
-        setDialogState(() {
-          hasAvailableDeliverables = items.isNotEmpty;
-        });
-      } else {
-        setDialogState(() {
-          hasAvailableDeliverables = false;
-        });
-      }
-    } catch (e) {
-      debugPrint("Error checking deliverables availability: $e");
-      setDialogState(() {
-        hasAvailableDeliverables = false;
-      });
-    }
-    setDialogState(() {});
-  }
-
-  Future<bool> hasCompleteAccomplishmentData(
-    int deliverableId,
-    int expectedPeriods,
-  ) async {
-    try {
-      final List<PgsDeliverableAccomplishment> accomplishments =
-          await _deliverableStatusMonitoring.fetchAccomplishments(
-            deliverableId,
-          );
-
-      if (accomplishments.isEmpty || accomplishments.length < expectedPeriods) {
-        return false;
-      }
-
-      int completedPeriods = 0;
-
-      for (var i = 0; i < accomplishments.length; i++) {
-        var accomplishment = accomplishments[i];
-
-        final status = accomplishment.remarks;
-
-        final attachmentPath = accomplishment.attachmentPath;
-
-        bool hasValidStatus = status != null && status.toString().isNotEmpty;
-
-        bool hasValidAttachment =
-            attachmentPath != null && attachmentPath.isNotEmpty;
-
-        bool isComplete = hasValidStatus && hasValidAttachment;
-
-        if (isComplete) {
-          completedPeriods++;
-        } else {
-          if (!hasValidStatus) debugPrint("    - Missing status: $status");
-        }
-      }
-
-      bool allComplete = completedPeriods >= expectedPeriods;
-
-      return allComplete;
-    } catch (e) {
-      return false;
-    }
-  }
-
   @override
   void dispose() {
     _verticalController.dispose();
     _horizontalController.dispose();
     _headerHorizontalController.dispose();
     super.dispose();
-  }
-
-  Future<void> fetchRoadmap() async {
-    try {
-      String endpoint = '${ApiEndpoint().scorecardMonitoringFilter}/kra-year';
-      Map<String, dynamic>? queryParams;
-
-      if (selectedKra != null &&
-          _selectedPeriod != null &&
-          _selectedPeriod!.isNotEmpty) {
-        queryParams = {'kraid': selectedKra, 'year': _selectedPeriod};
-      } else if (selectedKra != null) {
-        queryParams = {'kraid': selectedKra};
-      } else if (_selectedPeriod != null && _selectedPeriod!.isNotEmpty) {
-        queryParams = {'year': _selectedPeriod};
-      } else {
-        queryParams = null;
-      }
-
-      final response = await AuthenticatedRequest.get(
-        dio,
-        endpoint,
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        final items = data["deliverables"] as List<dynamic>? ?? [];
-        List<Map<String, dynamic>> formattedData =
-            items.map((item) {
-              return {
-                'id': item['id'],
-                'kraDescription': item['kraDescription'] ?? '',
-                'deliverableName': item['deliverableDescription'] ?? '',
-                'year': item['year']?.toString() ?? '',
-
-                'kra': item['kraDescription'] ?? item['kra'],
-              };
-            }).toList();
-        if (mounted) {
-          setState(() {
-            roadmapList = formattedData;
-            filteredList = List.from(formattedData);
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching filtered data: $e");
-    }
-  }
-
-  Future<void> fetchKpi() async {
-    try {
-      String endpoint = '${ApiEndpoint().scorecardMonitoringFilter}/kra';
-      Map<String, dynamic>? queryParams;
-
-      if (selectedKra != null) {
-        queryParams = {'kraid': selectedKra};
-      } else {
-        queryParams = null;
-      }
-
-      final response = await AuthenticatedRequest.get(
-        dio,
-        endpoint,
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        final items = data["deliverables"] as List<dynamic>? ?? [];
-
-        List<Map<String, dynamic>> formattedData =
-            items.map((item) {
-              return {'kpiDescription': item['kpiDescription'] ?? ''};
-            }).toList();
-
-        if (mounted) {
-          setState(() {
-            kpiList = formattedData;
-            filteredList = List.from(formattedData);
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching KPI data: $e");
-    }
   }
 
   @override
@@ -380,14 +204,29 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                               });
                             },
 
-                            onSelected: (int value) {
+                            onSelected: (int value) async {
                               setState(() {
                                 selectedKra = (value == -1) ? null : value;
                                 isMenuOpenKra = false;
-
-                                fetchRoadmap();
-                                fetchKpi();
                               });
+
+                              try {
+                                final roadmapData = await _scorecardService
+                                    .fetchRoadmapFiltered(
+                                      kraId: selectedKra,
+                                      year: _selectedPeriod,
+                                    );
+                                final kpiData = await _scorecardService
+                                    .fetchKpiFiltered(kraId: selectedKra);
+                                if (!mounted) return;
+                                setState(() {
+                                  roadmapList = roadmapData;
+                                  kpiList = kpiData;
+                                  filteredList = List.from(roadmapData);
+                                });
+                              } catch (e) {
+                                debugPrint("Error fetching filtered data");
+                              }
                             },
                             itemBuilder: (BuildContext context) {
                               final updatedKraList = [
@@ -448,14 +287,27 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                             });
                           },
 
-                          onSelected: (int value) {
+                          onSelected: (int value) async {
                             setState(() {
                               selectedPeriod = (value == -1) ? null : value;
                               _selectedPeriod =
                                   (value == -1) ? null : value.toString();
                               isMenuOpenPeriod = false;
-                              fetchRoadmap();
                             });
+                            try {
+                              final roadmapData = await _scorecardService
+                                  .fetchRoadmapFiltered(
+                                    kraId: selectedKra,
+                                    year: _selectedPeriod,
+                                  );
+                              if (!mounted) return;
+                              setState(() {
+                                roadmapList = roadmapData;
+                                filteredList = List.from(roadmapData);
+                              });
+                            } catch (e) {
+                              debugPrint("Error fetching filtered data");
+                            }
                           },
 
                           itemBuilder: (BuildContext context) {

@@ -45,4 +45,73 @@ class ScoreCardMonitoringServices {
       throw Exception('Failed to fetch scorecard accomplishments');
     }
   }
+
+  Future<List<Map<String, dynamic>>> fetchRoadmapFiltered({
+    int? kraId,
+    String? year,
+  }) async {
+    final endpoint = '${ApiEndpoint().scorecardMonitoringFilter}/kra-year';
+    Map<String, dynamic>? queryParams;
+
+    if (kraId != null && year != null && year.isNotEmpty) {
+      queryParams = {'kraid': kraId, 'year': year};
+    } else if (kraId != null) {
+      queryParams = {'kraid': kraId};
+    } else if (year != null && year.isNotEmpty) {
+      queryParams = {'year': year};
+    } else {
+      queryParams = null;
+    }
+
+    final response = await AuthenticatedRequest.get(
+      dio,
+      endpoint,
+      queryParameters: queryParams,
+    );
+
+    if (response.statusCode == 200) {
+      final data = response.data;
+      final items = data["deliverables"] as List<dynamic>? ?? [];
+      return items
+          .map(
+            (item) => {
+              'id': item['id'],
+              'kraDescription': item['kraDescription'] ?? '',
+              'deliverableName': item['deliverableDescription'] ?? '',
+              'year': (item['year']?.toString() ?? ''),
+              'kra': item['kraDescription'] ?? item['kra'],
+            },
+          )
+          .toList();
+    } else {
+      throw Exception('Failed to fetch roadmap filtered data');
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> fetchKpiFiltered({int? kraId}) async {
+    final endpoint = '${ApiEndpoint().scorecardMonitoringFilter}/kra';
+    Map<String, dynamic>? queryParams;
+
+    if (kraId != null) {
+      queryParams = {'kraid': kraId};
+    } else {
+      queryParams = null;
+    }
+
+    final response = await AuthenticatedRequest.get(
+      dio,
+      endpoint,
+      queryParameters: queryParams,
+    );
+
+    if (response.statusCode == 200) {
+      final data = response.data;
+      final items = data["deliverables"] as List<dynamic>? ?? [];
+      return items
+          .map((item) => {'kpiDescription': item['kpiDescription'] ?? ''})
+          .toList();
+    } else {
+      throw Exception('Failed to fetch KPI data');
+    }
+  }
 }
