@@ -12,42 +12,29 @@ namespace IMIS.Persistence.KraRoadMapModule
         public KraRoadMapRepository(ImisDbContext dbContext) : base(dbContext)
         {
         }
-
-        // ====== Get specific Point - Person for Deliverable  ======
-        public async Task<List<KraRoadMapDeliverable>> GetDeliverablesByRoleAsync(int? kraId, int? year, string roleId, CancellationToken cancellationToken)
+      
+        // ====== Get specific deliverables for a Role ======
+        public async Task<List<KraRoadMapDeliverable>> GetDeliverablesByRoleAsync(
+            int? kraId,
+            int? fromYear,
+            int? toYear,
+            string roleId,
+            CancellationToken cancellationToken)
         {
             var roadMapQuery = ReadOnlyDbContext.Set<KraRoadMap>()
                 .AsNoTracking()
-                .Where(r => r.RoleId == roleId);
+                .Include(r => r.KraRoadMapPeriod)
+                .Where(r => r.RoleId == roleId && !r.IsDeleted);
 
             if (kraId.HasValue)
                 roadMapQuery = roadMapQuery.Where(r => r.KraId == kraId.Value);
 
-            var roadMapIds = await roadMapQuery
-                .Select(r => r.Id)
-                .ToListAsync(cancellationToken);
-
-            if (!roadMapIds.Any())
-                return new List<KraRoadMapDeliverable>();
-
-            var deliverablesQuery = ReadOnlyDbContext.Set<KraRoadMapDeliverable>()
-                .AsNoTracking()
-                .Where(d => !d.IsDeleted && roadMapIds.Contains(d.KraRoadMapId));
-
-            if (year.HasValue)
-                deliverablesQuery = deliverablesQuery.Where(d => d.Year == year.Value);
-
-            return await deliverablesQuery.ToListAsync(cancellationToken);
-        }
-     
-        // ====== Get All Point - Person for Deliverable  ======
-        public async Task<List<KraRoadMapDeliverable>> GetDeliverablesAsync(int? kraid, int? year, CancellationToken cancellationToken)
-        {
-            var roadMapQuery = ReadOnlyDbContext.Set<KraRoadMap>()
-                .AsNoTracking();
-            
-            if (kraid.HasValue)
-                roadMapQuery = roadMapQuery.Where(r => r.KraId == kraid.Value);
+            if (fromYear.HasValue)
+            {
+                roadMapQuery = roadMapQuery.Where(r =>
+                    r.KraRoadMapPeriod!.StartYear.Year <= toYear.GetValueOrDefault(fromYear.Value) &&
+                    r.KraRoadMapPeriod.EndYear.Year >= fromYear.Value);
+            }
 
             var roadMapIds = await roadMapQuery.Select(r => r.Id).ToListAsync(cancellationToken);
 
@@ -56,59 +43,127 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             var deliverablesQuery = ReadOnlyDbContext.Set<KraRoadMapDeliverable>()
                 .AsNoTracking()
+                .Include(d => d.KraRoadMap)
+                    .ThenInclude(r => r.KraRoadMapPeriod)
                 .Where(d => !d.IsDeleted && roadMapIds.Contains(d.KraRoadMapId));
 
-            if (year.HasValue)
-                deliverablesQuery = deliverablesQuery.Where(d => d.Year == year.Value);
+            if (fromYear.HasValue)
+            {
+                if (toYear.HasValue)
+                    deliverablesQuery = deliverablesQuery.Where(d => d.Year >= fromYear.Value && d.Year <= toYear.Value);
+                else
+                    deliverablesQuery = deliverablesQuery.Where(d => d.Year == fromYear.Value);
+            }
 
             return await deliverablesQuery.ToListAsync(cancellationToken);
         }
 
-        // ====== Get All Point - Person for KPI  ======
-        public async Task<List<KraRoadMapKpi>> GetKpisAsync(int? kraid, CancellationToken cancellationToken)
+        // ====== Get all deliverables (Admin & PGS Manager) ======
+        public async Task<List<KraRoadMapDeliverable>> GetDeliverablesAsync(
+            int? kraId,
+            int? fromYear,
+            int? toYear,
+            CancellationToken cancellationToken)
         {
             var roadMapQuery = ReadOnlyDbContext.Set<KraRoadMap>()
                 .AsNoTracking()
+                .Include(r => r.KraRoadMapPeriod)
                 .Where(r => !r.IsDeleted);
 
-            if (kraid.HasValue)
-                roadMapQuery = roadMapQuery.Where(r => r.KraId == kraid.Value);
+            if (kraId.HasValue)
+                roadMapQuery = roadMapQuery.Where(r => r.KraId == kraId.Value);
 
-            var roadMapIds = await roadMapQuery
-                .Select(r => r.Id)
-                .ToListAsync(cancellationToken);
+            if (fromYear.HasValue)
+            {
+                roadMapQuery = roadMapQuery.Where(r =>
+                    r.KraRoadMapPeriod!.StartYear.Year <= toYear.GetValueOrDefault(fromYear.Value) &&
+                    r.KraRoadMapPeriod.EndYear.Year >= fromYear.Value);
+            }
+
+            var roadMapIds = await roadMapQuery.Select(r => r.Id).ToListAsync(cancellationToken);
 
             if (!roadMapIds.Any())
-                return new List<KraRoadMapKpi>();
+                return new List<KraRoadMapDeliverable>();
 
+            var deliverablesQuery = ReadOnlyDbContext.Set<KraRoadMapDeliverable>()
+                .AsNoTracking()
+                .Include(d => d.KraRoadMap)
+                    .ThenInclude(r => r.KraRoadMapPeriod)
+                .Where(d => !d.IsDeleted && roadMapIds.Contains(d.KraRoadMapId));
+
+            if (fromYear.HasValue)
+            {
+                if (toYear.HasValue)
+                    deliverablesQuery = deliverablesQuery.Where(d => d.Year >= fromYear.Value && d.Year <= toYear.Value);
+                else
+                    deliverablesQuery = deliverablesQuery.Where(d => d.Year == fromYear.Value);
+            }
+
+            return await deliverablesQuery.ToListAsync(cancellationToken);
+        }
+       
+        // ====== Get All Point - Person (Admin & Pgs Core Team) for KPI  ======       
+        public async Task<List<KraRoadMapKpi>> GetKpisAsync(int? kraid, int? fromYear, int? toYear, CancellationToken cancellationToken)
+        {
             var kpiQuery = ReadOnlyDbContext.Set<KraRoadMapKpi>()
                 .AsNoTracking()
-                .Where(k => !k.IsDeleted && roadMapIds.Contains(k.KraRoadMapId));
+                .Include(k => k.KraRoadMap)
+                    .ThenInclude(r => r.KraRoadMapPeriod)
+                .Where(k => !k.IsDeleted && !k.KraRoadMap!.IsDeleted);
+
+            if (kraid.HasValue)
+                kpiQuery = kpiQuery.Where(k => k.KraRoadMap!.KraId == kraid.Value);
+
+            if (fromYear.HasValue && toYear.HasValue)
+            {
+                int start = fromYear.Value;
+                int end = toYear.Value;
+
+                kpiQuery = kpiQuery.Where(k =>
+                    k.KraRoadMap!.KraRoadMapPeriod!.StartYear.Year <= end &&
+                    k.KraRoadMap!.KraRoadMapPeriod.EndYear.Year >= start);
+            }
+            else if (fromYear.HasValue)
+            {
+                int year = fromYear.Value;
+                kpiQuery = kpiQuery.Where(k =>
+                    k.KraRoadMap!.KraRoadMapPeriod!.StartYear.Year <= year &&
+                    k.KraRoadMap!.KraRoadMapPeriod.EndYear.Year >= year);
+            }
 
             return await kpiQuery.ToListAsync(cancellationToken);
         }
 
-        // ======Get specific Point - Person for KPI  ======
-        public async Task<List<KraRoadMapKpi>> GetKpisByRoleAsync(int? kraid, string roleId, CancellationToken cancellationToken)
+        // ======Get specific Point - Person for KPI by Role ======      
+        public async Task<List<KraRoadMapKpi>> GetKpisByRoleAsync(int? kraid, string roleId, int? fromYear, int? toYear, CancellationToken cancellationToken)
         {
-            var roadMapQuery = ReadOnlyDbContext.Set<KraRoadMap>()
+            var kpiQuery = ReadOnlyDbContext.Set<KraRoadMapKpi>()
                 .AsNoTracking()
-                .Where(r => r.RoleId == roleId);
+                .Include(k => k.KraRoadMap)
+                    .ThenInclude(r => r.KraRoadMapPeriod)
+                .Where(k => !k.IsDeleted && k.KraRoadMap!.RoleId == roleId && !k.KraRoadMap.IsDeleted);
 
             if (kraid.HasValue)
-                roadMapQuery = roadMapQuery.Where(r => r.KraId == kraid.Value);
+                kpiQuery = kpiQuery.Where(k => k.KraRoadMap!.KraId == kraid.Value);
 
-            var roadMapIds = await roadMapQuery
-                .Select(r => r.Id)
-                .ToListAsync(cancellationToken);
+            if (fromYear.HasValue && toYear.HasValue)
+            {
+                int start = fromYear.Value;
+                int end = toYear.Value;
 
-            if (!roadMapIds.Any())
-                return new List<KraRoadMapKpi>();
+                kpiQuery = kpiQuery.Where(k =>
+                    k.KraRoadMap!.KraRoadMapPeriod!.StartYear.Year <= end &&
+                    k.KraRoadMap!.KraRoadMapPeriod.EndYear.Year >= start);
+            }
+            else if (fromYear.HasValue)
+            {
+                int year = fromYear.Value;
+                kpiQuery = kpiQuery.Where(k =>
+                    k.KraRoadMap!.KraRoadMapPeriod!.StartYear.Year <= year &&
+                    k.KraRoadMap!.KraRoadMapPeriod.EndYear.Year >= year);
+            }
 
-            return await ReadOnlyDbContext.Set<KraRoadMapKpi>()
-                .AsNoTracking()
-                .Where(k => !k.IsDeleted && roadMapIds.Contains(k.KraRoadMapId))
-                .ToListAsync(cancellationToken);
+            return await kpiQuery.ToListAsync(cancellationToken);
         }
 
         public async Task<KraRoadMap?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)

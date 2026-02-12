@@ -15,8 +15,7 @@ namespace IMIS.Application.KraRoadMapModule
         Task<IEnumerable<KraRoadMapDescriptionFilter>> GetAllKraDescriptionsByKraIdAsync(int kraId, CancellationToken cancellationToken);
         Task<ReportKraRoadMapDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken);
         Task<List<KraRoadMapDto>> GetAllRoadmapForUserAsync(string roleId, CancellationToken cancellationToken);
-        Task<List<FilterKraPeriodKraDeliverableDto>> GetGroupedDeliverablesAsync(int? kraid, int? year, CancellationToken cancellationToken);
-        Task<List<KraRoadMapKpiDto>> GetKpiDeliverableAsync(int? kraid, CancellationToken cancellationToken);
-
+        Task<List<FilterKraPeriodKraDeliverableDto>> GetGroupedDeliverablesAsync(int? kraid, int? fromYear, int? toYear, CancellationToken cancellationToken);
+        Task<List<KraRoadMapKpiDeliverableFilterDto>> GetKpiDeliverableAsync(int? kraid, int? fromYear, int? toYear, CancellationToken cancellationToken);
     }
 }

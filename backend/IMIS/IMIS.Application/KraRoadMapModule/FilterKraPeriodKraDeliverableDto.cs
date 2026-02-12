@@ -1,12 +1,11 @@
-﻿namespace IMIS.Application.KraRoadMapModule
-{
-    public class FilterKraPeriodKraDeliverableDto
-    {
-        public required int Id { get; set; }
-        public string? KraDescription { get; set; }
-        public string? DeliverableDescription { get; set; }
-        public required int Year { get; set; }
-        public string? KraPeriod { get; set; }
+﻿using IMIS.Application.KraRoadMapDeliverableModule;
 
+namespace IMIS.Application.KraRoadMapModule
+{
+    public class FilterKraPeriodKraDeliverableDto 
+    {      
+        public required DateOnly StartDate { get; set; }
+        public required DateOnly EndDate { get; set; }
+        public required List<KraRoadMapDeliverableDto> Deliverables { get; set; }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using Base.Primitives;
+using IMIS.Application.KraRoadMapModule;
 using IMIS.Domain;
 
 namespace IMIS.Application.KraRoadMapDeliverableModule
@@ -10,19 +11,22 @@ namespace IMIS.Application.KraRoadMapDeliverableModule
         public string? DeliverableDescription { get; set; }
         public required int Year { get; set; }
         public bool IsEnabler { get; set; }
+        public long KraRoadMapId { get; set; }   
 
         public KraRoadMapDeliverableDto() { }
 
         [SetsRequiredMembers]
-        public KraRoadMapDeliverableDto(KraRoadMapDeliverable kraRoadMapDeliverableDto)
+        public KraRoadMapDeliverableDto(KraRoadMapDeliverable entity)
         {
-            this.Id = kraRoadMapDeliverableDto.Id;
-            this.KraDescription = kraRoadMapDeliverableDto.KraDescription;
-            this.DeliverableDescription = kraRoadMapDeliverableDto.DeliverableDescription;
-            this.Year = kraRoadMapDeliverableDto.Year;
-            this.IsEnabler = kraRoadMapDeliverableDto.IsEnabler;
+            Id = entity.Id;
+            KraDescription = entity.KraDescription;
+            DeliverableDescription = entity.DeliverableDescription;
+            Year = entity.Year;
+            IsEnabler = entity.IsEnabler;
+            KraRoadMapId = entity.KraRoadMapId;
+
         }
-        
+
         public override KraRoadMapDeliverable ToEntity()
         {
             return new KraRoadMapDeliverable()
@@ -32,6 +36,7 @@ namespace IMIS.Application.KraRoadMapDeliverableModule
                 DeliverableDescription = DeliverableDescription,
                 Year = Year,
                 IsEnabler = IsEnabler,
+                KraRoadMapId = KraRoadMapId
             };
         }
     }

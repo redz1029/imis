@@ -9,5 +9,6 @@ namespace IMIS.Domain
         public required int Year { get; set; }
         public bool IsEnabler { get; set; }
         public long KraRoadMapId { get; set; }
+        public KraRoadMap? KraRoadMap { get; set; }
     }
 }

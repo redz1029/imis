@@ -136,25 +136,25 @@ namespace IMIS.Presentation.KraRoadMapModule
             .WithTags(_kraRoadMap)
             .RequireAuthorization(e =>  e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true);
-
-            app.MapGet("/filter/kra-year", async ([FromQuery] int? kraid, [FromQuery] int? year, IKraRoadMapService service, CancellationToken cancellationToken) =>
+         
+            app.MapGet("/filter/kra-year", async ([FromQuery] int? kraid, [FromQuery] int? fromYear, [FromQuery] int? toYear, IKraRoadMapService service,
+            CancellationToken cancellationToken) =>
             {
-                var result = await service.GetGroupedDeliverablesAsync(kraid, year, cancellationToken);
+                var result = await service.GetGroupedDeliverablesAsync(kraid, fromYear, toYear, cancellationToken);
 
                 return Results.Ok(new { deliverables = result });
             })
             .WithTags(_kraRoadMap)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
-
-            app.MapGet("/filter/kra", async ([FromQuery] int? kraid, IKraRoadMapService service, CancellationToken cancellationToken) =>
+           
+            app.MapGet("/filter/kra", async ([FromQuery] int? kraid, [FromQuery] int? fromYear, [FromQuery] int? toYear, IKraRoadMapService service,
+            CancellationToken cancellationToken) =>
             {
-                var result = await service.GetKpiDeliverableAsync(kraid, cancellationToken);
-
+                var result = await service.GetKpiDeliverableAsync(kraid, fromYear, toYear, cancellationToken);
                 return Results.Ok(new { deliverables = result });
             })
-           .WithTags(_kraRoadMap)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
-
+            .WithTags(_kraRoadMap)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
         }
     }
 }

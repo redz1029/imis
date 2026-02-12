@@ -31,9 +31,12 @@ namespace IMIS.Persistence.KraRoadMapModule
             _kraRoadMapPeriodRepository = kraRoadMapPeriodRepository;
             _userManager = userManager;
             _roleManager = roleManager;
-        }
-       
-        public async Task<List<FilterKraPeriodKraDeliverableDto>> GetGroupedDeliverablesAsync(int? kraid, int? year, CancellationToken cancellationToken)
+        }       
+        public async Task<List<FilterKraPeriodKraDeliverableDto>> GetGroupedDeliverablesAsync(
+        int? kraid,
+        int? fromYear,
+        int? toYear,
+        CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
@@ -44,79 +47,96 @@ namespace IMIS.Persistence.KraRoadMapModule
                 return new List<FilterKraPeriodKraDeliverableDto>();
 
             var roleName = userRoles.First();
-
             var role = await _roleManager.FindByNameAsync(roleName);
             if (role == null)
                 return new List<FilterKraPeriodKraDeliverableDto>();
 
             List<KraRoadMapDeliverable> deliverables;
 
-            if (
-                role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase)
-            )
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase))
             {
-                deliverables = await _repository.GetDeliverablesAsync(kraid, year, cancellationToken);
+                deliverables = await _repository.GetDeliverablesAsync(kraid, fromYear, toYear, cancellationToken);
             }
             else
             {
-                deliverables = await _repository.GetDeliverablesByRoleAsync(kraid, year, role.Id, cancellationToken);
+                deliverables = await _repository.GetDeliverablesByRoleAsync(kraid, fromYear, toYear, role.Id, cancellationToken);
             }
 
             if (!deliverables.Any())
                 return new List<FilterKraPeriodKraDeliverableDto>();
 
             var grouped = deliverables
-                .GroupBy(d => new { d.Year, d.KraDescription })
+                .Where(d => d.KraRoadMap != null && d.KraRoadMap.KraRoadMapPeriod != null)
+                .GroupBy(d => new
+                {
+                    d.KraRoadMap!.KraRoadMapPeriod!.StartYear,
+                    d.KraRoadMap!.KraRoadMapPeriod!.EndYear
+                })
                 .Select(g => new FilterKraPeriodKraDeliverableDto
                 {
-                    Id = g.Min(x => (int)x.Id),
-                    KraDescription = g.Key.KraDescription,
-                    DeliverableDescription = string.Join(", ", g.Select(x => x.DeliverableDescription)),
-                    Year = g.Key.Year
+                    StartDate = g.Key.StartYear,
+                    EndDate = g.Key.EndYear,
+                    Deliverables = g.Select(d => new KraRoadMapDeliverableDto(d)).ToList()
                 })
+                .OrderBy(x => x.StartDate)
                 .ToList();
 
-            return grouped;
+            return grouped; 
         }
-        
-        public async Task<List<KraRoadMapKpiDto>> GetKpiDeliverableAsync(int? kraid, CancellationToken cancellationToken)
+       
+        public async Task<List<KraRoadMapKpiDeliverableFilterDto>> GetKpiDeliverableAsync(
+        int? kraid,
+        int? fromYear,
+        int? toYear,
+        CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
-                return new List<KraRoadMapKpiDto>();
+                return new List<KraRoadMapKpiDeliverableFilterDto>();
 
             var userRoles = await _userManager.GetRolesAsync(currentUser);
             if (!userRoles.Any())
-                return new List<KraRoadMapKpiDto>();
+                return new List<KraRoadMapKpiDeliverableFilterDto>();
 
-            var roleName = userRoles.First(); 
+            var roleName = userRoles.First();
             var role = await _roleManager.FindByNameAsync(roleName);
             if (role == null)
-                return new List<KraRoadMapKpiDto>();
+                return new List<KraRoadMapKpiDeliverableFilterDto>();
 
             List<KraRoadMapKpi> kpis;
 
-            if (
-                role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase)
-            )
+            if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase))
             {
-                kpis = await _repository.GetKpisAsync(kraid, cancellationToken);
+                kpis = await _repository.GetKpisAsync(kraid, fromYear, toYear, cancellationToken);
             }
             else
             {
-                kpis = await _repository.GetKpisByRoleAsync(kraid, role.Id, cancellationToken);
+                kpis = await _repository.GetKpisByRoleAsync(kraid, role.Id, fromYear, toYear, cancellationToken);
             }
 
             if (!kpis.Any())
-                return new List<KraRoadMapKpiDto>();
+                return new List<KraRoadMapKpiDeliverableFilterDto>();
 
-            return kpis.Select(k => new KraRoadMapKpiDto
-            {
-                Id = k.Id,
-                KpiDescription = k.KpiDescription
-            }).ToList();
+
+            var grouped = kpis
+                .Where(d => d.KraRoadMap != null && d.KraRoadMap.KraRoadMapPeriod != null)
+                .GroupBy(d => new
+                {
+                    d.KraRoadMap!.KraRoadMapPeriod!.StartYear,
+                    d.KraRoadMap!.KraRoadMapPeriod!.EndYear
+                })
+                .Select(g => new KraRoadMapKpiDeliverableFilterDto
+                {
+                    StartDate = g.Key.StartYear,
+                    EndDate = g.Key.EndYear,
+                    KpiDeliverable = g.Select(d => new KraRoadMapKpiDto(d)).ToList()
+                })
+                .OrderBy(x => x.StartDate)
+                .ToList();
+
+            return grouped;
         }
 
         public async Task<ReportKraRoadMapDto?> ReportGetByIdAsync(int id, CancellationToken cancellationToken)
