@@ -7,8 +7,8 @@ namespace IMIS.Application.IsoStandardModule
 {
     public class IsoStandardDto : BaseDto<IsoStandard, long>
     {
-        public new required int VersionID { get; set; }
-        public new required string ClauseRef { get; set; }
+        public  required int VersionID { get; set; }
+        public  required string ClauseRef { get; set; }
         public string? Description { get; set; }
         public bool IsActive { get; set; }
         public StandardVersionDto? Version { get; set; }

@@ -10,6 +10,7 @@ namespace IMIS.Application.TeamModule
         public required string Name { get; set; }
         public required bool IsActive { get; set; }
         public List<AuditorDto>? Auditors { get; set; }
+        public OrganizationImprovementType ImprovementType { get; set; }
         public TeamDto() { }     
         [SetsRequiredMembers]
         public TeamDto(Team team)
@@ -32,7 +33,8 @@ namespace IMIS.Application.TeamModule
             {
                 Id = Id,
                 IsActive = IsActive,
-                Name  = Name
+                Name  = Name,
+                ImprovementType = ImprovementType
             };
         }
     }

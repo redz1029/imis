@@ -8,6 +8,8 @@ namespace IMIS.Domain
         public required bool IsActive { get; set; }
         public ICollection<AuditorTeams>? AuditorTeams { get; set; }
 
-        
+        public required OrganizationImprovementType ImprovementType { get; set; }
+        public ICollection<Auditor>? Auditors { get; set; }
+
     }
 }
