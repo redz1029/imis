@@ -4614,68 +4614,71 @@ class PerformanceGovernanceSystemPageState
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          "Cancel",
-                          style: TextStyle(color: primaryColor),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
+                  PermissionWidget(
+                    permission: AppPermissions.addPgsDeliverableAccomplishment,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text(
+                            "Cancel",
+                            style: TextStyle(color: primaryColor),
                           ),
                         ),
-                        onPressed: () async {
-                          final shouldSave = await showDialog<bool>(
-                            context: context,
-                            builder:
-                                (ctx) => AlertDialog(
-                                  title: const Text("Confirm Save"),
-                                  content: const Text(
-                                    "Are you sure you want to save this data?",
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
+                          onPressed: () async {
+                            final shouldSave = await showDialog<bool>(
+                              context: context,
+                              builder:
+                                  (ctx) => AlertDialog(
+                                    title: const Text("Confirm Save"),
+                                    content: const Text(
+                                      "Are you sure you want to save this data?",
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(ctx).pop(false),
+                                        child: Text(
+                                          "No",
+                                          style: TextStyle(color: primaryColor),
+                                        ),
+                                      ),
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(ctx).pop(true),
+                                        child: Text(
+                                          "Yes",
+                                          style: TextStyle(color: primaryColor),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(false),
-                                      child: Text(
-                                        "No",
-                                        style: TextStyle(color: primaryColor),
-                                      ),
-                                    ),
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.of(ctx).pop(true),
-                                      child: Text(
-                                        "Yes",
-                                        style: TextStyle(color: primaryColor),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                          );
-                          if (shouldSave != true) return;
+                            );
+                            if (shouldSave != true) return;
 
-                          await saveAccomplishmentData(deliverableId, userId);
-                          MotionToast.success(
-                            description: Text('Save Successfully'),
-                            toastAlignment: Alignment.topCenter,
-                          ).show(context);
-                          Navigator.of(context).pop(true);
-                        },
-                        child: const Text(
-                          "Save Accomplishment",
-                          style: TextStyle(color: Colors.white),
+                            await saveAccomplishmentData(deliverableId, userId);
+                            MotionToast.success(
+                              description: Text('Save Successfully'),
+                              toastAlignment: Alignment.topCenter,
+                            ).show(context);
+                            Navigator.of(context).pop(true);
+                          },
+                          child: const Text(
+                            "Save Accomplishment",
+                            style: TextStyle(color: Colors.white),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -4912,10 +4915,7 @@ class PerformanceGovernanceSystemPageState
 
                   SizedBox(height: 20),
                   PermissionWidget(
-                    allowedRoles: [
-                      PermissionString.pgsAuditor,
-                      PermissionString.roleAdmin,
-                    ],
+                    permission: AppPermissions.addBreakThroughScoring,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
@@ -4988,38 +4988,6 @@ class PerformanceGovernanceSystemPageState
       },
     );
   }
-
-  // Widget _buildDropdownKraCellPGSDeliverableStatus(
-  //   int index,
-  //   String? id,
-  //   Function setDialogState,
-  //   int orderLevel,
-  // ) {
-  //   if (!kraDescriptionController.containsKey(index)) {
-  //     kraDescriptionController[index] = TextEditingController();
-  //   }
-
-  //   return Padding(
-  //     padding: const EdgeInsets.all(8.0),
-  //     child: Column(
-  //       crossAxisAlignment: CrossAxisAlignment.start,
-  //       children: [
-  //         Tooltip(
-  //           message:
-  //               'Enter a short description of what this KRA focuses on achieving.',
-  //           child: TextFormField(
-  //             readOnly: id != null && orderLevel >= 1,
-  //             controller: kraDescriptionController[index],
-  //             decoration: const InputDecoration(
-  //               hintText: "Enter your description here...",
-  //               border: OutlineInputBorder(),
-  //             ),
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 
   Widget _buildKraDescriptionStatus(
     int index,
