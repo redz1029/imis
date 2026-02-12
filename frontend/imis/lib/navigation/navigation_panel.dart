@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
+import 'package:imis/scorecard_monitoring/pages/score_card_monitoring_page.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -850,6 +851,30 @@ class NavigationPanelState extends State<NavigationPanel> {
                                 DeliverableStatusMonitoringPage(),
                                 20,
                               ),
+                            )
+                            : SizedBox.shrink(),
+                  ),
+                  PermissionWidget(
+                    child:
+                        [
+                              PermissionString.roleAdmin,
+                              PermissionString.pgsAuditor,
+                              PermissionString.trainingOfficer,
+                              PermissionString.hrOfficer,
+                              PermissionString.serviceOfficer,
+                              PermissionString.financeOfficer,
+                              PermissionString.safetyOfficer,
+                              PermissionString.facilityOfficer,
+                              PermissionString.linkagesOfficer,
+                              PermissionString.informationOfficer,
+                              PermissionString.researchOfficer,
+                              PermissionString.coreTeam,
+                            ].contains(selectedRole)
+                            ? _buildListTile(
+                              Icons.fact_check_outlined,
+                              'Scorecard Monitoring',
+                              26,
+                              () => _setScreen(ScoreCardMonitoringPage(), 26),
                             )
                             : SizedBox.shrink(),
                   ),
