@@ -10,12 +10,10 @@ import 'package:imis/performance_governance_system/key_result_area/models/key_re
 import 'package:imis/performance_governance_system/models/pgs_deliverable_score_history.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/widgets/scorecard_monitoring_accomplishment_widget.dart';
-import 'package:intl/intl.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../common_services/common_service.dart';
@@ -23,7 +21,6 @@ import '../../../user/models/user_registration.dart';
 import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/http_util.dart';
-import '../../../utils/permission_string.dart';
 
 class ScoreCardMonitoringPage extends StatefulWidget {
   const ScoreCardMonitoringPage({super.key});
@@ -75,7 +72,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   bool isLoading = true;
   int? officeId;
   int? periodId;
-  bool _hasAvailableDeliverables = false;
+  bool hasAvailableDeliverables = false;
 
   @override
   void initState() {
@@ -128,10 +125,10 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
     }
   }
 
-  Future<void> _checkDeliverablesAvailability(Function setDialogState) async {
+  Future<void> checkDeliverablesAvailability(Function setDialogState) async {
     if (_selectedPeriod == null) {
       setState(() {
-        _hasAvailableDeliverables = false;
+        hasAvailableDeliverables = false;
       });
       return;
     }
@@ -164,23 +161,23 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
         final items = data["items"] as List<dynamic>? ?? [];
 
         setDialogState(() {
-          _hasAvailableDeliverables = items.isNotEmpty;
+          hasAvailableDeliverables = items.isNotEmpty;
         });
       } else {
         setDialogState(() {
-          _hasAvailableDeliverables = false;
+          hasAvailableDeliverables = false;
         });
       }
     } catch (e) {
       debugPrint("Error checking deliverables availability: $e");
       setDialogState(() {
-        _hasAvailableDeliverables = false;
+        hasAvailableDeliverables = false;
       });
     }
     setDialogState(() {});
   }
 
-  Future<bool> _hasCompleteAccomplishmentData(
+  Future<bool> hasCompleteAccomplishmentData(
     int deliverableId,
     int expectedPeriods,
   ) async {
