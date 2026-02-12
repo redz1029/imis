@@ -20,6 +20,7 @@ import '../scorecard_monitoring/services/score_card_monitoring_services.dart';
 final Dio dio = Dio();
 final _scorecardAccomplishmentService = ScoreCardMonitoringServices(dio);
 final Map<int, AchievementPeriodData> achievementsList = {};
+final Map<int, ValueNotifier<int>> totalScores = {};
 final permissionService = PermissionService();
 
 class AchievementPeriodData {
@@ -208,6 +209,8 @@ class _ScorecardAccomplishmentRowWidgetState
               percentageController.selection = TextSelection.collapsed(
                 offset: percentageController.text.length,
               );
+
+              _notifyTotalScore();
             },
           ),
         ),
@@ -283,6 +286,8 @@ class _ScorecardAccomplishmentRowWidgetState
           status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
         ),
       );
+      _ensureTotalNotifier();
+      _notifyTotalScore();
     }
 
     final row =
@@ -359,6 +364,7 @@ class _ScorecardAccomplishmentRowWidgetState
                           percentageController.text == '100') {
                         percentageController.text = '1';
                       }
+                      _notifyTotalScore();
                     },
                     items:
                         PgsStatus.values.map((value) {
@@ -634,21 +640,49 @@ class _ScorecardAccomplishmentRowWidgetState
       ),
     );
   }
+
+  void _ensureTotalNotifier() {
+    totalScores.putIfAbsent(widget.deliverableId, () => ValueNotifier<int>(0));
+  }
+
+  void _notifyTotalScore() {
+    _ensureTotalNotifier();
+    final data = achievementsList[widget.deliverableId];
+    if (data == null) return;
+    int sum = 0;
+    for (final row in data.rows) {
+      final val = int.tryParse(row.percentageController.text) ?? 0;
+      sum += val;
+    }
+    totalScores[widget.deliverableId]!.value = sum;
+  }
 }
 
 Future<void> loadScorecardAccomplishments(int deliverableId) async {
   final accomplishments = await _scorecardAccomplishmentService
       .fetchAccomplishments(deliverableId);
-
   achievementsList[deliverableId] = AchievementPeriodData(
     rows:
         accomplishments.map((acc) {
           final percent = acc.percentAccomplished ?? 0;
+          final percentageController = TextEditingController(
+            text: percent.toString(),
+          );
+          percentageController.addListener(() {
+            final data = achievementsList[deliverableId];
+            if (data == null) return;
+
+            int sum = 0;
+            for (final row in data.rows) {
+              sum += int.tryParse(row.percentageController.text) ?? 0;
+            }
+            totalScores.putIfAbsent(deliverableId, () => ValueNotifier<int>(0));
+            totalScores[deliverableId]!.value = sum;
+          });
+
           return ScorecardMonitoringRowData(
             auditorRemarksController: TextEditingController(text: acc.remarks),
-            percentageController: TextEditingController(
-              text: percent.toString(),
-            ),
+            percentageController: percentageController,
             status: ValueNotifier<PgsStatus>(_deriveStatusFromPercent(percent)),
             attachmentPath: acc.attachmentPath,
             attachmentBytes: null,
@@ -656,6 +690,18 @@ Future<void> loadScorecardAccomplishments(int deliverableId) async {
           );
         }).toList(),
   );
+
+  _ensureTotalNotifier(deliverableId);
+
+  int sum = 0;
+  for (final row in achievementsList[deliverableId]!.rows) {
+    sum += int.tryParse(row.percentageController.text) ?? 0;
+  }
+  totalScores[deliverableId]!.value = sum;
+}
+
+void _ensureTotalNotifier(int deliverableId) {
+  totalScores.putIfAbsent(deliverableId, () => ValueNotifier<int>(0));
 }
 
 PgsStatus _deriveStatusFromPercent(int percent) {

@@ -17,6 +17,7 @@ import 'package:motion_toast/motion_toast.dart';
 import '../../../common_services/common_service.dart';
 import '../../../user/models/user_registration.dart';
 import '../../../utils/auth_util.dart';
+import '../../widgets/total_score_indicator.dart';
 
 class ScoreCardMonitoringPage extends StatefulWidget {
   const ScoreCardMonitoringPage({super.key});
@@ -773,20 +774,23 @@ Future<bool?> showAccomplishmentFormDialog(
                         ),
                         const SizedBox(height: 20),
 
-                        // Section title
                         Row(
-                          children: const [
-                            Icon(Icons.bar_chart_outlined, size: 18),
-                            SizedBox(width: 8),
-                            Text(
+                          children: [
+                            const Icon(Icons.bar_chart_outlined, size: 18),
+                            const SizedBox(width: 8),
+                            const Text(
                               "Accomplishment Tracking",
                               style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const Spacer(),
+                            TotalScoreIndicator(
+                              deliverableId: (deliverable['id'] ?? 0) as int,
+                              totalPeriods: totalPeriods,
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
 
-                        // Dynamic table
                         Container(
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.black12),
