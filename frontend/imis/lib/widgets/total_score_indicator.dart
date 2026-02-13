@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:imis/constant/constant.dart';
 import 'scorecard_monitoring_accomplishment_widget.dart';
 import 'dart:math';
 
@@ -46,11 +45,9 @@ class TotalScoreIndicator extends StatelessWidget {
                     size: const Size(100, 50),
                     painter: HalfCirclePainter(
                       progress: (total / 200).clamp(0.0, 1.0),
-
                       color: color,
                     ),
                   ),
-
                   Positioned(
                     top: 20,
                     left: 0,
@@ -68,9 +65,7 @@ class TotalScoreIndicator extends StatelessWidget {
                 ],
               ),
             ),
-
             const SizedBox(height: 4),
-            // Label below the arc
             Text(label, style: const TextStyle(fontSize: 12)),
           ],
         );

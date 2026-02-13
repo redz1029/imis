@@ -48,68 +48,102 @@ class ScoreCardMonitoringServices {
 
   Future<List<Map<String, dynamic>>> fetchRoadmapFiltered({
     int? kraId,
-    String? year,
+    int? fromYear,
+    int? toYear,
   }) async {
     final endpoint = '${ApiEndpoint().scorecardMonitoringFilter}/kra-year';
-    Map<String, dynamic>? queryParams;
-
-    if (kraId != null && year != null && year.isNotEmpty) {
-      queryParams = {'kraid': kraId, 'year': year};
-    } else if (kraId != null) {
-      queryParams = {'kraid': kraId};
-    } else if (year != null && year.isNotEmpty) {
-      queryParams = {'year': year};
-    } else {
-      queryParams = null;
+    final Map<String, dynamic> queryParams = {};
+    if (kraId != null) {
+      queryParams['kraid'] = kraId;
+    }
+    if (fromYear != null) {
+      queryParams['fromYear'] = fromYear;
+    }
+    if (toYear != null) {
+      queryParams['toYear'] = toYear;
     }
 
     final response = await AuthenticatedRequest.get(
       dio,
       endpoint,
-      queryParameters: queryParams,
+      queryParameters: queryParams.isEmpty ? null : queryParams,
     );
 
     if (response.statusCode == 200) {
       final data = response.data;
-      final items = data["deliverables"] as List<dynamic>? ?? [];
-      return items
-          .map(
-            (item) => {
-              'id': item['id'],
-              'kraDescription': item['kraDescription'] ?? '',
-              'deliverableName': item['deliverableDescription'] ?? '',
-              'year': (item['year']?.toString() ?? ''),
-              'kra': item['kraDescription'] ?? item['kra'],
-            },
-          )
-          .toList();
+      final outerList = data["deliverables"] as List<dynamic>? ?? [];
+
+      final allItems =
+          outerList.expand((outer) {
+            final startDate = outer['startDate'];
+            final endDate = outer['endDate'];
+
+            final innerList = outer["deliverables"] as List<dynamic>? ?? [];
+
+            return innerList.map(
+              (item) => {
+                'id': item['id'],
+                'kraDescription': item['kraDescription'] ?? '',
+                'deliverableName': item['deliverableDescription'] ?? '',
+                'year': item['year']?.toString() ?? '',
+                'startDate': startDate,
+                'endDate': endDate,
+                'kra': item['kraDescription'] ?? '',
+              },
+            );
+          }).toList();
+
+      return allItems;
     } else {
       throw Exception('Failed to fetch roadmap filtered data');
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchKpiFiltered({int? kraId}) async {
+  Future<List<Map<String, dynamic>>> fetchKpiFiltered({
+    int? kraId,
+    int? fromYear,
+    int? toYear,
+  }) async {
     final endpoint = '${ApiEndpoint().scorecardMonitoringFilter}/kra';
-    Map<String, dynamic>? queryParams;
-
+    final Map<String, dynamic> queryParams = {};
     if (kraId != null) {
-      queryParams = {'kraid': kraId};
-    } else {
-      queryParams = null;
+      queryParams['kraid'] = kraId;
+    }
+    if (fromYear != null) {
+      queryParams['fromYear'] = fromYear;
+    }
+    if (toYear != null) {
+      queryParams['toYear'] = toYear;
     }
 
     final response = await AuthenticatedRequest.get(
       dio,
       endpoint,
-      queryParameters: queryParams,
+      queryParameters: queryParams.isEmpty ? null : queryParams,
     );
 
     if (response.statusCode == 200) {
       final data = response.data;
-      final items = data["deliverables"] as List<dynamic>? ?? [];
-      return items
-          .map((item) => {'kpiDescription': item['kpiDescription'] ?? ''})
-          .toList();
+      final outerList = data["deliverables"] as List<dynamic>? ?? [];
+
+      final allItems =
+          outerList.expand((outer) {
+            final startDate = outer['startDate'];
+            final endDate = outer['endDate'];
+
+            final innerList = outer["kpiDeliverable"] as List<dynamic>? ?? [];
+
+            return innerList.map(
+              (item) => {
+                'id': item['id'],
+                'kpiDescription': item['kpiDescription'] ?? '',
+                'startDate': startDate,
+                'endDate': endDate,
+              },
+            );
+          }).toList();
+
+      return allItems;
     } else {
       throw Exception('Failed to fetch KPI data');
     }
