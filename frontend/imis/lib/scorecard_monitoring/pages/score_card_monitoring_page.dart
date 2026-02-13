@@ -52,22 +52,25 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
 
   final List<String> kpiHeaders = ["KPI", "ACTIONS"];
 
-  bool isMenuOpenPeriod = false;
+  bool isMenuOpenStartYear = false;
+  bool isMenuOpenEndYear = false;
   bool isMenuOpenKra = false;
   bool isMenuOpenKraKpi = false;
   List<KeyResultArea> kraListOptions = [];
   int? selectedKra;
-
   List<PgsPeriod> periodList = [];
-  int? selectedPeriod;
+  int? selectedStartYear;
+  int? selectedEndYear;
   int? selectedPeriodCreateReport;
   String? selectedPeriodText;
   String? selectedPeriodTextCreateReport;
-  String? _selectedPeriod;
+  String? selectedStartYearText;
+  String? selectedEndYearText;
   bool isLoading = true;
   int? officeId;
   int? periodId;
   bool hasAvailableDeliverables = false;
+  bool isAllYearsSelected = false;
 
   @override
   void initState() {
@@ -88,7 +91,8 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
       try {
         roadmapData = await _scorecardService.fetchRoadmapFiltered(
           kraId: selectedKra,
-          year: _selectedPeriod,
+          fromYear: selectedStartYear,
+          toYear: selectedEndYear,
         );
         kpiData = await _scorecardService.fetchKpiFiltered(kraId: selectedKra);
       } catch (e) {
@@ -215,10 +219,15 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                                 final roadmapData = await _scorecardService
                                     .fetchRoadmapFiltered(
                                       kraId: selectedKra,
-                                      year: _selectedPeriod,
+                                      fromYear: selectedStartYear,
+                                      toYear: selectedEndYear,
                                     );
                                 final kpiData = await _scorecardService
-                                    .fetchKpiFiltered(kraId: selectedKra);
+                                    .fetchKpiFiltered(
+                                      kraId: selectedKra,
+                                      fromYear: selectedStartYear,
+                                      toYear: selectedEndYear,
+                                    );
                                 if (!mounted) return;
                                 setState(() {
                                   roadmapList = roadmapData;
@@ -278,32 +287,42 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
 
                           onCanceled: () {
                             setState(() {
-                              isMenuOpenPeriod = false;
+                              isMenuOpenStartYear = false;
                             });
                           },
 
                           onOpened: () {
                             setState(() {
-                              isMenuOpenPeriod = true;
+                              isMenuOpenStartYear = true;
                             });
                           },
 
                           onSelected: (int value) async {
                             setState(() {
-                              selectedPeriod = (value == -1) ? null : value;
-                              _selectedPeriod =
+                              selectedStartYear = (value == -1) ? null : value;
+                              selectedStartYearText =
                                   (value == -1) ? null : value.toString();
-                              isMenuOpenPeriod = false;
+                              isMenuOpenStartYear = false;
+                              isAllYearsSelected = (value == -1);
                             });
                             try {
                               final roadmapData = await _scorecardService
                                   .fetchRoadmapFiltered(
                                     kraId: selectedKra,
-                                    year: _selectedPeriod,
+                                    fromYear: selectedStartYear,
+                                    toYear: selectedEndYear,
                                   );
+                              final kpiData = await _scorecardService
+                                  .fetchKpiFiltered(
+                                    kraId: selectedKra,
+                                    fromYear: selectedStartYear,
+                                    toYear: selectedEndYear,
+                                  );
+
                               if (!mounted) return;
                               setState(() {
                                 roadmapList = roadmapData;
+                                kpiList = kpiData;
                                 filteredList = List.from(roadmapData);
                               });
                             } catch (e) {
@@ -321,15 +340,96 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                               return PopupMenuItem<int>(
                                 value: year,
                                 child: Text(
-                                  year == -1 ? 'All Period' : year.toString(),
+                                  year == -1 ? 'All Years' : year.toString(),
                                 ),
                               );
                             }).toList();
                           },
 
                           child: FilterButton(
-                            label: selectedPeriod?.toString() ?? 'All Period',
-                            isActive: isMenuOpenPeriod,
+                            label:
+                                selectedStartYear == null
+                                    ? (isAllYearsSelected
+                                        ? 'All Years'
+                                        : 'Start Year')
+                                    : selectedStartYear.toString(),
+                            isActive: isMenuOpenStartYear,
+                          ),
+                        ),
+                        SizedBox(width: 6),
+                        PopupMenuButton<int>(
+                          color: mainBgColor,
+                          offset: const Offset(0, 30),
+
+                          onCanceled: () {
+                            setState(() {
+                              isMenuOpenEndYear = false;
+                            });
+                          },
+
+                          onOpened: () {
+                            setState(() {
+                              isMenuOpenEndYear = true;
+                            });
+                          },
+
+                          onSelected: (int value) async {
+                            setState(() {
+                              selectedEndYear = (value == -1) ? null : value;
+                              selectedEndYearText =
+                                  (value == -1) ? null : value.toString();
+                              isMenuOpenEndYear = false;
+                              isAllYearsSelected = (value == -1);
+                            });
+                            try {
+                              final roadmapData = await _scorecardService
+                                  .fetchRoadmapFiltered(
+                                    kraId: selectedKra,
+                                    fromYear: selectedStartYear,
+                                    toYear: selectedEndYear,
+                                  );
+                              final kpiData = await _scorecardService
+                                  .fetchKpiFiltered(
+                                    kraId: selectedKra,
+                                    fromYear: selectedStartYear,
+                                    toYear: selectedEndYear,
+                                  );
+
+                              if (!mounted) return;
+                              setState(() {
+                                roadmapList = roadmapData;
+                                kpiList = kpiData;
+                                filteredList = List.from(roadmapData);
+                              });
+                            } catch (e) {
+                              debugPrint("Error fetching filtered data");
+                            }
+                          },
+
+                          itemBuilder: (BuildContext context) {
+                            final updatedYearList = [
+                              -1,
+                              ...SwotYear.years.map((y) => int.parse(y)),
+                            ];
+
+                            return updatedYearList.map((year) {
+                              return PopupMenuItem<int>(
+                                value: year,
+                                child: Text(
+                                  year == -1 ? 'All Years' : year.toString(),
+                                ),
+                              );
+                            }).toList();
+                          },
+
+                          child: FilterButton(
+                            label:
+                                selectedEndYear == null
+                                    ? (isAllYearsSelected
+                                        ? 'All Years'
+                                        : 'End Year')
+                                    : selectedEndYear.toString(),
+                            isActive: isMenuOpenEndYear,
                           ),
                         ),
                       ],
@@ -452,7 +552,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                               _tableCell(item['deliverableName'] ?? ''),
                               _buildActionButton('', () async {
                                 await loadScorecardAccomplishments(item['id']);
-                                showAccomplishmentFormDialog(
+                                showRoadmapAccomplishmentFormDialog(
                                   context,
                                   item,
                                   userId,
@@ -563,7 +663,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                             _tableCell('${item['id'] ?? index + 1}'),
                             _tableCell(item['kpiDescription'] ?? ''),
                             _buildActionButton('', () {
-                              showAccomplishmentFormDialog(
+                              showKPIAccomplishmentFormDialog(
                                 context,
                                 item,
                                 userId,
@@ -642,43 +742,65 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   }
 }
 
-Future<bool?> showAccomplishmentFormDialog(
+Future<bool?> showRoadmapAccomplishmentFormDialog(
   BuildContext context,
   Map<String, dynamic> deliverable,
   String userId,
 ) {
-  final String? yearStr = deliverable['year']?.toString();
   int? startYear;
   int? endYear;
 
-  if (yearStr != null && yearStr.isNotEmpty) {
-    final rangeMatch = RegExp(
-      r'^(\d{4})(?:\s*-\s*(\d{4}))?$',
-    ).firstMatch(yearStr.trim());
-    if (rangeMatch != null) {
-      startYear = int.tryParse(rangeMatch.group(1)!);
-      endYear = int.tryParse(rangeMatch.group(2) ?? rangeMatch.group(1)!);
-    } else {
-      final years =
-          RegExp(r'\d{4}')
-              .allMatches(yearStr)
-              .map((m) => int.tryParse(m.group(0)!))
-              .whereType<int>()
-              .toList();
-      if (years.isNotEmpty) {
-        startYear = years.first;
-        endYear = years.length > 1 ? years.last : years.first;
+  final String? startDateStr = deliverable['startDate']?.toString();
+  final String? endDateStr = deliverable['endDate']?.toString();
+  final int? deliverableYear = () {
+    final dynamic y = deliverable['year'];
+    if (y is int) return y;
+    if (y is String) return int.tryParse(y);
+    return null;
+  }();
+  if (startDateStr != null && endDateStr != null) {
+    final DateTime? startDt = DateTime.tryParse(startDateStr);
+    final DateTime? endDt = DateTime.tryParse(endDateStr);
+    if (startDt != null && endDt != null) {
+      startYear = deliverableYear ?? startDt.year;
+      endYear = endDt.year;
+      if (endYear < startYear) {
+        endYear = startYear;
       }
-    }
-
-    if (startYear != null && endYear != null && startYear == endYear) {
-      final int year = startYear;
-      final int cycleStart = 2026 + 5 * ((year - 2026) ~/ 5);
-      endYear = cycleStart + 4;
     }
   }
 
-  final bool useYearly = startYear != null && endYear != null;
+  if (startYear == null || endYear == null) {
+    if (deliverableYear != null) {
+      startYear = deliverableYear;
+      endYear = deliverableYear;
+    } else {
+      final String? fallbackYearStr = deliverable['year']?.toString();
+      if (fallbackYearStr != null && fallbackYearStr.isNotEmpty) {
+        final RegExpMatch? rangeMatch = RegExp(
+          r'^(\d{4})(?:\s*-\s*(\d{4}))?$',
+        ).firstMatch(fallbackYearStr.trim());
+        if (rangeMatch != null) {
+          startYear = int.tryParse(rangeMatch.group(1)!);
+          endYear = int.tryParse(rangeMatch.group(2) ?? rangeMatch.group(1)!);
+        } else {
+          final List<int> years =
+              RegExp(r'\d{4}')
+                  .allMatches(fallbackYearStr)
+                  .map((m) => int.tryParse(m.group(0)!))
+                  .whereType<int>()
+                  .toList();
+          if (years.isNotEmpty) {
+            startYear = years.first;
+            endYear = years.length > 1 ? years.last : years.first;
+          }
+        }
+      }
+    }
+  }
+
+  final bool useYearly =
+      startYear != null && endYear != null && endYear >= startYear;
 
   final List<Map<String, dynamic>> periods = <Map<String, dynamic>>[];
   if (useYearly) {
@@ -791,6 +913,338 @@ Future<bool?> showAccomplishmentFormDialog(
                         ),
                         const SizedBox(height: 12),
 
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black12),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: [
+                              // Headers
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                  horizontal: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade50,
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(8),
+                                    topRight: Radius.circular(8),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: const [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Center(
+                                        child: Text(
+                                          "Period",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Center(
+                                        child: Text(
+                                          "Status",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 2,
+                                      child: Center(
+                                        child: Text(
+                                          "Percent Accomplishment",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+
+                                    Expanded(
+                                      flex: 2,
+                                      child: Center(
+                                        child: Text(
+                                          "Proof",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Center(
+                                        child: Text(
+                                          "Remarks",
+                                          style: TextStyle(color: grey),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              ...periods.asMap().entries.map((entry) {
+                                final index = entry.key;
+                                final period = entry.value;
+                                return Column(
+                                  children: [
+                                    const Divider(height: 1),
+                                    ScorecardAccomplishmentRowWidget(
+                                      period: period['period'],
+                                      periodIndex: index,
+                                      totalPeriods: totalPeriods,
+                                      deliverableId:
+                                          (deliverable['id'] ?? 0) as int,
+                                    ),
+                                  ],
+                                );
+                              }),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 20),
+                PermissionWidget(
+                  permission: AppPermissions.addKraRoadMapAccomplishment,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text(
+                          "Cancel",
+                          style: TextStyle(color: primaryColor),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        onPressed: () async {
+                          final shouldSave = await showDialog<bool>(
+                            context: context,
+                            builder:
+                                (ctx) => AlertDialog(
+                                  title: Text("Confirm Save"),
+                                  content: Text(
+                                    "Are you sure you want to save this data?",
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(ctx).pop(false),
+                                      child: Text(
+                                        "No",
+                                        style: TextStyle(color: primaryColor),
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed:
+                                          () => Navigator.of(ctx).pop(true),
+                                      child: Text(
+                                        "Yes",
+                                        style: TextStyle(color: primaryColor),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                          );
+
+                          if (shouldSave != true) return;
+                          MotionToast.success(
+                            description: Text('Saved Successfully'),
+                            toastAlignment: Alignment.topCenter,
+                          ).show(context);
+                          await saveScorecardAccomplishmentData(
+                            deliverable['id'],
+                            userId,
+                          );
+
+                          Navigator.of(context).pop(true);
+                        },
+                        child: Text(
+                          "Save Accomplishment",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Future<bool?> showKPIAccomplishmentFormDialog(
+  BuildContext context,
+  Map<String, dynamic> deliverable,
+  String userId,
+) {
+  int? startYear;
+  int? endYear;
+
+  final String? startDateStr = deliverable['startDate']?.toString();
+  final String? endDateStr = deliverable['endDate']?.toString();
+  final int? deliverableYear = () {
+    final dynamic y = deliverable['year'];
+    if (y is int) return y;
+    if (y is String) return int.tryParse(y);
+    return null;
+  }();
+  if (startDateStr != null && endDateStr != null) {
+    final DateTime? startDt = DateTime.tryParse(startDateStr);
+    final DateTime? endDt = DateTime.tryParse(endDateStr);
+    if (startDt != null && endDt != null) {
+      startYear = deliverableYear ?? startDt.year;
+      endYear = endDt.year;
+      if (endYear < startYear) {
+        endYear = startYear;
+      }
+    }
+  }
+
+  if (startYear == null || endYear == null) {
+    if (deliverableYear != null) {
+      startYear = deliverableYear;
+      endYear = deliverableYear;
+    } else {
+      final String? fallbackYearStr = deliverable['year']?.toString();
+      if (fallbackYearStr != null && fallbackYearStr.isNotEmpty) {
+        final RegExpMatch? rangeMatch = RegExp(
+          r'^(\d{4})(?:\s*-\s*(\d{4}))?$',
+        ).firstMatch(fallbackYearStr.trim());
+        if (rangeMatch != null) {
+          startYear = int.tryParse(rangeMatch.group(1)!);
+          endYear = int.tryParse(rangeMatch.group(2) ?? rangeMatch.group(1)!);
+        } else {
+          final List<int> years =
+              RegExp(r'\d{4}')
+                  .allMatches(fallbackYearStr)
+                  .map((m) => int.tryParse(m.group(0)!))
+                  .whereType<int>()
+                  .toList();
+          if (years.isNotEmpty) {
+            startYear = years.first;
+            endYear = years.length > 1 ? years.last : years.first;
+          }
+        }
+      }
+    }
+  }
+
+  final bool useYearly =
+      startYear != null && endYear != null && endYear >= startYear;
+
+  final List<Map<String, dynamic>> periods = <Map<String, dynamic>>[];
+  if (useYearly) {
+    for (int y = startYear; y <= endYear; y++) {
+      periods.add({'period': y.toString(), 'year': y});
+    }
+  }
+
+  return showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) {
+      final int totalPeriods = periods.length;
+      final String headerText =
+          useYearly
+              ? 'Accomplishment Form - Years ${startYear ?? ''} to ${endYear ?? ''}'
+              : 'Accomplishment Form';
+
+      return Dialog(
+        backgroundColor: mainBgColor,
+        insetPadding: const EdgeInsets.all(20),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1500),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Scrollable Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              headerText,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => Navigator.pop(context),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade100,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "KPI: ${deliverable['kpiDescription'] ?? deliverable['kpi'] ?? 'N/A'}",
+                                  ),
+                                  Text(
+                                    useYearly
+                                        ? "Yearly Tracking: ${startYear ?? ''}-${endYear ?? ''} ($totalPeriods year(s))"
+                                        : "Tracking Periods: $totalPeriods period(s)",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        Row(
+                          children: [
+                            const Icon(Icons.bar_chart_outlined, size: 18),
+                            const SizedBox(width: 8),
+                            const Text(
+                              "Accomplishment Tracking",
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            const Spacer(),
+                            TotalScoreIndicator(
+                              deliverableId: (deliverable['id'] ?? 0) as int,
+                              totalPeriods: totalPeriods,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
                         Container(
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.black12),
