@@ -1,4 +1,5 @@
-﻿using Base.Auths;
+﻿using Base.Abstractions;
+using Base.Auths;
 using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
@@ -31,7 +32,7 @@ namespace IMIS.Persistence.KraRoadMapModule
             _kraRoadMapPeriodRepository = kraRoadMapPeriodRepository;
             _userManager = userManager;
             _roleManager = roleManager;
-        }       
+        }     
         public async Task<List<FilterKraPeriodKraDeliverableDto>> GetGroupedDeliverablesAsync(
         int? kraid,
         int? fromYear,
@@ -66,25 +67,21 @@ namespace IMIS.Persistence.KraRoadMapModule
             if (!deliverables.Any())
                 return new List<FilterKraPeriodKraDeliverableDto>();
 
-            var grouped = deliverables
-                .Where(d => d.KraRoadMap != null && d.KraRoadMap.KraRoadMapPeriod != null)
-                .GroupBy(d => new
-                {
-                    d.KraRoadMap!.KraRoadMapPeriod!.StartYear,
-                    d.KraRoadMap!.KraRoadMapPeriod!.EndYear
-                })
+            var roadmapPeriods = await _repository.GetRoadMapPeriodsAsync(deliverables, cancellationToken);
+
+            var grouped = deliverables.GroupBy(d => roadmapPeriods.First(r => r.KraRoadMapId == d.KraRoadMapId))
                 .Select(g => new FilterKraPeriodKraDeliverableDto
                 {
-                    StartDate = g.Key.StartYear,
-                    EndDate = g.Key.EndYear,
+                    StartDate = DateOnly.FromDateTime(g.Key.StartYear),
+                    EndDate = DateOnly.FromDateTime(g.Key.EndYear),
                     Deliverables = g.Select(d => new KraRoadMapDeliverableDto(d)).ToList()
                 })
                 .OrderBy(x => x.StartDate)
                 .ToList();
 
-            return grouped; 
+            return grouped;
         }
-       
+
         public async Task<List<KraRoadMapKpiDeliverableFilterDto>> GetKpiDeliverableAsync(
         int? kraid,
         int? fromYear,
@@ -119,19 +116,14 @@ namespace IMIS.Persistence.KraRoadMapModule
             if (!kpis.Any())
                 return new List<KraRoadMapKpiDeliverableFilterDto>();
 
+            var roadmapPeriods = await _repository.GetRoadMapPeriodsForKpisAsync(kpis, cancellationToken);
 
-            var grouped = kpis
-                .Where(d => d.KraRoadMap != null && d.KraRoadMap.KraRoadMapPeriod != null)
-                .GroupBy(d => new
-                {
-                    d.KraRoadMap!.KraRoadMapPeriod!.StartYear,
-                    d.KraRoadMap!.KraRoadMapPeriod!.EndYear
-                })
+            var grouped = kpis.GroupBy(k => roadmapPeriods.First(r => r.KraRoadMapId == k.KraRoadMapId))
                 .Select(g => new KraRoadMapKpiDeliverableFilterDto
                 {
-                    StartDate = g.Key.StartYear,
-                    EndDate = g.Key.EndYear,
-                    KpiDeliverable = g.Select(d => new KraRoadMapKpiDto(d)).ToList()
+                    StartDate = DateOnly.FromDateTime(g.Key.StartYear),
+                    EndDate = DateOnly.FromDateTime(g.Key.EndYear),
+                    KpiDeliverable = g.Select(k => new KraRoadMapKpiDto(k)).ToList()
                 })
                 .OrderBy(x => x.StartDate)
                 .ToList();
@@ -285,7 +277,6 @@ namespace IMIS.Persistence.KraRoadMapModule
             return roadmaps.Select(MapToDto).ToList();
         }
 
-
         public async Task<List<KraRoadMapDto>?> GetAll(CancellationToken cancellationToken)
         {
             var list = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
@@ -357,6 +348,8 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             foreach (var d in incoming.Deliverables ?? new List<KraRoadMapDeliverable>())
             {
+                d.KraRoadMapId = existing.Id;
+
                 if (d.Id == 0)
                 {
                     existing.Deliverables!.Add(d);
@@ -369,6 +362,7 @@ namespace IMIS.Persistence.KraRoadMapModule
                     bool wasDeleted = match.IsDeleted;
                     _repository.GetDbContext().Entry(match).CurrentValues.SetValues(d);
                     match.IsDeleted = wasDeleted;
+                    match.KraRoadMapId = existing.Id;
                 }
             }
         }
@@ -382,6 +376,8 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             foreach (var k in incoming.Kpis ?? new List<KraRoadMapKpi>())
             {
+                k.KraRoadMapId = existing.Id;
+
                 if (k.Id == 0)
                 {                                
                     existing.Kpis!.Add(k);
@@ -394,6 +390,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                     bool wasDeleted = match.IsDeleted;
                     _repository.GetDbContext().Entry(match).CurrentValues.SetValues(k);
                     match.IsDeleted = wasDeleted;
+
+                    match.KraRoadMapId = existing.Id;
                 }
             }
         }
