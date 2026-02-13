@@ -56,6 +56,9 @@ class ApiEndpoint {
   late String kraRoadMapRoleId;
   late String kraRoadMapReport;
   late String kraRoadmapRole;
+  late String isoStandard;
+  late String standardVersion;
+  late String improvementtype;
   ApiEndpoint() {
     login = '$baseUrl/login';
     register = '$baseUrl/register';
@@ -110,6 +113,9 @@ class ApiEndpoint {
     kraRoadMapRoleId = '$baseUrl/KRARoadmapRole/roleid';
     kraRoadMapReport = '$baseUrl/kraRoadMap/list-report/pdf';
     kraRoadmapRole = '$baseUrl/kraRoadmapRole/roleid';
+    isoStandard = '$baseUrl/IsoStandard';
+    standardVersion = '$baseUrl/api/StandardVersion';
+    improvementtype = '$baseUrl/improvementtype';
   }
 
   static Future<void> setBaseUrl() async {

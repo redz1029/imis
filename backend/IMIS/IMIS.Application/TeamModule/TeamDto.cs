@@ -18,6 +18,7 @@ namespace IMIS.Application.TeamModule
             this.Id = team.Id;
             this.Name = team.Name;
             this.IsActive = team.IsActive;
+            this.ImprovementType = team.ImprovementType;
             this.Auditors = team.AuditorTeams?.Select(a => new AuditorDto()
             {
                 Id = a.AuditorId ?? 0,

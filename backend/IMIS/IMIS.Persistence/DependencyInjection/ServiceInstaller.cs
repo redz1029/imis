@@ -6,6 +6,7 @@ using IMIS.Application.AuditorTeamsModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.BreakThroughScoringModule;
 using IMIS.Application.IsoStandardModule;
+using IMIS.Application.ImprovementTypeModule;
 using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
@@ -30,6 +31,7 @@ using IMIS.Persistence.AuditorOfficesModule;
 using IMIS.Persistence.AuditorTeamsModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.BreakThroughScoringModule;
+using IMIS.Persistence.ImprovementTypeModule;
 using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.KraRoadMapDeliverableModule;
@@ -100,6 +102,9 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IOfficeTypeRepository, OfficeTypeRepository>();
             services.AddScoped<IOfficeTypeService, OfficeTypeService>();
 
+            services.AddScoped<IImprovementTypeRepository, ImprovementTypeRepository>();
+            services.AddScoped<IImprovementTypeService, ImprovementTypeService>();
+
             services.AddScoped<IAuditorOfficesRepository, AuditorOfficesRepository>();
             services.AddScoped<IAuditorOfficesService, AuditorOfficesService>();
 
@@ -139,7 +144,10 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IIsoStandardRepository, IsoStandardRepository>();
             services.AddScoped<IIsoStandardService, IsoStandardService>();
-           
+
+            services.AddScoped<ImprovementTypeRepository, ImprovementTypeRepository>();
+            services.AddScoped<ImprovementTypeService, ImprovementTypeService>();
+
 
             return services;
         }

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:imis/team/models/improvement_type.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/http_util.dart';
@@ -37,6 +38,34 @@ class TeamService {
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create team');
     }
+  }
+
+  Future<List<ImprovementType>> getImprovementType() async {
+    var url = ApiEndpoint().improvementtype;
+
+    try {
+      final response = await AuthenticatedRequest.get(dio, url);
+
+      if (response.statusCode == 200 && response.data is List) {
+        return (response.data as List)
+            .map((improvementType) => ImprovementType.fromJson(improvementType))
+            .toList();
+      } else {
+        throw Exception("Failed to fetch improvement types.");
+      }
+    } on DioException {
+      rethrow;
+    } catch (e) {
+      rethrow;
+    }
+  }
+  
+   String getImprovementTypeName(int id, List<Map<String, dynamic>> improvementTypeList) {
+    final improvementType = improvementTypeList.firstWhere(
+      (type) => type['id'] == id,
+      orElse: () => {'name': 'Unknown'},
+    );
+    return improvementType['name'];
   }
 
   Future<void> deleteTeam(String teamId) async {

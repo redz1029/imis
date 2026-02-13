@@ -26,7 +26,10 @@ class TeamPageState extends State<TeamPage> {
   final _formKey = GlobalKey<FormState>();
   List<Team> teamList = [];
   List<Team> filteredList = [];
+    String? _selectedimprovementTypeId;
 
+  List<Map<String, dynamic>> filteredimprovementType = [];
+  List<Map<String, dynamic>> filteredimprovement = [];
   final TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
 
@@ -81,7 +84,31 @@ class TeamPageState extends State<TeamPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
+
+    _teamService
+        .getImprovementType()
+        .then((data) {
+          if (mounted) {
+            setState(() {
+              filteredimprovement =
+                  data.map((improvementType) => improvementType.toJson()).toList();
+              filteredimprovementType = List.from(filteredimprovement);
+              if (filteredimprovementType.isNotEmpty) {
+                _selectedimprovementTypeId =
+                    filteredimprovementType[0]['id'].toString();
+              }
+            });
+          }
+        })
+        .catchError((error) {
+          debugPrint("Failed to fetch data");
+        });
+
+    if (filteredimprovementType.isNotEmpty) {
+      _selectedimprovementTypeId = filteredimprovementType[0]['id'].toString();
+    }
   }
+
 
   @override
   void dispose() {
@@ -107,6 +134,7 @@ class TeamPageState extends State<TeamPage> {
     String? name,
     bool isActive = false,
   }) {
+    _selectedimprovementTypeId = _selectedimprovementTypeId;
     TextEditingController teamController = TextEditingController(text: name);
     showDialog(
       context: context,
@@ -143,6 +171,43 @@ class TeamPageState extends State<TeamPage> {
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
                         return 'Please fill out this field';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+
+                 SizedBox(
+                 width: 350,
+                  height: 65,
+                  child: DropdownButtonFormField<String>(
+                    value: _selectedimprovementTypeId,
+                    decoration: InputDecoration(
+                      labelText: 'Improvement Type',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      floatingLabelStyle: TextStyle(color: primaryColor),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                    ),
+
+                    items:
+                        filteredimprovementType.map((improvementTypeData) {
+                          return DropdownMenuItem<String>(
+                            value: improvementTypeData['id'].toString(),
+                            child: Text(improvementTypeData['name']),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                       _selectedimprovementTypeId = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select an office';
                       }
                       return null;
                     },
@@ -208,6 +273,7 @@ class TeamPageState extends State<TeamPage> {
                       isActive,
                       isDeleted,
                       rowVersion: '',
+                      improvementTypeID: int.tryParse(_selectedimprovementTypeId ?? '0'),
                     );
                     await _teamService.createTeam(team);
                     setState(() {
@@ -325,7 +391,11 @@ class TeamPageState extends State<TeamPage> {
                     columns: const [
                       DataColumn2(label: Text('#'), fixedWidth: 40),
                       DataColumn2(
-                        label: Text('Office Name'),
+                        label: Text('Team Name'),
+                        size: ColumnSize.L,
+                      ),
+                      DataColumn2(
+                        label: Text('Improvement Type'),
                         size: ColumnSize.L,
                       ),
                       DataColumn(label: Text('Actions')),
@@ -341,6 +411,12 @@ class TeamPageState extends State<TeamPage> {
                             cells: [
                               DataCell(Text(itemNumber.toString())),
                               DataCell(Text(team.name)),
+                              DataCell( Text(
+                                  _teamService.getImprovementTypeName(
+                                    team.improvementTypeID ?? 0,
+                                    filteredimprovementType,
+                                  ),
+                                ),),
                               DataCell(
                                 Row(
                                   children: [

@@ -9,7 +9,7 @@ namespace IMIS.Domain
         public ICollection<AuditorTeams>? AuditorTeams { get; set; }
 
         public required OrganizationImprovementType ImprovementType { get; set; }
-        public ICollection<Auditor>? Auditors { get; set; }
+        
 
     }
 }

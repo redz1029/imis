@@ -4,7 +4,7 @@ namespace IMIS.Domain
 {
     public enum OrganizationImprovementType
     {
-        PGS = 0, // Performance Governance System
+        PGS = 2, // Performance Governance System
         ISO = 1 // Internal Organization for Standardization
     }
 

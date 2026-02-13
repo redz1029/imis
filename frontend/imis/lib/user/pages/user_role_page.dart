@@ -501,7 +501,7 @@ class UserRolePageState extends State<UserRolePage> {
 
   void _showPermissionsDialog(
     String userId,
-    String userName,
+    String roleId,
     List<dynamic> permissions,
   ) {
     showDialog(
@@ -536,7 +536,8 @@ class UserRolePageState extends State<UserRolePage> {
 
                         await _userRoleService.updatePermission(
                           userId,
-                          userName,
+                          roleId,
+                          roleId,
                           permissions,
                         );
                       },
@@ -566,7 +567,8 @@ class UserRolePageState extends State<UserRolePage> {
 
                                       await _userRoleService.updatePermission(
                                         userId,
-                                        userName,
+                                        roleId,
+                                        roleId,
                                         permissions,
                                       );
                                     },
