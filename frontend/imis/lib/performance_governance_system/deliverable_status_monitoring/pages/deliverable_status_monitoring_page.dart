@@ -195,7 +195,6 @@ class _DeliverableStatusMonitoringPageState
         });
       }
     } catch (e) {
-      debugPrint("Error checking deliverables availability: $e");
       setDialogState(() {
         _hasAvailableDeliverables = false;
       });
@@ -236,7 +235,7 @@ class _DeliverableStatusMonitoringPageState
         if (isComplete) {
           completedPeriods++;
         } else {
-          if (!hasValidStatus) debugPrint("    - Missing status: $status");
+          if (!hasValidStatus) {}
         }
       }
 
