@@ -494,12 +494,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                             color: primaryColor,
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.trim().isEmpty) {
-                            return 'Please enter a description';
-                          }
-                          return null;
-                        },
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -615,16 +609,19 @@ class _AnnouncementCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          SelectableText(
             announcement.title,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
-          Text(
+          SelectableText(
             displayDate,
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           gap6px,
-          Text(announcement.description, style: const TextStyle(fontSize: 14)),
+          SelectableText(
+            announcement.description,
+            style: const TextStyle(fontSize: 14),
+          ),
         ],
       ),
     );
