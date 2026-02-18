@@ -23,6 +23,7 @@ import 'package:imis/user/pages/user_profile_page.dart';
 import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
+import 'package:imis/iso_standard/page/iso_standard_page.dart';
 import 'package:imis/user/pages/home_page.dart';
 import 'package:imis/performance_governance_system/key_result_area/pages/key_result_area_page.dart';
 import 'package:imis/office/pages/office_page.dart';
@@ -168,38 +169,31 @@ class NavigationPanelState extends State<NavigationPanel> {
   void _logout(BuildContext context) async {
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            backgroundColor: mainBgColor,
-            title: const Text('Logout'),
-            content: const Text('Are you sure you want to logout?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: primaryColor),
-                ),
-              ),
-              TextButton(
-                onPressed: () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.remove('selectedRole');
-                  await AuthUtil.logout(context);
-                  if (!context.mounted) return;
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (context) => const LoginPage()),
-                    (route) => false,
-                  );
-                },
-
-                child: const Text(
-                  'Logout',
-                  style: TextStyle(color: primaryColor),
-                ),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        backgroundColor: mainBgColor,
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel', style: TextStyle(color: primaryColor)),
           ),
+          TextButton(
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('selectedRole');
+              await AuthUtil.logout(context);
+              if (!context.mounted) return;
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (context) => const LoginPage()),
+                (route) => false,
+              );
+            },
+
+            child: const Text('Logout', style: TextStyle(color: primaryColor)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -446,10 +440,9 @@ class NavigationPanelState extends State<NavigationPanel> {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: grey,
-                        backgroundImage:
-                            image != null
-                                ? FileImage(image!) as ImageProvider
-                                : AssetImage('assets/iconprofile.png'),
+                        backgroundImage: image != null
+                            ? FileImage(image!) as ImageProvider
+                            : AssetImage('assets/iconprofile.png'),
                       ),
                       Positioned(
                         bottom: 0,
@@ -566,10 +559,9 @@ class NavigationPanelState extends State<NavigationPanel> {
                       CircleAvatar(
                         radius: 50,
                         backgroundColor: grey,
-                        backgroundImage:
-                            image != null
-                                ? FileImage(image!) as ImageProvider
-                                : AssetImage('assets/iconprofile.jpg'),
+                        backgroundImage: image != null
+                            ? FileImage(image!) as ImageProvider
+                            : AssetImage('assets/iconprofile.jpg'),
                       ),
 
                       Positioned(
@@ -711,36 +703,28 @@ class NavigationPanelState extends State<NavigationPanel> {
                   PermissionWidget(
                     child:
                         (selectedRole == PermissionString.roleAdmin ||
-                                selectedRole ==
-                                    PermissionString.roleStandardUser ||
-                                selectedRole == PermissionString.mcc ||
-                                selectedRole == PermissionString.osm ||
-                                selectedRole ==
-                                    PermissionString.trainingOfficer ||
-                                selectedRole == PermissionString.hrOfficer ||
-                                selectedRole ==
-                                    PermissionString.serviceOfficer ||
-                                selectedRole ==
-                                    PermissionString.financeOfficer ||
-                                selectedRole ==
-                                    PermissionString.safetyOfficer ||
-                                selectedRole ==
-                                    PermissionString.facilityOfficer ||
-                                selectedRole ==
-                                    PermissionString.linkagesOfficer ||
-                                selectedRole ==
-                                    PermissionString.informationOfficer ||
-                                selectedRole ==
-                                    PermissionString.researchOfficer ||
-                                selectedRole == PermissionString.coreTeam ||
-                                selectedRole == PermissionString.serviceHead ||
-                                selectedRole == PermissionString.mcc)
-                            ? _buildListTile(
-                              Icons.map,
+                            selectedRole == PermissionString.roleStandardUser ||
+                            selectedRole == PermissionString.mcc ||
+                            selectedRole == PermissionString.osm ||
+                            selectedRole == PermissionString.trainingOfficer ||
+                            selectedRole == PermissionString.hrOfficer ||
+                            selectedRole == PermissionString.serviceOfficer ||
+                            selectedRole == PermissionString.financeOfficer ||
+                            selectedRole == PermissionString.safetyOfficer ||
+                            selectedRole == PermissionString.facilityOfficer ||
+                            selectedRole == PermissionString.linkagesOfficer ||
+                            selectedRole ==
+                                PermissionString.informationOfficer ||
+                            selectedRole == PermissionString.researchOfficer ||
+                            selectedRole == PermissionString.coreTeam ||
+                            selectedRole == PermissionString.serviceHead ||
+                            selectedRole == PermissionString.mcc)
+                        ? _buildListTile(
+                            Icons.map,
 
-                              selectedRole == PermissionString.roleAdmin
-                                  ? 'Create/View Roadmap'
-                                  : selectedRole ==
+                            selectedRole == PermissionString.roleAdmin
+                                ? 'Create/View Roadmap'
+                                : selectedRole ==
                                           PermissionString.roleStandardUser ||
                                       selectedRole ==
                                           PermissionString.coreTeam ||
@@ -748,280 +732,275 @@ class NavigationPanelState extends State<NavigationPanel> {
                                       selectedRole ==
                                           PermissionString.serviceHead ||
                                       selectedRole == PermissionString.osm
-                                  ? 'View Roadmap'
-                                  : 'Create Roadmap',
-                              25,
-                              () => _setScreen(RoadmapPage(), 25),
-                            )
-                            : SizedBox.shrink(),
+                                ? 'View Roadmap'
+                                : 'Create Roadmap',
+                            25,
+                            () => _setScreen(RoadmapPage(), 25),
+                          )
+                        : SizedBox.shrink(),
                   ),
                   PermissionWidget(
                     child:
                         (selectedRole == PermissionString.roleAdmin ||
-                                selectedRole ==
-                                    PermissionString.roleStandardUser ||
-                                selectedRole == PermissionString.serviceHead ||
-                                selectedRole == PermissionString.mcc ||
-                                selectedRole == PermissionString.osm)
-                            ? _buildListTile(
-                              Icons.inventory_2_outlined,
-                              selectedRole == PermissionString.roleAdmin
-                                  ? 'Create/View Deliverables'
-                                  : selectedRole ==
+                            selectedRole == PermissionString.roleStandardUser ||
+                            selectedRole == PermissionString.serviceHead ||
+                            selectedRole == PermissionString.mcc ||
+                            selectedRole == PermissionString.osm)
+                        ? _buildListTile(
+                            Icons.inventory_2_outlined,
+                            selectedRole == PermissionString.roleAdmin
+                                ? 'Create/View Deliverables'
+                                : selectedRole ==
                                       PermissionString.roleStandardUser
-                                  ? 'Create Deliverables'
-                                  : 'View Deliverables',
+                                ? 'Create Deliverables'
+                                : 'View Deliverables',
+                            2,
+                            () => _setScreen(
+                              PerformanceGovernanceSystemPage(),
                               2,
-                              () => _setScreen(
-                                PerformanceGovernanceSystemPage(),
-                                2,
-                              ),
-                            )
-                            : SizedBox.shrink(),
+                            ),
+                          )
+                        : SizedBox.shrink(),
                   ),
 
                   PermissionWidget(
                     child:
                         (selectedRole == PermissionString.roleAdmin ||
-                                selectedRole ==
-                                    PermissionString.roleStandardUser ||
-                                selectedRole == PermissionString.serviceHead ||
-                                selectedRole == PermissionString.osm ||
-                                selectedRole == PermissionString.coreTeam)
-                            ? _buildListTile(
-                              Icons.trending_up_outlined,
-                              selectedRole == PermissionString.roleAdmin
-                                  ? 'Create/View SWOT'
-                                  : selectedRole ==
+                            selectedRole == PermissionString.roleStandardUser ||
+                            selectedRole == PermissionString.serviceHead ||
+                            selectedRole == PermissionString.osm ||
+                            selectedRole == PermissionString.coreTeam)
+                        ? _buildListTile(
+                            Icons.trending_up_outlined,
+                            selectedRole == PermissionString.roleAdmin
+                                ? 'Create/View SWOT'
+                                : selectedRole ==
                                       PermissionString.roleStandardUser
-                                  ? 'Create SWOT'
-                                  : 'View SWOT',
-                              23,
-                              () => _setScreen(SwotPage(), 23),
-                            )
-                            : SizedBox.shrink(),
+                                ? 'Create SWOT'
+                                : 'View SWOT',
+                            23,
+                            () => _setScreen(SwotPage(), 23),
+                          )
+                        : SizedBox.shrink(),
                   ),
 
                   PermissionWidget(
                     child:
                         [
-                              PermissionString.roleAdmin,
-                              PermissionString.serviceHead,
-                              PermissionString.mcc,
-                              PermissionString.osm,
-                              PermissionString.pgsAuditor,
-                              PermissionString.pgsHead,
-                              PermissionString.coreTeam,
-                            ].contains(selectedRole)
-                            ? _buildListTile(
-                              Icons.credit_score_outlined,
-                              'Deliverable Status Monitoring',
+                          PermissionString.roleAdmin,
+                          PermissionString.serviceHead,
+                          PermissionString.mcc,
+                          PermissionString.osm,
+                          PermissionString.pgsAuditor,
+                          PermissionString.pgsHead,
+                          PermissionString.coreTeam,
+                        ].contains(selectedRole)
+                        ? _buildListTile(
+                            Icons.credit_score_outlined,
+                            'Deliverable Status Monitoring',
+                            20,
+                            () => _setScreen(
+                              DeliverableStatusMonitoringPage(),
                               20,
-                              () => _setScreen(
-                                DeliverableStatusMonitoringPage(),
-                                20,
-                              ),
-                            )
-                            : SizedBox.shrink(),
+                            ),
+                          )
+                        : SizedBox.shrink(),
                   ),
 
                   PermissionWidget(
                     child:
                         [
-                              PermissionString.headAuditor,
-                              PermissionString.roleAdmin,
-                            ].contains(selectedRole)
-                            ? _buildListTile(
-                              Icons.folder_outlined,
-                              'Report',
-                              hideIcon: false,
+                          PermissionString.headAuditor,
+                          PermissionString.roleAdmin,
+                        ].contains(selectedRole)
+                        ? _buildListTile(
+                            Icons.folder_outlined,
+                            'Report',
+                            hideIcon: false,
+                            17,
+                            () => _setScreen(
+                              ViewSummaryNarrativeReportPage(),
                               17,
-                              () => _setScreen(
-                                ViewSummaryNarrativeReportPage(),
-                                17,
-                              ),
-                            )
-                            : SizedBox.shrink(),
+                            ),
+                          )
+                        : SizedBox.shrink(),
                   ),
                   PermissionWidget(
                     child:
                         [
-                              PermissionString.serviceHead,
-                              PermissionString.coreTeam,
-                              PermissionString.pgsAuditor,
-                            ].contains(selectedRole)
-                            ? _buildListTile(
-                              Icons.folder_outlined,
-                              'Report',
-                              hideIcon: false,
+                          PermissionString.serviceHead,
+                          PermissionString.coreTeam,
+                          PermissionString.pgsAuditor,
+                        ].contains(selectedRole)
+                        ? _buildListTile(
+                            Icons.folder_outlined,
+                            'Report',
+                            hideIcon: false,
+                            21,
+                            () => _setScreen(
+                              ViewSummaryNarrativeReportPage(),
                               21,
-                              () => _setScreen(
-                                ViewSummaryNarrativeReportPage(),
-                                21,
-                              ),
-                            )
-                            : SizedBox.shrink(),
+                            ),
+                          )
+                        : SizedBox.shrink(),
                   ),
                   PermissionWidget(
-                    child:
-                        (selectedRole == PermissionString.roleAdmin)
-                            ? Theme(
-                              data: Theme.of(
-                                context,
-                              ).copyWith(dividerColor: lightGrey),
-                              child: ExpansionTile(
-                                leading: const Icon(
-                                  Icons.settings_outlined,
-                                  color: primaryTextColor,
-                                ),
-                                title: const Text(
-                                  'Settings',
-                                  style: TextStyle(color: primaryTextColor),
-                                ),
-
-                                children: [
-                                  Padding(
-                                    padding: const EdgeInsets.only(left: 40),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Announcement',
-                                          22,
-                                          () => _setScreen(
-                                            AnnouncementPage(),
-                                            22,
-                                          ),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Audit Schedules',
-                                          4,
-                                          () => _setScreen(
-                                            AuditSchedulesPage(),
-                                            4,
-                                          ),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Auditor',
-                                          5,
-                                          () => _setScreen(AuditorPage(), 5),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Auditor Offices',
-                                          19,
-                                          () => _setScreen(
-                                            AuditorOfficesPage(),
-                                            19,
-                                          ),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Auditor Team',
-                                          6,
-                                          () =>
-                                              _setScreen(AuditorTeamPage(), 6),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Key Result Area',
-                                          7,
-                                          () => _setScreen(
-                                            KeyResultAreaPage(),
-                                            7,
-                                          ),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'KRA Roadmap Period',
-                                          24,
-                                          () => _setScreen(
-                                            KraPeriodRoadmapPage(),
-                                            24,
-                                          ),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Office',
-                                          8,
-                                          () => _setScreen(OfficePage(), 8),
-                                        ),
-
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'PGS Signatory',
-                                          9,
-                                          () => _setScreen(
-                                            (PgsSignatoryTemplatePage()),
-                                            9,
-                                          ),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Pgs Period',
-                                          10,
-                                          () => _setScreen(PgsPeriodPage(), 10),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Role',
-                                          12,
-                                          () => _setScreen(RolesPage(), 12),
-                                        ),
-
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'Team',
-                                          13,
-                                          () => _setScreen(TeamPage(), 13),
-                                        ),
-
-                                        _buildListTile(
-                                          Icons.medical_information,
-                                          hideIcon: true,
-                                          'User',
-                                          14,
-                                          () =>
-                                              _setScreen(UserProfilePage(), 14),
-                                        ),
-                                        _buildListTile(
-                                          Icons.date_range,
-                                          hideIcon: true,
-                                          'User Office',
-                                          15,
-                                          () =>
-                                              _setScreen(UserOfficePage(), 15),
-                                        ),
-                                        _buildListTile(
-                                          Icons.person,
-                                          hideIcon: true,
-                                          'User Role',
-                                          16,
-                                          () => _setScreen(UserRolePage(), 16),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                    child: (selectedRole == PermissionString.roleAdmin)
+                        ? Theme(
+                            data: Theme.of(
+                              context,
+                            ).copyWith(dividerColor: lightGrey),
+                            child: ExpansionTile(
+                              leading: const Icon(
+                                Icons.settings_outlined,
+                                color: primaryTextColor,
                               ),
-                            )
-                            : SizedBox.shrink(),
+                              title: const Text(
+                                'Settings',
+                                style: TextStyle(color: primaryTextColor),
+                              ),
+
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 40),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Announcement',
+                                        22,
+                                        () =>
+                                            _setScreen(AnnouncementPage(), 22),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Audit Schedules',
+                                        4,
+                                        () =>
+                                            _setScreen(AuditSchedulesPage(), 4),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Auditor',
+                                        5,
+                                        () => _setScreen(AuditorPage(), 5),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Auditor Offices',
+                                        19,
+                                        () => _setScreen(
+                                          AuditorOfficesPage(),
+                                          19,
+                                        ),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Auditor Team',
+                                        6,
+                                        () => _setScreen(AuditorTeamPage(), 6),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'ISO Standards',
+                                        25,
+                                        () => _setScreen(IsoStandardPage(), 25),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Key Result Area',
+                                        7,
+                                        () =>
+                                            _setScreen(KeyResultAreaPage(), 7),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'KRA Roadmap Period',
+                                        24,
+                                        () => _setScreen(
+                                          KraPeriodRoadmapPage(),
+                                          24,
+                                        ),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Office',
+                                        8,
+                                        () => _setScreen(OfficePage(), 8),
+                                      ),
+
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'PGS Signatory',
+                                        9,
+                                        () => _setScreen(
+                                          (PgsSignatoryTemplatePage()),
+                                          9,
+                                        ),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Pgs Period',
+                                        10,
+                                        () => _setScreen(PgsPeriodPage(), 10),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Role',
+                                        12,
+                                        () => _setScreen(RolesPage(), 12),
+                                      ),
+
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'Team',
+                                        13,
+                                        () => _setScreen(TeamPage(), 13),
+                                      ),
+
+                                      _buildListTile(
+                                        Icons.medical_information,
+                                        hideIcon: true,
+                                        'User',
+                                        14,
+                                        () => _setScreen(UserProfilePage(), 14),
+                                      ),
+                                      _buildListTile(
+                                        Icons.date_range,
+                                        hideIcon: true,
+                                        'User Office',
+                                        15,
+                                        () => _setScreen(UserOfficePage(), 15),
+                                      ),
+                                      _buildListTile(
+                                        Icons.person,
+                                        hideIcon: true,
+                                        'User Role',
+                                        16,
+                                        () => _setScreen(UserRolePage(), 16),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : SizedBox.shrink(),
                   ),
                 ],
               ),
@@ -1048,14 +1027,14 @@ class NavigationPanelState extends State<NavigationPanel> {
     return Container(
       color: _selectedIndex == index ? secondaryBgButton : Colors.transparent,
       child: ListTile(
-        leading:
-            hideIcon
-                ? null
-                : Icon(
-                  icon,
-                  color:
-                      _selectedIndex == index ? primaryColor : primaryTextColor,
-                ),
+        leading: hideIcon
+            ? null
+            : Icon(
+                icon,
+                color: _selectedIndex == index
+                    ? primaryColor
+                    : primaryTextColor,
+              ),
         title: Text(
           title,
           style: TextStyle(
@@ -1219,14 +1198,10 @@ class NavigationPanelState extends State<NavigationPanel> {
                                                   .toLowerCase()
                                                   .split(' ')
                                                   .map(
-                                                    (word) =>
-                                                        word.isNotEmpty
-                                                            ? word[0]
-                                                                    .toUpperCase() +
-                                                                word.substring(
-                                                                  1,
-                                                                )
-                                                            : '',
+                                                    (word) => word.isNotEmpty
+                                                        ? word[0].toUpperCase() +
+                                                              word.substring(1)
+                                                        : '',
                                                   )
                                                   .join(' '),
                                             ),
@@ -1255,19 +1230,19 @@ class NavigationPanelState extends State<NavigationPanel> {
                           ),
                         ],
                       ),
-                      drawer:
-                          isWideScreen ? null : Drawer(child: _buildSidebar()),
-                      body:
-                          _isLoading
-                              ? Container(
-                                color: mainBgColor,
-                                child: const Center(
-                                  child: CircularProgressIndicator(
-                                    color: primaryColor,
-                                  ),
+                      drawer: isWideScreen
+                          ? null
+                          : Drawer(child: _buildSidebar()),
+                      body: _isLoading
+                          ? Container(
+                              color: mainBgColor,
+                              child: const Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
                                 ),
-                              )
-                              : _selectedScreen,
+                              ),
+                            )
+                          : _selectedScreen,
                     ),
                   ),
                 ],

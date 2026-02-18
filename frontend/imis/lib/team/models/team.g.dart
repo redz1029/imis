@@ -12,7 +12,8 @@ Team _$TeamFromJson(Map<String, dynamic> json) => Team(
   json['isActive'] as bool,
   json['isDeleted'] as bool,
   rowVersion: json['rowVersion'] as String?,
-  improvementTypeID: (json['improvementTypeID'] as num?)?.toInt(),
+  improvementType: (json['improvementType'] as num?)?.toInt(),
+  auditors: json['auditors'] as String?,
 );
 
 Map<String, dynamic> _$TeamToJson(Team instance) => <String, dynamic>{
@@ -20,6 +21,7 @@ Map<String, dynamic> _$TeamToJson(Team instance) => <String, dynamic>{
   'name': instance.name,
   'isActive': instance.isActive,
   'isDeleted': instance.isDeleted,
-  'improvementTypeID': instance.improvementTypeID,
+  'auditors': instance.auditors,
+  'improvementType': instance.improvementType,
   'rowVersion': instance.rowVersion,
 };

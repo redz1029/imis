@@ -6,7 +6,6 @@ class Auditor {
   int? id;
   bool isDeleted;
   String? rowVersion;
-  String? name;
   bool isActive;
   String? userId;
 
@@ -14,7 +13,6 @@ class Auditor {
     required this.id,
     this.isDeleted = false,
     this.rowVersion,
-    required this.name,
     this.isActive = true,
     required this.userId,
   });

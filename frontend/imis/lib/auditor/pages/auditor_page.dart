@@ -113,7 +113,7 @@ class AuditorMainPageState extends State<AuditorPage> {
         orElse: () => User(id: '', fullName: 'Unknown', position: ''),
       );
 
-      return (auditor.name ?? '').toLowerCase().contains(
+      return (auditor.userId ?? '').toLowerCase().contains(
             search.toLowerCase(),
           ) ||
           (user.fullName).toLowerCase().contains(search.toLowerCase());
@@ -370,7 +370,6 @@ class AuditorMainPageState extends State<AuditorPage> {
                       if (confirmAction == true) {
                         final auditor = Auditor(
                           id: int.tryParse(id ?? '0') ?? 0,
-                          name: auditorController.text,
                           isDeleted: isDeleted,
                           rowVersion: rowVersion,
                           isActive: isActive,
@@ -516,7 +515,6 @@ class AuditorMainPageState extends State<AuditorPage> {
                           return DataRow(
                             cells: [
                               DataCell(Text(itemNumber.toString())),
-                              DataCell(Text(auditor.name ?? '')),
                               DataCell(Text(userName)),
                               DataCell(
                                 Row(
@@ -526,7 +524,6 @@ class AuditorMainPageState extends State<AuditorPage> {
                                       onPressed: () {
                                         showFormDialog(
                                           id: auditor.id.toString(),
-                                          name: auditor.name ?? '',
                                           selectedUserId: auditor.userId ?? '',
                                           isActive: auditor.isActive,
                                         );

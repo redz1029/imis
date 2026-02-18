@@ -273,7 +273,7 @@ class TeamPageState extends State<TeamPage> {
                       isActive,
                       isDeleted,
                       rowVersion: '',
-                      improvementTypeID: int.tryParse(_selectedimprovementTypeId ?? '0'),
+                      improvementType: int.tryParse(_selectedimprovementTypeId ?? '0'),
                     );
                     await _teamService.createTeam(team);
                     setState(() {
@@ -413,7 +413,7 @@ class TeamPageState extends State<TeamPage> {
                               DataCell(Text(team.name)),
                               DataCell( Text(
                                   _teamService.getImprovementTypeName(
-                                    team.improvementTypeID ?? 0,
+                                    team.improvementType ?? 0,
                                     filteredimprovementType,
                                   ),
                                 ),),

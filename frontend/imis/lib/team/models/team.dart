@@ -8,11 +8,12 @@ class Team {
   String name;
   bool isActive;
   bool isDeleted;
-  int? improvementTypeID;
+  String? auditors;
+  int? improvementType;
 
   String? rowVersion;
 
-  Team(this.id, this.name, this.isActive, this.isDeleted, {this.rowVersion, this.improvementTypeID});
+  Team(this.id, this.name, this.isActive, this.isDeleted, {this.rowVersion, this.improvementType, this.auditors});
   factory Team.fromJson(Map<String, dynamic> json) => _$TeamFromJson(json);
   Map<String, dynamic> toJson() => _$TeamToJson(this);
 }

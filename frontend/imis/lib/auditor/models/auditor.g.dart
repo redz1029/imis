@@ -10,7 +10,6 @@ Auditor _$AuditorFromJson(Map<String, dynamic> json) => Auditor(
   id: (json['id'] as num?)?.toInt(),
   isDeleted: json['isDeleted'] as bool? ?? false,
   rowVersion: json['rowVersion'] as String?,
-  name: json['name'] as String?,
   isActive: json['isActive'] as bool? ?? true,
   userId: json['userId'] as String?,
 );
@@ -19,7 +18,6 @@ Map<String, dynamic> _$AuditorToJson(Auditor instance) => <String, dynamic>{
   'id': instance.id,
   'isDeleted': instance.isDeleted,
   'rowVersion': instance.rowVersion,
-  'name': instance.name,
   'isActive': instance.isActive,
   'userId': instance.userId,
 };

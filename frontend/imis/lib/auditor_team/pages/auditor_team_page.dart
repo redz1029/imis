@@ -8,6 +8,8 @@ import 'package:imis/auditor_team/services/auditor_team_service.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/team/models/team.dart';
+import 'package:imis/team/services/team_service.dart';
+import 'package:imis/user/models/user.dart';
 import 'package:imis/widgets/custom_toggle.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
@@ -30,6 +32,12 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
   List<Map<String, dynamic>> selectedAuditors = [];
   List<Team> teamList = [];
   List<Auditor> auditorList = [];
+   List<Map<String, dynamic>> filteredimprovementType = [];
+     List<Map<String, dynamic>> filteredimprovement = [];
+         String? _selectedimprovementTypeId;
+         String? _selectedImprovementFilter;
+  String? _selectedImprovementTypeFilter; // Filter: null = All, or specific ID
+
   int? selectTeam;
   int? selectAuditor;
   String? selectTeamText;
@@ -37,9 +45,9 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
-
+final _teamService = TeamService(Dio());
   final dio = Dio();
-
+List<User> userList = [];
   Future<void> fetchAuditorTeam({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
@@ -57,7 +65,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
           auditorTeamList = pageList.items;
-          filteredList = List.from(auditorTeamList);
+          _applyImprovementTypeFilter();
         });
       }
     } catch (e) {
@@ -80,13 +88,122 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     () async {
       final auditors = await _commonService.fetchAuditors();
       final team = await _commonService.fetchTeam();
+      final users = await _commonService.fetchUsers();
       if (!mounted) return;
 
       setState(() {
         auditorList = auditors;
         teamList = team;
+        userList = users;
       });
     }();
+
+     _teamService
+        .getImprovementType()
+        .then((data) {
+          if (mounted) {
+            setState(() {
+              filteredimprovement =
+                  data.map((improvementType) => improvementType.toJson()).toList();
+              filteredimprovementType = List.from(filteredimprovement);
+              if (filteredimprovementType.isNotEmpty) {
+                _selectedimprovementTypeId =
+                    filteredimprovementType[0]['id'].toString();
+              }
+            });
+          }
+        })
+        .catchError((error) {
+          debugPrint("Failed to fetch data");
+        });
+
+    if (filteredimprovementType.isNotEmpty) {
+      _selectedimprovementTypeId = filteredimprovementType[0]['id'].toString();
+    }
+  }
+
+  String getUserFullName(String? userId) {
+    if (userId == null || userList.isEmpty) return 'Unknown';
+    final user = userList.firstWhere(
+      (user) => user.id == userId,
+      orElse: () => User(id: '', fullName: 'Unknown', position: ''),
+    );
+    return user.fullName;
+  }
+
+  // Check if auditor is already in another team with the same improvement type
+  bool isAuditorInSameImprovementType(int auditorId, int currentTeamId) {
+    // Get the improvement type of the currently selected team
+    final currentTeam = teamList.firstWhere(
+      (t) => t.id == currentTeamId,
+      orElse: () => Team(0, '', false, false, improvementType: 0),
+    );
+    final currentImprovementType = currentTeam.improvementType;
+
+    // Check all auditor teams
+    for (var auditorTeam in auditorTeamList) {
+      // Skip if it's the same team we're editing
+      if (auditorTeam.teamId == currentTeamId) continue;
+
+      // Get the team's improvement type
+      final team = teamList.firstWhere(
+        (t) => t.id == auditorTeam.teamId,
+        orElse: () => Team(0, '', false, false, improvementType: 0),
+      );
+
+      // If same improvement type, check if auditor is in this team
+      if (team.improvementType == currentImprovementType) {
+        final hasAuditor = auditorTeam.auditors.any((a) => a.id == auditorId);
+        if (hasAuditor) {
+          return true; // Auditor found in another team with same improvement type
+        }
+      }
+    }
+    return false; // Auditor not in any other team with same improvement type
+  }
+
+  // Get the team name where auditor is already assigned (same improvement type)
+  String? getAuditorExistingTeam(int auditorId, int currentTeamId) {
+    final currentTeam = teamList.firstWhere(
+      (t) => t.id == currentTeamId,
+      orElse: () => Team(0, '', false, false, improvementType: 0),
+    );
+    final currentImprovementType = currentTeam.improvementType;
+
+    for (var auditorTeam in auditorTeamList) {
+      if (auditorTeam.teamId == currentTeamId) continue;
+
+      final team = teamList.firstWhere(
+        (t) => t.id == auditorTeam.teamId,
+        orElse: () => Team(0, '', false, false, improvementType: 0),
+      );
+
+      if (team.improvementType == currentImprovementType) {
+        final hasAuditor = auditorTeam.auditors.any((a) => a.id == auditorId);
+        if (hasAuditor) {
+          return team.name;
+        }
+      }
+    }
+    return null;
+  }
+
+  void _applyImprovementTypeFilter() {
+    if (_selectedImprovementTypeFilter == null) {
+      // Show all auditor teams
+      filteredList = List.from(auditorTeamList);
+    } else {
+      // Filter by improvement type
+      filteredList = auditorTeamList.where((auditorTeam) {
+        // Find the team associated with this auditor team
+        final team = teamList.firstWhere(
+          (t) => t.id == auditorTeam.teamId,
+          orElse: () => Team(0, '', false, false, improvementType: 0),
+        );
+        // Check if team's improvement type matches the selected filter
+        return team.improvementType.toString() == _selectedImprovementTypeFilter;
+      }).toList();
+    }
   }
 
   @override
@@ -105,7 +222,10 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
     if (teamId != null && auditors != null) {
       selectedAuditors =
           auditors
-              .map((auditor) => {'id': auditor.id, 'name': auditor.name})
+              .map((auditor) => {
+                'id': auditor.id, 
+                'userId': auditor.userId,
+              })
               .toList();
     } else {
       selectedAuditors = [];
@@ -156,7 +276,10 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                     teamList.map((team) {
                                       return DropdownMenuItem<int>(
                                         value: team.id,
-                                        child: Text(team.name),
+                                        child: Text("${team.name} - ${  _teamService.getImprovementTypeName(
+                                    team.improvementType ?? 0,
+                                    filteredimprovementType,
+                                  )}"),
                                       );
                                     }).toList(),
                                 onChanged: (value) {
@@ -195,8 +318,8 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                auditor['name'],
+                              Text( 
+                                getUserFullName(auditor['userId']),
                                 style: TextStyle(color: primaryTextColor),
                               ),
                               IconButton(
@@ -296,12 +419,37 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                     );
 
                     if (confirmAction == true) {
+                      // Validate that no auditor is already in another team with same improvement type
+                      if (selectTeam != null) {
+                        List<String> conflictingAuditors = [];
+                        
+                        for (var auditor in selectedAuditors) {
+                          final auditorId = auditor['id'] as int?;
+                          if (auditorId != null && isAuditorInSameImprovementType(auditorId, selectTeam!)) {
+                            final existingTeam = getAuditorExistingTeam(auditorId, selectTeam!);
+                            final auditorName = getUserFullName(auditor['userId']);
+                            if (existingTeam != null) {
+                              conflictingAuditors.add('$auditorName is already in $existingTeam');
+                            }
+                          }
+                        }
+
+                        if (conflictingAuditors.isNotEmpty) {
+                          MotionToast.error(
+                            toastAlignment: Alignment.topCenter,
+                            description: Text(
+                              'Cannot save: ${conflictingAuditors.join(', ')}. Please remove them from their current team first.',
+                            ),
+                          ).show(context);
+                          return;
+                        }
+                      }
+
                       List<Auditor> auditors =
                           selectedAuditors
                               .map(
                                 (a) => Auditor(
                                   id: a['id'],
-                                  name: a['name'],
                                   userId: a['userId'],
                                 ),
                               )
@@ -343,16 +491,20 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
   }
 
   void showAvailableAuditorsDialog(Function setDialogState) {
-    auditorTeamList.expand((auditorTeam) {
-      final auditors = auditorTeam.auditors;
-      return auditors.map((auditor) {
-        if (auditor is Map<String, dynamic>) {
-          return auditor.id;
-        } else {
-          return auditor.id;
-        }
-      }).whereType<dynamic>();
-    }).toSet();
+    // Filter auditors: exclude those already selected AND those in other teams with same improvement type
+    final availableAuditors = auditorList.where((auditor) {
+      // Check if auditor is already selected
+      final isSelected = selectedAuditors.any((sel) => sel['id'] == auditor.id);
+      if (isSelected) return false;
+
+      // Check if auditor is in another team with same improvement type
+      if (selectTeam != null) {
+        final isInSameType = isAuditorInSameImprovementType(auditor.id!, selectTeam!);
+        if (isInSameType) return false;
+      }
+
+      return true;
+    }).toList();
 
     showDialog(
       context: context,
@@ -369,32 +521,31 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
           content: SizedBox(
             width: 400,
             height: 400,
-            child: ListView(
-              children:
-                  auditorList
-                      .where(
-                        (auditor) =>
-                            !selectedAuditors.any(
-                              (sel) => sel['id'] == auditor.id,
-                            ),
-                      )
-                      .map((auditor) {
-                        return ListTile(
-                          title: Text(auditor.name.toString()),
-                          trailing: Icon(Icons.person_add, color: primaryColor),
-                          onTap: () {
-                            setDialogState(() {
-                              selectedAuditors.add({
-                                'id': auditor.id,
-                                'name': auditor.name.toString(),
-                              });
+            child: availableAuditors.isEmpty
+                ? Center(
+                    child: Text(
+                      'No available auditors.\nAll auditors are already assigned to teams of this type.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                : ListView(
+                    children: availableAuditors.map((auditor) {
+                      return ListTile(
+                        title: Text(getUserFullName(auditor.userId)),
+                        trailing: Icon(Icons.person_add, color: primaryColor),
+                        onTap: () {
+                          setDialogState(() {
+                            selectedAuditors.add({
+                              'id': auditor.id,
+                              'userId': auditor.userId.toString(),
                             });
-                            Navigator.pop(context);
-                          },
-                        );
-                      })
-                      .toList(),
-            ),
+                          });
+                          Navigator.pop(context);
+                        },
+                      );
+                    }).toList(),
+                  ),
           ),
           actions: [
             TextButton(
@@ -448,39 +599,48 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                SizedBox(
-                  height: 30,
-                  width: 300,
-                  child: TextField(
-                    focusNode: isSearchfocus,
-                    controller: searchController,
-                    decoration: InputDecoration(
-                      enabledBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: lightGrey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderSide: BorderSide(color: primaryColor),
-                      ),
-                      floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Office',
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: isSearchfocus.hasFocus ? primaryColor : grey,
-                        size: 20,
-                      ),
-                      border: OutlineInputBorder(
+                Row(
+                  children: [
+                  
+                    // Filter Dropdown
+                    Container(
+                      height: 30,
+                      padding: EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: secondaryColor,
                         borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: lightGrey),
                       ),
-                      filled: true,
-                      fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
-                        vertical: 5,
-                        horizontal: 5,
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          dropdownColor: secondaryColor,
+                          value: _selectedImprovementTypeFilter,
+                          hint: Text(
+                            'Filter by Type',
+                            style: TextStyle(color: grey, fontSize: 14),
+                          ),
+                          items: [
+                            DropdownMenuItem<String>(
+                              value: null,
+                              child: Text('All'),
+                            ),
+                            ...filteredimprovementType.map((type) {
+                              return DropdownMenuItem<String>(
+                                value: type['id'].toString(),
+                                child: Text(type['name']),
+                              );
+                            }).toList(),
+                          ],
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedImprovementTypeFilter = value;
+                              _applyImprovementTypeFilter();
+                            });
+                          },
+                        ),
                       ),
                     ),
-                    // onChanged: filterSearchResults,
-                  ),
+                  ],
                 ),
                 if (!isMinimized)
                   ElevatedButton(
@@ -527,17 +687,25 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                   children: [
                                     // Team name - centered
                                     Center(
+                                   
                                       child: Text(
-                                        getTeamNameById(
-                                          audiorTeam.teamId,
-                                          teamList,
-                                        ),
-                                        style: TextStyle(
+  "${getTeamNameById(
+      audiorTeam.teamId,
+      teamList,
+    )} - ${_teamService.getImprovementTypeName(
+      teamList.firstWhere(
+        (t) => t.id == audiorTeam.teamId,
+        orElse: () => Team(0, '', false, false, improvementType: 0),
+      ).improvementType ?? 0,
+      filteredimprovementType,
+    )}",
+       style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 18,
                                           color: primaryTextColor,
                                         ),
-                                      ),
+),
+
                                     ),
                                     const SizedBox(height: 10),
                                     Expanded(
@@ -565,7 +733,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                                         bottom: 2,
                                                       ),
                                                   child: Text(
-                                                    auditor.name ?? '',
+                                                    getUserFullName(auditor.userId),
                                                     style: const TextStyle(
                                                       fontSize: 14,
                                                     ),

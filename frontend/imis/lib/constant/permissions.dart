@@ -72,4 +72,10 @@ class AppPermissions {
   static const String addAnnouncement = 'Add Announcement';
   static const String viewAnnouncement = 'View Announcement';
   static const String editAnnouncement = 'Edit Announcement';
+  static const String addIso = 'Add Iso';
+  static const String viewIso = 'View Iso';
+  static const String editIso = 'Edit Iso';
+  static const String addStandardVersion = 'Add Standard Version';
+  static const String viewStandardVersion = 'View Standard Version';
+  static const String editStandardVersion = 'Edit Standard Version';
 }

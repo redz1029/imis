@@ -15,6 +15,7 @@ class AuditorTeam {
   String? rowVersion;
   bool? isDeleted;
 
+
   AuditorTeam(
     this.id,
     this.teamId,

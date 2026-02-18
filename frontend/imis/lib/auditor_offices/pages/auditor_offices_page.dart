@@ -147,7 +147,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
     ) {
       final auditor = auditorList.firstWhere(
         (a) => a.id.toString() == auditorOffice.auditorId.toString(),
-        orElse: () => Auditor(id: 0, name: 'Unknown', userId: ''),
+        orElse: () => Auditor(id: 0, userId: ''),
       );
 
       final user = userList.firstWhere(
@@ -300,7 +300,6 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                               orElse:
                                   () => Auditor(
                                     id: 0,
-                                    name: 'Unknown',
                                     userId: '',
                                   ),
                             ),
@@ -691,7 +690,6 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                     orElse:
                                         () => Auditor(
                                           id: 0,
-                                          name: 'name',
                                           userId: '',
                                         ),
                                   );
