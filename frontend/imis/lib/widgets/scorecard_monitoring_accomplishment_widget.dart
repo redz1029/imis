@@ -97,7 +97,8 @@ class _ScorecardAccomplishmentRowWidgetState
 
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf'],
         allowMultiple: false,
         withData: true,
       );
@@ -598,7 +599,7 @@ class _ScorecardAccomplishmentRowWidgetState
                             onPressed: canEdit ? pickFile : null,
                           ),
                           Text(
-                            'Upload 1 supported file: PDF, document, or image: Max 10 MB',
+                            'Upload 1 supported file: PDF or image: Max 10 MB',
                             style: TextStyle(color: grey, fontSize: 10),
                           ),
                         ],
