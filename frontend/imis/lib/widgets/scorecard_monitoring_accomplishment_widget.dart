@@ -746,7 +746,47 @@ Future<void> saveScorecardAccomplishmentData(
           ),
       });
 
-      await _scorecardAccomplishmentService.saveAccomplishment(formData);
+      await _scorecardAccomplishmentService.saveKRAAccomplishment(formData);
+    }
+  }
+}
+
+Future<void> saveKPIAccomplishmentData(
+  int kpiRoadMapDeliverableId,
+  String userId,
+) async {
+  final periodData = achievementsList[kpiRoadMapDeliverableId];
+  if (periodData != null) {
+    for (var row in periodData.rows) {
+      File? file =
+          (!kIsWeb && row.attachmentPath != null)
+              ? File(row.attachmentPath!)
+              : null;
+      Uint8List? bytes = row.attachmentBytes;
+      final data = {
+        if (row.accomplishmentId != null) "id": row.accomplishmentId,
+        "kraRoadMapKpiId": kpiRoadMapDeliverableId,
+        "postingDate": DateTime.now().toIso8601String(),
+        "userId": userId,
+        "percentAccomplished":
+            double.tryParse(row.percentageController.text) ?? 0,
+        "remarks": row.auditorRemarksController.text,
+      };
+      final formData = FormData.fromMap({
+        ...data,
+        if (bytes != null)
+          "file": MultipartFile.fromBytes(
+            bytes,
+            filename: row.attachmentPath?.split("/").last ?? "upload.bin",
+          ),
+        if (file != null)
+          "file": await MultipartFile.fromFile(
+            file.path,
+            filename: row.attachmentPath?.split("/").last,
+          ),
+      });
+
+      await _scorecardAccomplishmentService.saveKPIAccomplishment(formData);
     }
   }
 }
