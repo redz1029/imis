@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
+import 'package:flutter_linkify/flutter_linkify.dart';
 import 'package:imis/announcements/models/announcement.dart';
 import 'package:imis/announcements/services/announcement_service.dart';
 import 'package:imis/constant/constant.dart';
@@ -11,6 +12,7 @@ import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/custom_toggle.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:motion_toast/motion_toast.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AnnouncementList extends StatefulWidget {
   const AnnouncementList({super.key});
@@ -618,9 +620,24 @@ class _AnnouncementCard extends StatelessWidget {
             style: const TextStyle(color: Colors.grey, fontSize: 12),
           ),
           gap6px,
-          SelectableText(
-            announcement.description,
+
+          SelectableLinkify(
+            text: announcement.description,
             style: const TextStyle(fontSize: 14),
+            linkStyle: const TextStyle(
+              color: Colors.blue,
+              decoration: TextDecoration.underline,
+            ),
+            onOpen: (link) async {
+              final url = Uri.parse(link.url);
+              if (await canLaunchUrl(url)) {
+                await launchUrl(url, mode: LaunchMode.externalApplication);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Could not open link')),
+                );
+              }
+            },
           ),
         ],
       ),
