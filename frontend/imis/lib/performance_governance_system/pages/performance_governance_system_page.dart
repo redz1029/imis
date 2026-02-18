@@ -394,125 +394,14 @@ class PerformanceGovernanceSystemPageState
       } else {
         debugPrint("Failed to fetch deliverables");
       }
-    } on DioException catch (e) {
-      debugPrint("Dio error: ${e.message}");
+    } on DioException {
+      debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     }
 
     return deliverablesListHistory;
   }
-
-  // Future<String?> _selectOffice() async {
-  //   final officeNames = await AuthUtil.fetchOfficeNames();
-  //   final officeIds = await AuthUtil.fetchOfficeIds();
-
-  //   if (officeNames == null ||
-  //       officeIds == null ||
-  //       officeNames.isEmpty ||
-  //       officeIds.isEmpty) {
-  //     MotionToast.error(
-  //       title: const Text("Office Not Found"),
-  //       description: const Text(
-  //         "The selected office ID does not match any known office.\nPlease contact the administrator.",
-  //       ),
-  //       toastDuration: const Duration(seconds: 10),
-  //       toastAlignment: Alignment.topCenter,
-  //     ).show(context);
-  //     return null;
-  //   }
-
-  //   String? selectedOffice = await showDialog<String>(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (BuildContext context) {
-  //       return Dialog(
-  //         backgroundColor: mainBgColor,
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(12),
-  //         ),
-  //         child: Container(
-  //           padding: const EdgeInsets.all(20),
-  //           constraints: const BoxConstraints(maxHeight: 450, maxWidth: 500),
-  //           child: Column(
-  //             mainAxisSize: MainAxisSize.min,
-  //             children: [
-  //               Align(
-  //                 alignment: Alignment.topRight,
-  //                 child: IconButton(
-  //                   icon: Icon(Icons.close, color: Colors.grey.shade600),
-
-  //                   onPressed: () async {
-  //                     final prefs = await SharedPreferences.getInstance();
-  //                     await prefs.remove('selectedOfficeId');
-  //                     await prefs.remove('selectedOfficeName');
-
-  //                     Navigator.pop(context, null);
-  //                   },
-  //                 ),
-  //               ),
-  //               // Title
-  //               Text(
-  //                 "Select Office",
-  //                 style: TextStyle(
-  //                   fontSize: 20,
-  //                   fontWeight: FontWeight.bold,
-  //                   color: primaryTextColor,
-  //                 ),
-  //               ),
-  //               const SizedBox(height: 10),
-  //               const Divider(),
-  //               const SizedBox(height: 8),
-  //               // List of offices
-  //               Expanded(
-  //                 child: ListView.separated(
-  //                   itemCount: officeNames.length,
-  //                   separatorBuilder: (_, __) => const SizedBox(height: 6),
-  //                   itemBuilder: (context, index) {
-  //                     return Card(
-  //                       color: mainBgColor,
-  //                       shape: RoundedRectangleBorder(
-  //                         borderRadius: BorderRadius.circular(0.1),
-  //                         side: const BorderSide(
-  //                           color: primaryTextColor,
-  //                           width: 0.5,
-  //                         ),
-  //                       ),
-  //                       child: ListTile(
-  //                         contentPadding: const EdgeInsets.symmetric(
-  //                           horizontal: 16,
-  //                           vertical: 10,
-  //                         ),
-  //                         leading: Icon(
-  //                           Icons.apartment_rounded,
-  //                           color: primaryColor,
-  //                         ),
-  //                         title: Text(
-  //                           officeNames[index],
-  //                           style: const TextStyle(fontSize: 16),
-  //                         ),
-  //                         onTap: () => Navigator.pop(context, officeIds[index]),
-  //                         hoverColor: primaryColor.withValues(alpha: 0.1),
-  //                       ),
-  //                     );
-  //                   },
-  //                 ),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-
-  //   if (selectedOffice == null || selectedOffice == '-1') {
-  //     await AuthUtil.removeSelectedOfficeId();
-  //     return null;
-  //   }
-
-  //   await AuthUtil.saveSelectedOfficeId(selectedOffice);
-  //   return selectedOffice;
-  // }
 
   Future<Map<String, dynamic>?> _selectOffice() async {
     final officeNames = await AuthUtil.fetchOfficeNames();
@@ -2272,7 +2161,7 @@ class PerformanceGovernanceSystemPageState
                                             },
                                             hint: const Center(
                                               child: Text(
-                                                'Select a Period',
+                                                'Select PGS Period',
                                                 textAlign: TextAlign.center,
                                               ),
                                             ),
@@ -3342,61 +3231,73 @@ class PerformanceGovernanceSystemPageState
 
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Tooltip(
-        message:
-            'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
-        child: TextFormField(
-          controller: selectedByWhenControllers[index],
-          readOnly: true,
-          decoration: const InputDecoration(
-            border: OutlineInputBorder(),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: primaryColor),
-            ),
-            contentPadding: EdgeInsets.all(8.0),
-            suffixIcon: Icon(Icons.calendar_today),
-          ),
-          onTap:
-              !hasEditPermission || selectedPeriod == null
-                  ? null
-                  : () async {
-                    DateTime initialDate = periodStartDate;
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Tooltip(
+            message:
+                'Specify when this deliverable is expected to be finished. Used to monitor deadlines and keep progress on schedule.',
+            child: TextFormField(
+              controller: selectedByWhenControllers[index],
+              readOnly: true,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                focusedBorder: OutlineInputBorder(
+                  borderSide: BorderSide(color: primaryColor),
+                ),
+                contentPadding: EdgeInsets.all(8.0),
+                suffixIcon: Icon(Icons.calendar_today),
+              ),
+              onTap:
+                  !hasEditPermission || selectedPeriod == null
+                      ? null
+                      : () async {
+                        DateTime initialDate = periodStartDate;
 
-                    DateTime? pickedDate = await showDatePicker(
-                      context: context,
-                      initialDate: initialDate,
-                      firstDate: periodStartDate,
-                      lastDate: periodEndDate,
-                      builder: (context, child) {
-                        return Theme(
-                          data: Theme.of(context).copyWith(
-                            colorScheme: ColorScheme.light(
-                              primary: primaryColor,
-                              onPrimary: secondaryColor,
-                            ),
-                            textButtonTheme: TextButtonThemeData(
-                              style: TextButton.styleFrom(
-                                foregroundColor: primaryColor,
+                        DateTime? pickedDate = await showDatePicker(
+                          context: context,
+                          initialDate: initialDate,
+                          firstDate: periodStartDate,
+                          lastDate: periodEndDate,
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.light(
+                                  primary: primaryColor,
+                                  onPrimary: secondaryColor,
+                                ),
+                                textButtonTheme: TextButtonThemeData(
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: primaryColor,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          child: child!,
+                              child: child!,
+                            );
+                          },
                         );
+                        if (pickedDate != null) {
+                          String formattedDate = DateFormat(
+                            'yyyy-MM-dd',
+                          ).format(pickedDate);
+                          setDialogState(() {
+                            selectedByWhen[index] = formattedDate;
+                            selectedByWhenControllers[index]?.text = DateFormat(
+                              'MMMM yyyy',
+                            ).format(pickedDate);
+                          });
+                        }
                       },
-                    );
-                    if (pickedDate != null) {
-                      String formattedDate = DateFormat(
-                        'yyyy-MM-dd',
-                      ).format(pickedDate);
-                      setDialogState(() {
-                        selectedByWhen[index] = formattedDate;
-                        selectedByWhenControllers[index]?.text = DateFormat(
-                          'MMMM yyyy',
-                        ).format(pickedDate);
-                      });
-                    }
-                  },
-        ),
+            ),
+          ),
+          if (selectedPeriod == null) ...[
+            const SizedBox(height: 6),
+            const Text(
+              'Select a PGS Period first.',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -3947,8 +3848,7 @@ class PerformanceGovernanceSystemPageState
                             kraDescription:
                                 kraDescriptionRoadmapController[index]?.text ??
                                 '',
-                            // kraDescription:
-                            //     kraDescriptionController[index]?.text ?? '',
+
                             isDirect: isDirectValue,
                           );
 
@@ -5494,8 +5394,8 @@ class PerformanceGovernanceSystemPageState
             ),
           ),
           gap12px,
-          if (deliverablesControllers[index]!.text.isEmpty &&
-              selectedKRA[index] != null)
+          if (selectedKRA[index] != null &&
+              deliverablesControllers[index]!.text.isEmpty)
             SelectableText(
               deliverablesRoadmapControllers[index]!.text.isNotEmpty
                   ? 'Sample deliverable: ${deliverablesRoadmapControllers[index]!.text}'

@@ -81,7 +81,7 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
             currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
           } catch (_) {}
         }
-        roleId = currentRole.id ?? '';
+        roleId = currentRole.id;
       }
 
       if (roleId.isEmpty) {

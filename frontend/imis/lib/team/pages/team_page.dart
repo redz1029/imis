@@ -324,10 +324,7 @@ class TeamPageState extends State<TeamPage> {
                     ),
                     columns: const [
                       DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(
-                        label: Text('Office Name'),
-                        size: ColumnSize.L,
-                      ),
+                      DataColumn2(label: Text('Team Name'), size: ColumnSize.L),
                       DataColumn(label: Text('Actions')),
                     ],
                     rows:

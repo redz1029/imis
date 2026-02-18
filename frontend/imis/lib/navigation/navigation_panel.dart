@@ -854,30 +854,30 @@ class NavigationPanelState extends State<NavigationPanel> {
                             )
                             : SizedBox.shrink(),
                   ),
-                  PermissionWidget(
-                    child:
-                        [
-                              PermissionString.roleAdmin,
-                              PermissionString.trainingOfficer,
-                              PermissionString.hrOfficer,
-                              PermissionString.serviceOfficer,
-                              PermissionString.financeOfficer,
-                              PermissionString.safetyOfficer,
-                              PermissionString.facilityOfficer,
-                              PermissionString.linkagesOfficer,
-                              PermissionString.informationOfficer,
-                              PermissionString.researchOfficer,
-                              PermissionString.coreTeam,
-                            ].contains(selectedRole)
-                            ? _buildListTile(
-                              Icons.fact_check_outlined,
-                              'Scorecard Monitoring',
-                              26,
-                              () => _setScreen(ScoreCardMonitoringPage(), 26),
-                            )
-                            : SizedBox.shrink(),
-                  ),
 
+                  // PermissionWidget(
+                  //   child:
+                  //       [
+                  //             PermissionString.roleAdmin,
+                  //             PermissionString.trainingOfficer,
+                  //             PermissionString.hrOfficer,
+                  //             PermissionString.serviceOfficer,
+                  //             PermissionString.financeOfficer,
+                  //             PermissionString.safetyOfficer,
+                  //             PermissionString.facilityOfficer,
+                  //             PermissionString.linkagesOfficer,
+                  //             PermissionString.informationOfficer,
+                  //             PermissionString.researchOfficer,
+                  //             PermissionString.coreTeam,
+                  //           ].contains(selectedRole)
+                  //           ? _buildListTile(
+                  //             Icons.fact_check_outlined,
+                  //             'Scorecard Monitoring',
+                  //             26,
+                  //             () => _setScreen(ScoreCardMonitoringPage(), 26),
+                  //           )
+                  //           : SizedBox.shrink(),
+                  // ),
                   PermissionWidget(
                     child:
                         [
