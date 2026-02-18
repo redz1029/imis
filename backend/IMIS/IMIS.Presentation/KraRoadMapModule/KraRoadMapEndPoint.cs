@@ -115,11 +115,11 @@ namespace IMIS.Presentation.KraRoadMapModule
                 ).ConfigureAwait(false);
 
                 //Force inline rendering in browser with dynamic timestamp filename
-                //var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                //response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
-                //return Results.File(file, "application/pdf");
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
 
-                return Results.File(file, "application/pdf", $"ReportKraRoadMapDto_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+                //return Results.File(file, "application/pdf", $"ReportKraRoadMapDto_{DateTime.Now:yyyyMMddHHmmss}.pdf");
 
                 //var kraRoadMapDto = await service.ReportGetByIdAsync(id, cancellationToken).ConfigureAwait(false);
                 //return kraRoadMapDto != null ? Results.Ok(kraRoadMapDto) : Results.NotFound();
