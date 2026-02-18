@@ -52,6 +52,8 @@ using IMIS.Application.StandardVersionModule;
 using IMIS.Persistence.StandardVersionModule;
 using IMIS.Application.KraRoadmapAccomplishmentModule;
 using IMIS.Persistence.KraRoadMapAccomplishmentModule;
+using IMIS.Application.KraRoadmapKpiAccomplishmentModule;
+using IMIS.Persistence.KraRoadMapKpiAccomplishmentModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -136,6 +138,9 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IKraRoadmapAccomplishmentRepository, KraRoadMapAccomplishmentRepository>();
             services.AddScoped<IKraRoadmapAccomplishmentService, KraRoadMapAccomplishmentService>();
+
+            services.AddScoped<IKraRoadmapKpiAccomplishmentRepository, KraRoadMapKpiAccomplishmentRepository>();
+            services.AddScoped<IKraRoadmapKpiAccomplishmentService, KraRoadMapKpiAccomplishmentService>();
 
             // ISO Standard module registrations
             services.AddScoped<IStandardVersionRepository, StandardVersionRepository>();

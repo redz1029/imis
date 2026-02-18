@@ -1,5 +1,4 @@
 ﻿using Base.Abstractions;
-using IMIS.Application.PgsDeliverableAccomplishmentModule;
 
 namespace IMIS.Application.KraRoadmapAccomplishmentModule
 {

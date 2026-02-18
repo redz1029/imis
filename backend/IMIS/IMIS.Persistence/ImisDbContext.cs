@@ -39,6 +39,7 @@ namespace IMIS.Persistence
         public DbSet<KraRoadMap> KraRoadMap { get; set; }
         public DbSet<KraRoadMapRole> KraRoadMapRole { get; set; }
         public DbSet<KraRoadmapAccomplishment> KraRoadmapAccomplishment { get; set; }
+        public DbSet<KraRoadmapKpiAccomplishment> KraRoadmapKpiAccomplishment { get; set; }
         public override DbSet<UserClaim<string>> UserClaims { get; set; }
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }
