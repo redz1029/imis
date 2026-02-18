@@ -12,7 +12,7 @@ class ScoreCardMonitoringServices {
     await AuthenticatedRequest.put(dio, url, data: {'items': items});
   }
 
-  Future<void> saveAccomplishment(FormData formData) async {
+  Future<void> saveKRAAccomplishment(FormData formData) async {
     final id =
         formData.fields
             .firstWhere((f) => f.key == 'id', orElse: () => MapEntry('id', ''))
@@ -27,6 +27,25 @@ class ScoreCardMonitoringServices {
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       throw Exception('Failed to create/update scorecard accomplishment');
+    }
+  }
+
+  Future<void> saveKPIAccomplishment(FormData formData) async {
+    final id =
+        formData.fields
+            .firstWhere((f) => f.key == 'id', orElse: () => MapEntry('id', ''))
+            .value;
+    final url =
+        ApiEndpoint().kraroadmapkpiAccomplishment +
+        (id.isNotEmpty ? '/$id' : '');
+
+    final response =
+        id.isNotEmpty
+            ? await AuthenticatedRequest.put(dio, url, data: formData)
+            : await AuthenticatedRequest.post(dio, url, data: formData);
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Failed to create/update KPI accomplishment');
     }
   }
 
