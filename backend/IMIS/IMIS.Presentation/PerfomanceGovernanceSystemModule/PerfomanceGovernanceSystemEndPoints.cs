@@ -83,15 +83,18 @@ namespace IMIS.Presentation.PgsModuleAPIs
             .WithTags(_pgsTag)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
-
-            app.MapGet("userId/{id}", async (string userId, string roleId, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
+            
+            app.MapGet("user/{userId}", async (string userId, string roleId, int page, int pageSize, IPerfomanceGovernanceSystemService service, CancellationToken cancellationToken) =>
             {
-                var performanceGovernanceSystem = await service.GetByUserIdAsync(userId, roleId, cancellationToken).ConfigureAwait(false);
-                return performanceGovernanceSystem != null ? Results.Ok(performanceGovernanceSystem) : Results.NotFound();
+                var result = await service.GetByUserIdAsync(userId, roleId, page, pageSize, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return Results.Ok(result);
             })
-           .WithTags(_pgsTag)
-           .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.View))
-           .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+            .WithTags(_pgsTag)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _performanceGovernanceSystem.View))
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_pgsTag), true);
+
 
             app.MapPut("/{id}", async (int id, [FromBody] PerfomanceGovernanceSystemDto performanceGovernanceSystemDto, IPerfomanceGovernanceSystemService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {

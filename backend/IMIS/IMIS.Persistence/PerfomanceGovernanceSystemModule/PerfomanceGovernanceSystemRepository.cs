@@ -180,13 +180,21 @@ public class PerfomanceGovernanceSystemRepository : BaseRepository<PerfomanceGov
         .AsNoTracking()
         .ToListAsync(cancellationToken);
     }
-    // Get Pgs, Filter by all Paginated
+    // Get Pgs, Filter by all Paginated 
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
-       
-       return await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken).ConfigureAwait(false);
-        
+        var query = _entities
+            .AsNoTracking()
+           .Include(p => p.PgsPeriod)
+            .Include(p => p.Office)
+                .ThenInclude(o => o.UserOffices)
+            .Include(p => p.PgsReadinessRating)
+            .Include(p => p.PgsSignatories)
+            .Include(p => p.PgsDeliverables);
+
+        return await EntityPageList<PerfomanceGovernanceSystem, long>.CreateAsync(query, page, pageSize, cancellationToken);
     }
+
     // Get Pgs, Filter by Pgs Period Id with pagination
     public async Task<EntityPageList<PerfomanceGovernanceSystem, long>> GetPaginatedPgsPeriodIdAsync(
     long? pgsPeriodId, int page, int pageSize, CancellationToken cancellationToken)
