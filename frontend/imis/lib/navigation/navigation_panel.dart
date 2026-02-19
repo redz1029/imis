@@ -3,7 +3,6 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
-import 'package:imis/scorecard_monitoring/pages/score_card_monitoring_page.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -40,6 +39,8 @@ import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/circle_text_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import '../scorecard_monitoring/pages/score_card_monitoring_page.dart';
 
 class NavigationPanel extends StatefulWidget {
   final int? initialScreenIndex;
