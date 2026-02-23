@@ -23,9 +23,11 @@ import '../../../user/models/user_registration.dart';
 import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/date_time_converter.dart';
+import '../../../utils/pagination_util.dart';
 import '../../../utils/permission_string.dart';
 import '../../../widgets/accomplishment_auditor_widget.dart';
 import '../../../widgets/breakthrough_widget.dart';
+import '../../../widgets/pagination_controls.dart';
 import '../../models/pgs_deliverable_score_history.dart';
 import '../models/pgs_deliverable_accomplishment.dart';
 import '../models/pgs_filter.dart';
@@ -61,20 +63,12 @@ class _DeliverableStatusMonitoringPageState
   final _formKey = GlobalKey<FormState>();
   final GlobalKey _menuScoreRangeKey = GlobalKey();
   final GlobalKey _menuPageKey = GlobalKey();
-  final int kpiColumns = 2;
-
   final dio = Dio();
   final _commonService = CommonService(Dio());
   final permissionService = PermissionService();
   List<Map<String, dynamic>> filteredList = [];
-  List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
   String userId = "";
   List<Map<String, dynamic>> deliverableList = [];
-
-  final List<String> kraHeaders = ["PERIOD", "KRA", "ACTIVITY", "ACTION"];
-
-  final List<String> kpiHeaders = ["KPI", "ACTIONS"];
-
   bool isMenuOpenStartYear = false;
   bool isMenuOpenEndYear = false;
   bool isMenuOpenKra = false;
@@ -110,7 +104,9 @@ class _DeliverableStatusMonitoringPageState
   String? _selectedPeriod;
   String? _selectedOffice;
   bool _hasAvailableDeliverables = false;
-
+  final int _currentPage = 1;
+  final int _pageSize = 15;
+  final int _totalCount = 0;
   @override
   void initState() {
     super.initState();
@@ -964,6 +960,28 @@ class _DeliverableStatusMonitoringPageState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [_buildDeliverablesStatusMonitoringTable()],
               ),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.all(10),
+            color: secondaryColor,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                PaginationInfo(
+                  currentPage: currentPage,
+                  totalItems: totalCount,
+                  itemsPerPage: pageSize,
+                ),
+                PaginationControls(
+                  currentPage: currentPage,
+                  totalItems: totalCount,
+                  itemsPerPage: pageSize,
+                  isLoading: _isLoading,
+                  onPageChanged: (page) => fetchFilteredPgsList(page: page),
+                ),
+                Container(width: 60),
+              ],
             ),
           ),
         ],
@@ -1856,7 +1874,9 @@ class _DeliverableStatusMonitoringPageState
                           children: [
                             TableRow(
                               children: [
-                                _number("${index + 1}"),
+                                _number(
+                                  "${(currentPage - 1) * pageSize + index + 1}",
+                                ),
                                 _buildActivity(
                                   "${deliverable['Start Date']} - ${deliverable['End Date']}",
                                   deliverable['officeName'] ?? '',
