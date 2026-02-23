@@ -7,11 +7,15 @@ namespace IMIS.Application.IsoStandardModule
 {
     public class IsoStandardDto : BaseDto<IsoStandard, long>
     {
+
         public  required int VersionID { get; set; }
+        public long? ParentID { get; set; }
         public  required string ClauseRef { get; set; }
         public string? Description { get; set; }
         public bool IsActive { get; set; }
+        List<IsoStandardDto>? Children { get; set; }
         public StandardVersionDto? Version { get; set; }
+        public required string Particulars { get; set; }
 
         public IsoStandardDto() { }
 
@@ -23,6 +27,8 @@ namespace IMIS.Application.IsoStandardModule
             this.ClauseRef = isoStandard.ClauseRef;
             this.Description = isoStandard.Description;
             this.IsActive = isoStandard.isActive;
+            this.ParentID = isoStandard.ParentID;
+            this.Particulars = isoStandard.Particulars;
 
             if (isoStandard.Version != null)
             {
@@ -45,7 +51,9 @@ namespace IMIS.Application.IsoStandardModule
                 VersionID = VersionID,
                 ClauseRef = ClauseRef,
                 Description = Description,
-                isActive = IsActive
+                isActive = IsActive,
+                ParentID = ParentID,
+                Particulars = Particulars
             };
         }
     }
