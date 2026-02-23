@@ -643,7 +643,7 @@ class _AccomplishmentRowWidgetState extends State<AccomplishmentRowWidget> {
                 valueListenable: remarksAuditorController,
                 builder: (context, value, _) {
                   return Text(
-                    value.text.isEmpty ? '' : value.text,
+                    value.text.isEmpty ? 'No remarks' : value.text,
                     style: const TextStyle(fontSize: 14.0),
                   );
                 },
