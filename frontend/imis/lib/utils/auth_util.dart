@@ -192,6 +192,16 @@ class AuthUtil {
           data: jsonEncode(loggedUser),
         );
 
+        if (refreshResponse.statusCode == 401) {
+          if (context != null && context.mounted) {
+            await _showSessionExpiredDialog(context);
+          } else {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.clear();
+          }
+          return null;
+        }
+
         final existingUser = await fetchLoggedUser();
         if (existingUser == null) return null;
 
