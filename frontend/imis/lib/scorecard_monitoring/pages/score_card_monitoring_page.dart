@@ -35,9 +35,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   final ScrollController _kpiScrollController = ScrollController();
   final int kraColumns = 4;
   final int kpiColumns = 2;
-  final double numberColumnWidth = 70;
-  final double dataColumnWidth = 280;
-  final double actionColumnWidth = 120;
+
   final dio = Dio();
   final _commonService = CommonService(Dio());
   final _scorecardService = ScoreCardMonitoringServices(Dio());
@@ -45,7 +43,6 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   List<Map<String, dynamic>> kpiList = [];
   List<Map<String, dynamic>> roadmapList = [];
   List<Map<String, dynamic>> filteredList = [];
-  List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
   String userId = "";
 
   final List<String> kraHeaders = ["PERIOD", "KRA", "ACTIVITY", "ACTION"];
