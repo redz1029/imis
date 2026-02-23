@@ -26,6 +26,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
   late Future<List<Announcement>> _announcementsFuture;
   final _announcement = AnnouncementService(Dio());
   final _formKey = GlobalKey<FormState>();
+  final _dateConverter = const LongDateOnlyConverter();
 
   @override
   void initState() {
@@ -149,8 +150,8 @@ class _AnnouncementListState extends State<AnnouncementList> {
                           showAnnouncementFormDialog(
                             id: announcement.id.toString(),
                             title: announcement.title,
-                            fromDate: announcement.fromDate.toIso8601String(),
-                            endDate: announcement.toDate.toIso8601String(),
+                            fromDate: announcement.fromDate,
+                            endDate: announcement.toDate,
                             description: announcement.description,
                             isActive: announcement.isActive,
                           );
@@ -239,7 +240,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
                                       ),
                                     ),
                                     subtitle: Text(
-                                      '${ann.description}\nFrom: ${ann.fromDate.toLocal()} - To: ${ann.toDate.toLocal()}',
+                                      '${ann.description}\nFrom: ${_dateConverter.toJson(ann.fromDate)} - To: ${_dateConverter.toJson(ann.toDate)}',
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -252,9 +253,8 @@ class _AnnouncementListState extends State<AnnouncementList> {
                                         showAnnouncementFormDialog(
                                           id: ann.id.toString(),
                                           title: ann.title,
-                                          fromDate:
-                                              ann.fromDate.toIso8601String(),
-                                          endDate: ann.toDate.toIso8601String(),
+                                          fromDate: ann.fromDate,
+                                          endDate: ann.toDate,
                                           description: ann.description,
                                           isActive: ann.isActive,
                                           onSaved: () {
@@ -295,8 +295,8 @@ class _AnnouncementListState extends State<AnnouncementList> {
   void showAnnouncementFormDialog({
     String? id,
     String? title,
-    String? fromDate,
-    String? endDate,
+    DateTime? fromDate,
+    DateTime? endDate,
     String? description,
     bool isActive = false,
     Function()? onSaved,
@@ -305,10 +305,8 @@ class _AnnouncementListState extends State<AnnouncementList> {
     TextEditingController descriptionController = TextEditingController(
       text: description,
     );
-    DateTime? selectedFromDate =
-        fromDate != null ? DateTime.tryParse(fromDate) : null;
-    DateTime? selectedEndDate =
-        endDate != null ? DateTime.tryParse(endDate) : null;
+    DateTime? selectedFromDate = fromDate;
+    DateTime? selectedEndDate = endDate;
     bool localIsActive = isActive;
 
     showDialog(
@@ -417,11 +415,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                             });
                           }
                         },
-                        validator:
-                            (_) =>
-                                selectedFromDate == null
-                                    ? 'Please select a start date'
-                                    : null,
                       ),
                     ),
                     const SizedBox(height: 14),
@@ -470,11 +463,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                             setState(() => selectedEndDate = picked);
                           }
                         },
-                        validator:
-                            (_) =>
-                                selectedEndDate == null
-                                    ? 'Please select an end date'
-                                    : null,
                       ),
                     ),
                     const SizedBox(height: 14),
