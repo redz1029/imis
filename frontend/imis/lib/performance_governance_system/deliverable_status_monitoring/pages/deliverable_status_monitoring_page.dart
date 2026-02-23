@@ -4,30 +4,29 @@ import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/permissions.dart';
-import 'package:imis/office/models/office.dart';
-import 'package:imis/performance_governance_system/enum/pgs_status.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
-import 'package:imis/reports/models/pgs_summary_narrative.dart';
-import 'package:imis/reports/services/summary_narrative_service.dart';
+import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
+import 'package:imis/utils/http_util.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/widgets/accomplishment_auditor_widget.dart';
-import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
-import 'package:intl/intl.dart';
 import 'package:imis/constant/constant.dart';
+import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../common_services/common_service.dart';
+import '../../../office/models/office.dart';
+import '../../../reports/models/pgs_summary_narrative.dart';
 import '../../../reports/pages/manage_summary_narrative_report_page.dart';
+import '../../../reports/services/summary_narrative_service.dart';
 import '../../../user/models/user_registration.dart';
 import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/date_time_converter.dart';
-import '../../../utils/http_util.dart';
 import '../../../utils/permission_string.dart';
+import '../../../widgets/accomplishment_auditor_widget.dart';
+import '../../../widgets/breakthrough_widget.dart';
 import '../../models/pgs_deliverable_score_history.dart';
-import '../../pgs_period/models/pgs_period.dart';
 import '../models/pgs_deliverable_accomplishment.dart';
 import '../models/pgs_filter.dart';
 import '../services/deliverable_status_monitoring_service.dart';
@@ -45,6 +44,10 @@ class _DeliverableStatusMonitoringPageState
   final ScrollController _verticalController = ScrollController();
   final ScrollController _horizontalController = ScrollController();
   final ScrollController _headerHorizontalController = ScrollController();
+  final ScrollController _kpiScrollController = ScrollController();
+  final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
+    Dio(),
+  );
   final _dateConverter = const LongDateOnlyConverter();
   TextEditingController scoreRangeToController = TextEditingController();
   TextEditingController scoreRangeFromController = TextEditingController();
@@ -58,51 +61,54 @@ class _DeliverableStatusMonitoringPageState
   final _formKey = GlobalKey<FormState>();
   final GlobalKey _menuScoreRangeKey = GlobalKey();
   final GlobalKey _menuPageKey = GlobalKey();
-  final int dataColumns = 8;
-  final double numberColumnWidth = 70;
-  final double dataColumnWidth = 280;
+  final int kpiColumns = 2;
+
   final dio = Dio();
   final _commonService = CommonService(Dio());
-  final _deliverableStatusMonitoring = DeliverableStatusMonitoringService(
-    Dio(),
-  );
   final permissionService = PermissionService();
-  List<Map<String, dynamic>> deliverableList = [];
   List<Map<String, dynamic>> filteredList = [];
   List<PgsDeliverableHistoryGrouped> deliverableHistoryGrouped = [];
   String userId = "";
-  final List<String> headers = [
-    "PERIOD",
-    "OFFICE",
-    "PROCESS (CORE & SUPPORT)",
-    "KRA",
-    "DIRECT",
-    "DELIVERABLES",
-    "BY WHEN",
-    "ACTIONS",
-  ];
-  bool isMenuOpenOffice = false;
-  bool isMenuOpenPeriod = false;
-  bool isMenuOpenPeriodCreateReport = false;
+  List<Map<String, dynamic>> deliverableList = [];
+
+  final List<String> kraHeaders = ["PERIOD", "KRA", "ACTIVITY", "ACTION"];
+
+  final List<String> kpiHeaders = ["KPI", "ACTIONS"];
+
+  bool isMenuOpenStartYear = false;
+  bool isMenuOpenEndYear = false;
   bool isMenuOpenKra = false;
-  bool isMenuOpenType = false;
-  bool isMenuScoreRange = false;
-  bool isMenuOpenPage = false;
   List<KeyResultArea> kraListOptions = [];
   int? selectedKra;
-
-  List<Office> officeList = [];
-  String? _selectedOfficeId;
-  bool? isDirect;
   List<PgsPeriod> periodList = [];
-  int? selectedPeriod;
+  int? selectedStartYear;
+  int? selectedEndYear;
   int? selectedPeriodCreateReport;
   String? selectedPeriodText;
   String? selectedPeriodTextCreateReport;
-  String? _selectedPeriod;
-  String? _selectedOffice;
+  String? selectedStartYearText;
+  String? selectedEndYearText;
+  bool isLoading = true;
   int? officeId;
   int? periodId;
+  bool hasAvailableDeliverables = false;
+  bool isAllYearsSelected = false;
+  bool isMenuOpenOffice = false;
+  bool isMenuOpenPeriod = false;
+  bool isMenuOpenPeriodCreateReport = false;
+  bool isMenuOpenType = false;
+  bool isMenuScoreRange = false;
+  bool isMenuOpenPage = false;
+  int currentPage = 1;
+  final int pageSize = 15;
+  int totalCount = 0;
+  bool _isLoading = false;
+  List<Office> officeList = [];
+  String? _selectedOfficeId;
+  bool? isDirect;
+  int? selectedPeriod;
+  String? _selectedPeriod;
+  String? _selectedOffice;
   bool _hasAvailableDeliverables = false;
 
   @override
@@ -110,20 +116,28 @@ class _DeliverableStatusMonitoringPageState
     super.initState();
     _headerHorizontalController.addListener(_syncHeaderScroll);
     _horizontalController.addListener(_syncBodyScroll);
+
     () async {
+      setState(() {
+        isLoading = true;
+      });
       final offices = await _deliverableStatusMonitoring.fetchOffices();
       final period = await _commonService.fetchPgsPeriod();
       final kra = await _commonService.fetchKra();
+
+      await _loadCurrentUserId();
+
       if (!mounted) return;
 
       setState(() {
-        officeList = offices;
         periodList = period;
+        officeList = offices;
         kraListOptions = kra;
+
+        isLoading = false;
       });
     }();
     fetchFilteredPgsList();
-    _loadCurrentUserId();
   }
 
   void _syncHeaderScroll() {
@@ -147,6 +161,142 @@ class _DeliverableStatusMonitoringPageState
 
     if (mounted) {
       setState(() {});
+    }
+  }
+
+  Future<void> fetchFilteredPgsList({int page = 1}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      int? scoreFrom =
+          scoreRangeFromController.text.isNotEmpty
+              ? int.tryParse(scoreRangeFromController.text)
+              : null;
+
+      int? scoreTo =
+          scoreRangeToController.text.isNotEmpty
+              ? int.tryParse(scoreRangeToController.text)
+              : null;
+
+      final filter = PgsFilter(
+        selectedPeriod,
+        int.tryParse(_selectedOfficeId ?? ''),
+        selectedKra,
+        isDirect,
+        scoreFrom,
+        scoreTo,
+        page,
+        pageSize,
+      );
+
+      final queryParams =
+          filter.toJson()..removeWhere((key, value) => value == null);
+
+      final response = await AuthenticatedRequest.get(
+        dio,
+        ApiEndpoint().filterBy,
+        queryParameters: queryParams,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data;
+
+        final items = data["items"] as List<dynamic>? ?? [];
+        final totalPages = data["totalCount"] ?? 0;
+        final currentPaged = data["page"] ?? page;
+
+        List<Map<String, dynamic>> formattedData =
+            items.map((item) {
+              String formattedByWhen = '';
+
+              if (item['byWhen'] != null &&
+                  item['byWhen'].toString().isNotEmpty) {
+                try {
+                  DateTime date = DateTime.parse(item['byWhen'].toString());
+                  formattedByWhen = DateFormat('MMMM, yyyy').format(date);
+                } catch (_) {
+                  formattedByWhen = item['byWhen'].toString();
+                }
+              }
+
+              return {
+                'pgsDeliverableId': item['pgsDeliverableId'],
+                'kra': item['keyResultArea'],
+                'kraDescription': item['kraDescription'],
+                'Start Date': item['pgsPeriod']?.split(" - ")?.first ?? '',
+                'End Date': item['pgsPeriod']?.split(" - ")?.last ?? '',
+                'officeName': item['office'],
+                'isDirect': item['isDirect'],
+                'deliverableName': item['deliverable'],
+                'byWhen': formattedByWhen,
+                'status': item['status'].toString(),
+                'remarks': item['remarks'],
+                'score': item['score'],
+              };
+            }).toList();
+
+        if (mounted) {
+          setState(() {
+            currentPage = currentPaged;
+            totalCount = totalPages;
+            deliverableList = formattedData;
+            filteredList = List.from(formattedData);
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching filtered data: $e");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<bool> _hasCompleteAccomplishmentData(
+    int deliverableId,
+    int expectedPeriods,
+  ) async {
+    try {
+      final List<PgsDeliverableAccomplishment> accomplishments =
+          await _deliverableStatusMonitoring.fetchAccomplishments(
+            deliverableId,
+          );
+
+      if (accomplishments.isEmpty || accomplishments.length < expectedPeriods) {
+        return false;
+      }
+
+      int completedPeriods = 0;
+
+      for (var i = 0; i < accomplishments.length; i++) {
+        var accomplishment = accomplishments[i];
+
+        final status = accomplishment.remarks;
+
+        final attachmentPath = accomplishment.attachmentPath;
+
+        bool hasValidStatus = status != null && status.toString().isNotEmpty;
+
+        bool hasValidAttachment =
+            attachmentPath != null && attachmentPath.isNotEmpty;
+
+        bool isComplete = hasValidStatus && hasValidAttachment;
+
+        if (isComplete) {
+          completedPeriods++;
+        } else {
+          if (!hasValidStatus) {}
+        }
+      }
+
+      bool allComplete = completedPeriods >= expectedPeriods;
+
+      return allComplete;
+    } catch (e) {
+      return false;
     }
   }
 
@@ -202,51 +352,6 @@ class _DeliverableStatusMonitoringPageState
     setDialogState(() {});
   }
 
-  Future<bool> _hasCompleteAccomplishmentData(
-    int deliverableId,
-    int expectedPeriods,
-  ) async {
-    try {
-      final List<PgsDeliverableAccomplishment> accomplishments =
-          await _deliverableStatusMonitoring.fetchAccomplishments(
-            deliverableId,
-          );
-
-      if (accomplishments.isEmpty || accomplishments.length < expectedPeriods) {
-        return false;
-      }
-
-      int completedPeriods = 0;
-
-      for (var i = 0; i < accomplishments.length; i++) {
-        var accomplishment = accomplishments[i];
-
-        final status = accomplishment.remarks;
-
-        final attachmentPath = accomplishment.attachmentPath;
-
-        bool hasValidStatus = status != null && status.toString().isNotEmpty;
-
-        bool hasValidAttachment =
-            attachmentPath != null && attachmentPath.isNotEmpty;
-
-        bool isComplete = hasValidStatus && hasValidAttachment;
-
-        if (isComplete) {
-          completedPeriods++;
-        } else {
-          if (!hasValidStatus) {}
-        }
-      }
-
-      bool allComplete = completedPeriods >= expectedPeriods;
-
-      return allComplete;
-    } catch (e) {
-      return false;
-    }
-  }
-
   @override
   void dispose() {
     _verticalController.dispose();
@@ -255,103 +360,8 @@ class _DeliverableStatusMonitoringPageState
     super.dispose();
   }
 
-  Future<void> fetchFilteredPgsList() async {
-    try {
-      int? scoreFrom =
-          scoreRangeFromController.text.isNotEmpty
-              ? int.tryParse(scoreRangeFromController.text)
-              : null;
-      int? scoreTo =
-          scoreRangeToController.text.isNotEmpty
-              ? int.tryParse(scoreRangeToController.text)
-              : null;
-
-      int? page =
-          pageController.text.isNotEmpty
-              ? int.tryParse(pageController.text)
-              : null;
-      int? pageSize =
-          pageSizeController.text.isNotEmpty
-              ? int.tryParse(pageSizeController.text)
-              : null;
-
-      final filter = PgsFilter(
-        selectedPeriod,
-        int.tryParse(_selectedOfficeId ?? ''),
-        selectedKra,
-        isDirect,
-        scoreFrom,
-        scoreTo,
-        page,
-        pageSize,
-      );
-
-      final queryParams =
-          filter.toJson()..removeWhere((key, value) => value == null);
-
-      final response = await AuthenticatedRequest.get(
-        dio,
-        ApiEndpoint().filterBy,
-        queryParameters: queryParams,
-      );
-
-      if (response.statusCode == 200) {
-        final data = response.data;
-        final items = data["items"] as List<dynamic>? ?? [];
-
-        List<Map<String, dynamic>> formattedData =
-            items.map((item) {
-              String formattedByWhen = '';
-              if (item['byWhen'] != null &&
-                  item['byWhen'].toString().isNotEmpty) {
-                try {
-                  DateTime date = DateTime.parse(item['byWhen'].toString());
-                  formattedByWhen = DateFormat('MMMM, yyyy').format(date);
-                } catch (e) {
-                  formattedByWhen = item['byWhen'].toString();
-                }
-              }
-
-              deliverableHistoryGrouped.firstWhere(
-                (h) => h.pgsDeliverableId == item['pgsDeliverableId'],
-                orElse: () => PgsDeliverableHistoryGrouped(0, null),
-              );
-
-              return {
-                'pgsDeliverableId': item['pgsDeliverableId'],
-                'kra': item['keyResultArea'],
-                'kraDescription': item['kraDescription'],
-                'Start Date': item['pgsPeriod']?.split(" - ")?.first ?? '',
-                'End Date': item['pgsPeriod']?.split(" - ")?.last ?? '',
-                'officeName': item['office'],
-                'isDirect': item['isDirect'],
-                'deliverableName': item['deliverable'],
-                'byWhen': formattedByWhen,
-                'status':
-                    item['status'] is PgsStatus
-                        ? (item['status'] as PgsStatus).name
-                        : item['status'].toString(),
-                'remarks': item['remarks'],
-                'score': item['score'],
-              };
-            }).toList();
-
-        if (mounted) {
-          setState(() {
-            deliverableList = formattedData;
-            filteredList = List.from(formattedData);
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Error fetching filtered data: $e");
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    double totalWidth =
-        numberColumnWidth + (dataColumns * dataColumnWidth) + 24.0;
     bool isMinimized = MediaQuery.of(context).size.width < 600;
     bool hasPermission = permissionService.hasPermission(
       AppPermissions.viewPgsDeliverableMonitor,
@@ -946,39 +956,13 @@ class _DeliverableStatusMonitoringPageState
               ],
             ),
           ),
-          SizedBox(
-            height: 60,
-            child: SingleChildScrollView(
-              controller: _headerHorizontalController,
-              scrollDirection: Axis.horizontal,
-              child: SizedBox(width: totalWidth, child: _buildHeader()),
-            ),
-          ),
           Expanded(
-            child: Scrollbar(
+            child: SingleChildScrollView(
               controller: _verticalController,
-              thumbVisibility: true,
-              trackVisibility: true,
-              child: Scrollbar(
-                controller: _horizontalController,
-                thumbVisibility: true,
-                trackVisibility: true,
-                notificationPredicate: (notif) => notif.depth == 1,
-                child: SingleChildScrollView(
-                  controller: _verticalController,
-                  scrollDirection: Axis.vertical,
-                  child: SingleChildScrollView(
-                    controller: _horizontalController,
-                    scrollDirection: Axis.horizontal,
-                    child: ConstrainedBox(
-                      constraints: BoxConstraints(
-                        minWidth: totalWidth,
-                        minHeight: MediaQuery.of(context).size.height - 160,
-                      ),
-                      child: _buildTableBody(),
-                    ),
-                  ),
-                ),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [_buildDeliverablesStatusMonitoringTable()],
               ),
             ),
           ),
@@ -986,15 +970,50 @@ class _DeliverableStatusMonitoringPageState
       ),
       floatingActionButton:
           isMinimized
-              ? FloatingActionButton.extended(
-                backgroundColor: primaryColor,
-                onPressed: () {
-                  showReportDialog();
-                },
-                icon: const Icon(Icons.add, color: Colors.white),
-                label: const Text(
-                  'Create Report',
-                  style: TextStyle(color: Colors.white),
+              ? PermissionWidget(
+                allowedRoles: [
+                  PermissionString.pgsAuditor,
+                  PermissionString.roleAdmin,
+                ],
+                child: Column(
+                  mainAxisSize: MainAxisSize.min, // important!
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    FloatingActionButton.extended(
+                      heroTag: "createReport", // REQUIRED if multiple FABs
+                      backgroundColor: primaryColor,
+                      onPressed: () {
+                        showReportDialog();
+                      },
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text(
+                        'Create Report',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                    const SizedBox(height: 12), // spacing
+                    FloatingActionButton.extended(
+                      heroTag: "manageReports",
+                      backgroundColor: mainBgColor,
+                      onPressed: () {
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder:
+                                (context) => ManageSummaryNarrativeReportPage(),
+                          ),
+                          (route) => false,
+                        );
+                      },
+                      icon: const Icon(
+                        Icons.description_outlined,
+                        color: primaryTextColor,
+                      ),
+                      label: const Text(
+                        'Manage Auditor Reports',
+                        style: TextStyle(color: primaryTextColor),
+                      ),
+                    ),
+                  ],
                 ),
               )
               : null,
@@ -1785,122 +1804,88 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  Widget _buildHeader() {
-    final border = TableBorder.all(color: Colors.grey.shade700, width: 1.0);
-
-    Map<int, TableColumnWidth> columnWidths = {
-      0: FixedColumnWidth(numberColumnWidth),
-    };
-    for (int i = 1; i <= dataColumns; i++) {
-      columnWidths[i] = FixedColumnWidth(dataColumnWidth);
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0),
-      child: Table(
-        border: border,
-        columnWidths: columnWidths,
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        children: [
-          TableRow(
-            decoration: const BoxDecoration(color: primaryLightColor),
-            children: [
-              _cell("#", isHeader: true, align: TextAlign.center),
-              for (final h in headers) _cell(h, isHeader: true),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTableBody() {
-    final border = TableBorder.all(color: Colors.grey.shade700, width: 1.0);
-
-    Map<int, TableColumnWidth> columnWidths = {
-      0: FixedColumnWidth(numberColumnWidth),
-    };
-    for (int i = 1; i <= dataColumns; i++) {
-      columnWidths[i] = FixedColumnWidth(dataColumnWidth);
-    }
-
-    if (deliverableList.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(20),
-          child: Text("No data available"),
-        ),
-      );
-    }
-
-    List<TableRow> rows =
-        deliverableList.asMap().entries.map((entry) {
-          final int index = entry.key;
-          final deliverable = entry.value;
-
-          return TableRow(
-            children: [
-              _cell("${index + 1}", align: TextAlign.center),
-              _cell(
-                "${deliverable['Start Date']} - ${deliverable['End Date']}",
-              ),
-              _cell(deliverable['officeName'] ?? ''),
-              _buildCoreSupport(deliverable['kra']),
-              _buildKRA(deliverable['kraDescription']),
-              _cell(deliverable['isDirect'] ? "Direct" : "Indirect"),
-              _cell(deliverable['deliverableName'] ?? ''),
-              _cell(deliverable['byWhen'] ?? ''),
-              _buildCreateAccomplishmentAndBreakthroughCell(index, () {
-                debugPrint(
-                  "Create tapped for ID: ${deliverable['pgsDeliverableId']}",
-                );
-              }),
-            ],
-          );
-        }).toList();
-
-    return Padding(
-      padding: const EdgeInsets.only(left: 12.0, right: 12.0, bottom: 12.0),
-      child: Table(
-        border: border,
-        columnWidths: columnWidths,
-        defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-        children: rows,
-      ),
-    );
-  }
-
-  Widget _cell(
-    String text, {
-    bool isHeader = false,
-    TextAlign align = TextAlign.left,
-  }) {
+  Widget _buildDeliverablesStatusMonitoringTable() {
     return Container(
-      alignment: Alignment.centerLeft,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      child: Center(
-        child: Text(
-          text,
-          textAlign: align,
-          style: TextStyle(
-            fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
-            fontSize: 14,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCoreSupport(String? kra) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Center(
-            child: Text(
-              kra ?? '',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+          Container(
+            decoration: BoxDecoration(color: secondaryColor),
+            child: Table(
+              columnWidths: const {
+                0: FixedColumnWidth(60),
+                1: FlexColumnWidth(5),
+                2: FlexColumnWidth(2),
+              },
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: [
+                TableRow(
+                  children: [
+                    _tableCell('#', isHeader: true),
+                    _tableCell('KPI', isHeader: true),
+                    Center(child: _tableCell('ACTIONS', isHeader: true)),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          // Scrollable data rows
+          SizedBox(
+            height: 7 * 100.0,
+            child: Scrollbar(
+              controller: _kpiScrollController,
+              thumbVisibility: true,
+              child: ListView.builder(
+                controller: _kpiScrollController,
+                itemCount: deliverableList.length,
+                itemBuilder: (context, index) {
+                  final deliverable = deliverableList[index];
+
+                  return Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(color: mainBgColor),
+                        child: Table(
+                          columnWidths: const {
+                            0: FixedColumnWidth(60),
+                            1: FlexColumnWidth(5),
+                            2: FlexColumnWidth(2),
+                          },
+                          defaultVerticalAlignment:
+                              TableCellVerticalAlignment.middle,
+                          children: [
+                            TableRow(
+                              children: [
+                                _number("${index + 1}"),
+                                _buildActivity(
+                                  "${deliverable['Start Date']} - ${deliverable['End Date']}",
+                                  deliverable['officeName'] ?? '',
+                                  deliverable['kra'] ?? '',
+                                  deliverable['deliverableName'] ?? '',
+                                  deliverable['kraDescription'] ?? '',
+                                  deliverable['isDirect']
+                                      ? "Direct"
+                                      : "Indirect",
+                                  deliverable['byWhen'] ?? '',
+                                ),
+                                _buildCreateAccomplishmentAndBreakthroughCell(
+                                  index,
+                                  () {},
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      Divider(
+                        height: 1,
+                        thickness: 0.8,
+                        color: Colors.grey.shade300,
+                      ),
+                    ],
+                  );
+                },
+              ),
             ),
           ),
         ],
@@ -1908,12 +1893,171 @@ class _DeliverableStatusMonitoringPageState
     );
   }
 
-  Widget _buildKRA(String? description) {
+  Widget _number(
+    String text, {
+    bool isHeader = false,
+    TextAlign align = TextAlign.left,
+  }) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      child: Text(
+        text,
+        textAlign: align,
+        style: TextStyle(
+          fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+          fontSize: 14,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivity(
+    String? period,
+    String? office,
+    String? kra,
+    String? kraDescription,
+    String? deliverables,
+    String? direct,
+    String? byWhen,
+  ) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
+      padding: const EdgeInsets.all(12.0),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          bool isSmallScreen = constraints.maxWidth < 600;
+
+          return Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildStatusChip(period ?? ''),
+                const SizedBox(height: 24),
+
+                Wrap(
+                  spacing: 24,
+                  runSpacing: 16,
+                  direction: isSmallScreen ? Axis.vertical : Axis.horizontal,
+                  children: [
+                    _infoItem(
+                      Icons.apartment_outlined,
+                      "OFFICE",
+                      office,
+                      Colors.lightBlue,
+                    ),
+                    _infoItem(
+                      Icons.adjust_outlined,
+                      "PROCESS (CORE & SUPPORT)",
+                      kra,
+                      Colors.green,
+                    ),
+                    _infoItem(
+                      Icons.insights,
+                      "KRA",
+                      kraDescription,
+                      Colors.orange,
+                    ),
+                    _infoItem(
+                      Icons.description_outlined,
+                      "DELIVERABLES",
+                      deliverables,
+                      const Color.fromARGB(255, 201, 95, 130),
+                    ),
+                    _infoItem(
+                      Icons.directions_outlined,
+                      "ALIGNMENT",
+                      direct,
+                      Colors.purple,
+                    ),
+                    _infoItem(
+                      Icons.calendar_month_outlined,
+                      "BY WHEN",
+                      byWhen,
+                      Colors.red,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildStatusChip(String? period) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: primaryColor.withAlpha(51),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        period!,
+        style: TextStyle(
+          color: primaryColor,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+
+  Widget _infoItem(
+    IconData icon,
+    String label,
+    String? value,
+    Color? iconColor,
+  ) {
+    return SizedBox(
+      width: 260,
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [if (description != null) Text(description)],
+        children: [
+          Icon(icon, size: 18, color: iconColor),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  value ?? '',
+                  style: const TextStyle(
+                    fontSize: 14,
+                    // fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _tableCell(String text, {bool isHeader = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+      decoration: BoxDecoration(),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontWeight: isHeader ? FontWeight.normal : FontWeight.normal,
+          fontSize: isHeader ? 14 : 14,
+          color: isHeader ? grey : Colors.black87,
+        ),
+
+        softWrap: true,
       ),
     );
   }
@@ -1942,10 +2086,12 @@ class _DeliverableStatusMonitoringPageState
       });
       current = DateTime(current.year, current.month + 1);
     }
-    return Padding(
-      padding: const EdgeInsets.all(4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return Center(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        alignment: WrapAlignment.center,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
           Tooltip(
             message: 'Click to open Accomplishment Form',
@@ -1989,8 +2135,6 @@ class _DeliverableStatusMonitoringPageState
               ),
             ),
           ),
-
-          const SizedBox(width: 8),
 
           FutureBuilder<bool>(
             future: _hasCompleteAccomplishmentData(
@@ -2111,7 +2255,6 @@ Future<bool?> showAccomplishmentFormDialog(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Scrollable Content
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
