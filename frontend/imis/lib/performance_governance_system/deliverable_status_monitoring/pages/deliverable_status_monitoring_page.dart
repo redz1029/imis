@@ -23,7 +23,6 @@ import '../../../user/models/user_registration.dart';
 import '../../../utils/api_endpoint.dart';
 import '../../../utils/auth_util.dart';
 import '../../../utils/date_time_converter.dart';
-import '../../../utils/pagination_util.dart';
 import '../../../utils/permission_string.dart';
 import '../../../widgets/accomplishment_auditor_widget.dart';
 import '../../../widgets/breakthrough_widget.dart';
@@ -104,9 +103,6 @@ class _DeliverableStatusMonitoringPageState
   String? _selectedPeriod;
   String? _selectedOffice;
   bool _hasAvailableDeliverables = false;
-  final int _currentPage = 1;
-  final int _pageSize = 15;
-  final int _totalCount = 0;
   @override
   void initState() {
     super.initState();
