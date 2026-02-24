@@ -47,7 +47,10 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   List<KeyResultArea> kraList = [];
   List<KraRoadmapRole> kraListRoadmap = [];
   List<KraRoadmapPeriod> kraPeriodList = [];
+  final List<KpiRoadmap> kpiList = [];
   final List<TextEditingController> kpiControllers = [];
+  final List<TextEditingController> targetControllers = [];
+  final List<TextEditingController> baselineControllers = [];
   final ScrollController _horizontalScrollController = ScrollController();
   final ScrollController _verticalScrollController = ScrollController();
   final permissionService = PermissionService();
@@ -220,6 +223,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
       barrierDismissible: false,
       builder: (_) {
         List<TextEditingController> kpiControllers = [];
+        List<TextEditingController> targetControllers = [];
+        List<TextEditingController> baselineControllers = [];
         List<List<TextEditingController>> tableControllers = [];
         List<List<bool>> enablerStates = [];
         List<DeliverableGroup?> existingGroups = [];
@@ -263,6 +268,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
 
           for (final kpi in roadmapToEdit.kpis ?? []) {
             kpiControllers.add(TextEditingController(text: kpi.kpiDescription));
+            targetControllers.add(TextEditingController(text: kpi.target));
+            baselineControllers.add(TextEditingController(text: kpi.baseLine));
           }
         }
 
@@ -274,8 +281,12 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
           existingGroups.add(null);
         }
 
-        if (kpiControllers.isEmpty) {
+        if (kpiControllers.isEmpty &&
+            targetControllers.isEmpty &&
+            baselineControllers.isEmpty) {
           kpiControllers.add(TextEditingController());
+          targetControllers.add(TextEditingController());
+          baselineControllers.add(TextEditingController());
         }
 
         return StatefulBuilder(
@@ -342,8 +353,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                           width: 1,
                         ),
                         columnWidths: const {
-                          0: FlexColumnWidth(3),
-                          1: FlexColumnWidth(1),
+                          0: FlexColumnWidth(2),
+                          1: FlexColumnWidth(6),
                         },
                         defaultVerticalAlignment:
                             TableCellVerticalAlignment.middle,
@@ -383,7 +394,9 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                   children: [
                                     for (
                                       int i = 0;
-                                      i < kpiControllers.length;
+                                      i < kpiControllers.length &&
+                                          i < targetControllers.length &&
+                                          i < baselineControllers.length;
                                       i++
                                     )
                                       Padding(
@@ -399,9 +412,53 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                               ),
                                             ),
                                             Expanded(
+                                              flex: 3,
                                               child: TextFormField(
                                                 maxLines: null,
                                                 controller: kpiControllers[i],
+                                                decoration:
+                                                    const InputDecoration(
+                                                      isDense: true,
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                    ),
+                                              ),
+                                            ),
+                                            SizedBox(width: 12),
+                                            Text(
+                                              'Target ${i + 1}: ',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+
+                                            Expanded(
+                                              flex: 2,
+                                              child: TextFormField(
+                                                maxLines: null,
+                                                controller:
+                                                    targetControllers[i],
+                                                decoration:
+                                                    const InputDecoration(
+                                                      isDense: true,
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                    ),
+                                              ),
+                                            ),
+                                            SizedBox(width: 12),
+                                            Text(
+                                              'Baseline ${i + 1}: ',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            Expanded(
+                                              flex: 2,
+                                              child: TextFormField(
+                                                maxLines: null,
+                                                controller:
+                                                    baselineControllers[i],
                                                 decoration:
                                                     const InputDecoration(
                                                       isDense: true,
@@ -418,6 +475,10 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                               onPressed: () {
                                                 setStateDialog(() {
                                                   kpiControllers.removeAt(i);
+                                                  baselineControllers.removeAt(
+                                                    i,
+                                                  );
+                                                  targetControllers.removeAt(i);
                                                 });
                                               },
                                             ),
@@ -425,13 +486,22 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         ),
                                       ),
                                     Visibility(
-                                      visible: kpiControllers.length < 2,
+                                      visible:
+                                          kpiControllers.length < 2 ||
+                                          targetControllers.length < 2 ||
+                                          baselineControllers.length < 2,
                                       child: Align(
                                         alignment: Alignment.centerLeft,
                                         child: TextButton.icon(
                                           onPressed: () {
                                             setStateDialog(() {
                                               kpiControllers.add(
+                                                TextEditingController(),
+                                              );
+                                              targetControllers.add(
+                                                TextEditingController(),
+                                              );
+                                              baselineControllers.add(
                                                 TextEditingController(),
                                               );
                                             });
@@ -659,7 +729,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                             ),
                           ),
                           child: Text(
-                            isEdit ? 'Update' : 'Save',
+                            'Save',
                             style: const TextStyle(color: Colors.white),
                           ),
                           onPressed: () async {
@@ -667,9 +737,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               context: context,
                               builder: (context) {
                                 return AlertDialog(
-                                  title: Text(
-                                    isEdit ? 'Confirm Update' : 'Confirm Save',
-                                  ),
+                                  title: Text('Confirm Save'),
                                   content: Text(
                                     isEdit
                                         ? 'Are you sure you want to update this roadmap?'
@@ -732,14 +800,20 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               return;
                             }
 
-                            if (kpiControllers.length < 2) {
+                            int filledKpiCount =
+                                kpiControllers
+                                    .where((c) => c.text.trim().isNotEmpty)
+                                    .length;
+
+                            if (filledKpiCount < 1) {
                               MotionToast.warning(
                                 title: const Text("Insufficient KPI"),
                                 description: const Text(
-                                  "Please provide at least 2 KPI's.",
+                                  "Please provide at least 1 or 2 KPIs only.",
                                 ),
                                 toastAlignment: Alignment.center,
                               ).show(context);
+
                               return;
                             }
 
@@ -798,20 +872,42 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               );
                             }
 
+                            kpiList.clear();
+                            final int kpiCount = [
+                              kpiControllers.length,
+                              targetControllers.length,
+                              baselineControllers.length,
+                            ].reduce((a, b) => a < b ? a : b);
+
+                            for (int i = 0; i < kpiCount; i++) {
+                              final kpiText = kpiControllers[i].text.trim();
+                              final targetText =
+                                  targetControllers[i].text.trim();
+                              final baselineText =
+                                  baselineControllers[i].text.trim();
+
+                              if (kpiText.isEmpty &&
+                                  targetText.isEmpty &&
+                                  baselineText.isEmpty) {
+                                continue;
+                              }
+
+                              kpiList.add(
+                                KpiRoadmap(
+                                  id: 0,
+                                  kpiDescription: kpiText,
+                                  target: targetText,
+                                  baseLine: baselineText,
+                                ),
+                              );
+                            }
                             final roadmap = Roadmap(
                               isEdit ? roadmapToEdit.id : 0,
                               selectedKra!.kraId,
                               period.id,
                               period,
                               allGroups,
-                              kpiControllers
-                                  .map(
-                                    (c) => KpiRoadmap(
-                                      id: 0,
-                                      kpiDescription: c.text,
-                                    ),
-                                  )
-                                  .toList(),
+                              kpiList,
                               roleId,
                               isDeleted: false,
                               rowVersion: roadmapToEdit?.rowVersion ?? '',
