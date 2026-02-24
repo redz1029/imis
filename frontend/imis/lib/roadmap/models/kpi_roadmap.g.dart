@@ -9,10 +9,14 @@ part of 'kpi_roadmap.dart';
 KpiRoadmap _$KpiRoadmapFromJson(Map<String, dynamic> json) => KpiRoadmap(
   id: (json['id'] as num).toInt(),
   kpiDescription: json['kpiDescription'] as String?,
+  target: json['target'] as String?,
+  baseLine: json['baseLine'] as String?,
 );
 
 Map<String, dynamic> _$KpiRoadmapToJson(KpiRoadmap instance) =>
     <String, dynamic>{
       'id': instance.id,
       'kpiDescription': instance.kpiDescription,
+      'target': instance.target,
+      'baseLine': instance.baseLine,
     };
