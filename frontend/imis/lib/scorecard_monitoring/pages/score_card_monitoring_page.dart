@@ -163,6 +163,253 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
       ),
       body: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 8.0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Filter by', style: TextStyle(color: Colors.grey)),
+                    ],
+                  ),
+                ),
+                PermissionWidget(
+                  permission: AppPermissions.viewKra,
+                  child: PopupMenuButton<int>(
+                    color: mainBgColor,
+                    offset: const Offset(0, 30),
+                    onCanceled: () {
+                      setState(() {
+                        isMenuOpenKra = false;
+                      });
+                    },
+                    onOpened: () {
+                      setState(() {
+                        isMenuOpenKra = true;
+                      });
+                    },
+
+                    onSelected: (int value) async {
+                      setState(() {
+                        selectedKra = (value == -1) ? null : value;
+                        isMenuOpenKra = false;
+                      });
+
+                      try {
+                        final roadmapData = await _scorecardService
+                            .fetchRoadmapFiltered(
+                              kraId: selectedKra,
+                              fromYear: selectedStartYear,
+                              toYear: selectedEndYear,
+                            );
+                        final kpiData = await _scorecardService
+                            .fetchKpiFiltered(
+                              kraId: selectedKra,
+                              fromYear: selectedStartYear,
+                              toYear: selectedEndYear,
+                            );
+                        if (!mounted) return;
+                        setState(() {
+                          roadmapList = roadmapData;
+                          kpiList = kpiData;
+                          filteredList = List.from(roadmapData);
+                        });
+                      } catch (e) {
+                        debugPrint("Error fetching filtered data");
+                      }
+                    },
+                    itemBuilder: (BuildContext context) {
+                      final updatedKraList = [
+                        {'id': -1, 'name': 'All KRA'},
+                        ...kraListOptions.map(
+                          (k) => {
+                            'id': k.id,
+                            'name': k.name,
+                            'remarks': k.remarks,
+                          },
+                        ),
+                      ];
+
+                      return updatedKraList.map<PopupMenuItem<int>>((kra) {
+                        return PopupMenuItem<int>(
+                          value: kra['id'] as int,
+                          child: Text(kra['name'].toString()),
+                        );
+                      }).toList();
+                    },
+                    child: FilterButton(
+                      label:
+                          selectedKra == null
+                              ? 'All KRA'
+                              : kraListOptions
+                                  .firstWhere(
+                                    (kra) => kra.id == selectedKra,
+                                    orElse:
+                                        () => KeyResultArea(
+                                          0,
+                                          'name',
+                                          'remarks',
+                                          'strategic',
+                                          false,
+                                        ),
+                                  )
+                                  .name,
+                      isActive: isMenuOpenKra,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 6),
+                PopupMenuButton<int>(
+                  color: mainBgColor,
+                  offset: const Offset(0, 30),
+
+                  onCanceled: () {
+                    setState(() {
+                      isMenuOpenStartYear = false;
+                    });
+                  },
+
+                  onOpened: () {
+                    setState(() {
+                      isMenuOpenStartYear = true;
+                    });
+                  },
+
+                  onSelected: (int value) async {
+                    setState(() {
+                      selectedStartYear = (value == -1) ? null : value;
+                      selectedStartYearText =
+                          (value == -1) ? null : value.toString();
+                      isMenuOpenStartYear = false;
+                      isAllYearsSelected = (value == -1);
+                    });
+                    try {
+                      final roadmapData = await _scorecardService
+                          .fetchRoadmapFiltered(
+                            kraId: selectedKra,
+                            fromYear: selectedStartYear,
+                            toYear: selectedEndYear,
+                          );
+                      final kpiData = await _scorecardService.fetchKpiFiltered(
+                        kraId: selectedKra,
+                        fromYear: selectedStartYear,
+                        toYear: selectedEndYear,
+                      );
+
+                      if (!mounted) return;
+                      setState(() {
+                        roadmapList = roadmapData;
+                        kpiList = kpiData;
+                        filteredList = List.from(roadmapData);
+                      });
+                    } catch (e) {
+                      debugPrint("Error fetching filtered data");
+                    }
+                  },
+
+                  itemBuilder: (BuildContext context) {
+                    final updatedYearList = [
+                      -1,
+                      ...SwotYear.years.map((y) => int.parse(y)),
+                    ];
+
+                    return updatedYearList.map((year) {
+                      return PopupMenuItem<int>(
+                        value: year,
+                        child: Text(year == -1 ? 'All Years' : year.toString()),
+                      );
+                    }).toList();
+                  },
+
+                  child: FilterButton(
+                    label:
+                        selectedStartYear == null
+                            ? (isAllYearsSelected ? 'All Years' : 'Start Year')
+                            : selectedStartYear.toString(),
+                    isActive: isMenuOpenStartYear,
+                  ),
+                ),
+                SizedBox(width: 6),
+                PopupMenuButton<int>(
+                  color: mainBgColor,
+                  offset: const Offset(0, 30),
+
+                  onCanceled: () {
+                    setState(() {
+                      isMenuOpenEndYear = false;
+                    });
+                  },
+
+                  onOpened: () {
+                    setState(() {
+                      isMenuOpenEndYear = true;
+                    });
+                  },
+
+                  onSelected: (int value) async {
+                    setState(() {
+                      selectedEndYear = (value == -1) ? null : value;
+                      selectedEndYearText =
+                          (value == -1) ? null : value.toString();
+                      isMenuOpenEndYear = false;
+                      isAllYearsSelected = (value == -1);
+                    });
+                    try {
+                      final roadmapData = await _scorecardService
+                          .fetchRoadmapFiltered(
+                            kraId: selectedKra,
+                            fromYear: selectedStartYear,
+                            toYear: selectedEndYear,
+                          );
+                      final kpiData = await _scorecardService.fetchKpiFiltered(
+                        kraId: selectedKra,
+                        fromYear: selectedStartYear,
+                        toYear: selectedEndYear,
+                      );
+
+                      if (!mounted) return;
+                      setState(() {
+                        roadmapList = roadmapData;
+                        kpiList = kpiData;
+                        filteredList = List.from(roadmapData);
+                      });
+                    } catch (e) {
+                      debugPrint("Error fetching filtered data");
+                    }
+                  },
+
+                  itemBuilder: (BuildContext context) {
+                    final updatedYearList = [
+                      -1,
+                      ...SwotYear.years.map((y) => int.parse(y)),
+                    ];
+
+                    return updatedYearList.map((year) {
+                      return PopupMenuItem<int>(
+                        value: year,
+                        child: Text(year == -1 ? 'All Years' : year.toString()),
+                      );
+                    }).toList();
+                  },
+
+                  child: FilterButton(
+                    label:
+                        selectedEndYear == null
+                            ? (isAllYearsSelected ? 'All Years' : 'End Year')
+                            : selectedEndYear.toString(),
+                    isActive: isMenuOpenEndYear,
+                  ),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: SingleChildScrollView(
               controller: _verticalController,
@@ -170,271 +417,9 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 8.0,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(right: 8.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Filter by',
-                                style: TextStyle(color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        ),
-                        PermissionWidget(
-                          permission: AppPermissions.viewKra,
-                          child: PopupMenuButton<int>(
-                            color: mainBgColor,
-                            offset: const Offset(0, 30),
-                            onCanceled: () {
-                              setState(() {
-                                isMenuOpenKra = false;
-                              });
-                            },
-                            onOpened: () {
-                              setState(() {
-                                isMenuOpenKra = true;
-                              });
-                            },
-
-                            onSelected: (int value) async {
-                              setState(() {
-                                selectedKra = (value == -1) ? null : value;
-                                isMenuOpenKra = false;
-                              });
-
-                              try {
-                                final roadmapData = await _scorecardService
-                                    .fetchRoadmapFiltered(
-                                      kraId: selectedKra,
-                                      fromYear: selectedStartYear,
-                                      toYear: selectedEndYear,
-                                    );
-                                final kpiData = await _scorecardService
-                                    .fetchKpiFiltered(
-                                      kraId: selectedKra,
-                                      fromYear: selectedStartYear,
-                                      toYear: selectedEndYear,
-                                    );
-                                if (!mounted) return;
-                                setState(() {
-                                  roadmapList = roadmapData;
-                                  kpiList = kpiData;
-                                  filteredList = List.from(roadmapData);
-                                });
-                              } catch (e) {
-                                debugPrint("Error fetching filtered data");
-                              }
-                            },
-                            itemBuilder: (BuildContext context) {
-                              final updatedKraList = [
-                                {'id': -1, 'name': 'All KRA'},
-                                ...kraListOptions.map(
-                                  (k) => {
-                                    'id': k.id,
-                                    'name': k.name,
-                                    'remarks': k.remarks,
-                                  },
-                                ),
-                              ];
-
-                              return updatedKraList.map<PopupMenuItem<int>>((
-                                kra,
-                              ) {
-                                return PopupMenuItem<int>(
-                                  value: kra['id'] as int,
-                                  child: Text(kra['name'].toString()),
-                                );
-                              }).toList();
-                            },
-                            child: FilterButton(
-                              label:
-                                  selectedKra == null
-                                      ? 'All KRA'
-                                      : kraListOptions
-                                          .firstWhere(
-                                            (kra) => kra.id == selectedKra,
-                                            orElse:
-                                                () => KeyResultArea(
-                                                  0,
-                                                  'name',
-                                                  'remarks',
-                                                  'strategic',
-                                                  false,
-                                                ),
-                                          )
-                                          .name,
-                              isActive: isMenuOpenKra,
-                            ),
-                          ),
-                        ),
-                        SizedBox(width: 6),
-                        PopupMenuButton<int>(
-                          color: mainBgColor,
-                          offset: const Offset(0, 30),
-
-                          onCanceled: () {
-                            setState(() {
-                              isMenuOpenStartYear = false;
-                            });
-                          },
-
-                          onOpened: () {
-                            setState(() {
-                              isMenuOpenStartYear = true;
-                            });
-                          },
-
-                          onSelected: (int value) async {
-                            setState(() {
-                              selectedStartYear = (value == -1) ? null : value;
-                              selectedStartYearText =
-                                  (value == -1) ? null : value.toString();
-                              isMenuOpenStartYear = false;
-                              isAllYearsSelected = (value == -1);
-                            });
-                            try {
-                              final roadmapData = await _scorecardService
-                                  .fetchRoadmapFiltered(
-                                    kraId: selectedKra,
-                                    fromYear: selectedStartYear,
-                                    toYear: selectedEndYear,
-                                  );
-                              final kpiData = await _scorecardService
-                                  .fetchKpiFiltered(
-                                    kraId: selectedKra,
-                                    fromYear: selectedStartYear,
-                                    toYear: selectedEndYear,
-                                  );
-
-                              if (!mounted) return;
-                              setState(() {
-                                roadmapList = roadmapData;
-                                kpiList = kpiData;
-                                filteredList = List.from(roadmapData);
-                              });
-                            } catch (e) {
-                              debugPrint("Error fetching filtered data");
-                            }
-                          },
-
-                          itemBuilder: (BuildContext context) {
-                            final updatedYearList = [
-                              -1,
-                              ...SwotYear.years.map((y) => int.parse(y)),
-                            ];
-
-                            return updatedYearList.map((year) {
-                              return PopupMenuItem<int>(
-                                value: year,
-                                child: Text(
-                                  year == -1 ? 'All Years' : year.toString(),
-                                ),
-                              );
-                            }).toList();
-                          },
-
-                          child: FilterButton(
-                            label:
-                                selectedStartYear == null
-                                    ? (isAllYearsSelected
-                                        ? 'All Years'
-                                        : 'Start Year')
-                                    : selectedStartYear.toString(),
-                            isActive: isMenuOpenStartYear,
-                          ),
-                        ),
-                        SizedBox(width: 6),
-                        PopupMenuButton<int>(
-                          color: mainBgColor,
-                          offset: const Offset(0, 30),
-
-                          onCanceled: () {
-                            setState(() {
-                              isMenuOpenEndYear = false;
-                            });
-                          },
-
-                          onOpened: () {
-                            setState(() {
-                              isMenuOpenEndYear = true;
-                            });
-                          },
-
-                          onSelected: (int value) async {
-                            setState(() {
-                              selectedEndYear = (value == -1) ? null : value;
-                              selectedEndYearText =
-                                  (value == -1) ? null : value.toString();
-                              isMenuOpenEndYear = false;
-                              isAllYearsSelected = (value == -1);
-                            });
-                            try {
-                              final roadmapData = await _scorecardService
-                                  .fetchRoadmapFiltered(
-                                    kraId: selectedKra,
-                                    fromYear: selectedStartYear,
-                                    toYear: selectedEndYear,
-                                  );
-                              final kpiData = await _scorecardService
-                                  .fetchKpiFiltered(
-                                    kraId: selectedKra,
-                                    fromYear: selectedStartYear,
-                                    toYear: selectedEndYear,
-                                  );
-
-                              if (!mounted) return;
-                              setState(() {
-                                roadmapList = roadmapData;
-                                kpiList = kpiData;
-                                filteredList = List.from(roadmapData);
-                              });
-                            } catch (e) {
-                              debugPrint("Error fetching filtered data");
-                            }
-                          },
-
-                          itemBuilder: (BuildContext context) {
-                            final updatedYearList = [
-                              -1,
-                              ...SwotYear.years.map((y) => int.parse(y)),
-                            ];
-
-                            return updatedYearList.map((year) {
-                              return PopupMenuItem<int>(
-                                value: year,
-                                child: Text(
-                                  year == -1 ? 'All Years' : year.toString(),
-                                ),
-                              );
-                            }).toList();
-                          },
-
-                          child: FilterButton(
-                            label:
-                                selectedEndYear == null
-                                    ? (isAllYearsSelected
-                                        ? 'All Years'
-                                        : 'End Year')
-                                    : selectedEndYear.toString(),
-                            isActive: isMenuOpenEndYear,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _buildKRATable(),
-                  const SizedBox(height: 32),
                   _buildKPITable(),
+                  const SizedBox(height: 32),
+                  _buildKRATable(),
                 ],
               ),
             ),
@@ -657,7 +642,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                       children: [
                         TableRow(
                           children: [
-                            _tableCell('${item['id'] ?? index + 1}'),
+                            _tableCell('${index + 1}'),
                             _tableCell(item['kpiDescription'] ?? ''),
                             _buildActionButton('', () {
                               showKPIAccomplishmentFormDialog(
@@ -898,7 +883,7 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                             const Icon(Icons.bar_chart_outlined, size: 18),
                             const SizedBox(width: 8),
                             const Text(
-                              "Accomplishment Tracking",
+                              "Yearly Accomplishment Tracking",
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const Spacer(),
@@ -1210,7 +1195,10 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    "KPI: ${deliverable['kpiDescription'] ?? deliverable['kpi'] ?? 'N/A'}",
+                                    "KPI: ${deliverable['kpiDescription'] ?? deliverable['kpiDescription'] ?? 'N/A'}",
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                   Text(
                                     useYearly
@@ -1219,6 +1207,26 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Target: ${deliverable['target'] ?? 'No Target'}",
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Baseline: ${deliverable['baseLine'] ?? 'No Baseline'}",
                                   ),
                                 ],
                               ),
@@ -1231,7 +1239,7 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                             const Icon(Icons.bar_chart_outlined, size: 18),
                             const SizedBox(width: 8),
                             const Text(
-                              "Accomplishment Tracking",
+                              "Yearly Accomplishment Tracking",
                               style: TextStyle(fontWeight: FontWeight.bold),
                             ),
                             const Spacer(),
