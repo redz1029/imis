@@ -1,5 +1,4 @@
-﻿using Base.Abstractions;
-using Base.Auths;
+﻿using Base.Auths;
 using Base.Auths.Roles;
 using Base.Pagination;
 using Base.Primitives;
@@ -189,6 +188,8 @@ namespace IMIS.Persistence.KraRoadMapModule
                 {
                     Id = k.Id,
                     KpiDescription = k.KpiDescription,
+                    Target = k.Target,
+                    BaseLine = k.BaseLine,
                     IsDeleted = false,
                     RowVersion = k.RowVersion
                 })
