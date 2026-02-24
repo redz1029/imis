@@ -123,7 +123,7 @@ class PerformanceGovernanceSystemPageState
 
   final _paginationUtils = PaginationUtil(Dio());
   int _currentPage = 1;
-  final int _pageSize = 30;
+  final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
   bool permissionsLoaded = false;
@@ -281,7 +281,6 @@ class PerformanceGovernanceSystemPageState
       if (response.statusCode == 200 || response.statusCode == 201) {
         setState(() {
           fetchPgsList();
-          // clearAllSelections();
         });
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
@@ -606,7 +605,7 @@ class PerformanceGovernanceSystemPageState
 
       setState(() => userId = user.id ?? "UserId");
 
-      String roleIdParam = "";
+      String? roleId;
       final prefs = await SharedPreferences.getInstance();
       final String? selectedRoleName = prefs.getString('selectedRole');
       final roles = await AuthUtil.fetchRoles();
@@ -617,22 +616,25 @@ class PerformanceGovernanceSystemPageState
           try {
             currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
           } catch (e) {
-            // keep first
+            //uwu
           }
         }
-        roleIdParam = "&roleId=${currentRole.id}";
+        roleId = currentRole.id;
       }
 
-      final pageList = await _paginationUtils.fetchPaginatedData<
-        PerformanceGovernanceSystem
-      >(
-        endpoint:
-            "${ApiEndpoint().performancegovernancesystem}/userId/$userId?userId=$userId$roleIdParam",
-        page: page,
-        pageSize: _pageSize,
-        searchQuery: searchQuery,
-        fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
-      );
+      final pageList = await _paginationUtils
+          .fetchPaginatedData<PerformanceGovernanceSystem>(
+            endpoint:
+                "${ApiEndpoint().performancegovernancesystem}/user/$userId",
+            page: page,
+            pageSize: _pageSize,
+            searchQuery: searchQuery,
+            additionalParams: {
+              'userId': userId,
+              if (roleId != null) 'roleId': roleId,
+            },
+            fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
+          );
 
       if (mounted) {
         setState(() {
@@ -655,6 +657,52 @@ class PerformanceGovernanceSystemPageState
       }
     }
   }
+
+  //  Future<void> fetchPgsList({int page = 1, String? searchQuery}) async {
+  //   if (_isLoading) return;
+
+  //   setState(() => _isLoading = true);
+
+  //   try {
+  //     UserRegistration? user = await AuthUtil.fetchLoggedUser();
+  //     if (user == null) {
+  //       return;
+  //     }
+
+  //     setState(() => userId = user.id ?? "UserId");
+
+  //     final pageList = await _paginationUtils.fetchPaginatedData<
+  //       PerformanceGovernanceSystem
+  //     >(
+  //       endpoint:
+  //           "${ApiEndpoint().performancegovernancesystem}/userId/$userId?userId=$userId",
+  //       page: page,
+  //       pageSize: _pageSize,
+  //       searchQuery: searchQuery,
+  //       fromJson: (json) => PerformanceGovernanceSystem.fromJson(json),
+  //     );
+
+  //     if (mounted) {
+  //       setState(() {
+  //         _currentPage = pageList.page;
+  //         _totalCount = pageList.totalCount;
+  //         deliverableLists =
+  //             pageList.items
+  //                 .map((pgs) => _mapPgsToListItem(pgs, userId))
+  //                 .toList();
+  //         filteredList = List.from(deliverableLists);
+  //       });
+  //     }
+  //   } on DioException {
+  //     debugPrint("Dio error");
+  //   } catch (e) {
+  //     debugPrint("Unexpected error: $e");
+  //   } finally {
+  //     if (mounted) {
+  //       setState(() => _isLoading = false);
+  //     }
+  //   }
+  // }
 
   Future<void> fetchSubmitUserId({
     required String pgsId,
@@ -799,7 +847,7 @@ class PerformanceGovernanceSystemPageState
     } on DioException {
       debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     }
   }
 
@@ -884,7 +932,7 @@ class PerformanceGovernanceSystemPageState
     } on DioException {
       debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     }
   }
 
@@ -908,7 +956,7 @@ class PerformanceGovernanceSystemPageState
         debugPrint("Failed to load data");
       }
     } catch (e) {
-      debugPrint("Error fetching data: $e");
+      debugPrint("Error fetching data:");
     }
   }
 
@@ -918,11 +966,7 @@ class PerformanceGovernanceSystemPageState
 
     List<PgsSignatory> existingSignatories = const [],
   }) {
-    // double percentDeliverables = 0.0;
-
-    try {
-      // percentDeliverables = double.tryParse(percentageDeliverables.text) ?? 0.0;
-    } catch (e) {
+    try {} catch (e) {
       debugPrint("Error parsing percentDeliverables");
     }
 
@@ -3314,7 +3358,6 @@ class PerformanceGovernanceSystemPageState
     bool hasEditPermission = permissionService.hasPermission(
       AppPermissions.editPerformanceGovernanceSystem,
     );
-    debugPrint('Has edit permission: $hasEditPermission');
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Column(
@@ -3575,21 +3618,12 @@ class PerformanceGovernanceSystemPageState
   }
 
   Widget _buildProcessStatus(int index, String? id, Function setDialogState) {
-    final selectedValue = selectedKRA[index];
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
-        child: CustomTooltip(
-          key: ValueKey('kra_tooltip_status_$selectedValue'),
-          maxLines: 5,
-          message:
-              selectedKRAObjects[index]?['remarks'] ??
-              'No description available',
-          child: Text(
-            selectedKRAObjects[index]?['name'] ?? '',
-            style: const TextStyle(fontSize: 14, color: Colors.black),
-          ),
+        child: Text(
+          selectedKRAObjects[index]?['name'] ?? '',
+          style: const TextStyle(fontSize: 14, color: Colors.black),
         ),
       ),
     );
@@ -4116,17 +4150,8 @@ class PerformanceGovernanceSystemPageState
       decoration: BoxDecoration(color: rowColor),
       children: [
         _buildNumbering(index),
-        // _buildProcess(index, id, setDialogState),
         _buildProcessStatus(index, id, setDialogState),
-
-        // _buildDropdownKraCellPGSDeliverableStatus(
-        //   index,
-        //   id,
-        //   setDialogState,
-        //   orderLevel,
-        // ),
         _buildKraDescriptionStatus(index, id, setDialogState),
-
         _buildCheckboxCell(
           index,
           id,
