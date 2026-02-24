@@ -18,6 +18,7 @@ namespace IMIS.Presentation.KraRoadMapModule
         public KraRoadMapEndPoint() : base("/kraRoadMap")
         {
         }
+
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
 
@@ -137,7 +138,7 @@ namespace IMIS.Presentation.KraRoadMapModule
             .RequireAuthorization(e =>  e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View))
             .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMap), true);
          
-            app.MapGet("/filter/kra-year", async ([FromQuery] int? kraid, [FromQuery] int? fromYear, [FromQuery] int? toYear, IKraRoadMapService service,
+            app.MapGet("/deliverable/filter/kra-year", async ([FromQuery] int? kraid, [FromQuery] int? fromYear, [FromQuery] int? toYear, IKraRoadMapService service,
             CancellationToken cancellationToken) =>
             {
                 var result = await service.GetGroupedDeliverablesAsync(kraid, fromYear, toYear, cancellationToken);
@@ -147,7 +148,7 @@ namespace IMIS.Presentation.KraRoadMapModule
             .WithTags(_kraRoadMap)
             .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
            
-            app.MapGet("/filter/kra", async ([FromQuery] int? kraid, [FromQuery] int? fromYear, [FromQuery] int? toYear, IKraRoadMapService service,
+            app.MapGet("/Kpi/filter/kra", async ([FromQuery] int? kraid, [FromQuery] int? fromYear, [FromQuery] int? toYear, IKraRoadMapService service,
             CancellationToken cancellationToken) =>
             {
                 var result = await service.GetKpiDeliverableAsync(kraid, fromYear, toYear, cancellationToken);
