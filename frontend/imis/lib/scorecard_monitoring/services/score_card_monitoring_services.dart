@@ -70,7 +70,7 @@ class ScoreCardMonitoringServices {
     int? fromYear,
     int? toYear,
   }) async {
-    final endpoint = '${ApiEndpoint().scorecardMonitoringFilter}/kra-year';
+    final endpoint = '${ApiEndpoint().kraRoadMap}/deliverable/filter/kra-year';
     final Map<String, dynamic> queryParams = {};
     if (kraId != null) {
       queryParams['kraid'] = kraId;
@@ -123,7 +123,7 @@ class ScoreCardMonitoringServices {
     int? fromYear,
     int? toYear,
   }) async {
-    final endpoint = '${ApiEndpoint().scorecardMonitoringFilter}/kra';
+    final endpoint = '${ApiEndpoint().kraRoadMap}/Kpi/filter/kra';
     final Map<String, dynamic> queryParams = {};
     if (kraId != null) {
       queryParams['kraid'] = kraId;
@@ -156,6 +156,8 @@ class ScoreCardMonitoringServices {
               (item) => {
                 'id': item['id'],
                 'kpiDescription': item['kpiDescription'] ?? '',
+                'target': item['target'] ?? '',
+                'baseLine': item['baseLine'] ?? '',
                 'startDate': startDate,
                 'endDate': endDate,
               },
