@@ -359,7 +359,7 @@ class PerformanceGovernanceSystemPageState
     } on DioException {
       debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     }
 
     return deliverablesList;
@@ -704,26 +704,20 @@ class PerformanceGovernanceSystemPageState
   //   }
   // }
 
-  Future<void> fetchSubmitUserId({
+  Future<Map<String, dynamic>?> fetchSubmitUserId({
     required String pgsId,
     required String userId,
   }) async {
-    if (_isLoading) return;
+    if (_isLoading) return null;
 
     setState(() => _isLoading = true);
 
     try {
       UserRegistration? user = await AuthUtil.fetchLoggedUser();
-      if (user == null) {
-        return;
-      }
-
-      setState(() => userId = user.id ?? "UserId");
+      if (user == null) return null;
 
       String? token = await AuthUtil.getAccessToken();
-      if (token == null || token.isEmpty) {
-        return;
-      }
+      if (token == null || token.isEmpty) return null;
 
       final response = await AuthenticatedRequest.get(
         dio,
@@ -731,26 +725,22 @@ class PerformanceGovernanceSystemPageState
       );
       if (response.statusCode == 200 && mounted) {
         final data = response.data;
-        setState(() {
-          deliverableLists = [
-            _mapPgsToListItem(
-              PerformanceGovernanceSystem.fromJson(data),
-              userId,
-            ),
-          ];
-          filteredList = List.from(deliverableLists);
-        });
+
+        return _mapPgsToListItem(
+          PerformanceGovernanceSystem.fromJson(data),
+          userId,
+        );
       }
     } on DioException catch (e) {
-      debugPrint("Dio error: ${e.message}");
-      if (e.response != null) {}
+      debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error: $e");
+      debugPrint("Unexpected error");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
+    return null;
   }
 
   Future<void> fetchPgsFilter({int page = 1, int pageSize = 15}) async {
@@ -2146,7 +2136,6 @@ class PerformanceGovernanceSystemPageState
                         setDialogState(() {
                           Navigator.pop(context);
                           clearAllSelections();
-                          fetchPgsList();
                         });
                       },
                     ),
