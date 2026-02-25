@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
+import 'package:imis/toolkit/tool_kit_page.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -39,8 +40,7 @@ import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/circle_text_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../scorecard_monitoring/pages/score_card_monitoring_page.dart';
+import '../scorecard/pages/score_card_monitoring_page.dart';
 
 class NavigationPanel extends StatefulWidget {
   final int? initialScreenIndex;
@@ -738,6 +738,12 @@ class NavigationPanelState extends State<NavigationPanel> {
                     0,
                     () => _setScreen(HomePage(), 0),
                   ),
+                  // _buildListTile(
+                  //   Icons.business_center_outlined,
+                  //   'Toolkit',
+                  //   27,
+                  //   () => _setScreen(ToolKitPage(), 27),
+                  // ),
                   PermissionWidget(
                     child:
                         (selectedRole == PermissionString.roleAdmin ||
@@ -879,6 +885,70 @@ class NavigationPanelState extends State<NavigationPanel> {
                   //           )
                   //           : SizedBox.shrink(),
                   // ),
+                  PermissionWidget(
+                    child:
+                        [
+                              PermissionString.roleAdmin,
+                              PermissionString.trainingOfficer,
+                              PermissionString.hrOfficer,
+                              PermissionString.serviceOfficer,
+                              PermissionString.financeOfficer,
+                              PermissionString.safetyOfficer,
+                              PermissionString.facilityOfficer,
+                              PermissionString.linkagesOfficer,
+                              PermissionString.informationOfficer,
+                              PermissionString.researchOfficer,
+                              PermissionString.coreTeam,
+                            ].contains(selectedRole)
+                            ? Theme(
+                              data: Theme.of(
+                                context,
+                              ).copyWith(dividerColor: lightGrey),
+                              child: ExpansionTile(
+                                leading: const Icon(
+                                  Icons.fact_check_outlined,
+                                  color: primaryTextColor,
+                                ),
+                                title: const Text(
+                                  'Scorecard',
+                                  style: TextStyle(color: primaryTextColor),
+                                ),
+
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 40),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildListTile(
+                                          Icons.date_range,
+                                          hideIcon: true,
+                                          'Monitoring',
+                                          26,
+                                          () => _setScreen(
+                                            ScoreCardMonitoringPage(),
+                                            26,
+                                          ),
+                                        ),
+                                        _buildListTile(
+                                          Icons.date_range,
+                                          hideIcon: true,
+                                          'Report',
+                                          27,
+                                          () => _setScreen(
+                                            AuditSchedulesPage(),
+                                            27,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                            : SizedBox.shrink(),
+                  ),
                   PermissionWidget(
                     child:
                         [

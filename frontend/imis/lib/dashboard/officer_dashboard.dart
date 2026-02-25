@@ -104,13 +104,20 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
 
   @override
   Widget build(BuildContext context) {
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
+    final double width = MediaQuery.of(context).size.width;
+    final bool isMobile = width < 600;
+    final bool isTablet = width >= 600 && width < 1024;
 
     return Scaffold(
       backgroundColor: mainBgColor,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: isMobile ? _buildMobileLayout() : _buildDesktopLayout(),
+        child:
+            isMobile
+                ? _buildMobileLayout()
+                : isTablet
+                ? _buildTabletLayout()
+                : _buildDesktopLayout(),
       ),
     );
   }
@@ -132,6 +139,7 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
                     gap32px,
                     _buildStatsRow(),
                     gap32px,
+                    _buildStrategicMap(),
                   ],
                 ),
               ),
@@ -161,6 +169,41 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
     );
   }
 
+  Widget _buildTabletLayout() {
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          gap16px,
+          _buildWelcome(),
+          gap32px,
+          _buildStatsRow(),
+          gap32px,
+          _buildStrategicMap(),
+          gap24px,
+          DynamicSideColumn1(
+            focusedDay: _focusedDay,
+            selectedDay: _selectedDay,
+            calendarFormat: _calendarFormat,
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+            },
+            onFormatChanged: (format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            },
+            currentImageIndex: _currentImageIndex,
+            rotatingImages: rotatingImages,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildMobileLayout() {
     return SingleChildScrollView(
       child: Column(
@@ -173,7 +216,7 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
               gap32px,
               _buildStatsRow(),
               gap12px,
-
+              _buildStrategicMap(),
               gap16px,
               DynamicSideColumn1(
                 focusedDay: _focusedDay,
@@ -417,6 +460,29 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
   }
 }
 
+Widget _buildStrategicMap() {
+  return LayoutBuilder(
+    builder: (context, constraints) {
+      final double maxWidth = constraints.maxWidth;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxWidth),
+              child: Image.asset(
+                'assets/strat_roadmap.jpg',
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+        ],
+      );
+    },
+  );
+}
+
 Widget buildDashboardBox({
   required String title,
   required String count,
@@ -443,14 +509,19 @@ Widget buildDashboardBox({
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color.fromARGB(129, 0, 0, 0),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: Color.fromARGB(129, 0, 0, 0),
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Icon(icon, color: color, size: 20),
             ],
           ),
