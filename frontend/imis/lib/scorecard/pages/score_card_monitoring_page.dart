@@ -11,7 +11,7 @@ import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/permission_widget.dart';
 import 'package:imis/widgets/scorecard_monitoring_accomplishment_widget.dart';
-import 'package:imis/scorecard_monitoring/services/score_card_monitoring_services.dart';
+import 'package:imis/scorecard/services/score_card_monitoring_services.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../../common_services/common_service.dart';
@@ -644,7 +644,8 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                           children: [
                             _tableCell('${index + 1}'),
                             _tableCell(item['kpiDescription'] ?? ''),
-                            _buildActionButton('', () {
+                            _buildActionButton('', () async {
+                              await loadKPIAccomplishments(item['id']);
                               showKPIAccomplishmentFormDialog(
                                 context,
                                 item,

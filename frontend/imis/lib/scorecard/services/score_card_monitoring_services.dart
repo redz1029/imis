@@ -49,12 +49,26 @@ class ScoreCardMonitoringServices {
     }
   }
 
-  Future<List<ScoreCardMonitoringAccomplishment>> fetchAccomplishments(
+  Future<List<ScoreCardMonitoringAccomplishment>> fetchKRAccomplishments(
     int kraRoadmapId,
   ) async {
     final url = "${ApiEndpoint().kraroadmapAccomplishment}/$kraRoadmapId";
     final response = await AuthenticatedRequest.get(dio, url);
+    if (response.statusCode == 200) {
+      final data = response.data as List;
+      return data
+          .map((json) => ScoreCardMonitoringAccomplishment.fromJson(json))
+          .toList();
+    } else {
+      throw Exception('Failed to fetch scorecard accomplishments');
+    }
+  }
 
+  Future<List<ScoreCardMonitoringAccomplishment>> fetchKPIAccomplishments(
+    int kraRoadmapId,
+  ) async {
+    final url = "${ApiEndpoint().kraroadmapkpiAccomplishment}/$kraRoadmapId";
+    final response = await AuthenticatedRequest.get(dio, url);
     if (response.statusCode == 200) {
       final data = response.data as List;
       return data
