@@ -15,7 +15,7 @@ import 'package:motion_toast/motion_toast.dart';
 import 'package:open_file/open_file.dart';
 import 'package:universal_html/html.dart' as html;
 import '../performance_governance_system/enum/pgs_status.dart';
-import '../scorecard_monitoring/services/score_card_monitoring_services.dart';
+import '../scorecard/services/score_card_monitoring_services.dart';
 
 final Dio dio = Dio();
 final _scorecardAccomplishmentService = ScoreCardMonitoringServices(dio);
@@ -661,7 +661,7 @@ class _ScorecardAccomplishmentRowWidgetState
 
 Future<void> loadScorecardAccomplishments(int deliverableId) async {
   final accomplishments = await _scorecardAccomplishmentService
-      .fetchAccomplishments(deliverableId);
+      .fetchKRAccomplishments(deliverableId);
   achievementsList[deliverableId] = AchievementPeriodData(
     rows:
         accomplishments.map((acc) {
@@ -699,6 +699,48 @@ Future<void> loadScorecardAccomplishments(int deliverableId) async {
     sum += int.tryParse(row.percentageController.text) ?? 0;
   }
   totalScores[deliverableId]!.value = sum;
+}
+
+Future<void> loadKPIAccomplishments(int kpi) async {
+  final accomplishments = await _scorecardAccomplishmentService
+      .fetchKPIAccomplishments(kpi);
+  achievementsList[kpi] = AchievementPeriodData(
+    rows:
+        accomplishments.map((acc) {
+          final percent = acc.percentAccomplished ?? 0;
+          final percentageController = TextEditingController(
+            text: percent.toString(),
+          );
+          percentageController.addListener(() {
+            final data = achievementsList[kpi];
+            if (data == null) return;
+
+            int sum = 0;
+            for (final row in data.rows) {
+              sum += int.tryParse(row.percentageController.text) ?? 0;
+            }
+            totalScores.putIfAbsent(kpi, () => ValueNotifier<int>(0));
+            totalScores[kpi]!.value = sum;
+          });
+
+          return ScorecardMonitoringRowData(
+            auditorRemarksController: TextEditingController(text: acc.remarks),
+            percentageController: percentageController,
+            status: ValueNotifier<PgsStatus>(_deriveStatusFromPercent(percent)),
+            attachmentPath: acc.attachmentPath,
+            attachmentBytes: null,
+            accomplishmentId: acc.id,
+          );
+        }).toList(),
+  );
+
+  _ensureTotalNotifier(kpi);
+
+  int sum = 0;
+  for (final row in achievementsList[kpi]!.rows) {
+    sum += int.tryParse(row.percentageController.text) ?? 0;
+  }
+  totalScores[kpi]!.value = sum;
 }
 
 void _ensureTotalNotifier(int deliverableId) {
