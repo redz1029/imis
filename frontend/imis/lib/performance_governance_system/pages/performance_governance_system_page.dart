@@ -731,10 +731,10 @@ class PerformanceGovernanceSystemPageState
           userId,
         );
       }
-    } on DioException catch (e) {
+    } on DioException {
       debugPrint("Dio error");
     } catch (e) {
-      debugPrint("Unexpected error");
+      debugPrint("Unexpected error: $e");
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
