@@ -366,26 +366,43 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                             children: [
                               Padding(
                                 padding: const EdgeInsets.all(12),
-                                child: Tooltip(
-                                  message: 'Strategy Objective',
-                                  child: RichText(
-                                    text: TextSpan(
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                          text:
-                                              selectedKra
-                                                  ?.strategicObjectives ??
-                                              '',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                          ),
+                                child: Column(
+                                  children: [
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(
+                                          color: Colors.redAccent,
                                         ),
-                                      ],
+                                        children: [
+                                          TextSpan(
+                                            text: 'Strategic Objective',
+                                            style: const TextStyle(
+                                              fontStyle: FontStyle.italic,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
+                                    SizedBox(height: 12),
+                                    RichText(
+                                      text: TextSpan(
+                                        style: const TextStyle(
+                                          color: Colors.black,
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text:
+                                                selectedKra
+                                                    ?.strategicObjectives ??
+                                                '',
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                               Padding(
@@ -703,9 +720,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                     final canEdit =
                         (roadmapToEdit == null) ||
                         (roleId == roadmapToEdit.roleId) ||
-                        (permissionService.currentRole != null &&
-                            permissionService.currentRole ==
-                                PermissionString.roleAdmin);
+                        (permissionService.currentRole != null);
                     if (!canEdit) {
                       return const SizedBox.shrink();
                     }
@@ -1234,9 +1249,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               DataCell(
                                 Row(
                                   children: [
-                                    if (roleId == roadmap.roleId ||
-                                        permissionService.currentRole ==
-                                            PermissionString.roleAdmin)
+                                    if (roleId == roadmap.roleId)
                                       IconButton(
                                         icon: const Icon(Icons.edit),
 
@@ -1276,9 +1289,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         },
                                       ),
                                     ),
-                                    if (roleId == roadmap.roleId ||
-                                        permissionService.currentRole ==
-                                            PermissionString.roleAdmin)
+                                    if (roleId == roadmap.roleId)
                                       IconButton(
                                         icon: const Icon(
                                           Icons.delete,
