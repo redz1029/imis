@@ -257,36 +257,14 @@ class _DeliverableStatusMonitoringPageState
             deliverableId,
           );
 
-      if (accomplishments.isEmpty || accomplishments.length < expectedPeriods) {
-        return false;
-      }
-
-      int completedPeriods = 0;
-
-      for (var i = 0; i < accomplishments.length; i++) {
-        var accomplishment = accomplishments[i];
-
-        final status = accomplishment.remarks;
-
-        final attachmentPath = accomplishment.attachmentPath;
-
+      for (var accomplishment in accomplishments) {
+        final status = accomplishment.auditorRemarks;
         bool hasValidStatus = status != null && status.toString().isNotEmpty;
-
-        bool hasValidAttachment =
-            attachmentPath != null && attachmentPath.isNotEmpty;
-
-        bool isComplete = hasValidStatus && hasValidAttachment;
-
-        if (isComplete) {
-          completedPeriods++;
-        } else {
-          if (!hasValidStatus) {}
+        if (hasValidStatus) {
+          return true;
         }
       }
-
-      bool allComplete = completedPeriods >= expectedPeriods;
-
-      return allComplete;
+      return false;
     } catch (e) {
       return false;
     }
@@ -1843,66 +1821,74 @@ class _DeliverableStatusMonitoringPageState
               ],
             ),
           ),
-          // Scrollable data rows
+          // Scrollable data rows or empty message
           SizedBox(
             height: 7 * 100.0,
-            child: Scrollbar(
-              controller: _kpiScrollController,
-              thumbVisibility: true,
-              child: ListView.builder(
-                controller: _kpiScrollController,
-                itemCount: deliverableList.length,
-                itemBuilder: (context, index) {
-                  final deliverable = deliverableList[index];
-
-                  return Column(
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(color: mainBgColor),
-                        child: Table(
-                          columnWidths: const {
-                            0: FixedColumnWidth(60),
-                            1: FlexColumnWidth(5),
-                            2: FlexColumnWidth(2),
-                          },
-                          defaultVerticalAlignment:
-                              TableCellVerticalAlignment.middle,
-                          children: [
-                            TableRow(
-                              children: [
-                                _number(
-                                  "${(currentPage - 1) * pageSize + index + 1}",
-                                ),
-                                _buildActivity(
-                                  "${deliverable['Start Date']} - ${deliverable['End Date']}",
-                                  deliverable['officeName'] ?? '',
-                                  deliverable['kra'] ?? '',
-                                  deliverable['deliverableName'] ?? '',
-                                  deliverable['kraDescription'] ?? '',
-                                  deliverable['isDirect']
-                                      ? "Direct"
-                                      : "Indirect",
-                                  deliverable['byWhen'] ?? '',
-                                ),
-                                _buildCreateAccomplishmentAndBreakthroughCell(
-                                  index,
-                                  () {},
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+            child:
+                deliverableList.isEmpty
+                    ? Center(
+                      child: Text(
+                        'No data available',
+                        style: TextStyle(fontSize: 16, color: Colors.grey),
                       ),
-                      Divider(
-                        height: 1,
-                        thickness: 0.8,
-                        color: Colors.grey.shade300,
+                    )
+                    : Scrollbar(
+                      controller: _kpiScrollController,
+                      thumbVisibility: true,
+                      child: ListView.builder(
+                        controller: _kpiScrollController,
+                        itemCount: deliverableList.length,
+                        itemBuilder: (context, index) {
+                          final deliverable = deliverableList[index];
+                          // ...existing code...
+                          return Column(
+                            children: [
+                              Container(
+                                decoration: BoxDecoration(color: mainBgColor),
+                                child: Table(
+                                  columnWidths: const {
+                                    0: FixedColumnWidth(60),
+                                    1: FlexColumnWidth(5),
+                                    2: FlexColumnWidth(2),
+                                  },
+                                  defaultVerticalAlignment:
+                                      TableCellVerticalAlignment.middle,
+                                  children: [
+                                    TableRow(
+                                      children: [
+                                        _number(
+                                          "${(currentPage - 1) * pageSize + index + 1}",
+                                        ),
+                                        _buildActivity(
+                                          "${deliverable['Start Date']} - ${deliverable['End Date']}",
+                                          deliverable['officeName'] ?? '',
+                                          deliverable['kra'] ?? '',
+                                          deliverable['kraDescription'] ?? '',
+                                          deliverable['deliverableName'] ?? '',
+                                          deliverable['isDirect']
+                                              ? "Direct"
+                                              : "Indirect",
+                                          deliverable['byWhen'] ?? '',
+                                        ),
+                                        _buildCreateAccomplishmentAndBreakthroughCell(
+                                          index,
+                                          () {},
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Divider(
+                                height: 1,
+                                thickness: 0.8,
+                                color: Colors.grey.shade300,
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                    ],
-                  );
-                },
-              ),
-            ),
+                    ),
           ),
         ],
       ),
@@ -2164,7 +2150,7 @@ class _DeliverableStatusMonitoringPageState
                 message:
                     hasCompleteData
                         ? 'Click to open Breakthrough Scoring'
-                        : "The accomplishment data hasn't been completed yet.",
+                        : "The accomplishment data hasn't data yet.",
                 child: SizedBox(
                   height: 30,
                   child: ElevatedButton.icon(
