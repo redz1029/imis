@@ -1180,7 +1180,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                     dataRowColor: WidgetStatePropertyAll(mainBgColor),
                     headingTextStyle: const TextStyle(color: grey),
                     horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
+                    minWidth: 700,
                     fixedTopRows: 1,
                     border: TableBorder(
                       horizontalInside: BorderSide(color: Colors.grey.shade100),
@@ -1191,8 +1191,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                         label: Text('Process (Core & Support)'),
                         size: ColumnSize.L,
                       ),
-                      DataColumn(label: Text('Period')),
-                      DataColumn(label: Text('Actions')),
+                      DataColumn2(label: Text('Period'), size: ColumnSize.L),
+                      DataColumn2(label: Text('Actions'), size: ColumnSize.M),
                     ],
                     rows:
                         filteredList.asMap().entries.map((entry) {
@@ -1243,65 +1243,73 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                           final kraPeriod = '$startYear - $endYear ';
                           return DataRow(
                             cells: [
-                              DataCell(Text(itemNumber.toString())),
+                              DataCell(
+                                SizedBox(
+                                  width: 40,
+                                  child: Text(itemNumber.toString()),
+                                ),
+                              ),
                               DataCell(Text(kraName)),
                               DataCell(Text(kraPeriod)),
                               DataCell(
-                                Row(
-                                  children: [
-                                    if (roleId == roadmap.roleId)
-                                      IconButton(
-                                        icon: const Icon(Icons.edit),
+                                SizedBox(
+                                  child: Row(
+                                    children: [
+                                      if (roleId == roadmap.roleId)
+                                        IconButton(
+                                          icon: const Icon(Icons.edit),
 
-                                        onPressed: () async {
-                                          final Roadmap roadmapDetails =
-                                              await _roadmapService
-                                                  .getRoadmapId(roadmap.id!);
+                                          onPressed: () async {
+                                            final Roadmap roadmapDetails =
+                                                await _roadmapService
+                                                    .getRoadmapId(roadmap.id!);
 
-                                          showRoadmapFormDialog(
-                                            matchedKraPeriod,
-                                            selectedKra: matchedKraRoadmap,
-                                            roadmapToEdit: roadmapDetails,
-                                          );
-                                        },
-                                      ),
-                                    Tooltip(
-                                      message: 'Print Preview',
-
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.description_outlined,
+                                            showRoadmapFormDialog(
+                                              matchedKraPeriod,
+                                              selectedKra: matchedKraRoadmap,
+                                              roadmapToEdit: roadmapDetails,
+                                            );
+                                          },
                                         ),
+                                      Tooltip(
+                                        message: 'Print Preview',
 
-                                        onPressed: () async {
-                                          final roadMapId =
-                                              roadmap.id.toString();
+                                        child: IconButton(
+                                          icon: const Icon(
+                                            Icons.description_outlined,
+                                          ),
 
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder:
-                                                  (context) => PrintRoadmapPage(
-                                                    roadmapId: roadMapId,
-                                                  ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    if (roleId == roadmap.roleId)
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: primaryColor,
+                                          onPressed: () async {
+                                            final roadMapId =
+                                                roadmap.id.toString();
+
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder:
+                                                    (context) =>
+                                                        PrintRoadmapPage(
+                                                          roadmapId: roadMapId,
+                                                        ),
+                                              ),
+                                            );
+                                          },
                                         ),
-                                        onPressed: () {
-                                          showDeleteDialog(
-                                            roadmap.id.toString(),
-                                          );
-                                        },
                                       ),
-                                  ],
+                                      if (roleId == roadmap.roleId)
+                                        IconButton(
+                                          icon: const Icon(
+                                            Icons.delete,
+                                            color: primaryColor,
+                                          ),
+                                          onPressed: () {
+                                            showDeleteDialog(
+                                              roadmap.id.toString(),
+                                            );
+                                          },
+                                        ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             ],
