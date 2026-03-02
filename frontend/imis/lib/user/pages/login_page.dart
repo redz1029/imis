@@ -210,7 +210,7 @@ class LoginPageState extends State<LoginPage> {
                 labelText: 'Username',
                 labelStyle: const TextStyle(color: grey, fontSize: 14),
                 prefixIcon: Icon(
-                  Icons.email_outlined,
+                  Icons.person_outlined,
                   color: focusIconUsername.hasFocus ? primaryColor : grey,
                 ),
                 border: const OutlineInputBorder(),
