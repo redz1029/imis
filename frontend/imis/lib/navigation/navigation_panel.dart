@@ -3,7 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
-import 'package:imis/toolkit/tool_kit_page.dart';
+import 'package:imis/scorecard/pages/score_card_report_page.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -578,7 +578,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                         backgroundImage:
                             image != null
                                 ? FileImage(image!) as ImageProvider
-                                : AssetImage('assets/iconprofile.jpg'),
+                                : AssetImage('assets/iconprofile.png'),
                       ),
 
                       Positioned(
@@ -937,7 +937,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                                           'Report',
                                           27,
                                           () => _setScreen(
-                                            AuditSchedulesPage(),
+                                            ScoreCardReportPage(),
                                             27,
                                           ),
                                         ),
