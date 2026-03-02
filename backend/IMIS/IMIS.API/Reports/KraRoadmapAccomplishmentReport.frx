@@ -1,0 +1,592 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2026 11:10:55" ReportInfo.Modified="03/02/2026 11:36:04" ReportInfo.CreatorVersion="2025.2.0.0">
+  <ScriptText>using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Windows.Forms;
+using System.Drawing;
+using System.Data;
+using FastReport;
+using FastReport.Data;
+using FastReport.Dialog;
+using FastReport.Barcode;
+using FastReport.Table;
+using FastReport.Utils;
+
+namespace FastReport
+{
+  public class ReportScript
+  {
+  
+    private void txtHumanResource_BeforePrint(object sender, EventArgs e)
+    {
+      TextObject txt = sender as TextObject;
+      if (txt == null) return;
+
+      float startSize = 10f;     
+      float minimumSize = 7f;   
+      string fontName = &quot;Calibri&quot;;
+      FontStyle style = FontStyle.Bold;
+
+      float currentSize = startSize;
+
+      txt.Font = new Font(fontName, currentSize, style);
+
+      while (txt.CalcWidth() &gt; txt.Width &amp;&amp; currentSize &gt; minimumSize)
+      {
+        currentSize -= 0.5f;
+        txt.Font = new Font(fontName, currentSize, style);
+      }
+    }
+
+    private void txtInfrastructure_BeforePrint(object sender, EventArgs e)
+    {
+      TextObject txt = sender as TextObject;
+      if (txt == null) return;
+
+      float startSize = 10f;     
+      float minimumSize = 6f;   
+      string fontName = &quot;Calibri&quot;;
+      FontStyle style = FontStyle.Bold;
+
+      float currentSize = startSize;
+
+      txt.Font = new Font(fontName, currentSize, style);
+
+      while (txt.CalcWidth() &gt; txt.Width &amp;&amp; currentSize &gt; minimumSize)
+      {
+        currentSize -= 0.5f;
+        txt.Font = new Font(fontName, currentSize, style);
+      }
+    }
+
+    private void txtInformationCapital_BeforePrint(object sender, EventArgs e)
+    {
+      TextObject txt = sender as TextObject;
+      if (txt == null) return;
+
+      float startSize = 10f;     
+      float minimumSize = 7f;   
+      string fontName = &quot;Calibri&quot;;
+      FontStyle style = FontStyle.Bold;
+
+      float currentSize = startSize;
+
+      txt.Font = new Font(fontName, currentSize, style);
+
+      while (txt.CalcWidth() &gt; txt.Width &amp;&amp; currentSize &gt; minimumSize)
+      {
+        currentSize -= 0.5f;
+        txt.Font = new Font(fontName, currentSize, style);
+      }
+    }
+
+    private void txtFinancialSteward_BeforePrint(object sender, EventArgs e)
+    {
+      TextObject txt = sender as TextObject;
+      if (txt == null) return;
+
+      float startSize = 10f;     
+      float minimumSize = 6f;   
+      string fontName = &quot;Calibri&quot;;
+      FontStyle style = FontStyle.Bold;
+
+      float currentSize = startSize;
+
+      txt.Font = new Font(fontName, currentSize, style);
+
+      while (txt.CalcWidth() &gt; txt.Width &amp;&amp; currentSize &gt; minimumSize)
+      {
+        currentSize -= 0.5f;
+        txt.Font = new Font(fontName, currentSize, style);
+      }
+    }
+  }
+}
+</ScriptText>
+  <Dictionary>
+    <BusinessObjectDataSource Name="ReportKraDto" ReferenceName="ReportKraDto" DataType="System.Int32" Enabled="true">
+      <Column Name="Id" DataType="System.Int32"/>
+      <Column Name="Service_KraName1" DataType="System.String"/>
+      <Column Name="Service_KraName2" DataType="System.String"/>
+      <Column Name="Service_StrategicObjective1" DataType="System.String"/>
+      <Column Name="Service_StrategicObjective2" DataType="System.String"/>
+      <Column Name="Service_KpiDescription1" DataType="System.String"/>
+      <Column Name="Service_KpiDescription2" DataType="System.String"/>
+      <Column Name="Service_Target1" DataType="System.String"/>
+      <Column Name="Service_Target2" DataType="System.String"/>
+      <Column Name="Service_BaseLine1" DataType="System.String"/>
+      <Column Name="Service_BaseLine2" DataType="System.String"/>
+      <Column Name="Service_PercentAccomplished1" DataType="System.Decimal"/>
+      <Column Name="Service_PercentAccomplished2" DataType="System.Decimal"/>
+      <Column Name="Service_PercentAccomplished3" DataType="System.Decimal"/>
+      <Column Name="Service_PercentAccomplished4" DataType="System.Decimal"/>
+      <Column Name="Service_PercentAccomplished5" DataType="System.Decimal"/>
+      <Column Name="Service_PercentAccomplished6" DataType="System.Decimal"/>
+      <Column Name="Service_PercentAccomplished7" DataType="System.Decimal"/>
+      <Column Name="Service_PercentAccomplished8" DataType="System.Decimal"/>
+      <Column Name="Service_PercentAccomplished9" DataType="System.Decimal"/>
+      <Column Name="Service_PercentAccomplished10" DataType="System.Decimal"/>
+      <Column Name="Service_Year1" DataType="System.Int32"/>
+      <Column Name="Service_Year2" DataType="System.Int32"/>
+      <Column Name="Service_Year3" DataType="System.Int32"/>
+      <Column Name="Service_Year4" DataType="System.Int32"/>
+      <Column Name="Service_Year5" DataType="System.Int32"/>
+      <Column Name="Training_KraName1" DataType="System.String"/>
+      <Column Name="Training_KraName2" DataType="System.String"/>
+      <Column Name="Training_StrategicObjective1" DataType="System.String"/>
+      <Column Name="Training_StrategicObjective2" DataType="System.String"/>
+      <Column Name="Training_KpiDescription1" DataType="System.String"/>
+      <Column Name="Training_KpiDescription2" DataType="System.String"/>
+      <Column Name="Training_Target1" DataType="System.String"/>
+      <Column Name="Training_Target2" DataType="System.String"/>
+      <Column Name="Training_BaseLine1" DataType="System.String"/>
+      <Column Name="Training_BaseLine2" DataType="System.String"/>
+      <Column Name="Training_PercentAccomplished1" DataType="System.Decimal"/>
+      <Column Name="Training_PercentAccomplished2" DataType="System.Decimal"/>
+      <Column Name="Training_PercentAccomplished3" DataType="System.Decimal"/>
+      <Column Name="Training_PercentAccomplished4" DataType="System.Decimal"/>
+      <Column Name="Training_PercentAccomplished5" DataType="System.Decimal"/>
+      <Column Name="Training_PercentAccomplished6" DataType="System.Decimal"/>
+      <Column Name="Training_PercentAccomplished7" DataType="System.Decimal"/>
+      <Column Name="Training_PercentAccomplished8" DataType="System.Decimal"/>
+      <Column Name="Training_PercentAccomplished9" DataType="System.Decimal"/>
+      <Column Name="Training_PercentAccomplished10" DataType="System.Decimal"/>
+      <Column Name="Training_Year1" DataType="System.Int32"/>
+      <Column Name="Training_Year2" DataType="System.Int32"/>
+      <Column Name="Training_Year3" DataType="System.Int32"/>
+      <Column Name="Training_Year4" DataType="System.Int32"/>
+      <Column Name="Training_Year5" DataType="System.Int32"/>
+      <Column Name="Research_KraName1" DataType="System.String"/>
+      <Column Name="Research_KraName2" DataType="System.String"/>
+      <Column Name="Research_StrategicObjective1" DataType="System.String"/>
+      <Column Name="Research_StrategicObjective2" DataType="System.String"/>
+      <Column Name="Research_KpiDescription1" DataType="System.String"/>
+      <Column Name="Research_KpiDescription2" DataType="System.String"/>
+      <Column Name="Research_Target1" DataType="System.String"/>
+      <Column Name="Research_Target2" DataType="System.String"/>
+      <Column Name="Research_BaseLine1" DataType="System.String"/>
+      <Column Name="Research_BaseLine2" DataType="System.String"/>
+      <Column Name="Research_PercentAccomplished1" DataType="System.Decimal"/>
+      <Column Name="Research_PercentAccomplished2" DataType="System.Decimal"/>
+      <Column Name="Research_PercentAccomplished3" DataType="System.Decimal"/>
+      <Column Name="Research_PercentAccomplished4" DataType="System.Decimal"/>
+      <Column Name="Research_PercentAccomplished5" DataType="System.Decimal"/>
+      <Column Name="Research_PercentAccomplished6" DataType="System.Decimal"/>
+      <Column Name="Research_PercentAccomplished7" DataType="System.Decimal"/>
+      <Column Name="Research_PercentAccomplished8" DataType="System.Decimal"/>
+      <Column Name="Research_PercentAccomplished9" DataType="System.Decimal"/>
+      <Column Name="Research_PercentAccomplished10" DataType="System.Decimal"/>
+      <Column Name="Research_Year1" DataType="System.Int32"/>
+      <Column Name="Research_Year2" DataType="System.Int32"/>
+      <Column Name="Research_Year3" DataType="System.Int32"/>
+      <Column Name="Research_Year4" DataType="System.Int32"/>
+      <Column Name="Research_Year5" DataType="System.Int32"/>
+      <Column Name="Linkages_KraName1" DataType="System.String"/>
+      <Column Name="Linkages_KraName2" DataType="System.String"/>
+      <Column Name="Linkages_StrategicObjective1" DataType="System.String"/>
+      <Column Name="Linkages_StrategicObjective2" DataType="System.String"/>
+      <Column Name="Linkages_KpiDescription1" DataType="System.String"/>
+      <Column Name="Linkages_KpiDescription2" DataType="System.String"/>
+      <Column Name="Linkages_Target1" DataType="System.String"/>
+      <Column Name="Linkages_Target2" DataType="System.String"/>
+      <Column Name="Linkages_BaseLine1" DataType="System.String"/>
+      <Column Name="Linkages_BaseLine2" DataType="System.String"/>
+      <Column Name="Linkages_PercentAccomplished1" DataType="System.Decimal"/>
+      <Column Name="Linkages_PercentAccomplished2" DataType="System.Decimal"/>
+      <Column Name="Linkages_PercentAccomplished3" DataType="System.Decimal"/>
+      <Column Name="Linkages_PercentAccomplished4" DataType="System.Decimal"/>
+      <Column Name="Linkages_PercentAccomplished5" DataType="System.Decimal"/>
+      <Column Name="Linkages_PercentAccomplished6" DataType="System.Decimal"/>
+      <Column Name="Linkages_PercentAccomplished7" DataType="System.Decimal"/>
+      <Column Name="Linkages_PercentAccomplished8" DataType="System.Decimal"/>
+      <Column Name="Linkages_PercentAccomplished9" DataType="System.Decimal"/>
+      <Column Name="Linkages_PercentAccomplished10" DataType="System.Decimal"/>
+      <Column Name="Linkages_Year1" DataType="System.Int32"/>
+      <Column Name="Linkages_Year2" DataType="System.Int32"/>
+      <Column Name="Linkages_Year3" DataType="System.Int32"/>
+      <Column Name="Linkages_Year4" DataType="System.Int32"/>
+      <Column Name="Linkages_Year5" DataType="System.Int32"/>
+      <Column Name="Safety_KraName1" DataType="System.String"/>
+      <Column Name="Safety_KraName2" DataType="System.String"/>
+      <Column Name="Safety_StrategicObjective1" DataType="System.String"/>
+      <Column Name="Safety_StrategicObjective2" DataType="System.String"/>
+      <Column Name="Safety_KpiDescription1" DataType="System.String"/>
+      <Column Name="Safety_KpiDescription2" DataType="System.String"/>
+      <Column Name="Safety_Target1" DataType="System.String"/>
+      <Column Name="Safety_Target2" DataType="System.String"/>
+      <Column Name="Safety_BaseLine1" DataType="System.String"/>
+      <Column Name="Safety_BaseLine2" DataType="System.String"/>
+      <Column Name="Safety_PercentAccomplished1" DataType="System.Decimal"/>
+      <Column Name="Safety_PercentAccomplished2" DataType="System.Decimal"/>
+      <Column Name="Safety_PercentAccomplished3" DataType="System.Decimal"/>
+      <Column Name="Safety_PercentAccomplished4" DataType="System.Decimal"/>
+      <Column Name="Safety_PercentAccomplished5" DataType="System.Decimal"/>
+      <Column Name="Safety_PercentAccomplished6" DataType="System.Decimal"/>
+      <Column Name="Safety_PercentAccomplished7" DataType="System.Decimal"/>
+      <Column Name="Safety_PercentAccomplished8" DataType="System.Decimal"/>
+      <Column Name="Safety_PercentAccomplished9" DataType="System.Decimal"/>
+      <Column Name="Safety_PercentAccomplished10" DataType="System.Decimal"/>
+      <Column Name="Safety_Year1" DataType="System.Int32"/>
+      <Column Name="Safety_Year2" DataType="System.Int32"/>
+      <Column Name="Safety_Year3" DataType="System.Int32"/>
+      <Column Name="Safety_Year4" DataType="System.Int32"/>
+      <Column Name="Safety_Year5" DataType="System.Int32"/>
+      <Column Name="HumanResourceKra_KraName1" DataType="System.String"/>
+      <Column Name="HumanResourceKra_KraName2" DataType="System.String"/>
+      <Column Name="HumanResourceKra_StrategicObjective1" DataType="System.String"/>
+      <Column Name="HumanResourceKra_StrategicObjective2" DataType="System.String"/>
+      <Column Name="HumanResourceKra_KpiDescription1" DataType="System.String"/>
+      <Column Name="HumanResourceKra_KpiDescription2" DataType="System.String"/>
+      <Column Name="HumanResourceKra_Target1" DataType="System.String"/>
+      <Column Name="HumanResourceKra_Target2" DataType="System.String"/>
+      <Column Name="HumanResourceKra_BaseLine1" DataType="System.String"/>
+      <Column Name="HumanResourceKra_BaseLine2" DataType="System.String"/>
+      <Column Name="HumanResourceKra_PercentAccomplished1" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_PercentAccomplished2" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_PercentAccomplished3" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_PercentAccomplished4" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_PercentAccomplished5" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_PercentAccomplished6" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_PercentAccomplished7" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_PercentAccomplished8" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_PercentAccomplished9" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_PercentAccomplished10" DataType="System.Decimal"/>
+      <Column Name="HumanResourceKra_Year1" DataType="System.Int32"/>
+      <Column Name="HumanResourceKra_Year2" DataType="System.Int32"/>
+      <Column Name="HumanResourceKra_Year3" DataType="System.Int32"/>
+      <Column Name="HumanResourceKra_Year4" DataType="System.Int32"/>
+      <Column Name="HumanResourceKra_Year5" DataType="System.Int32"/>
+      <Column Name="Infrastructure_KraName1" DataType="System.String"/>
+      <Column Name="Infrastructure_KraName2" DataType="System.String"/>
+      <Column Name="Infrastructure_StrategicObjective1" DataType="System.String"/>
+      <Column Name="Infrastructure_StrategicObjective2 " DataType="System.String"/>
+      <Column Name="Infrastructure_KpiDescription1" DataType="System.String"/>
+      <Column Name="Infrastructure_KpiDescription2" DataType="System.String"/>
+      <Column Name="Infrastructure_Target1" DataType="System.String"/>
+      <Column Name="Infrastructure_Target2" DataType="System.String"/>
+      <Column Name="Infrastructure_BaseLine1" DataType="System.String"/>
+      <Column Name="Infrastructure_BaseLine2" DataType="System.String"/>
+      <Column Name="Infrastructure_PercentAccomplished1" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_PercentAccomplished2" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_PercentAccomplished3" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_PercentAccomplished4" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_PercentAccomplished5" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_PercentAccomplished6" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_PercentAccomplished7" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_PercentAccomplished8" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_PercentAccomplished9" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_PercentAccomplished10" DataType="System.Decimal"/>
+      <Column Name="Infrastructure_Year1" DataType="System.Int32"/>
+      <Column Name="Infrastructure_Year2" DataType="System.Int32"/>
+      <Column Name="Infrastructure_Year3" DataType="System.Int32"/>
+      <Column Name="Infrastructure_Year4" DataType="System.Int32"/>
+      <Column Name="Infrastructure_Year5" DataType="System.Int32"/>
+      <Column Name="InformationCapital_KraName1" DataType="System.String"/>
+      <Column Name="InformationCapital_KraName2" DataType="System.String"/>
+      <Column Name="InformationCapital_StrategicObjective1" DataType="System.String"/>
+      <Column Name="InformationCapital_StrategicObjective2" DataType="System.String"/>
+      <Column Name="InformationCapital_KpiDescription1" DataType="System.String"/>
+      <Column Name="InformationCapital_KpiDescription2" DataType="System.String"/>
+      <Column Name="InformationCapital_Target1" DataType="System.String"/>
+      <Column Name="InformationCapital_Target2" DataType="System.String"/>
+      <Column Name="InformationCapital_BaseLine1" DataType="System.String"/>
+      <Column Name="InformationCapital_BaseLine2" DataType="System.String"/>
+      <Column Name="InformationCapital_PercentAccomplished1" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_PercentAccomplished2" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_PercentAccomplished3" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_PercentAccomplished4" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_PercentAccomplished5" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_PercentAccomplished6" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_PercentAccomplished7" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_PercentAccomplished8" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_PercentAccomplished9" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_PercentAccomplished10" DataType="System.Decimal"/>
+      <Column Name="InformationCapital_Year1" DataType="System.Int32"/>
+      <Column Name="InformationCapital_Year2" DataType="System.Int32"/>
+      <Column Name="InformationCapital_Year3" DataType="System.Int32"/>
+      <Column Name="InformationCapital_Year4" DataType="System.Int32"/>
+      <Column Name="InformationCapital_Year5" DataType="System.Int32"/>
+      <Column Name="FinacialStewardship_KraName1" DataType="System.String"/>
+      <Column Name="FinacialStewardship_KraName2" DataType="System.String"/>
+      <Column Name="FinacialStewardship_StrategicObjective1" DataType="System.String"/>
+      <Column Name="FinacialStewardship_StrategicObjective2" DataType="System.String"/>
+      <Column Name="FinacialStewardship_KpiDescription1" DataType="System.String"/>
+      <Column Name="FinacialStewardship_KpiDescription2" DataType="System.String"/>
+      <Column Name="FinacialStewardship_Target1" DataType="System.String"/>
+      <Column Name="FinacialStewardship_Target2" DataType="System.String"/>
+      <Column Name="FinacialStewardship_BaseLine1" DataType="System.String"/>
+      <Column Name="FinacialStewardship_BaseLine2" DataType="System.String"/>
+      <Column Name="FinacialStewardship_PercentAccomplished1" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_PercentAccomplished2" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_PercentAccomplished3" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_PercentAccomplished4" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_PercentAccomplished5" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_PercentAccomplished6" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_PercentAccomplished7" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_PercentAccomplished8" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_PercentAccomplished9" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_PercentAccomplished10" DataType="System.Decimal"/>
+      <Column Name="FinacialStewardship_Year1" DataType="System.Int32"/>
+      <Column Name="FinacialStewardship_Year2" DataType="System.Int32"/>
+      <Column Name="FinacialStewardship_Year3" DataType="System.Int32"/>
+      <Column Name="FinacialStewardship_Year4" DataType="System.Int32"/>
+      <Column Name="FinacialStewardship_Year5" DataType="System.Int32"/>
+    </BusinessObjectDataSource>
+  </Dictionary>
+  <ReportPage Name="Page1" RawPaperSize="9" Watermark.Font="Arial, 60pt">
+    <PageHeaderBand Name="PageHeader1" Width="718.2" Height="774.9" CanGrow="true">
+      <ShapeObject Name="Shape5" Left="185.45" Top="101.3" Width="519.85" Height="64.9" Border.Color="Transparent" Border.Width="0.25" Fill.Color="101, 191, 205, 219" CanGrow="true" GrowToBottom="true"/>
+      <ShapeObject Name="Shape4" Left="12.1" Top="100.75" Width="695.65" Height="654.9" CanGrow="true" GrowToBottom="true"/>
+      <ShapeObject Name="Shape2" Left="12.35" Top="56.5" Width="695.3" Height="45.8" Fill.Color="219, 165, 42, 42"/>
+      <ShapeObject Name="Shape3" Left="12.2" Top="16.25" Width="695.5" Height="42.71" Fill.Color="219, 165, 42, 42"/>
+      <TextObject Name="Text1" Left="18.45" Top="20.15" Width="683.35" Height="33.9" Border.Color="White" Text="CORE PROCESSES SCORECARD" HorzAlign="Center" VertAlign="Center" Font="Calibri, 13pt, style=Bold" TextFill.Color="White"/>
+      <LineObject Name="Line3" Left="34.5" Top="58.5" Height="696.8" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line4" Left="184.4" Top="57.95" Height="697.25" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line5" Left="201.8" Top="58.5" Height="696.35" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line7" Left="657.74" Top="57.56" Height="697.2" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line8" Left="343.3" Top="58.5" Height="696.6" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line9" Left="405.65" Top="57.95" Height="697.05" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line10" Left="465.25" Top="58.5" Height="696.6" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line11" Left="513.05" Top="58.5" Height="696.6" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line12" Left="560.55" Top="58.5" Height="696.6" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line13" Left="608.6" Top="57.95" Height="696.75" CanGrow="true" GrowToBottom="true"/>
+      <TextObject Name="Text2" Left="34.25" Top="60.95" Width="149.5" Height="37.9" Text="Objectives" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text3" Left="187.45" Top="59.5" Width="13.2" Height="39.9" Text="#" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text4" Left="203.35" Top="60.95" Width="138.5" Height="37.9" Text="Measure" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text5" Left="346" Top="61.4" Width="57.5" Height="36.9" Text="Target" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text6" Left="407.7" Top="60.95" Width="55.5" Height="37.9" Text="19 (BL)" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text7" Left="465.95" Top="60.95" Width="46.5" Height="37.9" Text="[ReportKraDto.Service_Year1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text8" Left="514.2" Top="60.95" Width="44.5" Height="37.9" Text="[ReportKraDto.Service_Year2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text9" Left="562" Top="60.95" Width="44.5" Height="37.9" Text="[ReportKraDto.Service_Year3]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text10" Left="610.7" Top="60.95" Width="44.5" Height="37.9" Text="[ReportKraDto.Service_Year4]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text11" Left="658.5" Top="60.95" Width="44.5" Height="37.9" Text="[ReportKraDto.Service_Year5]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <LineObject Name="Line14" Left="12.55" Top="232.45" Width="694.7" CanGrow="true" Diagonal="true"/>
+      <LineObject Name="Line15" Left="184.9" Top="166.1" Width="521.7" CanGrow="true" Diagonal="true"/>
+      <TextObject Name="Text12" Left="187.45" Top="103.3" Width="13.2" Height="59.45" CanGrow="true" Text="1&#13;&#10;a" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text13" Left="187.45" Top="169" Width="13.2" Height="58.9" CanGrow="true" Text="1&#13;&#10;b" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <LineObject Name="Line16" Left="12.9" Top="360.65" Width="693.7" CanGrow="true" Diagonal="true"/>
+      <LineObject Name="Line17" Left="185.45" Top="296.95" Width="520.7" CanGrow="true" Diagonal="true"/>
+      <TextObject Name="Text14" Left="187" Top="233.7" Width="13.2" Height="59.45" CanGrow="true" Text="2&#13;&#10;a" AutoWidth="true" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text15" Left="187.45" Top="298.4" Width="13.2" Height="60.45" CanGrow="true" Text="2&#13;&#10;b" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <LineObject Name="Line18" Left="12.9" Top="492.95" Width="692.7" CanGrow="true" Diagonal="true"/>
+      <LineObject Name="Line19" Left="185" Top="427.35" Width="521.7" CanGrow="true" Diagonal="true"/>
+      <TextObject Name="Text16" Left="187" Top="364.1" Width="13.2" Height="60.45" CanGrow="true" CanBreak="false" Text="3&#13;&#10;a" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text17" Left="187" Top="430.25" Width="13.2" Height="59.45" CanGrow="true" Text="3&#13;&#10;b" AutoWidth="true" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <LineObject Name="Line20" Left="12.9" Top="624.15" Width="693.7" CanGrow="true" Diagonal="true"/>
+      <LineObject Name="Line21" Left="185" Top="558.45" Width="521.7" CanGrow="true" Diagonal="true"/>
+      <TextObject Name="Text18" Left="187.45" Top="496.05" Width="13.2" Height="59.45" CanGrow="true" Text="4&#13;&#10;a" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text19" Left="187" Top="561.45" Width="13.2" Height="58.45" CanGrow="true" Text="4&#13;&#10;b" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <LineObject Name="Line23" Left="185" Top="688.75" Width="521.7" CanGrow="true" Diagonal="true"/>
+      <TextObject Name="Text20" Left="187.45" Top="627.05" Width="12.2" Height="60.45" CanGrow="true" Text="5&#13;&#10;a" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text21" Left="187.45" Top="692.2" Width="12.2" Height="60.45" CanGrow="true" Text="5&#13;&#10;b" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text22" Left="203.35" Top="103.3" Width="138.5" Height="59.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Service_KpiDescription1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text23" Left="204.35" Top="168" Width="137.5" Height="61.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Service_KpiDescription2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text24" Left="204.35" Top="233.6" Width="137.5" Height="61.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Training_KpiDescription1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text25" Left="204.35" Top="298.3" Width="136.5" Height="60.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Training_KpiDescription2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text26" Left="205.35" Top="363.45" Width="135.5" Height="61.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Research_KpiDescription1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text27" Left="203.8" Top="429.05" Width="137.5" Height="62.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Research_KpiDescription2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text28" Left="204.35" Top="494.75" Width="137.5" Height="62.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Linkages_KpiDescription1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text29" Left="204.35" Top="559.9" Width="137.5" Height="62.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Linkages_StrategicObjective2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text30" Left="203.35" Top="627.05" Width="138.5" Height="59.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Safety_KpiDescription1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text31" Left="204.35" Top="690.2" Width="136.5" Height="61.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Safety_KpiDescription2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text32" Left="36.25" Top="103.3" Width="146.5" Height="125.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" CanBreak="false" Text="[ReportKraDto.Service_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text33" Left="37.8" Top="233.15" Width="144.5" Height="125.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Training_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text34" Left="37.25" Top="364.45" Width="144.5" Height="125.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Research_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text35" Left="37.25" Top="495.75" Width="143.5" Height="125.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Linkages_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text36" Left="37.25" Top="627.05" Width="143.5" Height="125.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Safety_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="txtService" Left="13.9" Top="103.3" Width="19.45" Height="125.85" CanGrow="true" BeforePrintEvent="txtService_BeforePrint" Text="[ReportKraDto.Service_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text73" Left="344.65" Top="102.3" Width="59.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Service_Target1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text74" Left="406.9" Top="102.85" Width="56.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Service_BaseLine1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishment1" Left="467.5" Top="103.3" Width="42.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished1]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishment2" Left="515.3" Top="103.3" Width="43.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished2]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishment3" Left="562" Top="103.3" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished3]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishment4" Left="610.7" Top="103.3" Width="45.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished4]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishment5" Left="660.5" Top="103.3" Width="41.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished5]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text80" Left="345.65" Top="167.45" Width="57.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Service_Target2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text81" Left="407.35" Top="168" Width="56.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Service_BaseLine2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishment6" Left="467.15" Top="168" Width="43.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished6]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishmen7" Left="514.4" Top="168" Width="44.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished7]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishment8" Left="562.65" Top="168" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished8]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishment9" Left="610.35" Top="168" Width="45.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished9]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtServiceAccomplishment10" Left="659.6" Top="167.45" Width="42.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Service_PercentAccomplished10]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTraining" Left="13.9" Top="233.15" Width="19.45" Height="125.85" CanGrow="true" BeforePrintEvent="txtTraining_BeforePrint" Text="[ReportKraDto.Training_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text88" Left="345.65" Top="234.15" Width="58.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_Target1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text89" Left="407.8" Top="234.15" Width="55.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_BaseLine1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTrainingAccomplishment1" Left="467.6" Top="234.15" Width="42.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished1]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTrainingAccomplishment2" Left="513.75" Top="234.15" Width="45.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished2]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTrainingAccomplishment3" Left="562" Top="234.15" Width="44.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished3]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTrainingAccomplishment4" Left="609.9" Top="233.6" Width="46.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished4]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTrainingAccomplishment5" Left="659.5" Top="233.6" Width="43.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished5]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text95" Left="345.65" Top="298.3" Width="58.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_Target2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text96" Left="406.9" Top="298.3" Width="57.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_BaseLine2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTrainingAccomplishment6" Left="467.5" Top="298.3" Width="43.5" Height="59.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished6]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTrainingAccomplishment7" Left="513.75" Top="298.3" Width="45.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished7]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="s" Left="562" Top="298.3" Width="44.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished8]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTrainingAccomplishment9" Left="610.25" Top="298.3" Width="45.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished9]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtTrainingAccomplishment10" Left="659.5" Top="298.3" Width="43.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Training_PercentAccomplished10]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearch" Left="13.9" Top="362.45" Width="19.45" Height="127.85" CanGrow="true" Text="[ReportKraDto.Research_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text103" Left="344.65" Top="363.45" Width="59.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Research_Target1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text104" Left="407.8" Top="362.45" Width="55.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Research_BaseLine1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment1" Left="467.5" Top="362.45" Width="42.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished1]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment2" Left="513.75" Top="362.45" Width="45.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished2]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment3" Left="562.55" Top="362.45" Width="44.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished3]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment4" Left="610.25" Top="362.45" Width="45.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished4]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment5" Left="659.95" Top="362.45" Width="42.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished5]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text110" Left="345.65" Top="428.6" Width="58.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_Target2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text111" Left="407.8" Top="428.6" Width="54.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_BaseLine2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment6" Left="466.5" Top="428.6" Width="43.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished6]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment7" Left="513.75" Top="428.6" Width="45.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished7]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment8" Left="562.65" Top="428.6" Width="44.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished8]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment9" Left="609.9" Top="428.6" Width="46.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished9]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtResearchAccomplishment10" Left="659.5" Top="428.6" Width="43.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Research_PercentAccomplished10]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkages" Left="13.9" Top="494.75" Width="19.45" Height="127.85" CanGrow="true" Text="[ReportKraDto.Linkages_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text118" Left="344.65" Top="494.75" Width="59.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_Target1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text119" Left="345.65" Top="559.9" Width="58.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Linkages_Target2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text120" Left="407.8" Top="494.75" Width="55.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_BaseLine1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text121" Left="407.8" Top="559.9" Width="55.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Linkages_BaseLine2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment1" Left="466.5" Top="494.75" Width="43.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished1]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment6" Left="466.5" Top="559.9" Width="43.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished6]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment2" Left="513.75" Top="494.75" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished2]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment7" Left="514.75" Top="559.9" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished7]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment3" Left="562.45" Top="494.75" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished3]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment4" Left="609.7" Top="494.75" Width="46.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished4]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment5" Left="659.5" Top="494.75" Width="43.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished5]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment8" Left="562" Top="559.9" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished8]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment9" Left="610.8" Top="559.9" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished9]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtLinkagesAccomplishment10" Left="659.95" Top="559.9" Width="42.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Linkages_PercentAccomplished10]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafety" Left="13.9" Top="626.05" Width="19.45" Height="126.85" CanGrow="true" Text="[ReportKraDto.Safety_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text133" Left="345.1" Top="625.7" Width="58.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Safety_Target1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text134" Left="345.1" Top="690.85" Width="58.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Safety_Target2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text135" Left="407.8" Top="625.7" Width="55.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Safety_BaseLine1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text136" Left="407.8" Top="690.85" Width="55.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Safety_BaseLine2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment1" Left="466.5" Top="626.15" Width="43.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished1]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment6" Left="467.5" Top="690.3" Width="42.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished6]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment2" Left="513.2" Top="626.15" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished2]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment7" Left="513.75" Top="690.85" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished7]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment3" Left="562" Top="625.7" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished3]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment8" Left="562" Top="690.85" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished8]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment4" Left="610.25" Top="625.7" Width="45.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished4]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment9" Left="610.25" Top="690.85" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished9]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment5" Left="659.6" Top="625.7" Width="43.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished5]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtSafetyAccomplishment10" Left="658.95" Top="689.85" Width="43.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.Safety_PercentAccomplished10]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+    </PageHeaderBand>
+  </ReportPage>
+  <ReportPage Name="Page2" Watermark.Font="Arial, 60pt">
+    <PageHeaderBand Name="PageHeader2" Width="718.2" Height="631.55" CanGrow="true" Guides="0">
+      <ShapeObject Name="Shape6" Left="184.8" Top="98.5" Width="519.85" Height="64.9" Border.Color="Transparent" Border.Width="0.25" Fill.Color="101, 191, 205, 219" CanGrow="true" GrowToBottom="true"/>
+      <ShapeObject Name="Shape7" Left="11.45" Top="97.95" Width="693.65" Height="523.4" CanGrow="true" GrowToBottom="true"/>
+      <ShapeObject Name="Shape8" Left="11.7" Top="53.7" Width="693.3" Height="45.8" Fill.Color="219, 165, 42, 42"/>
+      <ShapeObject Name="Shape9" Left="11.55" Top="13.45" Width="693.5" Height="42.71" Fill.Color="219, 165, 42, 42"/>
+      <TextObject Name="Text147" Left="17.8" Top="17.35" Width="651.35" Height="33.9" Border.Color="White" Text="SUPPORT PROCESSES SCORECARD" HorzAlign="Center" VertAlign="Center" Font="Calibri, 13pt, style=Bold" TextFill.Color="White"/>
+      <LineObject Name="Line24" Left="33.85" Top="55.7" Height="564.8" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line25" Left="183.75" Top="55.15" Height="565.25" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line26" Left="201.15" Top="55.7" Height="565.35" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line27" Left="657.09" Top="54.76" Height="566.2" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line28" Left="342.65" Top="55.7" Height="564.6" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line29" Left="405" Top="55.15" Height="565.05" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line30" Left="465.6" Top="55.7" Height="564.6" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line31" Left="511.4" Top="55.7" Height="564.6" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line32" Left="559.9" Top="55.7" Height="564.6" CanGrow="true" GrowToBottom="true"/>
+      <LineObject Name="Line33" Left="607.95" Top="55.15" Height="565.75" CanGrow="true" GrowToBottom="true"/>
+      <TextObject Name="Text148" Left="33.6" Top="58.15" Width="149.5" Height="37.9" Text="Objectives" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text149" Left="186.8" Top="56.7" Width="13.2" Height="39.9" Text="#" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text150" Left="202.7" Top="58.15" Width="138.5" Height="37.9" Text="Measure" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text151" Left="345.35" Top="58.6" Width="57.5" Height="36.9" Text="Target" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text152" Left="407.05" Top="58.15" Width="55.5" Height="37.9" Text="19 (BL)" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text153" Left="466.3" Top="58.15" Width="43.5" Height="37.9" Text="[ReportKraDto.HumanResourceKra_Year1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text154" Left="513.55" Top="58.15" Width="44.5" Height="37.9" Text="[ReportKraDto.HumanResourceKra_Year2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text155" Left="561.35" Top="58.15" Width="44.5" Height="37.9" Text="[ReportKraDto.HumanResourceKra_Year3]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text156" Left="610.05" Top="58.15" Width="44.5" Height="37.9" Text="[ReportKraDto.HumanResourceKra_Year4]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <TextObject Name="Text157" Left="657.85" Top="58.15" Width="44.5" Height="37.9" Text="[ReportKraDto.HumanResourceKra_Year5]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt" TextFill.Color="White"/>
+      <LineObject Name="Line34" Left="11.9" Top="229.65" Width="692.7" CanGrow="true" Diagonal="true"/>
+      <LineObject Name="Line35" Left="184.25" Top="163.3" Width="519.7" CanGrow="true" Diagonal="true"/>
+      <TextObject Name="Text158" Left="186.8" Top="100.5" Width="13.2" Height="59.45" CanGrow="true" Text="6&#13;&#10;a" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text159" Left="186.8" Top="166.2" Width="13.2" Height="58.9" CanGrow="true" Text="6&#13;&#10;b" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <LineObject Name="Line36" Left="12.25" Top="357.85" Width="691.7" CanGrow="true" Diagonal="true"/>
+      <LineObject Name="Line37" Left="184.8" Top="294.15" Width="519.7" CanGrow="true" Diagonal="true"/>
+      <TextObject Name="Text160" Left="186.35" Top="230.9" Width="13.2" Height="59.45" CanGrow="true" Text="7&#13;&#10;a" AutoWidth="true" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text161" Left="186.8" Top="295.6" Width="13.2" Height="60.45" CanGrow="true" Text="7&#13;&#10;b" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <LineObject Name="Line38" Left="12.25" Top="490.15" Width="691.7" CanGrow="true" Diagonal="true"/>
+      <LineObject Name="Line39" Left="184.35" Top="424.55" Width="519.7" CanGrow="true" Diagonal="true"/>
+      <TextObject Name="Text162" Left="186.35" Top="361.3" Width="13.2" Height="60.45" CanGrow="true" CanBreak="false" Text="8&#13;&#10;a" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text163" Left="186.35" Top="427.45" Width="13.2" Height="59.45" CanGrow="true" Text="8&#13;&#10;b" AutoWidth="true" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <LineObject Name="Line41" Left="184.35" Top="555.65" Width="519.7" CanGrow="true" Diagonal="true"/>
+      <TextObject Name="Text164" Left="186.8" Top="493.25" Width="13.2" Height="59.45" CanGrow="true" Text="9&#13;&#10;a" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text165" Left="186.35" Top="558.65" Width="13.2" Height="58.45" CanGrow="true" Text="9&#13;&#10;b" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text168" Left="202.7" Top="100.5" Width="138.5" Height="59.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_KpiDescription1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text169" Left="203.7" Top="165.2" Width="137.5" Height="61.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_KpiDescription2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text170" Left="203.7" Top="230.8" Width="137.5" Height="61.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Infrastructure_KpiDescription1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text171" Left="203.7" Top="295.5" Width="136.5" Height="60.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Infrastructure_KpiDescription2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text172" Left="204.7" Top="360.65" Width="135.5" Height="61.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.InformationCapital_KpiDescription1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text173" Left="203.15" Top="426.25" Width="137.5" Height="62.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.InformationCapital_KpiDescription2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text174" Left="203.7" Top="491.95" Width="137.5" Height="62.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_KpiDescription1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text175" Left="203.7" Top="557.1" Width="137.5" Height="62.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_KpiDescription2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text178" Left="37.6" Top="100.5" Width="144.5" Height="125.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" CanBreak="false" Text="[ReportKraDto.HumanResourceKra_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text179" Left="36.15" Top="230.35" Width="145.5" Height="125.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.Infrastructure_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text180" Left="36.6" Top="361.65" Width="145.5" Height="125.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.InformationCapital_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text181" Left="36.6" Top="492.95" Width="145.5" Height="125.9" Border.Color="Transparent" Border.Width="0.25" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_StrategicObjective1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="txtHumanResource" Left="13.25" Top="100.5" Width="18.45" Height="126.85" BeforePrintEvent="txtHumanResource_BeforePrint" CanBreak="false" Text="[ReportKraDto.HumanResourceKra_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text184" Left="344" Top="99.5" Width="59.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_Target1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text185" Left="406.25" Top="100.05" Width="57.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_BaseLine1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text186" Left="466.85" Top="100.5" Width="42.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished1]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text187" Left="513.65" Top="100.5" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished2]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text188" Left="561.35" Top="100.5" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished3]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text189" Left="610.05" Top="100.5" Width="45.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished4]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text190" Left="658.85" Top="100.5" Width="43.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished5]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text191" Left="345" Top="164.65" Width="57.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_Target2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text192" Left="406.7" Top="165.2" Width="57.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_BaseLine2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text193" Left="466.5" Top="165.2" Width="43.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished6]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text194" Left="513.75" Top="165.2" Width="44.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished7]" Format="Number" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.NegativePattern="1" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text195" Left="562" Top="165.2" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished8]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text196" Left="609.7" Top="165.2" Width="45.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished9]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text197" Left="658.95" Top="164.65" Width="42.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.HumanResourceKra_PercentAccomplished10]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtInfrastructure" Left="13.25" Top="230.35" Width="19.45" Height="125.85" BeforePrintEvent="txtInfrastructure_BeforePrint" CanBreak="false" Text="[ReportKraDto.Infrastructure_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text199" Left="345" Top="231.35" Width="58.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_Target1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text200" Left="407.15" Top="231.35" Width="55.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_BaseLine1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text201" Left="466.95" Top="231.35" Width="42.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished1]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text202" Left="513.1" Top="231.35" Width="45.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished2]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text203" Left="561.35" Top="231.35" Width="44.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished3]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text204" Left="609.25" Top="230.8" Width="46.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished4]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text205" Left="658.85" Top="230.8" Width="43.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished5]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text206" Left="345" Top="295.5" Width="58.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_Target2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text207" Left="406.25" Top="295.5" Width="57.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_BaseLine2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text208" Left="466.85" Top="295.5" Width="43.5" Height="59.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished6]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text209" Left="513.1" Top="295.5" Width="45.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished7]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text210" Left="561.35" Top="295.5" Width="44.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished8]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text211" Left="609.6" Top="295.5" Width="45.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished9]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text212" Left="658.85" Top="295.5" Width="43.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.Infrastructure_PercentAccomplished10]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtInformationCapital" Left="13.25" Top="360.65" Width="19.45" Height="127.85" BeforePrintEvent="txtInformationCapital_BeforePrint" CanBreak="false" Text="[ReportKraDto.InformationCapital_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text214" Left="344" Top="360.65" Width="59.5" Height="60.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_Target1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text215" Left="407.15" Top="359.65" Width="55.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_BaseLine1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text216" Left="466.85" Top="359.65" Width="42.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished1]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text217" Left="513.1" Top="359.65" Width="45.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished2]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text218" Left="561.9" Top="359.65" Width="44.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished3]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text219" Left="609.6" Top="359.65" Width="45.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished4]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text220" Left="659.3" Top="359.65" Width="42.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished5]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text221" Left="345" Top="425.8" Width="58.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_Target2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text222" Left="407.15" Top="425.8" Width="54.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_BaseLine2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text223" Left="465.85" Top="425.8" Width="43.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished7]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text224" Left="513.1" Top="425.8" Width="45.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished7]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text225" Left="562" Top="425.8" Width="44.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished8]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text226" Left="609.25" Top="425.8" Width="46.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished9]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text227" Left="658.85" Top="425.8" Width="43.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.InformationCapital_PercentAccomplished10]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="txtFinancialSteward" Left="13.25" Top="491.95" Width="18.45" Height="126.85" BeforePrintEvent="txtFinancialSteward_BeforePrint" CanBreak="false" Text="[ReportKraDto.FinacialStewardship_KraName1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt, style=Bold"/>
+      <TextObject Name="Text229" Left="344" Top="491.95" Width="59.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_Target1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text230" Left="345" Top="557.1" Width="58.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_Target2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text231" Left="407.15" Top="491.95" Width="55.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_BaseLine1]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text232" Left="407.15" Top="557.1" Width="55.5" Height="62.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_BaseLine2]" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text233" Left="465.85" Top="491.95" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished1]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text234" Left="465.85" Top="557.1" Width="43.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished6]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text235" Left="513.1" Top="491.95" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished2]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text236" Left="514.1" Top="557.1" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished7]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text237" Left="561.8" Top="491.95" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished3]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text238" Left="609.05" Top="491.95" Width="46.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished4]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text239" Left="658.85" Top="491.95" Width="43.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished5]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text240" Left="561.35" Top="557.1" Width="44.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished8]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text241" Left="610.15" Top="557.1" Width="45.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished9]" Format="Number" Format.UseLocale="true" Format.DecimalDigits="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+      <TextObject Name="Text242" Left="659.3" Top="557.1" Width="42.5" Height="61.9" CanGrow="true" Text="[ReportKraDto.FinacialStewardship_PercentAccomplished10]" Format="Currency" Format.UseLocale="false" Format.DecimalDigits="0" Format.DecimalSeparator="." Format.GroupSeparator="," Format.CurrencySymbol="" Format.PositivePattern="0" Format.NegativePattern="0" HorzAlign="Center" VertAlign="Center" Font="Calibri, 9pt"/>
+    </PageHeaderBand>
+  </ReportPage>
+</Report>
