@@ -41,7 +41,7 @@ namespace IMIS.Presentation.KraRoadmapCoreSupportProcessModule
                 //return Results.File(file, "application/pdf", $"ReportKraRoadMapDto_{DateTime.Now:yyyyMMddHHmmss}.pdf");               
             })
             .WithTags(_kraRoadMapCore)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_kraRoadMapCore), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMapCore), true);
         }
     }
 }
