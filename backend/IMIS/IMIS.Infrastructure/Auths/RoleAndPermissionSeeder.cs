@@ -151,6 +151,7 @@ namespace IMIS.Infrastructure.Auths
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
                 new KeyResultAreaPermission(),
+                new KraRoadMapAccomplishmentPermission(),
                 new KraRoadMapKpiAccomplishmentPermission());
 
 
