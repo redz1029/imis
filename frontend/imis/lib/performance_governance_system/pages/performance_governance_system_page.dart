@@ -216,7 +216,6 @@ class PerformanceGovernanceSystemPageState
             // clearAllSelections();
           });
         }
-
         await prefs.remove('selectedOfficeId');
         await prefs.remove('selectedOfficeName');
         _lastResponseStatusCode = response.statusCode;

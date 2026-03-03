@@ -26,7 +26,6 @@ import '../../../utils/date_time_converter.dart';
 import '../../../utils/permission_string.dart';
 import '../../../widgets/accomplishment_auditor_widget.dart';
 import '../../../widgets/breakthrough_widget.dart';
-import '../../../widgets/pagination_controls.dart';
 import '../../models/pgs_deliverable_score_history.dart';
 import '../models/pgs_deliverable_accomplishment.dart';
 import '../models/pgs_filter.dart';
@@ -156,7 +155,7 @@ class _DeliverableStatusMonitoringPageState
     }
   }
 
-  Future<void> fetchFilteredPgsList({int page = 1}) async {
+  Future<void> fetchFilteredPgsList() async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
@@ -170,6 +169,15 @@ class _DeliverableStatusMonitoringPageState
       int? scoreTo =
           scoreRangeToController.text.isNotEmpty
               ? int.tryParse(scoreRangeToController.text)
+              : null;
+
+      int? page =
+          pageController.text.isNotEmpty
+              ? int.tryParse(pageController.text)
+              : null;
+      int? pageSize =
+          pageSizeController.text.isNotEmpty
+              ? int.tryParse(pageSizeController.text)
               : null;
 
       final filter = PgsFilter(
@@ -194,10 +202,7 @@ class _DeliverableStatusMonitoringPageState
 
       if (response.statusCode == 200) {
         final data = response.data;
-
         final items = data["items"] as List<dynamic>? ?? [];
-        final totalPages = data["totalCount"] ?? 0;
-        final currentPaged = data["page"] ?? page;
 
         List<Map<String, dynamic>> formattedData =
             items.map((item) {
@@ -231,8 +236,6 @@ class _DeliverableStatusMonitoringPageState
 
         if (mounted) {
           setState(() {
-            currentPage = currentPaged;
-            totalCount = totalPages;
             deliverableList = formattedData;
             filteredList = List.from(formattedData);
           });
@@ -934,28 +937,6 @@ class _DeliverableStatusMonitoringPageState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [_buildDeliverablesStatusMonitoringTable()],
               ),
-            ),
-          ),
-          Container(
-            padding: EdgeInsets.all(10),
-            color: secondaryColor,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                PaginationInfo(
-                  currentPage: currentPage,
-                  totalItems: totalCount,
-                  itemsPerPage: pageSize,
-                ),
-                PaginationControls(
-                  currentPage: currentPage,
-                  totalItems: totalCount,
-                  itemsPerPage: pageSize,
-                  isLoading: _isLoading,
-                  onPageChanged: (page) => fetchFilteredPgsList(page: page),
-                ),
-                Container(width: 60),
-              ],
             ),
           ),
         ],

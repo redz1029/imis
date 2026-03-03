@@ -858,7 +858,7 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                                   ),
                                   Text(
                                     useYearly
-                                        ? "Yearly Tracking: ${startYear ?? ''}-${endYear ?? ''} ($totalPeriods year(s))"
+                                        ? "Year Tracking Period: ($totalPeriods year(s))"
                                         : "Tracking Periods: $totalPeriods period(s)",
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
@@ -1202,7 +1202,7 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                   ),
                                   Text(
                                     useYearly
-                                        ? "Yearly Tracking: ${startYear ?? ''}-${endYear ?? ''} ($totalPeriods year(s))"
+                                        ? "Yearly Tracking: ($totalPeriods year(s))"
                                         : "Tracking Periods: $totalPeriods period(s)",
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,

@@ -686,7 +686,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                               );
                               existingGroups.add(null);
                             });
-                            // Scroll to bottom to show the new row
                             Future.delayed(
                               const Duration(milliseconds: 100),
                               () {
@@ -1273,7 +1272,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         ),
                                       Tooltip(
                                         message: 'Print Preview',
-
                                         child: IconButton(
                                           icon: const Icon(
                                             Icons.description_outlined,
