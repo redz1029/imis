@@ -21,16 +21,13 @@ class TotalScoreIndicator extends StatelessWidget {
       ),
       builder: (context, total, _) {
         Color color;
-        String label;
+
         if (total >= 75) {
           color = Colors.green;
-          label = 'Good';
         } else if (total >= 50) {
           color = Colors.orange;
-          label = 'Fair';
         } else {
           color = Colors.red;
-          label = 'Poor';
         }
 
         return Column(
@@ -66,7 +63,7 @@ class TotalScoreIndicator extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            Text(label, style: const TextStyle(fontSize: 12)),
+            Text("Total Score", style: const TextStyle(fontSize: 12)),
           ],
         );
       },

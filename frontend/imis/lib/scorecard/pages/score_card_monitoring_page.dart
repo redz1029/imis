@@ -850,7 +850,12 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text("KRA: ${deliverable['kra'] ?? 'N/A'}"),
+                                  Text(
+                                    "KRA: ${deliverable['kra'] ?? 'N/A'}",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                   Text(
                                     useYearly
                                         ? "Yearly Tracking: ${startYear ?? ''}-${endYear ?? ''} ($totalPeriods year(s))"
@@ -878,7 +883,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                           ),
                         ),
                         const SizedBox(height: 20),
-
                         Row(
                           children: [
                             const Icon(Icons.bar_chart_outlined, size: 18),
@@ -927,20 +931,12 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                                         ),
                                       ),
                                     ),
+
                                     Expanded(
                                       flex: 2,
                                       child: Center(
                                         child: Text(
-                                          "Status",
-                                          style: TextStyle(color: grey),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Percent Accomplishment",
+                                          "Score",
                                           style: TextStyle(color: grey),
                                         ),
                                       ),
@@ -1050,7 +1046,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                             deliverable['id'],
                             userId,
                           );
-
                           Navigator.of(context).pop(true);
                         },
                         child: Text(
@@ -1195,11 +1190,15 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    "KPI: ${deliverable['kpiDescription'] ?? deliverable['kpiDescription'] ?? 'N/A'}",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                  Column(
+                                    children: [
+                                      Text(
+                                        "KPI: ${deliverable['kpiDescription'] ?? deliverable['kpiDescription'] ?? 'N/A'}",
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   Text(
                                     useYearly
@@ -1218,6 +1217,9 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                 children: [
                                   Text(
                                     "Target: ${deliverable['target'] ?? 'No Target'}",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1228,6 +1230,9 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                 children: [
                                   Text(
                                     "Baseline: ${deliverable['baseLine'] ?? 'No Baseline'}",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -1282,20 +1287,12 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                         ),
                                       ),
                                     ),
+
                                     Expanded(
                                       flex: 2,
                                       child: Center(
                                         child: Text(
-                                          "Status",
-                                          style: TextStyle(color: grey),
-                                        ),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      flex: 2,
-                                      child: Center(
-                                        child: Text(
-                                          "Percent Accomplishment",
+                                          "Score",
                                           style: TextStyle(color: grey),
                                         ),
                                       ),

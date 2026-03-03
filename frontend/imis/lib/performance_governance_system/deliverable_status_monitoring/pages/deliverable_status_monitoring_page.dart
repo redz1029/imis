@@ -1290,8 +1290,8 @@ class _DeliverableStatusMonitoringPageState
                                         _selectedPeriod == null
                                             ? null
                                             : periodList.firstWhere(
-                                              (office) =>
-                                                  office.id.toString() ==
+                                              (period) =>
+                                                  period.id.toString() ==
                                                   _selectedPeriod,
                                               orElse:
                                                   () => PgsPeriod(
