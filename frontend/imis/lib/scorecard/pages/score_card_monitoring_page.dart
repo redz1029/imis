@@ -146,7 +146,7 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   @override
   Widget build(BuildContext context) {
     bool hasPermission = permissionService.hasPermission(
-      AppPermissions.viewKraRoadMapAccomplishment,
+      AppPermissions.viewKraRoadMap,
     );
 
     if (!hasPermission) {
@@ -430,6 +430,10 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   }
 
   Widget _buildKRATable() {
+    final canView = permissionService.hasPermission(
+      AppPermissions.viewKraRoadMapAccomplishment,
+    );
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
@@ -532,14 +536,14 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                               _tableCell(item['year'] ?? ''),
                               _tableCell(item['kraDescription'] ?? ''),
                               _tableCell(item['deliverableName'] ?? ''),
-                              _buildActionButton('', () async {
+                              _buildActionButton(() async {
                                 await loadScorecardAccomplishments(item['id']);
                                 showRoadmapAccomplishmentFormDialog(
                                   context,
                                   item,
                                   userId,
                                 );
-                              }),
+                              }, enabled: canView),
                             ],
                           ),
                         ],
@@ -556,6 +560,10 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
   }
 
   Widget _buildKPITable() {
+    final canView = permissionService.hasPermission(
+      AppPermissions.viewKraRoadMapKpiAccomplishment,
+    );
+
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: Colors.grey.shade300),
@@ -644,14 +652,14 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
                           children: [
                             _tableCell('${index + 1}'),
                             _tableCell(item['kpiDescription'] ?? ''),
-                            _buildActionButton('', () async {
+                            _buildActionButton(() async {
                               await loadKPIAccomplishments(item['id']);
                               showKPIAccomplishmentFormDialog(
                                 context,
                                 item,
                                 userId,
                               );
-                            }),
+                            }, enabled: canView),
                           ],
                         ),
                       ],
@@ -687,38 +695,52 @@ class _ScoreCardMonitoringPageState extends State<ScoreCardMonitoringPage> {
     );
   }
 
-  Widget _buildActionButton(String label, VoidCallback onPressed) {
+  Widget _buildActionButton(VoidCallback? onPressed, {bool enabled = true}) {
     return Container(
       padding: const EdgeInsets.all(12),
-      child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-            side: const BorderSide(color: Colors.grey, width: 1),
+      child: Tooltip(
+        message:
+            enabled
+                ? 'Open Accomplishment'
+                : 'You dont have permission to view',
+        child: ElevatedButton.icon(
+          style: ElevatedButton.styleFrom(
+            backgroundColor:
+                enabled ? Colors.transparent : Colors.grey.shade300,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(4),
+              side: BorderSide(
+                color: enabled ? Colors.grey : Colors.grey.shade500,
+                width: 1,
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            textStyle: const TextStyle(fontSize: 13),
+            minimumSize: const Size(100, 36),
+          ).copyWith(
+            overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
+              if (!enabled) return null; // no overlay when disabled
+              if (states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.pressed)) {
+                return const Color.fromARGB(255, 221, 221, 221);
+              }
+              return null;
+            }),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          textStyle: const TextStyle(fontSize: 13),
-          minimumSize: const Size(100, 36),
-        ).copyWith(
-          overlayColor: WidgetStateProperty.resolveWith<Color?>((states) {
-            if (states.contains(WidgetState.hovered) ||
-                states.contains(WidgetState.pressed)) {
-              return const Color.fromARGB(255, 221, 221, 221);
-            }
-            return null;
-          }),
-        ),
-        onPressed: onPressed,
-        icon: const Icon(
-          Icons.bar_chart_outlined,
-          size: 14,
-          color: primaryTextColor,
-        ),
-        label: const Text(
-          'Accomplishment',
-          style: TextStyle(color: primaryTextColor, fontSize: 10),
+          onPressed: enabled ? onPressed : null,
+          icon: Icon(
+            Icons.bar_chart_outlined,
+            size: 14,
+            color: enabled ? primaryTextColor : Colors.grey.shade600,
+          ),
+          label: Text(
+            'Accomplishment',
+            style: TextStyle(
+              color: enabled ? primaryTextColor : Colors.grey.shade600,
+              fontSize: 10,
+            ),
+          ),
         ),
       ),
     );
@@ -1344,7 +1366,7 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                 ),
                 SizedBox(height: 20),
                 PermissionWidget(
-                  permission: AppPermissions.addKraRoadMapAccomplishment,
+                  permission: AppPermissions.addKraRoadMapKpiAccomplishment,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
