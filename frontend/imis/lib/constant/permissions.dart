@@ -1,5 +1,5 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-// Last synced: 2026-02-11 16:18:05.503316
+// Last synced: 2026-03-03 14:06:17.734996
 
 class AppPermissions {
   static const String addUserOffice = 'Add User Office';
@@ -23,41 +23,25 @@ class AppPermissions {
   static const String addKra = 'Add Kra';
   static const String viewKra = 'View Kra';
   static const String editKra = 'Edit Kra';
-  static const String viewPgsDeliverableMonitor =
-      'View Pgs Deliverable Monitor';
-  static const String scorePgsDeliverableMonitor =
-      'Score Pgs Deliverable Monitor';
+  static const String viewPgsDeliverableMonitor = 'View Pgs Deliverable Monitor';
+  static const String scorePgsDeliverableMonitor = 'Score Pgs Deliverable Monitor';
   static const String addPgsDeliverable = 'Add Pgs Deliverable';
   static const String viewPgsDeliverable = 'View Pgs Deliverable';
   static const String editPgsDeliverable = 'Edit Pgs Deliverable';
-  static const String addPgsDeliverableServiceHead =
-      'Add Pgs Deliverable Service Head';
-  static const String viewPgsDeliverableServiceHead =
-      'View Pgs Deliverable Service Head';
-  static const String editPgsDeliverableServiceHead =
-      'Edit Pgs Deliverable Service Head';
-  static const String addPgsDeliverableAccomplishment =
-      'Add Pgs Deliverable Accomplishment';
-  static const String viewPgsDeliverableAccomplishment =
-      'View Pgs Deliverable Accomplishment';
-  static const String editPgsDeliverableAccomplishment =
-      'Edit Pgs Deliverable Accomplishment';
-  static const String disapprovePerformanceGovernanceSystem =
-      'Disapprove Performance Governance System';
-  static const String submitPerformanceGovernanceSystem =
-      'Submit Performance Governance System';
-  static const String confirmPerformanceGovernanceSystem =
-      'Confirm Performance Governance System';
-  static const String draftPerformanceGovernanceSystem =
-      'Draft Performance Governance System';
-  static const String deletePerformanceGovernanceSystem =
-      'Delete Performance Governance System';
-  static const String addPerformanceGovernanceSystem =
-      'Add Performance Governance System';
-  static const String viewPerformanceGovernanceSystem =
-      'View Performance Governance System';
-  static const String editPerformanceGovernanceSystem =
-      'Edit Performance Governance System';
+  static const String addPgsDeliverableServiceHead = 'Add Pgs Deliverable Service Head';
+  static const String viewPgsDeliverableServiceHead = 'View Pgs Deliverable Service Head';
+  static const String editPgsDeliverableServiceHead = 'Edit Pgs Deliverable Service Head';
+  static const String addPgsDeliverableAccomplishment = 'Add Pgs Deliverable Accomplishment';
+  static const String viewPgsDeliverableAccomplishment = 'View Pgs Deliverable Accomplishment';
+  static const String editPgsDeliverableAccomplishment = 'Edit Pgs Deliverable Accomplishment';
+  static const String disapprovePerformanceGovernanceSystem = 'Disapprove Performance Governance System';
+  static const String submitPerformanceGovernanceSystem = 'Submit Performance Governance System';
+  static const String confirmPerformanceGovernanceSystem = 'Confirm Performance Governance System';
+  static const String draftPerformanceGovernanceSystem = 'Draft Performance Governance System';
+  static const String deletePerformanceGovernanceSystem = 'Delete Performance Governance System';
+  static const String addPerformanceGovernanceSystem = 'Add Performance Governance System';
+  static const String viewPerformanceGovernanceSystem = 'View Performance Governance System';
+  static const String editPerformanceGovernanceSystem = 'Edit Performance Governance System';
   static const String addOfficeType = 'Add Office Type';
   static const String viewOfficeType = 'View Office Type';
   static const String editOfficeType = 'Edit Office Type';
@@ -70,12 +54,12 @@ class AppPermissions {
   static const String addKraRoadMap = 'Add Kra Road Map';
   static const String viewKraRoadMap = 'View Kra Road Map';
   static const String editKraRoadMap = 'Edit Kra Road Map';
-  static const String addKraRoadMapAccomplishment =
-      'Add Kra Road Map Accomplishment';
-  static const String viewKraRoadMapAccomplishment =
-      'View Kra Road Map Accomplishment';
-  static const String editKraRoadMapAccomplishment =
-      'Edit Kra Road Map Accomplishment';
+  static const String addKraRoadMapKpiAccomplishment = 'Add Kra Road Map Kpi Accomplishment';
+  static const String viewKraRoadMapKpiAccomplishment = 'View Kra Road Map Kpi Accomplishment';
+  static const String editKraRoadMapKpiAccomplishment = 'Edit Kra Road Map Kpi Accomplishment';
+  static const String addKraRoadMapAccomplishment = 'Add Kra Road Map Accomplishment';
+  static const String viewKraRoadMapAccomplishment = 'View Kra Road Map Accomplishment';
+  static const String editKraRoadMapAccomplishment = 'Edit Kra Road Map Accomplishment';
   static const String addIsoStandard = 'Add Iso Standard';
   static const String viewIsoStandard = 'View Iso Standard';
   static const String editIsoStandard = 'Edit Iso Standard';
