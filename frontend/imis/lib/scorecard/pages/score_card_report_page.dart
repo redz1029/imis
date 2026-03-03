@@ -11,8 +11,6 @@ import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
-import 'package:intl/intl.dart';
-import 'package:motion_toast/motion_toast.dart';
 
 class ScoreCardReportPage extends StatefulWidget {
   const ScoreCardReportPage({super.key});
@@ -45,7 +43,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
   @override
   void initState() {
     super.initState();
-    fetchPGSPeriods();
+    fetchScoredcardReport();
     pgsPeriodSearchUtil = FilterSearchResultUtil<KraRoadmapPeriod>(
       paginationUtils: _paginationUtils,
       endpoint: ApiEndpoint().pgsperiod,
@@ -58,7 +56,10 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
     });
   }
 
-  Future<void> fetchPGSPeriods({int page = 1, String? searchQuery}) async {
+  Future<void> fetchScoredcardReport({
+    int page = 1,
+    String? searchQuery,
+  }) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
@@ -91,51 +92,6 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
   void dispose() {
     isSearchfocus.dispose();
     super.dispose();
-  }
-
-  void showDeleteDialog(String id) {
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Confirm Delete"),
-          content: Text(
-            "Are you sure you want to delete this KRA Period? This action cannot be undone.",
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
-            ),
-            TextButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                try {
-                  await _pgsPeriodService.deleteKraPeriod(id);
-                  await fetchPGSPeriods();
-                  MotionToast.success(
-                    toastAlignment: Alignment.topCenter,
-                    description: Text('KRA Period deleted successfully'),
-                  ).show(context);
-                } catch (e) {
-                  MotionToast.error(
-                    description: Text('Failed to Delete KRA Period'),
-                  );
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-              child: Text('Delete', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -344,7 +300,7 @@ class ScoreCardReportPageState extends State<ScoreCardReportPage> {
                     totalItems: _totalCount,
                     itemsPerPage: _pageSize,
                     isLoading: _isLoading,
-                    onPageChanged: (page) => fetchPGSPeriods(page: page),
+                    onPageChanged: (page) => fetchScoredcardReport(page: page),
                   ),
                   Container(width: 60),
                 ],
