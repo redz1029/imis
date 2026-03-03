@@ -899,6 +899,8 @@ class NavigationPanelState extends State<NavigationPanel> {
                               PermissionString.informationOfficer,
                               PermissionString.researchOfficer,
                               PermissionString.coreTeam,
+                              PermissionString.mcc,
+                              PermissionString.osm,
                             ].contains(selectedRole)
                             ? Theme(
                               data: Theme.of(
