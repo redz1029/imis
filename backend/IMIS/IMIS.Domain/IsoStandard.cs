@@ -14,5 +14,5 @@ namespace IMIS.Domain
 
         public string? Description { get; set; }
         public required bool isActive { get; set; }
-    }?
+    }
 }

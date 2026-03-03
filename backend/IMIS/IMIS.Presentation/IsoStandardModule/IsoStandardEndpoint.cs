@@ -23,7 +23,7 @@ namespace IMIS.Presentation.IsoStandardModule
         {
 
 
-            app.MapPost("/", async ([FromBody] List<IsoStandardDto> isoDtos,IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
+            app.MapPost("/", async ([FromBody] List<IsoStandardDto> isoDtos, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
                 if (isoDtos == null || !isoDtos.Any())
                 {
@@ -39,7 +39,7 @@ namespace IMIS.Presentation.IsoStandardModule
                 await cache.EvictByTagAsync(_tag, cancellationToken);
 
                 return Results.Ok();
-            })      
+            })
             .WithTags(_tag);
 
 
@@ -80,19 +80,19 @@ namespace IMIS.Presentation.IsoStandardModule
             })
             .WithTags(_tag);
 
-            app.MapGet("/paginate/{page}/{pageSize}", async (int page, int pageSize, IIsoStandardService service, CancellationToken cancellationToken) =>
-            {
-                var paginatedStandards = await service.GetPaginatedAsync(page, pageSize, cancellationToken);
-                return Results.Ok(paginatedStandards);
-            })
-            .WithTags(_tag);
+            //app.MapGet("/paginate/{page}/{pageSize}", async (int page, int pageSize, IIsoStandardService service, CancellationToken cancellationToken) =>
+            //{
+            //    var paginatedStandards = await service.GetPaginatedAsync(page, pageSize, cancellationToken);
+            //    return Results.Ok(paginatedStandards);
+            //})
+            //.WithTags(_tag);
 
-            app.MapGet("/paginate-version/{versionId}/{page}/{pageSize}", async (int versionId, int page, int pageSize, IIsoStandardService service, CancellationToken cancellationToken) =>
-            {
-                var paginatedStandards = await service.GetPaginatedByVersionAsync(versionId, page, pageSize, cancellationToken);
-                return Results.Ok(paginatedStandards);
-            })
-            .WithTags(_tag);
+            //app.MapGet("/paginate-version/{versionId}/{page}/{pageSize}", async (int versionId, int page, int pageSize, IIsoStandardService service, CancellationToken cancellationToken) =>
+            //{
+            //    var paginatedStandards = await service.GetPaginatedByVersionAsync(versionId, page, pageSize, cancellationToken);
+            //    return Results.Ok(paginatedStandards);
+            //})
+            //.WithTags(_tag);
 
             app.MapPut("/{id}", async (long id, [FromBody] IsoStandardDto dto, IIsoStandardService service, IOutputCacheStore cache, CancellationToken cancellationToken) =>
             {
@@ -117,7 +117,7 @@ namespace IMIS.Presentation.IsoStandardModule
                     : Results.NotFound(new { message = "IsoStandard not found." });
             })
             .WithTags(_tag);
-         
+
 
         }
     }

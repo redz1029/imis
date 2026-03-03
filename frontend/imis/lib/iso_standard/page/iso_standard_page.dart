@@ -1,6 +1,5 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
@@ -18,6 +17,13 @@ import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/dotted_button.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+// Simple node used to build a parent/child tree from flat IsoStandard list
+class _IsoNode {
+  final IsoStandard iso;
+  final List<_IsoNode> children = [];
+  _IsoNode(this.iso);
+}
 
 /// ISO Standards Settings Page implementing SRS requirements
 /// FR-01 to FR-11, NFR: Performance, Security, Audit Trail
@@ -45,6 +51,8 @@ class IsoStandardPageState extends State<IsoStandardPage> {
   final int _pageSize = 15;
   int _totalCount = 0;
   bool _isLoading = false;
+  bool _showClause4to10 = false;
+  bool _hasAllData = false;
 
   // Track deleted item IDs to filter them out permanently
   final Set<String> _deletedIds = {};
@@ -82,7 +90,8 @@ class IsoStandardPageState extends State<IsoStandardPage> {
   /// Initialize data - load deleted IDs then fetch data
   Future<void> _initialize() async {
     await _loadDeletedIds();
-    fetchIsoStandards();
+    // Load the full dataset so ExpansionTiles render correctly
+    await fetchAllIsoStandards();
     fetchStandardVersions();
   }
 
@@ -124,9 +133,10 @@ class IsoStandardPageState extends State<IsoStandardPage> {
           // Extract unique versions from IsoStandard data
           final Map<int, StandardVersion> uniqueVersions = {};
           for (var iso in isoPageList.items) {
-            if (iso.version.isActive &&
-                !uniqueVersions.containsKey(iso.version.id)) {
-              uniqueVersions[iso.version.id] = iso.version;
+            if (iso.version != null &&
+                iso.version!.isActive &&
+                !uniqueVersions.containsKey(iso.version!.id)) {
+              uniqueVersions[iso.version!.id] = iso.version!;
             }
           }
           setState(() {
@@ -181,25 +191,80 @@ class IsoStandardPageState extends State<IsoStandardPage> {
     } catch (e) {
       debugPrint(e.toString());
     } finally {
-      if (mounted) { 
+      if (mounted) {
         setState(() => _isLoading = false);
       }
     }
   }
 
+  /// Fetch all ISO standards from backend in a single call and prepare lists.
+  Future<void> fetchAllIsoStandards({String? searchQuery}) async {
+    if (_isLoading) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      // Request a very large pageSize to retrieve all items from the backend
+      final pageList = await _isoStandardService.getIsoStandards(
+        page: 1,
+        pageSize: 1000000,
+        searchQuery: searchQuery,
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPage = 1;
+          isoStandardList = pageList.items
+              .where((item) => !_deletedIds.contains(item.id.toString()))
+              .toList();
+          filteredList = List.from(isoStandardList);
+          _totalCount = pageList.totalCount - _deletedIds.length;
+          _hasAllData = false;
+          _hasAllData = true;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching all ISO standards: $e');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   Future<void> filterSearchResults(String query) async {
+    // If we have the full dataset loaded locally, perform client-side
+    // filtering for instant results and to avoid extra API calls.
+    if (_hasAllData) {
+      final search = query.toLowerCase();
+      final results = isoStandardList.where((isoStandard) {
+        return isoStandard.particulars.toLowerCase().contains(search) ||
+            (isoStandard.description ?? '').toLowerCase().contains(search) ||
+            isoStandard.clauseRef.toLowerCase().contains(search);
+      }).toList();
+
+      setState(() {
+        filteredList = results;
+      });
+      return;
+    }
+
+    // Fallback to server-side filtering when we don't have the full dataset
     final results = await isoStandardSearchUtil.filter(
       query,
       (isoStandard, search) =>
-          (isoStandard.description).toLowerCase().contains(
+          (isoStandard.particulars).toLowerCase().contains(
+            search.toLowerCase(),
+          ) ||
+          (isoStandard.description ?? '').toLowerCase().contains(
             search.toLowerCase(),
           ) ||
           (isoStandard.clauseRef).toLowerCase().contains(search.toLowerCase()),
     );
 
-    setState(() {
-      filteredList = results;
-    });
+    if (mounted) {
+      setState(() {
+        filteredList = results;
+      });
+    }
   }
 
   @override
@@ -209,10 +274,389 @@ class IsoStandardPageState extends State<IsoStandardPage> {
     super.dispose();
   }
 
+  // Helper node removed; top-level _IsoNode is used instead
+
+  // Build a forest of root nodes from the flat list using parentID links.
+  List<_IsoNode> _buildHierarchy(List<IsoStandard> items) {
+    final Map<int, _IsoNode> nodeById = {};
+    final Map<String, _IsoNode> nodeByRef = {};
+    final List<_IsoNode> roots = [];
+
+    // Flatten any nested children provided by the backend so we can build
+    // a consistent flat index used by the existing parent/clauses inference
+    // logic. This ensures backend-provided `children` are respected.
+    final List<IsoStandard> flatItems = [];
+    void _flatten(IsoStandard i) {
+      flatItems.add(i);
+      if (i.children != null) {
+        for (var c in i.children!) _flatten(c);
+      }
+    }
+
+    for (var it in items) {
+      _flatten(it);
+    }
+
+    // Helper to normalize clauseRef and produce a version-scoped key
+    String normalizeRef(String? ref) {
+      if (ref == null) return '';
+      var r = ref.trim();
+      // Remove trailing dots and spaces, and collapse internal spaces
+      r = r.replaceAll(RegExp(r"\.+\s*"), '.');
+      r = r.replaceAll(' ', '');
+      r = r.replaceAll(RegExp(r"\.+\$"), '');
+      return r;
+    }
+
+    // Create nodes and maps for quick lookup (do not overwrite duplicate refs)
+    for (var item in flatItems) {
+      final node = _IsoNode(item);
+      nodeById[item.id] = node;
+      final normalized = normalizeRef(item.clauseRef);
+      if (normalized.isNotEmpty) {
+        final versionId = item.versionID;
+        final scopedKey = '$versionId::$normalized';
+        if (!nodeByRef.containsKey(scopedKey)) {
+          nodeByRef[scopedKey] = node;
+        }
+      }
+    }
+
+    // Ensure synthetic major parents (4..10) exist per version so that
+    // children like `4.1`, `5.2` etc. attach under a visible parent even
+    // when the explicit major clause record is missing from the dataset.
+    final versionIds = flatItems.map((e) => e.versionID).toSet();
+    for (var versionId in versionIds) {
+      for (var major = 4; major <= 10; major++) {
+        final scopedKey = '$versionId::$major';
+        if (!nodeByRef.containsKey(scopedKey)) {
+          // Create a synthetic IsoStandard as a placeholder parent.
+          final syntheticIso = IsoStandard(
+            id: -(versionId * 1000 + major),
+            clauseRef: '$major',
+            particulars: 'Section $major',
+            description: null,
+            version: items.firstWhere((it) => it.versionID == versionId,
+                orElse: () => items.first).version,
+            versionID: versionId,
+            isDeleted: false,
+            isActive: true,
+          );
+          final syntheticNode = _IsoNode(syntheticIso);
+          nodeByRef[scopedKey] = syntheticNode;
+          // Add to roots so it will be visible if not attached later.
+          // We'll keep it in roots now; children will be attached to it
+          // during the clauseRef prefix inference below.
+          roots.add(syntheticNode);
+        }
+      }
+    }
+
+    // 1) Attach nodes with explicit parentID
+    for (var item in flatItems) {
+      final node = nodeById[item.id]!;
+      final parentId = item.parentID;
+      if (parentId != null && nodeById.containsKey(parentId)) {
+        final parentNode = nodeById[parentId]!;
+        if (!parentNode.children.contains(node)) parentNode.children.add(node);
+      }
+    }
+
+    // Helper comparator for clauseRef segments (numeric first, then alpha)
+    int clauseComparator(String a, String b) {
+      final pa = a.split('.');
+      final pb = b.split('.');
+      final len = pa.length < pb.length ? pa.length : pb.length;
+      for (var i = 0; i < len; i++) {
+        final sa = pa[i];
+        final sb = pb[i];
+        final numaStr = RegExp(r"^\d+").stringMatch(sa) ?? '';
+        final numbStr = RegExp(r"^\d+").stringMatch(sb) ?? '';
+        final numa = numaStr.isEmpty ? null : int.tryParse(numaStr);
+        final numb = numbStr.isEmpty ? null : int.tryParse(numbStr);
+        if (numa != null && numb != null) {
+          if (numa != numb) return numa.compareTo(numb);
+          final alphaA = sa.substring(numaStr.length);
+          final alphaB = sb.substring(numbStr.length);
+          if (alphaA != alphaB) return alphaA.compareTo(alphaB);
+        } else {
+          final res = sa.compareTo(sb);
+          if (res != 0) return res;
+        }
+      }
+      return pa.length.compareTo(pb.length);
+    }
+
+    // 2) Infer parents by clauseRef prefix where possible
+    for (var item in flatItems) {
+      final node = nodeById[item.id]!;
+      // Skip if already attached via parentID
+      final alreadyAttached = nodeById.values.any(
+        (n) => n.children.contains(node),
+      );
+      if (alreadyAttached) continue;
+
+      final clause = normalizeRef(item.clauseRef);
+      if (clause.isNotEmpty) {
+        final parts = clause.split('.');
+        final versionId = item.versionID;
+        bool attached = false;
+        for (int len = parts.length - 1; len >= 1; len--) {
+          final candidate = parts.sublist(0, len).join('.');
+          final scopedKey = '$versionId::$candidate';
+          if (nodeByRef.containsKey(scopedKey)) {
+            final parentNode = nodeByRef[scopedKey]!;
+            if (parentNode.iso.id != node.iso.id &&
+                !parentNode.children.contains(node)) {
+              parentNode.children.add(node);
+              attached = true;
+              break;
+            }
+          }
+        }
+        if (!attached) {
+          roots.add(node);
+        }
+      } else {
+        roots.add(node);
+      }
+    }
+
+    // 3) For remaining roots within same major prefix, create sequential chains
+    //    to support the structure: major -> major.1 -> major.2 -> major.3
+    final Map<String, List<_IsoNode>> groups = {};
+    for (var node in roots.toList()) {
+      final clause = normalizeRef(node.iso.clauseRef);
+      if (clause.isEmpty) continue;
+      final major = clause.split('.').first;
+      final key = '${node.iso.versionID}::$major';
+      groups.putIfAbsent(key, () => []).add(node);
+    }
+
+    for (var entry in groups.entries) {
+      final list = entry.value;
+      // Sort by clause depth then comparator
+      list.sort(
+        (a, b) => clauseComparator(
+          normalizeRef(a.iso.clauseRef),
+          normalizeRef(b.iso.clauseRef),
+        ),
+      );
+      // If there is an explicit major root (exact match), find it
+      final versionId = entry.key.split('::').first;
+      final major = entry.key.split('::').last;
+      final rootScoped = '$versionId::$major';
+      final majorRoot = nodeByRef[rootScoped];
+
+      if (majorRoot != null) {
+        // Attach first item to majorRoot if it's not the majorRoot itself
+        _IsoNode prev = majorRoot;
+        for (var node in list) {
+          if (node.iso.id == majorRoot.iso.id) continue;
+          if (!prev.children.contains(node)) prev.children.add(node);
+          prev = node;
+          // Remove from top-level roots since now attached
+          roots.remove(node);
+        }
+      } else {
+        // No explicit major root - chain list sequentially
+        for (int i = 0; i < list.length; i++) {
+          if (i == 0) continue; // keep first as root
+          final parent = list[i - 1];
+          final child = list[i];
+          if (!parent.children.contains(child)) parent.children.add(child);
+          roots.remove(child);
+        }
+      }
+    }
+
+    // Final pass: Ensure nodes whose major prefix matches an existing major
+    // root are attached. This is a safety net for cases where earlier
+    // inference didn't attach children (e.g., backend-provided children
+    // with slight formatting differences).
+    for (var node in nodeById.values) {
+      // Skip if already attached to any parent
+      final attached = nodeById.values.any((n) => n.children.contains(node));
+      if (attached) continue;
+
+      final clause = normalizeRef(node.iso.clauseRef);
+      if (clause.isEmpty) continue;
+      final major = clause.split('.').first;
+      final scopedMajor = '${node.iso.versionID}::$major';
+      final majorRoot = nodeByRef[scopedMajor];
+      if (majorRoot != null && majorRoot.iso.id != node.iso.id) {
+        if (!majorRoot.children.contains(node)) majorRoot.children.add(node);
+        roots.remove(node);
+      }
+    }
+
+    // Optionally sort roots and children for predictable ordering using
+    // the numeric-aware clause comparator so '10' sorts after '9'.
+    void sortRecursively(List<_IsoNode> list) {
+      list.sort((a, b) => clauseComparator(
+          normalizeRef(a.iso.clauseRef), normalizeRef(b.iso.clauseRef)));
+      for (var n in list) {
+        if (n.children.isNotEmpty) sortRecursively(n.children);
+      }
+    }
+
+    sortRecursively(roots);
+    return roots;
+  }
+
+  bool _isMajorInFourToTen(String? clauseRef) {
+    if (clauseRef == null) return false;
+    final m = RegExp(r"^\s*(\d+)").firstMatch(clauseRef);
+    if (m == null) return false;
+    final v = int.tryParse(m.group(1) ?? '');
+    return v != null && v >= 4 && v <= 10;
+  }
+
+  // Return true only when clauseRef is a pure major number (e.g. '4', '10')
+  bool _isMajorRootFourToTen(String? clauseRef) {
+    if (clauseRef == null) return false;
+    final m = RegExp(r"^\s*(\d+)\s*$").firstMatch(clauseRef);
+    if (m == null) return false;
+    final v = int.tryParse(m.group(1) ?? '');
+    return v != null && v >= 4 && v <= 10;
+  }
+
+  // Compact renderer: shows only clauseRef in a nested ExpansionTile/ListTile
+  Widget _buildCompactNodeWidget(_IsoNode node, int depth) {
+    final title = Padding(
+      padding: EdgeInsets.only(left: depth * 16.0),
+      child: Text(node.iso.clauseRef),
+    );
+
+    if (node.children.isEmpty) {
+      return ListTile(title: title);
+    }
+
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: title,
+      children: node.children.map((c) => _buildCompactNodeWidget(c, depth + 1)).toList(),
+    );
+  }
+
+  // Render a node (parent or child). Depth used for indentation.
+  Widget _buildNodeWidget(_IsoNode node, int depth) {
+    final iso = node.iso;
+
+    Widget rowContent = Padding(
+      padding: EdgeInsets.only(left: depth * 16.0, right: 8, top: 8, bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 1,
+            child: InkWell(
+              onTap: () {
+                if (iso.id > 0) {
+                  showFormDialog(
+                    id: iso.id.toString(),
+                    clauseRef: iso.clauseRef,
+                    particulars: iso.particulars,
+                    description: iso.description,
+                    version: iso.version,
+                    versionID: iso.versionID,
+                    isActive: iso.isActive,
+                  );
+                }
+              },
+              child: Text(
+                iso.clauseRef,
+                style: TextStyle(
+                  color: iso.id > 0 ? primaryColor : null,
+                  decoration: iso.id > 0 ? TextDecoration.underline : null,
+                ),
+              ),
+            ),
+          ),
+          Expanded(flex: 2, child: Text(iso.version?.versionName ?? 'N/A')),
+          Expanded(
+            flex: 4,
+            child: Text(
+              iso.particulars.length > 80
+                  ? '${iso.particulars.substring(0, 80)}...'
+                  : iso.particulars,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Expanded(
+            flex: 3,
+            child: Text(
+              (iso.description ?? '').length > 60
+                  ? '${iso.description!.substring(0, 60)}...'
+                  : (iso.description ?? '-'),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: iso.isActive
+                    ? Colors.green.shade100
+                    : Colors.red.shade100,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                iso.isActive ? 'Active' : 'Inactive',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: iso.isActive
+                      ? Colors.green.shade800
+                      : Colors.red.shade800,
+                ),
+              ),
+            ),
+          ),
+          if (hasEditPermission && iso.id > 0)
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit),
+                  onPressed: () => showFormDialog(
+                    id: iso.id.toString(),
+                    clauseRef: iso.clauseRef,
+                    particulars: iso.particulars,
+                    description: iso.description,
+                    version: iso.version,
+                    versionID: iso.versionID,
+                    isActive: iso.isActive,
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete, color: primaryColor),
+                  onPressed: () {
+                    showDeleteDialog(iso.id.toString());
+                  },
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+
+    if (node.children.isEmpty) return rowContent;
+
+    return ExpansionTile(
+      tilePadding: EdgeInsets.zero,
+      title: rowContent,
+      children: node.children
+          .map((c) => _buildNodeWidget(c, depth + 1))
+          .toList(),
+    );
+  }
+
   /// Single Edit Dialog (FR-10: Edit permission)
   void showFormDialog({
     String? id,
     String? clauseRef,
+    String? particulars,
     String? description,
     StandardVersion? version,
     int? versionID,
@@ -236,6 +680,9 @@ class IsoStandardPageState extends State<IsoStandardPage> {
 
     TextEditingController clauseRefController = TextEditingController(
       text: clauseRef,
+    );
+    TextEditingController particularsController = TextEditingController(
+      text: particulars,
     );
     TextEditingController descriptionController = TextEditingController(
       text: description,
@@ -388,14 +835,15 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                         ),
                       ),
                       gap16px,
-                      // Description
+                      // Particulars (Required)
                       SizedBox(
                         height: 100,
                         child: TextFormField(
-                          controller: descriptionController,
+                          controller: particularsController,
                           maxLines: 3,
                           decoration: InputDecoration(
-                            labelText: 'Description',
+                            labelText: 'Particulars',
+                            hintText: 'Enter the particulars',
                             focusColor: primaryColor,
                             floatingLabelStyle: TextStyle(color: primaryColor),
                             border: OutlineInputBorder(),
@@ -411,6 +859,26 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                             }
                             return null;
                           },
+                        ),
+                      ),
+                      gap16px,
+                      // Description (Optional)
+                      SizedBox(
+                        height: 100,
+                        child: TextFormField(
+                          controller: descriptionController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            labelText: 'Description (Optional)',
+                            hintText: 'Additional description',
+                            focusColor: primaryColor,
+                            floatingLabelStyle: TextStyle(color: primaryColor),
+                            border: OutlineInputBorder(),
+                            focusedBorder: const OutlineInputBorder(
+                              borderSide: BorderSide(color: primaryColor),
+                            ),
+                            alignLabelWithHint: true,
+                          ),
                         ),
                       ),
                       gap16px,
@@ -579,7 +1047,11 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                           final isoStandard = IsoStandard(
                             id: int.tryParse(id ?? '0') ?? 0,
                             clauseRef: clauseRefController.text.trim(),
-                            description: descriptionController.text.trim(),
+                            particulars: particularsController.text.trim(),
+                            description:
+                                descriptionController.text.trim().isEmpty
+                                ? null
+                                : descriptionController.text.trim(),
                             version: versionToUse,
                             versionID: versionToUse.id,
                             isDeleted: false,
@@ -594,7 +1066,8 @@ class IsoStandardPageState extends State<IsoStandardPage> {
 
                           Navigator.pop(context);
 
-                          await fetchIsoStandards();
+                          // Refresh full list to keep hierarchy up-to-date
+                          await fetchAllIsoStandards();
 
                           if (mounted) {
                             MotionToast.success(
@@ -674,6 +1147,7 @@ class IsoStandardPageState extends State<IsoStandardPage> {
       5,
       (index) => {
         'clauseRef': TextEditingController(),
+        'particulars': TextEditingController(),
         'description': TextEditingController(),
         'version': null,
         'hasError': false,
@@ -727,7 +1201,7 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                 ),
               ),
               content: SizedBox(
-                width: 900,
+                width: 1100,
                 height: 500,
                 child: Column(
                   children: [
@@ -740,6 +1214,7 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                             setDialogState(() {
                               _bulkRows.add({
                                 'clauseRef': TextEditingController(),
+                                'particulars': TextEditingController(),
                                 'description': TextEditingController(),
                                 'version': null,
                                 'hasError': false,
@@ -764,7 +1239,8 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                             DataColumn(label: Text('#')),
                             DataColumn(label: Text('Standard Version *')),
                             DataColumn(label: Text('Clause Ref *')),
-                            DataColumn(label: Text('Description *')),
+                            DataColumn(label: Text('Particulars *')),
+                            DataColumn(label: Text('Description')),
                             DataColumn(label: Text('Actions')),
                           ],
                           rows: _bulkRows.asMap().entries.map((entry) {
@@ -832,16 +1308,38 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                                     ),
                                   ),
                                 ),
-                                // Description
+                                // Particulars (Required)
                                 DataCell(
                                   SizedBox(
-                                    width: 300,
+                                    width: 200,
+                                    child: TextField(
+                                      controller: row['particulars'],
+                                      maxLines: 2,
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        isDense: true,
+                                        hintText: 'Enter particulars',
+                                        contentPadding: EdgeInsets.all(8),
+                                      ),
+                                      onChanged: (_) {
+                                        setDialogState(() {
+                                          row['hasError'] = false;
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                ),
+                                // Description (Optional)
+                                DataCell(
+                                  SizedBox(
+                                    width: 200,
                                     child: TextField(
                                       controller: row['description'],
                                       maxLines: 2,
                                       decoration: InputDecoration(
                                         border: OutlineInputBorder(),
                                         isDense: true,
+                                        hintText: 'Optional',
                                         contentPadding: EdgeInsets.all(8),
                                       ),
                                       onChanged: (_) {
@@ -882,6 +1380,7 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                     // Clear controllers
                     for (var row in _bulkRows) {
                       (row['clauseRef'] as TextEditingController).dispose();
+                      (row['particulars'] as TextEditingController).dispose();
                       (row['description'] as TextEditingController).dispose();
                     }
                     Navigator.pop(context);
@@ -905,14 +1404,17 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                       final clauseRef =
                           (row['clauseRef'] as TextEditingController).text
                               .trim();
+                      final particulars =
+                          (row['particulars'] as TextEditingController).text
+                              .trim();
                       final description =
                           (row['description'] as TextEditingController).text
                               .trim();
 
-                      // FR-09: Empty field validation
+                      // FR-09: Required field validation (version, clauseRef, particulars)
                       if (version == null ||
                           clauseRef.isEmpty ||
-                          description.isEmpty) {
+                          particulars.isEmpty) {
                         setDialogState(() {
                           row['hasError'] = true;
                         });
@@ -945,7 +1447,8 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                         IsoStandard(
                           id: 0,
                           clauseRef: clauseRef,
-                          description: description,
+                          particulars: particulars,
+                          description: description.isEmpty ? null : description,
                           version: version,
                           versionID: version.id,
                           isDeleted: false,
@@ -1005,7 +1508,8 @@ class IsoStandardPageState extends State<IsoStandardPage> {
 
                         if (!mounted) return;
 
-                        await fetchIsoStandards();
+                        // Refresh full list after bulk save
+                        await fetchAllIsoStandards();
 
                         if (mounted) {
                           MotionToast.success(
@@ -1018,6 +1522,8 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                           // Clear and close
                           for (var row in _bulkRows) {
                             (row['clauseRef'] as TextEditingController)
+                                .dispose();
+                            (row['particulars'] as TextEditingController)
                                 .dispose();
                             (row['description'] as TextEditingController)
                                 .dispose();
@@ -1086,7 +1592,7 @@ class IsoStandardPageState extends State<IsoStandardPage> {
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
+          
 
           return Padding(
             padding: const EdgeInsets.all(16.0),
@@ -1129,6 +1635,24 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                         ),
                         onChanged: filterSearchResults,
                       ),
+                    ),
+                    SizedBox(width: 12),
+                    // Toggle to show only Clause 4-10
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: _showClause4to10,
+                          onChanged: (v) async {
+                            final newVal = v ?? false;
+                            setState(() {
+                              _showClause4to10 = newVal;
+                            });
+                            // Always use full dataset to preserve hierarchy
+                            await fetchAllIsoStandards();
+                          },
+                        ),
+                        Text('Show Clause 4–10'),
+                      ],
                     ),
                     if (!isMinimized)
                       Row(
@@ -1240,139 +1764,92 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                             ],
                           ),
                         )
-                      : DataTable2(
-                          columnSpacing: isMobile ? 16 : 40,
-                          headingRowColor: WidgetStatePropertyAll(
-                            secondaryColor,
-                          ),
-                          dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                          headingTextStyle: const TextStyle(color: grey),
-                          horizontalMargin: 12,
-                          minWidth: constraints.maxWidth,
-                          fixedTopRows: 1,
-                          border: TableBorder(
-                            horizontalInside: BorderSide(
-                              color: Colors.grey.shade100,
-                            ),
-                          ),
-                          columns: [
-                            DataColumn2(label: Text('#'), fixedWidth: 40),
-                            DataColumn2(
-                              label: Text('Clause Reference'),
-                              size: ColumnSize.L,
-                            ),
-                            DataColumn(label: Text('Version Name')),
-                            DataColumn(label: Text('Description')),
-                            DataColumn(label: Text('Status')),
-                            // FR-02, FR-10: Show Actions only if has Edit permission
-                            if (hasEditPermission)
-                              DataColumn(label: Text('Actions')),
-                          ],
-                          rows: filteredList.asMap().entries.map((entry) {
-                            int index = entry.key;
-                            var isoStandard = entry.value;
-                            int itemNumber =
-                                ((_currentPage - 1) * _pageSize) + index + 1;
-
-                            return DataRow(
-                              cells: [
-                                DataCell(Text(itemNumber.toString())),
-                                DataCell(Text(isoStandard.clauseRef)),
-                                DataCell(Text(isoStandard.version.versionName)),
-                                DataCell(
-                                  Text(
-                                    isoStandard.description.length > 50
-                                        ? '${isoStandard.description.substring(0, 50)}...'
-                                        : isoStandard.description,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
+                      : SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Header row matching the original table columns
+                              Container(
+                                color: secondaryColor,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                  horizontal: 8,
                                 ),
-                                DataCell(
-                                  Container(
-                                    padding: EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: isoStandard.isActive
-                                          ? Colors.green.shade100
-                                          : Colors.red.shade100,
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: Text(
-                                      isoStandard.isActive
-                                          ? 'Active'
-                                          : 'Inactive',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: isoStandard.isActive
-                                            ? Colors.green.shade800
-                                            : Colors.red.shade800,
+                                child: Row(
+                                  children: [
+                                    Expanded(flex: 1, child: SizedBox()),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        'Clause Reference',
+                                        style: TextStyle(color: grey),
                                       ),
                                     ),
-                                  ),
-                                ),
-                                // FR-10: Edit and Delete buttons (only if has Edit permission)
-                                if (hasEditPermission)
-                                  DataCell(
-                                    Row(
-                                      children: [
-                                        IconButton(
-                                          icon: const Icon(Icons.edit),
-                                          onPressed: () => showFormDialog(
-                                            id: isoStandard.id.toString(),
-                                            clauseRef: isoStandard.clauseRef,
-                                            description:
-                                                isoStandard.description,
-                                            version: isoStandard.version,
-                                            versionID: isoStandard.versionID,
-                                            isActive: isoStandard.isActive,
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: primaryColor,
-                                          ),
-                                          onPressed: () {
-                                            showDeleteDialog(
-                                              isoStandard.id.toString(),
-                                            );
-                                          },
-                                        ),
-                                      ],
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        'Version Name',
+                                        style: TextStyle(color: grey),
+                                      ),
                                     ),
-                                  ),
-                              ],
-                            );
-                          }).toList(),
+                                    Expanded(
+                                      flex: 4,
+                                      child: Text(
+                                        'Particulars',
+                                        style: TextStyle(color: grey),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 3,
+                                      child: Text(
+                                        'Description',
+                                        style: TextStyle(color: grey),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        'Status',
+                                        style: TextStyle(color: grey),
+                                      ),
+                                    ),
+                                    if (hasEditPermission) SizedBox(width: 120),
+                                  ],
+                                ),
+                              ),
+                              // Hierarchical content
+                              Padding(
+                                padding: const EdgeInsets.only(top: 8.0),
+                                child: Builder(builder: (context) {
+                                  final roots = _buildHierarchy(filteredList);
+                                    final rootsToShow = _showClause4to10
+                                      ? roots
+                                        .where((n) =>
+                                          _isMajorRootFourToTen(
+                                            n.iso.clauseRef))
+                                        .toList()
+                                      : roots;
+
+                                  return ListView.builder(
+                                    itemCount: rootsToShow.length,
+                                    shrinkWrap: true,
+                                    physics: const NeverScrollableScrollPhysics(),
+                                    itemBuilder: (context, index) {
+                                      final node = rootsToShow[index];
+                                      return _showClause4to10
+                                          ? _buildCompactNodeWidget(node, 0)
+                                          : _buildNodeWidget(node, 0);
+                                    },
+                                  );
+                                }),
+                              ),
+                            ],
+                          ),
                         ),
                 ),
-                // Only show pagination if there are items
-                if (_totalCount > 0)
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    color: secondaryColor,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        PaginationInfo(
-                          currentPage: _currentPage,
-                          totalItems: _totalCount,
-                          itemsPerPage: _pageSize,
-                        ),
-                        PaginationControls(
-                          currentPage: _currentPage,
-                          totalItems: _totalCount,
-                          itemsPerPage: _pageSize,
-                          isLoading: _isLoading,
-                          onPageChanged: (page) =>
-                              fetchIsoStandards(page: page),
-                        ),
-                        Container(width: 60),
-                      ],
-                    ),
-                  ),
+                // Pagination intentionally removed to preserve ExpansionTile
+                // behavior. The full dataset is loaded and rendered as a
+                // hierarchical tree, so page controls are not shown here.
               ],
             ),
           );
@@ -1418,16 +1895,7 @@ class IsoStandardPageState extends State<IsoStandardPage> {
               onPressed: () async {
                 Navigator.pop(dialogContext);
 
-                // Save the item being deleted for potential rollback
-                final itemToDelete = isoStandardList.firstWhere(
-                  (item) => item.id.toString() == id,
-                  orElse: () => filteredList.firstWhere(
-                    (item) => item.id.toString() == id,
-                  ),
-                );
-                final indexInList = isoStandardList.indexWhere(
-                  (item) => item.id.toString() == id,
-                );
+                // Item and index are not needed here; directly refresh after delete
 
                 try {
                   // Call delete API first
@@ -1437,38 +1905,9 @@ class IsoStandardPageState extends State<IsoStandardPage> {
                   // Add to deleted IDs set so it stays removed
                   _deletedIds.add(id);
                   await _saveDeletedIds(); // Persist to local storage
-
-                  // Calculate new total count
-                  final newTotalCount = _totalCount > 0 ? _totalCount - 1 : 0;
-
-                  // Calculate total pages with new count
-                  final totalPages = (newTotalCount / _pageSize).ceil();
-
-                  // If current page exceeds total pages, go to the last valid page
-                  int pageToFetch = _currentPage;
-                  if (_currentPage > totalPages && totalPages > 0) {
-                    pageToFetch = totalPages;
-                  } else if (totalPages == 0) {
-                    pageToFetch = 1;
-                  }
-
-                  // Update UI and fetch the appropriate page
+                  // Refresh full list to ensure children/parents update correctly
                   if (mounted) {
-                    // If we need to navigate to a different page, fetch it
-                    if (pageToFetch != _currentPage) {
-                      await fetchIsoStandards(page: pageToFetch);
-                    } else {
-                      // Just remove from current page
-                      setState(() {
-                        isoStandardList.removeWhere(
-                          (item) => item.id.toString() == id,
-                        );
-                        filteredList.removeWhere(
-                          (item) => item.id.toString() == id,
-                        );
-                        _totalCount = newTotalCount;
-                      });
-                    }
+                    await fetchAllIsoStandards();
 
                     MotionToast.success(
                       toastAlignment: Alignment.topCenter,
