@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2026 11:10:55" ReportInfo.Modified="03/02/2026 11:36:04" ReportInfo.CreatorVersion="2025.2.0.0">
+<Report ScriptLanguage="CSharp" ReportInfo.Created="02/24/2026 11:10:55" ReportInfo.Modified="03/04/2026 09:54:05" ReportInfo.CreatorVersion="2025.2.0.0">
   <ScriptText>using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -341,7 +341,7 @@ namespace FastReport
       <ShapeObject Name="Shape4" Left="12.1" Top="100.75" Width="695.65" Height="654.9" CanGrow="true" GrowToBottom="true"/>
       <ShapeObject Name="Shape2" Left="12.35" Top="56.5" Width="695.3" Height="45.8" Fill.Color="219, 165, 42, 42"/>
       <ShapeObject Name="Shape3" Left="12.2" Top="16.25" Width="695.5" Height="42.71" Fill.Color="219, 165, 42, 42"/>
-      <TextObject Name="Text1" Left="18.45" Top="20.15" Width="683.35" Height="33.9" Border.Color="White" Text="CORE PROCESSES SCORECARD" HorzAlign="Center" VertAlign="Center" Font="Calibri, 13pt, style=Bold" TextFill.Color="White"/>
+      <TextObject Name="Text1" Left="17.45" Top="20.15" Width="685.35" Height="33.9" Border.Color="White" Text="CORE PROCESSES SCORECARD" HorzAlign="Center" VertAlign="Center" Font="Calibri, 13pt, style=Bold" TextFill.Color="White"/>
       <LineObject Name="Line3" Left="34.5" Top="58.5" Height="696.8" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line4" Left="184.4" Top="57.95" Height="697.25" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line5" Left="201.8" Top="58.5" Height="696.35" CanGrow="true" GrowToBottom="true"/>
@@ -479,7 +479,7 @@ namespace FastReport
       <ShapeObject Name="Shape7" Left="11.45" Top="97.95" Width="693.65" Height="523.4" CanGrow="true" GrowToBottom="true"/>
       <ShapeObject Name="Shape8" Left="11.7" Top="53.7" Width="693.3" Height="45.8" Fill.Color="219, 165, 42, 42"/>
       <ShapeObject Name="Shape9" Left="11.55" Top="13.45" Width="693.5" Height="42.71" Fill.Color="219, 165, 42, 42"/>
-      <TextObject Name="Text147" Left="17.8" Top="17.35" Width="651.35" Height="33.9" Border.Color="White" Text="SUPPORT PROCESSES SCORECARD" HorzAlign="Center" VertAlign="Center" Font="Calibri, 13pt, style=Bold" TextFill.Color="White"/>
+      <TextObject Name="Text147" Left="17.8" Top="17.35" Width="682.35" Height="33.9" Border.Color="White" Text="SUPPORT PROCESSES SCORECARD" HorzAlign="Center" VertAlign="Center" Font="Calibri, 13pt, style=Bold" TextFill.Color="White"/>
       <LineObject Name="Line24" Left="33.85" Top="55.7" Height="564.8" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line25" Left="183.75" Top="55.15" Height="565.25" CanGrow="true" GrowToBottom="true"/>
       <LineObject Name="Line26" Left="201.15" Top="55.7" Height="565.35" CanGrow="true" GrowToBottom="true"/>
