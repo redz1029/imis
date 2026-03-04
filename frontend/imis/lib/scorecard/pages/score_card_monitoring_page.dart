@@ -878,14 +878,6 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                  Text(
-                                    useYearly
-                                        ? "Year Tracking Period: ($totalPeriods year(s))"
-                                        : "Tracking Periods: $totalPeriods period(s)",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
                                 ],
                               ),
                               const SizedBox(height: 4),
@@ -909,9 +901,13 @@ Future<bool?> showRoadmapAccomplishmentFormDialog(
                           children: [
                             const Icon(Icons.bar_chart_outlined, size: 18),
                             const SizedBox(width: 8),
-                            const Text(
-                              "Yearly Accomplishment Tracking",
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Text(
+                              useYearly
+                                  ? "Yealy KRA and Deliverable Tracking - $totalPeriods year(s)"
+                                  : "Yearly and Deliverable Tracking - $totalPeriods year(s)",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const Spacer(),
                             TotalScoreIndicator(
@@ -1212,48 +1208,45 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Column(
-                                    children: [
-                                      Text(
-                                        "KPI: ${deliverable['kpiDescription'] ?? deliverable['kpiDescription'] ?? 'N/A'}",
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
+                                  Expanded(
+                                    child: Text(
+                                      "KPI: ${deliverable['kpiDescription'] ?? 'N/A'}",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                    ],
-                                  ),
-                                  Text(
-                                    useYearly
-                                        ? "Yearly Tracking: ($totalPeriods year(s))"
-                                        : "Tracking Periods: $totalPeriods period(s)",
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                      softWrap: true,
+                                      overflow:
+                                          TextOverflow
+                                              .visible, // ensures wrapping
                                     ),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 4),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    "Target: ${deliverable['target'] ?? 'No Target'}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                  Flexible(
+                                    child: Text(
+                                      "Target: ${deliverable['target'] ?? 'No Target'}",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      softWrap: true,
+                                      overflow: TextOverflow.visible,
                                     ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
                               Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    "Baseline: ${deliverable['baseLine'] ?? 'No Baseline'}",
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
+                                  Flexible(
+                                    child: Text(
+                                      "Baseline: ${deliverable['baseLine'] ?? 'No Baseline'}",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                      softWrap: true,
+                                      overflow: TextOverflow.visible,
                                     ),
                                   ),
                                 ],
@@ -1266,9 +1259,13 @@ Future<bool?> showKPIAccomplishmentFormDialog(
                           children: [
                             const Icon(Icons.bar_chart_outlined, size: 18),
                             const SizedBox(width: 8),
-                            const Text(
-                              "Yearly Accomplishment Tracking",
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                            Text(
+                              useYearly
+                                  ? "Yealy KPI Tracking - $totalPeriods year(s)"
+                                  : "Yearly KPI Tracking - $totalPeriods year(s)",
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                             const Spacer(),
                             TotalScoreIndicator(
