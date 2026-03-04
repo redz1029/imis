@@ -151,17 +151,19 @@ class _ScorecardAccomplishmentRowWidgetState
 
     if (achievementsList[widget.deliverableId]!.rows.length <=
         widget.periodIndex) {
-      achievementsList[widget.deliverableId]!.rows.add(
-        ScorecardMonitoringRowData(
-          auditorRemarksController: TextEditingController(),
-          percentageController: TextEditingController(text: ''),
-          status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
-        ),
+      final row = ScorecardMonitoringRowData(
+        auditorRemarksController: TextEditingController(),
+        percentageController: TextEditingController(text: ''),
+        status: ValueNotifier<PgsStatus>(PgsStatus.notStarted),
       );
+
+      row.percentageController.addListener(() {
+        _notifyTotalScore();
+      });
+      achievementsList[widget.deliverableId]!.rows.add(row);
       _ensureTotalNotifier();
       _notifyTotalScore();
     }
-
     final row =
         achievementsList[widget.deliverableId]!.rows[widget.periodIndex];
     final percentageController = row.percentageController;
