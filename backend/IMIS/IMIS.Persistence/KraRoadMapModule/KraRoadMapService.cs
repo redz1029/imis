@@ -10,6 +10,7 @@ using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
+using VaultSharp.V1.SecretsEngines.Database;
 
 namespace IMIS.Persistence.KraRoadMapModule
 {
@@ -292,13 +293,22 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             return groups.SelectMany(g => g.Items ?? new List<KraRoadMapDeliverable>()).ToList();
         }
-
+      
         public async Task<KraRoadMapDto> SaveOrUpdateAsync(KraRoadMapDto dto, CancellationToken cancellationToken)
         {
+            var currentUser = await GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new UnauthorizedAccessException("User not found.");
+
+            var roles = await _userManager.GetRolesAsync(currentUser);
+
+            bool isAdmin = roles.Any(r =>
+                r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase));
+
             var flattenedDeliverables = FlattenDeliverableGroups(dto.Deliverables);
 
             var entity = dto.ToEntity();
-            entity.Deliverables = flattenedDeliverables; 
+            entity.Deliverables = flattenedDeliverables;
 
             var kra = await _kraRepository.GetByIdAsync(entity.KraId!.Value, cancellationToken)
                       ?? throw new InvalidOperationException("Invalid KRA Id");
@@ -311,18 +321,42 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             bool isNew = entity.Id == 0;
 
+            // ======================================================
+            // CREATE
+            // ======================================================
             if (isNew)
             {
                 _repository.GetDbContext().Add(entity);
                 await _repository.SaveOrUpdateAsync(entity, cancellationToken);
             }
+            // ======================================================
+            // UPDATE
+            // ======================================================
             else
             {
                 var existing = await _repository
                     .GetByIdWithChildrenAsync(entity.Id, cancellationToken)
                     ?? throw new InvalidOperationException("KraRoadMap record not found.");
 
+                var originalRoleId = existing.RoleId;
+
                 _repository.GetDbContext().Entry(existing).CurrentValues.SetValues(entity);
+
+                if (isAdmin)
+                {
+                    existing.RoleId = originalRoleId;
+                }
+                else
+                {                   
+                    var firstRoleName = roles.FirstOrDefault();
+                    if (!string.IsNullOrEmpty(firstRoleName))
+                    {
+                        var roleEntity = await _roleManager.FindByNameAsync(firstRoleName);
+                        if (roleEntity != null)
+                            existing.RoleId = roleEntity.Id;
+                    }
+                }
+
                 existing.KraId = kra.Id;
                 existing.KraRoadMapPeriodId = period.Id;
 
@@ -339,7 +373,6 @@ namespace IMIS.Persistence.KraRoadMapModule
                 Id = entity.Id
             };
         }
-
         private void UpdateDeliverables(KraRoadMap existing, KraRoadMap incoming)
         {
             var incomingIds = incoming.Deliverables?.Select(d => d.Id).ToList() ?? new();
