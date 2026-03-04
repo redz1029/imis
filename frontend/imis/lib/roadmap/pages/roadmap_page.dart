@@ -13,7 +13,6 @@ import 'package:imis/roadmap/models/roadmap_deliverables.dart';
 import 'package:imis/roadmap/pages/print_roadmap_page.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/utils/permission_service.dart';
-import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -484,20 +483,25 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                                     ),
                                               ),
                                             ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.delete,
-                                                color: Colors.red,
+                                            PermissionWidget(
+                                              permission:
+                                                  AppPermissions.editKraRoadMap,
+                                              child: IconButton(
+                                                icon: const Icon(
+                                                  Icons.delete,
+                                                  color: Colors.red,
+                                                ),
+                                                onPressed: () {
+                                                  setStateDialog(() {
+                                                    kpiControllers.removeAt(i);
+                                                    baselineControllers
+                                                        .removeAt(i);
+                                                    targetControllers.removeAt(
+                                                      i,
+                                                    );
+                                                  });
+                                                },
                                               ),
-                                              onPressed: () {
-                                                setStateDialog(() {
-                                                  kpiControllers.removeAt(i);
-                                                  baselineControllers.removeAt(
-                                                    i,
-                                                  );
-                                                  targetControllers.removeAt(i);
-                                                });
-                                              },
                                             ),
                                           ],
                                         ),
@@ -596,23 +600,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                         ) {
                                           if (col == 0) {
                                             return PermissionWidget(
-                                              allowedRoles: [
-                                                PermissionString.roleAdmin,
-                                                PermissionString
-                                                    .trainingOfficer,
-                                                PermissionString.serviceOfficer,
-                                                PermissionString.financeOfficer,
-                                                PermissionString
-                                                    .researchOfficer,
-                                                PermissionString
-                                                    .facilityOfficer,
-                                                PermissionString
-                                                    .linkagesOfficer,
-                                                PermissionString
-                                                    .informationOfficer,
-                                                PermissionString.safetyOfficer,
-                                                PermissionString.hrOfficer,
-                                              ],
+                                              permission:
+                                                  AppPermissions.editKraRoadMap,
                                               child: IconButton(
                                                 icon: const Icon(
                                                   Icons.delete,
@@ -716,236 +705,248 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
               actions: [
                 Builder(
                   builder: (context) {
-                    final canEdit =
-                        (roadmapToEdit == null) ||
-                        (roleId == roadmapToEdit.roleId) ||
-                        (permissionService.currentRole != null);
-                    if (!canEdit) {
-                      return const SizedBox.shrink();
-                    }
+                    // final canEdit =
+                    //     (roadmapToEdit == null) ||
+                    //     (roleId == roadmapToEdit.roleId) ||
+                    //     (permissionService.currentRole != null &&
+                    //         permissionService.currentRole ==
+                    //             PermissionString.roleAdmin);
+                    // if (!canEdit) {
+                    //   return const SizedBox.shrink();
+                    // }
 
-                    return Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text(
-                            'Cancel',
-                            style: TextStyle(color: primaryColor),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
+                    return PermissionWidget(
+                      permission: AppPermissions.addKraRoadMap,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text(
+                              'Cancel',
+                              style: TextStyle(color: primaryColor),
                             ),
                           ),
-                          child: Text(
-                            'Save',
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                          onPressed: () async {
-                            bool? confirmAction = await showDialog<bool>(
-                              context: context,
-                              builder: (context) {
-                                return AlertDialog(
-                                  title: Text('Confirm Save'),
-                                  content: Text(
-                                    isEdit
-                                        ? 'Are you sure you want to update this roadmap?'
-                                        : 'Are you sure you want to save this roadmap?',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed:
-                                          () => Navigator.pop(context, false),
-                                      child: const Text(
-                                        'Cancel',
-                                        style: TextStyle(color: primaryColor),
-                                      ),
+                          const SizedBox(width: 12),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                            child: Text(
+                              'Save',
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                            onPressed: () async {
+                              bool? confirmAction = await showDialog<bool>(
+                                context: context,
+                                builder: (context) {
+                                  return AlertDialog(
+                                    title: Text('Confirm Save'),
+                                    content: Text(
+                                      isEdit
+                                          ? 'Are you sure you want to update this roadmap?'
+                                          : 'Are you sure you want to save this roadmap?',
                                     ),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: primaryColor,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.pop(context, false),
+                                        child: const Text(
+                                          'Cancel',
+                                          style: TextStyle(color: primaryColor),
                                         ),
                                       ),
-                                      onPressed:
-                                          () => Navigator.pop(context, true),
-                                      child: const Text(
-                                        'Confirm',
-                                        style: TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-
-                            if (confirmAction != true) return;
-
-                            final Set<String> kraSet = {};
-                            bool hasDuplicateKra = false;
-
-                            for (final row in tableControllers) {
-                              final kraText = row[2].text.trim().toLowerCase();
-
-                              if (kraText.isEmpty) continue;
-
-                              if (kraSet.contains(kraText)) {
-                                hasDuplicateKra = true;
-                                break;
-                              }
-                              kraSet.add(kraText);
-                            }
-
-                            if (hasDuplicateKra) {
-                              MotionToast.warning(
-                                toastAlignment: Alignment.topCenter,
-                                description: const Text(
-                                  'Duplicate KRA found. Please ensure each KRA is unique.',
-                                ),
-                              ).show(context);
-                              return;
-                            }
-
-                            int filledKpiCount =
-                                kpiControllers
-                                    .where((c) => c.text.trim().isNotEmpty)
-                                    .length;
-
-                            if (filledKpiCount < 1) {
-                              MotionToast.warning(
-                                title: const Text("Insufficient KPI"),
-                                description: const Text(
-                                  "Please provide at least 1 or 2 KPIs only.",
-                                ),
-                                toastAlignment: Alignment.center,
-                              ).show(context);
-
-                              return;
-                            }
-
-                            final List<DeliverableGroup> allGroups = [];
-
-                            for (int r = 0; r < tableControllers.length; r++) {
-                              final controllers = tableControllers[r];
-                              final existingGroup = existingGroups[r];
-
-                              final List<RoadmapDeliverableItem> items = [];
-
-                              for (int c = 3; c < headers.length; c++) {
-                                final year = yearColumns[c - 3];
-                                final text = controllers[c].text.trim();
-
-                                final existingItem = existingGroup?.items
-                                    ?.firstWhere(
-                                      (i) => i.year == year,
-                                      orElse:
-                                          () => RoadmapDeliverableItem(
-                                            id: 0,
-                                            deliverableDescription: '',
-                                            year: year,
-                                            kraDescription: controllers[2].text,
-                                            isEnabler:
-                                                c == 3
-                                                    ? enablerStates[r][1]
-                                                    : false,
-                                            isDeleted: false,
-                                            rowVersion: '',
+                                      ElevatedButton(
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: primaryColor,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
-                                    );
+                                        ),
+                                        onPressed:
+                                            () => Navigator.pop(context, true),
+                                        child: const Text(
+                                          'Confirm',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                },
+                              );
 
-                                items.add(
-                                  RoadmapDeliverableItem(
-                                    id: isEdit ? existingItem?.id ?? 0 : 0,
-                                    deliverableDescription: text,
-                                    year: year,
+                              if (confirmAction != true) return;
+
+                              final Set<String> kraSet = {};
+                              bool hasDuplicateKra = false;
+
+                              for (final row in tableControllers) {
+                                final kraText =
+                                    row[2].text.trim().toLowerCase();
+
+                                if (kraText.isEmpty) continue;
+
+                                if (kraSet.contains(kraText)) {
+                                  hasDuplicateKra = true;
+                                  break;
+                                }
+                                kraSet.add(kraText);
+                              }
+
+                              if (hasDuplicateKra) {
+                                MotionToast.warning(
+                                  toastAlignment: Alignment.topCenter,
+                                  description: const Text(
+                                    'Duplicate KRA found. Please ensure each KRA is unique.',
+                                  ),
+                                ).show(context);
+                                return;
+                              }
+
+                              int filledKpiCount =
+                                  kpiControllers
+                                      .where((c) => c.text.trim().isNotEmpty)
+                                      .length;
+
+                              if (filledKpiCount < 1) {
+                                MotionToast.warning(
+                                  title: const Text("Insufficient KPI"),
+                                  description: const Text(
+                                    "Please provide at least 1 or 2 KPIs only.",
+                                  ),
+                                  toastAlignment: Alignment.center,
+                                ).show(context);
+
+                                return;
+                              }
+
+                              final List<DeliverableGroup> allGroups = [];
+
+                              for (
+                                int r = 0;
+                                r < tableControllers.length;
+                                r++
+                              ) {
+                                final controllers = tableControllers[r];
+                                final existingGroup = existingGroups[r];
+
+                                final List<RoadmapDeliverableItem> items = [];
+
+                                for (int c = 3; c < headers.length; c++) {
+                                  final year = yearColumns[c - 3];
+                                  final text = controllers[c].text.trim();
+
+                                  final existingItem = existingGroup?.items
+                                      ?.firstWhere(
+                                        (i) => i.year == year,
+                                        orElse:
+                                            () => RoadmapDeliverableItem(
+                                              id: 0,
+                                              deliverableDescription: '',
+                                              year: year,
+                                              kraDescription:
+                                                  controllers[2].text,
+                                              isEnabler:
+                                                  c == 3
+                                                      ? enablerStates[r][1]
+                                                      : false,
+                                              isDeleted: false,
+                                              rowVersion: '',
+                                            ),
+                                      );
+
+                                  items.add(
+                                    RoadmapDeliverableItem(
+                                      id: isEdit ? existingItem?.id ?? 0 : 0,
+                                      deliverableDescription: text,
+                                      year: year,
+                                      kraDescription: controllers[2].text,
+                                      isEnabler:
+                                          c == 3 ? enablerStates[r][1] : false,
+                                      isDeleted: false,
+                                      rowVersion:
+                                          existingItem?.rowVersion ?? '',
+                                    ),
+                                  );
+                                }
+
+                                allGroups.add(
+                                  DeliverableGroup(
+                                    id: isEdit ? existingGroup?.id ?? 0 : 0,
                                     kraDescription: controllers[2].text,
-                                    isEnabler:
-                                        c == 3 ? enablerStates[r][1] : false,
+                                    items: items,
                                     isDeleted: false,
-                                    rowVersion: existingItem?.rowVersion ?? '',
+                                    rowVersion: existingGroup?.rowVersion ?? '',
                                   ),
                                 );
                               }
 
-                              allGroups.add(
-                                DeliverableGroup(
-                                  id: isEdit ? existingGroup?.id ?? 0 : 0,
-                                  kraDescription: controllers[2].text,
-                                  items: items,
-                                  isDeleted: false,
-                                  rowVersion: existingGroup?.rowVersion ?? '',
-                                ),
-                              );
-                            }
+                              kpiList.clear();
+                              final int kpiCount = [
+                                kpiControllers.length,
+                                targetControllers.length,
+                                baselineControllers.length,
+                              ].reduce((a, b) => a < b ? a : b);
 
-                            kpiList.clear();
-                            final int kpiCount = [
-                              kpiControllers.length,
-                              targetControllers.length,
-                              baselineControllers.length,
-                            ].reduce((a, b) => a < b ? a : b);
+                              for (int i = 0; i < kpiCount; i++) {
+                                final kpiText = kpiControllers[i].text.trim();
+                                final targetText =
+                                    targetControllers[i].text.trim();
+                                final baselineText =
+                                    baselineControllers[i].text.trim();
 
-                            for (int i = 0; i < kpiCount; i++) {
-                              final kpiText = kpiControllers[i].text.trim();
-                              final targetText =
-                                  targetControllers[i].text.trim();
-                              final baselineText =
-                                  baselineControllers[i].text.trim();
+                                if (kpiText.isEmpty &&
+                                    targetText.isEmpty &&
+                                    baselineText.isEmpty) {
+                                  continue;
+                                }
 
-                              if (kpiText.isEmpty &&
-                                  targetText.isEmpty &&
-                                  baselineText.isEmpty) {
-                                continue;
+                                kpiList.add(
+                                  KpiRoadmap(
+                                    id: 0,
+                                    kpiDescription: kpiText,
+                                    target: targetText,
+                                    baseLine: baselineText,
+                                  ),
+                                );
                               }
-
-                              kpiList.add(
-                                KpiRoadmap(
-                                  id: 0,
-                                  kpiDescription: kpiText,
-                                  target: targetText,
-                                  baseLine: baselineText,
-                                ),
+                              final roadmap = Roadmap(
+                                isEdit ? roadmapToEdit.id : 0,
+                                selectedKra!.kraId,
+                                period.id,
+                                period,
+                                allGroups,
+                                kpiList,
+                                roleId,
+                                isDeleted: false,
+                                rowVersion: roadmapToEdit?.rowVersion ?? '',
                               );
-                            }
-                            final roadmap = Roadmap(
-                              isEdit ? roadmapToEdit.id : 0,
-                              selectedKra!.kraId,
-                              period.id,
-                              period,
-                              allGroups,
-                              kpiList,
-                              roleId,
-                              isDeleted: false,
-                              rowVersion: roadmapToEdit?.rowVersion ?? '',
-                            );
 
-                            await _roadmapService.createRoadmap(roadmap);
+                              await _roadmapService.createRoadmap(roadmap);
 
-                            setState(() {
-                              fetchRoadmap();
-                            });
+                              setState(() {
+                                fetchRoadmap();
+                              });
 
-                            MotionToast.success(
-                              toastAlignment: Alignment.topCenter,
-                              description: Text(
-                                isEdit
-                                    ? 'Updated successfully'
-                                    : 'Saved successfully',
-                              ),
-                            ).show(context);
+                              MotionToast.success(
+                                toastAlignment: Alignment.topCenter,
+                                description: Text(
+                                  isEdit
+                                      ? 'Updated successfully'
+                                      : 'Saved successfully',
+                                ),
+                              ).show(context);
 
-                            Navigator.pop(context);
-                          },
-                        ),
-                      ],
+                              Navigator.pop(context);
+                            },
+                          ),
+                        ],
+                      ),
                     );
                   },
                 ),
@@ -1138,18 +1139,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                     ),
                     if (!isMinimized)
                       PermissionWidget(
-                        allowedRoles: [
-                          PermissionString.roleAdmin,
-                          PermissionString.trainingOfficer,
-                          PermissionString.serviceOfficer,
-                          PermissionString.financeOfficer,
-                          PermissionString.researchOfficer,
-                          PermissionString.facilityOfficer,
-                          PermissionString.linkagesOfficer,
-                          PermissionString.informationOfficer,
-                          PermissionString.safetyOfficer,
-                          PermissionString.hrOfficer,
-                        ],
+                        permission: AppPermissions.addKraRoadMap,
                         child: ElevatedButton.icon(
                           onPressed: () => showProcess(),
                           style: ElevatedButton.styleFrom(
@@ -1254,8 +1244,10 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                 SizedBox(
                                   child: Row(
                                     children: [
-                                      if (roleId == roadmap.roleId)
-                                        IconButton(
+                                      PermissionWidget(
+                                        permission:
+                                            AppPermissions.viewKraRoadMap,
+                                        child: IconButton(
                                           icon: const Icon(Icons.edit),
 
                                           onPressed: () async {
@@ -1270,6 +1262,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                             );
                                           },
                                         ),
+                                      ),
                                       Tooltip(
                                         message: 'Print Preview',
                                         child: IconButton(
@@ -1294,8 +1287,11 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                           },
                                         ),
                                       ),
-                                      if (roleId == roadmap.roleId)
-                                        IconButton(
+
+                                      PermissionWidget(
+                                        permission:
+                                            AppPermissions.editKraRoadMap,
+                                        child: IconButton(
                                           icon: const Icon(
                                             Icons.delete,
                                             color: primaryColor,
@@ -1306,6 +1302,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                             );
                                           },
                                         ),
+                                      ),
                                     ],
                                   ),
                                 ),
@@ -1347,18 +1344,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
       floatingActionButton:
           isMinimized
               ? PermissionWidget(
-                allowedRoles: [
-                  PermissionString.roleAdmin,
-                  PermissionString.trainingOfficer,
-                  PermissionString.serviceOfficer,
-                  PermissionString.financeOfficer,
-                  PermissionString.researchOfficer,
-                  PermissionString.facilityOfficer,
-                  PermissionString.linkagesOfficer,
-                  PermissionString.informationOfficer,
-                  PermissionString.safetyOfficer,
-                  PermissionString.hrOfficer,
-                ],
+                permission: AppPermissions.addKraRoadMap,
                 child: FloatingActionButton(
                   backgroundColor: primaryColor,
                   onPressed: () => showProcess(),
