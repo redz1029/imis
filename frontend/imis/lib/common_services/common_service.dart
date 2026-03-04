@@ -71,4 +71,10 @@ class CommonService {
     (e) => KraRoadmapPeriod.fromJson(e),
     'Failed to fetch kra period',
   );
+
+  Future<List<PgsPeriod>> fetchPeriod() => _fetchList(
+    ApiEndpoint().pgsperiod,
+    (e) => PgsPeriod.fromJson(e),
+    'Failed to fetch kra period',
+  );
 }
