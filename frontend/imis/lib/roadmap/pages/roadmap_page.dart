@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
+import 'package:imis/performance_governance_system/pages/pgs_reports.dart';
 import 'package:imis/roadmap/models/kpi_roadmap.dart';
 import 'package:imis/roadmap/models/kra_roadmap_role.dart';
 import 'package:imis/roadmap/models/roadmap.dart';
@@ -1163,154 +1164,380 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: 700,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: const [
-                      DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(
-                        label: Text('Process (Core & Support)'),
-                        size: ColumnSize.L,
-                      ),
-                      DataColumn2(label: Text('Period'), size: ColumnSize.L),
-                      DataColumn2(label: Text('Actions'), size: ColumnSize.M),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var roadmap = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
+                  child:
+                      isMobile
+                          ? ListView.separated(
+                            itemCount: filteredList.length,
+                            separatorBuilder:
+                                (context, index) => Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              var roadmap = filteredList[index];
 
-                          final matchedKra = kraList.firstWhere(
-                            (kra) => kra.id == roadmap.kraId,
-                            orElse:
-                                () => KeyResultArea(
-                                  0,
-                                  'name',
-                                  'remarks',
-                                  'strategicObjective',
-                                  false,
-                                ),
-                          );
+                              int itemNumber =
+                                  ((_currentPage - 1) * _pageSize) + index + 1;
+                              final matchedKra = kraList.firstWhere(
+                                (kra) => kra.id == roadmap.kraId,
+                                orElse:
+                                    () => KeyResultArea(
+                                      0,
+                                      'name',
+                                      'remarks',
+                                      'strategicObjective',
+                                      false,
+                                    ),
+                              );
 
-                          final kraName = matchedKra.name;
+                              final kraName = matchedKra.name;
 
-                          final matchedKraRoadmap = kraListRoadmap.firstWhere(
-                            (kra) => kra.kraId == roadmap.kraId,
-                            orElse:
-                                () => KraRoadmapRole(
-                                  kraId: 0,
-                                  roleId: 'roleId',
-                                  kraName: kraName,
-                                  strategicObjectives: '',
-                                ),
-                          );
-
-                          final matchedKraPeriod = kraPeriodList.firstWhere(
-                            (kraPeriod) =>
-                                kraPeriod.id == roadmap.kraRoadMapPeriodId,
-                            orElse:
-                                () => KraRoadmapPeriod(
-                                  0,
-                                  DateTime.now(),
-                                  DateTime.now(),
-                                  isDeleted: false,
-                                  rowVersion: '',
-                                ),
-                          );
-                          final startYear = matchedKraPeriod.startYear.year;
-                          final endYear = matchedKraPeriod.endYear.year;
-                          final kraPeriod = '$startYear - $endYear ';
-                          return DataRow(
-                            cells: [
-                              DataCell(
-                                SizedBox(
-                                  width: 40,
-                                  child: Text(itemNumber.toString()),
-                                ),
-                              ),
-                              DataCell(Text(kraName)),
-                              DataCell(Text(kraPeriod)),
-                              DataCell(
-                                SizedBox(
-                                  child: Row(
-                                    children: [
-                                      PermissionWidget(
-                                        permission:
-                                            AppPermissions.viewKraRoadMap,
-                                        child: IconButton(
-                                          icon: const Icon(Icons.edit),
-
-                                          onPressed: () async {
-                                            final Roadmap roadmapDetails =
-                                                await _roadmapService
-                                                    .getRoadmapId(roadmap.id!);
-
-                                            showRoadmapFormDialog(
-                                              matchedKraPeriod,
-                                              selectedKra: matchedKraRoadmap,
-                                              roadmapToEdit: roadmapDetails,
-                                            );
-                                          },
+                              final matchedKraRoadmap = kraListRoadmap
+                                  .firstWhere(
+                                    (kra) => kra.kraId == roadmap.kraId,
+                                    orElse:
+                                        () => KraRoadmapRole(
+                                          kraId: 0,
+                                          roleId: 'roleId',
+                                          kraName: kraName,
+                                          strategicObjectives: '',
                                         ),
-                                      ),
-                                      Tooltip(
-                                        message: 'Print Preview',
-                                        child: IconButton(
-                                          icon: const Icon(
-                                            Icons.description_outlined,
+                                  );
+
+                              final matchedKraPeriod = kraPeriodList.firstWhere(
+                                (kraPeriod) =>
+                                    kraPeriod.id == roadmap.kraRoadMapPeriodId,
+                                orElse:
+                                    () => KraRoadmapPeriod(
+                                      0,
+                                      DateTime.now(),
+                                      DateTime.now(),
+                                      isDeleted: false,
+                                      rowVersion: '',
+                                    ),
+                              );
+                              final startYear = matchedKraPeriod.startYear.year;
+                              final endYear = matchedKraPeriod.endYear.year;
+                              final kraPeriod = '$startYear - $endYear ';
+                              return Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "$itemNumber",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
                                           ),
+                                        ),
+                                        PopupMenuButton<String>(
+                                          color: mainBgColor,
+                                          tooltip: 'Show actions',
+                                          icon: const Icon(
+                                            Icons.more_vert_outlined,
+                                          ),
+                                          onSelected: (value) async {
+                                            if (value == 'edit') {
+                                              final Roadmap roadmapDetails =
+                                                  await _roadmapService
+                                                      .getRoadmapId(
+                                                        roadmap.id!,
+                                                      );
 
-                                          onPressed: () async {
-                                            final roadMapId =
-                                                roadmap.id.toString();
+                                              showRoadmapFormDialog(
+                                                matchedKraPeriod,
+                                                selectedKra: matchedKraRoadmap,
+                                                roadmapToEdit: roadmapDetails,
+                                              );
+                                            }
 
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) =>
-                                                        PrintRoadmapPage(
-                                                          roadmapId: roadMapId,
+                                            if (value == 'preview') {
+                                              final roadMapId =
+                                                  roadmap.id.toString();
+
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (context) =>
+                                                          PrintRoadmapPage(
+                                                            roadmapId:
+                                                                roadMapId,
+                                                          ),
+                                                ),
+                                              );
+                                            }
+                                            if (value == 'delete') {
+                                              showDeleteDialog(
+                                                roadmap.id.toString(),
+                                              );
+                                            }
+                                          },
+                                          itemBuilder:
+                                              (context) => [
+                                                PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: PermissionWidget(
+                                                    permission:
+                                                        AppPermissions
+                                                            .viewKraRoadMap,
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.edit,
+                                                          size: 18,
                                                         ),
-                                              ),
-                                            );
-                                          },
+                                                        SizedBox(width: 8),
+                                                        Text('Edit'),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                const PopupMenuItem(
+                                                  value: 'preview',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .description_outlined,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Print preview'),
+                                                    ],
+                                                  ),
+                                                ),
+
+                                                PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: PermissionWidget(
+                                                    permission:
+                                                        AppPermissions
+                                                            .editKraRoadMap,
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.delete,
+                                                          color: Color.fromARGB(
+                                                            255,
+                                                            221,
+                                                            79,
+                                                            79,
+                                                          ),
+                                                          size: 18,
+                                                        ),
+                                                        SizedBox(width: 8),
+                                                        Text('Delete'),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 8),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Process (Core & Support): ',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        Expanded(child: Text(kraName)),
+                                      ],
+                                    ),
+                                    SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Period: ',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        Expanded(child: Text(kraPeriod)),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          )
+                          : DataTable2(
+                            columnSpacing: isMobile ? 16 : 40,
+                            headingRowColor: WidgetStatePropertyAll(
+                              secondaryColor,
+                            ),
+                            dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                            headingTextStyle: const TextStyle(color: grey),
+                            horizontalMargin: 12,
+                            minWidth: 700,
+                            fixedTopRows: 1,
+                            border: TableBorder(
+                              horizontalInside: BorderSide(
+                                color: Colors.grey.shade100,
+                              ),
+                            ),
+                            columns: const [
+                              DataColumn2(label: Text('#'), fixedWidth: 40),
+                              DataColumn2(
+                                label: Text('Process (Core & Support)'),
+                                size: ColumnSize.L,
+                              ),
+                              DataColumn2(
+                                label: Text('Period'),
+                                size: ColumnSize.L,
+                              ),
+                              DataColumn2(
+                                label: Text('Actions'),
+                                size: ColumnSize.M,
+                              ),
+                            ],
+                            rows:
+                                filteredList.asMap().entries.map((entry) {
+                                  int index = entry.key;
+                                  var roadmap = entry.value;
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+
+                                  final matchedKra = kraList.firstWhere(
+                                    (kra) => kra.id == roadmap.kraId,
+                                    orElse:
+                                        () => KeyResultArea(
+                                          0,
+                                          'name',
+                                          'remarks',
+                                          'strategicObjective',
+                                          false,
+                                        ),
+                                  );
+
+                                  final kraName = matchedKra.name;
+
+                                  final matchedKraRoadmap = kraListRoadmap
+                                      .firstWhere(
+                                        (kra) => kra.kraId == roadmap.kraId,
+                                        orElse:
+                                            () => KraRoadmapRole(
+                                              kraId: 0,
+                                              roleId: 'roleId',
+                                              kraName: kraName,
+                                              strategicObjectives: '',
+                                            ),
+                                      );
+
+                                  final matchedKraPeriod = kraPeriodList
+                                      .firstWhere(
+                                        (kraPeriod) =>
+                                            kraPeriod.id ==
+                                            roadmap.kraRoadMapPeriodId,
+                                        orElse:
+                                            () => KraRoadmapPeriod(
+                                              0,
+                                              DateTime.now(),
+                                              DateTime.now(),
+                                              isDeleted: false,
+                                              rowVersion: '',
+                                            ),
+                                      );
+                                  final startYear =
+                                      matchedKraPeriod.startYear.year;
+                                  final endYear = matchedKraPeriod.endYear.year;
+                                  final kraPeriod = '$startYear - $endYear ';
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(
+                                        SizedBox(
+                                          width: 40,
+                                          child: Text(itemNumber.toString()),
                                         ),
                                       ),
+                                      DataCell(Text(kraName)),
+                                      DataCell(Text(kraPeriod)),
+                                      DataCell(
+                                        SizedBox(
+                                          child: Row(
+                                            children: [
+                                              PermissionWidget(
+                                                permission:
+                                                    AppPermissions
+                                                        .viewKraRoadMap,
+                                                child: IconButton(
+                                                  icon: const Icon(Icons.edit),
 
-                                      PermissionWidget(
-                                        permission:
-                                            AppPermissions.editKraRoadMap,
-                                        child: IconButton(
-                                          icon: const Icon(
-                                            Icons.delete,
-                                            color: primaryColor,
+                                                  onPressed: () async {
+                                                    final Roadmap
+                                                    roadmapDetails =
+                                                        await _roadmapService
+                                                            .getRoadmapId(
+                                                              roadmap.id!,
+                                                            );
+
+                                                    showRoadmapFormDialog(
+                                                      matchedKraPeriod,
+                                                      selectedKra:
+                                                          matchedKraRoadmap,
+                                                      roadmapToEdit:
+                                                          roadmapDetails,
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                              Tooltip(
+                                                message: 'Print Preview',
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                    Icons.description_outlined,
+                                                  ),
+
+                                                  onPressed: () async {
+                                                    final roadMapId =
+                                                        roadmap.id.toString();
+
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder:
+                                                            (context) =>
+                                                                PrintRoadmapPage(
+                                                                  roadmapId:
+                                                                      roadMapId,
+                                                                ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+
+                                              PermissionWidget(
+                                                permission:
+                                                    AppPermissions
+                                                        .editKraRoadMap,
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                    Icons.delete,
+                                                    color: primaryColor,
+                                                  ),
+                                                  onPressed: () {
+                                                    showDeleteDialog(
+                                                      roadmap.id.toString(),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          onPressed: () {
-                                            showDeleteDialog(
-                                              roadmap.id.toString(),
-                                            );
-                                          },
                                         ),
                                       ),
                                     ],
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                  ),
+                                  );
+                                }).toList(),
+                          ),
                 ),
 
                 Container(
