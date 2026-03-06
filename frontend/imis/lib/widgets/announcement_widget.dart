@@ -390,6 +390,12 @@ class _AnnouncementListState extends State<AnnouncementList> {
                             color: primaryColor,
                           ),
                         ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Plase select a date';
+                          }
+                          return null;
+                        },
                         controller: TextEditingController(
                           text:
                               selectedFromDate != null
@@ -435,6 +441,12 @@ class _AnnouncementListState extends State<AnnouncementList> {
                             color: primaryColor,
                           ),
                         ),
+                        validator: (value) {
+                          if (value == null || value.trim().isEmpty) {
+                            return 'Please select a date';
+                          }
+                          return null;
+                        },
                         controller: TextEditingController(
                           text:
                               selectedEndDate != null
