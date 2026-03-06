@@ -12,14 +12,14 @@ import 'package:imis/utils/pagination_util.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:motion_toast/motion_toast.dart';
 
-class KeyResultAreaPage extends StatefulWidget {
-  const KeyResultAreaPage({super.key});
+class ProcessCoreSupportPage extends StatefulWidget {
+  const ProcessCoreSupportPage({super.key});
 
   @override
-  KeyResultAreaPageState createState() => KeyResultAreaPageState();
+  ProcessCoreSupportPageState createState() => ProcessCoreSupportPageState();
 }
 
-class KeyResultAreaPageState extends State<KeyResultAreaPage> {
+class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
   final _formKey = GlobalKey<FormState>();
   final _kraService = KeyResultAreaService(Dio());
 
@@ -338,7 +338,7 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: const Text('Role Information'),
+        title: const Text('Process Core & Support Information'),
         backgroundColor: mainBgColor,
         elevation: 0,
       ),
@@ -411,68 +411,215 @@ class KeyResultAreaPageState extends State<KeyResultAreaPage> {
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: const [
-                      DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(label: Text('Name'), size: ColumnSize.L),
-                      DataColumn(label: Text('Description')),
-                      DataColumn(label: Text('Strategic Objectives')),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var kra = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
+                  child:
+                      isMobile
+                          ? ListView.separated(
+                            itemCount: filteredList.length,
+                            separatorBuilder: (context, index) => Divider(),
+                            itemBuilder: (context, index) {
+                              var kra = filteredList[index];
+                              int itemNumber =
+                                  ((_currentPage - 1) * _pageSize) + index + 1;
 
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
-                              DataCell(Text(kra.name)),
-                              DataCell(Text(kra.remarks ?? '')),
-                              DataCell(Text(kra.strategicObjective ?? '')),
-                              DataCell(
-                                Row(
+                              return Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () {
-                                        showFormDialog(
-                                          id: kra.id.toString(),
-                                          name: kra.name,
-                                          remarks: kra.remarks,
-                                          strategicObjective:
-                                              kra.strategicObjective,
-                                        );
-                                      },
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "$itemNumber",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                        PopupMenuButton<String>(
+                                          color: mainBgColor,
+                                          tooltip: 'Show actions',
+                                          icon: const Icon(
+                                            Icons.more_vert_outlined,
+                                          ),
+                                          onSelected: (value) {
+                                            if (value == 'edit') {
+                                              showFormDialog(
+                                                id: kra.id.toString(),
+                                                name: kra.name,
+                                                remarks: kra.remarks,
+                                                strategicObjective:
+                                                    kra.strategicObjective,
+                                              );
+                                            } else if (value == 'delete') {
+                                              showDeleteDialog(
+                                                kra.id.toString(),
+                                              );
+                                            }
+                                          },
+                                          itemBuilder:
+                                              (context) => [
+                                                PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.edit,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Edit'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.delete,
+                                                        size: 18,
+                                                        color: primaryColor,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Delete'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                        ),
+                                      ],
                                     ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
-                                      ),
-                                      onPressed: () {
-                                        showDeleteDialog(kra.id.toString());
-                                      },
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "Name: ",
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            kra.name,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "Description: ",
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(kra.remarks ?? ''),
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          "Strategic Objectives: ",
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            kra.strategicObjective ?? '',
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
+                              );
+                            },
+                          )
+                          : DataTable2(
+                            columnSpacing: isMobile ? 16 : 40,
+                            headingRowColor: WidgetStatePropertyAll(
+                              secondaryColor,
+                            ),
+                            dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                            headingTextStyle: const TextStyle(color: grey),
+                            horizontalMargin: 12,
+                            minWidth: constraints.maxWidth,
+                            fixedTopRows: 1,
+                            border: TableBorder(
+                              horizontalInside: BorderSide(
+                                color: Colors.grey.shade100,
                               ),
+                            ),
+                            columns: const [
+                              DataColumn2(label: Text('#'), fixedWidth: 40),
+                              DataColumn2(
+                                label: Text('Name'),
+                                size: ColumnSize.L,
+                              ),
+                              DataColumn(label: Text('Description')),
+                              DataColumn(label: Text('Strategic Objectives')),
+                              DataColumn(label: Text('Actions')),
                             ],
-                          );
-                        }).toList(),
-                  ),
+                            rows:
+                                filteredList.asMap().entries.map((entry) {
+                                  int index = entry.key;
+                                  var kra = entry.value;
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(Text(itemNumber.toString())),
+                                      DataCell(Text(kra.name)),
+                                      DataCell(Text(kra.remarks ?? '')),
+                                      DataCell(
+                                        Text(kra.strategicObjective ?? ''),
+                                      ),
+                                      DataCell(
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.edit),
+                                              onPressed: () {
+                                                showFormDialog(
+                                                  id: kra.id.toString(),
+                                                  name: kra.name,
+                                                  remarks: kra.remarks,
+                                                  strategicObjective:
+                                                      kra.strategicObjective,
+                                                );
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete,
+                                                color: primaryColor,
+                                              ),
+                                              onPressed: () {
+                                                showDeleteDialog(
+                                                  kra.id.toString(),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                          ),
                 ),
 
                 Container(
