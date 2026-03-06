@@ -471,10 +471,7 @@ Widget _buildStrategicMap() {
           Center(
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxWidth),
-              child: Image.asset(
-                'assets/strat_roadmap.jpg',
-                fit: BoxFit.contain,
-              ),
+              child: Image.asset('assets/strat_map.png', fit: BoxFit.contain),
             ),
           ),
         ],

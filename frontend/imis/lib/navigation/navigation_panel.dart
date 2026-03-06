@@ -25,7 +25,7 @@ import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
 import 'package:imis/user/pages/home_page.dart';
-import 'package:imis/performance_governance_system/key_result_area/pages/key_result_area_page.dart';
+import 'package:imis/performance_governance_system/key_result_area/pages/process_core_support_page.dart';
 import 'package:imis/office/pages/office_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/constant/constant.dart';
@@ -1060,10 +1060,10 @@ class NavigationPanelState extends State<NavigationPanel> {
                                         _buildListTile(
                                           Icons.date_range,
                                           hideIcon: true,
-                                          'Key Result Area',
+                                          'Process Core & Support',
                                           7,
                                           () => _setScreen(
-                                            KeyResultAreaPage(),
+                                            ProcessCoreSupportPage(),
                                             7,
                                           ),
                                         ),
