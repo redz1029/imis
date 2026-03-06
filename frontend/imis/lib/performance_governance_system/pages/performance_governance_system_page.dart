@@ -1591,225 +1591,502 @@ class PerformanceGovernanceSystemPageState
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 8 : 12,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: 700,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: [
-                      DataColumn2(label: const Text('#'), fixedWidth: 40),
-                      DataColumn2(
-                        label: const Text('Office'),
-                        size: ColumnSize.L,
-                      ),
-                      DataColumn2(
-                        label: const Text('Period'),
-                        size: ColumnSize.L,
-                      ),
-                      DataColumn2(
-                        label: const Text('Status'),
-                        size: ColumnSize.S,
-                      ),
-                      DataColumn2(
-                        label: const Text('Actions'),
-                        size: ColumnSize.M,
-                      ),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var pgsgovernancesystem = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
-                          final isDraft =
-                              pgsgovernancesystem['isDraft'] as bool? ?? false;
+                  child:
+                      isMobile
+                          ? ListView.separated(
+                            itemCount: filteredList.length,
+                            separatorBuilder:
+                                (context, index) => const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              var pgs = filteredList[index];
 
-                          final signatories = List<Map<String, dynamic>>.from(
-                            pgsgovernancesystem['signatories'] ?? [],
-                          );
-                          final deliverables = List<Map<String, dynamic>>.from(
-                            pgsgovernancesystem['pgsDeliverables'] ?? [],
-                          );
-                          String status = 'Draft';
-                          if (deliverables.any(
-                            (d) => d['isDisapproved'] as bool? ?? false,
-                          )) {
-                            status = 'Disapproved';
-                          } else if (isDraft) {
-                            status = 'Draft';
-                          } else {
-                            final hasNextStatus = signatories.any((signatory) {
-                              final isNextStatus = signatory['isNextStatus'];
+                              int itemNumber =
+                                  ((_currentPage - 1) * _pageSize) + index + 1;
 
-                              if (isNextStatus == null) return false;
-                              if (isNextStatus is bool) return isNextStatus;
-                              if (isNextStatus is String) {
-                                return isNextStatus.toLowerCase() == 'true';
+                              final isDraft = pgs['isDraft'] as bool? ?? false;
+
+                              final signatories =
+                                  List<Map<String, dynamic>>.from(
+                                    pgs['signatories'] ?? [],
+                                  );
+
+                              final deliverables =
+                                  List<Map<String, dynamic>>.from(
+                                    pgs['pgsDeliverables'] ?? [],
+                                  );
+
+                              String status = 'Draft';
+
+                              if (deliverables.any(
+                                (d) => d['isDisapproved'] as bool? ?? false,
+                              )) {
+                                status = 'Disapproved';
+                              } else if (isDraft) {
+                                status = 'Draft';
+                              } else {
+                                final hasNextStatus = signatories.any((
+                                  signatory,
+                                ) {
+                                  final isNextStatus =
+                                      signatory['isNextStatus'];
+
+                                  if (isNextStatus == null) return false;
+                                  if (isNextStatus is bool) return isNextStatus;
+                                  if (isNextStatus is String) {
+                                    return isNextStatus.toLowerCase() == 'true';
+                                  }
+                                  return false;
+                                });
+
+                                status =
+                                    hasNextStatus ? 'For Approval' : 'Approved';
                               }
-                              return false;
-                            });
 
-                            status =
-                                hasNextStatus ? 'For Approval' : 'Approved';
-                          }
-
-                          return DataRow(
-                            cells: [
-                              DataCell(
-                                SizedBox(
-                                  width: 40,
-                                  child: Text(itemNumber.toString()),
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
-                              ),
-                              DataCell(
-                                Container(
-                                  constraints: BoxConstraints(
-                                    minWidth: 100,
-                                    maxWidth: constraints.maxWidth * 0.4,
-                                  ),
-                                  child: Text(
-                                    pgsgovernancesystem['name'] ?? '',
-                                    overflow: TextOverflow.ellipsis,
-                                    softWrap: true,
-                                    maxLines: 2,
-                                  ),
-                                ),
-                              ),
-                              DataCell(
-                                SizedBox(
-                                  child: Text(
-                                    "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['startDate']))} - ${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['endDate']))}",
-                                  ),
-                                ),
-                              ),
-                              DataCell(SizedBox(child: Text(status))),
-                              DataCell(
-                                SizedBox(
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      IconButton(
-                                        icon: Icon(Icons.edit),
-
-                                        onPressed: () async {
-                                          try {
-                                            await AuthUtil.saveSelectedOfficeId(
-                                              pgsgovernancesystem['officeid']
-                                                  .toString(),
-                                            );
-                                            selectedOffice =
-                                                await AuthUtil.fetchSelectedOfficeId();
-
-                                            final deliverables =
-                                                await fetchDeliverables(
-                                                  pgsId:
-                                                      pgsgovernancesystem['id'],
-                                                );
-                                            final signatory =
-                                                await fetchSignatoryList(
-                                                  pgsId:
-                                                      pgsgovernancesystem['id'],
-                                                );
-                                            await fetchSubmitUserId(
-                                              userId: userId,
-                                              pgsId: pgsgovernancesystem['id'],
-                                            );
-
-                                            final isDraftValue =
-                                                pgsgovernancesystem['isDraft'] ??
-                                                false;
-
-                                            showFormDialog(
-                                              userId:
-                                                  pgsgovernancesystem['userId'],
-                                              id: pgsgovernancesystem['id'],
-                                              officename:
-                                                  pgsgovernancesystem['name'],
-                                              officenameid:
-                                                  pgsgovernancesystem['officeid'],
-                                              competencescore:
-                                                  pgsgovernancesystem['competencescore'],
-                                              confidencescore:
-                                                  pgsgovernancesystem['confidencescore'],
-                                              resourcescore:
-                                                  pgsgovernancesystem['resourcescore'],
-                                              startDate:
-                                                  pgsgovernancesystem['startDate'],
-                                              endDate:
-                                                  pgsgovernancesystem['endDate'],
-                                              percentDeliverables:
-                                                  pgsgovernancesystem['percentDeliverables'],
-                                              deliverables: deliverables,
-                                              signatories: signatory,
-                                              isDraft: isDraftValue,
-                                              remarks:
-                                                  pgsgovernancesystem['remarks'],
-                                            );
-                                            // ignore: empty_catches
-                                          } catch (e) {}
-                                        },
-                                      ),
-                                      Tooltip(
-                                        message: 'Print Preview',
-                                        child: IconButton(
-                                          icon: const Icon(
-                                            Icons.description_outlined,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    /// Top Row (# + Menu)
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "$itemNumber",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
                                           ),
-                                          onPressed: () async {
-                                            final pgsId =
-                                                pgsgovernancesystem['id']
-                                                    .toString();
-
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder:
-                                                    (context) =>
-                                                        ReportViewerPage(
-                                                          pgsId: pgsId,
-                                                        ),
-                                              ),
-                                            );
-                                          },
                                         ),
-                                      ),
-                                      if (status != 'Approved' &&
-                                          status != 'For Approval')
-                                        PermissionWidget(
-                                          permission:
-                                              AppPermissions
-                                                  .deletePerformanceGovernanceSystem,
-                                          child: IconButton(
-                                            icon: Icon(
-                                              Icons.delete,
-                                              color: Color.fromARGB(
-                                                255,
-                                                221,
-                                                79,
-                                                79,
-                                              ),
-                                            ),
-                                            onPressed:
-                                                () => showDeleteDialog(
-                                                  pgsgovernancesystem['id']
-                                                      .toString(),
+
+                                        PopupMenuButton<String>(
+                                          tooltip: "Show actions",
+                                          icon: const Icon(Icons.more_vert),
+                                          onSelected: (value) async {
+                                            if (value == 'edit') {
+                                              try {
+                                                await AuthUtil.saveSelectedOfficeId(
+                                                  pgs['officeid'].toString(),
+                                                );
+
+                                                selectedOffice =
+                                                    await AuthUtil.fetchSelectedOfficeId();
+
+                                                final deliverables =
+                                                    await fetchDeliverables(
+                                                      pgsId: pgs['id'],
+                                                    );
+
+                                                final signatory =
+                                                    await fetchSignatoryList(
+                                                      pgsId: pgs['id'],
+                                                    );
+
+                                                await fetchSubmitUserId(
+                                                  userId: userId,
+                                                  pgsId: pgs['id'],
+                                                );
+
+                                                showFormDialog(
+                                                  userId: pgs['userId'],
+                                                  id: pgs['id'],
+                                                  officename: pgs['name'],
+                                                  officenameid: pgs['officeid'],
+                                                  competencescore:
+                                                      pgs['competencescore'],
+                                                  confidencescore:
+                                                      pgs['confidencescore'],
+                                                  resourcescore:
+                                                      pgs['resourcescore'],
+                                                  startDate: pgs['startDate'],
+                                                  endDate: pgs['endDate'],
+                                                  percentDeliverables:
+                                                      pgs['percentDeliverables'],
+                                                  deliverables: deliverables,
+                                                  signatories: signatory,
+                                                  isDraft: pgs['isDraft'],
+                                                  remarks: pgs['remarks'],
+                                                );
+                                              } catch (e) {}
+                                            }
+
+                                            if (value == 'preview') {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                  builder:
+                                                      (context) =>
+                                                          ReportViewerPage(
+                                                            pgsId:
+                                                                pgs['id']
+                                                                    .toString(),
+                                                          ),
                                                 ),
+                                              );
+                                            }
+
+                                            if (value == 'delete') {
+                                              showDeleteDialog(
+                                                pgs['id'].toString(),
+                                              );
+                                            }
+                                          },
+                                          itemBuilder:
+                                              (context) => [
+                                                const PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.edit,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text("Edit"),
+                                                    ],
+                                                  ),
+                                                ),
+
+                                                const PopupMenuItem(
+                                                  value: 'preview',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .description_outlined,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text("Print Preview"),
+                                                    ],
+                                                  ),
+                                                ),
+
+                                                if (status != 'Approved' &&
+                                                    status != 'For Approval')
+                                                  const PopupMenuItem(
+                                                    value: 'delete',
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.delete,
+                                                          size: 18,
+                                                          color: Color.fromARGB(
+                                                            255,
+                                                            221,
+                                                            79,
+                                                            79,
+                                                          ),
+                                                        ),
+                                                        SizedBox(width: 8),
+                                                        Text("Delete"),
+                                                      ],
+                                                    ),
+                                                  ),
+                                              ],
+                                        ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 8),
+
+                                    /// Office
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          "Office: ",
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        Expanded(
+                                          child: Text(pgs['name'] ?? ""),
+                                        ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 4),
+
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          "Period: ",
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        Expanded(
+                                          child: Text(
+                                            "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['startDate']))} - "
+                                            "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['endDate']))}",
                                           ),
                                         ),
-                                    ],
-                                  ),
+                                      ],
+                                    ),
+
+                                    const SizedBox(height: 4),
+
+                                    /// Status
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          "Status: ",
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        Text(status),
+                                      ],
+                                    ),
+                                  ],
                                 ),
+                              );
+                            },
+                          )
+                          : DataTable2(
+                            columnSpacing: isMobile ? 8 : 12,
+                            headingRowColor: WidgetStatePropertyAll(
+                              secondaryColor,
+                            ),
+                            dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                            headingTextStyle: const TextStyle(color: grey),
+                            horizontalMargin: 12,
+                            minWidth: 700,
+                            fixedTopRows: 1,
+                            border: TableBorder(
+                              horizontalInside: BorderSide(
+                                color: Colors.grey.shade100,
+                              ),
+                            ),
+                            columns: [
+                              DataColumn2(
+                                label: const Text('#'),
+                                fixedWidth: 40,
+                              ),
+                              DataColumn2(
+                                label: const Text('Office'),
+                                size: ColumnSize.L,
+                              ),
+                              DataColumn2(
+                                label: const Text('Period'),
+                                size: ColumnSize.L,
+                              ),
+                              DataColumn2(
+                                label: const Text('Status'),
+                                size: ColumnSize.S,
+                              ),
+                              DataColumn2(
+                                label: const Text('Actions'),
+                                size: ColumnSize.M,
                               ),
                             ],
-                          );
-                        }).toList(),
-                  ),
+                            rows:
+                                filteredList.asMap().entries.map((entry) {
+                                  int index = entry.key;
+                                  var pgsgovernancesystem = entry.value;
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  final isDraft =
+                                      pgsgovernancesystem['isDraft'] as bool? ??
+                                      false;
+
+                                  final signatories =
+                                      List<Map<String, dynamic>>.from(
+                                        pgsgovernancesystem['signatories'] ??
+                                            [],
+                                      );
+                                  final deliverables = List<
+                                    Map<String, dynamic>
+                                  >.from(
+                                    pgsgovernancesystem['pgsDeliverables'] ??
+                                        [],
+                                  );
+                                  String status = 'Draft';
+                                  if (deliverables.any(
+                                    (d) => d['isDisapproved'] as bool? ?? false,
+                                  )) {
+                                    status = 'Disapproved';
+                                  } else if (isDraft) {
+                                    status = 'Draft';
+                                  } else {
+                                    final hasNextStatus = signatories.any((
+                                      signatory,
+                                    ) {
+                                      final isNextStatus =
+                                          signatory['isNextStatus'];
+
+                                      if (isNextStatus == null) return false;
+                                      if (isNextStatus is bool) {
+                                        return isNextStatus;
+                                      }
+                                      if (isNextStatus is String) {
+                                        return isNextStatus.toLowerCase() ==
+                                            'true';
+                                      }
+                                      return false;
+                                    });
+
+                                    status =
+                                        hasNextStatus
+                                            ? 'For Approval'
+                                            : 'Approved';
+                                  }
+
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(
+                                        SizedBox(
+                                          width: 40,
+                                          child: Text(itemNumber.toString()),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Container(
+                                          constraints: BoxConstraints(
+                                            minWidth: 100,
+                                            maxWidth:
+                                                constraints.maxWidth * 0.4,
+                                          ),
+                                          child: Text(
+                                            pgsgovernancesystem['name'] ?? '',
+                                            overflow: TextOverflow.ellipsis,
+                                            softWrap: true,
+                                            maxLines: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        SizedBox(
+                                          child: Text(
+                                            "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['startDate']))} - ${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['endDate']))}",
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(SizedBox(child: Text(status))),
+                                      DataCell(
+                                        SizedBox(
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(Icons.edit),
+
+                                                onPressed: () async {
+                                                  try {
+                                                    await AuthUtil.saveSelectedOfficeId(
+                                                      pgsgovernancesystem['officeid']
+                                                          .toString(),
+                                                    );
+                                                    selectedOffice =
+                                                        await AuthUtil.fetchSelectedOfficeId();
+
+                                                    final deliverables =
+                                                        await fetchDeliverables(
+                                                          pgsId:
+                                                              pgsgovernancesystem['id'],
+                                                        );
+                                                    final signatory =
+                                                        await fetchSignatoryList(
+                                                          pgsId:
+                                                              pgsgovernancesystem['id'],
+                                                        );
+                                                    await fetchSubmitUserId(
+                                                      userId: userId,
+                                                      pgsId:
+                                                          pgsgovernancesystem['id'],
+                                                    );
+
+                                                    final isDraftValue =
+                                                        pgsgovernancesystem['isDraft'] ??
+                                                        false;
+
+                                                    showFormDialog(
+                                                      userId:
+                                                          pgsgovernancesystem['userId'],
+                                                      id:
+                                                          pgsgovernancesystem['id'],
+                                                      officename:
+                                                          pgsgovernancesystem['name'],
+                                                      officenameid:
+                                                          pgsgovernancesystem['officeid'],
+                                                      competencescore:
+                                                          pgsgovernancesystem['competencescore'],
+                                                      confidencescore:
+                                                          pgsgovernancesystem['confidencescore'],
+                                                      resourcescore:
+                                                          pgsgovernancesystem['resourcescore'],
+                                                      startDate:
+                                                          pgsgovernancesystem['startDate'],
+                                                      endDate:
+                                                          pgsgovernancesystem['endDate'],
+                                                      percentDeliverables:
+                                                          pgsgovernancesystem['percentDeliverables'],
+                                                      deliverables:
+                                                          deliverables,
+                                                      signatories: signatory,
+                                                      isDraft: isDraftValue,
+                                                      remarks:
+                                                          pgsgovernancesystem['remarks'],
+                                                    );
+                                                    // ignore: empty_catches
+                                                  } catch (e) {}
+                                                },
+                                              ),
+                                              Tooltip(
+                                                message: 'Print Preview',
+                                                child: IconButton(
+                                                  icon: const Icon(
+                                                    Icons.description_outlined,
+                                                  ),
+                                                  onPressed: () async {
+                                                    final pgsId =
+                                                        pgsgovernancesystem['id']
+                                                            .toString();
+
+                                                    Navigator.push(
+                                                      context,
+                                                      MaterialPageRoute(
+                                                        builder:
+                                                            (context) =>
+                                                                ReportViewerPage(
+                                                                  pgsId: pgsId,
+                                                                ),
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                              ),
+                                              if (status != 'Approved' &&
+                                                  status != 'For Approval')
+                                                PermissionWidget(
+                                                  permission:
+                                                      AppPermissions
+                                                          .deletePerformanceGovernanceSystem,
+                                                  child: IconButton(
+                                                    icon: Icon(
+                                                      Icons.delete,
+                                                      color: Color.fromARGB(
+                                                        255,
+                                                        221,
+                                                        79,
+                                                        79,
+                                                      ),
+                                                    ),
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          pgsgovernancesystem['id']
+                                                              .toString(),
+                                                        ),
+                                                  ),
+                                                ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                          ),
                 ),
 
                 Container(
