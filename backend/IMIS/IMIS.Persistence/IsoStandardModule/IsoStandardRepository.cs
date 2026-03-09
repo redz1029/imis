@@ -46,24 +46,7 @@ namespace IMIS.Persistence.IsoStandardModule
                 .ConfigureAwait(false);
         }
 
-        //public async Task<EntityPageList<IsoStandard, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
-        //{
-        //    var query = _entities.Include(iso => iso.Version).AsNoTracking();
-        //    return await EntityPageList<IsoStandard, long>
-        //        .CreateAsync(query, page, pageSize, cancellationToken)
-        //        .ConfigureAwait(false);
-        //}
-
-        //public async Task<EntityPageList<IsoStandard, long>> GetPaginatedByVersionAsync(int versionId, int page, int pageSize, CancellationToken cancellationToken)
-        //{
-        //    var query = _entities
-        //        .Where(iso => iso.VersionID == versionId)
-        //        .Include(iso => iso.Version)
-        //        .AsNoTracking();
-        //    return await EntityPageList<IsoStandard, long>
-        //        .CreateAsync(query, page, pageSize, cancellationToken)
-        //        .ConfigureAwait(false);
-        //}
+        
 
         public async Task<IsoStandard?> GetByIdWithVersionAsync(long id, CancellationToken cancellationToken)
         {

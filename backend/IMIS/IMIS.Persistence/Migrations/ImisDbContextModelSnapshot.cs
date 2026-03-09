@@ -131,6 +131,225 @@ namespace IMIS.Persistence.Migrations
                     b.ToTable("Announcement");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.AuditPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PlanStatus")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PreparerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<string>("SelectedApproverId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PreparerId");
+
+                    b.HasIndex("SelectedApproverId");
+
+                    b.ToTable("AuditPlans");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlanApproval", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ApproverId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ApproverId1")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("AuditPlanId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Comments")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ApproverId1");
+
+                    b.HasIndex("AuditPlanId");
+
+                    b.ToTable("AuditPlanApprovals");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlanEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AuditPlanId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DayNumber")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("OfficeId")
+                        .HasColumnType("int");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Time")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditPlanId");
+
+                    b.HasIndex("OfficeId");
+
+                    b.HasIndex("TeamId");
+
+                    b.ToTable("AuditPlanEntries");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlanPersonResponsible", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AuditPlanEntryId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ContactInfo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Position")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditPlanEntryId");
+
+                    b.ToTable("AuditPlanPersonResponsibles");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlanProcess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AuditPlanEntryId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("LastModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AuditPlanEntryId");
+
+                    b.ToTable("AuditPlanProcesses");
+                });
+
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>
                 {
                     b.Property<int>("Id")
@@ -6031,6 +6250,9 @@ namespace IMIS.Persistence.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<int?>("AuditPlanEntryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ClauseRef")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -6040,6 +6262,13 @@ namespace IMIS.Persistence.Migrations
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
+
+                    b.Property<long?>("ParentID")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("Particulars")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<byte[]>("RowVersion")
                         .IsConcurrencyToken()
@@ -6054,9 +6283,3821 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AuditPlanEntryId");
+
                     b.HasIndex("VersionID");
 
                     b.ToTable("IsoStandards");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1L,
+                            ClauseRef = "4",
+                            Description = "Context of the organization",
+                            IsDeleted = false,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 2L,
+                            ClauseRef = "4.1",
+                            Description = "Understanding the organization and its context",
+                            IsDeleted = false,
+                            ParentID = 1L,
+                            Particulars = "The organization shall determine external and internal issues that are relevant to its purpose and its strategic direction and that affect its ability to achieve the intended result(s) of its quality management system. Issues can include positive and negative factors or conditions for consideration.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 3L,
+                            ClauseRef = "4.2",
+                            Description = "Understanding the needs and expectations of interested parties",
+                            IsDeleted = false,
+                            ParentID = 1L,
+                            Particulars = "Due to their effect or potential effect on the organization’s ability to consistently provide products and services that meet customer and applicable statutory and regulatory requirements, the organization shall determine: The organization shall monitor and review information about these interested parties and their relevant requirements.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 4L,
+                            ClauseRef = "4.2.a",
+                            Description = "The interested parties that are relevant to the quality management system;",
+                            IsDeleted = false,
+                            ParentID = 6L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 5L,
+                            ClauseRef = "4.2.b",
+                            Description = "The requirements of these interested parties that are relevant to the quality management system.",
+                            IsDeleted = false,
+                            ParentID = 6L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 6L,
+                            ClauseRef = "4.3",
+                            Description = "Determining the scope of the quality management system",
+                            IsDeleted = false,
+                            ParentID = 1L,
+                            Particulars = "The organization shall determine the boundaries and applicability of the quality management system to establish its scope.The organization shall apply all the requirements of this International Standard if they are applicable within the determined scope of its quality management system. The scope of the organization’s quality management system shall be available and be maintained as documented information. The scope shall state the types of products and services covered, and provide justification for any requirement of this International Standard that the organization determines is not applicable to the scope of its quality management system. Conformity to this International Standard may only be claimed if the requirements determined as not being applicable do not affect the organization’s ability or responsibility to ensure the conformity of its products and services and the enhancement of customer satisfaction. When determining this scope, the organization shall consider:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 10L,
+                            ClauseRef = "4.3.a",
+                            Description = "The external and internal issues referred to in 4.1;",
+                            IsDeleted = false,
+                            ParentID = 9L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 11L,
+                            ClauseRef = "4.3.b",
+                            Description = "The requirements of relevant interested parties referred to in 4.2;",
+                            IsDeleted = false,
+                            ParentID = 9L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 12L,
+                            ClauseRef = "4.3.c",
+                            Description = "The products and services of the organization.",
+                            IsDeleted = false,
+                            ParentID = 9L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 13L,
+                            ClauseRef = "4.4",
+                            Description = "Quality management system and its processes",
+                            IsDeleted = false,
+                            ParentID = 1L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 14L,
+                            ClauseRef = "4.4.1",
+                            Description = "The organization shall establish, implement, maintain and continually improve a quality management system, including the processes needed and their interactions, in accordance with the requirements of this International Standard.",
+                            IsDeleted = false,
+                            ParentID = 13L,
+                            Particulars = "The organization shall determine the processes needed for the quality management system and their application throughout the organization, and shall:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 15L,
+                            ClauseRef = "4.4.1.a",
+                            Description = "Determine the inputs required and outputs expected;",
+                            IsDeleted = false,
+                            ParentID = 14L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 16L,
+                            ClauseRef = "4.4.1.b",
+                            Description = "Determine sequence and interaction of processes;",
+                            IsDeleted = false,
+                            ParentID = 14L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 17L,
+                            ClauseRef = "4.4.1.c",
+                            Description = "determine and apply the criteria and methods (including monitoring, measurements and related performance indicators) needed to ensure the effective operation and control of these processes;",
+                            IsDeleted = false,
+                            ParentID = 14L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 18L,
+                            ClauseRef = "4.4.1.d",
+                            Description = "determine the resources needed for these processes and ensure their availability;",
+                            IsDeleted = false,
+                            ParentID = 14L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 19L,
+                            ClauseRef = "4.4.1.e",
+                            Description = "assign the responsibilities and authorities for these processes;",
+                            IsDeleted = false,
+                            ParentID = 14L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 20L,
+                            ClauseRef = "4.4.1.f",
+                            Description = "address the risks and opportunities as determined in accordance with the requirements of 6.1;",
+                            IsDeleted = false,
+                            ParentID = 14L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 21L,
+                            ClauseRef = "4.4.1.g",
+                            Description = "evaluate these processes and implement any changes needed to ensure that these processes achieve their intended results;",
+                            IsDeleted = false,
+                            ParentID = 14L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 22L,
+                            ClauseRef = "4.4.1.h",
+                            Description = "improve the processes and the quality management system.",
+                            IsDeleted = false,
+                            ParentID = 14L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 23L,
+                            ClauseRef = "4.4.2",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 13L,
+                            Particulars = "To the extent necessary, the organization shall:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 24L,
+                            ClauseRef = "4.4.2.a",
+                            Description = "maintain documented information to support the operation of its processes;",
+                            IsDeleted = false,
+                            ParentID = 23L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 25L,
+                            ClauseRef = "4.4.2.b",
+                            Description = "retain documented information to have confidence that the processes are being carried out as planned.",
+                            IsDeleted = false,
+                            ParentID = 23L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 26L,
+                            ClauseRef = "5",
+                            Description = "Leadership",
+                            IsDeleted = false,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 27L,
+                            ClauseRef = "5.1",
+                            Description = "Leadership and commitment",
+                            IsDeleted = false,
+                            ParentID = 26L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 28L,
+                            ClauseRef = "5.1.1",
+                            Description = "General",
+                            IsDeleted = false,
+                            ParentID = 27L,
+                            Particulars = "Top management shall demonstrate leadership and commitment with respect to the quality management system by: NOTE Reference to “business” in this International Standard can be interpreted broadly to mean those activities that are core to the purposes of the organization’s existence, whether the organization is public, private, for profit or not for profit.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 29L,
+                            ClauseRef = "5.1.1.a",
+                            Description = "taking accountability for the effectiveness of the quality management system;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 30L,
+                            ClauseRef = "5.1.1.b",
+                            Description = "ensuring that the quality policy and quality objectives are established and compatible with the organization;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 31L,
+                            ClauseRef = "5.1.1.c",
+                            Description = "ensuring integration of QMS requirements into business processes;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 32L,
+                            ClauseRef = "5.1.1.d",
+                            Description = "promoting the use of the process approach and risk-based thinking;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 33L,
+                            ClauseRef = "5.1.1.e",
+                            Description = "ensuring necessary resources are available;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 34L,
+                            ClauseRef = "5.1.1.f",
+                            Description = "communicating the importance of effective quality management;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 35L,
+                            ClauseRef = "5.1.1.g",
+                            Description = "ensuring QMS achieves intended results;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 36L,
+                            ClauseRef = "5.1.1.h",
+                            Description = "engaging and supporting persons to contribute to QMS effectiveness;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 37L,
+                            ClauseRef = "5.1.1.i",
+                            Description = "promoting improvement;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 38L,
+                            ClauseRef = "5.1.1.j",
+                            Description = "supporting other management roles to demonstrate leadership;",
+                            IsDeleted = false,
+                            ParentID = 28L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 39L,
+                            ClauseRef = "5.1.2",
+                            Description = "Customer focus",
+                            IsDeleted = false,
+                            ParentID = 27L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 40L,
+                            ClauseRef = "5.1.2.a",
+                            Description = "customer and statutory requirements are determined and met;",
+                            IsDeleted = false,
+                            ParentID = 39L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 41L,
+                            ClauseRef = "5.1.2.b",
+                            Description = "risks and opportunities affecting conformity are addressed;",
+                            IsDeleted = false,
+                            ParentID = 39L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 42L,
+                            ClauseRef = "5.1.2.c",
+                            Description = "focus on enhancing customer satisfaction is maintained.",
+                            IsDeleted = false,
+                            ParentID = 39L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 43L,
+                            ClauseRef = "5.2",
+                            Description = "Policy",
+                            IsDeleted = false,
+                            ParentID = 26L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 44L,
+                            ClauseRef = "5.2.1",
+                            Description = "Establishing the quality policy",
+                            IsDeleted = false,
+                            ParentID = 43L,
+                            Particulars = "Top management shall establish, implement and maintain a quality policy that:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 45L,
+                            ClauseRef = "5.2.1.a",
+                            Description = "is appropriate to the purpose and context of the organization;",
+                            IsDeleted = false,
+                            ParentID = 44L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 46L,
+                            ClauseRef = "5.2.1.b",
+                            Description = "provides a framework for setting quality objectives;",
+                            IsDeleted = false,
+                            ParentID = 44L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 47L,
+                            ClauseRef = "5.2.1.c",
+                            Description = "includes a commitment to satisfy applicable requirements;",
+                            IsDeleted = false,
+                            ParentID = 44L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 48L,
+                            ClauseRef = "5.2.1.d",
+                            Description = "includes a commitment to continual improvement of the QMS.",
+                            IsDeleted = false,
+                            ParentID = 44L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 49L,
+                            ClauseRef = "5.2.2",
+                            Description = "Communicating the quality policy",
+                            IsDeleted = false,
+                            ParentID = 43L,
+                            Particulars = "The quality policy shall:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 50L,
+                            ClauseRef = "5.2.2.a",
+                            Description = "be available and maintained as documented information;",
+                            IsDeleted = false,
+                            ParentID = 49L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 51L,
+                            ClauseRef = "5.2.2.b",
+                            Description = "be communicated and understood within the organization;",
+                            IsDeleted = false,
+                            ParentID = 49L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 52L,
+                            ClauseRef = "5.2.2.c",
+                            Description = "be available to relevant interested parties.",
+                            IsDeleted = false,
+                            ParentID = 49L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 53L,
+                            ClauseRef = "5.3",
+                            Description = "Organizational roles, responsibilities and authorities",
+                            IsDeleted = false,
+                            ParentID = 26L,
+                            Particulars = "Top management shall ensure that the responsibilities and authorities for relevant roles are assigned, communicated and understood within the organization. Top management shall assign the responsibility and authority for:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 54L,
+                            ClauseRef = "5.3.a",
+                            Description = "ensuring QMS conforms to requirements;",
+                            IsDeleted = false,
+                            ParentID = 53L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 55L,
+                            ClauseRef = "5.3.b",
+                            Description = "ensuring processes deliver intended outputs;",
+                            IsDeleted = false,
+                            ParentID = 53L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 56L,
+                            ClauseRef = "5.3.c",
+                            Description = "reporting on the performance of the quality management system and on opportunities for improvement (see 10.1), in particular to top management;",
+                            IsDeleted = false,
+                            ParentID = 53L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 57L,
+                            ClauseRef = "5.3.d",
+                            Description = "ensuring promotion of customer focus.",
+                            IsDeleted = false,
+                            ParentID = 53L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 58L,
+                            ClauseRef = "6",
+                            Description = "Planning",
+                            IsDeleted = false,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 59L,
+                            ClauseRef = "6.1",
+                            Description = "Actions to address risks and opportunities",
+                            IsDeleted = false,
+                            ParentID = 58L,
+                            Particulars = "When planning for the quality management system, the organization shall consider the context of the organization and the issues referred to in 4.1, as well as the requirements referred to in 4.2. The organization shall determine the risks and opportunities that need to be addressed to:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 60L,
+                            ClauseRef = "6.1.a",
+                            Description = "give assurance that the QMS can achieve its intended results;",
+                            IsDeleted = false,
+                            ParentID = 59L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 61L,
+                            ClauseRef = "6.1.b",
+                            Description = "enhance desirable effects;",
+                            IsDeleted = false,
+                            ParentID = 59L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 62L,
+                            ClauseRef = "6.1.c",
+                            Description = "prevent or reduce undesired effects;",
+                            IsDeleted = false,
+                            ParentID = 59L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 63L,
+                            ClauseRef = "6.1.d",
+                            Description = "achieve improvement.",
+                            IsDeleted = false,
+                            ParentID = 59L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 64L,
+                            ClauseRef = "6.1.2",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 59L,
+                            Particulars = "The organization shall plan actions to address risks and opportunities and evaluate their effectiveness of these actions..",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 65L,
+                            ClauseRef = "6.1.2.a",
+                            Description = "actions to address these risks and opportunities;",
+                            IsDeleted = false,
+                            ParentID = 64L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 66L,
+                            ClauseRef = "6.1.2.b",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 64L,
+                            Particulars = "how to:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 67L,
+                            ClauseRef = "6.1.2.b.1",
+                            Description = "integrate and implement the actions into QMS processes (see 4.4);",
+                            IsDeleted = false,
+                            ParentID = 66L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 68L,
+                            ClauseRef = "6.1.2.b.2",
+                            Description = "evaluate the effectiveness of these actions.",
+                            IsDeleted = false,
+                            ParentID = 66L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 69L,
+                            ClauseRef = "6.1.2.NOTE 1",
+                            Description = "Options to address risks can include avoiding risk, taking risk in order to pursue an opportunity, eliminating the risk source, changing the likelihood or consequences, sharing the risk, or retaining risk by informed decision.",
+                            IsDeleted = false,
+                            ParentID = 64L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 70L,
+                            ClauseRef = "6.1.2.NOTE 2",
+                            Description = "Opportunities can lead to the adoption of new practices, launching new products, opening new markets, addressing new customers, building partnerships, using new technology and other desirable and viable possibilities to address the organization’s or its customers’ needs.",
+                            IsDeleted = false,
+                            ParentID = 64L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 71L,
+                            ClauseRef = "6.2",
+                            Description = "Quality objectives and planning to achieve them",
+                            IsDeleted = false,
+                            ParentID = 58L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 72L,
+                            ClauseRef = "6.2.1",
+                            Description = "The organization shall establish quality objectives at relevant functions, levels and processes needed for the quality management system.",
+                            IsDeleted = false,
+                            ParentID = 71L,
+                            Particulars = "The quality objectives shall: The quality objectives shall:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 73L,
+                            ClauseRef = "6.2.1.a",
+                            Description = "be consistent with the quality policy;",
+                            IsDeleted = false,
+                            ParentID = 72L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 74L,
+                            ClauseRef = "6.2.1.b",
+                            Description = "be measurable;",
+                            IsDeleted = false,
+                            ParentID = 72L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 75L,
+                            ClauseRef = "6.2.1.c",
+                            Description = "take into account applicable requirements;",
+                            IsDeleted = false,
+                            ParentID = 72L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 76L,
+                            ClauseRef = "6.2.1.d",
+                            Description = "be relevant to conformity and customer satisfaction;",
+                            IsDeleted = false,
+                            ParentID = 72L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 77L,
+                            ClauseRef = "6.2.1.e",
+                            Description = "be monitored;",
+                            IsDeleted = false,
+                            ParentID = 72L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 78L,
+                            ClauseRef = "6.2.1.f",
+                            Description = "be communicated;",
+                            IsDeleted = false,
+                            ParentID = 72L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 79L,
+                            ClauseRef = "6.2.1.g",
+                            Description = "be updated as appropriate.",
+                            IsDeleted = false,
+                            ParentID = 72L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 80L,
+                            ClauseRef = "6.2.2",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 71L,
+                            Particulars = "When planning how to achieve quality objectives, the organization shall determine:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 81L,
+                            ClauseRef = "6.2.2.a",
+                            Description = "what will be done;",
+                            IsDeleted = false,
+                            ParentID = 80L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 82L,
+                            ClauseRef = "6.2.2.b",
+                            Description = "what resources will be required;",
+                            IsDeleted = false,
+                            ParentID = 80L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 83L,
+                            ClauseRef = "6.2.2.c",
+                            Description = "who will be responsible;",
+                            IsDeleted = false,
+                            ParentID = 80L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 84L,
+                            ClauseRef = "6.2.2.d",
+                            Description = "when it will be completed;",
+                            IsDeleted = false,
+                            ParentID = 80L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 85L,
+                            ClauseRef = "6.2.2.e",
+                            Description = "how results will be evaluated.",
+                            IsDeleted = false,
+                            ParentID = 80L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 86L,
+                            ClauseRef = "6.3",
+                            Description = "Planning of changes",
+                            IsDeleted = false,
+                            ParentID = 58L,
+                            Particulars = "When the organization determines the need for changes to the quality management system, the changes shall be carried out in a planned manner (see 4.4). The organization shall consider:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 87L,
+                            ClauseRef = "6.3.a",
+                            Description = "purpose of the change and potential consequences;",
+                            IsDeleted = false,
+                            ParentID = 86L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 88L,
+                            ClauseRef = "6.3.b",
+                            Description = "integrity of the QMS;",
+                            IsDeleted = false,
+                            ParentID = 86L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 89L,
+                            ClauseRef = "6.3.c",
+                            Description = "availability of resources;",
+                            IsDeleted = false,
+                            ParentID = 86L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 90L,
+                            ClauseRef = "6.3.d",
+                            Description = "allocation or reallocation of responsibilities and authorities.",
+                            IsDeleted = false,
+                            ParentID = 86L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 91L,
+                            ClauseRef = "7",
+                            Description = "Support",
+                            IsDeleted = false,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 92L,
+                            ClauseRef = "7.1",
+                            Description = "Resources",
+                            IsDeleted = false,
+                            ParentID = 91L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 93L,
+                            ClauseRef = "7.1.1",
+                            Description = "General",
+                            IsDeleted = false,
+                            ParentID = 92L,
+                            Particulars = "The organization shall determine and provide the resources needed for the establishment, implementation, maintenance and continual improvement of the quality management system. The organization shall consider:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 94L,
+                            ClauseRef = "7.1.1.a",
+                            Description = "capabilities and constraints of existing internal resources;",
+                            IsDeleted = false,
+                            ParentID = 93L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 95L,
+                            ClauseRef = "7.1.1.b",
+                            Description = "what needs to be obtained from external providers.",
+                            IsDeleted = false,
+                            ParentID = 93L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 96L,
+                            ClauseRef = "7.1.2",
+                            Description = "People",
+                            IsDeleted = false,
+                            ParentID = 92L,
+                            Particulars = "The organization shall determine and provide the persons necessary for the effective implementation of its quality management system and for the operation and control of its processes.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 97L,
+                            ClauseRef = "7.1.3",
+                            Description = "Infrastructure",
+                            IsDeleted = false,
+                            ParentID = 92L,
+                            Particulars = "The organization shall determine and provide the infrastructure needed for the operation of its processes and to achieve conformity of products and services. ",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 98L,
+                            ClauseRef = "7.1.3.a",
+                            Description = "buildings and associated utilities;",
+                            IsDeleted = false,
+                            ParentID = 97L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 99L,
+                            ClauseRef = "7.1.3.b",
+                            Description = "equipment, including hardware and software;",
+                            IsDeleted = false,
+                            ParentID = 97L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 100L,
+                            ClauseRef = "7.1.3.c",
+                            Description = "transportation resources;",
+                            IsDeleted = false,
+                            ParentID = 97L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 101L,
+                            ClauseRef = "7.1.3.d",
+                            Description = "information and communication technology.",
+                            IsDeleted = false,
+                            ParentID = 97L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 102L,
+                            ClauseRef = "7.1.4",
+                            Description = "Environment for the operation of processes",
+                            IsDeleted = false,
+                            ParentID = 92L,
+                            Particulars = "The organization shall determine, provide and maintain the environment necessary for the operation of its processes and to achieve conformity of products and services. physical (e.g. temperature, heat, humidity, light, airflow, hygiene, noise). NOTE A suitable environment can be a combination of human and physical factors, such as:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 103L,
+                            ClauseRef = "7.1.4.a",
+                            Description = "social (e.g. non-discriminatory, calm, non-confrontational);",
+                            IsDeleted = false,
+                            ParentID = 102L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 104L,
+                            ClauseRef = "7.1.4.b",
+                            Description = "psychological (e.g. stress-reducing, burnout prevention, emotionally protective);",
+                            IsDeleted = false,
+                            ParentID = 102L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 105L,
+                            ClauseRef = "7.1.4.c",
+                            Description = "physical (e.g. temperature, heat, humidity, light, airflow, hygiene, noise).",
+                            IsDeleted = false,
+                            ParentID = 102L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 106L,
+                            ClauseRef = "7.1.5",
+                            Description = "Monitoring and measuring resources",
+                            IsDeleted = false,
+                            ParentID = 92L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 107L,
+                            ClauseRef = "7.1.5.1",
+                            Description = "General",
+                            IsDeleted = false,
+                            ParentID = 106L,
+                            Particulars = "The organization shall determine and provide the resources needed to ensure valid and reliable results when monitoring or measuring is used to verify the conformity of products and services to requirements. \" +\r\n            \"The organization shall retain appropriate documented information as evidence of fitness for purpose of the monitoring and measurement resources.The organization shall retain appropriate documented information as evidence of fitness for purpose of the monitoring and measurement resources.\"",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 108L,
+                            ClauseRef = "7.1.5.1.a",
+                            Description = "are suitable for specific monitoring activities being undertaken;",
+                            IsDeleted = false,
+                            ParentID = 107L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 109L,
+                            ClauseRef = "7.1.5.1.b",
+                            Description = "are maintained to ensure their continuing fitness for their purpose.",
+                            IsDeleted = false,
+                            ParentID = 107L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 110L,
+                            ClauseRef = "7.1.5.2",
+                            Description = "Measurement traceability",
+                            IsDeleted = false,
+                            ParentID = 106L,
+                            Particulars = "The organization shall determine if the validity of previous measurement results has been adversely affected when measuring equipment is found to be unfit for its intended purpose, and shall take appropriate action as necessary. The organization shall determine if the validity of previous measurement results has been adversely affected when measuring equipment is found to be unfit for its intended purpose, and shall take appropriate action as necessary.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 111L,
+                            ClauseRef = "7.1.5.2.a",
+                            Description = "calibrated or verified, or both, at specified intervals, or prior to use, against measurement standards traceable to international or national measurement standards; when no such standards exist, the basis used for calibration or verification shall be retained as documented information;",
+                            IsDeleted = false,
+                            ParentID = 110L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 112L,
+                            ClauseRef = "7.1.5.2.b",
+                            Description = "identified to determine status;",
+                            IsDeleted = false,
+                            ParentID = 110L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 113L,
+                            ClauseRef = "7.1.5.2.c",
+                            Description = "safeguarded from adjustments, damage or deterioration that would invalidate the calibration status and subsequent measurement results.",
+                            IsDeleted = false,
+                            ParentID = 110L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 114L,
+                            ClauseRef = "7.1.6",
+                            Description = "Organizational knowledge",
+                            IsDeleted = false,
+                            ParentID = 92L,
+                            Particulars = "The organization shall determine the knowledge necessary for the operation of its processes and to achieve conformity of products and services. This knowledge shall be maintained and be made available to the extent necessary. When addressing changing needs and trends, the organization shall consider its current knowledge and determine how to acquire or access any necessary additional knowledge and required updates. Organizational knowledge can be based on:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 115L,
+                            ClauseRef = "7.1.6.Note 1",
+                            Description = "Organizational knowledge is knowledge specific to the organization; it is generally gained by experience. It is information that is used and shared to achieve the organization’s objectives.",
+                            IsDeleted = false,
+                            ParentID = 114L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 116L,
+                            ClauseRef = "7.1.6.Note 2",
+                            Description = "NOTE Applicable actions can include, for example, the provision of training to, the mentoring of, or the reassignment of currently employed persons; or the hiring or contracting of competent persons.",
+                            IsDeleted = false,
+                            ParentID = 114L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 117L,
+                            ClauseRef = "7.1.6.a",
+                            Description = "internal sources (e.g. intellectual property; knowledge gained from experience; lessons learned from failures and successful projects; capturing and sharing undocumented knowledge and experience; the results of improvements in processes, products and services);",
+                            IsDeleted = false,
+                            ParentID = 114L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 118L,
+                            ClauseRef = "7.1.6.b",
+                            Description = "external sources (e.g. standards; academia; conferences; gathering knowledge from customers or external providers).",
+                            IsDeleted = false,
+                            ParentID = 114L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 119L,
+                            ClauseRef = "7.2",
+                            Description = "Competence",
+                            IsDeleted = false,
+                            ParentID = 91L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 120L,
+                            ClauseRef = "7.2.a",
+                            Description = "determine the necessary competence of person(s) doing work under its control that affects the performance and effectiveness of the quality management system;",
+                            IsDeleted = false,
+                            ParentID = 117L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 121L,
+                            ClauseRef = "7.2.b",
+                            Description = "ensure that these persons are competent on the basis of appropriate education, training, or experience;",
+                            IsDeleted = false,
+                            ParentID = 117L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 122L,
+                            ClauseRef = "7.2.c",
+                            Description = "where applicable, take actions to acquire the necessary competence, and evaluate the effectiveness of the actions taken;",
+                            IsDeleted = false,
+                            ParentID = 117L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 123L,
+                            ClauseRef = "7.3",
+                            Description = "Awareness",
+                            IsDeleted = false,
+                            ParentID = 91L,
+                            Particulars = "The organization shall ensure that persons doing work under the organization’s control are aware of:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 124L,
+                            ClauseRef = "7.3.a",
+                            Description = "quality policy;",
+                            IsDeleted = false,
+                            ParentID = 121L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 125L,
+                            ClauseRef = "7.3.b",
+                            Description = "relevant quality objectives;",
+                            IsDeleted = false,
+                            ParentID = 121L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 126L,
+                            ClauseRef = "7.3.c",
+                            Description = "their contribution to the effectiveness of the quality management system, including the benefits of improved performance;",
+                            IsDeleted = false,
+                            ParentID = 121L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 127L,
+                            ClauseRef = "7.3.d",
+                            Description = "the implications of not conforming with the quality management system requirements.",
+                            IsDeleted = false,
+                            ParentID = 121L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 128L,
+                            ClauseRef = "7.4",
+                            Description = "Communication",
+                            IsDeleted = false,
+                            ParentID = 91L,
+                            Particulars = "The organization shall determine the internal and external communications relevant to the quality management system, including:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 129L,
+                            ClauseRef = "7.4.a",
+                            Description = "what to communicate;",
+                            IsDeleted = false,
+                            ParentID = 126L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 130L,
+                            ClauseRef = "7.4.b",
+                            Description = "when to communicate;",
+                            IsDeleted = false,
+                            ParentID = 126L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 131L,
+                            ClauseRef = "7.4.c",
+                            Description = "with whom to communicate;",
+                            IsDeleted = false,
+                            ParentID = 126L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 132L,
+                            ClauseRef = "7.4.d",
+                            Description = "how to communicate;",
+                            IsDeleted = false,
+                            ParentID = 126L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 133L,
+                            ClauseRef = "7.4.e",
+                            Description = "who communicates.",
+                            IsDeleted = false,
+                            ParentID = 126L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 134L,
+                            ClauseRef = "7.5",
+                            Description = "Documented information",
+                            IsDeleted = false,
+                            ParentID = 91L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 135L,
+                            ClauseRef = "7.5.1",
+                            Description = "General",
+                            IsDeleted = false,
+                            ParentID = 132L,
+                            Particulars = "The organization’s quality management system shall include:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 136L,
+                            ClauseRef = "7.5.1.a",
+                            Description = "documented information required by this International Standard;",
+                            IsDeleted = false,
+                            ParentID = 133L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 137L,
+                            ClauseRef = "7.5.1.b",
+                            Description = "documented information determined by the organization as being necessary for the effectiveness of the quality management system.",
+                            IsDeleted = false,
+                            ParentID = 133L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 138L,
+                            ClauseRef = "7.5.2",
+                            Description = "Creating and updating",
+                            IsDeleted = false,
+                            ParentID = 132L,
+                            Particulars = "When creating and updating documented information, the organization shall ensure appropriate:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 139L,
+                            ClauseRef = "7.5.2.a",
+                            Description = "identification and description (e.g. a title, date, author, or reference number);",
+                            IsDeleted = false,
+                            ParentID = 136L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 140L,
+                            ClauseRef = "7.5.2.b",
+                            Description = "format (e.g. language, software version, graphics) and media (e.g. paper, electronic);",
+                            IsDeleted = false,
+                            ParentID = 136L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 141L,
+                            ClauseRef = "7.5.2.c",
+                            Description = "review and approval for suitability and adequacy.",
+                            IsDeleted = false,
+                            ParentID = 136L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 142L,
+                            ClauseRef = "7.5.3",
+                            Description = "Control of documented information",
+                            IsDeleted = false,
+                            ParentID = 132L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 143L,
+                            ClauseRef = "7.5.3.1",
+                            Description = "Documented information required by the quality management system and by this International Standard shall be controlled to ensure:",
+                            IsDeleted = false,
+                            ParentID = 140L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 144L,
+                            ClauseRef = "7.5.3.1.a",
+                            Description = "it is available and suitable for use, where and when it is needed;",
+                            IsDeleted = false,
+                            ParentID = 141L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 145L,
+                            ClauseRef = "7.5.3.1.b",
+                            Description = "it is adequately protected (e.g. from loss of confidentiality, improper use, or loss of integrity).",
+                            IsDeleted = false,
+                            ParentID = 141L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 146L,
+                            ClauseRef = "7.5.3.2",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 140L,
+                            Particulars = "Documented information of external origin determined by the organization to be necessary for the planning and operation of the quality management system shall be identified as appropriate, and be controlled.Documented information retained as evidence of conformity shall be protected from unintended alterations. For the control of documented information, the organization shall address the following activities, as applicable:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 147L,
+                            ClauseRef = "7.5.3.2.a",
+                            Description = "distribution and access;",
+                            IsDeleted = false,
+                            ParentID = 144L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 148L,
+                            ClauseRef = "7.5.3.2.b",
+                            Description = "storage and preservation, including preservation of legibility;",
+                            IsDeleted = false,
+                            ParentID = 144L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 149L,
+                            ClauseRef = "7.5.3.2.c",
+                            Description = "control of changes (e.g. version control);",
+                            IsDeleted = false,
+                            ParentID = 144L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 150L,
+                            ClauseRef = "7.5.3.2.d",
+                            Description = "retention and disposition.",
+                            IsDeleted = false,
+                            ParentID = 144L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 151L,
+                            ClauseRef = "8",
+                            Description = "Operation",
+                            IsDeleted = false,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 152L,
+                            ClauseRef = "8.1",
+                            Description = "Operational planning and control",
+                            IsDeleted = false,
+                            ParentID = 149L,
+                            Particulars = "The organization shall plan, implement and control the processes (see 4.4) needed to meet the requirements for the provision of products and services, and to implement the actions determined in Clause 6, by:The output of this planning shall be suitable for the organization’s operations. The organization shall control planned changes and review the consequences of unintended changes, taking action to mitigate any adverse effects, as necessary. The organization shall ensure that outsourced processes are controlled (see 8.4).",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 153L,
+                            ClauseRef = "8.1.a",
+                            Description = "determining the requirements for the products and services;",
+                            IsDeleted = false,
+                            ParentID = 150L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 154L,
+                            ClauseRef = "8.1.b",
+                            Description = "establishing criteria for:",
+                            IsDeleted = false,
+                            ParentID = 150L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 155L,
+                            ClauseRef = "8.1.b.1",
+                            Description = "the processes;",
+                            IsDeleted = false,
+                            ParentID = 152L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 156L,
+                            ClauseRef = "8.1.b.2",
+                            Description = "the acceptance of products and services;",
+                            IsDeleted = false,
+                            ParentID = 152L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 157L,
+                            ClauseRef = "8.1.c",
+                            Description = "determining the resources needed to achieve conformity to the product and service requirements;",
+                            IsDeleted = false,
+                            ParentID = 150L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 158L,
+                            ClauseRef = "8.1.d",
+                            Description = "implementing control of the processes in accordance with criteria;",
+                            IsDeleted = false,
+                            ParentID = 150L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 159L,
+                            ClauseRef = "8.1.e",
+                            Description = "determining, maintaining and retaining documented information to the extent necessary:",
+                            IsDeleted = false,
+                            ParentID = 150L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 160L,
+                            ClauseRef = "8.1.e.1",
+                            Description = "to have confidence processes were carried out as planned;",
+                            IsDeleted = false,
+                            ParentID = 157L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 161L,
+                            ClauseRef = "8.1.e.2",
+                            Description = "to demonstrate the conformity of products and services to their requirements.",
+                            IsDeleted = false,
+                            ParentID = 157L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 162L,
+                            ClauseRef = "8.2",
+                            Description = "Requirements for products and services",
+                            IsDeleted = false,
+                            ParentID = 149L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 163L,
+                            ClauseRef = "8.1.e.2",
+                            Description = "to demonstrate the conformity of products and services to their requirements.",
+                            IsDeleted = false,
+                            ParentID = 157L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 164L,
+                            ClauseRef = "8.2.1",
+                            Description = "Customer communication",
+                            IsDeleted = false,
+                            ParentID = 160L,
+                            Particulars = "Communication with customers shall include:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 165L,
+                            ClauseRef = "8.2.1.a",
+                            Description = "providing information relating to products and services;",
+                            IsDeleted = false,
+                            ParentID = 161L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 166L,
+                            ClauseRef = "8.2.1.b",
+                            Description = "handling enquiries, contracts or orders, including changes;;",
+                            IsDeleted = false,
+                            ParentID = 161L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 167L,
+                            ClauseRef = "8.2.1.c",
+                            Description = "obtaining customer feedback relating to products and services, including customer complaints;;",
+                            IsDeleted = false,
+                            ParentID = 161L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 168L,
+                            ClauseRef = "8.2.1.d",
+                            Description = "handling or controlling customer property;",
+                            IsDeleted = false,
+                            ParentID = 161L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 169L,
+                            ClauseRef = "8.2.1.e",
+                            Description = "establishing specific requirements for contingency actions, when relevant.",
+                            IsDeleted = false,
+                            ParentID = 161L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 170L,
+                            ClauseRef = "8.2.2",
+                            Description = "Determining the requirements for products and services",
+                            IsDeleted = false,
+                            ParentID = 160L,
+                            Particulars = "When determining the requirements for the products and services to be offered to customers, the organization shall ensure that:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 171L,
+                            ClauseRef = "8.2.2.a",
+                            Description = "the requirements for the products and services are defined, including:",
+                            IsDeleted = false,
+                            ParentID = 167L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 172L,
+                            ClauseRef = "8.2.2.a.1",
+                            Description = "any applicable statutory and regulatory requirements;",
+                            IsDeleted = false,
+                            ParentID = 168L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 173L,
+                            ClauseRef = "8.2.2.a.2",
+                            Description = "those considered necessary by the organization;",
+                            IsDeleted = false,
+                            ParentID = 168L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 174L,
+                            ClauseRef = "8.2.2.b",
+                            Description = "the organization can meet the claims for the products and services it offers.",
+                            IsDeleted = false,
+                            ParentID = 167L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 175L,
+                            ClauseRef = "8.2.3",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 160L,
+                            Particulars = "Review of the requirements for products and services",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 176L,
+                            ClauseRef = "8.2.3.1",
+                            Description = "Review before commitment to supply",
+                            IsDeleted = false,
+                            ParentID = 172L,
+                            Particulars = "The organization shall ensure that contract or order requirements differing from those previously defined are resolved. The customer’s requirements shall be confirmed by the organization before acceptance, when the customer does not provide a documented statement of their requirements.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 177L,
+                            ClauseRef = "8.2.3.1.a",
+                            Description = "requirements specified by the customer, including the requirements for delivery and postdelivery activities;",
+                            IsDeleted = false,
+                            ParentID = 173L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 178L,
+                            ClauseRef = "8.2.3.1.b",
+                            Description = "requirements not stated by the customer, but necessary for the specified or intended use, when known;",
+                            IsDeleted = false,
+                            ParentID = 173L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 179L,
+                            ClauseRef = "8.2.3.1.c",
+                            Description = "requirements specified by organization;",
+                            IsDeleted = false,
+                            ParentID = 173L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 180L,
+                            ClauseRef = "8.2.3.1.d",
+                            Description = "statutory and regulatory requirements applicable to the products and services;",
+                            IsDeleted = false,
+                            ParentID = 173L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 181L,
+                            ClauseRef = "8.2.3.1.e",
+                            Description = "contract or order requirements differing from those previously expressed.",
+                            IsDeleted = false,
+                            ParentID = 173L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 182L,
+                            ClauseRef = "8.2.3.2",
+                            Description = "The organization shall retain documented information, as applicable:",
+                            IsDeleted = false,
+                            ParentID = 172L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 183L,
+                            ClauseRef = "8.2.3.2.a",
+                            Description = "on the results of the review;",
+                            IsDeleted = false,
+                            ParentID = 179L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 184L,
+                            ClauseRef = "8.2.3.2.b",
+                            Description = "on any new requirements for products and services.",
+                            IsDeleted = false,
+                            ParentID = 179L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 185L,
+                            ClauseRef = "8.2.4",
+                            Description = "Changes to requirements for products and services",
+                            IsDeleted = false,
+                            ParentID = 160L,
+                            Particulars = "The organization shall ensure that relevant documented information is amended, and that relevant persons are made aware of the changed requirements, when the requirements for products and services are changed.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 186L,
+                            ClauseRef = "8.3",
+                            Description = "Design and development of products and services",
+                            IsDeleted = false,
+                            ParentID = 149L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 187L,
+                            ClauseRef = "8.3.1",
+                            Description = "General",
+                            IsDeleted = false,
+                            ParentID = 183L,
+                            Particulars = "The organization shall establish, implement and maintain a design and development process that is appropriate to ensure the subsequent provision of products and services.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 188L,
+                            ClauseRef = "8.3.2",
+                            Description = "Design and development of products and services",
+                            IsDeleted = false,
+                            ParentID = 183L,
+                            Particulars = "In determining the stages and controls for design and development, the organization shall consider:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 189L,
+                            ClauseRef = "8.3.2.a",
+                            Description = "the nature, duration and complexity of the design and development activities;",
+                            IsDeleted = false,
+                            ParentID = 185L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 190L,
+                            ClauseRef = "8.3.2.b",
+                            Description = "the required process stages, including applicable design and development reviews;",
+                            IsDeleted = false,
+                            ParentID = 185L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 191L,
+                            ClauseRef = "8.3.2.c",
+                            Description = "the required design and development verification and validation activities;",
+                            IsDeleted = false,
+                            ParentID = 185L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 192L,
+                            ClauseRef = "8.3.2.d",
+                            Description = "the responsibilities and authorities involved in the design and development process;",
+                            IsDeleted = false,
+                            ParentID = 185L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 193L,
+                            ClauseRef = "8.3.2.e",
+                            Description = "the internal and external resource needs for the design and development of products and services;;",
+                            IsDeleted = false,
+                            ParentID = 185L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 194L,
+                            ClauseRef = "8.3.2.f",
+                            Description = "The need to control interfaces between persons involved in the design and development process;",
+                            IsDeleted = false,
+                            ParentID = 188L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 195L,
+                            ClauseRef = "8.3.2.g",
+                            Description = "The need for involvement of customers and users in the design and development process;",
+                            IsDeleted = false,
+                            ParentID = 188L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 196L,
+                            ClauseRef = "8.3.2.h",
+                            Description = "The requirements for subsequent provision of products and services;",
+                            IsDeleted = false,
+                            ParentID = 188L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 197L,
+                            ClauseRef = "8.3.2.i",
+                            Description = "The level of control expected by customers and other interested parties;",
+                            IsDeleted = false,
+                            ParentID = 188L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 198L,
+                            ClauseRef = "8.3.2.j",
+                            Description = "Documented information to demonstrate requirements are met;",
+                            IsDeleted = false,
+                            ParentID = 188L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 199L,
+                            ClauseRef = "8.3.3",
+                            Description = "Design and development inputs",
+                            IsDeleted = false,
+                            ParentID = 186L,
+                            Particulars = "The organization shall determine the requirements essential for the specific types of products and services to be designed and developed. The organization shall consider: Inputs shall be adequate for design and development purposes, complete and unambiguous. Conflicting design and development inputs shall be resolved. The organization shall retain documented information on design and development inputs.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 200L,
+                            ClauseRef = "8.3.3.a",
+                            Description = "Functional and performance requirements; ",
+                            IsDeleted = false,
+                            ParentID = 199L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 201L,
+                            ClauseRef = "8.3.3.b",
+                            Description = "Information from previous similar design and development activities; ",
+                            IsDeleted = false,
+                            ParentID = 199L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 202L,
+                            ClauseRef = "8.3.3.c",
+                            Description = "Statutory and regulatory requirements; ",
+                            IsDeleted = false,
+                            ParentID = 199L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 203L,
+                            ClauseRef = "8.3.3.d",
+                            Description = "standards or codes of practice that the organization has committed to implement;",
+                            IsDeleted = false,
+                            ParentID = 199L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 204L,
+                            ClauseRef = "8.3.3.e",
+                            Description = "potential consequences of failure due to the nature of the products and services.",
+                            IsDeleted = false,
+                            ParentID = 199L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 205L,
+                            ClauseRef = "8.3.4",
+                            Description = "Design and development controls",
+                            IsDeleted = false,
+                            ParentID = 186L,
+                            Particulars = "The organization shall apply controls to the design and development process to ensure that:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 206L,
+                            ClauseRef = "8.3.4.a",
+                            Description = "The results to be achieved are defined; ",
+                            IsDeleted = false,
+                            ParentID = 205L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 207L,
+                            ClauseRef = "8.3.4.b",
+                            Description = "reviews are conducted to evaluate the ability of the results of design and development to meet requirements;",
+                            IsDeleted = false,
+                            ParentID = 205L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 208L,
+                            ClauseRef = "8.3.4.c",
+                            Description = "verification activities are conducted to ensure that the design and development outputs meet the input requirements;",
+                            IsDeleted = false,
+                            ParentID = 205L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 209L,
+                            ClauseRef = "8.3.4.d",
+                            Description = "Validation activities conducted to ensure that the resulting products and services meet requirements for the specified application or intended use; ",
+                            IsDeleted = false,
+                            ParentID = 205L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 210L,
+                            ClauseRef = "8.3.4.e",
+                            Description = "any necessary actions are taken on problems determined during the reviews, or verification and validation activities;",
+                            IsDeleted = false,
+                            ParentID = 205L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 211L,
+                            ClauseRef = "8.3.4.f",
+                            Description = "Documented information of these activities is retained. ",
+                            IsDeleted = false,
+                            ParentID = 205L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 212L,
+                            ClauseRef = "8.3.5",
+                            Description = "design and development outputs",
+                            IsDeleted = false,
+                            ParentID = 186L,
+                            Particulars = "The organization shall retain documented information on design and development outputs. The organization shall ensure that design and development outputs.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 213L,
+                            ClauseRef = "8.3.5.a",
+                            Description = "Meet the input requirements",
+                            IsDeleted = false,
+                            ParentID = 212L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 214L,
+                            ClauseRef = "8.3.5.b",
+                            Description = "are adequate for the subsequent process for the provision of products and services",
+                            IsDeleted = false,
+                            ParentID = 212L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 215L,
+                            ClauseRef = "8.3.5.c",
+                            Description = "include or reference monitoring and measuring requirements, as appropriate, and acceptance criteria;",
+                            IsDeleted = false,
+                            ParentID = 212L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 216L,
+                            ClauseRef = "8.3.5.d",
+                            Description = "specify the characteristics of the products and services that are essential for their intended purpose and their safe and proper provision.",
+                            IsDeleted = false,
+                            ParentID = 212L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 217L,
+                            ClauseRef = "8.3.6",
+                            Description = "Design and development changes",
+                            IsDeleted = false,
+                            ParentID = 186L,
+                            Particulars = "The organization shall identify, review and control changes made during, or subsequent to, the design and development of products and services, to the extent necessary to ensure that there is no adverse impact on conformity to requirements. The organization shall retain documented information on:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 218L,
+                            ClauseRef = "8.3.6.a",
+                            Description = "design and development changes; ",
+                            IsDeleted = false,
+                            ParentID = 217L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 219L,
+                            ClauseRef = "8.3.6.b",
+                            Description = "the results of reviews",
+                            IsDeleted = false,
+                            ParentID = 217L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 220L,
+                            ClauseRef = "8.3.6.c",
+                            Description = "the authorization of the changes",
+                            IsDeleted = false,
+                            ParentID = 217L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 221L,
+                            ClauseRef = "8.3.6.d",
+                            Description = "the actions taken to prevent adverse impacts",
+                            IsDeleted = false,
+                            ParentID = 217L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 222L,
+                            ClauseRef = "8.4",
+                            Description = "Control of externally provided processes, products and services",
+                            IsDeleted = false,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 223L,
+                            ClauseRef = "8.4.1",
+                            Description = "General",
+                            IsDeleted = false,
+                            ParentID = 222L,
+                            Particulars = "The organization shall ensure that externally provided processes, products and services conform to requirements.The organization shall determine and apply criteria for the evaluation, selection, monitoring of performance, and re-evaluation of external providers, based on their ability to provide processes or products and services in accordance with requirements. The organization shall retain documented information of these activities and any necessary actions arising from the evaluations.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 224L,
+                            ClauseRef = "8.4.1.a",
+                            Description = "Products and services intended for incorporation into the organization’s own products and services; ",
+                            IsDeleted = false,
+                            ParentID = 223L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 225L,
+                            ClauseRef = "8.4.1.b",
+                            Description = "Products and services provided directly to customers by external providers on behalf of the organization; ",
+                            IsDeleted = false,
+                            ParentID = 223L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 226L,
+                            ClauseRef = "8.4.1.c",
+                            Description = "A process, or part of a process, provided by an external provider as a result of a decision by the organization. ",
+                            IsDeleted = false,
+                            ParentID = 223L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 227L,
+                            ClauseRef = "8.4.2",
+                            Description = "Type and extent of control",
+                            IsDeleted = false,
+                            ParentID = 222L,
+                            Particulars = "The organization shall ensure that externally provided processes, products and services do not adversely affect the organization’s ability to consistently deliver conforming products and services to its customers.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 228L,
+                            ClauseRef = "8.4.2.a",
+                            Description = "ensure that externally provided processes remain within the control of its quality management system;",
+                            IsDeleted = false,
+                            ParentID = 227L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 229L,
+                            ClauseRef = "8.4.2.b",
+                            Description = "define both the controls that it intends to apply to an external provider and those it intends to apply to the resulting output;",
+                            IsDeleted = false,
+                            ParentID = 227L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 230L,
+                            ClauseRef = "8.4.2.c",
+                            Description = "Take into consideration:",
+                            IsDeleted = false,
+                            ParentID = 227L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 231L,
+                            ClauseRef = "8.4.2.c.1",
+                            Description = "the potential impact of the externally provided processes, products and services on the organization’s ability to consistently meet customer and applicable statutory and regulatory requirements;",
+                            IsDeleted = false,
+                            ParentID = 230L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 232L,
+                            ClauseRef = "8.4.2.c.2",
+                            Description = "Effectiveness of controls applied by the external provide;r",
+                            IsDeleted = false,
+                            ParentID = 230L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 233L,
+                            ClauseRef = "8.4.2.d",
+                            Description = "determine the verification, or other activities, necessary to ensure that the externally provided processes, products and services meet requirements.",
+                            IsDeleted = false,
+                            ParentID = 227L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 234L,
+                            ClauseRef = "8.4.3",
+                            Description = "Information for external providers",
+                            IsDeleted = false,
+                            ParentID = 222L,
+                            Particulars = "The organization shall ensure adequacy of requirements prior to communication to external providers.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 235L,
+                            ClauseRef = "8.4.3.a",
+                            Description = "Processes, products and services to be provided",
+                            IsDeleted = false,
+                            ParentID = 234L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 236L,
+                            ClauseRef = "8.4.3.b",
+                            Description = "the approval of:",
+                            IsDeleted = false,
+                            ParentID = 234L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 237L,
+                            ClauseRef = "8.4.3.b.1",
+                            Description = "Products and services",
+                            IsDeleted = false,
+                            ParentID = 236L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 238L,
+                            ClauseRef = "8.4.3.b.2",
+                            Description = "Methods, processes and equipment",
+                            IsDeleted = false,
+                            ParentID = 236L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 239L,
+                            ClauseRef = "8.4.3.b.3",
+                            Description = "the release of products and services",
+                            IsDeleted = false,
+                            ParentID = 236L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 240L,
+                            ClauseRef = "8.4.3.c",
+                            Description = "Competence, including qualification of persons",
+                            IsDeleted = false,
+                            ParentID = 234L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 241L,
+                            ClauseRef = "8.4.3.d",
+                            Description = "External providers’ interactions with the organization",
+                            IsDeleted = false,
+                            ParentID = 234L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 242L,
+                            ClauseRef = "8.4.3.e",
+                            Description = "control and monitoring of the external providers’ performance to be applied by the organization;",
+                            IsDeleted = false,
+                            ParentID = 234L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 243L,
+                            ClauseRef = "8.4.3.f",
+                            Description = "verification or validation activities that the organization, or its customer, intends to perform at the external providers’ premises.",
+                            IsDeleted = false,
+                            ParentID = 234L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 244L,
+                            ClauseRef = "8.5",
+                            Description = "Production and service provision",
+                            IsDeleted = false,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 245L,
+                            ClauseRef = "8.5.1",
+                            Description = "Control of production and service provision",
+                            IsDeleted = false,
+                            ParentID = 244L,
+                            Particulars = "The organization shall implement production and service provision under controlled conditions. Controlled conditions shall include, as applicable:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 246L,
+                            ClauseRef = "8.5.1.a",
+                            Description = "the availability of documented information that defines:",
+                            IsDeleted = false,
+                            ParentID = 245L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 247L,
+                            ClauseRef = "8.5.1.a.1",
+                            Description = "the characteristics of the products to be produced, the services to be provided, or the activities to be performed;",
+                            IsDeleted = false,
+                            ParentID = 246L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 248L,
+                            ClauseRef = "8.5.1.a.2",
+                            Description = "the results to be achieved;",
+                            IsDeleted = false,
+                            ParentID = 246L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 249L,
+                            ClauseRef = "8.5.1.b",
+                            Description = "the availability and use of suitable monitoring and measuring resources;",
+                            IsDeleted = false,
+                            ParentID = 245L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 250L,
+                            ClauseRef = "8.5.1.c",
+                            Description = "the implementation of monitoring and measurement activities at appropriate stages to verify that criteria for control of processes or outputs, and acceptance criteria for products and services, have been met;",
+                            IsDeleted = false,
+                            ParentID = 245L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 251L,
+                            ClauseRef = "8.5.1.d",
+                            Description = "the use of suitable infrastructure and environment for the operation of processes;",
+                            IsDeleted = false,
+                            ParentID = 245L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 252L,
+                            ClauseRef = "8.5.1.e",
+                            Description = "the appointment of competent persons, including any required qualification;",
+                            IsDeleted = false,
+                            ParentID = 245L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 253L,
+                            ClauseRef = "8.5.1.f",
+                            Description = "the validation, and periodic revalidation, of the ability to achieve planned results of the processes for production and service provision, where the resulting output cannot be verified by subsequent monitoring or measurement;",
+                            IsDeleted = false,
+                            ParentID = 245L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 254L,
+                            ClauseRef = "8.5.1.g",
+                            Description = "the implementation of actions to prevent human error;",
+                            IsDeleted = false,
+                            ParentID = 245L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 255L,
+                            ClauseRef = "8.5.1.h",
+                            Description = "the implementation of release, delivery and post-delivery activities.",
+                            IsDeleted = false,
+                            ParentID = 245L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 256L,
+                            ClauseRef = "8.5.2",
+                            Description = "Identification and traceability",
+                            IsDeleted = false,
+                            ParentID = 244L,
+                            Particulars = "The organization shall use suitable means to identify outputs when it is necessary to ensure the conformity of products and services. The organization shall identify the status of outputs with respect to monitoring and measurement requirements throughout production and service provision. The organization shall control the unique identification of the outputs when traceability is a requirement, and shall retain the documented information necessary to enable traceability.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 257L,
+                            ClauseRef = "8.5.3",
+                            Description = "Property belonging to customers or external providers",
+                            IsDeleted = false,
+                            ParentID = 244L,
+                            Particulars = "The organization shall exercise care with property belonging to customers or external providers while it is under the organization’s control or being used by the organization. The organization shall identify, verify, protect and safeguard customers’ or external providers’ property provided for use or incorporation into the products and services. When the property of a customer or external provider is lost, damaged or otherwise found to be unsuitable for use, the organization shall report this to the customer or external provider and retain documented information on what has occurred.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 258L,
+                            ClauseRef = "8.5.4",
+                            Description = "Preservation",
+                            IsDeleted = false,
+                            ParentID = 244L,
+                            Particulars = "The organization shall preserve the outputs during production and service provision, to the extent necessary to ensure conformity to requirements.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 259L,
+                            ClauseRef = "8.5.5",
+                            Description = "Post-delivery activities",
+                            IsDeleted = false,
+                            ParentID = 244L,
+                            Particulars = "The organization shall meet requirements for post-delivery activities associated with the products and services. In determining the extent of post-delivery activities that are required, the organization shall consider:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 260L,
+                            ClauseRef = "8.5.5.a",
+                            Description = "statutory and regulatory requirements;",
+                            IsDeleted = false,
+                            ParentID = 259L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 261L,
+                            ClauseRef = "8.5.5.b",
+                            Description = "the potential undesired consequences associated with its products and services;",
+                            IsDeleted = false,
+                            ParentID = 259L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 262L,
+                            ClauseRef = "8.5.5.c",
+                            Description = "the nature, use and intended lifetime of its products and services;",
+                            IsDeleted = false,
+                            ParentID = 259L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 263L,
+                            ClauseRef = "8.5.5.d",
+                            Description = "customer requirements;",
+                            IsDeleted = false,
+                            ParentID = 259L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 264L,
+                            ClauseRef = "8.5.5.e",
+                            Description = "customer feedback.",
+                            IsDeleted = false,
+                            ParentID = 259L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 265L,
+                            ClauseRef = "8.5.6",
+                            Description = "Control of changes",
+                            IsDeleted = false,
+                            ParentID = 244L,
+                            Particulars = "The organization shall review and control changes for production or service provision, to the extent necessary to ensure continuing conformity with requirements. The organization shall retain documented information describing the results of the review of changes, the person(s) authorizing the change, and any necessary actions arising from the review.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 266L,
+                            ClauseRef = "8.6",
+                            Description = "Release of products and services",
+                            IsDeleted = false,
+                            ParentID = 244L,
+                            Particulars = "The organization shall implement planned arrangements, at appropriate stages, to verify that the product and service requirements have been met. The release of products and services to the customer shall not proceed until the planned arrangements have been satisfactorily completed, unless otherwise approved by a relevant authority and, as applicable, by the customer. The organization shall retain documented information on the release of products and services. The documented information shall include:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 267L,
+                            ClauseRef = "8.6.a",
+                            Description = "evidence of conformity with the acceptance criteria;",
+                            IsDeleted = false,
+                            ParentID = 266L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 268L,
+                            ClauseRef = "8.6.b",
+                            Description = "traceability to the person(s) authorizing the release.",
+                            IsDeleted = false,
+                            ParentID = 266L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 269L,
+                            ClauseRef = "8.7",
+                            Description = "Control of nonconforming outputs",
+                            IsDeleted = false,
+                            ParentID = 244L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 270L,
+                            ClauseRef = "8.7.1",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 269L,
+                            Particulars = "The organization shall ensure that outputs that do not conform to their requirements are identified and controlled to prevent their unintended use or delivery. The organization shall take appropriate action based on the nature of the nonconformity and its effect on the conformity of products and services. This shall also apply to nonconforming products and services detected after delivery of products, during or after the provision of services. Conformity to the requirements shall be verified when nonconforming outputs are corrected. The organization shall deal with nonconforming outputs in one or more of the following ways:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 271L,
+                            ClauseRef = "8.7.1.a",
+                            Description = "Correction;",
+                            IsDeleted = false,
+                            ParentID = 270L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 272L,
+                            ClauseRef = "8.7.1.b",
+                            Description = "segregation, containment, return or suspension of provision of products and services;",
+                            IsDeleted = false,
+                            ParentID = 270L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 273L,
+                            ClauseRef = "8.7.1.c",
+                            Description = "informing the customer;",
+                            IsDeleted = false,
+                            ParentID = 270L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 274L,
+                            ClauseRef = "8.7.1.d",
+                            Description = "obtaining authorization for acceptance under concession.",
+                            IsDeleted = false,
+                            ParentID = 270L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 275L,
+                            ClauseRef = "8.7.2",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 269L,
+                            Particulars = "The organization shall retain documented information that:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 276L,
+                            ClauseRef = "8.7.2.a",
+                            Description = "describes the nonconformity;",
+                            IsDeleted = false,
+                            ParentID = 275L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 277L,
+                            ClauseRef = "8.7.2.b",
+                            Description = "describes the actions taken;",
+                            IsDeleted = false,
+                            ParentID = 275L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 278L,
+                            ClauseRef = "8.7.2.c",
+                            Description = "describes any concessions obtained;",
+                            IsDeleted = false,
+                            ParentID = 275L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 279L,
+                            ClauseRef = "8.7.2.d",
+                            Description = "identifies the authority deciding the action in respect of the nonconformity.",
+                            IsDeleted = false,
+                            ParentID = 275L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 280L,
+                            ClauseRef = "9",
+                            Description = "Performance evaluation",
+                            IsDeleted = false,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 281L,
+                            ClauseRef = "9.1",
+                            Description = "Monitoring, measurement, analysis and evaluation",
+                            IsDeleted = false,
+                            ParentID = 280L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 282L,
+                            ClauseRef = "9.1.1",
+                            Description = "General",
+                            IsDeleted = false,
+                            ParentID = 281L,
+                            Particulars = "The organization shall evaluate the performance and the effectiveness of the quality management system. The organization shall retain appropriate documented information as evidence of the results. The organization shall determine:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 283L,
+                            ClauseRef = "9.1.1.a",
+                            Description = "what needs to be monitored and measured;",
+                            IsDeleted = false,
+                            ParentID = 282L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 284L,
+                            ClauseRef = "9.1.1.b",
+                            Description = "the methods for monitoring, measurement, analysis and evaluation needed to ensure valid results;",
+                            IsDeleted = false,
+                            ParentID = 282L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 285L,
+                            ClauseRef = "9.1.1.c",
+                            Description = "when the monitoring and measuring shall be performed;",
+                            IsDeleted = false,
+                            ParentID = 282L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 286L,
+                            ClauseRef = "9.1.1.d",
+                            Description = "when the results from monitoring and measurement shall be analysed and evaluated.",
+                            IsDeleted = false,
+                            ParentID = 282L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 287L,
+                            ClauseRef = "9.1.2",
+                            Description = "Customer satisfaction",
+                            IsDeleted = false,
+                            ParentID = 281L,
+                            Particulars = "The organization shall monitor customers’ perceptions of the degree to which their needs and expectations have been fulfilled. The organization shall determine the methods for obtaining, monitoring and reviewing this information.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 288L,
+                            ClauseRef = "9.1.3",
+                            Description = "Analysis and evaluation",
+                            IsDeleted = false,
+                            ParentID = 281L,
+                            Particulars = "The organization shall analyse and evaluate appropriate data and information arising from monitoring and measurement. The results of analysis shall be used to evaluate:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 289L,
+                            ClauseRef = "9.1.3.a",
+                            Description = "conformity of products and services;",
+                            IsDeleted = false,
+                            ParentID = 288L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 290L,
+                            ClauseRef = "9.1.3.b",
+                            Description = "the degree of customer satisfaction;",
+                            IsDeleted = false,
+                            ParentID = 288L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 291L,
+                            ClauseRef = "9.1.3.c",
+                            Description = "the performance and effectiveness of the quality management system;",
+                            IsDeleted = false,
+                            ParentID = 288L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 292L,
+                            ClauseRef = "9.1.3.d",
+                            Description = "if planning has been implemented effectively;",
+                            IsDeleted = false,
+                            ParentID = 288L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 293L,
+                            ClauseRef = "9.1.3.e",
+                            Description = "the effectiveness of actions taken to address risks and opportunities;",
+                            IsDeleted = false,
+                            ParentID = 288L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 294L,
+                            ClauseRef = "9.1.3.f",
+                            Description = "the performance of external providers;",
+                            IsDeleted = false,
+                            ParentID = 288L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 295L,
+                            ClauseRef = "9.1.3.g",
+                            Description = "the need for improvements to the quality management system.",
+                            IsDeleted = false,
+                            ParentID = 288L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 296L,
+                            ClauseRef = "9.2",
+                            Description = "Internal audit",
+                            IsDeleted = false,
+                            ParentID = 280L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 297L,
+                            ClauseRef = "9.2.1",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 296L,
+                            Particulars = "The organization shall conduct internal audits at planned intervals to provide information on whether the quality management system:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 298L,
+                            ClauseRef = "9.2.1.a",
+                            Description = "conforms to:",
+                            IsDeleted = false,
+                            ParentID = 297L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 299L,
+                            ClauseRef = "9.2.1.a.1",
+                            Description = "the organization’s own requirements for its quality management system;",
+                            IsDeleted = false,
+                            ParentID = 298L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 300L,
+                            ClauseRef = "9.2.1.a.2",
+                            Description = "the requirements of this International Standard;",
+                            IsDeleted = false,
+                            ParentID = 298L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 301L,
+                            ClauseRef = "9.2.1.b",
+                            Description = "is effectively implemented and maintained.",
+                            IsDeleted = false,
+                            ParentID = 297L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 302L,
+                            ClauseRef = "9.2.2",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 296L,
+                            Particulars = "The organization shall:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 303L,
+                            ClauseRef = "9.2.2.a",
+                            Description = "plan, establish, implement and maintain an audit programme(s) including the frequency, methods, responsibilities, planning requirements and reporting, which shall take into consideration the importance of the processes concerned, changes affecting the organization, and the results of previous audits;",
+                            IsDeleted = false,
+                            ParentID = 302L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 304L,
+                            ClauseRef = "9.2.2.b",
+                            Description = "define the audit criteria and scope for each audit;",
+                            IsDeleted = false,
+                            ParentID = 302L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 305L,
+                            ClauseRef = "9.2.2.c",
+                            Description = "select auditors and conduct audits to ensure objectivity and the impartiality of the audit process;",
+                            IsDeleted = false,
+                            ParentID = 279L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 306L,
+                            ClauseRef = "9.2.2.d",
+                            Description = "ensure that the results of the audits are reported to relevant management;",
+                            IsDeleted = false,
+                            ParentID = 302L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 307L,
+                            ClauseRef = "9.2.2.e",
+                            Description = "take appropriate correction and corrective actions without undue delay;",
+                            IsDeleted = false,
+                            ParentID = 302L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 308L,
+                            ClauseRef = "9.2.2.f",
+                            Description = "retain documented information as evidence of the implementation of the audit programme and the audit results.",
+                            IsDeleted = false,
+                            ParentID = 302L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 309L,
+                            ClauseRef = "9.3",
+                            Description = "Management review",
+                            IsDeleted = false,
+                            ParentID = 280L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 310L,
+                            ClauseRef = "9.3.1",
+                            Description = "General",
+                            IsDeleted = false,
+                            ParentID = 309L,
+                            Particulars = "Top management shall review the organization’s quality management system, at planned intervals, to ensure its continuing suitability, adequacy, effectiveness and alignment with the strategic direction of the organization.",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 311L,
+                            ClauseRef = "9.3.2",
+                            Description = "Management review inputs",
+                            IsDeleted = false,
+                            ParentID = 309L,
+                            Particulars = "The management review shall be planned and carried out taking into consideration:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 312L,
+                            ClauseRef = "9.3.2.a",
+                            Description = "the status of actions from previous management reviews;",
+                            IsDeleted = false,
+                            ParentID = 311L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 313L,
+                            ClauseRef = "9.3.2.b",
+                            Description = "changes in external and internal issues that are relevant to the quality management system;",
+                            IsDeleted = false,
+                            ParentID = 311L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 314L,
+                            ClauseRef = "9.3.2.c",
+                            Description = "information on the performance and effectiveness of the quality management system, including trends in:",
+                            IsDeleted = false,
+                            ParentID = 311L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 315L,
+                            ClauseRef = "9.3.2.c.1",
+                            Description = "customer satisfaction and feedback from relevant interested parties;",
+                            IsDeleted = false,
+                            ParentID = 314L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 316L,
+                            ClauseRef = "9.3.2.c.2",
+                            Description = "the extent to which quality objectives have been met;",
+                            IsDeleted = false,
+                            ParentID = 314L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 317L,
+                            ClauseRef = "9.3.2.c.3",
+                            Description = "process performance and conformity of products and services;",
+                            IsDeleted = false,
+                            ParentID = 314L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 318L,
+                            ClauseRef = "9.3.2.c.4",
+                            Description = "nonconformities and corrective actions;",
+                            IsDeleted = false,
+                            ParentID = 314L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 319L,
+                            ClauseRef = "9.3.2.c.5",
+                            Description = "monitoring and measurement results;",
+                            IsDeleted = false,
+                            ParentID = 314L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 320L,
+                            ClauseRef = "9.3.2.c.6",
+                            Description = "audit results;",
+                            IsDeleted = false,
+                            ParentID = 314L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 321L,
+                            ClauseRef = "9.3.2.c.7",
+                            Description = "the performance of external providers",
+                            IsDeleted = false,
+                            ParentID = 314L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 322L,
+                            ClauseRef = "9.3.2.d",
+                            Description = "the adequacy of resources;",
+                            IsDeleted = false,
+                            ParentID = 311L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 323L,
+                            ClauseRef = "9.3.2.e",
+                            Description = "the effectiveness of actions taken to address risks and opportunities (see 6.1);",
+                            IsDeleted = false,
+                            ParentID = 311L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 324L,
+                            ClauseRef = "9.3.2.f",
+                            Description = "opportunities for improvement",
+                            IsDeleted = false,
+                            ParentID = 311L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 325L,
+                            ClauseRef = "9.3.3",
+                            Description = "Management review outputs",
+                            IsDeleted = false,
+                            ParentID = 309L,
+                            Particulars = "The organization shall retain documented information as evidence of the results of management reviews. The outputs of the management review shall include decisions and actions related to:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 326L,
+                            ClauseRef = "9.3.3.a",
+                            Description = "opportunities for improvement;",
+                            IsDeleted = false,
+                            ParentID = 325L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 327L,
+                            ClauseRef = "9.3.3.b",
+                            Description = "any need for changes to the quality management system;",
+                            IsDeleted = false,
+                            ParentID = 325L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 328L,
+                            ClauseRef = "9.3.3.c",
+                            Description = "resource needs.",
+                            IsDeleted = false,
+                            ParentID = 325L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 329L,
+                            ClauseRef = "10",
+                            Description = "Improvement",
+                            IsDeleted = false,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 330L,
+                            ClauseRef = "10.1",
+                            Description = "General",
+                            IsDeleted = false,
+                            ParentID = 329L,
+                            Particulars = "The organization shall determine and select opportunities for improvement and implement any necessary actions to meet customer requirements and enhance customer satisfaction. These shall include:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 331L,
+                            ClauseRef = "10.1.1.a",
+                            Description = "improving products and services to meet requirements as well as to address future needs and expectations;",
+                            IsDeleted = false,
+                            ParentID = 330L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 332L,
+                            ClauseRef = "10.1.1.b",
+                            Description = "correcting, preventing or reducing undesired effects;",
+                            IsDeleted = false,
+                            ParentID = 330L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 333L,
+                            ClauseRef = "10.1.1.c",
+                            Description = "improving the performance and effectiveness of the quality management system.",
+                            IsDeleted = false,
+                            ParentID = 330L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 334L,
+                            ClauseRef = "10.2",
+                            Description = "Nonconformity and corrective action",
+                            IsDeleted = false,
+                            ParentID = 329L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 335L,
+                            ClauseRef = "10.2.1",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 334L,
+                            Particulars = "Corrective actions shall be appropriate to the effects of the nonconformities encountered. When a nonconformity occurs, including any arising from complaints, the organization shall:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 336L,
+                            ClauseRef = "10.2.1.a",
+                            Description = "react to the nonconformity and, as applicable:",
+                            IsDeleted = false,
+                            ParentID = 335L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 337L,
+                            ClauseRef = "10.2.1.a.1",
+                            Description = "take action control and correct it;",
+                            IsDeleted = false,
+                            ParentID = 336L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 338L,
+                            ClauseRef = "10.2.1.a.2",
+                            Description = "deal with the consequences;",
+                            IsDeleted = false,
+                            ParentID = 336L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 339L,
+                            ClauseRef = "10.2.1.b",
+                            Description = "evaluate the need for action to eliminate the cause(s) of the nonconformity, in order that it does not recur or occur elsewhere, by:",
+                            IsDeleted = false,
+                            ParentID = 335L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 340L,
+                            ClauseRef = "10.2.1.b.1",
+                            Description = "reviewing and analysing the nonconformity;",
+                            IsDeleted = false,
+                            ParentID = 339L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 341L,
+                            ClauseRef = "10.2.1.b.2",
+                            Description = "determining the causes of the nonconformity;",
+                            IsDeleted = false,
+                            ParentID = 339L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 342L,
+                            ClauseRef = "10.2.1.b.3",
+                            Description = "determining if similar nonconformities exist, or could potentially occur;",
+                            IsDeleted = false,
+                            ParentID = 335L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 343L,
+                            ClauseRef = "10.2.1.c",
+                            Description = "implement any action needed;",
+                            IsDeleted = false,
+                            ParentID = 335L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 344L,
+                            ClauseRef = "10.2.1.d",
+                            Description = "review the effectiveness of any corrective action taken;",
+                            IsDeleted = false,
+                            ParentID = 335L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 345L,
+                            ClauseRef = "10.2.1.e",
+                            Description = "update risks and opportunities determined during planning, if necessary;",
+                            IsDeleted = false,
+                            ParentID = 335L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 346L,
+                            ClauseRef = "10.2.1.f",
+                            Description = "make changes to the quality management system, if necessary.",
+                            IsDeleted = false,
+                            ParentID = 335L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 347L,
+                            ClauseRef = "10.2.2",
+                            Description = "",
+                            IsDeleted = false,
+                            ParentID = 334L,
+                            Particulars = "The organization shall retain documented information as evidence of:",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 348L,
+                            ClauseRef = "10.2.2.a",
+                            Description = "the nature of the nonconformities and any subsequent actions taken;",
+                            IsDeleted = false,
+                            ParentID = 347L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 349L,
+                            ClauseRef = "10.2.2.b",
+                            Description = "the results of any corrective action.",
+                            IsDeleted = false,
+                            ParentID = 347L,
+                            Particulars = "",
+                            VersionID = 1,
+                            isActive = true
+                        },
+                        new
+                        {
+                            Id = 350L,
+                            ClauseRef = "10.3",
+                            Description = "Continual improvement",
+                            IsDeleted = false,
+                            ParentID = 329L,
+                            Particulars = "The organization shall continually improve the suitability, adequacy and effectiveness of the quality management system. The organization shall consider the results of analysis and evaluation, and the outputs from management review, to determine if there are needs or opportunities that shall be addressed as part of continual improvement.",
+                            VersionID = 1,
+                            isActive = true
+                        });
                 });
 
             modelBuilder.Entity("IMIS.Domain.KeyResultArea", b =>
@@ -9079,6 +13120,9 @@ namespace IMIS.Persistence.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
+                    b.Property<int?>("AuditPlanEntryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
@@ -9143,6 +13187,8 @@ namespace IMIS.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("AuditPlanEntryId");
+
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
 
@@ -9158,7 +13204,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2cfc9bc2-943c-4c37-af28-b31dc92f9882",
+                            ConcurrencyStamp = "7f9e133f-e293-43cb-a4fe-b9abd8995743",
                             Email = "marcrejohncastillano@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Marc Rejohn",
@@ -9167,10 +13213,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "Ballares",
                             NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
                             NormalizedUserName = "CASTILLANO.MRB",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOdgXdzHghjZEPnR+hUMqzS+d4q48ynh/3iKa6yhkypaUycva45C/jWgoosWb67tiw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOUyHrZ1HrcHiaXxX3nSXeKRBewGSiqHDFWS6KOKVutTh0b0o26bPcKhUQaERYPiMg==",
                             PhoneNumber = "09959283775",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "60339680-5e61-4874-8d4a-f26c69a96bf6",
+                            SecurityStamp = "501bb154-5cab-44a7-bd4c-2fb04aeea046",
                             TwoFactorEnabled = false,
                             UserName = "castillano.mrb"
                         },
@@ -9178,7 +13224,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "176bcfeb-f12a-4d42-b790-5d2312660801",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "47223767-94a4-4c41-9c41-f1bac555b8dd",
+                            ConcurrencyStamp = "81cb2526-98e0-43c8-9a40-326e294dce60",
                             Email = "earlmaerama@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Earlene Mae",
@@ -9187,10 +13233,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "Gallos",
                             NormalizedEmail = "EARLMAERAMA@GMAIL.COM",
                             NormalizedUserName = "RAMA.EMG",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFU3NRDgvF3noqxrqghohCSOM2AZvj0wEVPvNArUYMJ/V3GyNYLRzfy749RRc1ts3A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELaO4m1r9rzWO+jz80bbLQS9a44BLLaC22gGvXjCd1ooqnf8Brz9yDYVqY4tVaHQPA==",
                             PhoneNumber = "09128293036",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "0324deab-5b84-4d7c-9c43-eebeb64614b9",
+                            SecurityStamp = "828283a5-f662-4a5a-91bf-bc24224a3928",
                             TwoFactorEnabled = false,
                             UserName = "rama.emg"
                         },
@@ -9198,7 +13244,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "fb385d60-eaee-4ea2-8bf1-b5cc0723c17a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b3c27b83-1c1c-4fca-8aee-09dcf91a5461",
+                            ConcurrencyStamp = "3d45e0be-f018-4fa5-81d9-33af18726287",
                             Email = "wilburpimentel09@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Wilbur",
@@ -9207,10 +13253,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "Bello",
                             NormalizedEmail = "WILBURPIMENTEL09@GMAIL.COM",
                             NormalizedUserName = "PIMENTEL.WB",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGaOSK59rw8obt9PnugsRHBQm0pC/37Zk2R6Ui5joQHSjY07k+XnWFtmoIZNV+A6Pg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBgJDO0gysRNQqLXG75iIrYyN1JZo538kFqj/Lqg/fdvxGIP1czNQOuUoPdbdQ+eOA==",
                             PhoneNumber = "09069043375",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "f542d381-5d23-4d3a-97b3-6aa077bd2f92",
+                            SecurityStamp = "f6007896-4034-42ad-8069-4205c4d2617d",
                             TwoFactorEnabled = false,
                             UserName = "pimentel.wb"
                         },
@@ -9218,7 +13264,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "537d9fcd-b505-4f93-afc6-17eb8eddff83",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "67e8d0dd-3543-4d88-bc16-a130a7226fe6",
+                            ConcurrencyStamp = "c5722fe3-5bfa-4028-8a2e-748d8d70c7d2",
                             Email = "Nolan1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Nolan",
@@ -9227,12 +13273,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "",
                             NormalizedEmail = "NOLAN1234@GMAIL.COM",
                             NormalizedUserName = "NOLAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDtK8iqBQwNXFyjuhpmPzdKtzF2D7fFFtp6JZsMSbb0Um8Sjdo9juIRBroiONkjYfQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIVrI2pCbcQkkoraTznRTXKm5UFWcBMHTDZ4rdJOIDkNIDEWLfrcGkFrIjgOYCwHxg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Integrated Hospital Operations and Management Program",
                             Prefix = "Mr.",
-                            SecurityStamp = "9f27ca75-649c-41c5-9577-cd898c3ee783",
+                            SecurityStamp = "1dcc8357-32d7-4c9c-bdea-a345b61a29d3",
                             TwoFactorEnabled = false,
                             UserName = "Nolan"
                         },
@@ -9240,7 +13286,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "743b9807-3441-47c1-9285-5ff8dfd7acb9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "39fa8127-74e4-4711-bbe2-288b460600a8",
+                            ConcurrencyStamp = "47153709-fcb0-41cc-8336-c6bceb563191",
                             Email = "Sheila1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Sheila farisha",
@@ -9249,12 +13295,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "K.",
                             NormalizedEmail = "SHEILA1234@GMAIL.COM",
                             NormalizedUserName = "SHEILA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKtBNjdpkqlLTGAGrg2ZqgQpczlo9BeuD3ccX7F+ih4FGc4EpGRZbe0nsC4e3sMRKQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL3i1E2dVbYKNMJu0P2AKdE0zQ7yY+N/jDKPM0Rm3efyRB5TQOYB/OPoWaRbMJpWGQ==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Office for Strategy Management",
                             Prefix = "Dr.",
-                            SecurityStamp = "8d6fbf7b-ff7c-4942-968a-8c382a9e0069",
+                            SecurityStamp = "a24bb062-e2df-4db3-b2bd-57b5ef8c614b",
                             TwoFactorEnabled = false,
                             UserName = "Sheila"
                         },
@@ -9262,7 +13308,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7acb06ae-c2de-4fa1-8b62-53c1d63121f0",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c80adeea-f11c-4933-81c0-de494680da52",
+                            ConcurrencyStamp = "68ab2d5d-9812-4eab-82c9-dc21eec97676",
                             Email = "Johari1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Johari",
@@ -9271,11 +13317,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "P.",
                             NormalizedEmail = "JOHARI1234@GMAIL.COM",
                             NormalizedUserName = "JOHARI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIgTSj6q05SRWTGircGXs0Hb7xf3p0TQoX5kFPgawyuBhcQtzv9hiBFthgxcvVHTqg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEI1zzqVIfVMPLD6XOx+72bX12YhYL9z1swAJmI9oMxOJ44ioIHeETPjpK4VnsncL1g==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Prefix = "Atty.",
-                            SecurityStamp = "28679aa8-e980-4ac8-990d-299e4bec8841",
+                            SecurityStamp = "5977af59-8b31-4546-a04f-2149d46b3b82",
                             TwoFactorEnabled = false,
                             UserName = "Johari"
                         },
@@ -9283,7 +13329,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7eee5b08-df0d-4ac0-a8db-39d924dd30b7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5baea490-6a11-44e3-baca-c007191b0cec",
+                            ConcurrencyStamp = "c95fb737-6cee-4492-bccf-4ddaf17a66ce",
                             Email = "Linda1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Linda",
@@ -9292,12 +13338,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "P.",
                             NormalizedEmail = "LINDA1234@GMAIL.COM",
                             NormalizedUserName = "LINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHRW9+gOlDAUQnh7HY8QBK2hQN0BuOFywK55aaRjpxdphiEQAnhrlrVIlsGvU6WhOw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKuRdr81iBk1VsuFJ0OLgr9DHkHxODRnB2GBTtgJI20/UYcCoerg7IDi3jqpNWZRQA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Budget Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "44cef9b5-a703-4cf9-a855-812acdc59124",
+                            SecurityStamp = "041ecc79-b1b2-47d1-812f-1ffe90122b89",
                             TwoFactorEnabled = false,
                             UserName = "Linda"
                         },
@@ -9305,7 +13351,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8fa3f3e4-b8a2-4375-9dc8-91b6fbc55e4a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "48761705-57a3-42fd-8c2c-74f1ad7e73de",
+                            ConcurrencyStamp = "2eb9fcc6-004f-4f3a-b3ee-f7a411424fa2",
                             Email = "Java1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Sergio",
@@ -9314,12 +13360,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "C.",
                             NormalizedEmail = "JAVA1234@GMAIL.COM",
                             NormalizedUserName = "JAVA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEH1Wed//wn4kbksbQ5YIY0YHuEvN+wBnpFgHAFsAqBBnWdQNj6bx1CFIoJCLXhYFjg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAED2lprThZo2XXr/2Fr5ZWqjfJwV0/PxEzHe/U4d/4wFtPV1f5mZsw/unZxqdY/6+8w==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Chief Administrative Officer",
                             Prefix = "Mr.",
-                            SecurityStamp = "68f77994-c81f-43fd-8f69-849efd6e0232",
+                            SecurityStamp = "903eb6e4-9d77-49f6-a031-4f1337d147be",
                             TwoFactorEnabled = false,
                             UserName = "Java"
                         },
@@ -9327,7 +13373,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a6866933-92a9-41e7-9100-8bee51ed0ada",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "82386e9b-262c-43eb-a325-465ac0863e5d",
+                            ConcurrencyStamp = "94585564-6f29-43f5-93df-37aa9779fffa",
                             Email = "John1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "John",
@@ -9336,11 +13382,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "O.",
                             NormalizedEmail = "JOHN1234@GMAIL.COM",
                             NormalizedUserName = "JOHN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGN1FMqijvYdChj6a5nQbuFd8kPdxfE6YrkgJRBh9iVN9scVy1ZRxcI3bN5Sfnbo5g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL7WIS3lGolevX6prpMH9GFuhthmpaVyNsLzLggpmgsZWPrt0ihBoOdBE85uEXKJng==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Prefix = "Dr.",
-                            SecurityStamp = "ced1ed04-23f2-4d2a-947e-fe453c866ea4",
+                            SecurityStamp = "261bf936-2b92-4060-bb68-d62fbecc331c",
                             TwoFactorEnabled = false,
                             UserName = "John"
                         },
@@ -9348,7 +13394,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "cade94b1-d0d9-4ded-a46f-c8473d9fbc00",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f0205544-999f-4df5-8a41-1912b12300b7",
+                            ConcurrencyStamp = "582115eb-88c6-41a9-a5b9-78fa2dcd408b",
                             Email = "scibrahimtan@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Scheherazade",
@@ -9357,12 +13403,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "I.",
                             NormalizedEmail = "SCRIBRAHIMTAN@GMAIL.COM",
                             NormalizedUserName = "TAN.SI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEN/ibTx7gE5f2a93g60dzoQlwEifGrbkAILfY6TrjIeu2nhoHuhthYRLF1a5ICMRGg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECCufrUofWEHtOYFV8x8ExoDT0hCEZjG3LG5ob2I177Nb8dY/FsP51yYTH5PA27DeQ==",
                             PhoneNumber = "09178663037",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Out-Patient Department",
                             Prefix = "Dr.",
-                            SecurityStamp = "d673966c-cb12-47aa-8455-0a746863a5ab",
+                            SecurityStamp = "6c4de75f-7cd8-42f6-9fb8-ca7036f31d7d",
                             TwoFactorEnabled = false,
                             UserName = "tan.si"
                         },
@@ -9370,7 +13416,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "e1a3ac20-1d20-4f37-8826-242657a746c7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "38ab5efa-d905-4cc5-a5a6-3fce2e52feff",
+                            ConcurrencyStamp = "652d4add-0119-41c7-89b7-4f3d88256c91",
                             Email = "Dimaren1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Ishmael",
@@ -9379,12 +13425,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "R.",
                             NormalizedEmail = "DIMAREN1234@GMAIL.COM",
                             NormalizedUserName = "DIMAREN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPM3ZDgx7tBghamAnXdKBnqbBzojRlO+AeM4MfJUYs+fYuBJYaBI7t9bAzPbhD+5+Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEL9jAZKby4HPojqvHeCCxtdK0bTLmKcI7ZoatKBpqEpX2pr0GLOAe0SQLlbMRaQN6A==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Medical Center Chief II",
                             Prefix = "Dr.",
-                            SecurityStamp = "a32f5dce-6b10-4a66-9dbc-0c0d314d5bb8",
+                            SecurityStamp = "9c78f1c5-6e15-4840-b3d8-d55a208fd8c3",
                             TwoFactorEnabled = false,
                             UserName = "Dimaren"
                         },
@@ -9392,7 +13438,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "e9bcc340-e63f-40e6-8326-8fe86cbef923",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "403180f1-a72a-4e31-a5e4-40b908b38f89",
+                            ConcurrencyStamp = "93e88e45-e9a4-43dc-b1eb-38531a33e7cc",
                             Email = "Precious1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Precious Love",
@@ -9401,12 +13447,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "Y.",
                             NormalizedEmail = "PRECIOUS1234@GMAIL.COM",
                             NormalizedUserName = "PRECIOUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAIPzqN2BDl87IVLA+IPi8GytDNtWuXOMoyrH0BS6bPcWBH6nYhmd6gxOi20iKa5AQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPKo/R/fBeLzlqkW1bQx1PLwNre9HLR47uhDaYVRrNhp6KKkjtFEdcL7hpVheVAaaQ==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Chief Administrative Officer",
                             Prefix = "Ms.",
-                            SecurityStamp = "c3fb9b76-6dcf-408f-bf72-8b2e0d8805eb",
+                            SecurityStamp = "9c6459f4-a9eb-4b7a-808f-92ccaa06ea97",
                             TwoFactorEnabled = false,
                             UserName = "Precious"
                         },
@@ -9414,7 +13460,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c0cf20b1-6193-441d-a9da-fa614e81dcae",
+                            ConcurrencyStamp = "ecb3cf8d-c87d-406d-bade-af9f0bc4ecfc",
                             Email = "Singgon1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Bai Samirah",
@@ -9423,12 +13469,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "A.",
                             NormalizedEmail = "SINGGON1234@GMAIL.COM",
                             NormalizedUserName = "SINGGON",
-                            PasswordHash = "AQAAAAIAAYagAAAAEF4C5/QEwMzJgdf8ZCcaOM/q7u7sp7iivT4I1aXcFsqNXmffQ+RUacbqOpzWG7faCA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEM3ZpzmH1uyjn1dkFMRuwctpxjviTMjJmKBLgqH8xelUlSZ4f//uH159V1/7ApYpCA==",
                             PhoneNumber = "09177220668",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Pediatrics",
                             Prefix = "Dr.",
-                            SecurityStamp = "0bdf5a49-eed3-46bc-933d-5582a9b1a601",
+                            SecurityStamp = "9a26a054-9f0d-4364-8b8f-f21dc03caa06",
                             TwoFactorEnabled = false,
                             UserName = "Singgon"
                         },
@@ -9436,7 +13482,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "399f5e43-93d8-4a28-b113-d23eccd2ea15",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "3f8fd15f-5f04-4714-9501-178790ba34f2",
+                            ConcurrencyStamp = "523cdb9c-fee0-488c-a165-64e215582a6d",
                             Email = "npmangansakan@rocketmail.com",
                             EmailConfirmed = false,
                             FirstName = "NORHAN",
@@ -9445,10 +13491,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PIANG",
                             NormalizedEmail = "NPMANGANSAKAN@ROCKETMAIL.COM",
                             NormalizedUserName = "MANGANSAKAN.NORHAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGkuPbOimn5c8hRUaQIve5PvJbW+4ot0NgMgNILWhij3z7DO/GInFJ5cD4SPSyWUjQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJkn5+B7ulKCKuEJZeh7l7M0tbUx9+RFi+HX80l605Hjvti2WPp8JG4Afd0ccsT8mA==",
                             PhoneNumber = "09166629909",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b4e03eb4-1ee6-4a97-a101-ed3638457be0",
+                            SecurityStamp = "a8da02c5-23e1-466a-9218-1356619f0906",
                             TwoFactorEnabled = false,
                             UserName = "mangansakan.norhan"
                         },
@@ -9456,7 +13502,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "e765e1f5-bc17-49b1-9c3f-8c5c2c18b420",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0fba01d9-c01e-43b7-b92e-f814a32f6f02",
+                            ConcurrencyStamp = "acb3a6fc-c484-47a3-b201-dce5a46910f7",
                             Email = "nurlinda_06@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "NURLINDA",
@@ -9465,12 +13511,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PANGILAN",
                             NormalizedEmail = "NURLINDA_06@YAHOO.COM",
                             NormalizedUserName = "ARUMPAC.NURLINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHA9NEp5rRQJgxJqCgROjFpZTNGVUmRglqRPnptdiD14dN+QewVHWXuJIAlBGvldVA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENXIlE76BP9/Rpdsrw+Fzgnnt+6ZR0jr9bQfWoDLW1eZMlVTs+oL0fjXaRsDfmUQCg==",
                             PhoneNumber = "09177266885",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Women and Child Protection Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "2f092852-8ebd-419d-91d0-69dce9bed66c",
+                            SecurityStamp = "c9fb8212-a0fd-49a5-9746-be139d9aefa1",
                             TwoFactorEnabled = false,
                             UserName = "arumpac.nurlinda"
                         },
@@ -9478,7 +13524,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b4d73e5f-f530-4a4d-9c3d-0b364236da6f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bba0ad8b-20b5-4ac9-af94-0a7692562604",
+                            ConcurrencyStamp = "536830f4-1730-45d3-b0b6-b431ad067ec6",
                             Email = "jrbedol@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "LINTANG",
@@ -9487,11 +13533,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BUAN",
                             NormalizedEmail = "JRBEDOL@GMAIL.COM",
                             NormalizedUserName = "BEDOL.LINTANG",
-                            PasswordHash = "AQAAAAIAAYagAAAAEE65Mocs6j8nqEGYJErkgAKa+zvIq/SLSTYE+dnLlJAeDHVfOr/+HoTDvqyheCQJhg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP/jHYXlfBsjlJiAh2pOxn5DtX3pbw1NvQXchmKk500/lYcWmEXTv1W2ZwYyBF9CSw==",
                             PhoneNumber = "09226218394",
                             PhoneNumberConfirmed = false,
                             Prefix = "Dr.",
-                            SecurityStamp = "eacf9db7-ba52-4d18-9331-3749dde5c36b",
+                            SecurityStamp = "bc974d6e-2f8b-4704-b91e-19abef3a5762",
                             TwoFactorEnabled = false,
                             UserName = "bedol.lintang"
                         },
@@ -9499,7 +13545,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f8a17354-91b3-4c0e-9b71-d6af05f4e11e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c90fd7d6-bec0-421d-9f96-efb2c8bbcf78",
+                            ConcurrencyStamp = "85c5e152-7032-4001-87fa-7402ebe39fee",
                             Email = "rhkadil@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RONALD",
@@ -9508,10 +13554,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "HIPONIA",
                             NormalizedEmail = "RHKADIL@GMAIL.COM",
                             NormalizedUserName = "KADIL.RONALD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEF1nE4FDdJKaxIx/lEbhQNyjjOReQAWHpxf0vym3LYU21BCpCaCC340SHHxmzqgzkw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHTzccx2v50tSdg9nNN6RoHaivmnemmSMuw3j+3lY7d2daTrhNeEcuc7rFpTeLViqw==",
                             PhoneNumber = "09175333922",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "88466803-850e-4bcd-86c5-daefe5c384a0",
+                            SecurityStamp = "a279e37b-9b55-4562-9b68-2855573bc2c6",
                             TwoFactorEnabled = false,
                             UserName = "kadil.ronald"
                         },
@@ -9519,7 +13565,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "9b6d73e5-ff27-44bb-a9d0-f7c58b31c4a1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0626d3ae-6622-4d80-b087-29c043791cd0",
+                            ConcurrencyStamp = "dea2330f-8008-4b8c-b927-dc90728b4186",
                             Email = "madz.karao@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MOHAMAD",
@@ -9528,12 +13574,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DUMBI",
                             NormalizedEmail = "MADZ.KARAO@GMAIL.COM",
                             NormalizedUserName = "KARAO.MOHAMAD",
-                            PasswordHash = "AQAAAAIAAYagAAAAENJYTGyJOKtJdABtuWwFgyFpv5V3ms/lV+sP4ipwZ8UCMMpReuC8VIlYVzJNERxjpg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEE9pwF3t76YJZwD9Gd/w1d//Y+dXxM/eVmKljczVxR+oNe/Tkt20wAxMVypANDVRNA==",
                             PhoneNumber = "09363769315",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Public Health Unit-Health Promotion Unit",
                             Prefix = "Mr.",
-                            SecurityStamp = "f81979b8-3161-4785-9cfe-d4a3757e5c06",
+                            SecurityStamp = "0dc6cd89-870d-4ced-927d-4883008dbcbc",
                             TwoFactorEnabled = false,
                             UserName = "karao.mohamad"
                         },
@@ -9541,7 +13587,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a1f6d353-df11-4a17-b2be-49371b8c223d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f7075fb5-bf1f-4fba-8a83-b087a8a49a63",
+                            ConcurrencyStamp = "66030811-aa4b-40ee-bb53-ae096632185b",
                             Email = "don_astillero@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ADONIS",
@@ -9550,11 +13596,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHAN",
                             NormalizedEmail = "DON_ASTILLERO@YAHOO.COM",
                             NormalizedUserName = "ASTILLERO.ADONIS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMCBd3z80HD7hmBjqGLd1YxQhxzcTHPF7HeDd3YZr3opZCYVagmcf7WeL+r4xzwLLA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHemlK256pb0wJet9GBfZRb0+WWUtfyu29BqzVVMZRMx6dCbowDFExmv1tT5MynmQw==",
                             PhoneNumber = "09176261812",
                             PhoneNumberConfirmed = false,
                             Prefix = "Mr.",
-                            SecurityStamp = "69f49e74-af80-4000-bab5-3b22ca3febeb",
+                            SecurityStamp = "d96fc2ae-f206-4525-9fe7-04f68220aefa",
                             TwoFactorEnabled = false,
                             UserName = "astillero.adonis"
                         },
@@ -9562,7 +13608,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f2b28c8e-58cf-47b2-8245-33a7a98a7344",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5e4c9b09-c7c6-440b-b4ab-df39acc4d9ca",
+                            ConcurrencyStamp = "7fd6bb7b-2e2e-4aac-bd7d-b58c362f2932",
                             Email = "abantasfaizah@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "BBGIRL FAIZAH",
@@ -9571,12 +13617,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SHARIF",
                             NormalizedEmail = "ABANTASFAIZAH@GMAIL.COM",
                             NormalizedUserName = "ABANTAS.BBGIRL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIvGGlfszkX3kdWZJ3DMc07rky8r5Er2L31R2R+WXzHsRHyb/hZXJ7d91XIv3le3+w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBJdWBGHJGukU2yzRY5qDn3hcM/ew36JOzsMXXvWO+XWpZgOXnVLvDPS8KFUBMFfbA==",
                             PhoneNumber = "09618235949",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Claims Section",
                             Prefix = "Dr.",
-                            SecurityStamp = "28ef6e45-1013-49fd-9a78-fbb35cc8aebf",
+                            SecurityStamp = "3bf4613e-c696-4ade-89f4-a89a6d050d08",
                             TwoFactorEnabled = false,
                             UserName = "abantas.bbgirl"
                         },
@@ -9584,7 +13630,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6db39f4a-9d19-4fc2-b3ab-2aa37851bb71",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5d052f23-531f-478b-9ee7-324152a89507",
+                            ConcurrencyStamp = "559c2f9b-b6c6-4a66-b744-280b7814e428",
                             Email = "anidaabubakar5@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ANIDA",
@@ -9593,12 +13639,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PENDALIDAY",
                             NormalizedEmail = "ANIDAABUBAKAR5@GMAIL.COM",
                             NormalizedUserName = "ABUBAKAR.ANIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAECXGQiwg3ug69wSG1ZZYMXGj2xMONxxzP/Btyhk4qfUXxzgxAqlIiuMeg7PDYAtQpw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIqSB+XWng8iPbcnz0DxkWRS0mYrfvnGMJpp0ec4rP6+yw8zbCa07STHNwDLDGZoJA==",
                             PhoneNumber = "09177234338",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Emergency Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "826328e0-190e-473e-a250-83f7a9d7dcf9",
+                            SecurityStamp = "58933176-5466-4543-b604-46fd1eff3336",
                             TwoFactorEnabled = false,
                             UserName = "abubakar.anida"
                         },
@@ -9606,7 +13652,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c54d18f2-9a21-4f72-92eb-1f5d6e8f58de",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "447f8ede-138c-4336-9745-76ea539951e1",
+                            ConcurrencyStamp = "05be433c-35d2-41e6-81f1-66fd0ca54b0b",
                             Email = "bashegal23@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ALIBASHER",
@@ -9615,10 +13661,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ABO",
                             NormalizedEmail = "BASHEGAL23@GMAIL.COM",
                             NormalizedUserName = "ADANG.ALIBASHER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHXWP8gqgcdjsGmtsu8cR+HrXBHsmsNuH0pfve3lAZ31zlquK3b9rWFJPC0RUk4ZEQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKVRRhxGeH0WzxI8+eTAL/ZyqxVLBq9R6rdDzZ6jk8ByoF0onyIqKF8cckrZzfQ3nw==",
                             PhoneNumber = "09369833653",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ffefb402-2bce-487d-9728-518a8792effc",
+                            SecurityStamp = "88264bdf-4c94-44cb-b99d-beaddfe72880",
                             TwoFactorEnabled = false,
                             UserName = "adang.alibasher"
                         },
@@ -9626,7 +13672,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a1a6e8f1-4749-4a8e-8f9b-0b6b2f05f38b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ddaeb60d-86f2-4190-8875-03f012be2689",
+                            ConcurrencyStamp = "f080e703-64cf-40c6-9f99-a0f835741563",
                             Email = "lailakaliaagting@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "LAILA",
@@ -9635,12 +13681,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KALI",
                             NormalizedEmail = "LAILAKALIAAGTING@GMAIL.COM",
                             NormalizedUserName = "AGTING.LAILA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIrat+aWLxmgBFscy9N79xVmcJi5i5NBTlqzm7pBH9YAHqPGaPyxjBlelBqEvU8d6A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELF8h2LkUt0O97UvM2PhqdO8R/R2Ldjx4jgqnrpyqbLyKl7KqBpWZT34kqEnzRS54g==",
                             PhoneNumber = "09177124579",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Sec. Ona Wing",
                             Prefix = "Ms.",
-                            SecurityStamp = "b5193216-9690-4e77-85eb-47b5c31c9870",
+                            SecurityStamp = "9933e1c2-4541-4952-8f72-ea3c1bc22017",
                             TwoFactorEnabled = false,
                             UserName = "agting.laila"
                         },
@@ -9648,7 +13694,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f79e34aa-f6a2-4ff1-b2e0-4a7c8194e61c",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e097bcc0-4416-4fe8-b59e-261eff026ee9",
+                            ConcurrencyStamp = "29beb658-5b92-4808-9908-7fb92cb65f12",
                             Email = "miemarandakan@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "AMERA",
@@ -9657,10 +13703,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MARANDACAN",
                             NormalizedEmail = "MIEMARANDAKAN@GMAIL.COM",
                             NormalizedUserName = "AKMAD.AMERA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGrOqpVvLc0ULA8xW14rdArVxSn8H4IskFtVku06ofB3PtaseRS4gbgw1B/2xfh5lA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEK2VGRjKJSnys/A3CMn1R5eXLYhZMsQuxzH3xElbwEtr/hjfjd53Jwl3haZwpdTow==",
                             PhoneNumber = "09560537326",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "a9817f4f-635d-4efc-8489-fce31b19193f",
+                            SecurityStamp = "3c8f4f80-2978-4ad1-9fd9-8c88294d9cab",
                             TwoFactorEnabled = false,
                             UserName = "akmad.amera"
                         },
@@ -9668,7 +13714,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1b8a5144-b8a6-4df5-bb98-0136d7ebdf24",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1008a3ea-acf9-4e78-a9da-d679c132d156",
+                            ConcurrencyStamp = "29e65907-0e54-4fef-a98a-f95f5d419180",
                             Email = "maraguia44@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ABDUL",
@@ -9677,11 +13723,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MARAGUIAL",
                             NormalizedEmail = "MARAGUIA44@GMAIL.COM",
                             NormalizedUserName = "AKMAD.ABDUL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHdkVLKabX45doGH5+K2RJJMc5Qj3I47NqMfRlSu0GrDZVhkjPVhmu3fYJCHd98B1w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPFjHBRg7ySuBJ4HjxQsacWp4I2A/uLTaSkfS3GgALcdP4lZUPJUZG99B5NIvEr+bA==",
                             PhoneNumber = "09209177429",
                             PhoneNumberConfirmed = false,
                             Position = "Head, EEG",
-                            SecurityStamp = "c05be6eb-eafa-4a27-a664-ce7137326997",
+                            SecurityStamp = "ec649835-1a3d-4899-88f8-0f540225779a",
                             TwoFactorEnabled = false,
                             UserName = "akmad.abdul"
                         },
@@ -9689,7 +13735,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6c8454ef-fd19-4db5-9f88-dcd7b13e5c55",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e828d19f-e188-40e4-b426-ecb147215c65",
+                            ConcurrencyStamp = "d70fec4c-3fe9-4768-9ac6-2bb636adadb1",
                             Email = "rosarioalojipan@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROSARIO",
@@ -9698,12 +13744,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DELA CRUZ",
                             NormalizedEmail = "ROSARIOALOJIPAN@GMAIL.COM",
                             NormalizedUserName = "ALOJIPAN.ROSARIO",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMxOUuS/t9oh1DraaW7nupAQhiTFc8JOuaBMYsO47FWu8ymGTKMgkChNoliRcCAXHQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHVCGPBL5/pIq4nIsGJ3ujH4HGdZxBtLACeF7ZU95OEHurJHcFBJJQv0dH52YAEMGw==",
                             PhoneNumber = "09178202970",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Operating Room",
                             Prefix = "Ms.",
-                            SecurityStamp = "c1100bb0-e6c1-4a6f-b80d-3365c57f00ba",
+                            SecurityStamp = "e923a4d0-370d-44f8-8472-a19df09ad563",
                             TwoFactorEnabled = false,
                             UserName = "alojipan.rosario"
                         },
@@ -9711,7 +13757,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "4f5b9c31-d406-4036-b8cd-37cb92d6b211",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "483a5d98-f5a1-4c1e-b1a4-d0dd1b495870",
+                            ConcurrencyStamp = "21bec8aa-0073-49b7-9cc8-77cdb1cf19f7",
                             Email = "yashou_07@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "YASSER FARID",
@@ -9720,10 +13766,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAMA",
                             NormalizedEmail = "YASHOU_07@YAHOO.COM",
                             NormalizedUserName = "ANDAL.YASSER",
-                            PasswordHash = "AQAAAAIAAYagAAAAECUAldzHRinoOSZXh/qd6idYda0SsLmu0JYIrXBjAT80YoGt9R9LH+dvWg4Os607tA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAFwShGF1+cKbi06JR+m7xpiMs2zOv6zc8tA/m+VhUSvZw2LnNAjON1a/dNtcX1vgw==",
                             PhoneNumber = "09173085559",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "0395bb76-348a-4224-a8c6-71a3a56359b2",
+                            SecurityStamp = "c15e83b4-34a3-4709-bbb3-8e751aed7107",
                             TwoFactorEnabled = false,
                             UserName = "andal.yasser"
                         },
@@ -9731,7 +13777,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0b91d20a-0ab3-4820-b3f2-fbcf01c0af26",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2ed66ce1-e8ee-4aac-85b1-b974255ef589",
+                            ConcurrencyStamp = "ff1a72e6-703f-4786-80c3-450d457e8750",
                             Email = "racsandamen13@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RAHMA",
@@ -9740,10 +13786,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KALID",
                             NormalizedEmail = "RACSANDAMEN13@GMAIL.COM",
                             NormalizedUserName = "ANDAMEN.RAHMA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP6XKifg7OR0hAwN7kf8ALMK3+u8YGDatTPdxoHJPttAIV9Qec9y2BCq2fRSVM3tZw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEF1FthGcZGaw5Ljg43UYJh22DQOy/dJWMeqkJ5RsliofkQdlIB+UdnnXL8nIw/AshA==",
                             PhoneNumber = "09456829380",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "37421067-1b50-4fca-967a-f1ec0c39c4ae",
+                            SecurityStamp = "0eb6ca9e-3fce-478a-86ce-69a6a86e540e",
                             TwoFactorEnabled = false,
                             UserName = "andamen.rahma"
                         },
@@ -9751,7 +13797,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2489fce0-858f-43af-b82a-65ee42cb2e33",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "179b78bc-c9de-47bc-aa1b-7d1e7b3aee9d",
+                            ConcurrencyStamp = "00dfd5d8-9dfa-4abb-94d7-f42572665e5c",
                             Email = "aljazzerangas@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "AL-JAZZER",
@@ -9760,11 +13806,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAULANA",
                             NormalizedEmail = "ALJAZZERANGAS@YAHOO.COM",
                             NormalizedUserName = "ANGAS.AL-JAZZER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDGVBsQdfsMVFfStuVOgo4TtdG0Qn6Fi5gMIvDPZxhFpqmNJUqxaul+OYBfo/R2JNQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHZjabN4xT4Wr7lEFT2cVRZ0AGhMRypSQ33uLj++noa1JA5Hx7M1/Hx4JaVYyGGLNQ==",
                             PhoneNumber = "09179755770",
                             PhoneNumberConfirmed = false,
                             Prefix = "Dr.",
-                            SecurityStamp = "63a899aa-310b-4641-8acd-d16fb41d6316",
+                            SecurityStamp = "bc7dc6c9-a06c-4011-9c0f-3ea36fa87492",
                             TwoFactorEnabled = false,
                             UserName = "angas.al-jazzer"
                         },
@@ -9772,16 +13818,16 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "5ff58cb5-9d0c-44b2-bc2a-5f96a3c9d621",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a98b916e-0c83-4007-b29d-394f06258e7c",
+                            ConcurrencyStamp = "15231e18-404b-45b4-8e6a-628f54e0d4ae",
                             EmailConfirmed = false,
                             FirstName = "RENANTE",
                             LastName = "ARIAS",
                             LockoutEnabled = false,
                             MiddleName = "ZIA",
                             NormalizedUserName = "ARIAS.RENANTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAENmd3TRUaojej5xsLw1yDSnyPlr2MaqkMVcLmKnrpmfgVscCj6cP/Y7AzphKYJD0lA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGCiDBRDm+inTIOaUrVQSC4KVfV9drmt4Jvg/ttn5CKfKyawXRDdbtWMa47wBbBwUw==",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "8dd90b4b-bfa9-4876-9cad-50341ba002ed",
+                            SecurityStamp = "6a22eb15-9707-48d8-a599-59a76452222c",
                             TwoFactorEnabled = false,
                             UserName = "arias.renante"
                         },
@@ -9789,7 +13835,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "cc505df2-3586-41a1-9d44-b5fc8f28e3a9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "47cbef61-028d-4e97-be29-476a9f5a71a3",
+                            ConcurrencyStamp = "81aa1410-254e-49a2-bb11-5226777c5d95",
                             Email = "shiedhe@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "SHIEDHE",
@@ -9798,12 +13844,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KEMBUAN",
                             NormalizedEmail = "SHIEDHE@YAHOO.COM",
                             NormalizedUserName = "BANGEN.SHIEDHE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGr6FmJRphUVOFGNcWOV6JsjauInJcnz8uVMpIC/XlIZEgEOq6vz1jLAseypHe62Lw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAntS82q8FtFWeeKYmp0fIKlh488RqXoeVBTsWhr4sYF7h+m4ObzLA0VFYs+bEGpUQ==",
                             PhoneNumber = "09396526665",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Procurement Department",
                             Prefix = "Mr.",
-                            SecurityStamp = "27e9cd3e-b4f5-4a75-9265-a9605a24004f",
+                            SecurityStamp = "67809abe-ca5c-4e0f-951d-c3e45dcfb937",
                             TwoFactorEnabled = false,
                             UserName = "bangen.shiedhe"
                         },
@@ -9811,7 +13857,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8ea08a3f-066a-41ac-9ef0-ffb47d3657d9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0bc7830e-7d9a-43e4-96d2-790dbdb2cda0",
+                            ConcurrencyStamp = "f3a29e46-0a5a-4ed0-8e29-46cf43ed864c",
                             Email = "dannyfherbantilan@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "DANNY FHER",
@@ -9820,10 +13866,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BANQUIAO",
                             NormalizedEmail = "DANNYFHERBANTILAN@YAHOO.COM",
                             NormalizedUserName = "BANTILAN.DANNY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPBRQs0rmKRes3QI2LtsmQv8yVggtUBTjHiiE0hxLaCy7Sq0CxEJkF3Po3R579gsDg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKUVIJhRZYM5sMKdeT8wYAmCQcoLNfYFwsgJdGcd3QffrL647LcTJdNn2TtSpUyLHg==",
                             PhoneNumber = "09272727645",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "9a21915e-a553-4bde-94ca-8a79743d7668",
+                            SecurityStamp = "a362ced7-f2bc-43dd-adea-a0a6414c889b",
                             TwoFactorEnabled = false,
                             UserName = "bantilan.danny"
                         },
@@ -9831,7 +13877,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c79be729-47b3-4907-88e1-0a67dd4e48b1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f2939cac-b29a-4625-aea2-2078ad1b56c7",
+                            ConcurrencyStamp = "d31b49cb-2ee9-455a-882a-5007b874df40",
                             Email = "zahidabationgbassal2018@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ZAHIDA",
@@ -9840,10 +13886,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BATIONG",
                             NormalizedEmail = "ZAHIDABATIONGBASSAL2018@GMAIL.COM",
                             NormalizedUserName = "BASSAL.ZAHIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEF5ILXnkZ4EbNc6rcGhkVtwZqGG5EYA5nE27IXrqhNsncTwDG4faz54OJOAW19D0Wg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP1vbO3RtLCc1pF/d0F0vdrH9qN460NSoCKv6RvitIBeMpasO8uicugOpA90gpqTqw==",
                             PhoneNumber = "09161012599",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "7c00b0a8-b929-4d83-abb0-5e705db8b958",
+                            SecurityStamp = "29abb762-04e1-497f-9214-50de02d76b1f",
                             TwoFactorEnabled = false,
                             UserName = "bassal.zahida"
                         },
@@ -9851,7 +13897,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "de17cb47-83e7-4a6b-b97c-13808e14a7ff",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "bcb23e0f-33c0-4b4e-9ac5-1bd6567563f8",
+                            ConcurrencyStamp = "85083401-a4fa-4afb-a912-d8086269102c",
                             Email = "acocalbo@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ANABELLE",
@@ -9860,10 +13906,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "COCAL",
                             NormalizedEmail = "ACOCALBO@YAHOO.COM",
                             NormalizedUserName = "BONES.ANABELLE",
-                            PasswordHash = "AQAAAAIAAYagAAAAENIQGhW7wlDeZZI2qUzu1IX5BNTB28OP8unz4gb4LFMT2P5/qOe+9dgGlevoEgG8+w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJsA0aUdXCel4WrayuB7en9Ko7PjcW+fbIAOIquPcpfBIGBVuxxvNq0QNpofM0rkxg==",
                             PhoneNumber = "09483207824",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "d102fe9b-5f60-43d5-a6ac-9754b16f79be",
+                            SecurityStamp = "1bcfbed8-db55-4ed1-af55-878f4dd8b7d6",
                             TwoFactorEnabled = false,
                             UserName = "bones.anabelle"
                         },
@@ -9871,7 +13917,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0ed1f88a-8859-4d6c-9a1f-84aaf19cc45c",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "427d764d-3b8b-4875-8411-0481d94d80e6",
+                            ConcurrencyStamp = "96e41556-6527-4b60-9d72-940fcc6347a0",
                             Email = "amybonite09@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "EMELIA",
@@ -9880,12 +13926,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "YU",
                             NormalizedEmail = "AMYBONITE09@YAHOO.COM",
                             NormalizedUserName = "BONITE.EMELIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAENzRMkd8kYzZXdN+QHc+kkwe4rFCl8iUPCg4lI9iSM4mGkSnJCVyi/7FVosrLDdVUg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDmIblZwto8szoCveV5Dm/D5raVaD07hV/f3IEQdl8GV11tNdSmzyXDR8GYJUzMxwQ==",
                             PhoneNumber = "09055207141",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Billing Section",
                             Prefix = "Ms.",
-                            SecurityStamp = "c36f9e42-0ddd-47cc-8f2c-2a95c349dff6",
+                            SecurityStamp = "0517cdd7-ac44-41d7-9166-2674bc1c930a",
                             TwoFactorEnabled = false,
                             UserName = "bonite.emelia"
                         },
@@ -9893,7 +13939,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "74c35794-54d9-44a4-baf0-b8fa23e2d481",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "25e0bc9e-c450-4299-94dd-3fd6697faa54",
+                            ConcurrencyStamp = "d2eadfca-ceff-4dda-a976-d5406b497ca6",
                             Email = "Mulcaldea@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MAYLENE",
@@ -9902,10 +13948,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ULOG",
                             NormalizedEmail = "MULCALDEA@GMAIL.COM",
                             NormalizedUserName = "CALDEA.MAYLENE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIKooDJOLsfsdMwdYYuyXzKBB2U8ByjNd4unhIjqHVwwIyrdhTczcG8vr5UC0fimZQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELHo9nckYW8RDmdqhPQFHh4LW/AFu/Zqp13ihy7GOR6hVef/fpPIAOfPFIi8yMDVKQ==",
                             PhoneNumber = "09953048269",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "4c850113-2640-4e61-a222-0d84ed52877f",
+                            SecurityStamp = "0f922c1e-9694-4d43-a77c-2fd7579af223",
                             TwoFactorEnabled = false,
                             UserName = "caldea.maylene"
                         },
@@ -9913,7 +13959,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "53a2b071-d36f-4f1f-bf8e-3f7dbf7b8c7b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "555c6bb4-9493-4c8e-b7f7-037e59434c39",
+                            ConcurrencyStamp = "54fc3352-1779-4971-86bc-db5b79d806b9",
                             Email = "naughty_candao@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ABDULBAYAN",
@@ -9922,10 +13968,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BAYAO",
                             NormalizedEmail = "NAUGHTY_CANDAO@YAHOO.COM",
                             NormalizedUserName = "CANDÃO.ABDULBAYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAENSHvW5G/x4Np6X4hHUHSxB8qpN6uqAAtMJblEnOXlkWylHJ1BXw8Db67+oEUuWGBQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN03nnSLePy4rHuxONNa85aFoiSZMVOd5oPZcgvhP9IJ/RdQJqaqP0qTLb4loQKTNg==",
                             PhoneNumber = "09564021897",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "04a87b41-ae65-4bb1-9a00-8ce3cd2fcc94",
+                            SecurityStamp = "3a1f1da7-4ac2-4ac7-9319-b0bc64286114",
                             TwoFactorEnabled = false,
                             UserName = "candao.abdulbayan"
                         },
@@ -9933,7 +13979,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "28a2a313-bc8e-4225-b8c2-85c2935b315e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d15402bc-7ae8-4068-8ad7-ff643e32df87",
+                            ConcurrencyStamp = "dbba6074-755c-42f1-970b-e095f1c15853",
                             Email = "marcrejohncastillano@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MARC REJOHN",
@@ -9942,10 +13988,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BALLARES",
                             NormalizedEmail = "MARCREJOHNCASTILLANO@GMAIL.COM",
                             NormalizedUserName = "CASTILLANO.MARC",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBMQ4OZ7vxtK39epjKP/4ZGMa+d11UzLE8moak/UjmfOpQs1X8qBeqb3KsY7OWJf9g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMboqcahOzDH/UwG9H3eGyFTKk81o6VIEozsji7XMBHtVNmZoenqQl8AlXTWoPRTzw==",
                             PhoneNumber = "09959283775",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "5062a56b-876c-479e-8657-189846749493",
+                            SecurityStamp = "673b107c-6bc4-437f-b46c-5993e241cae9",
                             TwoFactorEnabled = false,
                             UserName = "castillano.marc"
                         },
@@ -9953,17 +13999,17 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "35159a7c-2120-46f6-9135-8a8469b9c7b1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fbed981c-9e28-48ef-9389-d1c0596b4fcb",
+                            ConcurrencyStamp = "19265c8a-66f1-4291-abfa-e3820b13f2fa",
                             EmailConfirmed = false,
                             FirstName = "JOBERT",
                             LastName = "CASTILLON",
                             LockoutEnabled = false,
                             MiddleName = "ARMADA",
                             NormalizedUserName = "CASTILLON.JOBERT",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOtNJtZ/sU+adpUTT9ugkGQ72pSWgx2jkZMAHAWejy4YpIiIRY+jd1plD0mXYRehDQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELmAnlfL8ymAwwK/SkaHfqgvquj0g1iBWOazUB8ki1zK+3lmZ7xgwyLNIf9/atjeqg==",
                             PhoneNumber = "09395055897",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "b13fae59-0199-48fc-a6bb-42f949cf90ab",
+                            SecurityStamp = "93c8c83f-b6e3-4d63-94e4-a096b6e6bed3",
                             TwoFactorEnabled = false,
                             UserName = "castillon.jobert"
                         },
@@ -9971,7 +14017,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "ec4219b7-dfc6-4966-bf2a-3f1eecf17391",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4eed3fec-7372-430c-b557-aa491ae52ed7",
+                            ConcurrencyStamp = "17901d11-6972-4cf0-b3fa-f38cd3039213",
                             Email = "rndmpa@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ANTHONY",
@@ -9980,10 +14026,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CULAB",
                             NormalizedEmail = "RNDMPA@GMAIL.COM",
                             NormalizedUserName = "CUYONG.ANTHONY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHw1Cj+blwUUfrBgNA3v8Yl3RRMvLe/D+cgAipy2UnzxUPbt5xnGhGlf9vglBynxjQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA8mqYpBrvkuvs1T6Kcg/6+b6gOiU/cjtNGri++RokG0bZL8mEWGo4ZUNywgGRUXjw==",
                             PhoneNumber = "09453040405",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6b6b1169-87d2-4d73-bc23-3d2004d44338",
+                            SecurityStamp = "7b6db757-101d-4480-af6c-cf3c54d6d75c",
                             TwoFactorEnabled = false,
                             UserName = "cuyong.anthony"
                         },
@@ -9991,7 +14037,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1a9d8654-1c19-4b60-9491-4e33c176cc64",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "cb3a67ac-e877-42e1-a8df-d077df8e3411",
+                            ConcurrencyStamp = "ef765640-7d32-4818-93e8-f08712d0a8b9",
                             Email = "gloriacalubiran79@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "GLORIA",
@@ -10000,12 +14046,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CALUBIRAN",
                             NormalizedEmail = "GLORIACALUBIRAN79@GMAIL.COM",
                             NormalizedUserName = "DELOSREYES.GLORIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPS5ixHLQTrJUF27ZZ7ArGXB2sbjwuMyczm3P85i69/FjRNJsStj1Kp9Gimso2w+dw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKIzCjB+rczk3I9vMyYewAyxGTRDHqmB+7lfRIDwu+D3RJWIXpFkOwvG1aM1X4M/hQ==",
                             PhoneNumber = "09363304534",
                             PhoneNumberConfirmed = false,
                             Position = "Head, SHTH",
                             Prefix = "Ms.",
-                            SecurityStamp = "a59f4335-75ae-40d2-acc2-6092d9a8f702",
+                            SecurityStamp = "3a361ca9-5202-4204-9130-1a367532bfda",
                             TwoFactorEnabled = false,
                             UserName = "delosreyes.gloria"
                         },
@@ -10013,7 +14059,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1a9d8654-1c19-4b50-9431-4e23c174cc60",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ca410192-38c0-4d18-af3c-b4386b29511c",
+                            ConcurrencyStamp = "ba150218-4fa5-48a2-b2dd-2946f6f0b63d",
                             Email = "Biloa1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Andul Hanif",
@@ -10022,10 +14068,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "B.",
                             NormalizedEmail = "BILAO1234@GMAIL.COM",
                             NormalizedUserName = "BILAO.ABDULHANIF",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIvdDtFipyUpbj9rjWYXjkDrfZQOQRCGlqXYXQVplGj1f7e/+Th90sEyPju1UCqxEA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEG8Qm+nyQ3BpFUvAfoRw8TTNXwwNR5iNHm4vECS0Bj3pIpDQQQLITHU2jrkkD488Uw==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "3fb5fa0e-7590-44a3-a9c0-7e57669432e7",
+                            SecurityStamp = "f368673c-748f-4879-92c6-43f11310bb4b",
                             TwoFactorEnabled = false,
                             UserName = "bilao.abdulhanif"
                         },
@@ -10033,7 +14079,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2z9f8451-1n19-4b50-8432-4e23c164cs51",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7362d3b3-f0f3-4d67-bb79-2ba1b9688766",
+                            ConcurrencyStamp = "388b1c46-2d97-4837-af2d-bcfe4231048a",
                             Email = "Caoagdan1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Socorro",
@@ -10042,10 +14088,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "A.",
                             NormalizedEmail = "CAOAGDAN1234@GMAIL.COM",
                             NormalizedUserName = "CAOAGDAN.SOCORRO",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO2SHNYuJ4oVDkKSpeRx0SV8PzOWuIDYCNnpLWAFokhxh/m5tBnh2m/bqwjJU7M67A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEF44/KiTXA8YfXgf744/UZJBtvKZjBLcFt+yuPAPKK2uOWgd10HnETWHyl5PRPaAlQ==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "d1a0cfdf-32fd-41ab-bfb9-bd52d4d65ab8",
+                            SecurityStamp = "e76c26d6-b686-4904-84e6-5e389f70e5f0",
                             TwoFactorEnabled = false,
                             UserName = "caoagdan.socorro"
                         },
@@ -10053,7 +14099,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "9c49e0f2-4cb0-45b1-9f0e-4fbd24d25368",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "09ef50b1-0cf9-4a47-8c49-980161f849d1",
+                            ConcurrencyStamp = "c767c442-6588-41e2-af76-68308a65a86f",
                             Email = "graceenlayo@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "HONEY GRACE",
@@ -10062,10 +14108,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ROMASANTA",
                             NormalizedEmail = "GRACEENLAYO@GMAIL.COM",
                             NormalizedUserName = "ENLAYOAPAAP.HONEYGRACE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEC+rmT9JwYFmmn/SjdVskZYFcplDbcvNohiXR7xVL7JDgsFptAeUOxXwYJNWieZDWQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECy/Wu+pT0bJ6eFCTsKPRgtB98fmGx/1ho21l4+Jd62QZJuzzqQGhTTGEJQXb52f9w==",
                             PhoneNumber = "09754948544",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ee9b96e5-bb2a-44e7-a4e4-b85857bd6323",
+                            SecurityStamp = "f48e38ec-d63b-4533-8ece-a44d699bcd06",
                             TwoFactorEnabled = false,
                             UserName = "enlayoapaap.honeygrace"
                         },
@@ -10073,7 +14119,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "33a13c76-041f-4d68-8f67-41b7dd60c408",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6bf26eaa-b0b5-4238-a11e-d0fc15074b89",
+                            ConcurrencyStamp = "735c54fb-5870-4929-aaa1-f243555fd274",
                             Email = "henesijesmundo27@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "HENESI JEM",
@@ -10082,10 +14128,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "GAUDIANO",
                             NormalizedEmail = "HENESIJESMUNDO27@GMAIL.COM",
                             NormalizedUserName = "ESMUNDO.HENESIJEM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJ1e4sBZaNeiUPyj40q//2SgMYJzBeVVUsIi+jmg6v9oVUyStu0h1dsMi7EL5yxr0g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPLMOSDmZrEMnxThVrriXZAyRb00cZEnVGjr04Wag0B9+WE6v4NRWWbsiZqdph/xeQ==",
                             PhoneNumber = "09354975202",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "158be911-5554-4ae1-9273-e80d2b5ef58b",
+                            SecurityStamp = "01686441-fc4c-4dcf-8e7b-bf044f924bed",
                             TwoFactorEnabled = false,
                             UserName = "esmundo.henesijem"
                         },
@@ -10093,7 +14139,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "43cd6e17-9d86-4cb9-8d84-298e43a23450",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c5046a98-e8c9-44bb-a193-565fc40c9de4",
+                            ConcurrencyStamp = "4f1c684e-7589-4997-82f5-6d80b6e63970",
                             Email = "jesryll.tupas@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "JESRYLL LEANA",
@@ -10102,10 +14148,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "TUPAS",
                             NormalizedEmail = "JESRYLL.TUPAS@YAHOO.COM",
                             NormalizedUserName = "FACTORA.JESRYLLLEANA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMZAMNoyHX+JfdboOQErfSnlNkyeILelsjcqzPkHvTvUYGfJgxcdgFMTP/FBtYGbvQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENRo1pu+IuFnwM98WFGPYd1l5uGnEET0jtBgqU01ppGvDbBBcrwH7mWd6IhudcBvqw==",
                             PhoneNumber = "09176111210",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "60f8b1cf-c769-415b-9f1c-9c620ce2e814",
+                            SecurityStamp = "8691d99b-f04b-45c0-afcb-6a9685d01b47",
                             TwoFactorEnabled = false,
                             UserName = "factora.jesryllleana"
                         },
@@ -10113,7 +14159,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c77b5df0-836a-4f9e-9f29-d2f6c6cf4074",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4c86343a-cdab-4e3b-80e9-53daa5e11f87",
+                            ConcurrencyStamp = "0fa8d8f2-5505-4c9e-a066-435bd6b5647c",
                             Email = "cherfer22@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "CHERYL",
@@ -10122,12 +14168,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAGBANUA",
                             NormalizedEmail = "CHERFER22@YAHOO.COM",
                             NormalizedUserName = "FERRER.CHERYL",
-                            PasswordHash = "AQAAAAIAAYagAAAAENfMv8VbX2Vlq0Wo6FdE49nseEDl3jsH17Y6MVPWe6NlUZLqsdASuQlVJvKVh5Hdqw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBwrNuGTC1Ck8wkySo0z9Pw494k5Tj4iLCrCiYgNEU4BaW4QHlfZ122hYHnFFt9RpA==",
                             PhoneNumber = "09276048113",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Paritoneal Dialysis Clinic",
                             Prefix = "Ms.",
-                            SecurityStamp = "14465022-9019-4ad6-8b14-be8878b16f82",
+                            SecurityStamp = "e31f729a-e8d4-48ad-9931-185e82835870",
                             TwoFactorEnabled = false,
                             UserName = "ferrer.cheryl"
                         },
@@ -10135,7 +14181,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "5d8a2197-b38b-40b2-940a-845e2a44b622",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a7b48760-2676-4b5d-8564-6955ba961805",
+                            ConcurrencyStamp = "8b12bb2c-6a63-404d-ba0c-4645d47839bb",
                             Email = "resildago1212@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RESILDA",
@@ -10144,10 +14190,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BAGGAYAN",
                             NormalizedEmail = "RESILDAGO1212@GMAIL.COM",
                             NormalizedUserName = "GO.RESILDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEK1FfFli6F+o06Z4lXXFArpa2iZFNWvStazMJ+SlY70cr8pJLRc0Qhp5s5Tv+8fCuQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAotp8AhVmchuMcE/KdOvdWcAGUt2HHyPybuen9Qmoji5hEqQp9pJbetsYRv3zjztw==",
                             PhoneNumber = "09062249400",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ac00373f-8871-4fc6-8e74-030404c03726",
+                            SecurityStamp = "aa7832cf-99e8-4da3-a143-49a25fc51d26",
                             TwoFactorEnabled = false,
                             UserName = "go.resilda"
                         },
@@ -10155,7 +14201,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c79c6433-d1ad-46a3-ae87-84edb44476de",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0c5dfe40-1ddc-4a17-94be-01aedb493279",
+                            ConcurrencyStamp = "3660e5f8-773d-4279-9524-5402a9e11e90",
                             Email = "rendtesy0620@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RENETTE",
@@ -10164,12 +14210,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SUDARIO",
                             NormalizedEmail = "RENDTSEY0620@GMAIL.COM",
                             NormalizedUserName = "GONZALES.RENETTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBB4IqCyfjozC+M8p6gk5hCuLbeng9UXn+SKMA/bYkJVby9/MczgrYSGX4CjIiJm1g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN2PzsNXkyZbEO1XqDxqQSxts40AGiGTcXhrN868QzxPAwJCcsj/R05Ge5imrL0YbQ==",
                             PhoneNumber = "09166248783",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Medicine Ward",
                             Prefix = "Ms.",
-                            SecurityStamp = "26efc043-acf0-407d-8f29-b52174c96325",
+                            SecurityStamp = "d5ca4977-ee3f-4e49-831c-e95091293952",
                             TwoFactorEnabled = false,
                             UserName = "gonzales.renette"
                         },
@@ -10177,7 +14223,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f03cf528-c2a5-4820-91a5-6821dc5350f8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "81a5dd74-4084-4a2c-9b18-4e3612d8fe87",
+                            ConcurrencyStamp = "df79c2cb-3082-43e9-911c-ce738ec3b674",
                             Email = "espurakoy@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "GABRIEL",
@@ -10186,10 +14232,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BLANCO",
                             NormalizedEmail = "ESPURAKOY@YAHOO.COM",
                             NormalizedUserName = "SERO.GABRIEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIq3F0k5U8FIqTU6E981xGse9VO7NOfNccr93KSqUeLgi4Ix8eBgLETvI4MrrVG7kA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBTs2lhEV2fHYYcXdV4WrcNHgmqGsdhubHZUglcWqYlsG29DcrtV0uf/eexCmp5h3g==",
                             PhoneNumber = "09177239443",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6c961629-c38b-4feb-bacc-d279bdf04f61",
+                            SecurityStamp = "270695c8-fe42-4ff5-b107-789acb4063c0",
                             TwoFactorEnabled = false,
                             UserName = "sero.gabriel"
                         },
@@ -10197,7 +14243,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "5f33b779-c424-4e4d-89a9-7b8e5ac3e98d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f369bd02-d168-4aa6-a69f-2a9a3524a3e3",
+                            ConcurrencyStamp = "93f4dc98-a59d-4095-bea4-3391be6324f7",
                             Email = "jettFTS@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JARRETT",
@@ -10206,10 +14252,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DORONILLA",
                             NormalizedEmail = "JETTFTS@GMAIL.COM",
                             NormalizedUserName = "SABRINE.JARRETT",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBj1zZflwQkuUO2qe53mv0/3RR9jwyTR7LA7G9h9p2eM156P8N514o7O2MHVj2Adug==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPbGk5Iy3cchlJvHhP0Bu3dJ+rWbUPqTX20yYVQT8h1DkNUsO+wyp5s3Ih7JDH0L/Q==",
                             PhoneNumber = "09162012248",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "70e09a22-d0ad-49b4-8cbf-4a04c780d795",
+                            SecurityStamp = "895fc9c8-ad46-4df1-897e-3371cdfa74b1",
                             TwoFactorEnabled = false,
                             UserName = "sabrine.jarrett"
                         },
@@ -10217,17 +14263,17 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "baf0a172-7e0a-4999-8c03-8f9bfb62150b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f26775f1-c40a-4a79-8f78-b5ce0971626d",
+                            ConcurrencyStamp = "73ddc94c-d44a-40c4-b342-1df41e296b9d",
                             EmailConfirmed = false,
                             FirstName = "FAISAL",
                             LastName = "SALIK",
                             LockoutEnabled = false,
                             MiddleName = "ONG",
                             NormalizedUserName = "SALIK.FAISAL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEC0VFZlu5iGcgX8qXU/2sxMRzV1Xym63c7Uv+XQk9lwf9Vcv6ZWA1KZn8BZFLjKWSw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPsicgRfFo3616U+8rqnzIRc//alsuQR4GFBac5NLdzMfxp89Xbi4yA0SNgCQKScuA==",
                             PhoneNumber = "09773262708",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "299ec6f7-4f2c-4880-98cc-5ad2acf3cff8",
+                            SecurityStamp = "e06250d7-9a60-4cc9-967c-7dc6cee5a09e",
                             TwoFactorEnabled = false,
                             UserName = "salik.faisal"
                         },
@@ -10235,7 +14281,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "88a1a0b3-943d-47a2-b0bb-f1c8763acaf4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "811c650a-612e-44f2-8228-9fa7983587d3",
+                            ConcurrencyStamp = "c801b80b-708b-47ee-9fe5-912a2b230c84",
                             Email = "tardz03@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "GERALD",
@@ -10244,10 +14290,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "VEN",
                             NormalizedEmail = "TARDZ03@YAHOO.COM",
                             NormalizedUserName = "SORIANO.GERALD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHexbA2fRxtCE/10kMsu9iGRr5PWCrgyZDtrhjQUEAmRFBC1F7sruwLI2H/aeVgYKQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEj9yAvkNUMHi65x1XMfb0Dp89RNtJzgFiCyOTnR1ncTnA6s9UaqR9OhhOCNd/AI/w==",
                             PhoneNumber = "09224339675",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "c90b5de1-a5b1-4b19-8372-816f126dca5c",
+                            SecurityStamp = "38840f63-47f5-4ef8-82b5-6bc6b88c8a0d",
                             TwoFactorEnabled = false,
                             UserName = "soriano.gerald"
                         },
@@ -10255,7 +14301,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0ff9af54-f57a-4d1b-a2d6-679b3a4b8c30",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "34918a8e-9c28-41dd-a5c3-4b68eb4c3e7b",
+                            ConcurrencyStamp = "95695cb0-9883-4342-bd1d-67c3f5dcc908",
                             Email = "abigailsaveland@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MA. ABIGAIL",
@@ -10264,10 +14310,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "YU",
                             NormalizedEmail = "ABIGAILSAVELAND@GMAIL.COM",
                             NormalizedUserName = "SALVATIERRA.MA.ABIGAIL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIDw3bfUM4sZNc99uUrtrMRa2DCs3sBzj2xM8xMlX9jnS66VTrHIeCzybmMs7yntuQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOFalsBDxsBIPQnepdhmJZ3EUlIb9C7BIcf9Qfjjvo1zbIepFrAf4x4fFyFZmOx20w==",
                             PhoneNumber = "09088931724",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "ad150e92-1293-48c7-8565-0e79a6ef8a88",
+                            SecurityStamp = "daab22b4-6f9d-4361-bbbd-489d6b0f719b",
                             TwoFactorEnabled = false,
                             UserName = "salvatierra.ma.abigail"
                         },
@@ -10275,7 +14321,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "59b4a3e6-30c2-4a8c-8851-78b95cf11f5b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "eaf92247-dd3f-41de-9c4d-c60662a6e4d7",
+                            ConcurrencyStamp = "3e8029cf-a2a4-49a5-8d6d-79951328d39a",
                             Email = "jomedellesampulna13@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JOMEDELLE",
@@ -10284,10 +14330,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHIO",
                             NormalizedEmail = "JOMEDELLESAMPULNA13@GMAIL.COM",
                             NormalizedUserName = "SAMPULNA.JOMEDELLE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGdqyMKKg0eZ+A5SlCGS84eUJwPsmFVcVGBV1KWcOFmmnNe8KsTOMm72F6GOUXH3Rw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJO8Fu70XqP5IQKcjRjJogwO9YMXfGci8bAHhAACujs+8jLRTztFlwq2elLFAVIYxA==",
                             PhoneNumber = "09673774366",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "8fddb38f-4cd2-4c57-9553-3ee4dd9dffdf",
+                            SecurityStamp = "268e03fa-a922-4f8f-ba7a-637cf888fb8a",
                             TwoFactorEnabled = false,
                             UserName = "sampulna.jomedelle"
                         },
@@ -10295,7 +14341,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "3db6b5af-4b42-4747-a3f0-3a60b3e36a56",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "16042d9c-12de-451f-8c90-cc1c116a43fb",
+                            ConcurrencyStamp = "44634f66-770e-4704-ba1a-38a7b2cd4f60",
                             Email = "omaldetj9@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "TERRY JANE",
@@ -10304,12 +14350,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "OMALDE",
                             NormalizedEmail = "OMALDETJ9@YAHOO.COM",
                             NormalizedUserName = "SAPI.TERRYJANE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGLNpICz1u+CMVUqNuieiQ9SfmJnEp0ROoNxCXrSpTdfe7lCdijqULgsmABUQvjeMg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMWz6qTnVACF2Z/AwA1LT/+2fd7d0QgIeiKcRkPcoZmBmwPY/wjCxpcuZsTION+WmA==",
                             PhoneNumber = "09458244916",
                             PhoneNumberConfirmed = false,
                             Position = "Head, TTMF",
                             Prefix = "Ms.",
-                            SecurityStamp = "13ba2d43-519b-4220-87ef-f48334fa2c81",
+                            SecurityStamp = "f757ceb3-ff66-4781-9ea5-8784dfadb0ae",
                             TwoFactorEnabled = false,
                             UserName = "sapi.terryjane"
                         },
@@ -10317,7 +14363,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7gf2b7zj-4b42-2476-f3f3-1x72b3e34aq68",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c22cec5f-3ac2-4f1a-943e-2dddc3d4390b",
+                            ConcurrencyStamp = "8d5d3992-40c8-4d9d-8db9-8cfd437df299",
                             Email = "saliling1234@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "Floredliza",
@@ -10326,10 +14372,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "J.",
                             NormalizedEmail = "SALILING@YAHOO.COM",
                             NormalizedUserName = "SALILING.FLOREDLIZA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAUCqK3402tMpi+oJlEmOLgKHUGySroK/MU+nDMX8NXiIjr49zeFhKwAExr10vY85A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENK4N7dAMLxMfq9YCiZrLw2mAZ6WrzZRvyqrB5zDkCVDNwT21uBHezcJJCpJxcisAg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "7a243869-ea75-4eb7-9cb7-c85a14080de0",
+                            SecurityStamp = "b7a97ce0-bcdc-4e82-8644-fa2694a5be88",
                             TwoFactorEnabled = false,
                             UserName = "saliling.floredliza"
                         },
@@ -10337,7 +14383,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b83670e3-3d7c-40a4-8d07-5a3c3f6bde91",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5304f07d-6d88-4203-b197-2538ebafea98",
+                            ConcurrencyStamp = "f5a36a19-aade-4f73-8f60-84e4902d5c84",
                             Email = "paogratuito@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JOHN PAUL",
@@ -10346,10 +14392,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHOA KHAO UY",
                             NormalizedEmail = "PAOGRATUITO@GMAIL.COM",
                             NormalizedUserName = "GRATUITO.JOHNPAUL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJEghj2PkzCmw8HKMn43dAbRsTqPmw+aFXm/Upk3uYgiEvfFyZIMlzRHS/0dlnfJqw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDPQfUXeV9ZCe1fRwg7FeqNvNR8oGyGnRennUNRqNdELg9ogjMIteocukU1jwJ9gVw==",
                             PhoneNumber = "09177027392",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6fafb569-7498-404f-a223-81ff78109690",
+                            SecurityStamp = "eda6d303-abec-459c-861a-e570dab489b1",
                             TwoFactorEnabled = false,
                             UserName = "gratuito.johnpaul"
                         },
@@ -10357,7 +14403,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "3a4c88b0-5f73-41f0-82e7-255e19e8d9d1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e7dcf31b-fe53-4c2c-92ea-788b826d2d25",
+                            ConcurrencyStamp = "24c37012-484f-4f26-b62b-8bd52a203ccb",
                             Email = "leyn0426@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "AILEEN",
@@ -10366,10 +14412,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SANTIAGO",
                             NormalizedEmail = "LEYN0426@YAHOO.COM",
                             NormalizedUserName = "GUMAPAC.AILEEN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJen8hKev1ip8c4/BirGJWVS+b/1ZRlp0gJNQVk/gxVHmADGjT1/nSfZr9tLxyGWIA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECag+qN3qlENBKdTA3FBvEKUIFie3wE+7q9Go3HR/7OwCTY7osvJ73N4WrZWu/zzHg==",
                             PhoneNumber = "09274449665",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "bce63be1-e2c0-4948-9236-1cfce90e9470",
+                            SecurityStamp = "27bdd286-35d0-406a-9674-9cc58204ada3",
                             TwoFactorEnabled = false,
                             UserName = "gumapac.aileen"
                         },
@@ -10377,7 +14423,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c0b41f2c-0f8d-4a53-b0a9-5cfa02b6a851",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1133c993-1bac-43c7-8d3b-7fa5b16d62e8",
+                            ConcurrencyStamp = "83e67198-cbd3-47b6-8cb6-89e02e031f7b",
                             Email = "jaheerhusseinismael@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "AMIR HUSSEIN",
@@ -10386,10 +14432,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MACAPENDENG",
                             NormalizedEmail = "JAHEERHUSSEINISMAEL@GMAIL.COM",
                             NormalizedUserName = "ISMAEL.AMIRHUSSEIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOFdG+DBZcPE1CbBTzB+03TWHpFiGB8tHLa4p28kLBO15N2PS6xYczqYypTmpBLj1w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPDmQRZ0vmmP3ogRSc+EVVP6ynjvXght2K656HHgyMTu9T3jakvjTZ/sfQty1CfoyA==",
                             PhoneNumber = "09564020491",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "02652a4c-1609-4be4-a6cf-c672d1837297",
+                            SecurityStamp = "ccc20b0c-c846-496d-9335-0c7b605c639b",
                             TwoFactorEnabled = false,
                             UserName = "ismael.amirhussein"
                         },
@@ -10397,7 +14443,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c171e56e-b2e0-43f2-91f1-8f258417bc3d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f3b270b0-8c0a-4a07-acbe-b96314f01324",
+                            ConcurrencyStamp = "233f7ddd-a69d-43fc-a705-a025a7999a58",
                             Email = "shingdumama@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHARINAH",
@@ -10406,10 +14452,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CATALAN",
                             NormalizedEmail = "SHINGDUMAMA@GMAIL.COM",
                             NormalizedUserName = "IBRAHIMDUMAMA.SHARINAH",
-                            PasswordHash = "AQAAAAIAAYagAAAAEG+2JrBqDy0jRP7eROkLIUVQQjbofKJ4EHLzlpWPZPKP37nJenfTWOrID/seb1fPWw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELbN1CwzMAsCHzBEcS+sVOgGDMI+ifAV4tyDJ1bOkK7tgJ0A3BJPQ+pVYW6EjAhsgw==",
                             PhoneNumber = "09177263399",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2327ddbf-6f7f-4e83-b48b-46cda0b7fac4",
+                            SecurityStamp = "3b6fe939-3cb1-4483-a9f6-3ed27e0ffb4a",
                             TwoFactorEnabled = false,
                             UserName = "ibrahimdumama.sharinah"
                         },
@@ -10417,7 +14463,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "43f6a708-995c-4a07-9e90-6d0a5efc32d5",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "cb93b3ef-3163-443d-907d-15e09f859c54",
+                            ConcurrencyStamp = "97d1c0f8-ea5c-45d5-9668-a39a592fb0a7",
                             Email = "baiyasminjaynonjuanday@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "BAI YASMIN",
@@ -10426,10 +14472,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "JAYNON",
                             NormalizedEmail = "BAIYASMINJAYNONJUANDAY@GMAIL.COM",
                             NormalizedUserName = "JUANDAY.BAIYASMIN",
-                            PasswordHash = "AQAAAAIAAYagAAAAELYVeEKmCUvPcvtqh93cPZQfNcvwblQaGgrwduBRR/OI7lrh0xLQZIwxOSdP5fRQWw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP2xBxUWrySZ5KkbS7TGSnzHXFB5GUK8jJ8Jq1jvWT3uwfO+0TFrxOk2ibAFM+8Vhw==",
                             PhoneNumber = "09260474812",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "e6a8040a-a459-47de-864a-6cd0656b461d",
+                            SecurityStamp = "781ef109-b6fc-4279-a335-1a0ee55c6b0b",
                             TwoFactorEnabled = false,
                             UserName = "juanday.baiyasmin"
                         },
@@ -10437,7 +14483,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "21d7b7dc-3425-464f-96d5-f6784b19b4cf",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "43391b17-7b98-4b61-835d-0364bf665f1b",
+                            ConcurrencyStamp = "b73fe505-f6b7-4e73-a871-1dc9745231b0",
                             Email = "lenzkylu@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "LEONITA",
@@ -10446,10 +14492,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHUA",
                             NormalizedEmail = "LENZKYLU@GMAIL.COM",
                             NormalizedUserName = "LU.LEONITA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEH67BB69cGF3AYJNwaotmolB0YDd0AyfNOJNHskpNIu1CUTzNGaLVkA6AxA7Q5uBYQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAED4ylhNw9qczjdGVg17FWxzHS8jBGslsEv6CDYaOspK9TZC/LLJmKrQ/7B2mlLpE6A==",
                             PhoneNumber = "09178732580",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "42034372-d15f-413d-b964-31efb67f5d71",
+                            SecurityStamp = "d17d055b-1dfc-4aff-af42-8499d1be3802",
                             TwoFactorEnabled = false,
                             UserName = "lu.leonita"
                         },
@@ -10457,7 +14503,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c8dc080e-2c5f-4a8e-b0e0-9c29dc45a31f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "99e591e1-66e7-484b-85d6-a6c0f441961a",
+                            ConcurrencyStamp = "b07e3e0f-acf6-406b-b471-b8fa1f43cfdb",
                             Email = "rbmaputi@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROWENA",
@@ -10466,12 +14512,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAPUTI",
                             NormalizedEmail = "RBMAPUTI@GMAIL.COM",
                             NormalizedUserName = "LU.ROWENA",
-                            PasswordHash = "AQAAAAIAAYagAAAAENH6LruZScnwk44mL8QyTIc1fXZ4S7Sm68FEqu1Jd59+YjarSZNxcPGZBIsP/D9e7g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPgMgsSYwRaOCk/wyAYquSCQTV0SnD8j5oCisi8POltf5CeCBGIcgcHI/bGM9BtsmA==",
                             PhoneNumber = "09173000155",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Health Information Management Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "29a96686-2e68-4e4d-872a-d3ea6204a92c",
+                            SecurityStamp = "ae942d81-3e84-4aaa-9b26-0beca57e317a",
                             TwoFactorEnabled = false,
                             UserName = "lu.rowena"
                         },
@@ -10479,7 +14525,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "13ab0a0e-5d9a-4e53-a5f0-5cb11a775fe3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6742d8fc-bfa2-4876-96de-f44d6651d56b",
+                            ConcurrencyStamp = "1cd4f350-ff85-4f34-8c70-489aba4aa1f4",
                             Email = "rosalieluces05@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROSALIE",
@@ -10488,12 +14534,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "OREJUDOS",
                             NormalizedEmail = "ROSALIELUCES05@GMAIL.COM",
                             NormalizedUserName = "LUCES.ROSALIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHPzjgX5Wi19THyMorRh3MZZoD7faHe36Lh3FxbdDUGr7qMnSMeQz81ioIkW+tphDg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBVYK8j4k6KXD6bJ/ykUKvwFIPbJBnQMmgSaN5M7zViISFhTEdI1LEg/pjsT7fIuWA==",
                             PhoneNumber = "09109099656",
                             PhoneNumberConfirmed = false,
                             Position = "Head, General Extension Ward",
                             Prefix = "Ms.",
-                            SecurityStamp = "2334484c-ca64-40a0-b068-42990c253378",
+                            SecurityStamp = "0487c827-36ef-4266-8efa-27670bd3ea52",
                             TwoFactorEnabled = false,
                             UserName = "luces.rosalie"
                         },
@@ -10501,7 +14547,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a2a9b64b-1b54-4c49-90e2-4dbf1e59a98e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7a62c072-5dad-4419-8f61-bf3d609e643a",
+                            ConcurrencyStamp = "a588a2f0-65ae-4471-9246-446002e36119",
                             Email = "mabangsigrid@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SIGRID",
@@ -10510,10 +14556,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BARAGUIR",
                             NormalizedEmail = "MABANGSIGRID@GMAIL.COM",
                             NormalizedUserName = "MABANG.SIGRID",
-                            PasswordHash = "AQAAAAIAAYagAAAAELENglLON9T2xbcmose23z76YwN0XjN55SOT+Hxh0JbjtU/xVnMMHbVzONZfQJ0Z9A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHLRgdueJOhMI00w1mhSqdI22jF2uv3iN6fY7/Vcb6QxRTdt8VgVfCaVMTJjJfyeNQ==",
                             PhoneNumber = "09351488175",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "a00c58d9-6d1e-4fd2-8a1a-8032e79f5571",
+                            SecurityStamp = "14253ecf-cb20-4708-8ebd-2e71402e0abc",
                             TwoFactorEnabled = false,
                             UserName = "mabang.sigrid"
                         },
@@ -10521,7 +14567,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "49180f4a-cbe7-489b-8fd1-901e79dfe2f5",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d44fb779-4495-47d0-95c3-ea2662d4d104",
+                            ConcurrencyStamp = "9906c0af-38e2-4561-838c-1c3c87448f38",
                             Email = "sacamaglangit.md@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SITTIE ANEZA CAMILLE",
@@ -10530,12 +14576,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "AMAD",
                             NormalizedEmail = "SACAMAGLANGIT.MD@GMAIL.COM",
                             NormalizedUserName = "MAGLANGIT.SITTIEANEZA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEDFfwDP8BRUgdmPA/xNFWPtBhXwZcpeyxAa5gxf86C2sXqxcha79KwQmDj5GpoIvKQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGxvHWs65A9amPdf3IU3Fn5V640kfS2+FeX0Kcz9+5eyk8zAhCEs7wOTNFAq/M6Ltg==",
                             PhoneNumber = "09989913196",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Cancer Institute",
                             Prefix = "Dr.",
-                            SecurityStamp = "b809a2f3-b536-48a2-a179-233c2536abbe",
+                            SecurityStamp = "9f4983aa-7ea1-4c3f-aa0d-4a62b9c45a4c",
                             TwoFactorEnabled = false,
                             UserName = "maglangit.sittieaneza"
                         },
@@ -10543,7 +14589,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "dcf663a4-36f5-4fd6-b124-bae31e0c9e2e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "372d0bed-28af-4034-8e63-a1649f1a5853",
+                            ConcurrencyStamp = "6cfc2824-f81f-4e4b-962f-bfc077cbd208",
                             Email = "jayjay_malana@hotmail.com",
                             EmailConfirmed = false,
                             FirstName = "JAY-JAY",
@@ -10552,10 +14598,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MALANNAG",
                             NormalizedEmail = "JAYJAY_MALANA@HOTMAIL.COM",
                             NormalizedUserName = "MALANA.JAYJAY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMOyASLL6g7wONurxWeTWHVbvhtfPW7mL1//ANAMQ2Ohx1YMbXFIyWDSAXOXe3pUOg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOXqAN+L90W4hXFLM7PJ02JyLvxIS3Gy6sOWhJhFrWm0wKVo3xBNYENgpQL3km+J4g==",
                             PhoneNumber = "09274171288",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "48915a25-f34d-4af3-a4b6-6b01805c5ce0",
+                            SecurityStamp = "995b16b5-c783-47c3-8822-26769e233ad0",
                             TwoFactorEnabled = false,
                             UserName = "malana.jayjay"
                         },
@@ -10563,7 +14609,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "17793347-1bfa-4526-a0af-0ffcf374aa9a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "dad889c0-680b-4d36-a6bd-678be47adc1c",
+                            ConcurrencyStamp = "fa353653-32b1-40d3-bc19-e3cac726f0a6",
                             Email = "marjorenecorpuz@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MARJORENE",
@@ -10572,10 +14618,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CORPUZ",
                             NormalizedEmail = "MARJORENECORPUZ@YAHOO.COM",
                             NormalizedUserName = "MANAOIS.MARJORENE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEM7r6PlwtbdDpnabwGD/csI3Od+fQnyOQspS376j1RiTiV+jPfv/vcO2YWlePKyI0A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJjcSuErl9Qk3J810xnXDuVJLunkghMk/apCKslaOTSw3qzcfVqVxqBIRXe79naIhQ==",
                             PhoneNumber = "09072856158",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "fd19d6e2-54c2-4901-8b9b-8b0db29aa49e",
+                            SecurityStamp = "c8b1246d-0a12-4992-a36c-3737be49a0d2",
                             TwoFactorEnabled = false,
                             UserName = "manaois.marjorene"
                         },
@@ -10583,7 +14629,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6f34a16a-6e68-4d8b-9f6a-0e0c07a09ed8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9a8863a8-fd13-4f6d-ac25-4fc5ec9d7621",
+                            ConcurrencyStamp = "e1757f5b-6186-4c4d-86de-570f20d364d7",
                             Email = "farizahm@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "FARIZAH",
@@ -10592,10 +14638,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MODIARAT",
                             NormalizedEmail = "FARIZAHM@YAHOO.COM",
                             NormalizedUserName = "MAMALUBA.FARIZAH",
-                            PasswordHash = "AQAAAAIAAYagAAAAELcwgo1FKaUdHCHhXi8U+2V59YlcXXH8r7BMo5OZYhi8xHk9Fdddvx1tAOpWbZzSeA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAAJUbiSPA0njAlcSEcfPwSUrow6NcwoABJfXBKY1QW+JHHTI1KyRplWjtvY3ZCe4Q==",
                             PhoneNumber = "09168372024",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2acac7f2-5147-4bcf-be8e-531952087d31",
+                            SecurityStamp = "4ce7e9b8-b794-40e8-91d8-42b9203b2fcb",
                             TwoFactorEnabled = false,
                             UserName = "mamaluba.farizah"
                         },
@@ -10603,7 +14649,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a6b59fd2-75eb-457e-90ea-d1d419da5f6d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "099b3cc4-e2d2-44d6-8d08-d49285725892",
+                            ConcurrencyStamp = "5c984d1e-f7d7-4c93-ac46-2a57799d246e",
                             Email = "hunnyresquites88@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "HONEYLET",
@@ -10612,10 +14658,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "RESQUITES",
                             NormalizedEmail = "HUNNYRESQUITES88@YAHOO.COM",
                             NormalizedUserName = "MANGULAMAS.HONEYLET",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO1L2wzqZf4w4cSaLvLrk0bBi/uUmvqSOuQHCCNEudjUnEnWOJNKz9gUSnkIGJuPCQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEA/wKxiGjV82Xw8ladVhEzv1Q2T61tsnYUMUiUDNZ5HQl6XBIBROB+huWMQsdJAIdg==",
                             PhoneNumber = "09776146365",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "0b4a344b-41b0-4a51-9577-3b7a53ebb219",
+                            SecurityStamp = "0a32eeb7-3bb1-4fb2-890e-b3bfb965e755",
                             TwoFactorEnabled = false,
                             UserName = "mangulamas.honeylet"
                         },
@@ -10623,7 +14669,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "53ac9d08-f52f-4a25-92d7-10de53f612fa",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0b8a22e5-60e5-4d43-8da7-ee35ccdd5425",
+                            ConcurrencyStamp = "cd2441ed-0f73-4b94-aa91-d647dd580010",
                             Email = "rodelynmartinez619@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RODELYN",
@@ -10632,10 +14678,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CORTEZ",
                             NormalizedEmail = "RODELYNMARTINEZ619@GMAIL.COM",
                             NormalizedUserName = "MARTINEZ.RODELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO8HZfC43ypQHoGWrm+YprWcX3JATX5UPH9tCAiKP8Q1z7hiAieegS/4Jy8dcVy8zw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDzI9eXvVefaDJXtCDvOi5rO7S9FyyxWU5ZJ0BrHq50+/gJOTK/Ot3WAksIuNTKXFw==",
                             PhoneNumber = "09177188038",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "cada9d10-94f5-4f9e-918f-6bd073c82fcb",
+                            SecurityStamp = "b07ca246-373f-4c47-a428-885589470610",
                             TwoFactorEnabled = false,
                             UserName = "martinez.rodelyn"
                         },
@@ -10643,7 +14689,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "827e71e5-479c-47a7-8f91-16327825a02d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6c1adca5-7138-4d20-bc62-7729aadb225d",
+                            ConcurrencyStamp = "d970b02e-e74a-4760-bdc9-b76cecf57744",
                             Email = "faridaolama@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "FARIDA",
@@ -10652,12 +14698,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "OLAMA",
                             NormalizedEmail = "FARIDAOLAMA@GMAIL.COM",
                             NormalizedUserName = "MEDITAR.FARIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAlwwuvhEtS36m5UBCR93w9dnj+BE4oTdsApfXuM/WL0fZ/rTdq/WocYMZUcsduTYA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECq4HD4/+ZbZOn77P5vGULTCjHofss05R1AVpjhFaT4p4hLIszyo2StaTK2MAIHVDQ==",
                             PhoneNumber = "09606059079",
                             PhoneNumberConfirmed = false,
                             Position = "Head, OB-Gyne Ward",
                             Prefix = "Ms.",
-                            SecurityStamp = "78c0a9a0-e790-4f4d-bc1d-8aa3b845fb2b",
+                            SecurityStamp = "6d60e168-e6eb-47d6-9c16-1b40a6b539b2",
                             TwoFactorEnabled = false,
                             UserName = "meditar.farida"
                         },
@@ -10665,7 +14711,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "dfb15a5f-9f4e-48e6-b781-f4a62c5bfb0a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "89f0dccf-d8ef-44a3-8d7a-08670584cbc6",
+                            ConcurrencyStamp = "fdde7fc8-4dcc-490a-8e18-60bd1610a9c5",
                             Email = "midtimbangbebot@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "BEBOT",
@@ -10674,12 +14720,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "USOP",
                             NormalizedEmail = "MIDTIMBANGBEBOT@GMAIL.COM",
                             NormalizedUserName = "MIDTIMBANG.BEBOT",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIH3BRXzFHyiaslBYhJ369kKQxMBqIWI0zSwqM3T8nh75TP47fuQ9kNRXdcHzOc7Ew==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFlJTE2GxpWUOsvBaohGzGrU8RDaOkpI8dsSw03GId2WON/0GLOO4WfwifHTs2mB1A==",
                             PhoneNumber = "09755272044",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Delivery Room",
                             Prefix = "Ms.",
-                            SecurityStamp = "837ef9f7-97ed-42d4-82c4-c2231e33407d",
+                            SecurityStamp = "b9b7aa69-0e3d-42a0-ae64-1af28cbc0f43",
                             TwoFactorEnabled = false,
                             UserName = "midtimbang.bebot"
                         },
@@ -10687,7 +14733,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "12183b62-26ee-459b-a859-88a94e86c117",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "18909fdd-286c-40d1-a20d-aae63d1bbb8f",
+                            ConcurrencyStamp = "8e56ad0c-dcb8-4e93-a495-6578e41d3451",
                             Email = "NA",
                             EmailConfirmed = false,
                             FirstName = "JOCELYN",
@@ -10696,12 +14742,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BAJAO",
                             NormalizedEmail = "NA",
                             NormalizedUserName = "MOJADO.JOCELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEF0vFOnw9Mj2EheiFXDacpu1U5xroNyxwNKISjgIANQTuuBYclxaBHqd/dMAdka3JA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKs+ODLiaoU+LI/BcYbeI9R7l1j2nr/1l8WAJ3Kpax4LQZ9Fvi4cRKOXO0skVCHsew==",
                             PhoneNumber = "NA",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Hemodialysis-Main",
                             Prefix = "Ms.",
-                            SecurityStamp = "39966fe5-cf31-4570-9ebf-39dac4c93391",
+                            SecurityStamp = "290711af-fa64-4eba-b91a-bc3ccc52a96a",
                             TwoFactorEnabled = false,
                             UserName = "mojado.jocelyn"
                         },
@@ -10709,7 +14755,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "ef529a6b-b381-4db1-a204-913ba73a6721",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "74f87bbe-a9d6-4387-b18b-28ccb7c99a0a",
+                            ConcurrencyStamp = "c13ec223-492a-442a-b1a2-17a384fb690c",
                             Email = "iamarielolivo@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ARIEL",
@@ -10718,10 +14764,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MELOCOTON",
                             NormalizedEmail = "IAMARIELOLIVO@GMAIL.COM",
                             NormalizedUserName = "OLIVO.ARIEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGpS2te+jOT0ZycMlS5FsFRqZYKg8ph5Ibvrr69PE3GgiJSgkUxqyjcKTTtVpxwpVg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEJztGeuVzXYqvW9HuKTt9EJ0boVUAdpJQg7MITPL6Gmwizsv4AGqnVnjUV2TPt06g==",
                             PhoneNumber = "09084724708",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "d3c8799d-48f1-41a9-8811-cf970814bd2f",
+                            SecurityStamp = "de4eaf17-0ba0-4559-a311-6479cf0b7732",
                             TwoFactorEnabled = false,
                             UserName = "olivo.ariel"
                         },
@@ -10729,7 +14775,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "969fb51f-26aa-4637-8a8a-96247c7a67a4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "431eb51e-2eec-4f47-8393-9f2cec4aaa14",
+                            ConcurrencyStamp = "55a2f2ad-5686-44e8-9511-6ed351543b43",
                             Email = "hasmiamdo@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "HASMIA",
@@ -10738,10 +14784,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DATUMANONG",
                             NormalizedEmail = "HASMIAMDO@GMAIL.COM",
                             NormalizedUserName = "OMAR.HASMIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGzcwqQYNghhyAWi89+3AA/3ghwXMYBtmaE//kPQ1ffWe/KadTWoREHDRiVuQPtP0Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMPr8Vbg8xbPkvF/b8hswXj745xzJMkcmpoUYETsBDi5o0olq9/mW0OlP2D6P8XoZg==",
                             PhoneNumber = "09365268695",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2e19af1d-edc4-4767-a251-d84b7f420008",
+                            SecurityStamp = "1a9c4669-2dd2-4959-9d02-6b059b7dde15",
                             TwoFactorEnabled = false,
                             UserName = "omar.hasmia"
                         },
@@ -10749,7 +14795,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b5870b06-0240-4d35-a6b1-54a76c1e09fc",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6eed41e7-f20b-4919-a461-2d0cdf8136f5",
+                            ConcurrencyStamp = "72ed20b3-aa81-4597-95bf-014731f3892f",
                             Email = "apple_foj@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MARIVETTE",
@@ -10758,10 +14804,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "TABUGO",
                             NormalizedEmail = "APPLE_FOJ@YAHOO.COM",
                             NormalizedUserName = "ONDOY.MARIVETTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPFBzRLU1I6thD29+n+g9Odr2s01AFqOiGchsvEIeCGLy6cmotUjK4jMvSMtjL34wA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEC4106aEKxs1yRnkybYW4PYMU09V/a++uZj6qNvrOi9rt7QyiI9CQO1Rue76HA6okA==",
                             PhoneNumber = "09177228527",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "9ae06a70-4bcd-421f-aacf-4a84f7ab565e",
+                            SecurityStamp = "e37b01db-c16a-490f-af5a-c8acba6f586b",
                             TwoFactorEnabled = false,
                             UserName = "ondoy.marivette"
                         },
@@ -10769,7 +14815,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "bb22c692-bc14-44db-9a6e-5b0196c9a8c2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "552f5e0c-3370-4a83-8ff6-dc9c920ea17e",
+                            ConcurrencyStamp = "72b1e941-0851-4050-9df7-47beaf32cb1d",
                             Email = "origmonaliza@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MONALIZA",
@@ -10778,10 +14824,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "NOR",
                             NormalizedEmail = "ORIGMONALIZA@GMAIL.COM",
                             NormalizedUserName = "ORIG.MONALIZA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEImLmKic1xzFNg+Twv9XZt7iMgoZkLzoRsKhUwPYEZYM3Nf9s14W9T2ncsk8ZtXBLg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJHH6gwMmjZezNYgevzZe6Yzz8iwwdcGZh3Kjvi1CSMooz6WLVbnwLBa4P0a9/xcVQ==",
                             PhoneNumber = "09274704538",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "2329523a-ec45-4f64-888b-8a4a7db61f54",
+                            SecurityStamp = "a7aef23f-6bd8-4974-82dc-33413c86c8a5",
                             TwoFactorEnabled = false,
                             UserName = "orig.monaliza"
                         },
@@ -10789,7 +14835,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "5b7ff0c8-b6f9-489c-9f1d-9faadf9e6c6f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "580a3cbf-b674-456b-a54f-4d2c21c278e1",
+                            ConcurrencyStamp = "6e7d785f-4acf-4f04-a082-c52e5cfab852",
                             Email = "hor_he@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "JORGE",
@@ -10798,10 +14844,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LAMPITOC",
                             NormalizedEmail = "HOR_HE@YAHOO.COM",
                             NormalizedUserName = "PADILLA.JORGE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAJGSU407SaIiy1dxK0Z+Odh9gg20L6FiiNEkyUL7eVSQj9IwnKQXp7AClZVVTP6HQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEQpshhrD6BZsisbSJW/WOwHdb/o6s3ZrmaHIMIs7btPDCBvtFLNepjP2I/V11HKig==",
                             PhoneNumber = "09177900470",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "34569fa8-8467-4166-abdd-15c2c217a2df",
+                            SecurityStamp = "d28bcb63-c92b-47c4-bbd4-a5e73960190f",
                             TwoFactorEnabled = false,
                             UserName = "padilla.jorge"
                         },
@@ -10809,7 +14855,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "d65e3f58-b23d-4b83-8b15-15e66565d29f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "289da3bf-e78f-4399-ba67-b0c3982f9892",
+                            ConcurrencyStamp = "ab805de5-9842-4c21-a0f6-45588003d237",
                             Email = "shpagayao@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SANDRA",
@@ -10818,10 +14864,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PAGAYAO",
                             NormalizedEmail = "SHPAGAYAO@GMAIL.COM",
                             NormalizedUserName = "PANTARAN.SANDRA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP/BwuYZXu1N7o10sDiLafY3M6GJjalTyfbTm7RQ/Boiz0Jhf1Pz5D0IZm7ery8sHA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDQntISv6crkf51Dw/Hq4qJfqgVnkaIsazuechlrNIh0ANZAQIt22dhbgWwb5m+4YA==",
                             PhoneNumber = "09163771505",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "4a290efb-7ed8-423b-b464-eb22d1a22a31",
+                            SecurityStamp = "37ca311c-3e82-4bba-a371-b7a73cfdd1ea",
                             TwoFactorEnabled = false,
                             UserName = "pantaran.sandra"
                         },
@@ -10829,7 +14875,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a1e10c26-4d1d-4f9e-9378-1382457c82ad",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b43dbffc-45b7-4bfc-b592-ac902e07fce1",
+                            ConcurrencyStamp = "cd7c444f-a3f0-4e0a-9162-5a97ff639ce5",
                             Email = "beeyoupee@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "BAITAYAN",
@@ -10838,10 +14884,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "UNTONG",
                             NormalizedEmail = "BEEYOUPEE@GMAIL.COM",
                             NormalizedUserName = "PINGUIAMAN.BAITAYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAENYcHM6Y5HzrTVCVdviOtgSpuuOn4DrlyTSNSXsPxzNaV8m+J8ytRW0fAEy7HfzRbg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECRR+Bp+2GYDVG8PHBHL1Al9mvbXm6Eu5xJiY29jnU4Zj9wOldLuzTUjSEtUmTFm4w==",
                             PhoneNumber = "09056377715",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "c7f0a1e3-8345-4ec1-9fdb-e329ba5fe662",
+                            SecurityStamp = "4c45cd85-e840-4e80-98f6-e9fef79eb7f5",
                             TwoFactorEnabled = false,
                             UserName = "pinguiaman.baitayan"
                         },
@@ -10849,7 +14895,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "dfc40941-0cfb-46ed-8991-e285aa08c20e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "672c87c3-fa9e-48bb-8a8c-57c3129512ab",
+                            ConcurrencyStamp = "287546c3-7333-46af-a630-624b3ddd15b4",
                             Email = "quinto.jennifer82@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JENNIFER",
@@ -10858,10 +14904,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CATBAGAN",
                             NormalizedEmail = "QUINTO.JENNIFER82@GMAIL.COM",
                             NormalizedUserName = "QUINTO.JENNIFER",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJ+reFMNRmkvWsw77N8y9Gydw/S6XiGV8tthY7b01bclEkQ3RMZCMzOvEuDXTOZGBQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMbmk4hBbJBxoEW5UPZHgGQXINHj5qIdoq0YH8YU97SjiBjepWZF3FclZHQV2F4wsQ==",
                             PhoneNumber = "09272708149",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "36a88d45-8677-454a-8545-3e38b59b7530",
+                            SecurityStamp = "735f931c-d6f5-4237-a102-73d2c1c353d6",
                             TwoFactorEnabled = false,
                             UserName = "quinto.jennifer"
                         },
@@ -10869,7 +14915,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f23ac0c6-68ac-41c8-94ff-383acbfc3e41",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "72c72841-7e67-445d-abb6-eea79c0b664b",
+                            ConcurrencyStamp = "cf9397ef-9693-455d-9a6b-4117013b0560",
                             Email = "estrellavsreal@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "VIVIAN",
@@ -10878,12 +14924,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SARATAO",
                             NormalizedEmail = "ESTRELLAVSREAL@YAHOO.COM",
                             NormalizedUserName = "REAL.VIVIAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEF73XGyBtJr4WaFCZr8DFwUGRMLb872BgG6a0jE9DkPSD+MtWuViA6zwrhQnzle/Zg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIXsO2ph21+eY43RY9W1Mkmdd1EH21wCj5My3oZmO7+3MxDSCcoCA/nOh8DK/t0QaQ==",
                             PhoneNumber = "09171027173",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Dental Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "cc2eaab0-095d-4060-9217-01bd1cf889d2",
+                            SecurityStamp = "c1f3bbde-3f8e-4f25-b345-20abae20a8df",
                             TwoFactorEnabled = false,
                             UserName = "real.vivian"
                         },
@@ -10891,7 +14937,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "50e3ff41-8195-4d52-805a-d55efb68f08a",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0a990e3f-66ec-4581-89dd-5b287eef5d6b",
+                            ConcurrencyStamp = "223e58d6-9cc3-46a9-bd56-6add636188a1",
                             Email = "lienocius@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "NEIL ALFONSO",
@@ -10900,11 +14946,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "VIRAY",
                             NormalizedEmail = "LIENOCIUS@GMAIL.COM",
                             NormalizedUserName = "SUICO.NEILALFONSO",
-                            PasswordHash = "AQAAAAIAAYagAAAAEB6CkOURd95WYi2XEifPKsNhOh82MlIq9PgWUc3xAT6HWOcYs33GoNaqjyLlwBweQw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBwsrEepMthoNidV0OZ/CeaLT89mAb3fi0YuDByaoE9/C/KCAeTCEiSBoMMv8Nso3A==",
                             PhoneNumber = "09260398619",
                             PhoneNumberConfirmed = false,
                             Prefix = "Mr.",
-                            SecurityStamp = "1ea6db97-4119-4615-921e-28e35c4cd4a8",
+                            SecurityStamp = "ff414796-5302-4ff5-8283-bfeca9917730",
                             TwoFactorEnabled = false,
                             UserName = "suico.neilalfonso"
                         },
@@ -10912,7 +14958,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "55c79a0c-4f48-472f-9d13-1801e2e5c167",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "49cb6aa4-b974-433b-8e77-15170ef3b13e",
+                            ConcurrencyStamp = "a9fc4d6a-15f0-4cc4-a25c-d71de71ec6b2",
                             Email = "janesuperales27@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MARY JANE",
@@ -10921,11 +14967,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ORTEGA",
                             NormalizedEmail = "JANESUPERALES27@GMAIL.COM",
                             NormalizedUserName = "SUPERALES.MARYJANE",
-                            PasswordHash = "AQAAAAIAAYagAAAAELrqZB9AdUotOP4JqVqle4SloiVOae3LjBtoYIyZPYknkwDs8Z7CaV3WlfV+0laZhA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKj1T1fM7dnBadpHvEfaa6Zo0/Ctti9FVzqi7WFIv6BF6UPpOodlBV4DrLiBYJLbHQ==",
                             PhoneNumber = "09162424748",
                             PhoneNumberConfirmed = false,
                             Prefix = "Ms.",
-                            SecurityStamp = "42b94963-b79a-46b0-91b3-3bb914d1a991",
+                            SecurityStamp = "c498d2ef-3946-4d52-8489-349db92f70ea",
                             TwoFactorEnabled = false,
                             UserName = "superales.maryjane"
                         },
@@ -10933,7 +14979,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2e889d55-159e-44a0-b9c9-44cc9f25c66b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "52e34aeb-55ac-4c47-9f0d-8b41591fca2c",
+                            ConcurrencyStamp = "0b70810a-f66f-42aa-a27a-23ddc8c18732",
                             Email = "suzettetocao@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SUZETTE",
@@ -10942,10 +14988,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "COMPLETANO",
                             NormalizedEmail = "SUZETTE TOCAO@GMAIL.COM",
                             NormalizedUserName = "TOCAO.SUZETTE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPPxfR7ffoQ1pC13EuXSC3p2RkD4JX+yvStLv1S2+6OwmZ39F/9T9Ip4U7GZDCIWjA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGbW9pfIfmGJ4Qn0Rn8l2se2flYR4jl+OdTAS/FidMCzWihLaGtkzdKKyHZWoCcJ2Q==",
                             PhoneNumber = "09219908520",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "cb463006-e5e3-4729-a3d5-a5e679bb853f",
+                            SecurityStamp = "9dc87b64-652b-4710-844c-1e29f5964f27",
                             TwoFactorEnabled = false,
                             UserName = "tocao.suzette"
                         },
@@ -10953,7 +14999,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2ec1e24b-50c6-48b7-8e9c-18c64a42e172",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0975b398-c551-4bea-87c7-00e898c253e8",
+                            ConcurrencyStamp = "b3a69788-3cb5-482d-a8ad-fb423cbb62ca",
                             Email = "ashmatik23@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ASWARFY",
@@ -10962,10 +15008,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MOHAMAD",
                             NormalizedEmail = "ASHMATIK23@GMAIL.COM",
                             NormalizedUserName = "USMAN.ASWARFY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAlM9jEWhN3LVzhvWU79WP/NMB8K3KymNEgGW//i+vSesTY5wZfj5LTh2HZ3Q4mn6w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEtw7+uonlqKQMoMz6paq/PwtrcjS2dc60hOoOKyhqtPmWRwweJeGW5ENd42H90COg==",
                             PhoneNumber = "09173383890",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "94bee4b2-368f-493d-be35-c5a14b67d95d",
+                            SecurityStamp = "9ad6d829-bdb6-472e-a2ea-11cd4efa0bed",
                             TwoFactorEnabled = false,
                             UserName = "usman.aswarfy"
                         },
@@ -10973,7 +15019,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "87234d0c-41c3-44e5-8cb7-5d7a7a9209c8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c74efda2-3009-485a-afd8-915b121e92d5",
+                            ConcurrencyStamp = "80ec7974-e58d-43c6-b0ab-a7b808019b20",
                             Email = "hamidadubali@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "HAMIDA",
@@ -10982,12 +15028,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DATUMANONG",
                             NormalizedEmail = "HAMIDADUBALI@GMAIL.COM",
                             NormalizedUserName = "USMANBALI.HAMIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFRoifFbCkJcZmh7TjyWkPiZ5mve/52vrSFxeJhuZNlHiky+ph4WvkXmpNRDUoZ8Og==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOXrLs+ndYUhkyzwjEb2D6t4cWl1kxS6NH1fxSqINwEIXfPWvm0kmuxPNwVqgar4cg==",
                             PhoneNumber = "09368159393",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Materials and Supplies Management Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "2f3db081-2207-4d54-90f1-ad4b23b5a945",
+                            SecurityStamp = "fe9dbe5b-e2fa-44c7-87f5-4318f2884210",
                             TwoFactorEnabled = false,
                             UserName = "usmanbali.hamida"
                         },
@@ -10995,7 +15041,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "39987409-6b12-4a73-a9a3-61c7f117dcab",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "89f559d7-b1a3-4318-b8b4-aabe3b2e604e",
+                            ConcurrencyStamp = "1d2251a9-2685-4f2c-86be-b4cdd5d1fdc3",
                             Email = "claurencevasay@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "CLAURENCE",
@@ -11004,10 +15050,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ACHAS",
                             NormalizedEmail = "CLAURENCEVASAY@GMAIL.COM",
                             NormalizedUserName = "VASAY.CLAURENCE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFF6VX/l4zVmTr4m3LeYUz2D8A92QDq6BYAbwYtlcR1N8kWFCl1l7R4TE+OpWoI8zA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJxNo+v+qxKW+9qoTAefCO7CCXU1VGCpO1/gpGrKZC5i6YR7/nTtWaaSpPNTw5MdHQ==",
                             PhoneNumber = "09555765345",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1b3d5836-8416-4733-a3fd-b8451dc6a1cc",
+                            SecurityStamp = "60b664b8-7589-4fc2-b018-b53f4fdedba8",
                             TwoFactorEnabled = false,
                             UserName = "vasay.claurence"
                         },
@@ -11015,7 +15061,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "56731842-6b12-9a46-k9h2-61c7f212hyex",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "064e9d7a-b13b-410d-8ce9-5573da633a4f",
+                            ConcurrencyStamp = "5ded2c24-8193-4aed-b2bf-badec6fe0d9a",
                             Email = "Silvestre1234@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "Chrislen Lee",
@@ -11024,10 +15070,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "C.",
                             NormalizedEmail = "SILVESTRE1234@GMAIL.COM",
                             NormalizedUserName = "SILVESTRE.CHRISLENLEE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEM0lEPBJA9jMkZShEo86aE9yv+yhsErE9aFS+95Y/iEt8DZ67W231SeJFJre0qfb2g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENjc/5hJtNH0juQH0ES2FOhZgv8nJ4pLERoiQ8DBHozKYvRHH2Aezor+0jrKQUxoJw==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6a1a479a-95dc-4d72-af27-6375862e1c71",
+                            SecurityStamp = "50b0ddf6-9952-4b7f-8705-dde7118a1cc5",
                             TwoFactorEnabled = false,
                             UserName = "silvestre.chrislenlee"
                         },
@@ -11035,7 +15081,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c8463e9f-8ac6-40c3-91b1-2385f6a91eb4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e0ebcada-2fde-4b1e-8bf7-b67b0e232b8f",
+                            ConcurrencyStamp = "8093fcdc-a15c-4d00-b7a1-06066ebf3b5f",
                             Email = "holy_voltz771989@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "RUSSEL KIRK",
@@ -11044,10 +15090,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "GUALINGCO",
                             NormalizedEmail = "HOLY_VOLTZ771989@YAHOO.COM",
                             NormalizedUserName = "VILLA.RUSSELKIRK",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHrI86phhTXgv3q+PxZy+6CXgR/SDWTA9aQlqCiCaMspLWNfZNnhyB8dcEj8DGD0bA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEOHvfZb4NN405CIMx3e6/yskX5db7rF+krkRudZMzGFhwU5ZHsbjowWnZKnhsSBT5g==",
                             PhoneNumber = "09095412351",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "1f36f247-d229-4f4f-9466-64bf8441ec1e",
+                            SecurityStamp = "bfce8ebc-90cf-4dcf-a72e-44bcb2ef811e",
                             TwoFactorEnabled = false,
                             UserName = "villa.russelkirk"
                         },
@@ -11055,7 +15101,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "abfc1b6f-9f29-44dd-9c45-cdcddaa6eb83",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "3c272ff5-d160-4c74-bd34-f630d564b764",
+                            ConcurrencyStamp = "4988744a-8709-4015-a136-7e94a651936d",
                             Email = "ruby012770@outlook.com",
                             EmailConfirmed = false,
                             FirstName = "RUBY",
@@ -11064,12 +15110,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ELEVAZO",
                             NormalizedEmail = "RUBY012770@OUTLOOK.COM",
                             NormalizedUserName = "VILLANUEVA.RUBY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHUYzmD5CYzk6lYrXxGu6kBMBDSICw8cvLBzp3RD0TZiZ1RAejyftidTUllkNe/kUg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBD3vXWeC0ldzZZuaaymER48u2mJE7GNT05rf3o2o4e9gNGO6AJv+/eAsEOuw80g4w==",
                             PhoneNumber = "09173510613",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Credit and Collection Section",
                             Prefix = "Ms.",
-                            SecurityStamp = "2db34585-27fe-41a9-8d2d-95d469e4da61",
+                            SecurityStamp = "219ae133-519a-465d-9cd8-3cf309d7e1f7",
                             TwoFactorEnabled = false,
                             UserName = "villanueva.ruby"
                         },
@@ -11077,7 +15123,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "db7fba3d-88fc-47cf-b119-f868d9196f02",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4680e4b2-8696-481f-8302-6c6df17159bc",
+                            ConcurrencyStamp = "e41ee646-63bd-47c0-a0df-e9ff2f34f288",
                             Email = "ronfaith2003@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RONNIE",
@@ -11086,10 +15132,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "GREGORIO",
                             NormalizedEmail = "RONFAITH2003@GMAIL.COM",
                             NormalizedUserName = "VILLAROSA.RONNIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEn9aFlLlfzmX/qwTgEkjQNGyTI29USWCtvJXisQx04Tb2mKZ9nKuzcZxleJHfQBzw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEADBQ6+1kuXchFu95AN+Ki837YxrYAQeLhKllyzHoYxGr/jQocETCRdQ8qXXadIVrw==",
                             PhoneNumber = "09956598896",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "d909ebe2-07ca-4056-8352-5929552adca9",
+                            SecurityStamp = "24149b8b-5b9a-4ce1-a859-fce3fe6b451e",
                             TwoFactorEnabled = false,
                             UserName = "villarosa.ronnie"
                         },
@@ -11097,7 +15143,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7cfd0766-f3d3-47aa-9a48-53d437d6c232",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "203aa87a-6e6c-4b09-a337-a70b5bd3dc87",
+                            ConcurrencyStamp = "cb8dbdc6-bff4-46f2-af4e-6e9d95b92bc4",
                             Email = "wahidamaniala@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "WAHIDA",
@@ -11106,10 +15152,10 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MANIALA",
                             NormalizedEmail = "WAHIDAMANIALA@GMAIL.COM",
                             NormalizedUserName = "ZAMAN.WAHIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAED1aEamAYlemH3UaC2n/MIwutZCHg9cNx0EtBrJ1SQhHRVyeT1turG1K3+B402GKNA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMeF/YOMRP36sKfzlsaQmRIGhiXNfhuPBYp40+Afec4N4oxaHzccBx0zMxaqMukMug==",
                             PhoneNumber = "09065830887",
                             PhoneNumberConfirmed = false,
-                            SecurityStamp = "6358b8cf-b64b-4ced-a3fe-b3a2e7088faa",
+                            SecurityStamp = "2bb64998-974a-4dc0-be80-fc1446e58ba4",
                             TwoFactorEnabled = false,
                             UserName = "zaman.wahida"
                         },
@@ -11117,7 +15163,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "9821dbf5-0f70-4630-8c68-f2077a3abf08",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "08caa73d-ca2e-4c6d-87be-39d1832ab171",
+                            ConcurrencyStamp = "b1a83f84-5fbe-475f-8792-45142ea011c0",
                             Email = "ZAMBRANO.REHABMD@GMAIL.COM",
                             EmailConfirmed = false,
                             FirstName = "JHOANA MARIE",
@@ -11126,12 +15172,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "JUANEZA",
                             NormalizedEmail = "ZAMBRANO.REHABMD@GMAIL.COM",
                             NormalizedUserName = "ZAMBRANO.JHOANAMARIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFv8D/dOG6ez0MXBYabeGgRhTVb4lI0XyT0z12dOBSb5RmbGe7hVGh3Bg6/QxAvK/w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHQSUiJltIUsNk3aTX4yXOFh+JFLPCDhvYrTlUBX5OYAy51hnRl9HF8x2LglzhBzrA==",
                             PhoneNumber = "09178470437",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Physical Medicine and Rehabilitation Department",
                             Prefix = "Dr.",
-                            SecurityStamp = "f8904ed1-8bfc-40c2-90c9-12fc256226bf",
+                            SecurityStamp = "bb3c5404-8a9b-4336-aae9-79a4a3de7e92",
                             TwoFactorEnabled = false,
                             UserName = "zambrano.jhoanamarie"
                         },
@@ -11139,7 +15185,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8e4f430c-72da-4142-83d9-cd9d9c6f2a6e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fd9a1e3d-2352-4ba6-9526-619efecd665b",
+                            ConcurrencyStamp = "d638db5c-397a-43f1-ba69-fa309287465d",
                             Email = "sittierayhana@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SITTIE RAYHANA",
@@ -11148,12 +15194,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MARICOR",
                             NormalizedEmail = "SITTIERAYHANA@GMAIL.COM",
                             NormalizedUserName = "SANTURING.SITTIE",
-                            PasswordHash = "AQAAAAIAAYagAAAAENzvyTKiysrxiOgPoGLNaxKtAuST0c4y6SNms4nEneq5sh2rNXlLEbnvGlI2uKQigw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBIykqvgMxV7yRB5gW90Nk27qzTNOJz7M6F8suewxrMlOZ4L67/ILn5q7Z2uFNqNhA==",
                             PhoneNumber = "09451067619",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Legal Unit",
                             Prefix = "Atty.",
-                            SecurityStamp = "f053d270-9cda-4e55-a7b4-c56773662701",
+                            SecurityStamp = "06ed0a5b-595f-4c9d-95e7-1df9768fd2dc",
                             TwoFactorEnabled = false,
                             UserName = "santuring.sittie"
                         },
@@ -11161,7 +15207,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "4e21fe59-4f5e-46b3-82b7-28df270038da",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "8648f42c-f89d-4341-afe5-024d28d32b6c",
+                            ConcurrencyStamp = "d4afabf1-7d18-4ef1-a778-cf85d44408dc",
                             Email = "norainekansimd@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "NOR-AINE",
@@ -11170,12 +15216,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PENDONG",
                             NormalizedEmail = "NORAINEKANSIMD@GMAIL.COM",
                             NormalizedUserName = "KANSI.NORAINE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAUrBaO28zmWn8i7Kp0rWaRSp03diY8kX/tYypdy25pb2HwUGMrcc7EadHN0d0B6eA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKYJuS5bXQGCsnoirc73VNr5NNOFQckG7cgBTjB00BewOUrH18S9yqiC4tfSKG0eaw==",
                             PhoneNumber = "0917846224",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Hospital Epidemiology and Surveillance Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "380fcb72-d5db-4ac5-a984-933906b606b2",
+                            SecurityStamp = "1ec8e893-b3b3-4e79-8adf-41265e087215",
                             TwoFactorEnabled = false,
                             UserName = "kansi.noraine"
                         },
@@ -11183,7 +15229,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b582fc78-cd33-46d4-a994-8c43789600ff",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "10ed3dea-296d-4a66-96be-ceafe9f0c21f",
+                            ConcurrencyStamp = "5c704f88-ce72-4504-a524-b180dbf62a67",
                             Email = "fasl.buenaflor@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "FASL GOLDANNE",
@@ -11192,12 +15238,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BIRUAR",
                             NormalizedEmail = "FASL.BUENAFLOR@GMAIL.COM",
                             NormalizedUserName = "BUENAFLOR.FASL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAgRwvQlCOiRQ1B5mAce9rbYXE2tICPHsSgl891rB/0ujoeqK0UfXqf758P81Hq6FQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKBC3RneqCFuXcaNhLZkXW1QeGBVkirUlLdNsJQM4b24NpsOoEXeEJ+MHlD2gj5enQ==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Professional Education Training Development Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "d4487b79-91b3-4302-8b9d-b8ac6f532e8e",
+                            SecurityStamp = "ebab7634-ef70-4cc8-af17-4d82521f45cb",
                             TwoFactorEnabled = false,
                             UserName = "buenaflor.fasl"
                         },
@@ -11205,7 +15251,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0301f6de-6d6d-448f-a46c-2bb32ba97a28",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "595fa6a7-6b30-4590-83b8-ae5f8346edd6",
+                            ConcurrencyStamp = "e163636c-3a27-430e-b292-9f32cff125a8",
                             Email = "sigmundprabago@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SIGMUND",
@@ -11214,12 +15260,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PASCUAL",
                             NormalizedEmail = "SIGMUNDRABAGO@GMAIL.COM",
                             NormalizedUserName = "RABAGO.SIGMUND",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJ3tSmkTZavUbA7urE+Q9uyekQHoWf7jn7ydOI+1KK1goaq52pK2ehKddAS0ACsBfw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKXYQ0N/NdHKujXBbHHJUYhWYjZEVgM4KbEj2ymsZqLPZz/piXmqbqNgssnrW4DpDA==",
                             PhoneNumber = "09682425921",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Public Assistance and Complaint Desk",
                             Prefix = "Mr.",
-                            SecurityStamp = "898652c3-9e41-4f76-bd0c-d16ab234ef78",
+                            SecurityStamp = "0fec535e-d0cb-4551-8a90-96c14f37a21c",
                             TwoFactorEnabled = false,
                             UserName = "rabago.sigmund"
                         },
@@ -11227,7 +15273,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "eeadfae2-544f-4a5d-9027-808537e694b1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "41e0f1dc-d80f-4c52-a17c-826b6a31230f",
+                            ConcurrencyStamp = "2af32f83-ccf1-40fd-8dda-e40f1ee09204",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "FAISAL",
@@ -11236,12 +15282,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KASID",
                             NormalizedEmail = "",
                             NormalizedUserName = "ROMANCAP.FAISAL",
-                            PasswordHash = "AQAAAAIAAYagAAAAECO5YLrPeGhj14HwW+Zrl9FcZSMfgx0r0vWTtJzHQDtRbhuTRZdkQ6KUFCPjV3SO+Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEClI7ehyLPycre1YxHKyqMP9MDL02D+G9XarXfKrDPosQlUWhaGtFGkio4TAT5Cawg==",
                             PhoneNumber = "09176339433",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Surgery",
                             Prefix = "Dr.",
-                            SecurityStamp = "caba6eb6-dd6d-4dad-ae86-1fc8ddf009da",
+                            SecurityStamp = "9f888a9b-987d-4dd6-ad62-0aecfdb7d618",
                             TwoFactorEnabled = false,
                             UserName = "romancap.faisal"
                         },
@@ -11249,7 +15295,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "562a00d1-f6de-4c44-bfc2-b55e99074bcf",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f7bae109-49b7-4849-9c7d-8ccb7aaef6f4",
+                            ConcurrencyStamp = "58388e74-99d9-416d-b6d9-c799a1c232ec",
                             Email = "mokibox2@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MOCTAR",
@@ -11258,12 +15304,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MOPAC",
                             NormalizedEmail = "MOKIBOX2@GMAIL.COM",
                             NormalizedUserName = "MABANG.MOCTAR",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFGd+0G5D35BPU4Co2nqIfuagxXJUrhvQJ2gj3j7+gZWNcmYtAwF6DEKH+QOTChWLQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHzALJNxsJKPt/l+sbGoVNu1uiMUezBWiiDQQ7+dGJAhL2t4zQWVN6KzNwfc1u32hw==",
                             PhoneNumber = "09177237960",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Research Institute",
                             Prefix = "Dr.",
-                            SecurityStamp = "232efa13-d756-40f3-b4f8-26066ab79924",
+                            SecurityStamp = "6a2fa48b-065a-437e-83e4-2270eb6f3b0e",
                             TwoFactorEnabled = false,
                             UserName = "mabang.moctar"
                         },
@@ -11271,7 +15317,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "ba16dd9a-fbdb-4ed6-9cfa-b972bda73917",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "dabb90a1-11f8-4daf-aa13-1edce7d28351",
+                            ConcurrencyStamp = "16792078-3998-474b-9cfb-1dded06402d8",
                             Email = "flickersps@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHIRLEY",
@@ -11280,12 +15326,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PULIDO",
                             NormalizedEmail = "FLICKERSPS@GMAIL.COM",
                             NormalizedUserName = "SALIK.SHIRLEY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOeTsxNoceyKWWfRe7R2qLcvRSIj/e5nCLB3MpLxX6MHTRjmWTvFPqbrijeYIb7dpg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKL+hR/KnLkT3AMFn/na0XUz1SyLD4q3IwwK3lNpKoo4v3iTWd+Fhp6c2AYo0KlT3g==",
                             PhoneNumber = "09177229341",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Medical Social Work Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "0b9983f1-94d5-466e-a6d9-c267cb6a6ae7",
+                            SecurityStamp = "d118717f-93f1-4f8d-a68f-11e9737d8274",
                             TwoFactorEnabled = false,
                             UserName = "salik.shirley"
                         },
@@ -11293,7 +15339,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "bacdfd11-acd7-40fe-9fb3-b8831f94d7de",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "99501b52-5fdd-4d53-a107-6855724c10e7",
+                            ConcurrencyStamp = "9f0b31ec-a40a-4530-b0a9-e6e5cea279d4",
                             Email = "fsornd@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "FEBE",
@@ -11302,12 +15348,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SUYO",
                             NormalizedEmail = "FSORND@GMAIL.COM",
                             NormalizedUserName = "ONG.FEBE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHq5+fYY+jUw/D4CAKJXGxk5NSuhrrnxxFFwrVBPLPZnCKSikgmSigEeYL/k9OII8Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAED4CSmsaFpMJbC7X1JE4CG4I+zzy3YGNos8VjK94yDumuzuOuY2kZf++1qaibuHL5A==",
                             PhoneNumber = "09422188023",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Nutrition and Dietetics Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "63ef5a63-e367-4d7e-9408-13e6aa278d97",
+                            SecurityStamp = "6a792d08-a0a0-4011-8e17-45331dd31293",
                             TwoFactorEnabled = false,
                             UserName = "ong.febe"
                         },
@@ -11315,7 +15361,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "75228ef1-9a3f-4a55-8181-b1794ec72e8d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c7b698d9-5c89-49d1-aef1-c9cd7a849100",
+                            ConcurrencyStamp = "d8340bc4-25df-482b-bf47-b404963bb677",
                             Email = "sofia_alfonso64@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SOFIA",
@@ -11324,12 +15370,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DUMAMA",
                             NormalizedEmail = "SOFIA_ALFONSO64@GMAIL.COM",
                             NormalizedUserName = "ALFONSO.SOFIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKkz1nXGAi1lkkNxfO9D/3S/iaeDl9t7TZtkA9ZeC95zPbviSbNVuXUz483CPFGVHg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHwzfimBuesLrU8XKtkTs/9EIbVzmewKOfUNDad1JX9a7lji3S8kI03cQQItBHdNVw==",
                             PhoneNumber = "09176338010",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Pharmacy Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "02b2627b-4fd1-47af-9aac-0f1dfbd34e62",
+                            SecurityStamp = "48e95271-a782-4609-9eb0-40b1345bd999",
                             TwoFactorEnabled = false,
                             UserName = "alfonso.sofia"
                         },
@@ -11337,7 +15383,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0c0e6892-41a4-4536-bda7-757dd5aeb4ee",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "4ec8100b-7651-4426-ab98-5f11a91a7166",
+                            ConcurrencyStamp = "72215718-2066-441d-bc50-e61fae7c0e83",
                             Email = "almarodriguez1969@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ALMA ROSARIO",
@@ -11346,12 +15392,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PIOQUINTO",
                             NormalizedEmail = "ALMARODRIGUEZ1969@YAHOO.COM",
                             NormalizedUserName = "RODRIGUEZ.ALMA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEO1FCrkBIUQ7jE0CVA0HJ31GAPe96ljUe3XhrLVI364cro1PYlZ/I8H2CtPz4+llMQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHNb98SgG8Yo7Zx6M9cDb9rYtUACvyd70qJczIKfWBF3jCmIsmHO10wF/oGoLM84Iw==",
                             PhoneNumber = "093233910958",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Human Resource Management Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "fbc7c2e3-63ac-4a62-b736-3c10ca065266",
+                            SecurityStamp = "25757898-69c3-41ec-94e3-95be160ef908",
                             TwoFactorEnabled = false,
                             UserName = "rodriguez.alma"
                         },
@@ -11359,7 +15405,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "576fc42f-b0f9-433b-907a-29d98ebf7af6",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d0338099-2462-4e8e-a200-f1ce4cda36be",
+                            ConcurrencyStamp = "a8f94145-8606-4311-bc78-ad12be148894",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "RONALD BENEDICK",
@@ -11368,12 +15414,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "RIVERO",
                             NormalizedEmail = "",
                             NormalizedUserName = "JULIANO.RONALD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBV7l9XrDg8xwv3N1WYmzuSKBkCLfDKqTvDIpzzoJlXf/LjoK/PCGcprxz9hjGeCQQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELxOpyd+Gg36RRDiJU8QPbBFFB55m/+x8lKCVHL0QwRDyhnTTmLyG/1CI52ExYSF3A==",
                             PhoneNumber = "09393704748",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Engineering and Facilities Management Department",
                             Prefix = "Engr.",
-                            SecurityStamp = "e7282caa-1c34-41b1-b93f-9e9a93ff01bc",
+                            SecurityStamp = "922f06c4-7dd6-49fe-9233-8a52eb834f73",
                             TwoFactorEnabled = false,
                             UserName = "juliano.ronald"
                         },
@@ -11381,7 +15427,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "aa704a60-ad3d-4148-90c0-316803202de6",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "7cac079a-d3b0-41c8-96d2-4ad8133fd856",
+                            ConcurrencyStamp = "8304218b-1250-4949-8ad5-b658af74507c",
                             Email = "sheryllbargo041388@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHERYLL",
@@ -11390,12 +15436,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LUMACAD",
                             NormalizedEmail = "SHERYLLBARGO041388@GMAIL.COM",
                             NormalizedUserName = "BARGO.SHERYLL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEG2osoVJhKncStPRXguxiPB8Z+N1eF82HqwEfGhASpes8wImdDrjv3/SBhCk2QY24Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJgzw9QIbHNq+z8ExIoNJ8QQhSw6Wf7zFq0g18NaO8F3yvvIyPeUJblPRSfAPzbdug==",
                             PhoneNumber = "09178319784",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Accounting Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "e70aee63-2173-4257-b80f-40e3e5939794",
+                            SecurityStamp = "a6935c8b-e18d-41bd-9e66-dedef9cd6592",
                             TwoFactorEnabled = false,
                             UserName = "bargo.sheryll"
                         },
@@ -11403,7 +15449,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "08a7ead1-5c61-4207-8ea5-aec3d6b691d0",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "55bd99a3-f28c-4dcb-873f-11b4c3b57a2b",
+                            ConcurrencyStamp = "d681c97a-3b2a-4d90-b132-f076507c2a7c",
                             Email = "pong_rg@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "FELISA",
@@ -11412,12 +15458,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "RODRIGUEZ",
                             NormalizedEmail = "PONG_RG@YAHOO.COM",
                             NormalizedUserName = "GECOSALA.FELISA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEL8RiOaXHNU+W2dEDnOVL3+CVC5+sx5BtUz10aSOlz6uO6RL6xm24SZLaTW/5OCbFA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKjleFObkLgrQIaRbOG4bD1i2rOTeKSyub91y4tGaAPMV6bm6sW6NfgHK1tjZHFUbg==",
                             PhoneNumber = "09227487001",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Cash Operations Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "58c2a868-c98b-4f3c-bb65-e40a0d91ee28",
+                            SecurityStamp = "3a6da927-cad3-4bed-a112-318c1cf3cd3e",
                             TwoFactorEnabled = false,
                             UserName = "gecosala.felisa"
                         },
@@ -11425,7 +15471,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "d55b7093-1298-42fb-96b2-b12edb1cf49f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "521773bb-483d-432b-8d7a-96dd360599dd",
+                            ConcurrencyStamp = "445a223b-bc01-48f1-adde-c607a45ad9b1",
                             Email = "paridasatol@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "PARIDA",
@@ -11434,12 +15480,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "KIMAMAO",
                             NormalizedEmail = "PARIDASATOL@YAHOO.COM",
                             NormalizedUserName = "SATOL.PARIDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKR5+E3E/UGNyikHErDLyygAmKGl4QStJtUuLgNe6TpB00qKuaYoXSF4bkB/AiKi7Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHdOg5rtH2uBOdg430gIpKKlFXkPIm2kQy/EIb6ij8BDuj584rsNuIBysiZ5u3FnQA==",
                             PhoneNumber = "09174470268",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Out-Patient Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "12a5aad3-e640-4c5c-97b8-7dff5e339fcb",
+                            SecurityStamp = "625f02f2-f6ad-45eb-b193-479169f17b18",
                             TwoFactorEnabled = false,
                             UserName = "satol.parida"
                         },
@@ -11447,7 +15493,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "35035c73-8072-4005-85bb-0a91cd97741b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "de7c6c02-731d-4924-80f5-d210456d980f",
+                            ConcurrencyStamp = "9005ed76-a43c-452a-8f1c-0f38f66b11ff",
                             Email = "rotchelcambri38@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROTCHEL",
@@ -11456,12 +15502,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "GUIAMAD",
                             NormalizedEmail = "ROTCHELCAMBRI38@GMAIL.COM",
                             NormalizedUserName = "CAMBRI.ROTCHEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFW0Dk2vt4FZyZP4Y3iyyK4S/rIHrhMpFmG/09se2Rb+gT6PZLTeqmwy9ysuA0yiUw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEB8Lv6qw2q2n0Vd6ZW0gHxUAoNdajlludBY6C+BNFbgWcr89YWOTwKJVbq/t+FfP/Q==",
                             PhoneNumber = "09171280911",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Central Supply and Sterilization Room",
                             Prefix = "Ms.",
-                            SecurityStamp = "acfcab97-0ea7-4a98-a1d9-a7581483b59c",
+                            SecurityStamp = "db2660e8-fc66-43fd-adab-906411fb079f",
                             TwoFactorEnabled = false,
                             UserName = "cambri.rotchel"
                         },
@@ -11469,7 +15515,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b1ec6cc6-9920-4df6-bce0-b22b107a476d",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9ec22854-9ac4-4bb0-8361-63d7f8612f14",
+                            ConcurrencyStamp = "f9a880f2-1d93-4aa4-befb-81b36bff79ba",
                             Email = "vernon_uy@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "VERNON",
@@ -11478,12 +15524,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LIM",
                             NormalizedEmail = "VERNON_UY@YAHOO.COM",
                             NormalizedUserName = "UY.VERNON",
-                            PasswordHash = "AQAAAAIAAYagAAAAEG93Mx63mpUKoeZEB9ILxP9Lkh92betqqkdTKMeiC5mRUFCD6FuykdQ/TiRrvy9Lig==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECfUklFDHdhQ+cQlDynqlrIgbEJJUoEW2rC1gRfWKnHenekF4TmxtRPKnmla2V4nDQ==",
                             PhoneNumber = "09177227460",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Pediatrics Ward",
                             Prefix = "Mr.",
-                            SecurityStamp = "32a54d7e-8aa8-4690-99d0-333f30066465",
+                            SecurityStamp = "dc04600b-6868-4a19-b948-40dd52de75c2",
                             TwoFactorEnabled = false,
                             UserName = "uy.vernon"
                         },
@@ -11491,7 +15537,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "31298867-e329-4dbf-8c68-2e557d98e864",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "956b27e6-7b1e-4400-abd9-add11234a25c",
+                            ConcurrencyStamp = "dd2701cf-9606-4250-912d-2e2e1b608f36",
                             Email = "chiquivsongcayauon@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "CHIQUI",
@@ -11500,12 +15546,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "VILLANUEVA",
                             NormalizedEmail = "CHIQUIVSONGCAYAUON@GMAIL.COM",
                             NormalizedUserName = "SONGCAYAUON.CHIQUI",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKFYSL3TiDMe3WH/hfFhVjbb/TIu1iRjk7UBqy+vm7wiqjQxqKLDZ1SXEEgAY6Eg9w==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAflwM0McXnbKCfP7pN8ikRlEpVGPSz+cpIn9brSvOjolr8vKo1xbUSJcZRaz0WMFQ==",
                             PhoneNumber = "09568141482",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Surgery Wing",
                             Prefix = "Ms.",
-                            SecurityStamp = "7f78f9ed-5220-430f-95c1-64aca8004ec6",
+                            SecurityStamp = "ccea9a29-29cb-472e-9ba7-41d2f5d48dfc",
                             TwoFactorEnabled = false,
                             UserName = "songcayauon.chiqui"
                         },
@@ -11513,7 +15559,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "86e65501-a4a6-438c-abe7-5ec802032bd4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "f3640a05-cd4c-41bb-b2b1-75b4c931c2df",
+                            ConcurrencyStamp = "e1c79ca9-8db5-4393-81ce-2a39b7c11aac",
                             Email = "g_lou08@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MARILOU",
@@ -11522,12 +15568,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ACEJO",
                             NormalizedEmail = "G_LOU08@YAHOO.COM",
                             NormalizedUserName = "LAMPITCO.MARILOU",
-                            PasswordHash = "AQAAAAIAAYagAAAAEMgr+usk7Jqi2ODrcSkLLzKQtALpZq3F3FkEGWgP307Hm9CjCbULUhDHD8o+O8/jdA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEM/UPOItoaLS2Ty11Jd1wShmryha+nDALsrHhpQ5vogboG0I4KAdMIJNxM85iOtikw==",
                             PhoneNumber = "09157358418",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Oncology Ward",
                             Prefix = "Ms.",
-                            SecurityStamp = "bcf1b74c-604b-4de5-913b-444b8b6471d3",
+                            SecurityStamp = "b3efdc91-03b1-4e2e-b014-c6acf4bf1621",
                             TwoFactorEnabled = false,
                             UserName = "lampitco.marilou"
                         },
@@ -11535,7 +15581,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "60cbc60f-8572-47ba-b70c-cc328c363bd7",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a16c70a1-cb8b-4023-b0eb-868dc6039d5f",
+                            ConcurrencyStamp = "f5e28511-f520-410a-8106-d5c72ebd047c",
                             Email = "shanarizza@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "SHANA RIZZA",
@@ -11544,12 +15590,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BIRUAR",
                             NormalizedEmail = "SHANARIZZA@YAHOO.COM",
                             NormalizedUserName = "DUMAMA-REMO.SHANA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEGxPVbsu5eibZFWLj+l/4M5iKm/a/NsY48gtZgZXPYd9VnQoMnWtpRe+5L361oSl4Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPA7HHBmbkqEUxPAjWIsasd8Q1kfCEbbTa4k+nkz4pWO5REFRTTp3oINOtU+wsuFtg==",
                             PhoneNumber = "09175277669",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Internal Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "78ed1344-4768-4939-ac9e-8bb30d4207ea",
+                            SecurityStamp = "954aa936-e3d6-4006-a586-6832684520ed",
                             TwoFactorEnabled = false,
                             UserName = "dumama-remo.shana"
                         },
@@ -11557,7 +15603,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6ccacdfe-d21f-404a-a09a-fbb0a8027c9e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d5fedfe6-fc81-48fc-bcf5-72aad3d1e400",
+                            ConcurrencyStamp = "4748f0c5-6929-4372-8e66-c6f7a94b69ac",
                             Email = "ljalao28@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "LOUELLA JEANNE",
@@ -11566,12 +15612,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "AGDEPPA",
                             NormalizedEmail = "LJALAO28@YAHOO.COM",
                             NormalizedUserName = "LAO.LOUELLA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEPrhtDpbLoYRKJ77zo5xAcsK6RBvWvHZ54w5R5Rnjo1cV/sANjHnONERAfMHwXf9fQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGeqdYGRpMdBCj7eBiflNQXyTt2yONyCCEvZuEm+FCDi617zy8r53l/qR2nILNdltg==",
                             PhoneNumber = "09177267389",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Obstetics-Gynecology",
                             Prefix = "Dr.",
-                            SecurityStamp = "eeb066c2-a4c6-4ae7-b4e2-c55aaa0e9aef",
+                            SecurityStamp = "418ca25b-49a8-43c9-8a02-d460352926b6",
                             TwoFactorEnabled = false,
                             UserName = "lao.louella"
                         },
@@ -11579,7 +15625,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2902eb0b-328f-4c82-a37b-e6b67c1e7770",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c43d49fd-bda1-4ab8-b003-818e84b874a0",
+                            ConcurrencyStamp = "4ceb67af-1c33-4fdc-9871-c0a794018dc7",
                             Email = "hazel_calingasan@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "HAZEL",
@@ -11588,12 +15634,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LOPEZ",
                             NormalizedEmail = "HAZEL_CALINGASAN@YAHOO.COM",
                             NormalizedUserName = "CALINGASAN.HAZEL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJOccJbk4h27XYFS7snJM6v0N8ogfC6lOlW7LvR3Ut6Xf5eHm2Y8sEpDuSNlFX1pSQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAOzt9uZ9umHZotqYl4J084PCxjg3535jGEUqXRLtpCAuF9LaFtv6QhmPQ1pQMPrIw==",
                             PhoneNumber = "09173228233",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Anesthesiology",
                             Prefix = "Dr.",
-                            SecurityStamp = "d677b687-8222-4c36-96c0-8bea9edf0dc2",
+                            SecurityStamp = "a66f252e-5f43-4569-ba35-7684564c6f32",
                             TwoFactorEnabled = false,
                             UserName = "calingasan.hazel"
                         },
@@ -11601,7 +15647,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "756c27c7-7637-4525-9b85-c1f41c0c5a8f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "5709ed3c-770a-4ad1-8d7e-03711dafb144",
+                            ConcurrencyStamp = "0efdd6bd-b0f6-4176-a44b-16720e6edc1d",
                             Email = "cheridinemd@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "CHERIDINE",
@@ -11610,12 +15656,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PAGARIGAN",
                             NormalizedEmail = "CHERIDINEMD@GMAIL.COM",
                             NormalizedUserName = "ORO-JOSEF.CHERIDINE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIHGeMo+hg/aUQuPolJQO0qZzrPl3CKnysVrKzyj38TgmIObfkE7B7oJyM5MQ0nigg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMkeYxXrdimEHzSC2fZmUP/Cmm6JYKpI6UfETyUUvMvzLSnGA8ZHjj7mBzXt15cFew==",
                             PhoneNumber = "09228270573",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Family and Community Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "c9fb444a-b942-4642-bb41-198a6211eef9",
+                            SecurityStamp = "bfa60f1c-f549-4236-b478-d462e345d2c2",
                             TwoFactorEnabled = false,
                             UserName = "oro-josef.cheridine"
                         },
@@ -11623,7 +15669,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "32074da3-f8f8-4755-8cd5-f2aabba599e2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d0fe20b7-219b-4cb5-b264-08f325c588ad",
+                            ConcurrencyStamp = "dfc33e5d-7fc6-457b-b78d-9bf03e99ecd2",
                             Email = "veniciusdoruelo@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "VENICIUS",
@@ -11632,12 +15678,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PADUA",
                             NormalizedEmail = "VENICIUSDORUELO@YAHOO.COM",
                             NormalizedUserName = "DORUELO.VENICIUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBnN4Z8uVeL7hvsfkwQ6J5w4lIA1PAA1hVL6rBRmIfqrlxrfYj31Wanog6ScGwCnGQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAu9EA6i2IH7yJUKFUQZrC1GIcpdQgXkykxBHBiAFtMRUqpTUznXHShmOb1S3CO4zA==",
                             PhoneNumber = "09173012016",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Department of Diagnostic and Therapuetic Radiology",
                             Prefix = "Dr.",
-                            SecurityStamp = "e98bbe44-5fb6-47d4-b17d-4fe11819af62",
+                            SecurityStamp = "5403944f-0e7d-4361-9ca6-447468c5e621",
                             TwoFactorEnabled = false,
                             UserName = "doruelo.venicius"
                         },
@@ -11645,7 +15691,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a452e452-d791-439e-b390-d80dba5ffbc0",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b3feb846-6ace-4d92-ad41-96bd93ac54f0",
+                            ConcurrencyStamp = "1c3eb595-63ce-4858-b43e-5d3cb2b16fad",
                             Email = "rocelynmbarrientos@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ROCELYN",
@@ -11654,12 +15700,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BARRIENTOS",
                             NormalizedEmail = "ROCELYNMBARRIENTOS@GMAIL.COM",
                             NormalizedUserName = "SANTOS.ROCELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJ1/6lUshJTOHiR3dH9WWPERFAHkTqtSKJLD+tl2KGtXyDsli44RoyqfEiYmkAZKGQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELMnfyN0UIABBI9EjbItvNaDQqjJSxQqOj6IOPAV4fu+pSVAB575Ym4er9NLEgaGvA==",
                             PhoneNumber = "09176592255",
                             PhoneNumberConfirmed = false,
                             Position = "OIC-Head, Department of Pathology",
                             Prefix = "Dr.",
-                            SecurityStamp = "7e2c7126-2f9a-4896-bc9b-efcaef7840d6",
+                            SecurityStamp = "1a27cdb1-7c19-42d9-8a9b-b198b722f607",
                             TwoFactorEnabled = false,
                             UserName = "santos.rocelyn"
                         },
@@ -11667,7 +15713,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6517b46b-eade-4618-984b-525a31aec14f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ddc45bd5-c6fc-4c2f-a0cc-c046b93068ca",
+                            ConcurrencyStamp = "c80d79ce-0c05-432e-af7f-5c3bc1e02cc8",
                             Email = "lhemy_K@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "HALIMA",
@@ -11676,12 +15722,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "OMAR",
                             NormalizedEmail = "LHEMY_K@YAHOO.COM",
                             NormalizedUserName = "MOKAMAD-ROMANCAP.HALIMA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBIWB1woJF+/0VrVdlSmongYtljkMgYTbPqY7gJl3h00TrUxpUs6bpo1MgNmxBD7zg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKw7zn/3riq/CldCChSTiOKz2Qe8zIY2l4ZelJIG4tJu+U30LTZNgtb+uDt3p3e4EQ==",
                             PhoneNumber = "09173049710",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Emergency Department",
                             Prefix = "Dr.",
-                            SecurityStamp = "698dfbcf-1741-433e-b2b6-45ee7902edf6",
+                            SecurityStamp = "4864c20e-1b9c-47c6-9869-4c7fb942ba6b",
                             TwoFactorEnabled = false,
                             UserName = "mokamad-romancap.halima"
                         },
@@ -11689,7 +15735,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "3cfa9401-553a-4ac5-ab8d-3d65899090b3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "33554b1a-71db-4092-ab56-edc609e245fd",
+                            ConcurrencyStamp = "916b48b8-1ff2-49b7-9c38-649a20c4ff56",
                             Email = "mar23md@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MILDRED",
@@ -11698,12 +15744,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "VINLUAN",
                             NormalizedEmail = "MAR23MD@YAHOO.COM",
                             NormalizedUserName = "APOSTOL.MILDRED",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFasI2nHt+RZ4Z8iIUjzqsdeeiFI6FmDnWsT5YdP6h3wBkPj/a7rZawBLO1SYOUx2g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPHAJEUiABHiD+rWnBTfft01So+fU9Kp+4+9ys0f4ErT2tJhn7dYK5iRtswA+tV9nw==",
                             PhoneNumber = "09177068296",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Mental Health Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "0ad620bf-f852-4105-a04b-4b55ab592cc3",
+                            SecurityStamp = "66147b3f-e7fd-4b03-a575-0182590b69c3",
                             TwoFactorEnabled = false,
                             UserName = "apostol.mildred"
                         },
@@ -11711,7 +15757,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "45fm8462-553a-4ac5-ap8i-3d65879641h8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "530d74a5-2e5c-4d25-abe5-e5a904765496",
+                            ConcurrencyStamp = "304a255b-baf7-4e80-94d6-33b22f845467",
                             Email = "manilyn.hong@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MANILYN ANNE",
@@ -11720,12 +15766,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CONSTANTINO",
                             NormalizedEmail = "MANILYN.HONG@GMAIL.COM",
                             NormalizedUserName = "HONG.MANILYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBrofSLHHrQU6AIosZjs6Ax2/hzL+Itj8SkvfTbaZw8bW7Se4lGovBrCxUcz3ATt7Q==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECpFsO/eYE8b7MHPgIBf5lFaKg67SM7QLBQoNGKixxPxMf9AegrzMFUuG+J15TBhEA==",
                             PhoneNumber = "09664010006",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Brain and Spine Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "7e0fd771-a6d2-4bb2-b40b-a44866f6c6cc",
+                            SecurityStamp = "286d6070-6ec9-4668-ac2c-eedfebb9bc93",
                             TwoFactorEnabled = false,
                             UserName = "hong.manilyn"
                         },
@@ -11733,7 +15779,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "21ag1234-884k-0ak8-ap8i-2y54768532d2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "6fa42446-9d58-4098-b7f7-2640f7225ef8",
+                            ConcurrencyStamp = "7cce933e-7278-4dea-bfc3-d46a21b13942",
                             Email = "janefabrienne@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "JANE FABRIENNE",
@@ -11742,11 +15788,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "SAGPAO",
                             NormalizedEmail = "JANEFABRIENNE@GMAIL.COM",
                             NormalizedUserName = "GARCIA.JANE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHLyuRmOn5mS43pKSf+jOO6v8TWfI7/G6ZpzUaPPQlbM1o7AXgyluv+2rSuvxtdROQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJscET024IZyke6OMZ1YYbOjd75wNnXtrlpXv7RXupHpU9Y+mqU0QNfZFhqWszHi8g==",
                             PhoneNumber = "09177248567",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Brain and Spine Care",
-                            SecurityStamp = "064ade85-721c-4bc9-818f-0248165e9bbd",
+                            SecurityStamp = "96292dcf-4192-4fd2-8760-f5984d016bd8",
                             TwoFactorEnabled = false,
                             UserName = "garcia.jane"
                         },
@@ -11754,7 +15800,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "66fg1385-86sd-8aw9-vm5g-1s87643521j5",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "096c0233-67e0-4048-a29e-5cac05e4ba42",
+                            ConcurrencyStamp = "3a662e12-6643-4570-b5a6-2e6c60f89972",
                             Email = "jedjumaoas.md@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "JED WAYLON",
@@ -11763,12 +15809,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LIM",
                             NormalizedEmail = "JEDJUMAOAS.MD@YAHOO.COM",
                             NormalizedUserName = "JUMAO-AS.JED",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBLqEWKh5KllSnwPiNUphKzfdBXyAw1kXOfRF3B8nEY3DN/CesOkFypRs+ihauT1KA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEEgHTPo4dePJJsC2UXLd5bY8LEAZ99Ruud62uOtA60E4C1rLoqS1EDk4Va8OuzwvoQ==",
                             PhoneNumber = "09224969711",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Burn Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "b16a919c-8876-4480-8bb5-d235f93e71f2",
+                            SecurityStamp = "6194791f-327f-41db-a508-372577485c2b",
                             TwoFactorEnabled = false,
                             UserName = "jumao-as.jed"
                         },
@@ -11776,7 +15822,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "f82a9135-7bdf-4ca1-9ea2-2c8b63a1d7f9",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "919aaf01-848f-4775-b47d-803bea5843fe",
+                            ConcurrencyStamp = "d99ea29c-920d-4ec6-8258-03cb3a2d1ce2",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "HASSANA",
@@ -11785,11 +15831,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DIALO",
                             NormalizedEmail = "",
                             NormalizedUserName = "ONTOK-MANGINDRA.HASSANA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEI5RKFO2cI8lzkhcD/E1U/ZrPLSLZxeiSFY36w7CotyUgtrCAoS0e67SJbbbqhoV4A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPnX7UGiEaWmlm8TtPLM9s5Ax0SOnQYYc9nsX5eAXmAdG8yRkBFyyeXctx6eIG7Obg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Carsdiovascular Center",
-                            SecurityStamp = "4351ebf2-f135-4d50-8ffa-1d2617aaabd8",
+                            SecurityStamp = "f14459e9-bdbc-4ce9-9b12-4db4a964956f",
                             TwoFactorEnabled = false,
                             UserName = "ontok-mangindra.hassana"
                         },
@@ -11797,7 +15843,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c63b2e15-8ad4-45b8-bfd1-3a98216c5ea4",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "cb5e24b0-1ddf-4c0c-878a-df5cf3ecbf52",
+                            ConcurrencyStamp = "142f2063-1bce-4c6d-b014-85d7b3505d39",
                             Email = "princesaportia_md@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "PORTIA CHARISMA RUTH",
@@ -11806,12 +15852,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "AGDEPPA",
                             NormalizedEmail = "PRINCESAPORTIA_MD@YAHOO.COM",
                             NormalizedUserName = "ORTIZ.PORTIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBa6ycJbgWvtPV2KfLfSYHsu3pwzD/FCqAyxmKnHMgU6nq8GzoXQvz2nJe4NgHAEIw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFk8EXyYnB2zLclj7XkCvu/8vqWNAmIjPsCwx8iGlEx21zAnDlJhp0jzJCH+3P3iug==",
                             PhoneNumber = "09279667275",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Dermatology",
                             Prefix = "Dr.",
-                            SecurityStamp = "1189f92d-e31e-4610-beb0-5ad23961553e",
+                            SecurityStamp = "deff7f44-29f5-4e05-b2cd-dced1d9835b8",
                             TwoFactorEnabled = false,
                             UserName = "ortiz.portia"
                         },
@@ -11819,7 +15865,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "b7f4e831-25ad-48a9-91d3-7e26f53a4db2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a4f26a21-c96d-4385-a9dd-18a8d6bc67d7",
+                            ConcurrencyStamp = "97f286c5-189d-4764-80e5-bcc90addd102",
                             Email = "bomsiao.mariano@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHALAM",
@@ -11828,12 +15874,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BACAR",
                             NormalizedEmail = "BOMSIAO.MARIANO@GMAIL.COM",
                             NormalizedUserName = "SIAO.SHALAM",
-                            PasswordHash = "AQAAAAIAAYagAAAAEKie4AuXdsGdr/F4aUkNxm4J0kQ9T92U4jNkzjuKGSqcTsu64cz4ObJBfC+6nXFnFQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHKf4x2yttpobmYMumZxNa48ijPbIECkl91clxImA/2GKwaHiDkb3qOLxZwhfVOjYg==",
                             PhoneNumber = "09175483387",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Eye Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "afcf335b-663b-4566-bdc1-3eb7916b8c36",
+                            SecurityStamp = "97893dcd-2b42-4b26-bc7b-53f3b4062ccd",
                             TwoFactorEnabled = false,
                             UserName = "siao.shalam"
                         },
@@ -11841,7 +15887,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "a1c7d995-3f89-4fcb-86c4-4d8d193b57a3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "96b9ca33-a993-4f0d-af4c-785fd04d12ba",
+                            ConcurrencyStamp = "f7f6172c-be00-4978-858c-840fd337bd8b",
                             Email = "maylilene@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "MAYLILENE",
@@ -11850,11 +15896,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BUHAT",
                             NormalizedEmail = "MAYLILENE@GMAIL.COM",
                             NormalizedUserName = "FUENTES.MAYLILENE",
-                            PasswordHash = "AQAAAAIAAYagAAAAECfLyehylTsI+8SId9sKA7fhWgkUuqAd0bUH70H/ArDal2+cvU2GSafSr5IL1QWHlA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEBWUMhkVChUifrGMAcckXySTkJxxL4inN7rW/s0fS6OF0N62g6iFhwwb3Gm+gxX7Gg==",
                             PhoneNumber = "09154206679",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Geriatric Care",
-                            SecurityStamp = "d964c5ec-c0ee-410c-b784-8878e87229e2",
+                            SecurityStamp = "eb95dbae-c64f-4497-9505-10590a9f44cf",
                             TwoFactorEnabled = false,
                             UserName = "fuentes.maylilene"
                         },
@@ -11862,7 +15908,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "d5e2c4f8-95b1-47b9-bc12-8c4f9d8e2b17",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "51efb7ff-c40e-4aab-bf90-ebc29b3e79ba",
+                            ConcurrencyStamp = "1bb4ae65-77c2-415a-a25e-498659df1917",
                             Email = "abenojarmd@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "EMELYN",
@@ -11871,12 +15917,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "NOBLE",
                             NormalizedEmail = "ABENOJARMD@GMAIL.COM",
                             NormalizedUserName = "ABENOJAR-CONCON.EMELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAENGR/ol4bxPFCW45vNyeS6Q4fhFxHUAZJAsUrzpkpqkVy+CrESl1Y+h4bI5K9hOTCg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELmenyX9EXxn285Wjj5B38TM1kEZAo0Tba5pEjMP+8/8DcbZRw129Va4Uvtk8ZK3Ew==",
                             PhoneNumber = "09178202383",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Lung Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "2daf757b-f3f6-4590-9b11-78258b1c4f96",
+                            SecurityStamp = "e2bf6b37-123f-4965-9015-2e8fe6b51c15",
                             TwoFactorEnabled = false,
                             UserName = "abenojar-concon.emelyn"
                         },
@@ -11884,7 +15930,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "e4b3a611-7c8a-4f9b-83a6-2a5b9e61d4c8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e8fffc28-5e10-4a22-9ce2-4f641f11b25d",
+                            ConcurrencyStamp = "eac08245-0693-4126-9126-0f5a801ecbea",
                             Email = "jdesaca@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "JONAH ANN",
@@ -11893,12 +15939,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DESACA",
                             NormalizedEmail = "JDESACA@YAHOO.COM",
                             NormalizedUserName = "BESANA.JONAH",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBuzUa3yPLUGEpGXCsQ6dEbyTDTM/3mCJN7Td1TzC3LCeu/G37RMcGKm0VnlZlSCMg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAg7d55iwgx5nVCsNXsBoD5EukFkIADfbWC1YNpBicRMlp61wb6trOXJ+cr2mg6nyg==",
                             PhoneNumber = "09277197299",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Noenatal Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "f2527f46-7ef8-4fa3-a04f-94d1fb4ff74b",
+                            SecurityStamp = "dcc35c73-ced3-437c-93cd-390078357ee2",
                             TwoFactorEnabled = false,
                             UserName = "besana.jonah"
                         },
@@ -11906,7 +15952,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "9f3b1c52-2e4a-4d65-8d13-6f2c7a9b5f42",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "fef625d2-bad9-4481-b8c8-fe2313eb1ae1",
+                            ConcurrencyStamp = "d35d8e88-3022-41c4-835a-20ecf7f025e5",
                             Email = "dulce_doy@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "LYNN SARAH",
@@ -11915,12 +15961,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ANIÑON",
                             NormalizedEmail = "DULCE_DOY@YAHOO.COM",
                             NormalizedUserName = "AGDEPPA.LYNN",
-                            PasswordHash = "AQAAAAIAAYagAAAAED4P+GI06Iunj9AdcKyOQi1N78H3LA+BcSjC3TTwByF+2yP59oqAF7Z8Xp1HoQjAPw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEGaOGeQtQME3ee5rbDgapuYGGwX3EO9OTtqG7d2kWJjsHaAQ0eaCV8uWFlvKWN0hZQ==",
                             PhoneNumber = "09177260949",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Orthopedic Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "97fbe3a0-25d6-45c4-9794-1060b3229174",
+                            SecurityStamp = "a0e3feb8-7387-4448-9521-9df5a9d8117b",
                             TwoFactorEnabled = false,
                             UserName = "agdeppa.lynn"
                         },
@@ -11928,7 +15974,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "2e9a6b74-7a21-4d33-9a84-5b9f1e8a3d27",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "2dd54489-4bbc-4217-b0dd-67b4a74dede6",
+                            ConcurrencyStamp = "d9f59d02-669b-4c0b-aed6-f8d0aab3ef97",
                             Email = "xin_ya314@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MARY ANNE",
@@ -11937,12 +15983,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "CHONG",
                             NormalizedEmail = "XIN_YA314@YAHOO.COM",
                             NormalizedUserName = "LU.MARY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEB8CKgnhzbJ/W2S1YRjMJ+D89082pp51crGS+cgNk4vh48dlJYmvJZ1f+3OxiV0eGQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEH4Ihw3U6myp1LbCq6KYL1XcOyXNSMMv00l9bP7yXzrijk7P21/NtJQiZWB6M4Oclw==",
                             PhoneNumber = "09175114716",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Renal Care and Kidney Transplant",
                             Prefix = "Dr.",
-                            SecurityStamp = "70e17be6-4f43-487b-943a-bc872ace28ea",
+                            SecurityStamp = "8d358496-e430-4ef8-bf26-1cd385bd0a7f",
                             TwoFactorEnabled = false,
                             UserName = "lu.mary"
                         },
@@ -11950,7 +15996,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8c1f5b93-4e7a-4f18-b3c9-1a2d5f84c9e1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9f16b125-06db-4dc5-a6b5-f41d3ea95b97",
+                            ConcurrencyStamp = "3f418485-3e8d-4cac-84df-ef633f4e2c6a",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "MUHAMMAD SIDIK",
@@ -11959,11 +16005,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MANALASAL",
                             NormalizedEmail = "",
                             NormalizedUserName = "DIMALEN.MUHAMMAD",
-                            PasswordHash = "AQAAAAIAAYagAAAAEEI0h8J3dGEs4TjOUUpEoE4tP4xNKC59T9YZ+x2cUF1vVCCkbkDfrzFEQcfrHFFIAw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELoP05vl6tb5HBcl+aoOV4zLeYcGHSbEbbIJn1mOi0j/pbe2X6JeWitsE1vPn9wgkg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Renal Care and Kidney Transplant",
-                            SecurityStamp = "97c8adfe-cb1e-42cf-bae1-4ec7d5ba1435",
+                            SecurityStamp = "c23942cc-8d49-4c6d-a215-0b9d325b27af",
                             TwoFactorEnabled = false,
                             UserName = "dimalen.muhammad"
                         },
@@ -11971,7 +16017,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7e4c8a59-1b9d-4c5e-ae31-8c2f3d5b7a61",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "1d96632e-811d-4f51-b151-84245768419d",
+                            ConcurrencyStamp = "38784eeb-1d9b-46c2-80b5-0138e1d1a60e",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "PISCES RAYMOND",
@@ -11980,11 +16026,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "YUMANG",
                             NormalizedEmail = "",
                             NormalizedUserName = "LUMAQUE.PISCES",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFrbrK6fouJ8FcnOt8wKJw41SCsh9oD64FI3we7Y0oYsxq2w7Vz6ZjuvWvfDCFsMfg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAELj8+rCmJ3v82LVzoT1ibk0lKxtx4DQFbr2rAyu6yvABNjAm28crm5hRJe5xPlFJCw==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Renal Care and Kidney Transplant",
-                            SecurityStamp = "ae6ba45b-1f56-453b-acf8-0e04e1cd8355",
+                            SecurityStamp = "8f9a493e-2b84-4034-81a6-2b1c0f60146d",
                             TwoFactorEnabled = false,
                             UserName = "lumaque.pisces"
                         },
@@ -11992,7 +16038,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1a9e3f84-2b4d-45a8-9e3f-7b6c8d1e2f94",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a8b7527b-981e-4c9c-8264-30e4983a102e",
+                            ConcurrencyStamp = "7bdc9001-c4b1-4869-af0c-5ab0e26dddcc",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "Ella Joy",
@@ -12001,12 +16047,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "",
                             NormalizedEmail = "",
                             NormalizedUserName = "NOGAS.ELLA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFXnb5D1GY2NWDnuPHAg4CNo3O9qN+35Vkyw82QDcx2UbQpCsYdIQfsCX3onKyXBJA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPsjPhLasgEhGcEumJugFclvuG6ODw91HRo7CnyDIYV54ElhX62YLaOGActkMlYZVg==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Toxicology",
                             Prefix = "Dr.",
-                            SecurityStamp = "0353e040-0d4c-47ea-af01-d7ecf799d220",
+                            SecurityStamp = "25d8dc2c-06d8-476e-bdef-8bcc6fef8827",
                             TwoFactorEnabled = false,
                             UserName = "nogas.ella"
                         },
@@ -12014,7 +16060,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "6b3f8d72-9a1e-4c65-bd43-2e9c7f4b6a85",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "33255a1b-bbe0-4064-99ee-9343531cc7c7",
+                            ConcurrencyStamp = "a403e9c2-ed23-4638-b617-1a94332ff8b2",
                             Email = "adlynbeabernaldez@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ADLYN BEA",
@@ -12023,11 +16069,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ALBESA",
                             NormalizedEmail = "ADLYNBEABERNALDEZ@GMAIL.COM",
                             NormalizedUserName = "BERNALDEZ.ADLYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBtzbFBeTDASdvdY/fMOOCZmkR2s4igL3MwjcTq+EJcEy2puMxEZEhEVU8nGgYXEUg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECbwVHoU+3VkoToB23mEInqFljVO6XdwOFodHbFiejFJCAGZp6IoBnIGpXk1saBN/Q==",
                             PhoneNumber = "09171340137",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Toxicology",
-                            SecurityStamp = "47c5c3be-8ea8-4905-a046-9cf28a9a2224",
+                            SecurityStamp = "a928378b-aa20-4493-aa0d-7c069f0197e6",
                             TwoFactorEnabled = false,
                             UserName = "bernaldez.adlyn"
                         },
@@ -12035,7 +16081,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1a7c3e9b-42f8-4b25-9f81-7cd92c84b9a3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "ac68c6d4-c52d-460d-8339-90df3fabb8ad",
+                            ConcurrencyStamp = "ae6ea17f-4cde-49e7-9540-435318fdc557",
                             Email = "dats_88@yahoo.com/yoshiokadat88@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "ABDULKADIR",
@@ -12044,12 +16090,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "YOSHIOKA",
                             NormalizedEmail = "DATS_88@YAHOO.COM/YOSHIOKADAT88@GMAIL.COM",
                             NormalizedUserName = "DATUMANONG.ABDULKADIR",
-                            PasswordHash = "AQAAAAIAAYagAAAAENHVCh663VUDkX57ePssR2jHsZ9rnpHe+oT8kK4Qx/e+xNLw1f2m2H1AW+eXjniJLA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPG1Twky0+0myEc9spfxvGMA5kk6Nm9IDpsEwDweUcPgcnBtp4wiXQXNDd7rq4P2rg==",
                             PhoneNumber = "09053278687",
                             PhoneNumberConfirmed = false,
                             Position = "Head, ICU Complex",
                             Prefix = "Mr.",
-                            SecurityStamp = "9d8421cd-18b1-44c0-90bc-dd13e67dbe66",
+                            SecurityStamp = "014528eb-20cc-4fbb-800e-8274fee36b56",
                             TwoFactorEnabled = false,
                             UserName = "datumanong.abdulkadir"
                         },
@@ -12057,7 +16103,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c5e81f9d-73a0-4b93-b6fc-97c72e3c15e8",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "e3c813e1-bf16-465f-be45-6d7294eca8c5",
+                            ConcurrencyStamp = "b2f8d067-6795-47a2-b279-082e5d260f44",
                             Email = "peria_cynthia@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "CYNTHIA",
@@ -12066,12 +16112,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BADE",
                             NormalizedEmail = "PERIA_CYNTHIA@YAHOO.COM",
                             NormalizedUserName = "PERIA.CYNTHIA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEJIrj4XeA0Axw/UkUzWn9p+naWOmuv9ADDaXqOFjoJxLN8dsF+9hv8AWP3++X9SCBA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAENQLfxF8CQ+xIvlTeeRGtK2AjLMuBjgtEqcJFznXmkap/Zhv0l1BLkhA1rR887VTAA==",
                             PhoneNumber = "09167805311",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Neonatal Intensive Care Unit",
                             Prefix = "Ms.",
-                            SecurityStamp = "f9137d61-acf6-434d-882a-01701d30723c",
+                            SecurityStamp = "3fd0d928-05f6-4a2b-91fe-730e67f191d6",
                             TwoFactorEnabled = false,
                             UserName = "peria.cynthia"
                         },
@@ -12079,7 +16125,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8d9a1b3f-0c84-46a7-b932-13cf8d05f2a1",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9c0ce475-dd2f-47d6-bc11-8a7f12d89d9e",
+                            ConcurrencyStamp = "431e0e86-38b3-4e34-9b33-9717153b70ae",
                             Email = "geraldine_navarra@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "GERALDINE",
@@ -12088,12 +16134,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ABOGHO",
                             NormalizedEmail = "GERALDINE_NAVARRA@YAHOO.COM",
                             NormalizedUserName = "NAVARRA.GERALDINE",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOfFZwaQMcMDcidmzvn5KHsPgOHeWU1WRV6Dpy7t5Z+HexLEixwAKNZLGXjccViDxg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHnUF0Z/o8ETISNTQaBoqCPnOh1dEM+Lpl3V0XG4zN1GNWmeW+vRV/Exq4FUA4SxNQ==",
                             PhoneNumber = "09177272645",
                             PhoneNumberConfirmed = false,
                             Position = "Head, TB-Isolation",
                             Prefix = "Ms.",
-                            SecurityStamp = "07fc8266-acb9-4aad-a7b1-62e02827978d",
+                            SecurityStamp = "85689ff8-2c41-4b90-bb0c-297b971cffdb",
                             TwoFactorEnabled = false,
                             UserName = "navarra.geraldine"
                         },
@@ -12101,7 +16147,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "c4bd9e2a-1cb3-4c3b-9d0c-2ff2e43c7d1b",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "14415be0-7a15-476a-ba63-100de98442d4",
+                            ConcurrencyStamp = "23c25e38-d539-4338-b78a-328ef18c8d05",
                             Email = "ryanchrisolero@outlook.com",
                             EmailConfirmed = false,
                             FirstName = "RYAN CHRIS",
@@ -12110,11 +16156,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ELEVAZO",
                             NormalizedEmail = "RYANCHRISOLERO@OUTLOOK.COM",
                             NormalizedUserName = "OLERO.RYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEHQzLed9nEVnbToJjnU3mnBpRfClmMAs38v2kZd+hrx/QEWPVWqSOr0MpqREVfsGlQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEJlCs8hA5EsjW5JCTHTUjhSkDd8geUTLso8GQr9FBmROepXL1olL8EvnMzhwE4ddVQ==",
                             PhoneNumber = "09175170327",
                             PhoneNumberConfirmed = false,
                             Position = "Computer Maintenance Technologist II",
-                            SecurityStamp = "0ca5c345-7501-46ef-8fdc-e203282994e1",
+                            SecurityStamp = "c5556cc7-1b83-4aad-9a01-c7bf493089c2",
                             TwoFactorEnabled = false,
                             UserName = "olero.ryan"
                         },
@@ -12122,7 +16168,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "m3xzke5a-1cb3-4c3b-9d0o-9kk8f72v8j5f",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "d25d0740-3962-479c-abd7-ece74101a741",
+                            ConcurrencyStamp = "8ba2d14d-7983-49c3-b47c-4247edcbb24a",
                             Email = "doc_annie@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "ANNELYN GRACE",
@@ -12131,12 +16177,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "COCAL",
                             NormalizedEmail = "DOC_ANNIE@YAHOO.COM",
                             NormalizedUserName = "SABANAL.ANNELYN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEAECpy4lI2w+O6VQQMr0OvCOITEhCDpooxn4cmpwtA0sypojMVVS0jfcSl47BWLMug==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEHd1QyYTRaONaXWQ9fjBL9qpWzb6omG2zQQNYE3ikyFzcu2Oqj0GKCneNlTSI/C6tQ==",
                             PhoneNumber = "09176348295",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Dental Department",
                             Prefix = "Dr.",
-                            SecurityStamp = "c1c0f025-d66b-4e39-ba98-4fe7318ef955",
+                            SecurityStamp = "ecffcc1f-f9f9-4367-8d0a-ff3c3e68f2d8",
                             TwoFactorEnabled = false,
                             UserName = "sabanal.annelyn"
                         },
@@ -12144,7 +16190,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "1k3bdpoy-1cb3-4c3b-1fp0-kff9k71h3ysg",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "a88140c4-6d6f-49b2-9178-d00e1ab835be",
+                            ConcurrencyStamp = "2abd92ae-163e-4beb-b805-48bbf5c44694",
                             Email = "honeyletchristie@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "HONEYLET CHRISTIE",
@@ -12153,12 +16199,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MAGHANOY",
                             NormalizedEmail = "HONRYLETCHRISTTIE@YAHOO.COM",
                             NormalizedUserName = "TADINA.HONEYLET",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBub6gRLnNdOPYcrWOqkhSeI0SIle9baWQtw9Th24oxvyCMrOTDbYaBhUL1Lk3M/9A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEMqLnf5VV4BPzRTcO1ZfMMpZoz32QxjUDRO6ShYk1EZsm9OrQEEo6pD89wwsJ2xElw==",
                             PhoneNumber = "09359763862",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Budget Department",
                             Prefix = "Ms.",
-                            SecurityStamp = "201071d0-9fd8-44e9-9424-d1c59aa6523b",
+                            SecurityStamp = "327800d2-c43c-4b77-a4df-e55938a848a3",
                             TwoFactorEnabled = false,
                             UserName = "tadina.honeylet"
                         },
@@ -12166,7 +16212,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "4gghfkad-4xhj-4c3b-1fp0-damxmbak242V",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "dc1623d8-0094-4fe5-97c3-a654486e15cc",
+                            ConcurrencyStamp = "b5cf4602-fb15-47e4-8857-7276acfd7444",
                             Email = "",
                             EmailConfirmed = false,
                             FirstName = "MINDA",
@@ -12175,12 +16221,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "BADILLES",
                             NormalizedEmail = "",
                             NormalizedUserName = "CARE-IT.MINDA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEF9ovW6hUnyvd/fqP7nYTpG3JaSHhtZ2/HxTWW8tzj4UuuApmme/eGVbbkPDiDLaog==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEKC+uO33xtKXOeXY+IIEqSZz9Ae/7mWak3T3VRqStEo/bb6omUGVi/VpxDsgk1VLTw==",
                             PhoneNumber = "09326564879",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Planning and Management Unit",
                             Prefix = "Ms.",
-                            SecurityStamp = "0b4379d8-34bd-4ef3-8db5-2d92cfbb094e",
+                            SecurityStamp = "eff4204a-d909-41a9-a104-d5fe90813c49",
                             TwoFactorEnabled = false,
                             UserName = "care-it.minda"
                         },
@@ -12188,7 +16234,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "8rrdhjqf-2xhj-4c3b-1fp0-hqvxadfh137e",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "88e319ce-3558-4df9-975e-322a297104d3",
+                            ConcurrencyStamp = "5d8e1413-0b03-4856-8836-69ab2d16bff5",
                             Email = "sherjank@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SHERJAN",
@@ -12197,12 +16243,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "PANGATO",
                             NormalizedEmail = "SHERJANK@GMAIL.COM",
                             NormalizedUserName = "KALIM.SHERJAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEP5RtzTt9cZ4ZkTtKiQ7PDa82y7UrhOXseYYz97H4xPTfX30tx2FTatiN+UxpT1LJw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEIi8ZKIu3afdvaUYQ/TWYstjh4KklECjjbk3sr8A/JPxbVEg5Fgc/GYre+0iDMR9nQ==",
                             PhoneNumber = "09179713201",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Soccsksargen Regional Blood Center",
                             Prefix = "Dr.",
-                            SecurityStamp = "3300969f-b9aa-4983-9ce7-0686e855771e",
+                            SecurityStamp = "edc6112a-9b15-4e73-be3f-c4028bb58bd1",
                             TwoFactorEnabled = false,
                             UserName = "kalim.sherjan"
                         },
@@ -12210,7 +16256,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "813tyuio-7asd-1f7k-6kl0-aqFx134Tv190",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "72d42d21-536e-4b98-a3c7-e5b3d6a91bb3",
+                            ConcurrencyStamp = "895f52aa-4f1a-4ff5-9073-76c26a26e77b",
                             Email = "somairha@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "PRECIOUS SOMAIRHA",
@@ -12219,12 +16265,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ALIBASA",
                             NormalizedEmail = "SOMAIRHA@GMAIL.COM",
                             NormalizedUserName = "GIO.PRECIOUS",
-                            PasswordHash = "AQAAAAIAAYagAAAAECLDBIHGLTxQP9WIGR+BLeaOt4X7Bdm04KnLubRcX7GjKtDYA6hnjK7LK+U02Ogllg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAECrqIhgJjjHoxFUyXKwDCE2rgdv6okJ6ws7VRprU0HMy/YxXnnrhXwzHP2AQp4BmOg==",
                             PhoneNumber = "09171237248",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Emergency Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "97f2066c-2032-47bf-be4a-ca45327a39df",
+                            SecurityStamp = "d0418675-e9b6-4a9d-a3df-99a20dc05ddf",
                             TwoFactorEnabled = false,
                             UserName = "gio.precious"
                         },
@@ -12232,7 +16278,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "924omboD-0Dvi-3fkhQ-blh6-yaFv1de62431",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9b47cee3-067b-4a28-84c5-80603f1f1fcf",
+                            ConcurrencyStamp = "b1a30564-2a24-4b8c-8246-7b36f7aa2aae",
                             Email = "cpulauban@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "CHEERILOU",
@@ -12241,12 +16287,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "UKO",
                             NormalizedEmail = "CPULAIBAN@YAHOO.COM",
                             NormalizedUserName = "LAUBAN.CHEERILOU",
-                            PasswordHash = "AQAAAAIAAYagAAAAELMF4g8oCsIw5VmMQ5xurY3WzDA5em6w0jctrPan9zs6bCJKVL8x6egBFvOjs0B91A==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAgilVB9bfA3Z0DnIKPeDwbLFAzBnO2aUrJBbmguPgrD3r1Ot4KQqKplqfw2c7b+1w==",
                             PhoneNumber = "09171237248",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Medical Insurance Evaluation and Reconcillation Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "3765eaf6-1e59-4e9e-ba1c-78297bec2279",
+                            SecurityStamp = "525b1e54-d0b1-48d9-aa7d-ded8b056428f",
                             TwoFactorEnabled = false,
                             UserName = "lauban.cheerilou"
                         },
@@ -12254,7 +16300,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "822rlioO-0Dvi-3fo9O-bjh8-ya846jg58t24",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "baee2e46-e6c2-4c3c-a316-c5406d604193",
+                            ConcurrencyStamp = "520d19b8-4c67-46a8-8fc0-31c4bae4416a",
                             Email = "mtmadeha@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "MADEHA",
@@ -12263,12 +16309,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "TAHAL",
                             NormalizedEmail = "MTMADEHA@YAHOO.COM",
                             NormalizedUserName = "MADID.MADEHA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEOIeiZMNliVO3LnZuX4NTKPaY34Ec1e6K7ryIJjoxdl0oaXeeJBYqrMdcB0akCTBNg==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFGcXaP31BprJQhj6nv5PE/MviHCJr87Nwlc3mqliw+Hf+9HetZAf44OrspWWUW1SA==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Geriatric Care",
                             Prefix = "Dr.",
-                            SecurityStamp = "f7a7b702-d92a-401b-9f7e-73ba6804811c",
+                            SecurityStamp = "35d582c6-1301-46b9-a43a-4fb0c11656f7",
                             TwoFactorEnabled = false,
                             UserName = "madid.madeha"
                         },
@@ -12276,7 +16322,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "123rliom-2akV-cl381-uwe9-kah8h3f98632",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "32b28cbf-6935-4243-b8a3-74a0d93f1038",
+                            ConcurrencyStamp = "895be686-f8f7-469a-a169-ac11c51b9f18",
                             Email = "sonjaandsanji@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "SONJA",
@@ -12285,12 +16331,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "DE LUNA",
                             NormalizedEmail = "SONJAANDSANJI@GMAIL.COM",
                             NormalizedUserName = "ESCARA.SONJA",
-                            PasswordHash = "AQAAAAIAAYagAAAAEIDfC4yQdZ5ffAV9Me8ReSN4CF/II/UkuchTokWuveie1shV2irDFuEgC9qZ+T+iCQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEDIs/6j/9vEjTh6k2RY5KROwDTXFL3qiVZdsbmPVRaJhbGuzBq5TyRtLRMBXRB08Nw==",
                             PhoneNumber = "",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Infectious Disease and Tropical Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "9011c600-9dc8-45ad-b55b-3e054295a164",
+                            SecurityStamp = "105246a4-1c50-4b20-91c6-1e9c0aa907a6",
                             TwoFactorEnabled = false,
                             UserName = "escara.sonja"
                         },
@@ -12298,7 +16344,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "234glioh-2akV-BL062-Hh28-LSJ2Gnj976w3",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "9af41f02-8870-4487-88b4-e64b4024a9fd",
+                            ConcurrencyStamp = "56a3e50a-044d-44ac-88e8-821ff55747f4",
                             Email = "alnazaer1994@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "AL-NAZAER",
@@ -12307,12 +16353,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ABAS",
                             NormalizedEmail = "ALNAZAER1994@GMAIL.COM",
                             NormalizedUserName = "USOP.AL-NAZAER",
-                            PasswordHash = "AQAAAAIAAYagAAAAENw++Gp9bDzWClAjaGjoRYHP+7G+AA99sal8Bfg3oeR2LVCMPC7xjmHQI3cViEjang==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEN0lfmHef3g36n77wooPEKC8Q46hq6FIlKFO0QakqQFPBp23pRWPrrK9ZoSjlkWl4A==",
                             PhoneNumber = "09458250199",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Infectious Disease and Tropical Medicine",
                             Prefix = "Dr.",
-                            SecurityStamp = "81f4d097-c729-41ad-ab04-ec80b1c9530e",
+                            SecurityStamp = "13c3e792-4616-4369-b292-9473e40fb1fb",
                             TwoFactorEnabled = false,
                             UserName = "usop.al-nazaer"
                         },
@@ -12320,7 +16366,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "654hHioh-NkaH-jB19f-9uh12-33dFJnY823f2",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0d7458a0-3bb2-41de-890e-15ff34353091",
+                            ConcurrencyStamp = "fa55b36c-1399-4df1-a512-cd9948cf18ec",
                             Email = "aprilglimada01@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "APRIL AISHA",
@@ -12329,12 +16375,12 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "MACAVINTA",
                             NormalizedEmail = "APRILGLIMADA01@GMAIL.COM",
                             NormalizedUserName = "GLIMADA.APRIL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEFB5LeNCOd2K0++2nGcV7ekPfvi213xM5WLxJksks5FPygv21Q0rA8JTqqcLkdis/g==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEAAAsUB7INNlaRylDRk1WOYh/XEZML9L0SePj8jv87nrwSsqRqip/SE0qVcJ/YA13w==",
                             PhoneNumber = "09171488596",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Mental Health Unit",
                             Prefix = "Dr.",
-                            SecurityStamp = "44350d9f-d54c-49c4-9ecc-028eaf7fc849",
+                            SecurityStamp = "b3e03d16-124a-42b1-a387-7a871c63a726",
                             TwoFactorEnabled = false,
                             UserName = "glimada.april"
                         },
@@ -12342,7 +16388,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0020lEhG-NkaH-jB19f-9uh12-11dFwnTe6543",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "c5f10d9e-8bb4-4b99-ad48-f6548770b369",
+                            ConcurrencyStamp = "d35cc5bf-3600-4165-98ee-b9592ed732c2",
                             Email = "ramilramirez097@gmail.com",
                             EmailConfirmed = false,
                             FirstName = "RAMIL",
@@ -12351,11 +16397,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "LIMBAC",
                             NormalizedEmail = "RAMILRAMIREZ097@GMAIL.COM",
                             NormalizedUserName = "RAMIREZ.RAMIL",
-                            PasswordHash = "AQAAAAIAAYagAAAAEBXnZgVKFGzUr1EMyBN0LVWk3GX8DT6CglNCPj5yPn5c3M6Y9fkFpL+zCTKQ8rl3zQ==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEP4Xd87t5HeUMa7RiKnus7QrSnum+Rlzstj7V8inueeCw0GZKsrgPOgpIMW0soDkpw==",
                             PhoneNumber = "09065343887",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Housekeeping Unit",
-                            SecurityStamp = "102f7eb2-680a-436d-a35d-3f0e9ae41c4c",
+                            SecurityStamp = "c277c223-b14a-47ee-9a06-7c621a4c648f",
                             TwoFactorEnabled = false,
                             UserName = "ramirez.ramil"
                         },
@@ -12363,7 +16409,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "0201JEhG-NkaH-jB19f-9uh12-22GYwrTr9872",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "b4947d16-7ba9-4bc0-b400-c3baaddf5f4e",
+                            ConcurrencyStamp = "36268c4c-e5ed-4e53-864a-f2709e7b00d4",
                             Email = "quilnetgerry@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "GERRY",
@@ -12372,11 +16418,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "APARECE",
                             NormalizedEmail = "QUILNETGERRY@GMAIL.COM",
                             NormalizedUserName = "QUILNET.GERRY",
-                            PasswordHash = "AQAAAAIAAYagAAAAEM0GGvnScOjKpTlom1DF55VkH5kycXZ+ymdgo9MfbH8kO4fbs6qTUnlD/KZWV6b5JA==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEFLygpstcUL/xJd5pToldvkOOJ4caJ0CbaWKfhsCh/BI2yTJ7/lgE7GcChpZDARWPw==",
                             PhoneNumber = "09273691473",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Laundry and Linen Unit",
-                            SecurityStamp = "58653066-2f7a-4190-a0e6-68ba9aefe349",
+                            SecurityStamp = "4e598c2c-28df-4da6-8f72-22324489ad8c",
                             TwoFactorEnabled = false,
                             UserName = "quilnet.gerry"
                         },
@@ -12384,7 +16430,7 @@ namespace IMIS.Persistence.Migrations
                         {
                             Id = "7A91XEhQ-MpZ3-KL28-A9uT1-88HWrLQe5630",
                             AccessFailedCount = 0,
-                            ConcurrencyStamp = "0fc2315f-5b4b-4636-9388-0aa1723cb082",
+                            ConcurrencyStamp = "9964d875-b9fa-412b-a50d-2f337583fe62",
                             Email = "aryanrodereck@yahoo.com",
                             EmailConfirmed = false,
                             FirstName = "RYAN RODERECK",
@@ -12393,11 +16439,11 @@ namespace IMIS.Persistence.Migrations
                             MiddleName = "ARCONADO",
                             NormalizedEmail = "ARYANRODERECK@YAHOO.COM",
                             NormalizedUserName = "ABAYON.RYAN",
-                            PasswordHash = "AQAAAAIAAYagAAAAEG8w43V+ivlFgnFWh4KK4CGv8EbijJjBvuuOERuc/zIZoBJotlsx+OVTFVI5X3Ptlw==",
+                            PasswordHash = "AQAAAAIAAYagAAAAEPqsKIL+oLz26u1wYX/hfsAB7Td2XIqXZ8jeyA7g1pqUD8JY7bKdc7Ok+34oy8mLLg==",
                             PhoneNumber = "9268336993",
                             PhoneNumberConfirmed = false,
                             Position = "Head, Electrical Section",
-                            SecurityStamp = "a1ca34a9-f844-4869-827e-25222d9bf0f6",
+                            SecurityStamp = "23bb6d5a-49a3-484b-81ce-ea593fb107c4",
                             TwoFactorEnabled = false,
                             UserName = "abayon.ryan"
                         });
@@ -14727,133 +18773,133 @@ namespace IMIS.Persistence.Migrations
                         new
                         {
                             Id = "56996e97-9e8a-4d22-a693-c865144e9b96",
-                            ConcurrencyStamp = "4041aa7a-b301-4804-a1ee-9778c88a305a",
+                            ConcurrencyStamp = "7f4a3382-5463-4aa5-a572-444954a5040d",
                             Name = "Administrator",
                             NormalizedName = "ADMINISTRATOR"
                         },
                         new
                         {
                             Id = "8d9f58ec-a8b2-4738-9b5f-d5ce46f98b17",
-                            ConcurrencyStamp = "121d7511-6a87-4443-92fa-f2872e9f8506",
+                            ConcurrencyStamp = "44c7ce2a-dab8-4780-93f1-8f89a23c686a",
                             Name = "PGS Core Team",
                             NormalizedName = "PGS CORE TEAM"
                         },
                         new
                         {
                             Id = "f7cf5c73-16d9-4da8-9e0a-cc149b34fbbd",
-                            ConcurrencyStamp = "0cbb5fba-4a0f-423b-bedc-c189e9f083ce",
+                            ConcurrencyStamp = "03c7951e-8eb7-42ba-9c8b-7095f5889fb9",
                             Name = "Standard User",
                             NormalizedName = "STANDARD USER"
                         },
                         new
                         {
                             Id = "af7b586c7ee6490bbd878f46f6a47831",
-                            ConcurrencyStamp = "22789743-e49f-4116-bbbf-21d7e391b86e",
+                            ConcurrencyStamp = "30a00dff-76de-4a3f-93c5-0d749c5adeac",
                             Name = "Auditor",
                             NormalizedName = "AUDITOR"
                         },
                         new
                         {
                             Id = "95f224dd-3973-42ef-b350-7af30f67c2ca",
-                            ConcurrencyStamp = "05e04898-3396-4793-a8a0-30adfe65f480",
+                            ConcurrencyStamp = "d4ad7be0-7506-4f7a-83b6-5165fa787aa6",
                             Name = "Service Head",
                             NormalizedName = "SERVICE HEAD"
                         },
                         new
                         {
                             Id = "b6b97a7d-23b0-4c2f-9f9a-54d4f67b1234",
-                            ConcurrencyStamp = "14d195a6-9f37-4bde-baa1-d62a01f36946",
+                            ConcurrencyStamp = "d58083e7-a48b-4fc2-8264-209d4f2ac3fb",
                             Name = "PGS Head",
                             NormalizedName = "PGS HEAD"
                         },
                         new
                         {
                             Id = "e2a6a3fc-1f3a-4e9e-9df0-5f4a6e1f8c21",
-                            ConcurrencyStamp = "2af1dfe0-486f-4e2e-9d2d-ff006c05ae39",
+                            ConcurrencyStamp = "4f88bb29-6e5d-4752-baac-91d1fdd58f7e",
                             Name = "MCC",
                             NormalizedName = "MCC"
                         },
                         new
                         {
                             Id = "a3c8f0de-45d7-49ab-9c3f-8e25b5e7d421",
-                            ConcurrencyStamp = "6c6e2ddd-1f61-47c4-a1c5-d1abc0ace372",
+                            ConcurrencyStamp = "40502a98-482a-48a9-ad32-ac67f76d8c8b",
                             Name = "OSM",
                             NormalizedName = "OSM"
                         },
                         new
                         {
                             Id = "18b4151f-bff9-4525-b787-7a7e009757c3",
-                            ConcurrencyStamp = "8f5c1a84-1099-48a9-9c23-878bdd1a6452",
+                            ConcurrencyStamp = "f0422dae-1a1e-4820-9c4b-c4efe24da7fe",
                             Name = "PGS Auditor Head",
                             NormalizedName = "PGS AUDITOR HEAD"
                         },
                         new
                         {
                             Id = "4c1c9c2e-9e2b-4c88-8a94-6a7d3e4c5a01",
-                            ConcurrencyStamp = "487d90ee-e5a3-4fed-8f14-e0ce65f55719",
+                            ConcurrencyStamp = "65e0c02d-8904-4914-9d3f-76fc8a4a1210",
                             Name = "Service Officer",
                             NormalizedName = "SERVICE OFFICER"
                         },
                         new
                         {
                             Id = "9b7d2e11-6c3a-4f2e-a1d8-0f7c4b2e91a4",
-                            ConcurrencyStamp = "f46cae6f-d1b4-48dd-ac77-36bf9cbd92f8",
+                            ConcurrencyStamp = "9a107d62-f0a1-4cf5-ba53-de1ab7e7e30f",
                             Name = "Research Officer",
                             NormalizedName = "RESEARCH OFFICER"
                         },
                         new
                         {
                             Id = "2a6f5c90-1d3b-4e8f-9c42-7b1e5d0a83c2",
-                            ConcurrencyStamp = "26262090-00ec-41b8-93cf-9c73f489d094",
+                            ConcurrencyStamp = "61debf12-8371-4777-9f69-37afa07fe3d4",
                             Name = "Training Officer",
                             NormalizedName = "TRAINING OFFICER"
                         },
                         new
                         {
                             Id = "e3f7a4c1-5b29-4a8e-9d10-8c6e2f91b4a7",
-                            ConcurrencyStamp = "ecbfd8cc-b1d4-4268-b372-9749c5960803",
+                            ConcurrencyStamp = "566dfe7f-3c66-4e8e-9af6-e960aa751349",
                             Name = "Linkages Officer",
                             NormalizedName = "LINKAGES OFFICER"
                         },
                         new
                         {
                             Id = "7d8b0f3c-4a6e-4f9b-8c21-2e5a1d7b90f3",
-                            ConcurrencyStamp = "bec82718-83cb-4216-a346-5fc779678d88",
+                            ConcurrencyStamp = "2decca5a-dbeb-4941-9adb-927cf08fec63",
                             Name = "Facilities Officer",
                             NormalizedName = "FACILITIES OFFICER"
                         },
                         new
                         {
                             Id = "5c2e8b9f-6a1d-4e73-9f0b-1c7a4d3e8b52",
-                            ConcurrencyStamp = "d6009685-0b6a-4f4a-9406-8801d0f7237f",
+                            ConcurrencyStamp = "62411fe6-32b1-4700-96dd-775fbcdb9800",
                             Name = "Finance Officer",
                             NormalizedName = "FINANCE OFFICER"
                         },
                         new
                         {
                             Id = "f0a8d2c7-1e9b-4c5a-8f63-7b4e2d9c1a30",
-                            ConcurrencyStamp = "f6397df8-365d-4d31-9836-de720e066951",
+                            ConcurrencyStamp = "6a47dddc-49bc-496e-afb7-e0748bb18483",
                             Name = "Information Officer",
                             NormalizedName = "INFORMATION OFFICER"
                         },
                         new
                         {
                             Id = "3e1b5f2c-9d8a-4a07-8c64-fb2e9d7a1c50",
-                            ConcurrencyStamp = "18649954-0788-44a9-a4e1-5a7e1ee6edfa",
+                            ConcurrencyStamp = "51d54838-d894-4554-a9c0-706d16adf2a0",
                             Name = "HR Officer",
                             NormalizedName = "HR OFFICER"
                         },
                         new
                         {
                             Id = "6b7f1c2e-8a4d-4f90-9e53-0d3a5c2b718f",
-                            ConcurrencyStamp = "16f73dbf-71d4-4f1b-b70c-073c469332e4",
+                            ConcurrencyStamp = "965d9a72-19ac-47fa-8aee-615788164c6b",
                             Name = "Safety Officer",
                             NormalizedName = "SAFETY OFFICER"
                         },
                         new
                         {
                             Id = "5ef7f4d6-712b-4a7c-94d0-cc0fc6a16f88",
-                            ConcurrencyStamp = "deddc1be-09bc-4101-ab8d-bd80d5192f27",
+                            ConcurrencyStamp = "c2b454d7-925a-42d5-9707-b74e0bd944e0",
                             Name = "Multi-specialty Governance Council Officer",
                             NormalizedName = "MULTI-SPECIALTY GOVERNANCE COUNCIL OFFICER"
                         });
@@ -14873,6 +18919,79 @@ namespace IMIS.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlan", b =>
+                {
+                    b.HasOne("IMIS.Domain.User", "Preparer")
+                        .WithMany()
+                        .HasForeignKey("PreparerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("IMIS.Domain.User", "SelectedApprover")
+                        .WithMany()
+                        .HasForeignKey("SelectedApproverId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Preparer");
+
+                    b.Navigation("SelectedApprover");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlanApproval", b =>
+                {
+                    b.HasOne("IMIS.Domain.User", "Approver")
+                        .WithMany()
+                        .HasForeignKey("ApproverId1");
+
+                    b.HasOne("IMIS.Domain.AuditPlan", "AuditPlan")
+                        .WithMany("Approvals")
+                        .HasForeignKey("AuditPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Approver");
+
+                    b.Navigation("AuditPlan");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlanEntry", b =>
+                {
+                    b.HasOne("IMIS.Domain.AuditPlan", "AuditPlan")
+                        .WithMany("Entries")
+                        .HasForeignKey("AuditPlanId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("IMIS.Domain.Office", "Office")
+                        .WithMany()
+                        .HasForeignKey("OfficeId");
+
+                    b.HasOne("IMIS.Domain.Team", "Team")
+                        .WithMany()
+                        .HasForeignKey("TeamId");
+
+                    b.Navigation("AuditPlan");
+
+                    b.Navigation("Office");
+
+                    b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlanPersonResponsible", b =>
+                {
+                    b.HasOne("IMIS.Domain.AuditPlanEntry", null)
+                        .WithMany("ResposiblePersons")
+                        .HasForeignKey("AuditPlanEntryId");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlanProcess", b =>
+                {
+                    b.HasOne("IMIS.Domain.AuditPlanEntry", null)
+                        .WithMany("AuditPlanProcesses")
+                        .HasForeignKey("AuditPlanEntryId");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditScheduleDetails", b =>
@@ -14995,6 +19114,10 @@ namespace IMIS.Persistence.Migrations
 
             modelBuilder.Entity("IMIS.Domain.IsoStandard", b =>
                 {
+                    b.HasOne("IMIS.Domain.AuditPlanEntry", null)
+                        .WithMany("IsoStandards")
+                        .HasForeignKey("AuditPlanEntryId");
+
                     b.HasOne("IMIS.Domain.StandardVersion", "Version")
                         .WithMany()
                         .HasForeignKey("VersionID")
@@ -15203,6 +19326,13 @@ namespace IMIS.Persistence.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("IMIS.Domain.User", b =>
+                {
+                    b.HasOne("IMIS.Domain.AuditPlanEntry", null)
+                        .WithMany("Auditors")
+                        .HasForeignKey("AuditPlanEntryId");
+                });
+
             modelBuilder.Entity("IMIS.Domain.UserOffices", b =>
                 {
                     b.HasOne("IMIS.Domain.Office", null)
@@ -15252,6 +19382,24 @@ namespace IMIS.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlan", b =>
+                {
+                    b.Navigation("Approvals");
+
+                    b.Navigation("Entries");
+                });
+
+            modelBuilder.Entity("IMIS.Domain.AuditPlanEntry", b =>
+                {
+                    b.Navigation("AuditPlanProcesses");
+
+                    b.Navigation("Auditors");
+
+                    b.Navigation("IsoStandards");
+
+                    b.Navigation("ResposiblePersons");
                 });
 
             modelBuilder.Entity("IMIS.Domain.AuditSchedule", b =>

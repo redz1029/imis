@@ -53,6 +53,16 @@ using IMIS.Persistence.SWOTAnalysisModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.Extensions.DependencyInjection;
+using IMIS.Persistence.AuditPlanModule;
+using IMIS.Application.AuditPlanModule;
+using IMIS.Application.AuditPlanApprovalModule;
+using IMIS.Persistence.AuditPlanApprovalModule;
+using IMIS.Application.AuditPlanEntryModule;
+using IMIS.Persistence.AuditPlanEntryModule;
+using IMIS.Application.AuditPlanPersonResponsibleModule;
+using IMIS.Persistence.AuditPlanPersonResponsibleModule;
+using IMIS.Application.AuditPlanProcessModule;
+using IMIS.Persistence.AuditPlanProcessModule;
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -145,8 +155,25 @@ namespace IMIS.Persistence.DependencyInjection
             services.AddScoped<IIsoStandardRepository, IsoStandardRepository>();
             services.AddScoped<IIsoStandardService, IsoStandardService>();
 
-            services.AddScoped<ImprovementTypeRepository, ImprovementTypeRepository>();
-            services.AddScoped<ImprovementTypeService, ImprovementTypeService>();
+
+            services.AddScoped<IAuditPlanRepository, AuditPlanRepository>();
+            services.AddScoped<IAuditPlanService, AuditPlanService>();
+
+            services.AddScoped<IAuditPlanApprovalRepository, AuditPlanApprovalRepository>();
+            services.AddScoped<IAuditPlanApprovalService, AuditPlanApprovalService>();
+
+            services.AddScoped<IAuditPlanEntryRepository, AuditPlanEntryRepository>();
+            services.AddScoped<IAuditPlanEntryService, AuditPlanEntryService>();
+
+            services.AddScoped<IAuditScheduleDetailRepository, AuditScheduleDetailRepository>();
+            services.AddScoped<IAuditScheduleDetailService, AuditScheduleDetailService>();
+
+            services.AddScoped<IAuditPlanPersonResponsibleRepository, AuditPlanPersonResponsibleRepository>();
+            services.AddScoped<IAuditPlanPersonResponsibleService, AuditPlanPersonResponsibleService>();
+
+            services.AddScoped<IAuditPlanProcessRepository, AuditPlanProcessRepository>();
+            services.AddScoped<IAuditPlanProcessService, AuditPlanProcessService>();
+
 
 
             return services;

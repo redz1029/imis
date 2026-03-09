@@ -9,8 +9,7 @@ namespace IMIS.Application.IsoStandardModule
         Task<IEnumerable<IsoStandard>> GetAll(CancellationToken cancellationToken);
         Task<IEnumerable<IsoStandard>?> FilterByVersionId(int versionId, CancellationToken cancellationToken);
         Task<IEnumerable<IsoStandard>?> FilterByClauseRef(string clauseRef, int noOfResults, CancellationToken cancellationToken);
-        //Task<EntityPageList<IsoStandard, long>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
-        //Task<EntityPageList<IsoStandard, long>> GetPaginatedByVersionAsync(int versionId, int page, int pageSize, CancellationToken cancellationToken);
+      
         Task<IsoStandard?> GetByIdWithVersionAsync(long id, CancellationToken cancellationToken);
         Task<IsoStandard?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken);
     }

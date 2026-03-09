@@ -42,6 +42,13 @@ namespace IMIS.Persistence
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }
         public DbSet<ImprovementType> ImprovementType { get; set; }
+        
+        // Audit Plan entities
+        public DbSet<AuditPlan> AuditPlans { get; set; }
+        public DbSet<AuditPlanEntry> AuditPlanEntries { get; set; }
+        public DbSet<AuditPlanProcess> AuditPlanProcesses { get; set; }
+        public DbSet<AuditPlanPersonResponsible> AuditPlanPersonResponsibles { get; set; }
+        public DbSet<AuditPlanApproval> AuditPlanApprovals { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
@@ -69,92 +76,107 @@ namespace IMIS.Persistence
                   .WithMany(o => o.AuditorOffices)
                   .HasForeignKey(x => x.OfficeId);             
             });
+            builder.Entity<AuditPlan>(entity =>
+            {
+                entity.HasOne(a => a.SelectedApprover)
+                      .WithMany()
+                      .HasForeignKey(a => a.SelectedApproverId)
+                      .OnDelete(DeleteBehavior.NoAction);
+
+            });
 
             builder.Entity<AuditorTeams>()
-                .HasKey(at => at.Id);
+                    .HasKey(at => at.Id);
 
-            builder.Entity<AuditorTeams>()
-                .HasIndex(at => new { at.AuditorId, at.TeamId })
-                .IsUnique(); 
+                builder.Entity<AuditorTeams>()
+                    .HasIndex(at => new { at.AuditorId, at.TeamId })
+                    .IsUnique();
 
-            builder.Entity<AuditorTeams>()
-                .HasOne(t => t.Team)
-                .WithMany(at => at.AuditorTeams)
-                .HasForeignKey(at => at.TeamId);
+                builder.Entity<AuditorTeams>()
+                    .HasOne(t => t.Team)
+                    .WithMany(at => at.AuditorTeams)
+                    .HasForeignKey(at => at.TeamId);
 
-            builder.Entity<AuditorTeams>()
-                .HasOne(a => a.Auditor)
-                .WithMany(at => at.AuditorTeams)
-                .HasForeignKey(at => at.AuditorId);
+                builder.Entity<AuditorTeams>()
+                    .HasOne(a => a.Auditor)
+                    .WithMany(at => at.AuditorTeams)
+                    .HasForeignKey(at => at.AuditorId);
 
-            builder.Entity<AuditableOffices>()
-                .HasKey(ao => new { ao.AuditScheduleId, ao.OfficeId });
+                builder.Entity<AuditableOffices>()
+                    .HasKey(ao => new { ao.AuditScheduleId, ao.OfficeId });
 
-            builder.Entity<AuditableOffices>()
-                .HasOne(ao => ao.AuditSchedule)
-                .WithMany(a => a.AuditableOffices)
-                .HasForeignKey(a => a.AuditScheduleId);
+                builder.Entity<AuditableOffices>()
+                    .HasOne(ao => ao.AuditSchedule)
+                    .WithMany(a => a.AuditableOffices)
+                    .HasForeignKey(a => a.AuditScheduleId);
 
-            builder.Entity<AuditableOffices>()
-                .HasOne(ao => ao.Office)
-                .WithMany(o => o.AuditableOffices)
-                .HasForeignKey(ao => ao.OfficeId);
+                builder.Entity<AuditableOffices>()
+                    .HasOne(ao => ao.Office)
+                    .WithMany(o => o.AuditableOffices)
+                    .HasForeignKey(ao => ao.OfficeId);
 
-            builder.Entity<Office>()
-               .HasOne(o => o.ParentOffice)
-               .WithMany()
-               .HasForeignKey(o => o.ParentOfficeId)
-               .OnDelete(DeleteBehavior.NoAction);
+                builder.Entity<Office>()
+                   .HasOne(o => o.ParentOffice)
+                   .WithMany()
+                   .HasForeignKey(o => o.ParentOfficeId)
+                   .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<PgsSignatoryTemplate>()
-                .HasOne(p => p.Office)
-                .WithMany(o => o.SignatoryTemplates)
-                .HasForeignKey(p => p.OfficeId)
-                .OnDelete(DeleteBehavior.NoAction);
+                builder.Entity<PgsSignatoryTemplate>()
+                    .HasOne(p => p.Office)
+                    .WithMany(o => o.SignatoryTemplates)
+                    .HasForeignKey(p => p.OfficeId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<AuditorOffices>()
-                .HasOne(x => x.Office)
-                .WithMany(o => o.AuditorOffices)
-                .HasForeignKey(x => x.OfficeId)
-                .OnDelete(DeleteBehavior.NoAction);
+                builder.Entity<AuditorOffices>()
+                    .HasOne(x => x.Office)
+                    .WithMany(o => o.AuditorOffices)
+                    .HasForeignKey(x => x.OfficeId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<AuditableOffices>()
-                .HasOne(x => x.Office)
-                .WithMany(o => o.AuditableOffices)
-                .HasForeignKey(x => x.OfficeId)
-                .OnDelete(DeleteBehavior.NoAction);
+                builder.Entity<AuditableOffices>()
+                    .HasOne(x => x.Office)
+                    .WithMany(o => o.AuditableOffices)
+                    .HasForeignKey(x => x.OfficeId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
-            builder.Entity<UserOffices>()
-                .HasOne<Office>()
-                .WithMany(o => o.UserOffices)
-                .HasForeignKey(x => x.OfficeId)
-                .OnDelete(DeleteBehavior.NoAction);
+                builder.Entity<UserOffices>()
+                    .HasOne<Office>()
+                    .WithMany(o => o.UserOffices)
+                    .HasForeignKey(x => x.OfficeId)
+                    .OnDelete(DeleteBehavior.NoAction);
 
-            // Configure ISO Standard relationships
-        
+                // Configure ISO Standard relationships
 
-            // Apply seed configurations
-            builder.ApplyConfiguration(new RoleConfiguration());
-            builder.ApplyConfiguration(new UserConfiguration());
-            builder.ApplyConfiguration(new UserRoleConfiguration());
-            builder.ApplyConfiguration(new OfficeTypeConfiguration());
-            builder.ApplyConfiguration(new OfficeConfiguration());
-            builder.ApplyConfiguration(new KeyResultAreaConfiguration());
-            builder.ApplyConfiguration(new PgsSignatoryTemplateConfiguration());
-            builder.ApplyConfiguration(new UserOfficeConfiguration());
-            builder.ApplyConfiguration(new TeamConfiguration());
-            builder.ApplyConfiguration(new AuditorConfiguration());
-            builder.ApplyConfiguration(new PgsPeriodConfiguration());
-            builder.ApplyConfiguration(new AuditorOfficeConfiguration());
-            builder.ApplyConfiguration(new AuditorTeamsConfiguration());
-            builder.ApplyConfiguration(new KraRoadMapRoleConfiguration());
-            builder.ApplyConfiguration(new KraRoadMapPeriodConfiguration());
 
-            // Apply global query filter for soft deletion
-            // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false
-            // Use IgnoreQueryFilters() if you want to bypass this filter in specific queries
-            builder.ApplySoftDeleteQueryFilter();
-        }
+                // Apply seed configurations
+                builder.ApplyConfiguration(new RoleConfiguration());
+                builder.ApplyConfiguration(new UserConfiguration());
+                builder.ApplyConfiguration(new UserRoleConfiguration());
+                builder.ApplyConfiguration(new OfficeTypeConfiguration());
+                builder.ApplyConfiguration(new OfficeConfiguration());
+                builder.ApplyConfiguration(new KeyResultAreaConfiguration());
+                builder.ApplyConfiguration(new PgsSignatoryTemplateConfiguration());
+                builder.ApplyConfiguration(new UserOfficeConfiguration());
+                builder.ApplyConfiguration(new TeamConfiguration());
+                builder.ApplyConfiguration(new AuditorConfiguration());
+                builder.ApplyConfiguration(new PgsPeriodConfiguration());
+                builder.ApplyConfiguration(new AuditorOfficeConfiguration());
+                builder.ApplyConfiguration(new AuditorTeamsConfiguration());
+                builder.ApplyConfiguration(new KraRoadMapRoleConfiguration());
+                builder.ApplyConfiguration(new KraRoadMapPeriodConfiguration());
+
+
+                // Audit Plan configurations
+
+
+                // ISO Standard configurations
+                builder.ApplyConfiguration(new IsoStandardConfigurations());
+
+                // Apply global query filter for soft deletion
+                // This will ensure that all entities implementing ISoftDeletable are filtered by IsDeleted = false
+                // Use IgnoreQueryFilters() if you want to bypass this filter in specific queries
+                builder.ApplySoftDeleteQueryFilter();
+            }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder
