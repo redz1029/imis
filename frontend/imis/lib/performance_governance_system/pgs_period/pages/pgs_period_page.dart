@@ -451,7 +451,7 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: const Text('Process Core & Support Information'),
+        title: const Text('PGS Period Information'),
         backgroundColor: mainBgColor,
         elevation: 0,
       ),
