@@ -4,8 +4,8 @@ import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
-import 'package:imis/performance_governance_system/key_result_area/services/key_result_area_service.dart';
+import 'package:imis/performance_governance_system/process_core_support/models/key_result_area.dart';
+import 'package:imis/performance_governance_system/process_core_support/services/key_result_area_service.dart';
 import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
@@ -512,7 +512,7 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: 4),
+                                    gap4px,
                                     Row(
                                       children: [
                                         Text(
@@ -525,14 +525,14 @@ class ProcessCoreSupportPageState extends State<ProcessCoreSupportPage> {
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: 4),
+                                    gap4px,
                                     Row(
                                       children: [
                                         Text(
                                           "Strategic Objectives: ",
                                           style: TextStyle(color: Colors.grey),
                                         ),
-                                        SizedBox(width: 6),
+                                        gap4px,
                                         Expanded(
                                           child: Text(
                                             kra.strategicObjective ?? '',

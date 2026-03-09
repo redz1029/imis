@@ -457,7 +457,7 @@ class UserProfileState extends State<UserProfilePage> {
                           width: 450,
                           height: 65,
                           child: DropdownButtonFormField<String>(
-                            value:
+                            initialValue:
                                 prefixController.text.isNotEmpty
                                     ? prefixController.text
                                     : null,

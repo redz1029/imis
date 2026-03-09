@@ -480,74 +480,203 @@ class AuditorMainPageState extends State<AuditorPage> {
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: const [
-                      DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(label: Text('Name'), size: ColumnSize.L),
-                      DataColumn(label: Text('Description')),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var auditor = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
-                          final matchUserName = userList.firstWhere(
-                            (user) => user.id == auditor.userId,
-                            orElse:
-                                () => User(
-                                  id: 'unknown',
-                                  fullName: 'Unknown',
-                                  position: 'position',
-                                ),
-                          );
-                          final userName = matchUserName.fullName;
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
-                              DataCell(Text(auditor.name ?? '')),
-                              DataCell(Text(userName)),
-                              DataCell(
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () {
-                                        showFormDialog(
-                                          id: auditor.id.toString(),
-                                          name: auditor.name ?? '',
-                                          selectedUserId: auditor.userId ?? '',
-                                          isActive: auditor.isActive,
-                                        );
-                                      },
+                  child:
+                      isMobile
+                          ? ListView.separated(
+                            itemCount: filteredList.length,
+                            separatorBuilder: (context, index) => Divider(),
+                            itemBuilder: (context, index) {
+                              var auditor = filteredList[index];
+                              int itemNumber =
+                                  ((_currentPage - 1) * _pageSize) + index + 1;
+                              final matchUserName = userList.firstWhere(
+                                (user) => user.id == auditor.userId,
+                                orElse:
+                                    () => User(
+                                      id: 'unknown',
+                                      fullName: 'Unknown',
+                                      position: 'position',
                                     ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
-                                      ),
-                                      onPressed: () {
-                                        showDeleteDialog(auditor.id.toString());
-                                      },
+                              );
+                              final userName = matchUserName.fullName;
+                              return Padding(
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          '$itemNumber',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                        ),
+                                        PopupMenuButton<String>(
+                                          color: mainBgColor,
+                                          tooltip: 'Show actions',
+                                          icon: Icon(Icons.more_vert_outlined),
+                                          onSelected: (value) {
+                                            if (value == 'edit') {
+                                              showFormDialog(
+                                                id: auditor.id.toString(),
+                                                name: auditor.name ?? '',
+                                                selectedUserId:
+                                                    auditor.userId ?? '',
+                                                isActive: auditor.isActive,
+                                              );
+                                            } else if (value == 'delete') {
+                                              showDeleteDialog(
+                                                auditor.id.toString(),
+                                              );
+                                            }
+                                          },
+                                          itemBuilder:
+                                              (context) => [
+                                                PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.edit,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Edit'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.delete,
+                                                        size: 18,
+                                                        color: primaryColor,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Delete'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Name:',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(auditor.name ?? ''),
+                                        ),
+                                      ],
+                                    ),
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'User Name:',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Expanded(child: Text(userName)),
+                                      ],
                                     ),
                                   ],
                                 ),
+                              );
+                            },
+                          )
+                          : DataTable2(
+                            columnSpacing: isMobile ? 16 : 40,
+                            headingRowColor: WidgetStatePropertyAll(
+                              secondaryColor,
+                            ),
+                            dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                            headingTextStyle: const TextStyle(color: grey),
+                            horizontalMargin: 12,
+                            minWidth: constraints.maxWidth,
+                            fixedTopRows: 1,
+                            border: TableBorder(
+                              horizontalInside: BorderSide(
+                                color: Colors.grey.shade100,
                               ),
+                            ),
+                            columns: const [
+                              DataColumn2(label: Text('#'), fixedWidth: 40),
+                              DataColumn2(
+                                label: Text('Name'),
+                                size: ColumnSize.L,
+                              ),
+                              DataColumn(label: Text('User Name')),
+                              DataColumn(label: Text('Actions')),
                             ],
-                          );
-                        }).toList(),
-                  ),
+                            rows:
+                                filteredList.asMap().entries.map((entry) {
+                                  int index = entry.key;
+                                  var auditor = entry.value;
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  final matchUserName = userList.firstWhere(
+                                    (user) => user.id == auditor.userId,
+                                    orElse:
+                                        () => User(
+                                          id: 'unknown',
+                                          fullName: 'Unknown',
+                                          position: 'position',
+                                        ),
+                                  );
+                                  final userName = matchUserName.fullName;
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(Text(itemNumber.toString())),
+                                      DataCell(Text(auditor.name ?? '')),
+                                      DataCell(Text(userName)),
+                                      DataCell(
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.edit),
+                                              onPressed: () {
+                                                showFormDialog(
+                                                  id: auditor.id.toString(),
+                                                  name: auditor.name ?? '',
+                                                  selectedUserId:
+                                                      auditor.userId ?? '',
+                                                  isActive: auditor.isActive,
+                                                );
+                                              },
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete,
+                                                color: primaryColor,
+                                              ),
+                                              onPressed: () {
+                                                showDeleteDialog(
+                                                  auditor.id.toString(),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                          ),
                 ),
 
                 Container(

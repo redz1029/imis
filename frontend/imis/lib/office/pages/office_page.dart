@@ -227,7 +227,7 @@ class OfficePageState extends State<OfficePage> {
                 SizedBox(
                   width: 480,
                   child: DropdownButtonFormField<String>(
-                    value: _selectedOfficeType,
+                    initialValue: _selectedOfficeType,
                     decoration: InputDecoration(
                       labelText: 'Office Type',
                       border: OutlineInputBorder(
@@ -496,85 +496,255 @@ class OfficePageState extends State<OfficePage> {
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: const [
-                      DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(label: Text('Office'), size: ColumnSize.L),
-                      DataColumn(label: Text('Office Type')),
-                      DataColumn(label: Text('Parent Office')),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var office = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
+                  child:
+                      isMobile
+                          ? ListView.separated(
+                            itemCount: filteredList.length,
 
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
-                              DataCell(Text(office.name)),
-                              DataCell(
-                                Text(
-                                  _officeService.getOfficeTypeName(
-                                    office.officeTypeId ?? 0,
-                                    officeTypeList,
-                                  ),
+                            separatorBuilder:
+                                (context, index) => const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              var office = filteredList[index];
+
+                              int itemNumber =
+                                  ((_currentPage - 1) * _pageSize) + index + 1;
+
+                              return Padding(
+                                padding: const EdgeInsetsGeometry.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
                                 ),
-                              ),
-                              DataCell(
-                                Text(
-                                  _officeService.getParentOfficeName(
-                                    office.parentOfficeId,
-                                    parentOfficeList,
-                                  ),
-                                ),
-                              ),
-                              DataCell(
-                                Row(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed:
-                                          () => showFormDialog(
-                                            id: office.id.toString(),
-                                            name: office.name,
-                                            selectedOfficeType:
-                                                office.officeTypeId.toString(),
-
-                                            selectedParentOffice:
-                                                office.parentOfficeId
-                                                    ?.toString() ??
-                                                '0',
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          "$itemNumber",
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
                                           ),
+                                        ),
+
+                                        PopupMenuButton<String>(
+                                          tooltip: 'Show actions',
+                                          icon: Icon(Icons.more_vert_outlined),
+                                          onSelected:
+                                              (value) => {
+                                                if (value == 'edit')
+                                                  {
+                                                    showFormDialog(
+                                                      id: office.id.toString(),
+                                                      name: office.name,
+                                                      selectedOfficeType:
+                                                          office.officeTypeId
+                                                              .toString(),
+
+                                                      selectedParentOffice:
+                                                          office.parentOfficeId
+                                                              ?.toString() ??
+                                                          '0',
+                                                    ),
+                                                  }
+                                                else if (value == 'delete')
+                                                  {
+                                                    showDeleteDialog(
+                                                      office.id.toString(),
+                                                    ),
+                                                  },
+                                              },
+                                          itemBuilder:
+                                              (contex) => [
+                                                const PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.edit,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Edit'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.delete,
+                                                        size: 18,
+                                                        color: primaryColor,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Delete'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                        ),
+                                      ],
                                     ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
-                                      ),
-                                      onPressed: () {
-                                        showDeleteDialog(office.id.toString());
-                                      },
+                                    const SizedBox(height: 6),
+                                    Row(
+                                      children: [
+                                        const Text(
+                                          'Office Name:',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            office.name,
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    gap4px,
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Office Type:',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            _officeService.getOfficeTypeName(
+                                              office.officeTypeId ?? 0,
+                                              officeTypeList,
+                                            ),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    gap4px,
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'Parent Office:',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                        SizedBox(width: 6),
+                                        Expanded(
+                                          child: Text(
+                                            _officeService.getParentOfficeName(
+                                              office.parentOfficeId,
+                                              parentOfficeList,
+                                            ),
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ],
                                 ),
+                              );
+                            },
+                          )
+                          : DataTable2(
+                            columnSpacing: isMobile ? 16 : 40,
+                            headingRowColor: WidgetStatePropertyAll(
+                              secondaryColor,
+                            ),
+                            dataRowColor: WidgetStatePropertyAll(mainBgColor),
+                            headingTextStyle: const TextStyle(color: grey),
+                            horizontalMargin: 12,
+                            minWidth: constraints.maxWidth,
+                            fixedTopRows: 1,
+                            border: TableBorder(
+                              horizontalInside: BorderSide(
+                                color: Colors.grey.shade100,
                               ),
+                            ),
+                            columns: const [
+                              DataColumn2(label: Text('#'), fixedWidth: 40),
+                              DataColumn2(
+                                label: Text('Office'),
+                                size: ColumnSize.L,
+                              ),
+                              DataColumn(label: Text('Office Type')),
+                              DataColumn(label: Text('Parent Office')),
+                              DataColumn(label: Text('Actions')),
                             ],
-                          );
-                        }).toList(),
-                  ),
+                            rows:
+                                filteredList.asMap().entries.map((entry) {
+                                  int index = entry.key;
+                                  var office = entry.value;
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+
+                                  return DataRow(
+                                    cells: [
+                                      DataCell(Text(itemNumber.toString())),
+                                      DataCell(Text(office.name)),
+                                      DataCell(
+                                        Text(
+                                          _officeService.getOfficeTypeName(
+                                            office.officeTypeId ?? 0,
+                                            officeTypeList,
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Text(
+                                          _officeService.getParentOfficeName(
+                                            office.parentOfficeId,
+                                            parentOfficeList,
+                                          ),
+                                        ),
+                                      ),
+                                      DataCell(
+                                        Row(
+                                          children: [
+                                            IconButton(
+                                              icon: const Icon(Icons.edit),
+                                              onPressed:
+                                                  () => showFormDialog(
+                                                    id: office.id.toString(),
+                                                    name: office.name,
+                                                    selectedOfficeType:
+                                                        office.officeTypeId
+                                                            .toString(),
+
+                                                    selectedParentOffice:
+                                                        office.parentOfficeId
+                                                            ?.toString() ??
+                                                        '0',
+                                                  ),
+                                            ),
+                                            IconButton(
+                                              icon: const Icon(
+                                                Icons.delete,
+                                                color: primaryColor,
+                                              ),
+                                              onPressed: () {
+                                                showDeleteDialog(
+                                                  office.id.toString(),
+                                                );
+                                              },
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                }).toList(),
+                          ),
                 ),
 
                 Container(

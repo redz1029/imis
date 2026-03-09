@@ -151,7 +151,7 @@ class _AuditorTeamPageState extends State<AuditorTeamPage> {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                value: selectTeam,
+                                initialValue: selectTeam,
                                 items:
                                     teamList.map((team) {
                                       return DropdownMenuItem<int>(

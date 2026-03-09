@@ -226,7 +226,7 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: DropdownButtonFormField<int>(
-                          value: getDropdownValue(strategicController),
+                          initialValue: getDropdownValue(strategicController),
                           decoration: const InputDecoration(
                             isDense: true,
                             border: OutlineInputBorder(),
@@ -257,7 +257,9 @@ class _BreakthroughWidgetState extends State<BreakthroughWidget> {
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: DropdownButtonFormField<int>(
-                          value: getDropdownValue(breakthroughController),
+                          initialValue: getDropdownValue(
+                            breakthroughController,
+                          ),
                           decoration: const InputDecoration(
                             isDense: true,
                             border: OutlineInputBorder(),

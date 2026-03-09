@@ -275,7 +275,7 @@ class RegistrationPageState extends State<RegistrationPage> {
               SizedBox(
                 height: 65,
                 child: DropdownButtonFormField<String>(
-                  value:
+                  initialValue:
                       prefixController.text.isNotEmpty
                           ? prefixController.text
                           : null,

@@ -539,7 +539,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                                   BorderRadius.circular(8),
                                             ),
                                           ),
-                                          value: schedule['team'],
+                                          initialValue: schedule['team'],
                                           items:
                                               teamList.map((team) {
                                                 return DropdownMenuItem<int>(
@@ -570,7 +570,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                                   BorderRadius.circular(8),
                                             ),
                                           ),
-                                          value: schedule['office'],
+                                          initialValue: schedule['office'],
                                           items:
                                               officeList.map((office) {
                                                 return DropdownMenuItem<int>(
