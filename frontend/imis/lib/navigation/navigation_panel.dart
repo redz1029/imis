@@ -25,7 +25,7 @@ import 'package:imis/audit_schedules/pages/audit_schedules_page.dart';
 import 'package:imis/auditor_team/pages/auditor_team_page.dart';
 import 'package:imis/performance_governance_system/pages/performance_governance_system_page.dart';
 import 'package:imis/user/pages/home_page.dart';
-import 'package:imis/performance_governance_system/key_result_area/pages/process_core_support_page.dart';
+import 'package:imis/performance_governance_system/process_core_support/pages/process_core_support_page.dart';
 import 'package:imis/office/pages/office_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/constant/constant.dart';
@@ -901,6 +901,7 @@ class NavigationPanelState extends State<NavigationPanel> {
                               PermissionString.coreTeam,
                               PermissionString.mcc,
                               PermissionString.osm,
+                              PermissionString.pgsAuditor,
                             ].contains(selectedRole)
                             ? Theme(
                               data: Theme.of(
