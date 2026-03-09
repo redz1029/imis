@@ -72,7 +72,9 @@ namespace IMIS.Infrastructure.Auths
                 new OfficePermission(),
                 new PgsSummaryNarrativePermissions(),
                 new PgsDeliverableAccomplishmentPermission(),
-                new BreakThroughScoringPermission());        
+                new BreakThroughScoringPermission(),
+                new KraRoadMapKpiAccomplishmentPermission(),
+                new KraRoadMapPermission());        
 
             await PermissionSeeder.SeedPermissionForRole<PgsManagerRole, IdentityRole>(_roleManager,
                 new KeyResultAreaPermission(),
@@ -86,7 +88,7 @@ namespace IMIS.Infrastructure.Auths
                 new SWOTAnalysisPermission(),
                 new KraRoadMapPermission(),
                 new KraRoadMapPeriodPermission(),
-                new  KraRoadMapAccomplishmentPermission(),
+                new KraRoadMapAccomplishmentPermission(),
                 new KraRoadMapKpiAccomplishmentPermission());
 
             await PermissionSeeder.SeedPermissionForRole<PgsServiceHead, IdentityRole>(_roleManager,

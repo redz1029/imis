@@ -55,7 +55,8 @@ namespace IMIS.Persistence.KraRoadMapModule
             List<KraRoadMapDeliverable> deliverables;
 
             if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase))
             {
                 deliverables = await _repository.GetDeliverablesAsync(kraid, fromYear, toYear, cancellationToken);
             }
@@ -104,7 +105,8 @@ namespace IMIS.Persistence.KraRoadMapModule
             List<KraRoadMapKpi> kpis;
 
             if (role.Name!.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase) ||
-                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase))
+                role.Name.Equals(new PgsManagerRole().Name, StringComparison.OrdinalIgnoreCase) ||
+                role.Name.Equals(new PgsAuditorRole().Name, StringComparison.OrdinalIgnoreCase))
             {
                 kpis = await _repository.GetKpisAsync(kraid, fromYear, toYear, cancellationToken);
             }
