@@ -1,5 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:imis/auditor/models/auditor.dart';
+import 'package:imis/auditor_team/models/auditor_team.dart';
+import 'package:imis/iso_standard/models/iso_standard.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/performance_governance_system/key_result_area/models/key_result_area.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -66,9 +68,21 @@ class CommonService {
     'Failed to fetch team',
   );
 
+  Future<List<AuditorTeam>> fetchAuditorTeam() => _fetchList(
+    ApiEndpoint().auditorteam,
+    (e) => AuditorTeam.fromJson(e),
+    'Failed to fetch auditor team',
+  );
+
   Future<List<KraRoadmapPeriod>> fetchKraPeriod() => _fetchList(
     ApiEndpoint().kraRoadMapPeriod,
     (e) => KraRoadmapPeriod.fromJson(e),
     'Failed to fetch kra period',
+  );
+
+  Future<List<IsoStandard>> fetchIsoStandards() => _fetchList(
+    ApiEndpoint().isoStandard,
+    (e) => IsoStandard.fromJson(e),
+    'Failed to Iso',
   );
 }
