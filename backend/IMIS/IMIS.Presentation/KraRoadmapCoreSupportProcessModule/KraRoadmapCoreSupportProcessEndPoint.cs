@@ -31,17 +31,21 @@ namespace IMIS.Presentation.KraRoadmapCoreSupportProcessModule
                 var groupedData = await service.ReportGetByIdAsync(kraRoadMapPeriodId, cancellationToken)
                     .ConfigureAwait(false);
 
-                var file = await ReportUtil.GeneratePdfReport<KraProcessGroupedDto>("KraRoadmapAccomplishmentReport", groupedData!, "ReportKraDto",  cancellationToken).ConfigureAwait(false);
+                var file = await ReportUtil.GeneratePdfReport<KraProcessGroupedDto>("KraRoadmapAccomplishmentReport", groupedData!, "ReportKraDto", cancellationToken).ConfigureAwait(false);
 
                 //Force inline rendering in browser with dynamic timestamp filename
                 var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
                 response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
                 return Results.File(file, "application/pdf");
 
-                //return Results.File(file, "application/pdf", $"ReportKraRoadMapDto_{DateTime.Now:yyyyMMddHHmmss}.pdf");               
+                //return Results.File(file, "application/pdf", $"ReportKraRoadMapDto_{DateTime.Now:yyyyMMddHHmmss}.pdf");
+
+
+                //var kraRoadMapDto = await service.ReportGetByIdAsync(kraRoadMapPeriodId, cancellationToken).ConfigureAwait(false);
+                //return kraRoadMapDto != null ? Results.Ok(kraRoadMapDto) : Results.NotFound();
             })
             .WithTags(_kraRoadMapCore)
-            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMapCore), true);
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(0)).Tag(_kraRoadMapCore), true);           
         }
     }
 }

@@ -11,36 +11,52 @@ public class ReportKraDto : BaseDto<KeyResultArea, int>
     public List<ReportKraRoadMapKpiDto>? Kpis { get; set; }
     public List<int>? Years { get; set; }
 
-    public string? KraName1 => Name;  
-    public string? StrategicObjective1 => Kpis?.FirstOrDefault()?.KpiDescription != null ? StrategicObjective : null;
-    public string? KpiDescription1 => Kpis?.ElementAtOrDefault(0)?.KpiDescription;
-    public string? Target1 => Kpis?.ElementAtOrDefault(0)?.Target;
-    public string? BaseLine1 => Kpis?.ElementAtOrDefault(0)?.BaseLine;
+    public List<ReportKraRowDto> BuildList(int kraStatus) 
+    {
+        var list = new List<ReportKraRowDto>();
 
-    public decimal? PercentAccomplished1 => Kpis?.ElementAtOrDefault(0)?.PercentAccomplished?.ElementAtOrDefault(0);
-    public decimal? PercentAccomplished2 => Kpis?.ElementAtOrDefault(0)?.PercentAccomplished?.ElementAtOrDefault(1);
-    public decimal? PercentAccomplished3 => Kpis?.ElementAtOrDefault(0)?.PercentAccomplished?.ElementAtOrDefault(2);
-    public decimal? PercentAccomplished4 => Kpis?.ElementAtOrDefault(0)?.PercentAccomplished?.ElementAtOrDefault(3);
-    public decimal? PercentAccomplished5 => Kpis?.ElementAtOrDefault(0)?.PercentAccomplished?.ElementAtOrDefault(4);
+        if (Kpis == null || Id != kraStatus)
+            return list;
 
-    public string? KraName2 => Name;  
-    public string? KpiDescription2 => Kpis?.ElementAtOrDefault(1)?.KpiDescription;
-    public string? Target2 => Kpis?.ElementAtOrDefault(1)?.Target;
-    public string? BaseLine2 => Kpis?.ElementAtOrDefault(1)?.BaseLine;
+        foreach (var kpi in Kpis)
+        {
+            list.Add(new ReportKraRowDto
+            {
+                KraName = Name,
+                StrategicObjective = StrategicObjective,
+                KpiDescription = kpi.KpiDescription,
+                Target = kpi.Target,
+                BaseLine = kpi.BaseLine,
 
-    public decimal? PercentAccomplished6 => Kpis?.ElementAtOrDefault(1)?.PercentAccomplished?.ElementAtOrDefault(0);
-    public decimal? PercentAccomplished7 => Kpis?.ElementAtOrDefault(1)?.PercentAccomplished?.ElementAtOrDefault(1);
-    public decimal? PercentAccomplished8 => Kpis?.ElementAtOrDefault(1)?.PercentAccomplished?.ElementAtOrDefault(2);
-    public decimal? PercentAccomplished9 => Kpis?.ElementAtOrDefault(1)?.PercentAccomplished?.ElementAtOrDefault(3);
-    public decimal? PercentAccomplished10 => Kpis?.ElementAtOrDefault(1)?.PercentAccomplished?.ElementAtOrDefault(4);
+                PercentAccomplished1 = kpi.PercentAccomplished?.ElementAtOrDefault(0),
+                PercentAccomplished2 = kpi.PercentAccomplished?.ElementAtOrDefault(1),
+                PercentAccomplished3 = kpi.PercentAccomplished?.ElementAtOrDefault(2),
+                PercentAccomplished4 = kpi.PercentAccomplished?.ElementAtOrDefault(3),
+                PercentAccomplished5 = kpi.PercentAccomplished?.ElementAtOrDefault(4)
+            });
+        }
 
-    // Flattened Years
+        return list;
+    }
+
+    public List<ReportKraRowDto> ServiceList => BuildList(KraStatus.Service);
+    public List<ReportKraRowDto> ResearchList => BuildList(KraStatus.Research);
+    public List<ReportKraRowDto> TrainingList => BuildList(KraStatus.Training);
+    public List<ReportKraRowDto> LinkagesList => BuildList(KraStatus.Linkages);
+    public List<ReportKraRowDto> InfrastructureList => BuildList(KraStatus.Infrastructure);
+    public List<ReportKraRowDto> FinancialStewardshipList => BuildList(KraStatus.FinacialStewardship);
+    public List<ReportKraRowDto> InformationCapitalList => BuildList(KraStatus.InformationCapital);
+    public List<ReportKraRowDto> HumanResourceList => BuildList(KraStatus.HumanResource);
+    public List<ReportKraRowDto> SafetyList => BuildList(KraStatus.Safety);
+
+ 
     public int? Year1 => Years?.ElementAtOrDefault(0);
     public int? Year2 => Years?.ElementAtOrDefault(1);
     public int? Year3 => Years?.ElementAtOrDefault(2);
     public int? Year4 => Years?.ElementAtOrDefault(3);
     public int? Year5 => Years?.ElementAtOrDefault(4);
 
+  
     public ReportKraDto()
     {
         Kpis = new List<ReportKraRoadMapKpiDto>();
@@ -55,6 +71,7 @@ public class ReportKraDto : BaseDto<KeyResultArea, int>
         StrategicObjective = kra.StrategicObjective;
     }
 
+
     public override KeyResultArea ToEntity()
     {
         return new KeyResultArea
@@ -65,5 +82,21 @@ public class ReportKraDto : BaseDto<KeyResultArea, int>
             StrategicObjective = StrategicObjective
         };
     }
-}
 
+
+    public class ReportKraRowDto
+    {
+        public string? KraName { get; set; }
+        public string? StrategicObjective { get; set; }
+
+        public string? KpiDescription { get; set; }
+        public string? Target { get; set; }
+        public string? BaseLine { get; set; }
+
+        public decimal? PercentAccomplished1 { get; set; }
+        public decimal? PercentAccomplished2 { get; set; }
+        public decimal? PercentAccomplished3 { get; set; }
+        public decimal? PercentAccomplished4 { get; set; }
+        public decimal? PercentAccomplished5 { get; set; }
+    }
+}
