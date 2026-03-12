@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.OutputCaching;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 
+
 namespace IMIS.Presentation.KraRoadMapModule
 {
     public class KraRoadMapEndPoint : CarterModule
@@ -116,9 +117,9 @@ namespace IMIS.Presentation.KraRoadMapModule
                 ).ConfigureAwait(false);
 
                 //Force inline rendering in browser with dynamic timestamp filename
-                  var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
-                  response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
-                  return Results.File(file, "application/pdf");
+                var fileName = $"ReportPerfomanceGovernanceSystem{DateTime.Now:yyyyMMddHHmmss}.pdf";
+                response.Headers["Content-Disposition"] = $"inline; filename={fileName}";
+                return Results.File(file, "application/pdf");
 
                 //return Results.File(file, "application/pdf", $"ReportKraRoadMapDto_{DateTime.Now:yyyyMMddHHmmss}.pdf");
 
@@ -155,7 +156,7 @@ namespace IMIS.Presentation.KraRoadMapModule
                 return Results.Ok(new { deliverables = result });
             })
             .WithTags(_kraRoadMap)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _kraRoadMapPermission.View));           
         }
     }
 }
