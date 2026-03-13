@@ -194,25 +194,33 @@ namespace IMIS.Persistence.KraRoadMapModule
         public async Task<IEnumerable<KraRoadMap>?> GetAll(CancellationToken cancellationToken)
         {
             return await _entities
-            .AsNoTracking()
-            .Include(x => x.Kra)
-            .Include(x => x.KraRoadMapPeriod)
-            .Include(x => x.Deliverables)
-            .Include(x => x.Kpis)
-            .ToListAsync(cancellationToken)
-            .ConfigureAwait(false);
+                .AsNoTracking()
+                .Include(x => x.Kra)
+                .Include(x => x.KraRoadMapPeriod)
+                .Include(x => x.Deliverables)
+                .Include(x => x.Kpis)
+                .OrderBy(x => ReadOnlyDbContext.Set<KraRoadmapProcessKraAssignment>()
+                    .Where(a => a.KraId == x.KraId)
+                    .Select(a => a.Id)
+                    .FirstOrDefault())
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
         }
 
-        //Get for UserId Role     
+        // Get all for Specific StandardUser Role
         public async Task<List<KraRoadMap>> GetAllForUserIdAsync(string roleId, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<KraRoadMap>()
-            .Include(x => x.Kra)
-            .Include(x => x.KraRoadMapPeriod)
-            .Include(x => x.Deliverables)
-            .Include(x => x.Kpis)
-            .Where(x => x.RoleId == roleId)
-            .ToListAsync(cancellationToken);
+                .Include(x => x.Kra)
+                .Include(x => x.KraRoadMapPeriod)
+                .Include(x => x.Deliverables)
+                .Include(x => x.Kpis)
+                .Where(x => x.RoleId == roleId)
+                .OrderBy(x => ReadOnlyDbContext.Set<KraRoadmapProcessKraAssignment>()
+                    .Where(a => a.KraId == x.KraId)
+                    .Select(a => a.Id)
+                    .FirstOrDefault())
+                .ToListAsync(cancellationToken);
         }
 
         public async Task<List<(long KraRoadMapId, DateTime StartYear, DateTime EndYear)>> GetRoadMapPeriodsAsync(List<KraRoadMapDeliverable> deliverables, CancellationToken cancellationToken)
