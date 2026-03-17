@@ -10,6 +10,7 @@ using IMIS.Application.PgsKraModule;
 using IMIS.Domain;
 using IMIS.Infrastructure.Auths.Roles;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using VaultSharp.V1.SecretsEngines.Database;
 
 namespace IMIS.Persistence.KraRoadMapModule
@@ -295,16 +296,16 @@ namespace IMIS.Persistence.KraRoadMapModule
 
             return groups.SelectMany(g => g.Items ?? new List<KraRoadMapDeliverable>()).ToList();
         }
-      
+       
         public async Task<KraRoadMapDto> SaveOrUpdateAsync(KraRoadMapDto dto, CancellationToken cancellationToken)
         {
             var currentUser = await GetCurrentUserAsync();
             if (currentUser == null)
                 throw new UnauthorizedAccessException("User not found.");
 
-            var roles = await _userManager.GetRolesAsync(currentUser);
+            var userRoleNames = await _userManager.GetRolesAsync(currentUser);
 
-            bool isAdmin = roles.Any(r =>
+            bool isAdmin = userRoleNames.Any(r =>
                 r.Equals(new AdministratorRole().Name, StringComparison.OrdinalIgnoreCase));
 
             var flattenedDeliverables = FlattenDeliverableGroups(dto.Deliverables);
@@ -328,6 +329,15 @@ namespace IMIS.Persistence.KraRoadMapModule
             // ======================================================
             if (isNew)
             {
+                if (!isAdmin)
+                {
+                    if (string.IsNullOrEmpty(dto.RoleId))
+                        throw new InvalidOperationException("RoleId is required.");
+
+                    await ValidateUserRoleAsync(dto.RoleId, userRoleNames);
+
+                    entity.RoleId = dto.RoleId;
+                }            
                 _repository.GetDbContext().Add(entity);
                 await _repository.SaveOrUpdateAsync(entity, cancellationToken);
             }
@@ -349,14 +359,13 @@ namespace IMIS.Persistence.KraRoadMapModule
                     existing.RoleId = originalRoleId;
                 }
                 else
-                {                   
-                    var firstRoleName = roles.FirstOrDefault();
-                    if (!string.IsNullOrEmpty(firstRoleName))
-                    {
-                        var roleEntity = await _roleManager.FindByNameAsync(firstRoleName);
-                        if (roleEntity != null)
-                            existing.RoleId = roleEntity.Id;
-                    }
+                {
+                    if (string.IsNullOrEmpty(dto.RoleId))
+                        throw new InvalidOperationException("RoleId is required.");
+
+                    await ValidateUserRoleAsync(dto.RoleId, userRoleNames);
+
+                    existing.RoleId = dto.RoleId;
                 }
 
                 existing.KraId = kra.Id;
@@ -375,6 +384,19 @@ namespace IMIS.Persistence.KraRoadMapModule
                 Id = entity.Id
             };
         }
+
+        private async Task ValidateUserRoleAsync(string roleId, IList<string> userRoleNames)
+        {
+            var roleEntities = await _roleManager.Roles
+                .Where(r => userRoleNames.Contains(r.Name!))
+                .ToListAsync();
+
+            if (!roleEntities.Any(r => r.Id == roleId))
+            {
+                throw new UnauthorizedAccessException("Invalid role assignment.");
+            }
+        }
+
         private void UpdateDeliverables(KraRoadMap existing, KraRoadMap incoming)
         {
             var incomingIds = incoming.Deliverables?.Select(d => d.Id).ToList() ?? new();
