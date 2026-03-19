@@ -4,6 +4,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/auditor/models/auditor.dart';
 import 'package:imis/auditor_offices/models/auditor_offices.dart';
@@ -98,17 +99,9 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
     for (var auditorOffice in auditorOfficeList) {
       userList.firstWhere(
         (user) => user.id == auditorOffice.auditorId.toString(),
-        orElse: () => User(id: '', fullName: 'Unknown', position: 'position'),
+        orElse: () => User(id: '', fullName: '', position: ''),
       );
     }
-  }
-
-  void _onSearchChanged(String query) {
-    if (_debounce?.isActive ?? false) _debounce!.cancel();
-
-    _debounce = Timer(const Duration(milliseconds: 300), () {
-      filterSearchResults(query);
-    });
   }
 
   Future<void> fetchAuditorOffice({int page = 1, String? searchQuery}) async {
@@ -147,12 +140,12 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
     ) {
       final auditor = auditorList.firstWhere(
         (a) => a.id.toString() == auditorOffice.auditorId.toString(),
-        orElse: () => Auditor(id: 0, name: 'Unknown', userId: ''),
+        orElse: () => Auditor(id: 0, name: '', userId: ''),
       );
 
       final user = userList.firstWhere(
         (u) => u.id.toString() == auditor.userId.toString(),
-        orElse: () => User(id: '', fullName: 'Unknown', position: ''),
+        orElse: () => User(id: '', fullName: '', position: ''),
       );
 
       final office = officenameList.firstWhere(
@@ -160,7 +153,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
         orElse:
             () => Office(
               id: 0,
-              name: 'Unknown',
+              name: '',
               officeTypeId: 0,
               parentOfficeId: 0,
               isActive: true,
@@ -185,7 +178,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
         orElse:
             () => Office(
               id: 0,
-              name: 'Unknown',
+              name: '',
               officeTypeId: 0,
               parentOfficeId: 0,
               isActive: true,
@@ -264,11 +257,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                         final user = userList.firstWhere(
                           (u) => u.id == auditor?.userId,
                           orElse:
-                              () => User(
-                                id: '',
-                                fullName: 'Unknown',
-                                position: '',
-                              ),
+                              () => User(id: '', fullName: '', position: ''),
                         );
 
                         return ListTile(
@@ -281,9 +270,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                     itemAsString: (auditor) {
                       final user = userList.firstWhere(
                         (u) => u.id == auditor?.userId,
-                        orElse:
-                            () =>
-                                User(id: '', fullName: 'Unknown', position: ''),
+                        orElse: () => User(id: '', fullName: '', position: ''),
                       );
                       return user.fullName;
                     },
@@ -298,11 +285,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                               (auditor) =>
                                   auditor.id.toString() == _selectedAuditor,
                               orElse:
-                                  () => Auditor(
-                                    id: 0,
-                                    name: 'Unknown',
-                                    userId: '',
-                                  ),
+                                  () => Auditor(id: 0, name: '', userId: ''),
                             ),
                     validator: (value) {
                       if (value == null) {
@@ -556,19 +539,20 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: Text("Auditor's Office Information"),
-        backgroundColor: mainBgColor,
-      ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              "User Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 SizedBox(
                   height: 30,
@@ -585,7 +569,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search',
+                      labelText: 'Search...',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -601,70 +585,114 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                         horizontal: 5,
                       ),
                     ),
-                    onChanged: _onSearchChanged,
+                    onChanged: filterSearchResults,
                   ),
                 ),
-                if (!isMinimized)
-                  ElevatedButton(
+                const Spacer(),
+                if (!isMobile)
+                  ElevatedButton.icon(
+                    onPressed: () => showFormDialog(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    onPressed: () => showFormDialog(),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 5),
-                        Text('Add New', style: TextStyle(color: Colors.white)),
-                      ],
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
               ],
             ),
-            gap16px,
-            Expanded(
-              child: Column(
-                children: [
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Auditor', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Office', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Period', style: TextStyle(color: grey)),
-                        ),
 
-                        SizedBox(
-                          width: 150,
-                          child: Text('Actions', style: TextStyle(color: grey)),
-                        ),
-                      ],
+            const SizedBox(height: 26),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
                     ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: Column(
-                        children:
-                            filteredList
-                                .asMap()
-                                .map((index, auditorOffice) {
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// DESKTOP HEADER
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Auditor",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Office",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Period",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    const SizedBox(height: 5),
+
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final auditorOffice = filteredList[index];
                                   int itemNumber =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
@@ -677,7 +705,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                         orElse:
                                             () => Office(
                                               id: 0,
-                                              name: 'Unknown',
+                                              name: '',
                                               officeTypeId: 0,
                                               parentOfficeId: 0,
                                               isActive: true,
@@ -691,7 +719,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                     orElse:
                                         () => Auditor(
                                           id: 0,
-                                          name: 'name',
+                                          name: '',
                                           userId: '',
                                         ),
                                   );
@@ -701,7 +729,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                     orElse:
                                         () => User(
                                           id: '',
-                                          fullName: 'Unknown',
+                                          fullName: '',
                                           position: '',
                                         ),
                                   );
@@ -723,56 +751,45 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                   final period =
                                       "${LongDateOnlyConverter().toJson(matchedPeriod.startDate)} - ${LongDateOnlyConverter().toJson(matchedPeriod.endDate)}";
 
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 10,
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(
                                           bottom: BorderSide(
-                                            color: Colors.grey.shade300,
+                                            color: Colors.grey.shade200,
                                           ),
                                         ),
                                       ),
                                       child: Row(
                                         children: [
-                                          SizedBox(
-                                            width: 80,
-                                            child: Text(
-                                              itemNumber.toString(),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
                                           Expanded(
                                             flex: 1,
-                                            child: Text(
-                                              userName,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                                            child: Text("$itemNumber"),
                                           ),
                                           Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              officeName,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                                            flex: 3,
+                                            child: Text(userName),
                                           ),
                                           Expanded(
-                                            flex: 1,
-                                            child: Text(
-                                              period,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
+                                            flex: 2,
+                                            child: Text(officeName),
                                           ),
-                                          SizedBox(
-                                            width: 160,
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(period),
+                                          ),
+
+                                          Expanded(
+                                            flex: 3,
                                             child: Row(
                                               children: [
                                                 IconButton(
-                                                  icon: Icon(Icons.edit),
+                                                  icon: const Icon(
+                                                    Icons.edit_outlined,
+                                                  ),
                                                   onPressed: () {
                                                     showFormDialog(
                                                       id:
@@ -794,9 +811,10 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                                   },
                                                 ),
                                                 IconButton(
-                                                  icon: Icon(
-                                                    Icons.delete,
-                                                    color: primaryColor,
+                                                  icon: const Icon(
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
                                                   ),
                                                   onPressed:
                                                       () => showDeleteDialog(
@@ -809,43 +827,151 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
                                           ),
                                         ],
                                       ),
+                                    );
+                                  }
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) {
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id:
+                                                        auditorOffice.id
+                                                            .toString(),
+                                                    selectedAuditor:
+                                                        auditorOffice.auditorId
+                                                            .toString(),
+
+                                                    selectedOffice:
+                                                        auditorOffice.officeId
+                                                            .toString(),
+                                                    selectedPeriod:
+                                                        auditorOffice
+                                                            .pgsPeriodId
+                                                            .toString(),
+                                                  );
+                                                }
+
+                                                if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    auditorOffice.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    const PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    const PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+
+                                        Text("Auditor: $userName"),
+                                        const SizedBox(height: 4),
+
+                                        Text("Office $officeName"),
+                                        const SizedBox(height: 4),
+
+                                        Text("Period: $period}"),
+                                      ],
                                     ),
                                   );
-                                })
-                                .values
-                                .toList(),
+                                },
+                              ),
+                    ),
+
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchAuditorOffice(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    color: secondaryColor,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        PaginationInfo(
-                          currentPage: _currentPage,
-                          totalItems: _totalCount,
-                          itemsPerPage: _pageSize,
-                        ),
-                        PaginationControls(
-                          currentPage: _currentPage,
-                          totalItems: _totalCount,
-                          itemsPerPage: _pageSize,
-                          isLoading: _isLoading,
-                          onPageChanged:
-                              (page) => fetchAuditorOffice(page: page),
-                        ),
-                        Container(width: 60),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
+      floatingActionButton:
+          isMobile
+              ? FloatingActionButton(
+                backgroundColor: primaryColor,
+                onPressed: () => showFormDialog(),
+                child: Icon(Icons.add, color: Colors.white),
+              )
+              : null,
     );
   }
 

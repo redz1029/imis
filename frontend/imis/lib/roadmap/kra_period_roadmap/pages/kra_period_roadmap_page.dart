@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/roadmap/kra_period_roadmap/models/kra_roadmap_period.dart';
@@ -46,7 +46,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
   @override
   void initState() {
     super.initState();
-    fetchPGSPeriods();
+    fetchKRAPeriods();
     pgsPeriodSearchUtil = FilterSearchResultUtil<KraRoadmapPeriod>(
       paginationUtils: _paginationUtils,
       endpoint: ApiEndpoint().pgsperiod,
@@ -59,7 +59,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
     });
   }
 
-  Future<void> fetchPGSPeriods({int page = 1, String? searchQuery}) async {
+  Future<void> fetchKRAPeriods({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
@@ -157,7 +157,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                 Navigator.pop(context);
                 try {
                   await _pgsPeriodService.deleteKraPeriod(id);
-                  await fetchPGSPeriods();
+                  await fetchKRAPeriods();
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
                     description: Text('KRA Period deleted successfully'),
@@ -187,7 +187,6 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
     bool? isDeleted,
     String? startDate,
     String? endDate,
-    String? remarkrs,
     String? rowVersion,
   }) {
     TextEditingController startDateController = TextEditingController(
@@ -241,7 +240,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                     controller: startDateController,
                     decoration: InputDecoration(
                       focusColor: primaryColor,
-                      labelText: 'Start Date',
+                      labelText: 'Start Year',
                       floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
                       focusedBorder: const OutlineInputBorder(
@@ -250,7 +249,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please select a date';
+                        return 'Please select a start year';
                       }
                       return null;
                     },
@@ -293,7 +292,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                     controller: endDateController,
                     decoration: InputDecoration(
                       focusColor: primaryColor,
-                      labelText: 'End Date',
+                      labelText: 'End Year',
                       floatingLabelStyle: TextStyle(color: primaryColor),
                       border: OutlineInputBorder(),
                       focusedBorder: const OutlineInputBorder(
@@ -302,7 +301,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                     ),
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return 'Please select a date';
+                        return 'Please select a year';
                       }
                       return null;
                     },
@@ -406,7 +405,7 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
                     );
                     await _pgsPeriodService.createOrUpdateKraPeriod(period);
                     setState(() {
-                      fetchPGSPeriods();
+                      fetchKRAPeriods();
                     });
                     MotionToast.success(
                       toastAlignment: Alignment.topCenter,
@@ -429,436 +428,479 @@ class KraPeriodRoadmapPageState extends State<KraPeriodRoadmapPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
-    return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('KRA Period Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "KRA Period Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Row(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 300,
-                          height: 30,
-                          child: TextFormField(
-                            controller: startDateController,
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 12,
-                              ),
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.never,
-                              labelText: 'Search Start Year',
-                              labelStyle: TextStyle(color: grey, fontSize: 14),
-                              border: OutlineInputBorder(),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: lightGrey),
-                              ),
-                              filled: true,
-                              fillColor: secondaryColor,
-                              suffixIcon:
-                                  startDateController.text.isNotEmpty
-                                      ? IconButton(
-                                        icon: Icon(Icons.close),
-                                        onPressed: () {
-                                          setState(() {
-                                            startDateController.clear();
-                                            selectedStartDate = null;
-                                            filterByDateRange();
-                                          });
-                                          FocusScope.of(context).unfocus();
-                                        },
-                                      )
-                                      : Icon(
-                                        Icons.calendar_today,
-                                        color:
-                                            isSearchfocus.hasFocus
-                                                ? primaryColor
-                                                : grey,
-                                      ),
-                            ),
-                            readOnly: true,
-                            onTap: () async {
-                              final DateTime? picked = await showDatePicker(
-                                context: context,
-                                initialDate:
-                                    selectedStartDate ?? DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2101),
-                              );
-                              if (picked != null) {
-                                setState(() {
-                                  selectedStartDate = picked;
-                                  startDateController.text = DateFormat(
-                                    'yyyy-MM-dd',
-                                  ).format(picked);
-                                  filterByDateRange();
-                                });
-                              }
-                            },
+                    SizedBox(
+                      width: 300,
+                      height: 30,
+                      child: TextFormField(
+                        controller: startDateController,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
                           ),
-                        ),
-
-                        SizedBox(width: 15),
-                        SizedBox(
-                          width: 300,
-                          height: 30,
-                          child: TextFormField(
-                            controller: endDateController,
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 12,
-                              ),
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.never,
-                              labelText: 'Search End Year',
-                              labelStyle: TextStyle(color: grey, fontSize: 14),
-                              border: OutlineInputBorder(),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: lightGrey),
-                              ),
-                              filled: true,
-                              fillColor: secondaryColor,
-                              suffixIcon:
-                                  endDateController.text.isNotEmpty
-                                      ? IconButton(
-                                        icon: Icon(Icons.close),
-                                        onPressed: () {
-                                          setState(() {
-                                            endDateController.clear();
-                                            selectedEndDate = null;
-                                            filterByDateRange();
-                                          });
-                                          FocusScope.of(context).unfocus();
-                                        },
-                                      )
-                                      : Icon(
-                                        Icons.calendar_today,
-                                        color:
-                                            isSearchfocus.hasFocus
-                                                ? primaryColor
-                                                : grey,
-                                      ),
-                            ),
-                            readOnly: true,
-                            onTap: () async {
-                              final DateTime? picked = await showDatePicker(
-                                context: context,
-                                initialDate: selectedEndDate ?? DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2101),
-                              );
-                              if (picked != null) {
-                                setState(() {
-                                  selectedEndDate = picked;
-                                  endDateController.text = DateFormat(
-                                    'yyyy-MM-dd',
-                                  ).format(picked);
-                                  filterByDateRange();
-                                });
-                              }
-                            },
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelText: 'Search Start Date',
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          border: OutlineInputBorder(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
                           ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          suffixIcon:
+                              startDateController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: Icon(Icons.close),
+                                    onPressed: () {
+                                      setState(() {
+                                        startDateController.clear();
+                                        selectedStartDate = null;
+                                        filterByDateRange();
+                                      });
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                  : Icon(
+                                    Icons.calendar_today,
+                                    color:
+                                        isSearchfocus.hasFocus
+                                            ? primaryColor
+                                            : grey,
+                                  ),
                         ),
-                      ],
+                        readOnly: true,
+                        onTap: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedStartDate ?? DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2101),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedStartDate = picked;
+                              startDateController.text = DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(picked);
+                              filterByDateRange();
+                            });
+                          }
+                        },
+                      ),
                     ),
 
-                    if (!isMinimized)
-                      ElevatedButton.icon(
-                        onPressed: () => showFormDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 16,
+                    SizedBox(width: 15),
+                    SizedBox(
+                      width: 300,
+                      height: 30,
+                      child: TextFormField(
+                        controller: endDateController,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelText: 'Search End Date',
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          border: OutlineInputBorder(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
                           ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          suffixIcon:
+                              endDateController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: Icon(Icons.close),
+                                    onPressed: () {
+                                      setState(() {
+                                        endDateController.clear();
+                                        selectedEndDate = null;
+                                        filterByDateRange();
+                                      });
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                  : Icon(
+                                    Icons.calendar_today,
+                                    color:
+                                        isSearchfocus.hasFocus
+                                            ? primaryColor
+                                            : grey,
+                                  ),
                         ),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        label: const Text(
-                          'Add New',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        readOnly: true,
+                        onTap: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedEndDate ?? DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2101),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedEndDate = picked;
+                              endDateController.text = DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(picked);
+                              filterByDateRange();
+                            });
+                          }
+                        },
                       ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child:
-                      isMobile
-                          ? ListView.separated(
-                            itemCount: filteredList.length,
-                            separatorBuilder: (context, index) => Divider(),
-                            itemBuilder: (context, index) {
-                              var kraPeriod = filteredList[index];
-                              int itemNumber =
-                                  ((_currentPage - 1) * _pageSize) + index + 1;
 
-                              return Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "$itemNumber",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        PopupMenuButton<String>(
-                                          color: mainBgColor,
-                                          tooltip: 'Show actions',
-                                          icon: const Icon(
-                                            Icons.more_vert_outlined,
-                                          ),
-                                          onSelected: (value) {
-                                            if (value == 'edit') {
-                                              showFormDialog(
-                                                id: kraPeriod.id.toString(),
-                                                startDate: DateTimeConverter()
-                                                    .toJson(
-                                                      kraPeriod.startYear,
-                                                    ),
-                                                endDate: DateTimeConverter()
-                                                    .toJson(kraPeriod.endYear),
-                                              );
-                                            } else if (value == 'delete') {
-                                              showDeleteDialog(
-                                                kraPeriod.id.toString(),
-                                              );
-                                            }
-                                          },
-                                          itemBuilder:
-                                              (context) => [
-                                                PopupMenuItem(
-                                                  value: 'edit',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.edit,
-                                                        size: 18,
-                                                      ),
-                                                      SizedBox(width: 8),
-                                                      Text('Edit'),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem(
-                                                  value: 'delete',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.delete,
-                                                        size: 18,
-                                                        color: primaryColor,
-                                                      ),
-                                                      SizedBox(width: 8),
-                                                      Text('Delete'),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Start Date: ",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            DateTimeConverter().toJson(
-                                              kraPeriod.startYear,
-                                            ),
-
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    gap4px,
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "End Date: ",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            DateTimeConverter().toJson(
-                                              kraPeriod.endYear,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          )
-                          : DataTable2(
-                            columnSpacing: isMobile ? 16 : 40,
-                            headingRowColor: WidgetStatePropertyAll(
-                              secondaryColor,
-                            ),
-                            dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                            headingTextStyle: const TextStyle(color: grey),
-                            horizontalMargin: 12,
-                            minWidth: constraints.maxWidth,
-                            fixedTopRows: 1,
-                            border: TableBorder(
-                              horizontalInside: BorderSide(
-                                color: Colors.grey.shade100,
+                const Spacer(),
+                if (!isMobile)
+                  ElevatedButton.icon(
+                    onPressed: () => showFormDialog(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 26),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// DESKTOP HEADER
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-                            columns: const [
-                              DataColumn2(label: Text('#'), fixedWidth: 40),
-                              DataColumn2(
-                                label: Text('Start Date'),
-                                size: ColumnSize.L,
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Start Date",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              DataColumn(label: Text('End Date')),
-                              DataColumn(label: Text('Actions')),
-                            ],
-                            rows:
-                                filteredList.asMap().entries.map((entry) {
-                                  int index = entry.key;
-                                  var kraPeriod = entry.value;
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "End Date",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
+
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final kraperiod = filteredList[index];
                                   int itemNumber =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
-
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(Text(itemNumber.toString())),
-                                      DataCell(
-                                        Text(
-                                          DateTimeConverter().toJson(
-                                            kraPeriod.startYear,
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
                                           ),
                                         ),
                                       ),
-                                      DataCell(
-                                        Text(
-                                          DateTimeConverter().toJson(
-                                            kraPeriod.endYear,
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
                                           ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              DateTimeConverter().toJson(
+                                                kraperiod.startYear,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              DateTimeConverter().toJson(
+                                                kraperiod.endYear,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Edit',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons.edit_outlined,
+                                                    ),
+                                                    onPressed: () {
+                                                      showFormDialog(
+                                                        id:
+                                                            kraperiod.id
+                                                                .toString(),
+                                                        startDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  kraperiod
+                                                                      .startYear,
+                                                                ),
+                                                        endDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  kraperiod
+                                                                      .endYear,
+                                                                ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        kraperiod.id.toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
                                         ),
                                       ),
-
-                                      DataCell(
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
                                         Row(
                                           children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.edit),
-                                              onPressed: () {
-                                                showFormDialog(
-                                                  id: kraPeriod.id.toString(),
-                                                  startDate: DateTimeConverter()
-                                                      .toJson(
-                                                        kraPeriod.startYear,
-                                                      ),
-                                                  endDate: DateTimeConverter()
-                                                      .toJson(
-                                                        kraPeriod.endYear,
-                                                      ),
-                                                );
-                                              },
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.delete,
-                                                color: primaryColor,
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              onPressed: () {
-                                                showDeleteDialog(
-                                                  kraPeriod.id.toString(),
-                                                );
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id: kraperiod.id.toString(),
+                                                    startDate:
+                                                        DateTimeConverter()
+                                                            .toJson(
+                                                              kraperiod
+                                                                  .startYear,
+                                                            ),
+                                                    endDate: DateTimeConverter()
+                                                        .toJson(
+                                                          kraperiod.endYear,
+                                                        ),
+                                                  );
+                                                } else if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    kraperiod.id.toString(),
+                                                  );
+                                                }
                                               },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          DateTimeConverter().toJson(
+                                            kraperiod.startYear,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          DateTimeConverter().toJson(
+                                            kraperiod.endYear,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                      ],
+                                    ),
                                   );
-                                }).toList(),
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
                           ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchKRAPeriods(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
                       ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchPGSPeriods(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
-
       floatingActionButton:
-          isMinimized
+          isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),

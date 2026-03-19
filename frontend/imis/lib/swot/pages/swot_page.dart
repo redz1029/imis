@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -12,13 +12,14 @@ import 'package:imis/utils/api_endpoint.dart';
 import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/permission_string.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
+import 'package:imis/widgets/pagination_controls.dart';
+import 'package:imis/widgets/permission_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import '../../common_services/common_service.dart';
 import '../../user/models/user_registration.dart';
 import '../../utils/pagination_util.dart';
 import '../../utils/permission_service.dart';
-import '../../widgets/filter_button_widget.dart';
 
 class SwotPage extends StatefulWidget {
   const SwotPage({super.key});
@@ -129,297 +130,482 @@ class SwotDialogResponsiveState extends State<SwotPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
     bool hasPermission = permissionService.hasPermission(
       AppPermissions.viewSWOTAnalysis,
     );
+    final isMobile = width < 600;
 
     if (!hasPermission) {
       return noPermissionScreen();
     }
+
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('SWOT Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "SWOT Analysis Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                    color: Theme.of(context).cardColor,
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      dropdownColor: Colors.white,
+                      value: _selectedYear,
+                      isDense: true,
+                      icon: const Icon(Icons.keyboard_arrow_down),
+                      items:
+                          SwotYear.years.map((year) {
+                            return DropdownMenuItem(
+                              value: year.toString(),
+                              child: Text(year.toString()),
+                            );
+                          }).toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedYear = value!;
+                          fetchSwot();
+                        });
+                      },
+                    ),
+                  ),
+                ),
+                const Spacer(),
+                if (!isMobile)
+                  PermissionWidget(
+                    permission: AppPermissions.addKraRoadMap,
+                    child: ElevatedButton.icon(
+                      onPressed: () => showSwotDialog(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text(
+                        'Add New',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 26),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          PopupMenuButton<String>(
-                            color: mainBgColor,
-                            offset: const Offset(0, 30),
-                            onCanceled: () {
-                              setState(() {
-                                isMenuOpenYear = false;
-                              });
-                            },
-                            onOpened: () {
-                              setState(() {
-                                isMenuOpenYear = true;
-                              });
-                            },
-                            onSelected: (String value) {
-                              setState(() {
-                                _selectedYear = value;
+                    /// DESKTOP HEADER
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Full Name",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Date",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
 
-                                isMenuOpenYear = false;
-                                fetchSwot();
-                              });
-                            },
-                            itemBuilder: (BuildContext context) {
-                              final updatedYearList = [
-                                ...SwotYear.years.map(
-                                  (y) => {'id': y, 'name': y},
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
                                 ),
-                              ];
-
-                              final searchController = TextEditingController();
-                              ValueNotifier<String> searchQuery = ValueNotifier(
-                                '',
-                              );
-
-                              return [
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  height: kMinInteractiveDimension,
-                                  child: Column(
-                                    children: [
-                                      TextField(
-                                        controller: searchController,
-                                        decoration: const InputDecoration(
-                                          hintText: 'Search year...',
-                                          hintStyle: TextStyle(
-                                            color: Colors.grey,
-                                            fontSize: 12,
-                                          ),
-                                          prefixIcon: Icon(
-                                            Icons.search,
-                                            size: 18,
-                                          ),
-                                          isDense: true,
-                                          border: OutlineInputBorder(),
-                                          contentPadding: EdgeInsets.symmetric(
-                                            vertical: 8,
-                                          ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final swot = filteredList[index];
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  final matchUserName = userList.firstWhere(
+                                    (user) => user.id == swot.userId,
+                                    orElse:
+                                        () => User(
+                                          id: 'unknown',
+                                          fullName: 'Unknown',
+                                          position: 'position',
                                         ),
-                                        onChanged: (value) {
-                                          searchQuery.value =
-                                              value.toLowerCase();
-                                        },
+                                  );
+                                  final userName = matchUserName.fullName;
+
+                                  if (!isMobile) {
+                                    /// DESKTOP ROW
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
                                       ),
-                                      const Divider(height: 16, thickness: 1),
-                                    ],
-                                  ),
-                                ),
-                                PopupMenuItem<String>(
-                                  enabled: false,
-                                  child: ValueListenableBuilder<String>(
-                                    valueListenable: searchQuery,
-                                    builder: (context, query, _) {
-                                      final filteredYears =
-                                          updatedYearList
-                                              .where(
-                                                (y) => y['name']
-                                                    .toString()
-                                                    .toLowerCase()
-                                                    .contains(query),
-                                              )
-                                              .toList();
-
-                                      return ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxHeight:
-                                              MediaQuery.of(
-                                                context,
-                                              ).size.height *
-                                              0.4,
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
                                         ),
-                                        child: SingleChildScrollView(
-                                          child: Column(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children:
-                                                filteredYears.map<Widget>((y) {
-                                                  return ListTile(
-                                                    dense: true,
-                                                    title: Text(
-                                                      y['name'].toString(),
-                                                      style: const TextStyle(
-                                                        color: Colors.black,
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(userName),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              DateFormat(
+                                                'yyyy',
+                                              ).format(swot.postingDate),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                PermissionWidget(
+                                                  permission:
+                                                      AppPermissions
+                                                          .editSWOTAnalysis,
+                                                  child: Tooltip(
+                                                    message: 'Edit',
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons.edit_outlined,
+                                                      ),
+                                                      onPressed: () async {
+                                                        try {
+                                                          final fetchedSwot =
+                                                              await _swotService
+                                                                  .getSwotById(
+                                                                    swot.id
+                                                                        .toString(),
+                                                                  );
+                                                          showSwotDialog(
+                                                            id:
+                                                                fetchedSwot.id
+                                                                    .toString(),
+                                                            userIds: userId,
+                                                            strengths:
+                                                                fetchedSwot
+                                                                    .strengths,
+                                                            weaknesses:
+                                                                fetchedSwot
+                                                                    .weaknesses,
+                                                            opportunities:
+                                                                fetchedSwot
+                                                                    .opportunities,
+                                                            threats:
+                                                                fetchedSwot
+                                                                    .threats,
+                                                            longTermDepartmentStrategicPlan:
+                                                                fetchedSwot
+                                                                    .longTermDepartmentStrategicPlan,
+                                                            immediateNeedsToAchieveVision:
+                                                                fetchedSwot
+                                                                    .immediateNeedsToAchieveVision,
+                                                            departmentAchievementsAndBestPractices:
+                                                                fetchedSwot
+                                                                    .departmentAchievementsAndBestPractices,
+                                                            swotToEdit:
+                                                                fetchedSwot,
+                                                          );
+                                                        } catch (e) {
+                                                          MotionToast.error(
+                                                            description: const Text(
+                                                              "Failed to fetch SWOT details",
+                                                            ),
+                                                            toastAlignment:
+                                                                Alignment
+                                                                    .topCenter,
+                                                          ).show(context);
+                                                        }
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+
+                                                PermissionWidget(
+                                                  permission:
+                                                      AppPermissions
+                                                          .editKraRoadMap,
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      CupertinoIcons
+                                                          .delete_simple,
+                                                      color: Colors.redAccent,
+                                                    ),
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          swot.id.toString(),
+                                                        ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  /// MOBILE ROW
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit' &&
+                                                    permissionService
+                                                        .hasPermission(
+                                                          AppPermissions
+                                                              .editKraRoadMap,
+                                                        )) {
+                                                  try {
+                                                    final fetchedSwot =
+                                                        await _swotService
+                                                            .getSwotById(
+                                                              swot.id
+                                                                  .toString(),
+                                                            );
+                                                    showSwotDialog(
+                                                      id:
+                                                          fetchedSwot.id
+                                                              .toString(),
+                                                      userIds: userId,
+                                                      strengths:
+                                                          fetchedSwot.strengths,
+                                                      weaknesses:
+                                                          fetchedSwot
+                                                              .weaknesses,
+                                                      opportunities:
+                                                          fetchedSwot
+                                                              .opportunities,
+                                                      threats:
+                                                          fetchedSwot.threats,
+                                                      longTermDepartmentStrategicPlan:
+                                                          fetchedSwot
+                                                              .longTermDepartmentStrategicPlan,
+                                                      immediateNeedsToAchieveVision:
+                                                          fetchedSwot
+                                                              .immediateNeedsToAchieveVision,
+                                                      departmentAchievementsAndBestPractices:
+                                                          fetchedSwot
+                                                              .departmentAchievementsAndBestPractices,
+                                                      swotToEdit: fetchedSwot,
+                                                    );
+                                                  } catch (e) {
+                                                    MotionToast.error(
+                                                      description: const Text(
+                                                        "Failed to fetch SWOT details",
+                                                      ),
+                                                      toastAlignment:
+                                                          Alignment.topCenter,
+                                                    ).show(context);
+                                                  }
+                                                }
+
+                                                if (value == 'delete' &&
+                                                    permissionService
+                                                        .hasPermission(
+                                                          AppPermissions
+                                                              .editKraRoadMap,
+                                                        )) {
+                                                  showDeleteDialog(
+                                                    swot.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: PermissionWidget(
+                                                        permission:
+                                                            AppPermissions
+                                                                .viewKraRoadMap,
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .edit_outlined,
+                                                              size: 18,
+                                                            ),
+                                                            SizedBox(width: 8),
+                                                            Text('Edit'),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
-                                                    onTap: () {
-                                                      Navigator.pop(context);
 
-                                                      setState(() {
-                                                        _selectedYear =
-                                                            y['id'].toString();
-
-                                                        fetchSwot();
-                                                      });
-                                                    },
-                                                  );
-                                                }).toList(),
-                                          ),
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: PermissionWidget(
+                                                        permission:
+                                                            AppPermissions
+                                                                .editSWOTAnalysis,
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              CupertinoIcons
+                                                                  .delete_simple,
+                                                              color: Colors.red,
+                                                              size: 18,
+                                                            ),
+                                                            SizedBox(width: 8),
+                                                            Text('Delete'),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
                                         ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ];
-                            },
-
-                            child: FilterButton(
-                              label: _selectedYear ?? '',
-                              isActive: isMenuOpenYear,
-                            ),
+                                        const SizedBox(height: 8),
+                                        Text("Full Name: $userName"),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "Period: ${DateFormat('yyyy').format(swot.postingDate)}",
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: totalCount,
+                            itemsPerPage: _pageSize,
                           ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged: (page) => fetchSwot(page: page),
+                          ),
+                          const SizedBox(width: 60),
                         ],
                       ),
                     ),
-                    if (!isMinimized)
-                      ElevatedButton.icon(
-                        onPressed: () => showSwotDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        label: const Text(
-                          'Add New',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
-                    ),
-                    columns: const [
-                      DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(label: Text('Name'), size: ColumnSize.L),
-                      DataColumn(label: Text('Date')),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var swot = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
-                          final matchUserName = userList.firstWhere(
-                            (user) => user.id == swot.userId,
-                            orElse:
-                                () => User(
-                                  id: 'unknown',
-                                  fullName: 'Unknown',
-                                  position: 'position',
-                                ),
-                          );
-                          final userName = matchUserName.fullName;
-
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
-                              DataCell(Text(userName)),
-                              DataCell(
-                                Text(
-                                  DateFormat('yyyy').format(swot.postingDate),
-                                ),
-                              ),
-                              DataCell(
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () async {
-                                        try {
-                                          final fetchedSwot = await _swotService
-                                              .getSwotById(swot.id.toString());
-                                          showSwotDialog(
-                                            id: fetchedSwot.id.toString(),
-                                            userIds: userId,
-                                            strengths: fetchedSwot.strengths,
-                                            weaknesses: fetchedSwot.weaknesses,
-                                            opportunities:
-                                                fetchedSwot.opportunities,
-                                            threats: fetchedSwot.threats,
-                                            longTermDepartmentStrategicPlan:
-                                                fetchedSwot
-                                                    .longTermDepartmentStrategicPlan,
-                                            immediateNeedsToAchieveVision:
-                                                fetchedSwot
-                                                    .immediateNeedsToAchieveVision,
-                                            departmentAchievementsAndBestPractices:
-                                                fetchedSwot
-                                                    .departmentAchievementsAndBestPractices,
-                                            swotToEdit: fetchedSwot,
-                                          );
-                                        } catch (e) {
-                                          MotionToast.error(
-                                            description: const Text(
-                                              "Failed to fetch SWOT details",
-                                            ),
-                                            toastAlignment: Alignment.topCenter,
-                                          ).show(context);
-                                        }
-                                      },
-                                    ),
-                                    if (userId == swot.userId ||
-                                        permissionService.currentRole ==
-                                            PermissionString.roleAdmin)
-                                      IconButton(
-                                        icon: const Icon(
-                                          Icons.delete,
-                                          color: primaryColor,
-                                        ),
-                                        onPressed: () {
-                                          showDeleteDialog(swot.id.toString());
-                                        },
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
-                  ),
-                ),
-              ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
+      floatingActionButton:
+          isMobile
+              ? FloatingActionButton(
+                backgroundColor: primaryColor,
+                onPressed: () => showSwotDialog(),
+                child: Icon(Icons.add, color: Colors.white),
+              )
+              : null,
     );
   }
 

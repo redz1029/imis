@@ -1,16 +1,22 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/audit_schedules/models/audit_schedules.dart';
 import 'package:imis/audit_schedules/models/audit_schedules_details.dart';
 import 'package:imis/audit_schedules/models/auditable_office.dart';
-
+import 'package:imis/auditor/models/auditor.dart';
+import 'package:imis/common_services/common_service.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/office/models/office.dart';
 import 'package:imis/team/models/team.dart';
 import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/pagination_util.dart';
+import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/widgets/pagination_controls.dart';
+import 'package:motion_toast/motion_toast.dart';
 import '../../utils/http_util.dart';
+import '../services/audit_schedules_service.dart';
 
 class AuditSchedulesPage extends StatefulWidget {
   const AuditSchedulesPage({super.key});
@@ -20,24 +26,21 @@ class AuditSchedulesPage extends StatefulWidget {
 }
 
 class AuditSchedulesPageState extends State<AuditSchedulesPage> {
-  List<Map<String, dynamic>> auditScheduleList = [];
-  List<Map<String, dynamic>> filteredList = [];
+  final _auditScheduleService = AuditSchedulesService(Dio());
+
+  List<AuditSchedules> auditScheduleList = [];
+  List<AuditSchedules> filteredList = [];
+  final _commonService = CommonService(Dio());
   TextEditingController searchController = TextEditingController();
   final FocusNode isSearchfocus = FocusNode();
-  List<Map<String, dynamic>> filteredListAuditSchedule = [];
-  List<Map<String, dynamic>> filteredListAuditor = [];
   List<Map<String, dynamic>> selectedOffice = [];
-  List<Map<String, dynamic>> officeList = [];
-  List<Map<String, dynamic>> teamList = [];
-  List<Map<String, dynamic>> filteredListTeam = [];
-  List<Map<String, dynamic>> auditorList = [];
-  List<Map<String, dynamic>> auditscheduleDetails = [];
-
+  List<Office> officeList = [];
+  List<Team> teamList = [];
+  List<Auditor> auditorList = [];
+  bool isLoading = false;
   int? selectTeam;
   int? selectAuditor;
   String? selectTeamText;
-
-  final _paginationUtils = PaginationUtil(Dio());
 
   int _currentPage = 1;
   final int _pageSize = 15;
@@ -46,113 +49,32 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
 
   final dio = Dio();
 
-  Future<void> fetchAuditSchedule({int page = 1, String? searchQuery}) async {
+  Future<void> fetchAuditSchedules({int page = 1, String? searchQuery}) async {
     if (_isLoading) return;
 
     setState(() => _isLoading = true);
 
     try {
-      final pageList = await _paginationUtils
-          .fetchPaginatedData<AuditSchedules>(
-            endpoint: ApiEndpoint().auditSchedule,
-            page: page,
-            pageSize: _pageSize,
-            searchQuery: searchQuery,
-            fromJson: (json) => AuditSchedules.fromJson(json),
-          );
+      final pageList = await _auditScheduleService.getAuditSchedule(
+        page: page,
+        pageSize: _pageSize,
+        searchQuery: searchQuery,
+      );
 
       if (mounted) {
         setState(() {
           _currentPage = pageList.page;
           _totalCount = pageList.totalCount;
-          auditScheduleList = pageList.items.map((a) => a.toJson()).toList();
-          filteredListAuditSchedule = List.from(auditScheduleList);
+          auditScheduleList = pageList.items;
+          filteredList = List.from(auditScheduleList);
         });
       }
+    } catch (e) {
+      debugPrint(e.toString());
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-    }
-  }
-
-  Future<void> fetchOffice() async {
-    var url = ApiEndpoint().office;
-
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map((office) => Office.fromJson(office))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            officeList = data.map((office) => office.toJson()).toList();
-            filteredList = List.from(officeList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    }
-  }
-
-  Future<void> fetchTeam() async {
-    var url = ApiEndpoint().team;
-
-    try {
-      final response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Team> data =
-            (response.data as List).map((team) => Team.fromJson(team)).toList();
-
-        if (mounted) {
-          setState(() {
-            teamList = data.map((team) => team.toJson()).toList();
-            filteredListTeam = List.from(teamList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
-    }
-  }
-
-  Future<void> fetchAuditors() async {
-    var url = ApiEndpoint().office;
-
-    try {
-      var response = await AuthenticatedRequest.get(dio, url);
-
-      if (response.statusCode == 200 && response.data is List) {
-        List<Office> data =
-            (response.data as List)
-                .map((auditor) => Office.fromJson(auditor))
-                .toList();
-
-        if (mounted) {
-          setState(() {
-            auditorList = data.map((auditor) => auditor.toJson()).toList();
-            filteredListAuditor = List.from(auditorList);
-          });
-        }
-      } else {
-        debugPrint("Unexpected response format:");
-      }
-    } on DioException {
-      debugPrint("Dio error");
-    } catch (e) {
-      debugPrint("Unexpected error: $e");
     }
   }
 
@@ -168,7 +90,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        fetchAuditSchedule();
+        fetchAuditSchedules();
         selectedOffice.clear();
       } else {
         debugPrint("Response data");
@@ -188,10 +110,27 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
     isSearchfocus.addListener(() {
       setState(() {});
     });
-    fetchOffice();
-    fetchTeam();
-    fetchAuditors();
-    fetchAuditSchedule();
+
+    fetchAuditSchedules();
+
+    () async {
+      setState(() {
+        isLoading = true;
+      });
+
+      final team = await _commonService.fetchTeam();
+      final auditors = await _commonService.fetchAuditors();
+      final office = await _commonService.fetchOffices();
+
+      if (!mounted) return;
+
+      setState(() {
+        teamList = team;
+        auditorList = auditors;
+        officeList = office;
+        isLoading = false;
+      });
+    }();
   }
 
   @override
@@ -201,10 +140,12 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
   }
 
   String getOfficeNameById(int id) {
-    return officeList.firstWhere(
-      (o) => o['id'] == id,
-      orElse: () => {'name': 'Unknown'},
-    )['name'];
+    return officeList
+        .firstWhere(
+          (o) => o.id == id,
+          orElse: () => Office(id: 0, name: 'Unknown'),
+        )
+        .name;
   }
 
   void showFormDialog({
@@ -543,8 +484,8 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                           items:
                                               teamList.map((team) {
                                                 return DropdownMenuItem<int>(
-                                                  value: team['id'],
-                                                  child: Text(team['name']),
+                                                  value: team.id,
+                                                  child: Text(team.name),
                                                 );
                                               }).toList(),
                                           onChanged: (value) {
@@ -574,8 +515,8 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                                           items:
                                               officeList.map((office) {
                                                 return DropdownMenuItem<int>(
-                                                  value: office['id'],
-                                                  child: Text(office['name']),
+                                                  value: office.id,
+                                                  child: Text(office.name),
                                                 );
                                               }).toList(),
                                           onChanged: (value) {
@@ -902,18 +843,18 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                       .where(
                         (office) =>
                             !selectedOffice.any(
-                              (sel) => sel['id'] == office['id'],
+                              (sel) => sel['id'] == office.id,
                             ),
                       )
                       .map((office) {
                         return ListTile(
-                          title: Text(office['name']),
+                          title: Text(office.name ?? ''),
                           trailing: Icon(Icons.add, color: primaryColor),
                           onTap: () {
                             setDialogState(() {
                               selectedOffice.add({
-                                'id': office['id'],
-                                'name': office['name'],
+                                'id': office.id,
+                                'name': office.name,
                               });
                             });
                             Navigator.pop(context);
@@ -934,36 +875,36 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
     );
   }
 
-  void filterSearchResults(String query) {
-    setState(() {
-      filteredList =
-          auditScheduleList
-              .where(
-                (office) =>
-                    office['name']!.toLowerCase().contains(query.toLowerCase()),
-              )
-              .toList();
-    });
-  }
+  // void filterSearchResults(String query) {
+  //   setState(() {
+  //     filteredList =
+  //         auditScheduleList
+  //             .where(
+  //               (office) =>
+  //                   office['name']!.toLowerCase().contains(query.toLowerCase()),
+  //             )
+  //             .toList();
+  //   });
+  // }
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
 
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: Text('Audit Schedules Information'),
-        backgroundColor: mainBgColor,
-      ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              "Audit Schedule Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Search Field
                 SizedBox(
                   height: 30,
                   width: 300,
@@ -979,7 +920,7 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
                       labelStyle: TextStyle(color: grey, fontSize: 14),
-                      labelText: 'Search Audit Schedule',
+                      labelText: 'Search Team',
                       prefixIcon: Icon(
                         Icons.search,
                         color: isSearchfocus.hasFocus ? primaryColor : grey,
@@ -995,261 +936,375 @@ class AuditSchedulesPageState extends State<AuditSchedulesPage> {
                         horizontal: 5,
                       ),
                     ),
-                    onChanged: filterSearchResults,
+                    // onChanged: filterSearchResults,
                   ),
                 ),
-                // Add New Button
-                if (!isMinimized)
-                  ElevatedButton(
+                const Spacer(),
+                if (!isMobile)
+                  ElevatedButton.icon(
+                    onPressed: () => showFormDialog(),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4),
                       ),
                     ),
-                    onPressed: () => showFormDialog(),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add, color: Colors.white),
-                        SizedBox(width: 5),
-                        Text('Add New', style: TextStyle(color: Colors.white)),
-                      ],
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
               ],
             ),
-            gap16px,
+            const SizedBox(height: 26),
             Expanded(
-              child: Column(
-                children: [
-                  // Table Header
-                  Container(
-                    color: secondaryColor,
-                    padding: EdgeInsets.symmetric(vertical: 10, horizontal: 10),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 1,
-                          child: Text('#', style: TextStyle(color: grey)),
-                        ),
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            'Audit Schedule',
-                            style: TextStyle(color: grey),
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// DESKTOP HEADER
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
                           ),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Text('Actions', style: TextStyle(color: grey)),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Audit Title",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
-                  // Audit Schedule List
-                  Expanded(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.vertical,
-                      child: Column(
-                        children:
-                            filteredListAuditSchedule
-                                .asMap()
-                                .map((index, auditSchedule) {
+                      ),
+                    const SizedBox(height: 5),
+
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final auditSchedule = filteredList[index];
                                   int itemNumber =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
-                                  return MapEntry(
-                                    index,
-                                    Container(
-                                      padding: EdgeInsets.symmetric(
-                                        vertical: 1,
-                                        horizontal: 10,
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
                                         border: Border(
                                           bottom: BorderSide(
-                                            color: Colors.grey.shade300,
+                                            color: Colors.grey.shade200,
                                           ),
                                         ),
                                       ),
                                       child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
                                         children: [
                                           Expanded(
                                             flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                itemNumber.toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
+                                            child: Text("$itemNumber"),
                                           ),
                                           Expanded(
                                             flex: 3,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Text(
-                                                (auditSchedule['auditTitle'] ??
-                                                        '')
-                                                    .toString(),
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.normal,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
+                                            child: Text(
+                                              auditSchedule.auditTitle,
                                             ),
                                           ),
+
                                           Expanded(
-                                            flex: 1,
-                                            child: Padding(
-                                              padding: EdgeInsets.only(
-                                                right: 1,
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  IconButton(
-                                                    icon: Icon(Icons.edit),
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Edit',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons.edit_outlined,
+                                                    ),
                                                     onPressed: () {
                                                       showFormDialog(
-                                                        id: auditSchedule['id'],
+                                                        id: auditSchedule.id,
                                                         auditTitle:
-                                                            auditSchedule['auditTitle'],
+                                                            auditSchedule
+                                                                .auditTitle,
                                                         startDate:
-                                                            auditSchedule['startDate'],
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  auditSchedule
+                                                                      .startDate,
+                                                                ),
                                                         endDate:
-                                                            auditSchedule['endDate'],
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  auditSchedule
+                                                                      .endDate,
+                                                                ),
                                                         auditableOffices:
-                                                            auditSchedule['auditableOffices'],
+                                                            auditSchedule
+                                                                .auditableOffices,
                                                         auditSchduleDetails:
-                                                            auditSchedule['auditSchduleDetails'],
+                                                            auditSchedule
+                                                                .auditSchduleDetails,
                                                       );
                                                     },
                                                   ),
+                                                ),
 
-                                                  SizedBox(width: 1),
-                                                  // Delete Button
-                                                  IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: Color.fromARGB(
-                                                        255,
-                                                        221,
-                                                        79,
-                                                        79,
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        auditSchedule.id
+                                                            .toString(),
                                                       ),
-                                                    ),
-                                                    onPressed: () async {
-                                                      final confirmed = await showDialog<
-                                                        bool
-                                                      >(
-                                                        context: context,
-                                                        builder:
-                                                            (
-                                                              ctx,
-                                                            ) => AlertDialog(
-                                                              title: Text(
-                                                                'Confirm Deletion',
-                                                              ),
-                                                              content: Text(
-                                                                'Are you sure you want to delete this audit schedule?',
-                                                              ),
-                                                              actions: [
-                                                                TextButton(
-                                                                  onPressed:
-                                                                      () => Navigator.pop(
-                                                                        ctx,
-                                                                        false,
-                                                                      ),
-                                                                  child: Text(
-                                                                    'Cancel',
-                                                                  ),
-                                                                ),
-                                                                ElevatedButton(
-                                                                  onPressed:
-                                                                      () =>
-                                                                          Navigator.pop(
-                                                                            ctx,
-                                                                            true,
-                                                                          ),
-                                                                  child: Text(
-                                                                    'Delete',
-                                                                  ),
-                                                                ),
-                                                              ],
-                                                            ),
-                                                      );
-
-                                                      if (confirmed == true) {
-                                                        // await deleteAuditSchedule(auditSchedule['id']); // Implement the delete logic
-                                                        // fetchAuditSchedules(); // Refresh the list after deletion
-                                                      }
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
+                                                ),
+                                              ],
                                             ),
                                           ),
                                         ],
                                       ),
+                                    );
+                                  }
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id: auditSchedule.id,
+                                                    auditTitle:
+                                                        auditSchedule
+                                                            .auditTitle,
+                                                    startDate:
+                                                        DateTimeConverter()
+                                                            .toJson(
+                                                              auditSchedule
+                                                                  .startDate,
+                                                            ),
+                                                    endDate: DateTimeConverter()
+                                                        .toJson(
+                                                          auditSchedule.endDate,
+                                                        ),
+                                                    auditableOffices:
+                                                        auditSchedule
+                                                            .auditableOffices,
+                                                    auditSchduleDetails:
+                                                        auditSchedule
+                                                            .auditSchduleDetails,
+                                                  );
+                                                }
+
+                                                if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    auditSchedule.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        // Text(
+                                        //   "Audit Title: ${auditSchedule['auditTitle']}",
+                                        // ),
+                                      ],
                                     ),
                                   );
-                                })
-                                .values
-                                .toList(),
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchAuditSchedules(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.all(10),
-                    color: secondaryColor,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        PaginationInfo(
-                          currentPage: _currentPage,
-                          totalItems: _totalCount,
-                          itemsPerPage: _pageSize,
-                        ),
-                        PaginationControls(
-                          currentPage: _currentPage,
-                          totalItems: _totalCount,
-                          itemsPerPage: _pageSize,
-                          isLoading: _isLoading,
-                          onPageChanged:
-                              (page) => fetchAuditSchedule(page: page),
-                        ),
-                        Container(width: 60),
-                      ],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ],
         ),
       ),
       floatingActionButton:
-          isMinimized
+          isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
                 child: Icon(Icons.add, color: Colors.white),
               )
               : null,
+    );
+  }
+
+  void showDeleteDialog(String id) {
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: mainBgColor,
+          title: Text("Confirm Delete"),
+          content: Text(
+            "Are you sure you want to delete this Team? This action cannot be undone.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text("Cancel", style: TextStyle(color: primaryTextColor)),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                try {
+                  await _auditScheduleService.deleteAuditSchedule(id);
+                  await fetchAuditSchedules();
+                  MotionToast.success(
+                    toastAlignment: Alignment.topCenter,
+                    description: Text('Deleted successfully'),
+                  ).show(context);
+                } catch (e) {
+                  MotionToast.error(description: Text('Failed to Delete'));
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        );
+      },
     );
   }
 }

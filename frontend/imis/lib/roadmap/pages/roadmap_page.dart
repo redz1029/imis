@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/constant/permissions.dart';
@@ -13,6 +13,7 @@ import 'package:imis/roadmap/models/roadmap_deliverables.dart';
 import 'package:imis/roadmap/pages/print_roadmap_page.dart';
 import 'package:imis/roadmap/services/roadmap_service.dart';
 import 'package:imis/utils/permission_service.dart';
+import 'package:imis/widgets/button_filter.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
 import 'package:imis/widgets/permission_widget.dart';
@@ -53,7 +54,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
   final ScrollController _horizontalScrollController = ScrollController();
   final ScrollController _verticalScrollController = ScrollController();
   final permissionService = PermissionService();
-
+  String selectedFilter = "All Process (Core&Support)";
   @override
   void initState() {
     super.initState();
@@ -157,14 +158,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
         roadmapList.where((r) {
           final matchedKra = kraList.firstWhere(
             (kra) => kra.id == r.kraId,
-            orElse:
-                () => KeyResultArea(
-                  0,
-                  'name',
-                  'remarks',
-                  'strategicObjective',
-                  false,
-                ),
+            orElse: () => KeyResultArea(0, '', '', '', false),
           );
 
           final kraName = (matchedKra.name).toLowerCase();
@@ -310,7 +304,7 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                   horizontal: 16,
                 ),
                 decoration: BoxDecoration(
-                  color: maroon,
+                  color: const Color.fromARGB(255, 143, 56, 77),
                   borderRadius: const BorderRadius.vertical(
                     top: Radius.circular(12),
                   ),
@@ -705,16 +699,6 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
               actions: [
                 Builder(
                   builder: (context) {
-                    // final canEdit =
-                    //     (roadmapToEdit == null) ||
-                    //     (roleId == roadmapToEdit.roleId) ||
-                    //     (permissionService.currentRole != null &&
-                    //         permissionService.currentRole ==
-                    //             PermissionString.roleAdmin);
-                    // if (!canEdit) {
-                    //   return const SizedBox.shrink();
-                    // }
-
                     return PermissionWidget(
                       permission: AppPermissions.addKraRoadMap,
                       child: Row(
@@ -1076,348 +1060,216 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
-    bool hasPermission = permissionService.hasPermission(
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+    final hasPermission = permissionService.hasPermission(
       AppPermissions.viewKraRoadMap,
     );
 
-    if (!hasPermission) {
-      return noPermissionScreen();
-    }
+    if (!hasPermission) return noPermissionScreen();
+    List<Roadmap> filteredRoadmaps =
+        selectedFilter == "All Process (Core&Support)"
+            ? roadmapList
+            : roadmapList.where((roadmap) {
+              final kra = kraList.firstWhere(
+                (k) => k.id == roadmap.kraId,
+                orElse: () => KeyResultArea(0, '', '', '', false),
+              );
+              return kra.name.trim().toLowerCase() ==
+                  selectedFilter.trim().toLowerCase();
+            }).toList();
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('Roadmap Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Roadmap Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            gap16px,
+            if (isMobile)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        "Filter by",
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: grey,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      height: 30,
-                      width: 300,
-                      child: TextField(
-                        focusNode: isSearchfocus,
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: lightGrey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
-                          labelStyle: TextStyle(color: grey, fontSize: 14),
-                          labelText: 'Search...',
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: isSearchfocus.hasFocus ? primaryColor : grey,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          filled: true,
-                          fillColor: secondaryColor,
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 5,
+                      Expanded(
+                        child: SizedBox(
+                          height: 38,
+                          child: SearchableDropdown(
+                            items: [
+                              "All Process (Core&Support)",
+                              ...kraList.map((kra) => kra.name),
+                            ],
+                            selectedItem: selectedFilter,
+                            hintText: "Filter KRA",
+                            searchHint: "Search Process...",
+                            onChanged: (value) {
+                              setState(() {
+                                selectedFilter = value;
+                              });
+                            },
                           ),
                         ),
-                        onChanged: filterSearchResults,
+                      ),
+                    ],
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  const Text(
+                    "Filter by",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: grey,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      minWidth: 150,
+                      maxWidth: 400,
+                    ),
+                    child: SizedBox(
+                      height: 38,
+                      child: SearchableDropdown(
+                        items: [
+                          "All Process (Core&Support)",
+                          ...kraList.map((kra) => kra.name),
+                        ],
+                        selectedItem: selectedFilter,
+                        hintText: "Filter KRA",
+                        searchHint: "Search Process...",
+                        onChanged: (value) {
+                          setState(() {
+                            selectedFilter = value;
+                          });
+                        },
                       ),
                     ),
-                    if (!isMinimized)
-                      PermissionWidget(
-                        permission: AppPermissions.addKraRoadMap,
-                        child: ElevatedButton.icon(
-                          onPressed: () => showProcess(),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 10,
-                              horizontal: 16,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
+                  ),
+                  const Spacer(),
+                  if (!isMobile)
+                    PermissionWidget(
+                      permission: AppPermissions.addKraRoadMap,
+                      child: ElevatedButton.icon(
+                        onPressed: () => showProcess(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: primaryColor,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 16,
                           ),
-                          icon: const Icon(Icons.add, color: Colors.white),
-                          label: const Text(
-                            'Add New',
-                            style: TextStyle(color: Colors.white),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
                           ),
                         ),
+                        icon: const Icon(Icons.add, color: Colors.white),
+                        label: const Text(
+                          'Add New',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
+                    ),
+                ],
+              ),
+            const SizedBox(height: 26),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child:
-                      isMobile
-                          ? ListView.separated(
-                            itemCount: filteredList.length,
-                            separatorBuilder:
-                                (context, index) => Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              var roadmap = filteredList[index];
-
-                              int itemNumber =
-                                  ((_currentPage - 1) * _pageSize) + index + 1;
-                              final matchedKra = kraList.firstWhere(
-                                (kra) => kra.id == roadmap.kraId,
-                                orElse:
-                                    () => KeyResultArea(
-                                      0,
-                                      'name',
-                                      'remarks',
-                                      'strategicObjective',
-                                      false,
-                                    ),
-                              );
-
-                              final kraName = matchedKra.name;
-
-                              final matchedKraRoadmap = kraListRoadmap
-                                  .firstWhere(
-                                    (kra) => kra.kraId == roadmap.kraId,
-                                    orElse:
-                                        () => KraRoadmapRole(
-                                          kraId: 0,
-                                          roleId: 'roleId',
-                                          kraName: kraName,
-                                          strategicObjectives: '',
-                                        ),
-                                  );
-
-                              final matchedKraPeriod = kraPeriodList.firstWhere(
-                                (kraPeriod) =>
-                                    kraPeriod.id == roadmap.kraRoadMapPeriodId,
-                                orElse:
-                                    () => KraRoadmapPeriod(
-                                      0,
-                                      DateTime.now(),
-                                      DateTime.now(),
-                                      isDeleted: false,
-                                      rowVersion: '',
-                                    ),
-                              );
-                              final startYear = matchedKraPeriod.startYear.year;
-                              final endYear = matchedKraPeriod.endYear.year;
-                              final kraPeriod = '$startYear - $endYear ';
-                              return Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "$itemNumber",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        PopupMenuButton<String>(
-                                          color: mainBgColor,
-                                          tooltip: 'Show actions',
-                                          icon: const Icon(
-                                            Icons.more_vert_outlined,
-                                          ),
-                                          onSelected: (value) async {
-                                            if (value == 'edit') {
-                                              final Roadmap roadmapDetails =
-                                                  await _roadmapService
-                                                      .getRoadmapId(
-                                                        roadmap.id!,
-                                                      );
-
-                                              showRoadmapFormDialog(
-                                                matchedKraPeriod,
-                                                selectedKra: matchedKraRoadmap,
-                                                roadmapToEdit: roadmapDetails,
-                                              );
-                                            }
-
-                                            if (value == 'preview') {
-                                              final roadMapId =
-                                                  roadmap.id.toString();
-
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder:
-                                                      (context) =>
-                                                          PrintRoadmapPage(
-                                                            roadmapId:
-                                                                roadMapId,
-                                                          ),
-                                                ),
-                                              );
-                                            }
-                                            if (value == 'delete') {
-                                              showDeleteDialog(
-                                                roadmap.id.toString(),
-                                              );
-                                            }
-                                          },
-                                          itemBuilder:
-                                              (context) => [
-                                                PopupMenuItem(
-                                                  value: 'edit',
-                                                  child: PermissionWidget(
-                                                    permission:
-                                                        AppPermissions
-                                                            .viewKraRoadMap,
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(
-                                                          Icons.edit,
-                                                          size: 18,
-                                                        ),
-                                                        SizedBox(width: 8),
-                                                        Text('Edit'),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                const PopupMenuItem(
-                                                  value: 'preview',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons
-                                                            .description_outlined,
-                                                        size: 18,
-                                                      ),
-                                                      SizedBox(width: 8),
-                                                      Text('Print preview'),
-                                                    ],
-                                                  ),
-                                                ),
-
-                                                PopupMenuItem(
-                                                  value: 'delete',
-                                                  child: PermissionWidget(
-                                                    permission:
-                                                        AppPermissions
-                                                            .editKraRoadMap,
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(
-                                                          Icons.delete,
-                                                          color: Color.fromARGB(
-                                                            255,
-                                                            221,
-                                                            79,
-                                                            79,
-                                                          ),
-                                                          size: 18,
-                                                        ),
-                                                        SizedBox(width: 8),
-                                                        Text('Delete'),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          'Process (Core & Support): ',
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        Expanded(child: Text(kraName)),
-                                      ],
-                                    ),
-                                    SizedBox(height: 4),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          'Period: ',
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        Expanded(child: Text(kraPeriod)),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          )
-                          : DataTable2(
-                            columnSpacing: isMobile ? 16 : 40,
-                            headingRowColor: WidgetStatePropertyAll(
-                              secondaryColor,
-                            ),
-                            dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                            headingTextStyle: const TextStyle(color: grey),
-                            horizontalMargin: 12,
-                            minWidth: 700,
-                            fixedTopRows: 1,
-                            border: TableBorder(
-                              horizontalInside: BorderSide(
-                                color: Colors.grey.shade100,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// DESKTOP HEADER
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-                            columns: const [
-                              DataColumn2(label: Text('#'), fixedWidth: 40),
-                              DataColumn2(
-                                label: Text('Process (Core & Support)'),
-                                size: ColumnSize.L,
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Process (Core & Support)",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              DataColumn2(
-                                label: Text('Period'),
-                                size: ColumnSize.L,
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Period",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              DataColumn2(
-                                label: Text('Actions'),
-                                size: ColumnSize.M,
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                            ],
-                            rows:
-                                filteredList.asMap().entries.map((entry) {
-                                  int index = entry.key;
-                                  var roadmap = entry.value;
-                                  int itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
+
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredRoadmaps.length,
+                                itemBuilder: (context, index) {
+                                  final roadmap = filteredRoadmaps[index];
 
                                   final matchedKra = kraList.firstWhere(
                                     (kra) => kra.id == roadmap.kraId,
                                     orElse:
-                                        () => KeyResultArea(
-                                          0,
-                                          'name',
-                                          'remarks',
-                                          'strategicObjective',
-                                          false,
-                                        ),
+                                        () =>
+                                            KeyResultArea(0, '', '', '', false),
                                   );
-
                                   final kraName = matchedKra.name;
-
                                   final matchedKraRoadmap = kraListRoadmap
                                       .firstWhere(
                                         (kra) => kra.kraId == roadmap.kraId,
@@ -1432,9 +1284,8 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
 
                                   final matchedKraPeriod = kraPeriodList
                                       .firstWhere(
-                                        (kraPeriod) =>
-                                            kraPeriod.id ==
-                                            roadmap.kraRoadMapPeriodId,
+                                        (p) =>
+                                            p.id == roadmap.kraRoadMapPeriodId,
                                         orElse:
                                             () => KraRoadmapPeriod(
                                               0,
@@ -1444,138 +1295,303 @@ class RoadmapDialogPageState extends State<RoadmapPage> {
                                               rowVersion: '',
                                             ),
                                       );
-                                  final startYear =
-                                      matchedKraPeriod.startYear.year;
-                                  final endYear = matchedKraPeriod.endYear.year;
-                                  final kraPeriod = '$startYear - $endYear ';
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(
-                                        SizedBox(
-                                          width: 40,
-                                          child: Text(itemNumber.toString()),
-                                        ),
+
+                                  final kraPeriod =
+                                      "${matchedKraPeriod.startYear.year} - ${matchedKraPeriod.endYear.year}";
+
+                                  if (!isMobile) {
+                                    /// DESKTOP ROW
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
                                       ),
-                                      DataCell(Text(kraName)),
-                                      DataCell(Text(kraPeriod)),
-                                      DataCell(
-                                        SizedBox(
-                                          child: Row(
-                                            children: [
-                                              PermissionWidget(
-                                                permission:
-                                                    AppPermissions
-                                                        .viewKraRoadMap,
-                                                child: IconButton(
-                                                  icon: const Icon(Icons.edit),
-
-                                                  onPressed: () async {
-                                                    final Roadmap
-                                                    roadmapDetails =
-                                                        await _roadmapService
-                                                            .getRoadmapId(
-                                                              roadmap.id!,
-                                                            );
-
-                                                    showRoadmapFormDialog(
-                                                      matchedKraPeriod,
-                                                      selectedKra:
-                                                          matchedKraRoadmap,
-                                                      roadmapToEdit:
-                                                          roadmapDetails,
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                              Tooltip(
-                                                message: 'Print Preview',
-                                                child: IconButton(
-                                                  icon: const Icon(
-                                                    Icons.description_outlined,
-                                                  ),
-
-                                                  onPressed: () async {
-                                                    final roadMapId =
-                                                        roadmap.id.toString();
-
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder:
-                                                            (context) =>
-                                                                PrintRoadmapPage(
-                                                                  roadmapId:
-                                                                      roadMapId,
-                                                                ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-
-                                              PermissionWidget(
-                                                permission:
-                                                    AppPermissions
-                                                        .editKraRoadMap,
-                                                child: IconButton(
-                                                  icon: const Icon(
-                                                    Icons.delete,
-                                                    color: primaryColor,
-                                                  ),
-                                                  onPressed: () {
-                                                    showDeleteDialog(
-                                                      roadmap.id.toString(),
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                            ],
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
                                           ),
                                         ),
                                       ),
-                                    ],
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("${index + 1}"),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(matchedKra.name),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(kraPeriod),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                PermissionWidget(
+                                                  permission:
+                                                      AppPermissions
+                                                          .editKraRoadMap,
+                                                  child: Tooltip(
+                                                    message: 'Edit',
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons.edit_outlined,
+                                                      ),
+                                                      onPressed: () async {
+                                                        final roadmapDetails =
+                                                            await _roadmapService
+                                                                .getRoadmapId(
+                                                                  roadmap.id!,
+                                                                );
+                                                        showRoadmapFormDialog(
+                                                          matchedKraPeriod,
+                                                          selectedKra:
+                                                              matchedKraRoadmap,
+                                                          roadmapToEdit:
+                                                              roadmapDetails,
+                                                        );
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+                                                Tooltip(
+                                                  message: 'Print Preview',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons
+                                                          .description_outlined,
+                                                      color: Colors.blueAccent,
+                                                    ),
+                                                    onPressed: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (
+                                                                _,
+                                                              ) => PrintRoadmapPage(
+                                                                roadmapId:
+                                                                    roadmap.id
+                                                                        .toString(),
+                                                              ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+
+                                                PermissionWidget(
+                                                  permission:
+                                                      AppPermissions
+                                                          .editKraRoadMap,
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      CupertinoIcons
+                                                          .delete_simple,
+                                                      color: Colors.redAccent,
+                                                    ),
+                                                    onPressed:
+                                                        () => showDeleteDialog(
+                                                          roadmap.id.toString(),
+                                                        ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  /// MOBILE ROW
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "${index + 1}",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit' &&
+                                                    permissionService
+                                                        .hasPermission(
+                                                          AppPermissions
+                                                              .editKraRoadMap,
+                                                        )) {
+                                                  final roadmapDetails =
+                                                      await _roadmapService
+                                                          .getRoadmapId(
+                                                            roadmap.id!,
+                                                          );
+                                                  showRoadmapFormDialog(
+                                                    matchedKraPeriod,
+                                                    selectedKra:
+                                                        matchedKraRoadmap,
+                                                    roadmapToEdit:
+                                                        roadmapDetails,
+                                                  );
+                                                }
+                                                if (value == 'preview') {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (
+                                                            _,
+                                                          ) => PrintRoadmapPage(
+                                                            roadmapId:
+                                                                roadmap.id
+                                                                    .toString(),
+                                                          ),
+                                                    ),
+                                                  );
+                                                }
+                                                if (value == 'delete' &&
+                                                    permissionService
+                                                        .hasPermission(
+                                                          AppPermissions
+                                                              .editKraRoadMap,
+                                                        )) {
+                                                  showDeleteDialog(
+                                                    roadmap.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: PermissionWidget(
+                                                        permission:
+                                                            AppPermissions
+                                                                .viewKraRoadMap,
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .edit_outlined,
+                                                              size: 18,
+                                                            ),
+                                                            SizedBox(width: 8),
+                                                            Text('Edit'),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    const PopupMenuItem(
+                                                      value: 'preview',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons
+                                                                .description_outlined,
+                                                            size: 18,
+                                                            color:
+                                                                Colors
+                                                                    .blueAccent,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Print preview'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: PermissionWidget(
+                                                        permission:
+                                                            AppPermissions
+                                                                .editKraRoadMap,
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              CupertinoIcons
+                                                                  .delete_simple,
+                                                              color: Colors.red,
+                                                              size: 18,
+                                                            ),
+                                                            SizedBox(width: 8),
+                                                            Text('Delete'),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          "Process (Core & Support): ${matchedKra.name}",
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text("Period: $kraPeriod"),
+                                      ],
+                                    ),
                                   );
-                                }).toList(),
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
                           ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged: (page) => fetchRoadmap(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
                       ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchRoadmap(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
-
       floatingActionButton:
-          isMinimized
-              ? PermissionWidget(
-                permission: AppPermissions.addKraRoadMap,
-                child: FloatingActionButton(
-                  backgroundColor: primaryColor,
-                  onPressed: () => showProcess(),
-                  child: Icon(Icons.add, color: Colors.white),
-                ),
+          isMobile
+              ? FloatingActionButton(
+                backgroundColor: primaryColor,
+                onPressed: () => showProcess(),
+                child: Icon(Icons.add, color: Colors.white),
               )
               : null,
     );

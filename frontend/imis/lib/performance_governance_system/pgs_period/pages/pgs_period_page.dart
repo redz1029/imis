@@ -1,7 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/performance_governance_system/pgs_period/models/pgs_period.dart';
@@ -130,7 +130,6 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
             }).toList();
       });
     } catch (e) {
-      debugPrint('Error filtering by date range: $e');
       setState(() {
         filteredList = List<PgsPeriod>.from(pgsPeriodList);
       });
@@ -447,448 +446,485 @@ class PgsPeriodPageState extends State<PgsPeriodPage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
-    return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('PGS Period Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return Scaffold(
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "PGS Period Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Row(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        SizedBox(
-                          width: 300,
-                          height: 30,
-                          child: TextFormField(
-                            controller: startDateController,
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 12,
-                              ),
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.never,
-                              labelText: 'Search Start Date',
-                              labelStyle: TextStyle(color: grey, fontSize: 14),
-                              border: OutlineInputBorder(),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: lightGrey),
-                              ),
-                              filled: true,
-                              fillColor: secondaryColor,
-                              suffixIcon:
-                                  startDateController.text.isNotEmpty
-                                      ? IconButton(
-                                        icon: Icon(Icons.close),
-                                        onPressed: () {
-                                          setState(() {
-                                            startDateController.clear();
-                                            selectedStartDate = null;
-                                            filterByDateRange();
-                                          });
-                                          FocusScope.of(context).unfocus();
-                                        },
-                                      )
-                                      : Icon(
-                                        Icons.calendar_today,
-                                        color:
-                                            isSearchfocus.hasFocus
-                                                ? primaryColor
-                                                : grey,
-                                      ),
-                            ),
-                            readOnly: true,
-                            onTap: () async {
-                              final DateTime? picked = await showDatePicker(
-                                context: context,
-                                initialDate:
-                                    selectedStartDate ?? DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2101),
-                              );
-                              if (picked != null) {
-                                setState(() {
-                                  selectedStartDate = picked;
-                                  startDateController.text = DateFormat(
-                                    'yyyy-MM-dd',
-                                  ).format(picked);
-                                  filterByDateRange();
-                                });
-                              }
-                            },
+                    SizedBox(
+                      width: 300,
+                      height: 30,
+                      child: TextFormField(
+                        controller: startDateController,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
                           ),
-                        ),
-
-                        SizedBox(width: 15),
-                        SizedBox(
-                          width: 300,
-                          height: 30,
-                          child: TextFormField(
-                            controller: endDateController,
-                            decoration: InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 12,
-                              ),
-                              floatingLabelBehavior:
-                                  FloatingLabelBehavior.never,
-                              labelText: 'Search End Date',
-                              labelStyle: TextStyle(color: grey, fontSize: 14),
-                              border: OutlineInputBorder(),
-                              focusedBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: primaryColor),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderSide: BorderSide(color: lightGrey),
-                              ),
-                              filled: true,
-                              fillColor: secondaryColor,
-                              suffixIcon:
-                                  endDateController.text.isNotEmpty
-                                      ? IconButton(
-                                        icon: Icon(Icons.close),
-                                        onPressed: () {
-                                          setState(() {
-                                            endDateController.clear();
-                                            selectedEndDate = null;
-                                            filterByDateRange();
-                                          });
-                                          FocusScope.of(context).unfocus();
-                                        },
-                                      )
-                                      : Icon(
-                                        Icons.calendar_today,
-                                        color:
-                                            isSearchfocus.hasFocus
-                                                ? primaryColor
-                                                : grey,
-                                      ),
-                            ),
-                            readOnly: true,
-                            onTap: () async {
-                              final DateTime? picked = await showDatePicker(
-                                context: context,
-                                initialDate: selectedEndDate ?? DateTime.now(),
-                                firstDate: DateTime(2000),
-                                lastDate: DateTime(2101),
-                              );
-                              if (picked != null) {
-                                setState(() {
-                                  selectedEndDate = picked;
-                                  endDateController.text = DateFormat(
-                                    'yyyy-MM-dd',
-                                  ).format(picked);
-                                  filterByDateRange();
-                                });
-                              }
-                            },
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelText: 'Search Start Date',
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          border: OutlineInputBorder(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
                           ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          suffixIcon:
+                              startDateController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: Icon(Icons.close),
+                                    onPressed: () {
+                                      setState(() {
+                                        startDateController.clear();
+                                        selectedStartDate = null;
+                                        filterByDateRange();
+                                      });
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                  : Icon(
+                                    Icons.calendar_today,
+                                    color:
+                                        isSearchfocus.hasFocus
+                                            ? primaryColor
+                                            : grey,
+                                  ),
                         ),
-                      ],
+                        readOnly: true,
+                        onTap: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedStartDate ?? DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2101),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedStartDate = picked;
+                              startDateController.text = DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(picked);
+                              filterByDateRange();
+                            });
+                          }
+                        },
+                      ),
                     ),
 
-                    if (!isMinimized)
-                      ElevatedButton.icon(
-                        onPressed: () => showFormDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 16,
+                    SizedBox(width: 15),
+                    SizedBox(
+                      width: 300,
+                      height: 30,
+                      child: TextFormField(
+                        controller: endDateController,
+                        decoration: InputDecoration(
+                          isDense: true,
+                          contentPadding: EdgeInsets.symmetric(
+                            vertical: 8,
+                            horizontal: 12,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
+                          floatingLabelBehavior: FloatingLabelBehavior.never,
+                          labelText: 'Search End Date',
+                          labelStyle: TextStyle(color: grey, fontSize: 14),
+                          border: OutlineInputBorder(),
+                          focusedBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: primaryColor),
                           ),
+                          enabledBorder: OutlineInputBorder(
+                            borderSide: BorderSide(color: lightGrey),
+                          ),
+                          filled: true,
+                          fillColor: secondaryColor,
+                          suffixIcon:
+                              endDateController.text.isNotEmpty
+                                  ? IconButton(
+                                    icon: Icon(Icons.close),
+                                    onPressed: () {
+                                      setState(() {
+                                        endDateController.clear();
+                                        selectedEndDate = null;
+                                        filterByDateRange();
+                                      });
+                                      FocusScope.of(context).unfocus();
+                                    },
+                                  )
+                                  : Icon(
+                                    Icons.calendar_today,
+                                    color:
+                                        isSearchfocus.hasFocus
+                                            ? primaryColor
+                                            : grey,
+                                  ),
                         ),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        label: const Text(
-                          'Add New',
-                          style: TextStyle(color: Colors.white),
-                        ),
+                        readOnly: true,
+                        onTap: () async {
+                          final DateTime? picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedEndDate ?? DateTime.now(),
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime(2101),
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              selectedEndDate = picked;
+                              endDateController.text = DateFormat(
+                                'yyyy-MM-dd',
+                              ).format(picked);
+                              filterByDateRange();
+                            });
+                          }
+                        },
                       ),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child:
-                      isMobile
-                          ? ListView.separated(
-                            itemCount: filteredList.length,
-                            separatorBuilder: (context, index) => Divider(),
-                            itemBuilder: (context, index) {
-                              var period = filteredList[index];
-                              int itemNumber =
-                                  ((_currentPage - 1) * _pageSize) + index + 1;
 
-                              return Padding(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "$itemNumber",
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        PopupMenuButton<String>(
-                                          color: mainBgColor,
-                                          tooltip: 'Show actions',
-                                          icon: const Icon(
-                                            Icons.more_vert_outlined,
-                                          ),
-                                          onSelected: (value) {
-                                            if (value == 'edit') {
-                                              showFormDialog(
-                                                id: period.id.toString(),
-                                                startDate: DateTimeConverter()
-                                                    .toJson(period.startDate),
-                                                endDate: DateTimeConverter()
-                                                    .toJson(period.endDate),
-                                                remarkrs:
-                                                    period.remarks.toString(),
-                                              );
-                                            } else if (value == 'delete') {
-                                              showDeleteDialog(
-                                                period.id.toString(),
-                                              );
-                                            }
-                                          },
-                                          itemBuilder:
-                                              (context) => [
-                                                PopupMenuItem(
-                                                  value: 'edit',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.edit,
-                                                        size: 18,
-                                                      ),
-                                                      SizedBox(width: 8),
-                                                      Text('Edit'),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const PopupMenuItem(
-                                                  value: 'delete',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.delete,
-                                                        size: 18,
-                                                        color: primaryColor,
-                                                      ),
-                                                      SizedBox(width: 8),
-                                                      Text('Delete'),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Start Date: ",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            DateTimeConverter().toJson(
-                                              period.startDate,
-                                            ),
-
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    gap4px,
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "End Date: ",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        SizedBox(width: 6),
-                                        Expanded(
-                                          child: Text(
-                                            DateTimeConverter().toJson(
-                                              period.endDate,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    gap4px,
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "Remarks ",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        gap4px,
-                                        Expanded(
-                                          child: Text(period.remarks ?? ''),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          )
-                          : DataTable2(
-                            columnSpacing: isMobile ? 16 : 40,
-                            headingRowColor: WidgetStatePropertyAll(
-                              secondaryColor,
-                            ),
-                            dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                            headingTextStyle: const TextStyle(color: grey),
-                            horizontalMargin: 12,
-                            minWidth: constraints.maxWidth,
-                            fixedTopRows: 1,
-                            border: TableBorder(
-                              horizontalInside: BorderSide(
-                                color: Colors.grey.shade100,
+                const Spacer(),
+                if (!isMobile)
+                  ElevatedButton.icon(
+                    onPressed: () => showFormDialog(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                    ),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 26),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// DESKTOP HEADER
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-                            columns: const [
-                              DataColumn2(label: Text('#'), fixedWidth: 40),
-                              DataColumn2(
-                                label: Text('Start Date'),
-                                size: ColumnSize.L,
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Start Date",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
-                              DataColumn(label: Text('End Dare')),
-                              DataColumn(label: Text('Remarks')),
-                              DataColumn(label: Text('Actions')),
-                            ],
-                            rows:
-                                filteredList.asMap().entries.map((entry) {
-                                  int index = entry.key;
-                                  var period = entry.value;
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "End Date",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
+
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final pgsperiod = filteredList[index];
                                   int itemNumber =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              DateTimeConverter().toJson(
+                                                pgsperiod.startDate,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              DateTimeConverter().toJson(
+                                                pgsperiod.endDate,
+                                              ),
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Edit',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons.edit_outlined,
+                                                    ),
+                                                    onPressed: () {
+                                                      showFormDialog(
+                                                        id:
+                                                            pgsperiod.id
+                                                                .toString(),
+                                                        startDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  pgsperiod
+                                                                      .startDate,
+                                                                ),
+                                                        endDate:
+                                                            DateTimeConverter()
+                                                                .toJson(
+                                                                  pgsperiod
+                                                                      .endDate,
+                                                                ),
+                                                        remarkrs:
+                                                            pgsperiod.remarks
+                                                                .toString(),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
 
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(Text(itemNumber.toString())),
-                                      DataCell(
-                                        Text(
-                                          DateTimeConverter().toJson(
-                                            period.startDate,
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        pgsperiod.id.toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
                                         ),
                                       ),
-                                      DataCell(
-                                        Text(
-                                          DateTimeConverter().toJson(
-                                            period.endDate,
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(Text(period.remarks ?? '')),
-                                      DataCell(
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
                                         Row(
                                           children: [
-                                            IconButton(
-                                              icon: const Icon(Icons.edit),
-                                              onPressed: () {
-                                                showFormDialog(
-                                                  id: period.id.toString(),
-                                                  startDate: DateTimeConverter()
-                                                      .toJson(period.startDate),
-                                                  endDate: DateTimeConverter()
-                                                      .toJson(period.endDate),
-                                                  remarkrs:
-                                                      period.remarks.toString(),
-                                                );
-                                              },
-                                            ),
-                                            IconButton(
-                                              icon: const Icon(
-                                                Icons.delete,
-                                                color: primaryColor,
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              onPressed: () {
-                                                showDeleteDialog(
-                                                  period.id.toString(),
-                                                );
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id: pgsperiod.id.toString(),
+                                                    startDate:
+                                                        DateTimeConverter()
+                                                            .toJson(
+                                                              pgsperiod
+                                                                  .startDate,
+                                                            ),
+                                                    endDate: DateTimeConverter()
+                                                        .toJson(
+                                                          pgsperiod.endDate,
+                                                        ),
+                                                    remarkrs:
+                                                        pgsperiod.remarks
+                                                            .toString(),
+                                                  );
+                                                } else if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    pgsperiod.id.toString(),
+                                                  );
+                                                }
                                               },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          DateTimeConverter().toJson(
+                                            pgsperiod.startDate,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          DateTimeConverter().toJson(
+                                            pgsperiod.endDate,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                      ],
+                                    ),
                                   );
-                                }).toList(),
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
                           ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchPGSPeriods(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
                       ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchPGSPeriods(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
-
       floatingActionButton:
-          isMinimized
+          isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
