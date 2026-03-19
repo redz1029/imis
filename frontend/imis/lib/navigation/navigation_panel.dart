@@ -4,7 +4,9 @@ import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:imis/constant/role_info.dart';
+import 'package:imis/roadmap/pages/roadmap_page.dart';
 import 'package:imis/scorecard/pages/score_card_report_page.dart';
+import 'package:imis/user/pages/login_page.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,7 +17,6 @@ import 'package:imis/performance_governance_system/deliverable_status_monitoring
 import 'package:imis/performance_governance_system/pgs_signatory_template/pages/pgs_signatory_template_page.dart';
 import 'package:imis/reports/pages/view_summary_narrative_report_page.dart';
 import 'package:imis/roadmap/kra_period_roadmap/pages/kra_period_roadmap_page.dart';
-import 'package:imis/roadmap/pages/roadmap_page.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/swot/pages/swot_page.dart';
 import 'package:imis/user/models/user_registration.dart';
@@ -30,7 +31,6 @@ import 'package:imis/performance_governance_system/process_core_support/pages/pr
 import 'package:imis/office/pages/office_page.dart';
 import 'package:imis/performance_governance_system/pgs_period/pages/pgs_period_page.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/user/pages/login_page.dart';
 import 'package:imis/roles/pages/roles_page.dart';
 import 'package:imis/team/pages/team_page.dart';
 import 'package:imis/user/pages/user_role_page.dart';
@@ -72,6 +72,7 @@ class NavigationPanelState extends State<NavigationPanel> {
   List<String> roleIds = [];
   final dio = Dio();
   int? _hoveredIndex;
+
   @override
   void initState() {
     super.initState();
@@ -419,7 +420,7 @@ class NavigationPanelState extends State<NavigationPanel> {
     );
   }
 
-  void _showRoleSwitchDialog(BuildContext context) {
+  void showRoleSwitchDialog(BuildContext context) {
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
@@ -1483,7 +1484,7 @@ class NavigationPanelState extends State<NavigationPanel> {
         if (!context.mounted) return;
         _viewProfile(context);
       } else if (value == "Switch Role") {
-        _showRoleSwitchDialog(context);
+        _showSwitchRole();
       } else if (value == "change_password") {
         if (!context.mounted) return;
         Navigator.of(context).pushReplacement(

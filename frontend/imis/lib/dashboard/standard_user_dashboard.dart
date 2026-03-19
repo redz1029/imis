@@ -1,121 +1,36 @@
 import 'dart:async';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
-import 'package:imis/performance_governance_system/enum/pgs_status.dart';
-import 'package:imis/performance_governance_system/models/pgs_deliverables.dart';
-import 'package:imis/user/models/user_registration.dart';
-import 'package:imis/utils/api_endpoint.dart';
-import 'package:imis/utils/auth_util.dart';
-import 'package:imis/utils/http_util.dart';
 import 'package:imis/widgets/dynamic_side_column.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
+import '../user/models/user_registration.dart';
+import '../utils/auth_util.dart';
 
 class StandardUserDashboard extends StatefulWidget {
   const StandardUserDashboard({super.key});
 
   @override
-  StandardUserDashboardtate createState() => StandardUserDashboardtate();
+  StandardUserDashboardState createState() => StandardUserDashboardState();
 }
 
-class StandardUserDashboardtate extends State<StandardUserDashboard> {
+class StandardUserDashboardState extends State<StandardUserDashboard> {
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  List<PgsDeliverables> deliverablesList = [];
+
   List<String> office = [];
   String firstName = "firstName";
-  final dio = Dio();
-  int _currentImageIndex = 0;
-  late Timer imageTimer;
-  final List<String> rotatingImages = [
-    'assets/image3.png',
-    'assets/image4.png',
-  ];
+  bool loading = true;
 
   @override
   void initState() {
     super.initState();
-    loadUserNames();
-    loadDeliverables();
-    imageTimer = Timer.periodic(Duration(seconds: 3), (Timer timer) {
-      if (mounted) {
-        setState(() {
-          _currentImageIndex = (_currentImageIndex + 1) % rotatingImages.length;
-        });
-      }
-    });
     _loadUserName();
-    _loadOffice();
   }
 
   @override
   void dispose() {
-    imageTimer.cancel();
     super.dispose();
-  }
-
-  Future<void> _loadOffice() async {
-    UserRegistration? user = await AuthUtil.fetchLoggedUser();
-    List<String>? officeName = await AuthUtil.fetchOfficeNames();
-
-    if (user != null) {
-      setState(() {
-        office = officeName ?? [];
-      });
-    }
-  }
-
-  Future<void> loadDeliverables() async {
-    setState(() => deliverablesList = []);
-
-    try {
-      UserRegistration? user = await AuthUtil.fetchLoggedUser();
-      if (user == null) return;
-
-      final prefs = await SharedPreferences.getInstance();
-      final String? selectedRoleName = prefs.getString('selectedRole');
-      final roles = await AuthUtil.fetchRoles();
-
-      if (roles == null || roles.isEmpty) return;
-
-      var currentRole = roles.first;
-
-      if (selectedRoleName != null) {
-        try {
-          currentRole = roles.firstWhere((r) => r.name == selectedRoleName);
-        } catch (_) {
-          // keep first
-        }
-      }
-
-      final response = await AuthenticatedRequest.get(
-        dio,
-        "${ApiEndpoint().performancegovernancesystem}/user/${user.id}",
-        queryParameters: {
-          "roleId": currentRole.id,
-          "page": 1,
-          "pageSize": 10000,
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List data = response.data;
-
-        final List<PgsDeliverables> allDeliverables =
-            data
-                .expand((item) => (item['pgsDeliverables'] as List))
-                .map((d) => PgsDeliverables.fromJson(d))
-                .toList();
-
-        setState(() {
-          deliverablesList = allDeliverables;
-        });
-      }
-    } catch (e) {
-      debugPrint("Error loading deliverables");
-    }
   }
 
   Future<void> _loadUserName() async {
@@ -133,106 +48,39 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
     }
   }
 
-  Future<void> loadUserNames() async {
-    UserRegistration? user = await AuthUtil.fetchLoggedUser();
-    List<String>? officeName = await AuthUtil.fetchOfficeNames();
-
-    if (user != null) {
-      setState(() {
-        office = officeName ?? [];
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final double width = MediaQuery.of(context).size.width;
-    final bool isMobile = width < 600;
-    final bool isTablet = width >= 600 && width < 1024;
-
     return Scaffold(
-      backgroundColor: mainBgColor,
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child:
-            isMobile
-                ? _buildMobileLayout()
-                : isTablet
-                ? _buildTabletLayout()
-                : _buildDesktopLayout(),
+        padding: const EdgeInsets.all(16),
+        child: SingleChildScrollView(child: _buildMainLayout()),
       ),
     );
   }
 
-  Widget _buildDesktopLayout() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    gap16px,
-                    _buildWelcome(),
-                    gap32px,
-                    _buildStatsRow(),
-                    gap32px,
-                    _buildStrategicMap(),
-                  ],
-                ),
-              ),
-              SizedBox(width: 20),
-              DynamicSideColumn1(
-                /// Tablet layout: stack main content and side column vertically
-                /// to avoid overly narrow cards while still using available width.
-                focusedDay: _focusedDay,
-                selectedDay: _selectedDay,
-                calendarFormat: _calendarFormat,
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                },
-                onFormatChanged: (format) {
-                  setState(() {
-                    _calendarFormat = format;
-                  });
-                },
-                currentImageIndex: _currentImageIndex,
-                rotatingImages: rotatingImages,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  Widget _buildMainLayout() {
+    final width = MediaQuery.of(context).size.width;
+    final bool isMobile = width < 800;
 
-  Widget _buildTabletLayout() {
-    return SingleChildScrollView(
-      child: Column(
+    if (isMobile) {
+      // MOBILE: stack vertically
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          gap16px,
           _buildWelcome(),
-          gap32px,
+          const SizedBox(height: 16),
+          _buildInfoCards(),
+          const SizedBox(height: 16),
           _buildStatsRow(),
-          gap32px,
-          _buildStrategicMap(),
-          gap24px,
+          const SizedBox(height: 16),
           DynamicSideColumn1(
             focusedDay: _focusedDay,
             selectedDay: _selectedDay,
             calendarFormat: _calendarFormat,
-            onDaySelected: (selectedDay, focusedDay) {
+            onDaySelected: (selected, focused) {
               setState(() {
-                _selectedDay = selectedDay;
-                _focusedDay = focusedDay;
+                _selectedDay = selected;
+                _focusedDay = focused;
               });
             },
             onFormatChanged: (format) {
@@ -240,168 +88,304 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                 _calendarFormat = format;
               });
             },
-            currentImageIndex: _currentImageIndex,
-            rotatingImages: rotatingImages,
           ),
         ],
-      ),
-    );
-  }
+      );
+    }
 
-  Widget _buildMobileLayout() {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // LEFT: main content
+        Expanded(
+          flex: 3,
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              gap16px,
               _buildWelcome(),
-              gap32px,
+              const SizedBox(height: 24),
+              _buildInfoCards(),
+              const SizedBox(height: 24),
               _buildStatsRow(),
-              gap12px,
-              _buildStrategicMap(),
-              gap16px,
-              DynamicSideColumn1(
-                focusedDay: _focusedDay,
-                selectedDay: _selectedDay,
-                calendarFormat: _calendarFormat,
-                onDaySelected: (selectedDay, focusedDay) {
-                  setState(() {
-                    _selectedDay = selectedDay;
-                    _focusedDay = focusedDay;
-                  });
-                },
-                onFormatChanged: (format) {
-                  setState(() {
-                    _calendarFormat = format;
-                  });
-                },
-                currentImageIndex: _currentImageIndex,
-                rotatingImages: rotatingImages,
-              ),
             ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
 
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) {
-      return 'Good Morning';
-    } else if (hour < 17) {
-      return 'Good Afternoon';
-    } else {
-      return 'Good Evening';
-    }
+        const SizedBox(width: 24),
+
+        SizedBox(
+          width: 250,
+          child: DynamicSideColumn1(
+            focusedDay: _focusedDay,
+            selectedDay: _selectedDay,
+            calendarFormat: _calendarFormat,
+            onDaySelected: (selected, focused) {
+              setState(() {
+                _selectedDay = selected;
+                _focusedDay = focused;
+              });
+            },
+            onFormatChanged: (format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            },
+          ),
+        ),
+      ],
+    );
   }
 
   Widget _buildWelcome() {
-    final bool isMobile = MediaQuery.of(context).size.width < 600;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isMobile = constraints.maxWidth < 800;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 185, 123, 121),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child:
-          isMobile
-              ? Column(
+        if (isMobile) {
+          return Column(children: [_welcomeCard(), const SizedBox(height: 16)]);
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Flexible(flex: 2, child: _welcomeCard()),
+            const SizedBox(width: 16),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoCards() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final bool isMobile = constraints.maxWidth < 800;
+
+        if (isMobile) {
+          return Column(
+            children: [
+              _info1(),
+              const SizedBox(height: 16),
+              _info2(),
+              const SizedBox(height: 16),
+              _info3(),
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Flexible(child: _info1(), fit: FlexFit.loose),
+            const SizedBox(width: 20),
+            Flexible(child: _info2(), fit: FlexFit.loose),
+            const SizedBox(width: 20),
+            Flexible(child: _info3(), fit: FlexFit.loose),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _info1() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 200),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: const Color(0xFF213C51),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "${_getGreeting()}, ${firstName.trim().split(' ')[0].toLowerCase().replaceFirstMapped(RegExp(r'^[a-z]'), (m) => m.group(0)!.toUpperCase())}",
-                    style: const TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-
-                  gap8px,
-                  Text(
-                    "Welcome to CPeMS - Centralized Performance Electronic Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
+                  const Text(
+                    "We build CRMC together.",
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.9),
+                      color: Color(0xFFE37383),
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Your work matters. Your role changes lives.",
+                    style: TextStyle(
                       fontSize: 14,
+                      color: Theme.of(context).cardColor,
                     ),
-                  ),
-                  gap16px,
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        child: Image.asset(
-                          'assets/image1.png',
-                          height: 120,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      gap12px,
-                      Expanded(
-                        child: Image.asset(
-                          'assets/image2.png',
-                          height: 120,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              )
-              : Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "${_getGreeting()}, ${firstName.toLowerCase().split(' ').map((word) => word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '').join(' ')}",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        gap8px,
-                        Text(
-                          "Welcome to CPeMS - Centralized Performance Electronic Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.9),
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  gap16px,
-                  Image.asset(
-                    'assets/image1.png',
-                    height: 180,
-                    fit: BoxFit.contain,
-                  ),
-                  gap12px,
-                  Image.asset(
-                    'assets/image2.png',
-                    height: 150,
-                    fit: BoxFit.contain,
                   ),
                 ],
               ),
+            ),
+            const SizedBox(width: 10),
+            Flexible(
+              child: Image.asset(
+                'assets/shareGoals.png',
+                height: 90,
+                fit: BoxFit.contain,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _info2() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 200),
+      child: Container(
+        padding: const EdgeInsets.all(30),
+        decoration: BoxDecoration(
+          color: Theme.of(context).cardColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+        ),
+        child: Text(
+          "Performance is everyone's responsibility.",
+          style: TextStyle(
+            color: Color(0xFFE37383),
+            fontSize: 30,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _info3() {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: 200),
+      child: Container(
+        padding: EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+
+          color: Theme.of(context).cardColor,
+        ),
+        child: Stack(
+          children: [
+            Positioned(
+              right: 0,
+              bottom: -10,
+              child: Icon(
+                Icons.auto_awesome,
+                size: 120,
+                color: Colors.amber.withValues(alpha: 0.2),
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "What's New?",
+                  style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  "Discover the latest improvements and features added to CPeMS.",
+                  style: TextStyle(fontSize: 15),
+                ),
+                const SizedBox(height: 14),
+                ElevatedButton.icon(
+                  onPressed: _showWhatsNewDialog,
+                  icon: const Icon(Icons.new_releases),
+                  label: const Text("View Updates"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showWhatsNewDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: const Text("🚀 What's New in CPeMS"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text("Here are the latest updates:"),
+              SizedBox(height: 12),
+              Text("• Improved performance dashboard"),
+              Text("• New employee activity tracking"),
+              Text("• Faster report generation"),
+              Text("• UI improvements and bug fixes"),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Close"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _welcomeCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color.fromARGB(255, 150, 68, 89),
+            Color.fromARGB(255, 167, 80, 101),
+            Color.fromARGB(255, 190, 100, 120),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${getGreeting()}, ${firstName.split(' ')[0]}",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Welcome to CPeMS - Centralized Performance Electronic Management System! Together, we track progress and build a culture of accountability and continuous improvement.",
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.9),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 100),
+          Image.asset('assets/image1.png', height: 150),
+        ],
+      ),
     );
   }
 
   Widget _buildStatsRow() {
-    int total = deliverablesList.length;
-    int direct = deliverablesList.where((d) => d.isDirect).length;
-    int indirect = deliverablesList.where((d) => !d.isDirect).length;
-    int completed =
-        deliverablesList.where((d) => d.status == PgsStatus.completed).length;
     return LayoutBuilder(
       builder: (context, constraints) {
         final bool isNarrow = constraints.maxWidth < 400;
@@ -412,34 +396,33 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
               buildDashboardBox(
                 title: "Total Deliverables",
                 subtitle: office.join(', '),
-                count: "$total",
+                count: "",
                 color: Colors.black,
-                icon: Icons.show_chart,
+                icon: Icons.inventory_outlined,
+                context: context,
               ),
-
               buildDashboardBox(
                 title: "Direct Deliverables",
-                count: "$direct",
+                count: "",
                 color: primaryColor,
                 icon: Icons.directions_outlined,
-                progress: total > 0 ? direct / total : 0,
+                progress: 0,
+                context: context,
               ),
               buildDashboardBox(
                 title: "Indirect Deliverables",
-                count: "$indirect",
+                count: "",
                 color: Colors.orange,
                 icon: Icons.alt_route,
-                progress: total > 0 ? indirect / total : 0,
+                progress: 0,
+                context: context,
               ),
               buildDashboardBox(
-                title: "Total Deliverables",
-                subtitle: "$completed of $total completed",
-                count:
-                    total > 0
-                        ? "${((completed / total) * 100).toStringAsFixed(0)}%"
-                        : "0%",
+                title: "Completion Rate",
+                count: "0%",
                 color: Colors.green,
                 icon: Icons.check_circle_outline,
+                context: context,
               ),
             ],
           );
@@ -450,42 +433,39 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
                 child: buildDashboardBox(
                   title: "Total Deliverables",
                   subtitle: office.join(', '),
-                  count: "$total",
+                  count: "",
                   color: Colors.black,
                   icon: Icons.inventory_outlined,
+                  context: context,
                 ),
               ),
-
               Expanded(
                 child: buildDashboardBox(
                   title: "Direct Deliverables",
-                  count: "$direct",
+                  count: "",
                   color: primaryColor,
                   icon: Icons.directions_outlined,
-                  progress: total > 0 ? direct / total : 0,
+                  progress: 0,
+                  context: context,
                 ),
               ),
-
               Expanded(
                 child: buildDashboardBox(
                   title: "Indirect Deliverables",
-                  count: "$indirect",
+                  count: "",
                   color: Colors.orange,
                   icon: Icons.alt_route,
-                  progress: total > 0 ? indirect / total : 0,
+                  progress: 0,
+                  context: context,
                 ),
               ),
-
               Expanded(
                 child: buildDashboardBox(
                   title: "Completion Rate",
-                  subtitle: "$completed of $total completed",
-                  count:
-                      total > 0
-                          ? "${((completed / total) * 100).toStringAsFixed(0)}%"
-                          : "0%",
+                  count: "0%",
                   color: Colors.green,
                   icon: Icons.check_circle_outline,
+                  context: context,
                 ),
               ),
             ],
@@ -496,26 +476,7 @@ class StandardUserDashboardtate extends State<StandardUserDashboard> {
   }
 }
 
-Widget _buildStrategicMap() {
-  return LayoutBuilder(
-    builder: (context, constraints) {
-      final double maxWidth = constraints.maxWidth;
-
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              child: Image.asset('assets/strat_map.png', fit: BoxFit.contain),
-            ),
-          ),
-        ],
-      );
-    },
-  );
-}
-
+/// Dashboard Box Builder
 Widget buildDashboardBox({
   required String title,
   required String count,
@@ -523,19 +484,19 @@ Widget buildDashboardBox({
   required Color color,
   required IconData icon,
   double? progress,
+  required BuildContext context,
 }) {
   return Card(
-    color: mainBgColor,
+    color: Theme.of(context).cardColor,
     elevation: 0,
     shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(12),
-      side: BorderSide(color: Colors.grey.shade300, width: 1),
+      side: BorderSide(color: Theme.of(context).cardColor, width: 1),
     ),
     child: Container(
       width: double.infinity,
       constraints: const BoxConstraints(minHeight: 160),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -550,7 +511,6 @@ Widget buildDashboardBox({
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color.fromARGB(129, 0, 0, 0),
                   ),
                 ),
               ),
@@ -559,7 +519,6 @@ Widget buildDashboardBox({
             ],
           ),
           const SizedBox(height: 12),
-
           Text(
             count,
             style: TextStyle(
@@ -568,7 +527,6 @@ Widget buildDashboardBox({
               color: color,
             ),
           ),
-
           if (progress != null) ...[
             const SizedBox(height: 8),
             Row(
@@ -585,12 +543,11 @@ Widget buildDashboardBox({
                 const SizedBox(width: 8),
                 Text(
                   "${(progress * 100).toStringAsFixed(1)}%",
-                  style: const TextStyle(fontSize: 12, color: Colors.black54),
+                  style: const TextStyle(fontSize: 12),
                 ),
               ],
             ),
           ],
-
           if (subtitle != null) ...[
             const SizedBox(height: 8),
             Text(

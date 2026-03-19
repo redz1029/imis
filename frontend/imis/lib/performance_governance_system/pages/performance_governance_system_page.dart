@@ -1,5 +1,5 @@
 // ignore_for_file: use_build_context_synchronously, deprecated_member_use
-import 'package:data_table_2/data_table_2.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:imis/constant/permissions.dart';
 import 'package:imis/performance_governance_system/models/pgs_deliverable_history.dart';
 import 'package:imis/performance_governance_system/services/performance_governance_system_service.dart';
@@ -9,6 +9,7 @@ import 'package:imis/utils/permission_service.dart';
 import 'package:imis/widgets/accomplishment_pgs_widget.dart';
 import 'package:imis/widgets/breakthrough_widget.dart';
 import 'package:imis/widgets/build_header_cell.dart';
+import 'package:imis/widgets/button_filter.dart';
 import 'package:imis/widgets/custom_tooltip.dart';
 import 'package:imis/widgets/no_permission_widget.dart';
 import 'package:imis/widgets/pagination_controls.dart';
@@ -30,7 +31,6 @@ import 'package:imis/utils/auth_util.dart';
 import 'package:imis/utils/date_time_converter.dart';
 import 'package:imis/utils/filter_search_result_util.dart';
 import 'package:imis/utils/pagination_util.dart';
-import 'package:imis/widgets/filter_button_widget.dart';
 import 'package:intl/intl.dart';
 import 'package:motion_toast/motion_toast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -786,7 +786,7 @@ class PerformanceGovernanceSystemPageState
         ApiEndpoint().performancegovernancesystemFilter,
         queryParameters: queryParams,
       );
-      debugPrint('Query Params: $queryParams');
+
       if (response.statusCode == 200) {
         final data = response.data;
         final items =
@@ -858,6 +858,13 @@ class PerformanceGovernanceSystemPageState
       officeDisplay = selectedOfficeName;
       officeIdList = selectedOffice ?? "No Office ID";
     });
+  }
+
+  Widget _buildDropdown({required Widget child}) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minWidth: 150, maxWidth: 250),
+      child: SizedBox(height: 38, child: child),
+    );
   }
 
   @override
@@ -1163,744 +1170,434 @@ class PerformanceGovernanceSystemPageState
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
-    bool hasPermission = permissionService.hasPermission(
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+    final hasPermission = permissionService.hasPermission(
       AppPermissions.viewPerformanceGovernanceSystem,
     );
 
-    if (!hasPermission) {
-      return noPermissionScreen();
-    }
+    if (!hasPermission) return noPermissionScreen();
+
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('Performance Governance Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Performance Governance Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            if (isMobile)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Filter by",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: grey,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  /// OFFICE
+                  SizedBox(
+                    height: 38,
+                    child: PermissionWidget(
+                      permission: AppPermissions.viewOffice,
+                      child: SearchableDropdown(
+                        items: [
+                          "All Offices",
+                          ...officeList.map((o) => o.name),
+                        ],
+                        selectedItem:
+                            _selectedOfficeId == null
+                                ? "All Offices"
+                                : officeList
+                                    .firstWhere(
+                                      (o) =>
+                                          o.id.toString() == _selectedOfficeId,
+                                    )
+                                    .name,
+                        hintText: "Office",
+                        searchHint: "Search offices...",
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedOfficeId =
+                                value == "All Offices"
+                                    ? null
+                                    : officeList
+                                        .firstWhere((o) => o.name == value)
+                                        .id
+                                        .toString();
+
+                            fetchPgsFilter();
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  /// START DATE
+                  SizedBox(
+                    height: 38,
+                    child: SearchableDropdown(
+                      items: [
+                        "All Start Date",
+                        ...filteredListPeriod.map(
+                          (p) => _dateConverter.toJson(
+                            DateTime.parse(p['startDate']),
+                          ),
+                        ),
+                      ],
+                      selectedItem: selectedStartDateText ?? "All Start Date",
+                      hintText: "Start Date",
+                      searchHint: "Search start date...",
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == "All Start Date") {
+                            selectedStartPeriod = null;
+                            selectedStartDateText = "All Start Date";
+                          } else {
+                            final selected = filteredListPeriod.firstWhere(
+                              (p) =>
+                                  _dateConverter.toJson(
+                                    DateTime.parse(p['startDate']),
+                                  ) ==
+                                  value,
+                            );
+
+                            selectedStartPeriod = selected['startDate'];
+                            selectedStartDateText = value;
+                          }
+
+                          fetchPgsFilter();
+                        });
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  /// END DATE
+                  SizedBox(
+                    height: 38,
+                    child: SearchableDropdown(
+                      items: [
+                        "All End Date",
+                        ...filteredListPeriod.map(
+                          (p) => _dateConverter.toJson(
+                            DateTime.parse(p['endDate']),
+                          ),
+                        ),
+                      ],
+                      selectedItem: selectedEndDateText ?? "All End Date",
+                      hintText: "End Date",
+                      searchHint: "Search end date...",
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == "All End Date") {
+                            selectedEndDate = null;
+                            selectedEndDateText = "All End Date";
+                          } else {
+                            final selected = filteredListPeriod.firstWhere(
+                              (p) =>
+                                  _dateConverter.toJson(
+                                    DateTime.parse(p['endDate']),
+                                  ) ==
+                                  value,
+                            );
+
+                            selectedEndDate = selected['endDate'];
+                            selectedEndDateText = value;
+                          }
+
+                          fetchPgsFilter();
+                        });
+                      },
+                    ),
+                  ),
+                ],
+              )
+            else
+              Row(
+                children: [
+                  const Text(
+                    "Filter by",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: grey,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  /// OFFICE
+                  _buildDropdown(
+                    child: PermissionWidget(
+                      permission: AppPermissions.viewOffice,
+                      child: SearchableDropdown(
+                        items: [
+                          "All Offices",
+                          ...officeList.map((o) => o.name),
+                        ],
+                        selectedItem:
+                            _selectedOfficeId == null
+                                ? "All Offices"
+                                : officeList
+                                    .firstWhere(
+                                      (o) =>
+                                          o.id.toString() == _selectedOfficeId,
+                                    )
+                                    .name,
+                        hintText: "Office",
+                        searchHint: "Search offices...",
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedOfficeId =
+                                value == "All Offices"
+                                    ? null
+                                    : officeList
+                                        .firstWhere((o) => o.name == value)
+                                        .id
+                                        .toString();
+
+                            fetchPgsFilter();
+                          });
+                        },
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  /// START DATE
+                  _buildDropdown(
+                    child: SearchableDropdown(
+                      items: [
+                        "All Start Date",
+                        ...filteredListPeriod.map(
+                          (p) => _dateConverter.toJson(
+                            DateTime.parse(p['startDate']),
+                          ),
+                        ),
+                      ],
+                      selectedItem: selectedStartDateText ?? "Start Date",
+                      hintText: "Start Date",
+                      searchHint: "Search...",
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == "All Start Date") {
+                            selectedStartPeriod = null;
+                            selectedStartDateText = "All Start Date";
+                          } else {
+                            final selected = filteredListPeriod.firstWhere(
+                              (p) =>
+                                  _dateConverter.toJson(
+                                    DateTime.parse(p['startDate']),
+                                  ) ==
+                                  value,
+                            );
+
+                            selectedStartPeriod = selected['startDate'];
+                            selectedStartDateText = value;
+                          }
+
+                          fetchPgsFilter();
+                        });
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(width: 8),
+
+                  /// END DATE
+                  _buildDropdown(
+                    child: SearchableDropdown(
+                      items: [
+                        "All End Date",
+                        ...filteredListPeriod.map(
+                          (p) => _dateConverter.toJson(
+                            DateTime.parse(p['endDate']),
+                          ),
+                        ),
+                      ],
+                      selectedItem: selectedEndDateText ?? "End Date",
+                      hintText: "End Date",
+                      searchHint: "Search...",
+                      onChanged: (value) {
+                        setState(() {
+                          if (value == "All End Date") {
+                            selectedEndDate = null;
+                            selectedEndDateText = "All End Date";
+                          } else {
+                            final selected = filteredListPeriod.firstWhere(
+                              (p) =>
+                                  _dateConverter.toJson(
+                                    DateTime.parse(p['endDate']),
+                                  ) ==
+                                  value,
+                            );
+
+                            selectedEndDate = selected['endDate'];
+                            selectedEndDateText = value;
+                          }
+
+                          fetchPgsFilter();
+                        });
+                      },
+                    ),
+                  ),
+
+                  const Spacer(),
+
+                  /// ADD BUTTON
+                  PermissionWidget(
+                    permission: AppPermissions.addPerformanceGovernanceSystem,
+                    child: ElevatedButton.icon(
+                      onPressed: () async {
+                        selectedOffice = await AuthUtil.fetchSelectedOfficeId();
+
+                        if (selectedOffice == null || selectedOffice!.isEmpty) {
+                          await _selectOffice();
+                          selectedOffice =
+                              await AuthUtil.fetchSelectedOfficeId();
+
+                          if (selectedOffice != null &&
+                              selectedOffice!.isNotEmpty) {
+                            await _loadOfficeName();
+                            showFormDialog();
+                          }
+                        } else {
+                          await _loadOfficeName();
+                          showFormDialog();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      ),
+                      icon: const Icon(Icons.add, color: Colors.white),
+                      label: const Text(
+                        'Add New',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            const SizedBox(height: 26),
+
+            /// CARD CONTAINER
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
+                    /// DESKTOP HEADER
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
                         child: Row(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Filter by',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ],
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-                            PermissionWidget(
-                              permission: AppPermissions.viewOffice,
-                              child: Padding(
-                                padding: const EdgeInsets.only(right: 8.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    PopupMenuButton<String>(
-                                      color: mainBgColor,
-                                      offset: const Offset(0, 30),
-                                      onCanceled: () {
-                                        setState(() {
-                                          isMenuOpenOffice = false;
-                                        });
-                                      },
-                                      onOpened: () {
-                                        setState(() {
-                                          isMenuOpenOffice = true;
-                                        });
-                                      },
-                                      onSelected: (String value) {
-                                        setState(() {
-                                          _selectedOfficeId =
-                                              value.isEmpty ? null : value;
-                                          isMenuOpenOffice = false;
-
-                                          fetchPgsFilter();
-                                        });
-                                      },
-                                      itemBuilder: (BuildContext context) {
-                                        final updatedOfficeList = [
-                                          {'id': '', 'name': 'All Offices'},
-                                          ...officeList.map(
-                                            (o) => {'id': o.id, 'name': o.name},
-                                          ),
-                                        ];
-                                        final searchController =
-                                            TextEditingController();
-                                        ValueNotifier<String> searchQuery =
-                                            ValueNotifier('');
-                                        return [
-                                          PopupMenuItem<String>(
-                                            enabled: false,
-                                            height: kMinInteractiveDimension,
-                                            child: Column(
-                                              children: [
-                                                TextField(
-                                                  controller: searchController,
-                                                  decoration: InputDecoration(
-                                                    hintText:
-                                                        'Search offices...',
-                                                    hintStyle: TextStyle(
-                                                      color: Colors.grey,
-                                                      fontSize: 12,
-                                                    ),
-                                                    prefixIcon: Icon(
-                                                      Icons.search,
-                                                      size: 18,
-                                                    ),
-                                                    contentPadding:
-                                                        EdgeInsets.symmetric(
-                                                          vertical: 8,
-                                                        ),
-                                                    border:
-                                                        OutlineInputBorder(),
-                                                    isDense: true,
-                                                  ),
-                                                  onChanged: (value) {
-                                                    searchQuery.value =
-                                                        value.toLowerCase();
-                                                  },
-                                                ),
-                                                const Divider(
-                                                  height: 16,
-                                                  thickness: 1,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          PopupMenuItem<String>(
-                                            enabled: false,
-                                            child: ValueListenableBuilder<
-                                              String
-                                            >(
-                                              valueListenable: searchQuery,
-                                              builder: (context, query, _) {
-                                                final filteredOffices =
-                                                    updatedOfficeList
-                                                        .where(
-                                                          (office) =>
-                                                              office['name']
-                                                                  .toString()
-                                                                  .toLowerCase()
-                                                                  .contains(
-                                                                    query,
-                                                                  ),
-                                                        )
-                                                        .toList();
-                                                return ConstrainedBox(
-                                                  constraints: BoxConstraints(
-                                                    maxHeight:
-                                                        MediaQuery.of(
-                                                          context,
-                                                        ).size.height *
-                                                        0.4,
-                                                  ),
-                                                  child: SingleChildScrollView(
-                                                    child: Column(
-                                                      mainAxisSize:
-                                                          MainAxisSize.min,
-                                                      children:
-                                                          filteredOffices
-                                                              .map<Widget>(
-                                                                (
-                                                                  office,
-                                                                ) => ListTile(
-                                                                  dense: true,
-                                                                  title: Text(
-                                                                    office['name']
-                                                                        .toString(),
-                                                                    style: const TextStyle(
-                                                                      color:
-                                                                          Colors
-                                                                              .black,
-                                                                    ),
-                                                                  ),
-                                                                  onTap: () {
-                                                                    Navigator.pop(
-                                                                      context,
-                                                                    );
-                                                                    setState(() {
-                                                                      _selectedOfficeId =
-                                                                          office['id']
-                                                                              .toString();
-
-                                                                      fetchPgsFilter();
-                                                                    });
-                                                                  },
-                                                                ),
-                                                              )
-                                                              .toList(),
-                                                    ),
-                                                  ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        ];
-                                      },
-                                      child: FilterButton(
-                                        label:
-                                            _selectedOfficeId == null
-                                                ? 'All Offices'
-                                                : officeList
-                                                    .firstWhere(
-                                                      (office) =>
-                                                          office.id
-                                                              .toString() ==
-                                                          _selectedOfficeId,
-                                                      orElse:
-                                                          () => Office(
-                                                            id: 0,
-                                                            name: 'All Offices',
-                                                          ),
-                                                    )
-                                                    .name,
-                                        isActive: isMenuOpenOffice,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Office",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  PopupMenuButton<String>(
-                                    color: mainBgColor,
-                                    offset: const Offset(0, 30),
-                                    onCanceled: () {
-                                      setState(() {
-                                        isMenuOpenStartDate = false;
-                                      });
-                                    },
-                                    onOpened: () {
-                                      setState(() {
-                                        isMenuOpenStartDate = true;
-                                      });
-                                    },
-                                    onSelected: (String selectedDate) {
-                                      setState(() {
-                                        selectedStartPeriod =
-                                            selectedDate.isEmpty
-                                                ? null
-                                                : selectedDate;
-                                        selectedStartDateText =
-                                            selectedStartPeriod == null
-                                                ? 'All Start Date'
-                                                : _dateConverter.toJson(
-                                                  DateTime.parse(
-                                                    selectedStartPeriod!,
-                                                  ),
-                                                );
-                                        isMenuOpenStartDate = false;
-                                        fetchPgsFilter();
-                                      });
-                                    },
-                                    itemBuilder: (BuildContext context) {
-                                      final periodOptions = [
-                                        {
-                                          'date': '',
-                                          'displayText': 'All Start Date',
-                                        },
-                                        ...filteredListPeriod.map(
-                                          (period) => {
-                                            'date': period['startDate'],
-                                            'displayText': _dateConverter
-                                                .toJson(
-                                                  DateTime.parse(
-                                                    period['startDate'],
-                                                  ),
-                                                ),
-                                          },
-                                        ),
-                                      ];
-
-                                      return periodOptions
-                                          .map<PopupMenuItem<String>>((option) {
-                                            return PopupMenuItem<String>(
-                                              value: option['date'],
-                                              child: Text(
-                                                option['displayText']!,
-                                              ),
-                                            );
-                                          })
-                                          .toList();
-                                    },
-                                    child: FilterButton(
-                                      label:
-                                          selectedStartDateText ??
-                                          'Select Start Date',
-                                      isActive: isMenuOpenStartDate,
-                                    ),
-                                  ),
-                                ],
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Period",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
-
-                            Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  PopupMenuButton<String>(
-                                    color: mainBgColor,
-                                    offset: const Offset(0, 30),
-                                    onCanceled: () {
-                                      setState(() {
-                                        isMenuOpenEndDate = false;
-                                      });
-                                    },
-                                    onOpened: () {
-                                      setState(() {
-                                        isMenuOpenEndDate = true;
-                                      });
-                                    },
-                                    onSelected: (String selectedDate) {
-                                      setState(() {
-                                        selectedEndDate =
-                                            selectedDate.isEmpty
-                                                ? null
-                                                : selectedDate;
-                                        selectedEndDateText =
-                                            selectedEndDate == null
-                                                ? 'All End Date'
-                                                : _dateConverter.toJson(
-                                                  DateTime.parse(
-                                                    selectedEndDate!,
-                                                  ),
-                                                );
-                                        isMenuOpenEndDate = false;
-                                        fetchPgsFilter();
-                                      });
-                                    },
-                                    itemBuilder: (BuildContext context) {
-                                      final periodOptions = [
-                                        {
-                                          'date': '',
-                                          'displayText': 'All End Date',
-                                        },
-                                        ...filteredListPeriod.map(
-                                          (period) => {
-                                            'date': period['endDate'],
-                                            'displayText': _dateConverter
-                                                .toJson(
-                                                  DateTime.parse(
-                                                    period['endDate'],
-                                                  ),
-                                                ),
-                                          },
-                                        ),
-                                      ];
-
-                                      return periodOptions
-                                          .map<PopupMenuItem<String>>((option) {
-                                            return PopupMenuItem<String>(
-                                              value: option['date'],
-                                              child: Text(
-                                                option['displayText']!,
-                                              ),
-                                            );
-                                          })
-                                          .toList();
-                                    },
-                                    child: FilterButton(
-                                      label:
-                                          selectedEndDateText ??
-                                          'Select End Date',
-                                      isActive: isMenuOpenEndDate,
-                                    ),
-                                  ),
-                                ],
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Status",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-
-                    if (!isMinimized)
-                      PermissionWidget(
-                        permission:
-                            AppPermissions.addPerformanceGovernanceSystem,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                          ),
-                          onPressed: () async {
-                            clearAllSelections();
-                            selectedOffice =
-                                await AuthUtil.fetchSelectedOfficeId();
-
-                            if (selectedOffice == null ||
-                                selectedOffice!.isEmpty) {
-                              await _selectOffice();
-
-                              selectedOffice =
-                                  await AuthUtil.fetchSelectedOfficeId();
-
-                              if (selectedOffice != null &&
-                                  selectedOffice!.isNotEmpty) {
-                                await _loadOfficeName();
-                                showFormDialog();
-                              } else {}
-                            } else {
-                              await _loadOfficeName();
-                              showFormDialog();
-                            }
-
-                            setState(() {
-                              pgsIdHistory = null;
-                            });
-                          },
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.add, color: Colors.white),
-                              SizedBox(width: 5),
-                              Text(
-                                'Add New',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child:
-                      isMobile
-                          ? ListView.separated(
-                            itemCount: filteredList.length,
-                            separatorBuilder:
-                                (context, index) => const Divider(height: 1),
-                            itemBuilder: (context, index) {
-                              var pgs = filteredList[index];
-
-                              int itemNumber =
-                                  ((_currentPage - 1) * _pageSize) + index + 1;
-
-                              final isDraft = pgs['isDraft'] as bool? ?? false;
-
-                              final signatories =
-                                  List<Map<String, dynamic>>.from(
-                                    pgs['signatories'] ?? [],
-                                  );
-
-                              final deliverables =
-                                  List<Map<String, dynamic>>.from(
-                                    pgs['pgsDeliverables'] ?? [],
-                                  );
-
-                              String status = 'Draft';
-
-                              if (deliverables.any(
-                                (d) => d['isDisapproved'] as bool? ?? false,
-                              )) {
-                                status = 'Disapproved';
-                              } else if (isDraft) {
-                                status = 'Draft';
-                              } else {
-                                final hasNextStatus = signatories.any((
-                                  signatory,
-                                ) {
-                                  final isNextStatus =
-                                      signatory['isNextStatus'];
-
-                                  if (isNextStatus == null) return false;
-                                  if (isNextStatus is bool) return isNextStatus;
-                                  if (isNextStatus is String) {
-                                    return isNextStatus.toLowerCase() == 'true';
-                                  }
-                                  return false;
-                                });
-
-                                status =
-                                    hasNextStatus ? 'For Approval' : 'Approved';
-                              }
-
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+                    const SizedBox(height: 5),
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
                                 ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    /// Top Row (# + Menu)
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "$itemNumber",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-
-                                        PopupMenuButton<String>(
-                                          tooltip: "Show actions",
-                                          icon: const Icon(Icons.more_vert),
-                                          onSelected: (value) async {
-                                            if (value == 'edit') {
-                                              try {
-                                                await AuthUtil.saveSelectedOfficeId(
-                                                  pgs['officeid'].toString(),
-                                                );
-
-                                                selectedOffice =
-                                                    await AuthUtil.fetchSelectedOfficeId();
-
-                                                final deliverables =
-                                                    await fetchDeliverables(
-                                                      pgsId: pgs['id'],
-                                                    );
-
-                                                final signatory =
-                                                    await fetchSignatoryList(
-                                                      pgsId: pgs['id'],
-                                                    );
-
-                                                await fetchSubmitUserId(
-                                                  userId: userId,
-                                                  pgsId: pgs['id'],
-                                                );
-
-                                                showFormDialog(
-                                                  userId: pgs['userId'],
-                                                  id: pgs['id'],
-                                                  officename: pgs['name'],
-                                                  officenameid: pgs['officeid'],
-                                                  competencescore:
-                                                      pgs['competencescore'],
-                                                  confidencescore:
-                                                      pgs['confidencescore'],
-                                                  resourcescore:
-                                                      pgs['resourcescore'],
-                                                  startDate: pgs['startDate'],
-                                                  endDate: pgs['endDate'],
-                                                  percentDeliverables:
-                                                      pgs['percentDeliverables'],
-                                                  deliverables: deliverables,
-                                                  signatories: signatory,
-                                                  isDraft: pgs['isDraft'],
-                                                  remarks: pgs['remarks'],
-                                                );
-                                              } catch (e) {}
-                                            }
-
-                                            if (value == 'preview') {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder:
-                                                      (context) =>
-                                                          ReportViewerPage(
-                                                            pgsId:
-                                                                pgs['id']
-                                                                    .toString(),
-                                                          ),
-                                                ),
-                                              );
-                                            }
-
-                                            if (value == 'delete') {
-                                              showDeleteDialog(
-                                                pgs['id'].toString(),
-                                              );
-                                            }
-                                          },
-                                          itemBuilder:
-                                              (context) => [
-                                                const PopupMenuItem(
-                                                  value: 'edit',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.edit,
-                                                        size: 18,
-                                                      ),
-                                                      SizedBox(width: 8),
-                                                      Text("Edit"),
-                                                    ],
-                                                  ),
-                                                ),
-
-                                                const PopupMenuItem(
-                                                  value: 'preview',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons
-                                                            .description_outlined,
-                                                        size: 18,
-                                                      ),
-                                                      SizedBox(width: 8),
-                                                      Text("Print Preview"),
-                                                    ],
-                                                  ),
-                                                ),
-
-                                                if (status != 'Approved' &&
-                                                    status != 'For Approval')
-                                                  const PopupMenuItem(
-                                                    value: 'delete',
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(
-                                                          Icons.delete,
-                                                          size: 18,
-                                                          color: Color.fromARGB(
-                                                            255,
-                                                            221,
-                                                            79,
-                                                            79,
-                                                          ),
-                                                        ),
-                                                        SizedBox(width: 8),
-                                                        Text("Delete"),
-                                                      ],
-                                                    ),
-                                                  ),
-                                              ],
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 8),
-
-                                    /// Office
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "Office: ",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        Expanded(
-                                          child: Text(pgs['name'] ?? ""),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 4),
-
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "Period: ",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        Expanded(
-                                          child: Text(
-                                            "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['startDate']))} - "
-                                            "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['endDate']))}",
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 4),
-
-                                    /// Status
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          "Status: ",
-                                          style: TextStyle(color: Colors.grey),
-                                        ),
-                                        Text(status),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          )
-                          : DataTable2(
-                            columnSpacing: isMobile ? 8 : 12,
-                            headingRowColor: WidgetStatePropertyAll(
-                              secondaryColor,
-                            ),
-                            dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                            headingTextStyle: const TextStyle(color: grey),
-                            horizontalMargin: 12,
-                            minWidth: 700,
-                            fixedTopRows: 1,
-                            border: TableBorder(
-                              horizontalInside: BorderSide(
-                                color: Colors.grey.shade100,
-                              ),
-                            ),
-                            columns: [
-                              DataColumn2(
-                                label: const Text('#'),
-                                fixedWidth: 40,
-                              ),
-                              DataColumn2(
-                                label: const Text('Office'),
-                                size: ColumnSize.L,
-                              ),
-                              DataColumn2(
-                                label: const Text('Period'),
-                                size: ColumnSize.L,
-                              ),
-                              DataColumn2(
-                                label: const Text('Status'),
-                                size: ColumnSize.S,
-                              ),
-                              DataColumn2(
-                                label: const Text('Actions'),
-                                size: ColumnSize.M,
-                              ),
-                            ],
-                            rows:
-                                filteredList.asMap().entries.map((entry) {
-                                  int index = entry.key;
-                                  var pgsgovernancesystem = entry.value;
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
                                   int itemNumber =
                                       ((_currentPage - 1) * _pageSize) +
                                       index +
                                       1;
+                                  final pgs = filteredList[index];
                                   final isDraft =
-                                      pgsgovernancesystem['isDraft'] as bool? ??
-                                      false;
+                                      pgs['isDraft'] as bool? ?? false;
 
                                   final signatories =
                                       List<Map<String, dynamic>>.from(
-                                        pgsgovernancesystem['signatories'] ??
-                                            [],
+                                        pgs['signatories'] ?? [],
                                       );
-                                  final deliverables = List<
-                                    Map<String, dynamic>
-                                  >.from(
-                                    pgsgovernancesystem['pgsDeliverables'] ??
-                                        [],
-                                  );
+
+                                  final deliverables =
+                                      List<Map<String, dynamic>>.from(
+                                        pgs['pgsDeliverables'] ?? [],
+                                      );
+
                                   String status = 'Draft';
+
                                   if (deliverables.any(
                                     (d) => d['isDisapproved'] as bool? ?? false,
                                   )) {
@@ -1930,195 +1627,478 @@ class PerformanceGovernanceSystemPageState
                                             ? 'For Approval'
                                             : 'Approved';
                                   }
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(pgs['name'] ?? ""),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(
+                                              "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['startDate']))} - "
+                                              "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['endDate']))}",
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                // Solid circle with icon
+                                                Container(
+                                                  width: 16,
+                                                  height: 16,
+                                                  margin: EdgeInsets.only(
+                                                    right: 4,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: getStatusColor(
+                                                      status,
+                                                    ), // solid color
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Center(
+                                                    child: getStatusIcon(
+                                                      status,
+                                                    ), // now perfectly centered
+                                                  ),
+                                                ),
+                                                // Status text
+                                                Text(
+                                                  status,
+                                                  style: TextStyle(
+                                                    color: getStatusColor(
+                                                      status,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                PermissionWidget(
+                                                  permission:
+                                                      AppPermissions
+                                                          .editPerformanceGovernanceSystem,
+                                                  child: Tooltip(
+                                                    message: 'Edit',
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        Icons.edit_outlined,
+                                                      ),
+                                                      onPressed: () async {
+                                                        try {
+                                                          await AuthUtil.saveSelectedOfficeId(
+                                                            pgs['officeid']
+                                                                .toString(),
+                                                          );
+                                                          selectedOffice =
+                                                              await AuthUtil.fetchSelectedOfficeId();
 
-                                  return DataRow(
-                                    cells: [
-                                      DataCell(
-                                        SizedBox(
-                                          width: 40,
-                                          child: Text(itemNumber.toString()),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        Container(
-                                          constraints: BoxConstraints(
-                                            minWidth: 100,
-                                            maxWidth:
-                                                constraints.maxWidth * 0.4,
-                                          ),
-                                          child: Text(
-                                            pgsgovernancesystem['name'] ?? '',
-                                            overflow: TextOverflow.ellipsis,
-                                            softWrap: true,
-                                            maxLines: 2,
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(
-                                        SizedBox(
-                                          child: Text(
-                                            "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['startDate']))} - ${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgsgovernancesystem['endDate']))}",
-                                          ),
-                                        ),
-                                      ),
-                                      DataCell(SizedBox(child: Text(status))),
-                                      DataCell(
-                                        SizedBox(
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              IconButton(
-                                                icon: Icon(Icons.edit),
+                                                          final deliverables =
+                                                              await fetchDeliverables(
+                                                                pgsId:
+                                                                    pgs['id'],
+                                                              );
+                                                          final signatory =
+                                                              await fetchSignatoryList(
+                                                                pgsId:
+                                                                    pgs['id'],
+                                                              );
+                                                          await fetchSubmitUserId(
+                                                            userId: userId,
+                                                            pgsId: pgs['id'],
+                                                          );
 
-                                                onPressed: () async {
+                                                          final isDraftValue =
+                                                              pgs['isDraft'] ??
+                                                              false;
+
+                                                          showFormDialog(
+                                                            userId:
+                                                                pgs['userId'],
+                                                            id: pgs['id'],
+                                                            officename:
+                                                                pgs['name'],
+                                                            officenameid:
+                                                                pgs['officeid'],
+                                                            competencescore:
+                                                                pgs['competencescore'],
+                                                            confidencescore:
+                                                                pgs['confidencescore'],
+                                                            resourcescore:
+                                                                pgs['resourcescore'],
+                                                            startDate:
+                                                                pgs['startDate'],
+                                                            endDate:
+                                                                pgs['endDate'],
+                                                            percentDeliverables:
+                                                                pgs['percentDeliverables'],
+                                                            deliverables:
+                                                                deliverables,
+                                                            signatories:
+                                                                signatory,
+                                                            isDraft:
+                                                                isDraftValue,
+                                                            remarks:
+                                                                pgs['remarks'],
+                                                          );
+                                                          // ignore: empty_catches
+                                                        } catch (e) {}
+                                                      },
+                                                    ),
+                                                  ),
+                                                ),
+                                                Tooltip(
+                                                  message: 'Print Preview',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons
+                                                          .description_outlined,
+                                                      color: Colors.blueAccent,
+                                                    ),
+                                                    onPressed: () async {
+                                                      final pgsId =
+                                                          pgs['id'].toString();
+
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                          builder:
+                                                              (context) =>
+                                                                  PgsReports(
+                                                                    pgsId:
+                                                                        pgsId,
+                                                                  ),
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+                                                if (status != 'Approved' &&
+                                                    status != 'For Approval')
+                                                  PermissionWidget(
+                                                    permission:
+                                                        AppPermissions
+                                                            .deletePerformanceGovernanceSystem,
+                                                    child: IconButton(
+                                                      icon: const Icon(
+                                                        CupertinoIcons
+                                                            .delete_simple,
+                                                        color: Colors.redAccent,
+                                                      ),
+                                                      onPressed:
+                                                          () =>
+                                                              showDeleteDialog(
+                                                                pgs['id']
+                                                                    .toString(),
+                                                              ),
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit' &&
+                                                    permissionService.hasPermission(
+                                                      AppPermissions
+                                                          .editPerformanceGovernanceSystem,
+                                                    )) {
                                                   try {
                                                     await AuthUtil.saveSelectedOfficeId(
-                                                      pgsgovernancesystem['officeid']
+                                                      pgs['officeid']
                                                           .toString(),
                                                     );
+
                                                     selectedOffice =
                                                         await AuthUtil.fetchSelectedOfficeId();
 
                                                     final deliverables =
                                                         await fetchDeliverables(
-                                                          pgsId:
-                                                              pgsgovernancesystem['id'],
+                                                          pgsId: pgs['id'],
                                                         );
+
                                                     final signatory =
                                                         await fetchSignatoryList(
-                                                          pgsId:
-                                                              pgsgovernancesystem['id'],
+                                                          pgsId: pgs['id'],
                                                         );
+
                                                     await fetchSubmitUserId(
                                                       userId: userId,
-                                                      pgsId:
-                                                          pgsgovernancesystem['id'],
+                                                      pgsId: pgs['id'],
                                                     );
 
-                                                    final isDraftValue =
-                                                        pgsgovernancesystem['isDraft'] ??
-                                                        false;
-
                                                     showFormDialog(
-                                                      userId:
-                                                          pgsgovernancesystem['userId'],
-                                                      id:
-                                                          pgsgovernancesystem['id'],
-                                                      officename:
-                                                          pgsgovernancesystem['name'],
+                                                      userId: pgs['userId'],
+                                                      id: pgs['id'],
+                                                      officename: pgs['name'],
                                                       officenameid:
-                                                          pgsgovernancesystem['officeid'],
+                                                          pgs['officeid'],
                                                       competencescore:
-                                                          pgsgovernancesystem['competencescore'],
+                                                          pgs['competencescore'],
                                                       confidencescore:
-                                                          pgsgovernancesystem['confidencescore'],
+                                                          pgs['confidencescore'],
                                                       resourcescore:
-                                                          pgsgovernancesystem['resourcescore'],
+                                                          pgs['resourcescore'],
                                                       startDate:
-                                                          pgsgovernancesystem['startDate'],
-                                                      endDate:
-                                                          pgsgovernancesystem['endDate'],
+                                                          pgs['startDate'],
+                                                      endDate: pgs['endDate'],
                                                       percentDeliverables:
-                                                          pgsgovernancesystem['percentDeliverables'],
+                                                          pgs['percentDeliverables'],
                                                       deliverables:
                                                           deliverables,
                                                       signatories: signatory,
-                                                      isDraft: isDraftValue,
-                                                      remarks:
-                                                          pgsgovernancesystem['remarks'],
+                                                      isDraft: pgs['isDraft'],
+                                                      remarks: pgs['remarks'],
                                                     );
                                                     // ignore: empty_catches
                                                   } catch (e) {}
-                                                },
-                                              ),
-                                              Tooltip(
-                                                message: 'Print Preview',
-                                                child: IconButton(
-                                                  icon: const Icon(
-                                                    Icons.description_outlined,
-                                                  ),
-                                                  onPressed: () async {
-                                                    final pgsId =
-                                                        pgsgovernancesystem['id']
-                                                            .toString();
+                                                }
 
-                                                    Navigator.push(
-                                                      context,
-                                                      MaterialPageRoute(
-                                                        builder:
-                                                            (context) =>
-                                                                ReportViewerPage(
-                                                                  pgsId: pgsId,
-                                                                ),
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
-                                              ),
-                                              if (status != 'Approved' &&
-                                                  status != 'For Approval')
-                                                PermissionWidget(
-                                                  permission:
+                                                if (value == 'preview') {
+                                                  Navigator.push(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder:
+                                                          (
+                                                            context,
+                                                          ) => PgsReports(
+                                                            pgsId:
+                                                                pgs['id']
+                                                                    .toString(),
+                                                          ),
+                                                    ),
+                                                  );
+                                                }
+                                                if (value == 'delete' &&
+                                                    permissionService.hasPermission(
                                                       AppPermissions
                                                           .deletePerformanceGovernanceSystem,
-                                                  child: IconButton(
-                                                    icon: Icon(
-                                                      Icons.delete,
-                                                      color: Color.fromARGB(
-                                                        255,
-                                                        221,
-                                                        79,
-                                                        79,
+                                                    )) {
+                                                  showDeleteDialog(
+                                                    pgs['id'].toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: PermissionWidget(
+                                                        permission:
+                                                            AppPermissions
+                                                                .viewKraRoadMap,
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .edit_outlined,
+                                                              size: 18,
+                                                            ),
+                                                            SizedBox(width: 8),
+                                                            Text('Edit'),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ),
-                                                    onPressed:
-                                                        () => showDeleteDialog(
-                                                          pgsgovernancesystem['id']
-                                                              .toString(),
+                                                    const PopupMenuItem(
+                                                      value: 'preview',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons
+                                                                .description_outlined,
+                                                            size: 18,
+                                                            color:
+                                                                Colors
+                                                                    .blueAccent,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Print preview'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    if (status != 'Approved' &&
+                                                        status !=
+                                                            'For Approval')
+                                                      PopupMenuItem(
+                                                        value: 'delete',
+                                                        child: PermissionWidget(
+                                                          permission:
+                                                              AppPermissions
+                                                                  .deletePerformanceGovernanceSystem,
+                                                          child: Row(
+                                                            children: [
+                                                              Icon(
+                                                                CupertinoIcons
+                                                                    .delete_simple,
+                                                                color:
+                                                                    Colors.red,
+                                                                size: 18,
+                                                              ),
+                                                              SizedBox(
+                                                                width: 8,
+                                                              ),
+                                                              Text('Delete'),
+                                                            ],
+                                                          ),
                                                         ),
-                                                  ),
-                                                ),
-                                            ],
-                                          ),
+                                                      ),
+                                                  ],
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ],
+                                        const SizedBox(height: 8),
+                                        Row(
+                                          children: [
+                                            // Solid circle with icon
+                                            Container(
+                                              width: 16,
+                                              height: 16,
+                                              margin: EdgeInsets.only(right: 4),
+                                              decoration: BoxDecoration(
+                                                color: getStatusColor(
+                                                  status,
+                                                ), // solid color
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Center(
+                                                child: getStatusIcon(
+                                                  status,
+                                                ), // now perfectly centered
+                                              ),
+                                            ),
+                                            // Status text
+                                            Text(
+                                              status,
+                                              style: TextStyle(
+                                                color: getStatusColor(status),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Text(
+                                              "Office: ",
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Text(pgs['name'] ?? ""),
+                                            ),
+                                          ],
+                                        ),
+
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            const Text(
+                                              "Period: ",
+                                              style: TextStyle(
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Text(
+                                                "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['startDate']))} - "
+                                                "${LongDateOnlyConverter().toJson(LongDateOnlyConverter().fromJson(pgs['endDate']))}",
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   );
-                                }).toList(),
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
                           ),
-                ),
-
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged: (page) => fetchPgsList(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
                       ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchPgsList(page: page),
-                      ),
-                      const SizedBox(width: 60),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          );
-        },
+          ],
+        ),
       ),
-
       floatingActionButton:
-          isMinimized
+          isMobile
               ? PermissionWidget(
                 permission: AppPermissions.addPerformanceGovernanceSystem,
                 child: FloatingActionButton(
