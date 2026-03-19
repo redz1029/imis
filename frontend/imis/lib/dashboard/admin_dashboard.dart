@@ -186,8 +186,6 @@ class AdminDashboardState extends State<AdminDashboard> {
                     _calendarFormat = format;
                   });
                 },
-                currentImageIndex: _currentImageIndex,
-                rotatingImages: rotatingImages,
               ),
             ],
           ),
@@ -284,8 +282,6 @@ class AdminDashboardState extends State<AdminDashboard> {
                     _calendarFormat = format;
                   });
                 },
-                currentImageIndex: _currentImageIndex,
-                rotatingImages: rotatingImages,
               ),
             ],
           ),

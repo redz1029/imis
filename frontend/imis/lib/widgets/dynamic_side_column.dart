@@ -1,3 +1,92 @@
+// import 'package:flutter/material.dart';
+// import 'package:imis/constant/constant.dart';
+// import 'package:imis/widgets/announcement_widget.dart';
+// import 'package:table_calendar/table_calendar.dart';
+
+// class DynamicSideColumn1 extends StatelessWidget {
+//   final DateTime focusedDay;
+//   final DateTime? selectedDay;
+//   final CalendarFormat calendarFormat;
+//   final Function(DateTime selectedDay, DateTime focusedDay) onDaySelected;
+//   final Function(CalendarFormat format) onFormatChanged;
+
+//   const DynamicSideColumn1({
+//     super.key,
+//     required this.focusedDay,
+//     required this.selectedDay,
+//     required this.calendarFormat,
+//     required this.onDaySelected,
+//     required this.onFormatChanged,
+//   });
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Column(
+//       children: [
+//         Card(
+//           color: const Color(0xFFeeeeee),
+//           elevation: 0,
+//           shape: RoundedRectangleBorder(
+//             borderRadius: BorderRadius.circular(10),
+//             side: BorderSide(color: Colors.grey.shade300, width: 1),
+//           ),
+//           child: Padding(
+//             padding: const EdgeInsets.all(10.0),
+//             child: Column(
+//               mainAxisSize: MainAxisSize.min,
+//               children: [
+//                 const Text('Calendar', style: TextStyle(fontSize: 14)),
+//                 const Divider(),
+//                 SizedBox(
+//                   width: 280,
+//                   height: 320,
+//                   child: TableCalendar(
+//                     firstDay: DateTime.utc(2020, 1, 1),
+//                     lastDay: DateTime.utc(2030, 12, 31),
+//                     focusedDay: focusedDay,
+//                     calendarFormat: calendarFormat,
+//                     selectedDayPredicate: (day) => isSameDay(selectedDay, day),
+//                     onDaySelected: onDaySelected,
+//                     onFormatChanged: onFormatChanged,
+//                     rowHeight: 40,
+//                     calendarStyle: const CalendarStyle(
+//                       defaultTextStyle: TextStyle(fontSize: 12),
+//                       weekendTextStyle: TextStyle(
+//                         fontSize: 12,
+//                         fontWeight: FontWeight.normal,
+//                       ),
+//                       selectedDecoration: BoxDecoration(
+//                         color: primaryTextColor,
+//                         shape: BoxShape.circle,
+//                       ),
+//                       todayDecoration: BoxDecoration(
+//                         color: primaryColor,
+//                         shape: BoxShape.circle,
+//                       ),
+//                     ),
+//                     headerStyle: const HeaderStyle(
+//                       titleTextStyle: TextStyle(
+//                         fontSize: 16,
+//                         fontWeight: FontWeight.w700,
+//                       ),
+//                       formatButtonVisible: false,
+//                       titleCentered: true,
+//                     ),
+//                   ),
+//                 ),
+//                 SizedBox(width: 280, height: 350, child: AnnouncementList()),
+//               ],
+//             ),
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+
+//   bool isSameDay(DateTime? a, DateTime? b) {
+//     return a?.compareTo(b!) == 0;
+//   }
+// }
 import 'package:flutter/material.dart';
 import 'package:imis/constant/constant.dart';
 import 'package:imis/widgets/announcement_widget.dart';
@@ -9,8 +98,6 @@ class DynamicSideColumn1 extends StatelessWidget {
   final CalendarFormat calendarFormat;
   final Function(DateTime selectedDay, DateTime focusedDay) onDaySelected;
   final Function(CalendarFormat format) onFormatChanged;
-  final int currentImageIndex;
-  final List<String> rotatingImages;
 
   const DynamicSideColumn1({
     super.key,
@@ -19,8 +106,6 @@ class DynamicSideColumn1 extends StatelessWidget {
     required this.calendarFormat,
     required this.onDaySelected,
     required this.onFormatChanged,
-    required this.currentImageIndex,
-    required this.rotatingImages,
   });
 
   @override
@@ -28,22 +113,22 @@ class DynamicSideColumn1 extends StatelessWidget {
     return Column(
       children: [
         Card(
-          color: const Color(0xFFeeeeee),
+          color: Theme.of(context).cardColor,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
             side: BorderSide(color: Colors.grey.shade300, width: 1),
           ),
           child: Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(8.0),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text('Calendar', style: TextStyle(fontSize: 14)),
-                const Divider(),
+                const Text('Calendar', style: TextStyle(fontSize: 12)),
+                const Divider(height: 8),
                 SizedBox(
-                  width: 280,
-                  height: 320,
+                  width: 220,
+                  height: 240,
                   child: TableCalendar(
                     firstDay: DateTime.utc(2020, 1, 1),
                     lastDay: DateTime.utc(2030, 12, 31),
@@ -52,25 +137,36 @@ class DynamicSideColumn1 extends StatelessWidget {
                     selectedDayPredicate: (day) => isSameDay(selectedDay, day),
                     onDaySelected: onDaySelected,
                     onFormatChanged: onFormatChanged,
-                    rowHeight: 40,
-                    calendarStyle: const CalendarStyle(
-                      defaultTextStyle: TextStyle(fontSize: 12),
-                      weekendTextStyle: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.normal,
-                      ),
+                    rowHeight: 28, // smaller row height
+                    calendarStyle: CalendarStyle(
+                      defaultTextStyle: const TextStyle(
+                        fontSize: 10,
+                      ), // small numbers
+                      weekendTextStyle: const TextStyle(fontSize: 10),
                       selectedDecoration: BoxDecoration(
                         color: primaryTextColor,
                         shape: BoxShape.circle,
+                      ),
+                      selectedTextStyle: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
                       ),
                       todayDecoration: BoxDecoration(
                         color: primaryColor,
                         shape: BoxShape.circle,
                       ),
+                      todayTextStyle: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.white,
+                      ),
+                    ),
+                    daysOfWeekStyle: const DaysOfWeekStyle(
+                      weekdayStyle: TextStyle(fontSize: 10),
+                      weekendStyle: TextStyle(fontSize: 10),
                     ),
                     headerStyle: const HeaderStyle(
                       titleTextStyle: TextStyle(
-                        fontSize: 16,
+                        fontSize: 12, // small header
                         fontWeight: FontWeight.w700,
                       ),
                       formatButtonVisible: false,

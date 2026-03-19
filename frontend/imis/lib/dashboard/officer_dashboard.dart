@@ -28,7 +28,6 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
   List<String> office = [];
   String firstName = "firstName";
   final dio = Dio();
-  final int _currentImageIndex = 0;
   late Timer imageTimer;
   final List<String> rotatingImages = [
     'assets/image3.png',
@@ -159,8 +158,6 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
                     _calendarFormat = format;
                   });
                 },
-                currentImageIndex: _currentImageIndex,
-                rotatingImages: rotatingImages,
               ),
             ],
           ),
@@ -196,8 +193,6 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
                 _calendarFormat = format;
               });
             },
-            currentImageIndex: _currentImageIndex,
-            rotatingImages: rotatingImages,
           ),
         ],
       ),
@@ -233,8 +228,6 @@ class _OfficerDashboardState extends State<OfficerDashboard> {
                     _calendarFormat = format;
                   });
                 },
-                currentImageIndex: _currentImageIndex,
-                rotatingImages: rotatingImages,
               ),
             ],
           ),
