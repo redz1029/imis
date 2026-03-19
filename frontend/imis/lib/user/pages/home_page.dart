@@ -42,7 +42,10 @@ class HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        backgroundColor: mainBgColor,
+        body: Center(child: CircularProgressIndicator(color: primaryColor)),
+      );
     }
 
     if (_userRoles == null || _userRoles!.isEmpty) {
