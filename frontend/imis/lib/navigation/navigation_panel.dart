@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:dio/dio.dart';
+import 'package:imis/constant/role_info.dart';
 import 'package:imis/scorecard/pages/score_card_report_page.dart';
 import 'package:universal_html/html.dart' as html;
 import 'package:flutter/material.dart';
@@ -70,7 +71,7 @@ class NavigationPanelState extends State<NavigationPanel> {
   bool _isSwitchingRole = false;
   List<String> roleIds = [];
   final dio = Dio();
-
+  int? _hoveredIndex;
   @override
   void initState() {
     super.initState();
@@ -221,81 +222,196 @@ class NavigationPanelState extends State<NavigationPanel> {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Center(
-            child: AlertDialog(
-              backgroundColor: mainBgColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: const Text(
-                "Welcome!",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 24),
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    "Your account has multiple roles. Select one to continue.",
-                    style: TextStyle(fontSize: 14),
+            child: StatefulBuilder(
+              builder: (context, setDialogState) {
+                return Dialog(
+                  backgroundColor: mainBgColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  const SizedBox(height: 20),
-                  ...roles.map(
-                    (role) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: mainBgColor,
-
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(0.1),
-                          ),
-                          side: const BorderSide(
-                            color: primaryTextColor,
-                            width: 0.5,
-                          ),
-                          minimumSize: const Size(double.infinity, 45),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    width: 500,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/CRMC.png',
+                          width: 100,
+                          height: 60,
+                          fit: BoxFit.contain,
                         ),
-                        onPressed: () async {
-                          Navigator.of(context).pop();
-
-                          setState(() => _isSwitchingRole = true);
-
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setString('selectedRole', role);
-
-                          final roleIndex = roles.indexOf(role);
-                          final selectedRoleId = roleIds[roleIndex];
-                          await loadUserPermissionss(
-                            userId: userId,
-                            roleId: selectedRoleId,
-                          );
-
-                          await Future.delayed(
-                            Duration(milliseconds: 500),
-                            () async {
-                              setState(() {
-                                selectedRole = role;
-                                _isSwitchingRole = false;
-                                _selectedIndex = 0;
-                                _selectedScreen = HomePage();
-                              });
-                              await _checkSelectedRole();
-                            },
-                          );
-
-                          if (homePageKey.currentState != null) {
-                            await homePageKey.currentState!.refreshUserRoles();
-                          }
-                        },
-
-                        child: Text(
-                          role,
-                          style: TextStyle(color: primaryTextColor),
+                        SizedBox(height: 14),
+                        const Text(
+                          "Welcome Back!",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
+                        SizedBox(height: 6),
+                        const Text(
+                          "You have access to multiple roles. Choose one to continue to your dashboard.",
+                          style: TextStyle(fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 24),
+                        Flexible(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children:
+                                  roles.asMap().entries.map((entry) {
+                                    final index = entry.key;
+                                    final role = entry.value;
+                                    final roleInfo = getRoleInfo(role);
+
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      child: MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        onEnter: (_) {
+                                          setDialogState(
+                                            () => _hoveredIndex = index,
+                                          );
+                                        },
+                                        onExit: (_) {
+                                          setDialogState(
+                                            () => _hoveredIndex = null,
+                                          );
+                                        },
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            Navigator.of(context).pop();
+                                            setDialogState(
+                                              () => _isSwitchingRole = true,
+                                            );
+
+                                            final prefs =
+                                                await SharedPreferences.getInstance();
+                                            await prefs.setString(
+                                              'selectedRole',
+                                              role,
+                                            );
+
+                                            final roleIndex = roles.indexOf(
+                                              role,
+                                            );
+                                            final selectedRoleId =
+                                                roleIds[roleIndex];
+
+                                            await loadUserPermissionss(
+                                              userId: userId,
+                                              roleId: selectedRoleId,
+                                            );
+
+                                            await Future.delayed(
+                                              const Duration(milliseconds: 500),
+                                              () {
+                                                setState(() {
+                                                  selectedRole = role;
+                                                  _isSwitchingRole = false;
+                                                  _selectedIndex = 0;
+                                                  _selectedScreen = HomePage();
+                                                });
+                                              },
+                                            );
+
+                                            if (homePageKey.currentState !=
+                                                null) {
+                                              await homePageKey.currentState!
+                                                  .refreshUserRoles();
+                                            }
+                                          },
+                                          child: AnimatedContainer(
+                                            duration: const Duration(
+                                              milliseconds: 200,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: roleInfo.backgroundColor,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color:
+                                                    _hoveredIndex == index
+                                                        ? roleInfo.iconColor
+                                                        : roleInfo.borderColor,
+                                                width:
+                                                    _hoveredIndex == index
+                                                        ? 2
+                                                        : 1,
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                              horizontal: 16,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                RoleIconBox(
+                                                  roleInfo: roleInfo,
+                                                  size: 48,
+                                                  opacity: 0.08,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        role,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 16,
+                                                          color:
+                                                              roleInfo
+                                                                  .textColor,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        roleInfo.description,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.black87,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Icon(
+                                                  Icons.arrow_forward_ios,
+                                                  size: 16,
+                                                  color:
+                                                      _hoveredIndex == index
+                                                          ? roleInfo.iconColor
+                                                          : roleInfo.textColor,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        const Text(
+                          "Need help? Contact your system administrator.",
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         );
@@ -308,88 +424,200 @@ class NavigationPanelState extends State<NavigationPanel> {
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black.withValues(alpha: 0.1),
-      pageBuilder: (context, animation, secondaryAnimation) {
+      pageBuilder: (context, anim1, anim2) {
         return BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
           child: Center(
-            child: AlertDialog(
-              backgroundColor: mainBgColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text("Switch Role"),
-                  IconButton(
-                    icon: const Icon(Icons.close, size: 20),
-                    color: primaryTextColor,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+            child: StatefulBuilder(
+              builder: (context, setDialogState) {
+                return Dialog(
+                  backgroundColor: mainBgColor,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  ...roles.map(
-                    (role) => Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 5),
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: mainBgColor,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(0.1),
-                          ),
-                          side: const BorderSide(
-                            color: primaryTextColor,
-                            width: 0.5,
-                          ),
-                          minimumSize: const Size(double.infinity, 45),
+                  child: Container(
+                    padding: const EdgeInsets.all(20),
+                    width: 500,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Image.asset(
+                          'assets/CRMC.png',
+                          width: 100,
+                          height: 60,
+                          fit: BoxFit.contain,
                         ),
-                        onPressed: () async {
-                          Navigator.of(context).pop();
-
-                          setState(() => _isSwitchingRole = true);
-
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setString('selectedRole', role);
-
-                          final roleIndex = roles.indexOf(role);
-                          final selectedRoleId = roleIds[roleIndex];
-                          await loadUserPermissionss(
-                            userId: userId,
-                            roleId: selectedRoleId,
-                          );
-
-                          await Future.delayed(
-                            Duration(milliseconds: 500),
-                            () async {
-                              setState(() {
-                                selectedRole = role;
-                                _isSwitchingRole = false;
-                                _selectedIndex = 0;
-                                _selectedScreen = HomePage();
-                              });
-                              await _checkSelectedRole();
-                            },
-                          );
-
-                          if (homePageKey.currentState != null) {
-                            await homePageKey.currentState!.refreshUserRoles();
-                          }
-                        },
-
-                        child: Text(
-                          role,
-                          style: TextStyle(color: primaryTextColor),
+                        SizedBox(height: 14),
+                        const Text(
+                          "Switch Role",
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
+                        SizedBox(height: 6),
+                        const Text(
+                          "You have access to multiple roles. Choose one to continue to your dashboard.",
+                          style: TextStyle(fontSize: 14),
+                          textAlign: TextAlign.center,
+                        ),
+                        SizedBox(height: 24),
+                        Flexible(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children:
+                                  roles.asMap().entries.map((entry) {
+                                    final index = entry.key;
+                                    final role = entry.value;
+                                    final roleInfo = getRoleInfo(role);
+
+                                    return Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      child: MouseRegion(
+                                        cursor: SystemMouseCursors.click,
+                                        onEnter: (_) {
+                                          setDialogState(
+                                            () => _hoveredIndex = index,
+                                          );
+                                        },
+                                        onExit: (_) {
+                                          setDialogState(
+                                            () => _hoveredIndex = null,
+                                          );
+                                        },
+                                        child: GestureDetector(
+                                          onTap: () async {
+                                            Navigator.of(context).pop();
+                                            setDialogState(
+                                              () => _isSwitchingRole = true,
+                                            );
+
+                                            final prefs =
+                                                await SharedPreferences.getInstance();
+                                            await prefs.setString(
+                                              'selectedRole',
+                                              role,
+                                            );
+
+                                            final roleIndex = roles.indexOf(
+                                              role,
+                                            );
+                                            final selectedRoleId =
+                                                roleIds[roleIndex];
+
+                                            await loadUserPermissionss(
+                                              userId: userId,
+                                              roleId: selectedRoleId,
+                                            );
+
+                                            await Future.delayed(
+                                              const Duration(milliseconds: 500),
+                                              () {
+                                                setState(() {
+                                                  selectedRole = role;
+                                                  _isSwitchingRole = false;
+                                                  _selectedIndex = 0;
+                                                  _selectedScreen = HomePage();
+                                                });
+                                              },
+                                            );
+
+                                            if (homePageKey.currentState !=
+                                                null) {
+                                              await homePageKey.currentState!
+                                                  .refreshUserRoles();
+                                            }
+                                          },
+                                          child: AnimatedContainer(
+                                            duration: const Duration(
+                                              milliseconds: 200,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: roleInfo.backgroundColor,
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color:
+                                                    _hoveredIndex == index
+                                                        ? roleInfo.iconColor
+                                                        : roleInfo.borderColor,
+                                                width:
+                                                    _hoveredIndex == index
+                                                        ? 2
+                                                        : 1,
+                                              ),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                              horizontal: 16,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                RoleIconBox(
+                                                  roleInfo: roleInfo,
+                                                  size: 48,
+                                                  opacity: 0.08,
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        role,
+                                                        style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 16,
+                                                          color:
+                                                              roleInfo
+                                                                  .textColor,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(height: 2),
+                                                      Text(
+                                                        roleInfo.description,
+                                                        style: const TextStyle(
+                                                          fontSize: 12,
+                                                          color: Colors.black87,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                Icon(
+                                                  Icons.arrow_forward_ios,
+                                                  size: 16,
+                                                  color:
+                                                      _hoveredIndex == index
+                                                          ? roleInfo.iconColor
+                                                          : roleInfo.textColor,
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 16),
+                        const Text(
+                          "Need help? Contact your system administrator.",
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
         );
