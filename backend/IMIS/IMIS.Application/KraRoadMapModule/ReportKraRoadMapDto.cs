@@ -20,6 +20,13 @@ namespace IMIS.Application.KraRoadMapModule
 
         public List<ReportKraRoadMapDeliverableGroupDto>? Deliverables { get; set; }
 
+        // ---------------- Separate Deliverables ----------------
+        public List<ReportKraRoadMapDeliverableGroupDto>? EnablerDeliverables =>
+            Deliverables?.Where(d => d.IsEnabler).ToList();
+
+        public List<ReportKraRoadMapDeliverableGroupDto>? NonEnablerDeliverables =>
+            Deliverables?.Where(d => !d.IsEnabler).ToList();
+
         public List<int>? DeliverableYears { get; set; }
 
         public int? Year1 => DeliverableYears?.ElementAtOrDefault(0);
@@ -27,14 +34,17 @@ namespace IMIS.Application.KraRoadMapModule
         public int? Year3 => DeliverableYears?.ElementAtOrDefault(2);
         public int? Year4 => DeliverableYears?.ElementAtOrDefault(3);
         public int? Year5 => DeliverableYears?.ElementAtOrDefault(4);
-       
+
         public List<KraRoadMapKpiDto>? Kpis { get; set; }
+
         public KraRoadMapKpiDto? Kpi1 => Kpis != null && Kpis.Count > 0 ? Kpis[0] : null;
         public KraRoadMapKpiDto? Kpi2 => Kpis != null && Kpis.Count > 1 ? Kpis[1] : null;
+
         public string? Kpi1Description => Kpi1?.KpiDescription;
         public string? Kpi2Description => Kpi2?.KpiDescription;
 
         public required string UserId { get; set; }
+
         [SetsRequiredMembers]
         public ReportKraRoadMapDto(KraRoadMap entity)
         {
@@ -42,29 +52,38 @@ namespace IMIS.Application.KraRoadMapModule
             KraId = entity.KraId;
             KraRoadMapPeriodId = entity.KraRoadMapPeriodId;
 
-            Kra = entity.Kra != null ? new KeyResultAreaDto(entity.Kra) : null;
+            Kra = entity.Kra != null
+                ? new KeyResultAreaDto(entity.Kra)
+                : null;
+
             KraRoadMapPeriod = entity.KraRoadMapPeriod != null
                 ? new KraRoadMapPeriodDto(entity.KraRoadMapPeriod)
                 : null;
 
+            // ---------------- Collect Years ----------------
             DeliverableYears = entity.Deliverables?
                 .Select(d => d.Year)
                 .Distinct()
                 .OrderBy(y => y)
                 .ToList();
 
+            // ---------------- Group Deliverables ----------------
             Deliverables = entity.Deliverables?
-                .GroupBy(d => d.KraDescription)
+                .GroupBy(d => new { d.KraDescription, d.IsEnabler })
                 .Select(g => new ReportKraRoadMapDeliverableGroupDto(
                     items: g.ToList(),
                     allYears: DeliverableYears
                 ))
                 .ToList();
 
-            Kpis = entity.Kpis?.Select(k => new KraRoadMapKpiDto(k)).ToList();
+            // ---------------- KPI ----------------
+            Kpis = entity.Kpis?
+                .Select(k => new KraRoadMapKpiDto(k))
+                .ToList();
+
             UserId = entity.RoleId!;
         }
-       
+
         public override KraRoadMap ToEntity()
         {
             return new KraRoadMap
@@ -76,13 +95,6 @@ namespace IMIS.Application.KraRoadMapModule
                 Kpis = Kpis?.Select(k => k.ToEntity()).ToList(),
                 RoleId = UserId
             };
-        }      
+        }
     }
 }
-
-
-
-
-
-
-
