@@ -1,9 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:collection/collection.dart';
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';
@@ -47,34 +47,6 @@ class UserOfficePageState extends State<UserOfficePage> {
   final FocusNode isSearchfocus = FocusNode();
   final dio = Dio();
   List<UserOffice> _allUserOffice = [];
-  // Future<void> fetchUserOffice({int page = 1, String? searchQuery}) async {
-  //   if (_isLoading) return;
-
-  //   setState(() => _isLoading = true);
-
-  //   try {
-  //     final pageList = await _userOfficeService.getPgsPeriod(
-  //       page: page,
-  //       pageSize: _pageSize,
-  //       searchQuery: searchQuery,
-  //     );
-
-  //     if (mounted) {
-  //       setState(() {
-  //         _currentPage = pageList.page;
-  //         _totalCount = pageList.totalCount;
-  //         userOfficeList = pageList.items;
-  //         filteredList = List.from(userOfficeList);
-  //       });
-  //     }
-  //   } catch (e) {
-  //     debugPrint(e.toString());
-  //   } finally {
-  //     if (mounted) {
-  //       setState(() => _isLoading = false);
-  //     }
-  //   }
-  // }
 
   Future<void> fetchUserOffice({int page = 1}) async {
     if (_isLoading) return;
@@ -88,7 +60,6 @@ class UserOfficePageState extends State<UserOfficePage> {
       );
 
       if (response.statusCode == 200 && response.data is List) {
-        // Removed the roles filter
         List<UserOffice> allRoles =
             (response.data as List)
                 .map((json) => UserOffice.fromJson(json))
@@ -153,7 +124,7 @@ class UserOfficePageState extends State<UserOfficePage> {
     for (var userOffice in userOfficeList) {
       userList.firstWhere(
         (user) => user.id == userOffice.userId,
-        orElse: () => User(id: '', fullName: 'Unknown', position: 'position'),
+        orElse: () => User(id: '', fullName: '', position: ''),
       );
     }
   }
@@ -165,7 +136,7 @@ class UserOfficePageState extends State<UserOfficePage> {
         orElse:
             () => Office(
               id: 0,
-              name: 'Unknown',
+              name: '',
               officeTypeId: 0,
               parentOfficeId: 0,
               isActive: true,
@@ -352,7 +323,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                                   orElse:
                                       () => Office(
                                         id: 0,
-                                        name: 'Unknown',
+                                        name: '',
                                         officeTypeId: 0,
                                         parentOfficeId: 0,
                                         isActive: true,
@@ -545,200 +516,383 @@ class UserOfficePageState extends State<UserOfficePage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('User Office Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "User's Office Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      height: 30,
-                      width: 300,
-                      child: TextField(
-                        focusNode: isSearchfocus,
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: lightGrey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
-                          labelStyle: TextStyle(color: grey, fontSize: 14),
-                          labelText: 'Search...',
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: isSearchfocus.hasFocus ? primaryColor : grey,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          filled: true,
-                          fillColor: secondaryColor,
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 5,
-                          ),
-                        ),
-                        onChanged: filterSearchResults,
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    focusNode: isSearchfocus,
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: lightGrey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      labelText: 'Search...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isSearchfocus.hasFocus ? primaryColor : grey,
+                        size: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      filled: true,
+                      fillColor: secondaryColor,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 5,
+                        horizontal: 5,
                       ),
                     ),
-                    if (!isMinimized)
-                      ElevatedButton.icon(
-                        onPressed: () => showFormDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        label: const Text(
-                          'Add New',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                  ],
+                    onChanged: filterSearchResults,
+                  ),
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
+                const Spacer(),
+                if (!isMobile)
+                  ElevatedButton.icon(
+                    onPressed: () => showFormDialog(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                    columns: const [
-                      DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(label: Text('Name'), size: ColumnSize.L),
-                      DataColumn(label: Text('Office')),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var userOffice = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
-                          final matchedOffice = officenameList.firstWhere(
-                            (office) => office.id == userOffice.officeId,
-                            orElse:
-                                () => Office(
-                                  id: 0,
-                                  name: 'Unknown',
-                                  officeTypeId: 0,
-                                  parentOfficeId: 0,
-                                  isActive: true,
-                                  isDeleted: false,
-                                ),
-                          );
-                          final officeName = matchedOffice.name;
-
-                          final matchUserName = userList.firstWhere(
-                            (user) => user.id == userOffice.userId,
-                            orElse:
-                                () => User(
-                                  id: 'unknown',
-                                  fullName: 'Unknown',
-                                  position: 'position',
-                                ),
-                          );
-                          final userName = matchUserName.fullName;
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
-                              DataCell(Text(userName)),
-                              DataCell(Text(officeName)),
-                              DataCell(
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed: () {
-                                        showFormDialog(
-                                          id: userOffice.id.toString(),
-                                          selectedUserId: userOffice.userId,
-                                          selectedOfficeId:
-                                              userOffice.officeId.toString(),
-                                          isOfficeHead: userOffice.isOfficeHead,
-                                        );
-                                      },
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
-                                      ),
-                                      onPressed: () {
-                                        showDeleteDialog(
-                                          userOffice.id.toString(),
-                                        );
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                      ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchUserOffice(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
-                ),
               ],
             ),
-          );
-        },
-      ),
+            const SizedBox(height: 26),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// DESKTOP HEADER
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Name",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Office",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 5),
 
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  final userOffice = filteredList[index];
+                                  final matchedOffice = officenameList
+                                      .firstWhere(
+                                        (office) =>
+                                            office.id == userOffice.officeId,
+                                        orElse:
+                                            () => Office(
+                                              id: 0,
+                                              name: '',
+                                              officeTypeId: 0,
+                                              parentOfficeId: 0,
+                                              isActive: true,
+                                              isDeleted: false,
+                                            ),
+                                      );
+                                  final officeName = matchedOffice.name;
+
+                                  final matchUserName = userList.firstWhere(
+                                    (user) => user.id == userOffice.userId,
+                                    orElse:
+                                        () => User(
+                                          id: '',
+                                          fullName: '',
+                                          position: '',
+                                        ),
+                                  );
+                                  final userName = matchUserName.fullName;
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(userName),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(officeName),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Row(
+                                              children: [
+                                                Tooltip(
+                                                  message: 'Edit',
+                                                  child: IconButton(
+                                                    icon: const Icon(
+                                                      Icons.edit_outlined,
+                                                    ),
+                                                    onPressed: () {
+                                                      showFormDialog(
+                                                        id:
+                                                            userOffice.id
+                                                                .toString(),
+                                                        selectedUserId:
+                                                            userOffice.userId,
+                                                        selectedOfficeId:
+                                                            userOffice.officeId
+                                                                .toString(),
+                                                        isOfficeHead:
+                                                            userOffice
+                                                                .isOfficeHead,
+                                                      );
+                                                    },
+                                                  ),
+                                                ),
+
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        userOffice.id
+                                                            .toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) async {
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id:
+                                                        userOffice.id
+                                                            .toString(),
+                                                    selectedUserId:
+                                                        userOffice.userId,
+                                                    selectedOfficeId:
+                                                        userOffice.officeId
+                                                            .toString(),
+                                                    isOfficeHead:
+                                                        userOffice.isOfficeHead,
+                                                  );
+                                                }
+
+                                                if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    userOffice.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+
+                                                    PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text("Name: $userName"),
+                                        const SizedBox(height: 4),
+                                        Text("Office: $officeName"),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchUserOffice(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton:
-          isMinimized
+          isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),

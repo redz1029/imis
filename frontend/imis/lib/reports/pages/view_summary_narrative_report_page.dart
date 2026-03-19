@@ -281,7 +281,6 @@ class ViewSummaryNarrativeReportPageState
                                     onSelected: (String value) {
                                       setState(() {
                                         selectedPeriod = value;
-
                                         final selected = _periods.firstWhere(
                                           (period) =>
                                               period.id.toString() ==

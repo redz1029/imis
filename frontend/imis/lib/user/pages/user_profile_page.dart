@@ -1,9 +1,9 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
-import 'package:data_table_2/data_table_2.dart';
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/user/models/user_registration.dart';
 import 'package:imis/constant/constant.dart';
@@ -37,7 +37,6 @@ class UserProfileState extends State<UserProfilePage> {
   final TextEditingController confirmPasswordController =
       TextEditingController();
   final TextEditingController fullNameController = TextEditingController();
-
   final FocusNode focusFirstName = FocusNode();
   final FocusNode focusLastName = FocusNode();
   final FocusNode focusMiddleName = FocusNode();
@@ -848,211 +847,457 @@ class UserProfileState extends State<UserProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    bool isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: const Text('User Information'),
-        backgroundColor: mainBgColor,
-        elevation: 0,
-      ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isMobile = constraints.maxWidth < 600;
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "User Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Row(
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      height: 30,
-                      width: 300,
-                      child: TextField(
-                        focusNode: isSearchfocus,
-                        controller: searchController,
-                        decoration: InputDecoration(
-                          enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: lightGrey),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: primaryColor),
-                          ),
-                          floatingLabelBehavior: FloatingLabelBehavior.never,
-                          labelStyle: TextStyle(color: grey, fontSize: 14),
-                          labelText: 'Search...',
-                          prefixIcon: Icon(
-                            Icons.search,
-                            color: isSearchfocus.hasFocus ? primaryColor : grey,
-                            size: 20,
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          filled: true,
-                          fillColor: secondaryColor,
-                          contentPadding: EdgeInsets.symmetric(
-                            vertical: 5,
-                            horizontal: 5,
-                          ),
-                        ),
-                        onChanged: filterSearchResults,
+                SizedBox(
+                  height: 30,
+                  width: 300,
+                  child: TextField(
+                    focusNode: isSearchfocus,
+                    controller: searchController,
+                    decoration: InputDecoration(
+                      enabledBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: lightGrey),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderSide: BorderSide(color: primaryColor),
+                      ),
+                      floatingLabelBehavior: FloatingLabelBehavior.never,
+                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      labelText: 'Search...',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: isSearchfocus.hasFocus ? primaryColor : grey,
+                        size: 20,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      filled: true,
+                      fillColor: secondaryColor,
+                      contentPadding: EdgeInsets.symmetric(
+                        vertical: 5,
+                        horizontal: 5,
                       ),
                     ),
-                    if (!isMinimized)
-                      ElevatedButton.icon(
-                        onPressed: () => showFormDialog(),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 10,
-                            horizontal: 16,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                        icon: const Icon(Icons.add, color: Colors.white),
-                        label: const Text(
-                          'Add New',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                  ],
+                    onChanged: filterSearchResults,
+                  ),
                 ),
-                const SizedBox(height: 20),
-                Expanded(
-                  child: DataTable2(
-                    columnSpacing: isMobile ? 16 : 40,
-                    headingRowColor: WidgetStatePropertyAll(secondaryColor),
-                    dataRowColor: WidgetStatePropertyAll(mainBgColor),
-                    headingTextStyle: const TextStyle(color: grey),
-                    horizontalMargin: 12,
-                    minWidth: constraints.maxWidth,
-                    fixedTopRows: 1,
-                    border: TableBorder(
-                      horizontalInside: BorderSide(color: Colors.grey.shade100),
+                const Spacer(),
+                if (!isMobile)
+                  ElevatedButton.icon(
+                    onPressed: () => showFormDialog(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                    columns: const [
-                      DataColumn2(label: Text('#'), fixedWidth: 40),
-                      DataColumn2(
-                        label: Text('First Name'),
-                        size: ColumnSize.L,
-                      ),
-                      DataColumn(label: Text('Middle Name')),
-                      DataColumn(label: Text('Last Name')),
-                      DataColumn(label: Text('Position')),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows:
-                        filteredList.asMap().entries.map((entry) {
-                          int index = entry.key;
-                          var user = entry.value;
-                          int itemNumber =
-                              ((_currentPage - 1) * _pageSize) + index + 1;
-
-                          return DataRow(
-                            cells: [
-                              DataCell(Text(itemNumber.toString())),
-                              DataCell(Text(user.firstName ?? '')),
-                              DataCell(Text(user.middleName ?? '')),
-                              DataCell(Text(user.lastName ?? '')),
-                              DataCell(Text(user.position ?? '')),
-                              DataCell(
-                                Row(
-                                  children: [
-                                    IconButton(
-                                      icon: Icon(Icons.key, color: Colors.blue),
-                                      onPressed: () {
-                                        showFormDialogChangePassword(
-                                          id: user.id.toString(),
-                                          userName: user.userName,
-                                          email: user.email,
-                                          password: user.password,
-                                          firstName: user.firstName,
-                                          middleName: user.middleName,
-                                          lastName: user.lastName,
-                                          prefix: user.prefix,
-                                          suffix: user.suffix,
-                                          position: user.position,
-                                          fullName:
-                                              '${user.firstName} ${user.middleName} ${user.lastName}'
-                                                  .trim()
-                                                  .replaceAll(
-                                                    RegExp(' +'),
-                                                    ' ',
-                                                  ),
-                                        );
-                                      },
-                                    ),
-
-                                    IconButton(
-                                      icon: const Icon(Icons.edit),
-                                      onPressed:
-                                          () => showFormDialog(
-                                            id: user.id.toString(),
-                                            userName: user.userName,
-                                            email: user.email,
-                                            password: user.password,
-                                            firstName: user.firstName,
-                                            middleName: user.middleName,
-                                            lastName: user.lastName,
-                                            prefix: user.prefix,
-                                            suffix: user.suffix,
-                                            position: user.position,
-                                          ),
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(
-                                        Icons.delete,
-                                        color: primaryColor,
-                                      ),
-                                      onPressed: () {
-                                        showDeleteDialog(user.id.toString());
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          );
-                        }).toList(),
+                    icon: const Icon(Icons.add, color: Colors.white),
+                    label: const Text(
+                      'Add New',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
-                ),
-
-                Container(
-                  padding: EdgeInsets.all(10),
-                  color: secondaryColor,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      PaginationInfo(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                      ),
-                      PaginationControls(
-                        currentPage: _currentPage,
-                        totalItems: _totalCount,
-                        itemsPerPage: _pageSize,
-                        isLoading: _isLoading,
-                        onPageChanged: (page) => fetchUserProfile(page: page),
-                      ),
-                      Container(width: 60),
-                    ],
-                  ),
-                ),
               ],
             ),
-          );
-        },
-      ),
 
+            const SizedBox(height: 26),
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 10,
+                      color: Colors.black.withValues(alpha: .05),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// DESKTOP HEADER
+                    if (!isMobile)
+                      Container(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        decoration: BoxDecoration(
+                          border: Border(
+                            bottom: BorderSide(color: Colors.grey.shade300),
+                          ),
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
+                              flex: 1,
+                              child: Text(
+                                "#",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "First Name",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Middle Name",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Last Name",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Text(
+                                "Position",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              flex: 3,
+                              child: Text(
+                                "Actions",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    const SizedBox(height: 5),
+
+                    Expanded(
+                      child:
+                          _isLoading
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  color: primaryColor,
+                                ),
+                              )
+                              : ListView.builder(
+                                itemCount: filteredList.length,
+                                itemBuilder: (context, index) {
+                                  final user = filteredList[index];
+                                  int itemNumber =
+                                      ((_currentPage - 1) * _pageSize) +
+                                      index +
+                                      1;
+                                  if (!isMobile) {
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          bottom: BorderSide(
+                                            color: Colors.grey.shade200,
+                                          ),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            flex: 1,
+                                            child: Text("$itemNumber"),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Text(user.firstName ?? ''),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(user.middleName ?? ''),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(user.lastName ?? ''),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Text(user.position ?? ''),
+                                          ),
+                                          Expanded(
+                                            flex: 3,
+                                            child: Row(
+                                              children: [
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.security_outlined,
+                                                    color: Colors.blueAccent,
+                                                  ),
+                                                  onPressed: () {
+                                                    showFormDialogChangePassword(
+                                                      id: user.id.toString(),
+                                                      userName: user.userName,
+                                                      email: user.email,
+                                                      password: user.password,
+                                                      firstName: user.firstName,
+                                                      middleName:
+                                                          user.middleName,
+                                                      lastName: user.lastName,
+                                                      prefix: user.prefix,
+                                                      suffix: user.suffix,
+                                                      position: user.position,
+                                                      fullName:
+                                                          '${user.firstName} ${user.middleName} ${user.lastName}'
+                                                              .trim()
+                                                              .replaceAll(
+                                                                RegExp(' +'),
+                                                                ' ',
+                                                              ),
+                                                    );
+                                                  },
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    Icons.edit_outlined,
+                                                  ),
+                                                  onPressed: () {
+                                                    showFormDialog(
+                                                      id: user.id.toString(),
+                                                      userName: user.userName,
+                                                      email: user.email,
+                                                      password: user.password,
+                                                      firstName: user.firstName,
+                                                      middleName:
+                                                          user.middleName,
+                                                      lastName: user.lastName,
+                                                      prefix: user.prefix,
+                                                      suffix: user.suffix,
+                                                      position: user.position,
+                                                    );
+                                                  },
+                                                ),
+                                                IconButton(
+                                                  icon: const Icon(
+                                                    CupertinoIcons
+                                                        .delete_simple,
+                                                    color: Colors.redAccent,
+                                                  ),
+                                                  onPressed:
+                                                      () => showDeleteDialog(
+                                                        user.id.toString(),
+                                                      ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    );
+                                  }
+
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    margin: const EdgeInsets.only(bottom: 12),
+                                    decoration: BoxDecoration(
+                                      border: Border(
+                                        bottom: BorderSide(
+                                          color: Colors.grey.shade200,
+                                        ),
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Text(
+                                              "$itemNumber",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const Spacer(),
+                                            PopupMenuButton<String>(
+                                              color:
+                                                  Theme.of(context).cardColor,
+                                              icon: const Icon(Icons.more_vert),
+                                              onSelected: (value) {
+                                                if (value == 'password') {
+                                                  showFormDialogChangePassword(
+                                                    id: user.id.toString(),
+                                                    userName: user.userName,
+                                                    email: user.email,
+                                                    password: user.password,
+                                                    firstName: user.firstName,
+                                                    middleName: user.middleName,
+                                                    lastName: user.lastName,
+                                                    prefix: user.prefix,
+                                                    suffix: user.suffix,
+                                                    position: user.position,
+                                                    fullName:
+                                                        '${user.firstName} ${user.middleName} ${user.lastName}'
+                                                            .trim()
+                                                            .replaceAll(
+                                                              RegExp(' +'),
+                                                              ' ',
+                                                            ),
+                                                  );
+                                                }
+
+                                                if (value == 'edit') {
+                                                  showFormDialog(
+                                                    id: user.id.toString(),
+                                                    userName: user.userName,
+                                                    email: user.email,
+                                                    password: user.password,
+                                                    firstName: user.firstName,
+                                                    middleName: user.middleName,
+                                                    lastName: user.lastName,
+                                                    prefix: user.prefix,
+                                                    suffix: user.suffix,
+                                                    position: user.position,
+                                                  );
+                                                }
+
+                                                if (value == 'delete') {
+                                                  showDeleteDialog(
+                                                    user.id.toString(),
+                                                  );
+                                                }
+                                              },
+                                              itemBuilder:
+                                                  (_) => [
+                                                    const PopupMenuItem(
+                                                      value: 'password',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons
+                                                                .security_outlined,
+                                                            size: 18,
+                                                            color:
+                                                                Colors
+                                                                    .blueAccent,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    const PopupMenuItem(
+                                                      value: 'edit',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.edit_outlined,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Edit'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    const PopupMenuItem(
+                                                      value: 'delete',
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            CupertinoIcons
+                                                                .delete_simple,
+                                                            color: Colors.red,
+                                                            size: 18,
+                                                          ),
+                                                          SizedBox(width: 8),
+                                                          Text('Delete'),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+
+                                        Text(
+                                          "First Name: ${user.firstName ?? ''}",
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        Text(
+                                          "Middle Name: ${user.middleName ?? ''}",
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        Text(
+                                          "Last Name: ${user.lastName ?? ''}",
+                                        ),
+                                        const SizedBox(height: 4),
+
+                                        Text(
+                                          "Position: ${user.position ?? ''}",
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              ),
+                    ),
+
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged:
+                                (page) => fetchUserProfile(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton:
-          isMinimized
+          isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
