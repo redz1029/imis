@@ -66,7 +66,7 @@ class PgsReportsPageState extends State<PgsReports> {
     return Scaffold(
       backgroundColor: mainBgColor,
       appBar: AppBar(
-        title: const Text("Roadmap Report"),
+        title: const Text("Performance Governance System Report"),
         backgroundColor: mainBgColor,
         actions: [
           if (_pdfBytes != null) ...[

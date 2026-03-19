@@ -548,7 +548,7 @@ class _AuditorOfficesPageState extends State<AuditorOfficesPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "User Information",
+              "Auditor Office Information",
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
