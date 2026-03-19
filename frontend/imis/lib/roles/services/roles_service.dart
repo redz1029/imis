@@ -18,6 +18,7 @@ class RolesService {
     final paginationUtil = PaginationUtil(dio);
     return await paginationUtil.fetchPaginatedData<Roles>(
       endpoint: ApiEndpoint().roles,
+      // endpoint: '${ApiEndpoint().roles}/page',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,

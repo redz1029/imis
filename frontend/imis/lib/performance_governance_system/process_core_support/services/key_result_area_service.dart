@@ -16,7 +16,7 @@ class KeyResultAreaService {
   }) async {
     final paginationUtil = PaginationUtil(dio);
     return await paginationUtil.fetchPaginatedData<KeyResultArea>(
-      endpoint: ApiEndpoint().keyresult,
+      endpoint: '${ApiEndpoint().keyresult}/page',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,

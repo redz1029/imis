@@ -17,7 +17,7 @@ class AuditorService {
   }) async {
     final paginationUtil = PaginationUtil(dio);
     return await paginationUtil.fetchPaginatedData<Auditor>(
-      endpoint: ApiEndpoint().auditor,
+      endpoint: '${ApiEndpoint().auditor}/page',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,
