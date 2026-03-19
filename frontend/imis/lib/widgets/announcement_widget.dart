@@ -49,14 +49,21 @@ class _AnnouncementListState extends State<AnnouncementList> {
         color: const Color(0xFFeeeeee),
         borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16),
       child: Column(
         children: [
           Center(
             child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Text(
+                  'Announcements',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: primaryTextColor,
+                  ),
+                ),
+
+                const SizedBox(width: 40),
                 PermissionWidget(
                   allowedRoles: [
                     PermissionString.roleAdmin,
@@ -76,16 +83,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                     ),
                   ),
                 ),
-                Text(
-                  'Announcements',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: primaryTextColor,
-                  ),
-                ),
-
-                const SizedBox(width: 20),
                 PermissionWidget(
                   allowedRoles: [
                     PermissionString.roleAdmin,
@@ -109,7 +106,9 @@ class _AnnouncementListState extends State<AnnouncementList> {
               future: _announcementsFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(
+                    child: CircularProgressIndicator(color: primaryColor),
+                  );
                 }
 
                 if (snapshot.hasError) {
@@ -180,7 +179,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                   _announcementService.getAnnouncementsFromEndpoint(
                     ApiEndpoint().announcement,
                   );
-
               return AlertDialog(
                 backgroundColor: mainBgColor,
                 shape: RoundedRectangleBorder(
@@ -206,7 +204,9 @@ class _AnnouncementListState extends State<AnnouncementList> {
                     future: announcementsFuture,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return const Center(child: CircularProgressIndicator());
+                        return const Center(
+                          child: CircularProgressIndicator(color: primaryColor),
+                        );
                       } else if (snapshot.hasError) {
                         return Center(child: Text('Error: ${snapshot.error}'));
                       } else {
@@ -601,12 +601,18 @@ class _AnnouncementCard extends StatelessWidget {
     final displayDate =
         fromDateStr == toDateStr ? fromDateStr : '$fromDateStr - $toDateStr';
 
+    final backgroundColor = borderColor.withValues(alpha: 0.3);
+
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        border: Border(left: BorderSide(color: borderColor, width: 3)),
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(5),
+        border: Border(
+          left: BorderSide(color: borderColor.withValues(alpha: .8), width: 4),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -617,15 +623,14 @@ class _AnnouncementCard extends StatelessWidget {
           ),
           SelectableText(
             displayDate,
-            style: const TextStyle(color: Colors.grey, fontSize: 12),
+            style: const TextStyle(color: Colors.black54, fontSize: 12),
           ),
           gap6px,
-
           SelectableLinkify(
             text: announcement.description,
             style: const TextStyle(fontSize: 14),
             linkStyle: const TextStyle(
-              color: Colors.blue,
+              color: Colors.blueAccent,
               decoration: TextDecoration.underline,
             ),
             onOpen: (link) async {
