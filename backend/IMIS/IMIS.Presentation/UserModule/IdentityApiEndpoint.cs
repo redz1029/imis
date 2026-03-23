@@ -30,7 +30,7 @@ namespace IMIS.Presentation.UserModule
             // User Endpoints
             var authGroup = endpoints.MapGroup("").WithTags(IdentityGroup);
             authGroup.MapPost("/register", (UserRegistrationDto registration, IServiceProvider sp) => RegisterUser(registration, sp));
-            authGroup.MapGet("/getUser", async (int pageNumber, int pageSize, IServiceProvider sp) => await GetRegisteredUsers(sp, pageNumber, pageSize))
+            authGroup.MapGet("/getUser", async (int page, int pageSize, IServiceProvider sp) => await GetRegisteredUsers(sp, page, pageSize))
            .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag("roles"));
             authGroup.MapPut("/updateUser", async (UserRegistrationDto dto, IServiceProvider sp) => await UpdateUser(dto, sp));
             authGroup.MapPost("/login", LoginUser<TUser>);
@@ -39,12 +39,14 @@ namespace IMIS.Presentation.UserModule
             authGroup.MapDelete("/revokeRefreshToken", RevokeRefreshToken<TUser>);
             authGroup.MapGet("/users", (HttpContext httpContext, IServiceProvider sp) => GetUsers(httpContext, sp));
             authGroup.MapDelete("/deleteUser/{id}", async (string id, IServiceProvider sp) => await DeleteUser(id, sp));
+           
 
             // Role Management Endpoints
             var roleGroup = endpoints.MapGroup("").WithTags(RoleGroup);
-            roleGroup.MapGet("/roles", async (int pageNumber, int pageSize, RoleManager<IdentityRole> roleManager) =>
+            roleGroup.MapGet("/roles", GetRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
+            roleGroup.MapGet("page/roles", async (int page, int pageSize, RoleManager<IdentityRole> roleManager) =>
             {
-                pageNumber = pageNumber <= 0 ? 1 : pageNumber;
+                page = page <= 0 ? 1 : page;
                 pageSize = pageSize <= 0 ? 10 : pageSize;
 
                 var query = roleManager.Roles;
@@ -52,7 +54,7 @@ namespace IMIS.Presentation.UserModule
                 var totalCount = await query.CountAsync();
 
                 var roles = await query
-                    .Skip((pageNumber - 1) * pageSize)
+                    .Skip((page - 1) * pageSize)
                     .Take(pageSize)
                     .ToListAsync();
 
@@ -60,7 +62,7 @@ namespace IMIS.Presentation.UserModule
                 {                  
                     data = roles,
                     totalCount,
-                    pageNumber,
+                    page,
                     pageSize,
                 });
             })
@@ -251,10 +253,10 @@ namespace IMIS.Presentation.UserModule
             return Results.Ok("User registered successfully.");
         }
        
-        private static async Task<IResult> GetRegisteredUsers(IServiceProvider sp, int pageNumber, int pageSize)
+        private static async Task<IResult> GetRegisteredUsers(IServiceProvider sp, int page, int pageSize)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
-            pageNumber = pageNumber <= 0 ? 1 : pageNumber;
+            page = page <= 0 ? 1 : page;
             pageSize = pageSize <= 0 ? 10 : pageSize;
             pageSize = pageSize > 100 ? 100 : pageSize; 
 
@@ -263,7 +265,7 @@ namespace IMIS.Presentation.UserModule
             var totalCount = await query.CountAsync();
 
             var users = await query
-                .Skip((pageNumber - 1) * pageSize)
+                .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(u => new
                 {
@@ -286,7 +288,7 @@ namespace IMIS.Presentation.UserModule
                 data = users,
                 totalCount,
                 totalPages,
-                pageNumber,
+                page,
                 pageSize,
             });
         }
