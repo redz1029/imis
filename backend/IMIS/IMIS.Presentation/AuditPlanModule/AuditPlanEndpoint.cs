@@ -41,8 +41,7 @@ namespace IMIS.Presentation.AuditPlanModule
 
                 return result ? Results.Ok(dto) : Results.BadRequest("Failed to save Audit Plan.");
             })
-            .WithTags(_AuditPlan)
-            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
+            .WithTags(_AuditPlan);//.RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
             // GET ALL
             app.MapGet("/", async (

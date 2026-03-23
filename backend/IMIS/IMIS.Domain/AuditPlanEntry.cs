@@ -11,7 +11,6 @@ namespace IMIS.Domain
         public required DateTime Time { get; set; }
 
 
-
         public ICollection<IsoAuditProcess>? IsoAuditProcesses { get; set; }
 
         public ICollection<AuditPlanPersonResponsible>? ResponsiblePersons { get; set; }

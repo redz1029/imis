@@ -1,4 +1,5 @@
 using Base.Primitives;
+using IMIS.Application.AuditPlanModule;
 using IMIS.Application.AuditPlanPersonResponsibleModule;
 using IMIS.Application.AuditPlanProcessModule;
 using IMIS.Application.IsoAuditorModule;
@@ -15,7 +16,7 @@ namespace IMIS.Application.AuditPlanEntryModule
     public class AuditPlanEntryDto : BaseDto<AuditPlanEntry, int>
     {
         public required int AuditPlanId { get; set; }
-
+        public AuditPlanDto AuditPlan { get; set; }
         public required int DayNumber { get; set; }
 
         public required DateTime Time { get; set; }
@@ -69,6 +70,7 @@ namespace IMIS.Application.AuditPlanEntryModule
             {
                 Id = this.Id,
                 AuditPlanId = this.AuditPlanId,
+                AuditPlan = this.AuditPlan != null ? this.AuditPlan.ToEntity() : null,
                 DayNumber = this.DayNumber,
                 Time = this.Time,
 

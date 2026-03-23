@@ -80,14 +80,6 @@ namespace IMIS.Persistence
                   .WithMany(o => o.AuditorOffices)
                   .HasForeignKey(x => x.OfficeId);             
             });
-            //builder.Entity<AuditPlan>(entity =>
-            //{
-            //    entity.HasOne(a => a.SelectedApprover)
-            //          .WithMany()
-            //          .HasForeignKey(a => a.SelectedApproverId)
-            //          .OnDelete(DeleteBehavior.NoAction);
-
-            //});
 
             builder.Entity<AuditorTeams>()
                     .HasKey(at => at.Id);
@@ -149,11 +141,11 @@ namespace IMIS.Persistence
                     .HasForeignKey(x => x.OfficeId)
                     .OnDelete(DeleteBehavior.NoAction);
 
-                // Configure ISO Standard relationships
+            // Configure ISO Standard relationships
 
 
-                // Apply seed configurations
-                builder.ApplyConfiguration(new RoleConfiguration());
+            // Apply seed configurations
+            builder.ApplyConfiguration(new RoleConfiguration());
                 builder.ApplyConfiguration(new UserConfiguration());
                 builder.ApplyConfiguration(new UserRoleConfiguration());
                 builder.ApplyConfiguration(new OfficeTypeConfiguration());

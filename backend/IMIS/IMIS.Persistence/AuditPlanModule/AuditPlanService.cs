@@ -39,7 +39,6 @@ namespace IMIS.Application.AuditPlanModule
             if (entity.Id == 0)
             {
                 dbContext.Add(entity);
-                await dbContext.SaveChangesAsync(cancellationToken); // EF will handle transaction
             }
             else
             {
@@ -53,74 +52,72 @@ namespace IMIS.Application.AuditPlanModule
                     if (existing.Approvals?.Any() == true)
                         dbContext.Set<AuditPlanApproval>().RemoveRange(existing.Approvals);
 
-                    await dbContext.SaveChangesAsync(cancellationToken);
-
                     // Update main entity
-                    await _repository.UpdateAsync(entity, entity.Id, cancellationToken);
                 }
             }
+            await dbContext.SaveChangesAsync(cancellationToken); // EF will handle transaction
 
             // 2️⃣ Save AuditPlanEntries
-            if (entity.Entries?.Any() == true)
-            {
-                foreach (var entry in entity.Entries)
-                {
-                    entry.AuditPlanId = entity.Id; // FK must exist
-                    dbContext.Set<AuditPlanEntry>().Add(entry);
-                }
-                await dbContext.SaveChangesAsync(cancellationToken);
+            //if (entity.Entries?.Any() == true)
+            //{
+            //    foreach (var entry in entity.Entries)
+            //    {
+            //        entry.AuditPlanId = entity.Id; // FK must exist
+            //        dbContext.Set<AuditPlanEntry>().Add(entry);
+            //    }
+            //    await dbContext.SaveChangesAsync(cancellationToken);
 
-                // 3️⃣ Save nested children for each entry
-                foreach (var entry in entity.Entries)
-                {
-                    if (entry.IsoAuditors?.Any() == true)
-                    {
-                        foreach (var auditor in entry.IsoAuditors)
-                            auditor.AuditPlanEntryId = entry.Id;
-                        dbContext.Set<IsoAuditor>().AddRange(entry.IsoAuditors);
-                    }
+            //    // 3️⃣ Save nested children for each entry
+            //    foreach (var entry in entity.Entries)
+            //    {
+            //        if (entry.IsoAuditors?.Any() == true)
+            //        {
+            //            foreach (var auditor in entry.IsoAuditors)
+            //                auditor.AuditPlanEntryId = entry.Id;
+            //            dbContext.Set<IsoAuditor>().AddRange(entry.IsoAuditors);
+            //        }
 
-                    if (entry.ResponsiblePersons?.Any() == true)
-                    {
-                        foreach (var person in entry.ResponsiblePersons)
-                            person.AuditPlanEntryId = entry.Id;
-                        dbContext.Set<AuditPlanPersonResponsible>().AddRange(entry.ResponsiblePersons);
-                    }
+            //        if (entry.ResponsiblePersons?.Any() == true)
+            //        {
+            //            foreach (var person in entry.ResponsiblePersons)
+            //                person.AuditPlanEntryId = entry.Id;
+            //            dbContext.Set<AuditPlanPersonResponsible>().AddRange(entry.ResponsiblePersons);
+            //        }
 
-                    if (entry.IsoAuditProcesses?.Any() == true)
-                    {
-                        foreach (var process in entry.IsoAuditProcesses)
-                            process.AuditPlanEntryId = entry.Id;
-                        dbContext.Set<IsoAuditProcess>().AddRange(entry.IsoAuditProcesses);
-                    }
+            //        if (entry.IsoAuditProcesses?.Any() == true)
+            //        {
+            //            foreach (var process in entry.IsoAuditProcesses)
+            //                process.AuditPlanEntryId = entry.Id;
+            //            dbContext.Set<IsoAuditProcess>().AddRange(entry.IsoAuditProcesses);
+            //        }
 
-                    if (entry.IsoStandardAuditPlans?.Any() == true)
-                    {
-                        foreach (var plan in entry.IsoStandardAuditPlans)
-                            plan.AuditPlanEntryId = entry.Id;
-                        dbContext.Set<IsoStandardAuditPlan>().AddRange(entry.IsoStandardAuditPlans);
-                    }
+            //        if (entry.IsoStandardAuditPlans?.Any() == true)
+            //        {
+            //            foreach (var plan in entry.IsoStandardAuditPlans)
+            //                plan.AuditPlanEntryId = entry.Id;
+            //            dbContext.Set<IsoStandardAuditPlan>().AddRange(entry.IsoStandardAuditPlans);
+            //        }
 
-                    if (entry.AuditPlanProcesses?.Any() == true)
-                    {
-                        foreach (var planProcess in entry.AuditPlanProcesses)
-                            planProcess.AuditPlanEntryId = entry.Id;
-                        dbContext.Set<AuditPlanProcess>().AddRange(entry.AuditPlanProcesses);
-                    }
-                }
+            //        if (entry.AuditPlanProcesses?.Any() == true)
+            //        {
+            //            foreach (var planProcess in entry.AuditPlanProcesses)
+            //                planProcess.AuditPlanEntryId = entry.Id;
+            //            dbContext.Set<AuditPlanProcess>().AddRange(entry.AuditPlanProcesses);
+            //        }
+            //    }
 
-                await dbContext.SaveChangesAsync(cancellationToken);
-            }
+            //    await dbContext.SaveChangesAsync(cancellationToken);
+            //}
 
             // 4️⃣ Save Approvals
-            if (entity.Approvals?.Any() == true)
-            {
-                foreach (var approval in entity.Approvals)
-                    approval.AuditPlanId = entity.Id;
+            //if (entity.Approvals?.Any() == true)
+            //{
+            //    foreach (var approval in entity.Approvals)
+            //        approval.AuditPlanId = entity.Id;
 
-                dbContext.Set<AuditPlanApproval>().AddRange(entity.Approvals);
-                await dbContext.SaveChangesAsync(cancellationToken);
-            }
+            //    dbContext.Set<AuditPlanApproval>().AddRange(entity.Approvals);
+            //    await dbContext.SaveChangesAsync(cancellationToken);
+            //}
         }
         // Other retrieval methods...
         public async Task<List<AuditPlanDto>?> GetAllAsync(CancellationToken cancellationToken)

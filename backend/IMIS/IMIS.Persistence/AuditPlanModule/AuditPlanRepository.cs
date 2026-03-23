@@ -18,7 +18,7 @@ namespace IMIS.Persistence.AuditPlanModule
         public async Task<AuditPlan?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
             return await ReadOnlyDbContext.Set<AuditPlan>()
-                .Include(x => x.Preparer)
+                //.Include(x => x.Preparer)
                 .Include(x => x.Entries)
                 .Include(x => x.Approvals)
                 .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
