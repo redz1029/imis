@@ -199,10 +199,11 @@ namespace IMIS.Presentation.UserModule
 
             // User Role Management Endpoints
             var userRoleGroup = endpoints.MapGroup("").WithTags(UserRoleGroup);
-            userRoleGroup.MapGet("/userRoles", GetUserRoles).CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup)); 
+            userRoleGroup.MapGet("/userRoles", async (int page, int pageSize, IServiceProvider sp) => await GetUserRoles(sp, page, pageSize))
+            .CacheOutput(options => options.Expire(TimeSpan.FromMinutes(2)).Tag(RoleGroup));
             userRoleGroup.MapPost("/userRoles", AssignUserRoles);           
             userRoleGroup.MapPut("/updateUserRole", UpdateUserRoles);
-            userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);
+            userRoleGroup.MapDelete("/deleteUserRole", DeleteUserRole);      
 
             return authGroup;
         }
@@ -609,12 +610,25 @@ namespace IMIS.Presentation.UserModule
 
             return Results.Ok("Role deleted successfully.");
         }
-        private static async Task<IResult> GetUserRoles(IServiceProvider sp)
+       
+        private static async Task<IResult> GetUserRoles(IServiceProvider sp, int page, int pageSize)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
             var roleManager = sp.GetRequiredService<RoleManager<IdentityRole>>();
 
-            var users = userManager.Users.ToList();
+            page = page <= 0 ? 1 : page;
+            pageSize = pageSize <= 0 ? 10 : pageSize;
+            pageSize = pageSize > 100 ? 100 : pageSize;
+
+            var query = userManager.Users;
+
+            var totalCount = await query.CountAsync();
+
+            var users = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
             var userRolesList = new List<object>();
 
             foreach (var user in users)
@@ -625,29 +639,40 @@ namespace IMIS.Presentation.UserModule
                 foreach (var roleName in roleNames)
                 {
                     var role = await roleManager.FindByNameAsync(roleName);
+
                     if (role != null)
                     {
                         rolesWithIds.Add(new
                         {
-                            RoleId = role.Id, 
+                            RoleId = role.Id,
                             RoleName = role.Name
                         });
                     }
                 }
+
                 userRolesList.Add(new
                 {
                     UserId = user.Id,
-                    UserName = user.UserName,  
-                    FirstName = user.FirstName, 
+                    UserName = user.UserName,
+                    FirstName = user.FirstName,
                     MiddleName = user.MiddleName,
                     LastName = user.LastName,
                     Roles = rolesWithIds
-
                 });
             }
-            return Results.Ok(userRolesList);
+
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+
+            return Results.Ok(new
+            {               
+                data = userRolesList,
+                totalCount,
+                totalPages,
+                page,
+                pageSize,
+            });
         }
-     
+
         private static async Task<IResult> AssignUserRoles([FromBody] List<AssignUserRolesRequest> requests, IServiceProvider sp)
         {
             var userManager = sp.GetRequiredService<UserManager<User>>();
