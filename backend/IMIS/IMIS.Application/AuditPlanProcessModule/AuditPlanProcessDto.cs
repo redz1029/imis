@@ -6,36 +6,29 @@ namespace IMIS.Application.AuditPlanProcessModule
 {
     public class AuditPlanProcessDto : BaseDto<AuditPlanProcess, int>
     {
-        public required string Name { get; set; }
-        public string? Description { get; set; }
-        public required bool IsActive { get; set; }
-        public DateTime CreatedDate { get; set; }
+        public int OfficeId { get; set; }
+        public int AuditPlanEntryId { get; set; }
 
         public AuditPlanProcessDto() { }
-        
+
         [SetsRequiredMembers]
-        public AuditPlanProcessDto(AuditPlanProcess process)
+        public AuditPlanProcessDto(AuditPlanProcess entity)
         {
-            Id = process.Id;
-            Name = process.Name;
-            Description = process.Description;
-            IsActive = process.IsActive;
-            CreatedDate = process.CreatedDate;
-            IsDeleted = process.IsDeleted;
-            RowVersion = process.RowVersion;
+            if (entity != null)
+            {
+                Id = entity.Id;
+                OfficeId = entity.OfficeId;
+                AuditPlanEntryId = entity.AuditPlanEntryId;
+            }
         }
 
         public override AuditPlanProcess ToEntity()
         {
-            return new AuditPlanProcess
+            return new AuditPlanProcess()
             {
                 Id = Id,
-                Name = Name,
-                Description = Description,
-                IsActive = IsActive,
-                CreatedDate = CreatedDate,
-                IsDeleted = IsDeleted,
-                RowVersion = RowVersion
+                OfficeId = OfficeId,
+                AuditPlanEntryId = AuditPlanEntryId
             };
         }
     }

@@ -11,9 +11,6 @@ namespace IMIS.Application.StandardVersionModule
         public required string VersionName { get; set; }
         public bool IsActive { get; set; }
 
-      
-        
-
         public StandardVersionDto() { }
 
         [SetsRequiredMembers]

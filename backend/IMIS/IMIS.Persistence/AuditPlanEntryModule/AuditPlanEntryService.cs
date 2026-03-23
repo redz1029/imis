@@ -1,214 +1,214 @@
-using Base.Abstractions;
-using Base.Pagination;
+﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditPlanEntryModule;
+using IMIS.Application.AuditPlanModule;
 using IMIS.Domain;
-using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.AuditPlanEntryModule
 {
-    public class AuditPlanEntryService : IAuditPlanEntryService
+    public class AuditPlanEntryService(IAuditPlanEntryRepository repository) : IAuditPlanEntryService
     {
-        private readonly IAuditPlanEntryRepository _repository;
-        private readonly ImisDbContext _dbContext;
-
-        public AuditPlanEntryService(IAuditPlanEntryRepository repository)
-        {
-            _repository = repository;
-        }
-
-        public AuditPlanEntryService(IAuditPlanEntryRepository repository, ImisDbContext dbContext)
-        {
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        }
-
-        #region READ
+        private readonly IAuditPlanEntryRepository _repository = repository;
 
         public async Task<List<AuditPlanEntryDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var entities = await _repository.GetAll(cancellationToken).ConfigureAwait(false);
-            if (entities == null || !entities.Any()) return null;
+            var entities = await _repository.GetAllAsync(cancellationToken).ConfigureAwait(false);
 
-            return entities.Select(x => new AuditPlanEntryDto(x)).ToList();
+            return entities?.Select(e => new AuditPlanEntryDto(e)).ToList();
         }
 
-        public async Task<AuditPlanEntryDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
+        public async Task<List<string>> GetConflictValidationsAsync(AuditPlanEntryDto dto, CancellationToken cancellationToken)
         {
-            var entity = await _repository.GetWithDetailsAsync(id, cancellationToken).ConfigureAwait(false);
+            List<string> errors = new();
+
+            // 🔥 Example validations (you can expand this later)
+
+            // 1. Duplicate auditors
+            if (dto.IsoAuditors != null && dto.IsoAuditors.Any())
+            {
+                var duplicateAuditors = dto.IsoAuditors
+                    .GroupBy(x => x.AuditorId)
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key);
+
+                foreach (var auditorId in duplicateAuditors)
+                {
+                    errors.Add($"Duplicate auditor detected: AuditorId {auditorId}");
+                }
+            }
+
+            // 2. Duplicate processes
+            if (dto.AuditPlanProcesses != null && dto.AuditPlanProcesses.Any())
+            {
+                var duplicateProcesses = dto.AuditPlanProcesses
+                    .GroupBy(x => x.AuditPlanEntryId)
+                    .Where(g => g.Count() > 1)
+                    .Select(g => g.Key);
+
+                foreach (var processId in duplicateProcesses)
+                {
+                    errors.Add($"Duplicate process detected: ProcessId {processId}");
+                }
+            }
+
+            // 3. Missing required collections
+            if (dto.IsoAuditProcesses == null || !dto.IsoAuditProcesses.Any())
+            {
+                errors.Add("At least one ISO Audit Process is required.");
+            }
+
+            return errors;
+        }
+        public async Task<List<AuditPlanEntryDto>?> GetAllByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken)
+        {
+            var entities = await _repository
+                .GetAllByAuditPlanIdAsync(auditPlanId, cancellationToken)
+                .ConfigureAwait(false);
+
+            return entities?.Select(e => new AuditPlanEntryDto(e)).ToList();
+        }
+
+        public async Task<AuditPlanEntryDto?> GetByAuditPlanEntryIdAsync(int id, CancellationToken cancellationToken)
+        {
+            var entity = await _repository
+                .GetByAuditPlanEntryIdAsync(id, cancellationToken)
+                .ConfigureAwait(false);
+
             return entity != null ? new AuditPlanEntryDto(entity) : null;
-        }
-
-        public async Task<DtoPageList<AuditPlanEntryDto, AuditPlanEntry, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
-        {
-            var result = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken).ConfigureAwait(false);
-            if (result.TotalCount == 0) return null!;
-
-            return DtoPageList<AuditPlanEntryDto, AuditPlanEntry, int>.Create(result.Items, page, pageSize, result.TotalCount);
-        }
-
-        public async Task<List<AuditPlanEntryDto>?> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken)
-        {
-            var entries = await _repository.FilterByAuditPlanId(auditPlanId, cancellationToken).ConfigureAwait(false);
-            return entries != null && entries.Any() ? entries.Select(x => new AuditPlanEntryDto(x)).ToList() : null;
-        }
-
-        public async Task<List<AuditPlanEntryDto>?> GetByDayNumberAsync(int auditPlanId, int dayNumber, CancellationToken cancellationToken)
-        {
-            var entries = await _repository.FilterByDayNumber(auditPlanId, dayNumber, cancellationToken).ConfigureAwait(false);
-            return entries != null && entries.Any() ? entries.Select(x => new AuditPlanEntryDto(x)).ToList() : null;
-        }
-
-        public async Task<List<AuditPlanEntryDto>?> GetByOfficeIdAsync(int officeId, CancellationToken cancellationToken)
-        {
-            var entries = await _repository.FilterByOfficeId(officeId, cancellationToken).ConfigureAwait(false);
-            return entries != null && entries.Any() ? entries.Select(x => new AuditPlanEntryDto(x)).ToList() : null;
-        }
-
-        public async Task<List<AuditPlanEntryDto>?> GetByTeamIdAsync(int teamId, CancellationToken cancellationToken)
-        {
-            var entries = await _repository.FilterByTeamId(teamId, cancellationToken).ConfigureAwait(false);
-            return entries != null && entries.Any() ? entries.Select(x => new AuditPlanEntryDto(x)).ToList() : null;
-        }
-
-        public async Task<List<AuditPlanEntryDto>?> GetByAuditorIdAsync(string auditorId, CancellationToken cancellationToken)
-        {
-            var entries = await _repository.FilterByAuditorId(auditorId, cancellationToken).ConfigureAwait(false);
-            return entries != null && entries.Any() ? entries.Select(x => new AuditPlanEntryDto(x)).ToList() : null;
-        }
-
-        public async Task<List<AuditPlanEntryDto>?> GetByProcessIdAsync(int processId, CancellationToken cancellationToken)
-        {
-            var entries = await _repository.FilterByProcessId(processId, cancellationToken).ConfigureAwait(false);
-            return entries != null && entries.Any() ? entries.Select(x => new AuditPlanEntryDto(x)).ToList() : null;
-        }
-
-        public async Task<List<AuditPlanEntryDto>?> GetByResponsiblePersonIdAsync(int personId, CancellationToken cancellationToken)
-        {
-            var entries = await _repository.FilterByResponsiblePersonId(personId, cancellationToken).ConfigureAwait(false);
-            return entries != null && entries.Any() ? entries.Select(x => new AuditPlanEntryDto(x)).ToList() : null;
-        }
-
-        public async Task<List<AuditPlanEntryDto>?> GetByIsoStandardIdAsync(int standardId, CancellationToken cancellationToken)
-        {
-            var entries = await _repository.FilterByIsoStandardId(standardId, cancellationToken).ConfigureAwait(false);
-            return entries != null && entries.Any() ? entries.Select(x => new AuditPlanEntryDto(x)).ToList() : null;
-        }
-
-        #endregion
-
-        #region COMMANDS
-
-        /// <summary>
-        /// Fixes CS0535 and CS4032. 
-        /// Routes the base DTO to the specific Create/Update logic of this service.
-        /// </summary>
-        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)where TEntity : Entity<TId>
-        {
-            // Cast to specific DTO for this service
-            if (dto is not AuditPlanEntryDto entryDto) return;
-
-            // Ensure the ID comparison is handled correctly
-            if (EqualityComparer<TId>.Default.Equals(dto.Id, default))
-            {
-                // Logic for Create
-                var entity = entryDto.ToEntity();
-                _repository.Add(entity); // Fix for CS1061: use Add instead of AddAsync
-            }
-            else
-            {
-                // Logic for Update
-                var id = (int)(object)dto.Id; // Cast TId to int
-                var entity = entryDto.ToEntity();
-                await _repository.UpdateAsync(entity, id, cancellationToken).ConfigureAwait(false);
-            }
-
-           
-        }
-        
-
-        public async Task<AuditPlanEntryDto> CreateAsync(AuditPlanEntryDto entryDto, CancellationToken cancellationToken)
-        {
-            var entity = entryDto.ToEntity();
-            _dbContext.Add(entity);
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return new AuditPlanEntryDto(entity);
-        }
-
-        public async Task<AuditPlanEntryDto> UpdateAsync(AuditPlanEntryDto dto, CancellationToken cancellationToken)
-        {
-            var incoming = dto.ToEntity();
-            var existing = await _repository.GetWithDetailsAsync(dto.Id, cancellationToken).ConfigureAwait(false)
-                           ?? throw new InvalidOperationException("Audit Plan Entry not found.");
-
-            _dbContext.Entry(existing).CurrentValues.SetValues(incoming);
-
-            // Synchronize child collections
-            UpdateCollection(existing.Auditors, incoming.Auditors);
-            UpdateCollection(existing.IsoStandards, incoming.IsoStandards);
-            UpdateCollection(existing.AuditPlanProcesses, incoming.AuditPlanProcesses);
-            UpdateCollection(existing.ResposiblePersons, incoming.ResposiblePersons);
-
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return new AuditPlanEntryDto(existing);
-        }
-
-        public async Task<List<AuditPlanEntryDto>> CreateMultipleAsync(List<AuditPlanEntryDto> entriesDto, CancellationToken cancellationToken)
-        {
-            var entities = entriesDto.Select(x => x.ToEntity()).ToList();
-            _dbContext.AddRange(entities);
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-            return entities.Select(x => new AuditPlanEntryDto(x)).ToList();
         }
 
         public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
-            var entry = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken).ConfigureAwait(false);
-            if (entry == null) return false;
+            var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
 
-            entry.IsDeleted = true;
-            await _dbContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            if (entity == null)
+                return false;
+
+            entity.IsDeleted = true;
+
+            var context = _repository.GetDbContext();
+            await context.SaveChangesAsync(cancellationToken);
+
             return true;
         }
 
-        #endregion
-
-        /// <summary>
-        /// Fixes 'IMIS.Domain.User' reference conversion error.
-        /// Uses 'dynamic' to access Id and IsDeleted regardless of the base class.
-        /// </summary>
-        private void UpdateCollection<T>(List<T>? existingList, List<T>? incomingList) where T : class
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
+    where TEntity : Entity<TId>
         {
-            if (existingList == null) return;
-            var incomingListSafe = incomingList ?? new List<T>();
+            if (dto is not AuditPlanEntryDto aDto)
+                throw new InvalidOperationException("Invalid DTO type for AuditPlanEntry saving.");
 
-            // 1. Handle Deletions and Updates
-            foreach (var existingItem in existingList.ToList())
+            var entity = aDto.ToEntity();
+            var isNew = entity.Id == 0;
+            var dbContext = _repository.GetDbContext();
+
+            // --- 1. Save or update main entity ---
+            if (isNew)
             {
-                dynamic existingDyn = existingItem;
-                var match = incomingListSafe.FirstOrDefault(i => ((dynamic)i).Id == existingDyn.Id && ((dynamic)i).Id != 0);
+                dbContext.Add(entity);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+            else
+            {
+                await _repository.UpdateAsync(entity, entity.Id, cancellationToken);
+            }
 
-                if (match == null)
+            // --- 2. Handle child collections individually ---
+
+            // IsoAuditProcesses
+            if (entity.IsoAuditProcesses?.Any() == true)
+            {
+                var existingIds = await _repository.GetExistingIsoAuditProcessIdsAsync(entity.Id, cancellationToken);
+                var newItems = entity.IsoAuditProcesses
+                    .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+                    .ToList();
+
+                if (newItems.Any())
                 {
-                    existingDyn.IsDeleted = true;
-                }
-                else
-                {
-                    bool wasDeleted = existingDyn.IsDeleted;
-                    _dbContext.Entry(existingItem).CurrentValues.SetValues((object)match);
-                    existingDyn.IsDeleted = wasDeleted;
+                    newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+                    await _repository.AddIsoAuditProcessesAsync(newItems, cancellationToken);
                 }
             }
 
-            // 2. Handle Additions
-            foreach (var incomingItem in incomingListSafe)
+            // ResponsiblePersons
+            if (entity.ResponsiblePersons?.Any() == true)
             {
-                dynamic incomingDyn = incomingItem;
-                if (incomingDyn.Id == 0)
+                var existingIds = await _repository.GetExistingResponsiblePersonIdsAsync(entity.Id, cancellationToken);
+                var newItems = entity.ResponsiblePersons
+                    .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+                    .ToList();
+
+                if (newItems.Any())
                 {
-                    existingList.Add(incomingItem);
+                    newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+                    await _repository.AddResponsiblePersonsAsync(newItems, cancellationToken);
                 }
             }
+
+            // IsoAuditors
+            if (entity.IsoAuditors?.Any() == true)
+            {
+                var existingIds = await _repository.GetExistingIsoAuditorIdsAsync(entity.Id, cancellationToken);
+                var newItems = entity.IsoAuditors
+                    .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+                    .ToList();
+
+                if (newItems.Any())
+                {
+                    newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+                    await _repository.AddIsoAuditorsAsync(newItems, cancellationToken);
+                }
+            }
+
+            // IsoStandardAuditPlans
+            if (entity.IsoStandardAuditPlans?.Any() == true)
+            {
+                var existingIds = await _repository.GetExistingIsoStandardAuditPlanIdsAsync(entity.Id, cancellationToken);
+                var newItems = entity.IsoStandardAuditPlans
+                    .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+                    .ToList();
+
+                if (newItems.Any())
+                {
+                    newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+                    await _repository.AddIsoStandardAuditPlansAsync(newItems, cancellationToken);
+                }
+            }
+
+            // AuditPlanProcesses
+            if (entity.AuditPlanProcesses?.Any() == true)
+            {
+                var existingIds = await _repository.GetExistingAuditPlanProcessIdsAsync(entity.Id, cancellationToken);
+                var newItems = entity.AuditPlanProcesses
+                    .Where(x => x.Id == 0 || !existingIds.Contains(x.Id))
+                    .ToList();
+
+                if (newItems.Any())
+                {
+                    newItems.ForEach(x => x.AuditPlanEntryId = entity.Id);
+                    await _repository.AddAuditPlanProcessesAsync(newItems, cancellationToken);
+                }
+            }
+        }
+        public async Task<DtoPageList<AuditPlanEntryDto, AuditPlanEntry, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
+        {
+            var result = await _repository
+                .GetPaginatedAsync(page, pageSize, cancellationToken)
+                .ConfigureAwait(false);
+
+            if (result.TotalCount == 0)
+                return null;
+
+            return DtoPageList<AuditPlanEntryDto, AuditPlanEntry, int>
+                .Create(result.Items, page, pageSize, result.TotalCount);
+        }
+        public async Task<bool> SaveAuditPlanEntryDetailsAsync(AuditPlanEntryDto dto, CancellationToken cancellationToken)
+        {
+            if (dto == null)
+                return false;
+
+            await SaveOrUpdateAsync(dto, cancellationToken);
+            return true;
         }
     }
 }

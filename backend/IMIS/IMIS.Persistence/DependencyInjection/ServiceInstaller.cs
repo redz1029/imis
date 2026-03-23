@@ -1,12 +1,19 @@
-﻿using Base.Abstractions;
-using IMIS.Application.AnnouncementModule;
+﻿using IMIS.Application.AnnouncementModule;
 using IMIS.Application.AuditorModule;
 using IMIS.Application.AuditorOfficesModule;
 using IMIS.Application.AuditorTeamsModule;
+using IMIS.Application.AuditPlanApprovalModule;
+using IMIS.Application.AuditPlanEntryModule;
+using IMIS.Application.AuditPlanModule;
+using IMIS.Application.AuditPlanPersonResponsibleModule;
+using IMIS.Application.AuditPlanProcessModule;
 using IMIS.Application.AuditScheduleModule;
 using IMIS.Application.BreakThroughScoringModule;
-using IMIS.Application.IsoStandardModule;
 using IMIS.Application.ImprovementTypeModule;
+using IMIS.Application.IsoAuditorModule;
+using IMIS.Application.IsoAuditProcessModule;
+using IMIS.Application.IsoStandardAuditPlanModule;
+using IMIS.Application.IsoStandardModule;
 using IMIS.Application.KraRoadMapDeliverableModule;
 using IMIS.Application.KraRoadMapKpiModule;
 using IMIS.Application.KraRoadMapModule;
@@ -29,9 +36,17 @@ using IMIS.Persistence.AnnouncementModule;
 using IMIS.Persistence.AuditorModule;
 using IMIS.Persistence.AuditorOfficesModule;
 using IMIS.Persistence.AuditorTeamsModule;
+using IMIS.Persistence.AuditPlanApprovalModule;
+using IMIS.Persistence.AuditPlanEntryModule;
+using IMIS.Persistence.AuditPlanModule;
+using IMIS.Persistence.AuditPlanPersonResponsibleModule;
+using IMIS.Persistence.AuditPlanProcessModule;
 using IMIS.Persistence.AuditScheduleModule;
 using IMIS.Persistence.BreakThroughScoringModule;
 using IMIS.Persistence.ImprovementTypeModule;
+using IMIS.Persistence.IsoAuditorModule;
+using IMIS.Persistence.IsoAuditProcessModule;
+using IMIS.Persistence.IsoStandardAuditPlanModule;
 using IMIS.Persistence.IsoStandardModule;
 using IMIS.Persistence.KraModule;
 using IMIS.Persistence.KraRoadMapDeliverableModule;
@@ -53,16 +68,8 @@ using IMIS.Persistence.SWOTAnalysisModule;
 using IMIS.Persistence.TeamModule;
 using IMIS.Persistence.UserOfficeModule;
 using Microsoft.Extensions.DependencyInjection;
-using IMIS.Persistence.AuditPlanModule;
-using IMIS.Application.AuditPlanModule;
-using IMIS.Application.AuditPlanApprovalModule;
-using IMIS.Persistence.AuditPlanApprovalModule;
-using IMIS.Application.AuditPlanEntryModule;
-using IMIS.Persistence.AuditPlanEntryModule;
-using IMIS.Application.AuditPlanPersonResponsibleModule;
-using IMIS.Persistence.AuditPlanPersonResponsibleModule;
-using IMIS.Application.AuditPlanProcessModule;
-using IMIS.Persistence.AuditPlanProcessModule;
+
+
 
 namespace IMIS.Persistence.DependencyInjection
 {
@@ -173,6 +180,20 @@ namespace IMIS.Persistence.DependencyInjection
 
             services.AddScoped<IAuditPlanProcessRepository, AuditPlanProcessRepository>();
             services.AddScoped<IAuditPlanProcessService, AuditPlanProcessService>();
+            services.AddScoped<IIsoAuditProcessRepository,IsoAuditProcessRepository>();
+            services.AddScoped<IIsoAuditProcessService, IsoAuditProcessService>();
+            // Inside your Program.cs or Service registration method
+            // You MUST add these registrations
+            services.AddScoped<IIsoAuditorService, IsoAuditorService>();
+            services.AddScoped<IIsoAuditorRepository, IsoAuditorRepository>();
+
+            services.AddScoped<IIsoStandardAuditPlanService, IsoStandardAuditPlanService>();
+            services.AddScoped<IIsoStandardAuditPlanRepository, IsoStandardAuditPlanRepository>();
+
+
+
+
+
 
 
 

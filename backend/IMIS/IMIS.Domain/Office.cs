@@ -13,6 +13,8 @@ namespace IMIS.Domain
         public int? ParentOfficeId { get; set; }
         public Office? ParentOffice { get; set; }
 
+        
+
         public ICollection<AuditorOffices>? AuditorOffices { get; set; }
         public ICollection<AuditableOffices>? AuditableOffices { get; set; }
         public ICollection<UserOffices>? UserOffices { get; set; }

@@ -6,97 +6,59 @@ using Microsoft.EntityFrameworkCore;
 
 namespace IMIS.Persistence.AuditPlanProcessModule
 {
-    
-    public class AuditPlanProcessRepository : BaseRepository<AuditPlanProcess, int, ImisDbContext, User>, IAuditPlanProcessRepository
+    public class AuditPlanProcessRepository(ImisDbContext dbContext)
+        : BaseRepository<AuditPlanProcess, int, ImisDbContext, User>(dbContext), IAuditPlanProcessRepository
     {
-      
-        private readonly ImisDbContext _localContext;
-
-        public AuditPlanProcessRepository(ImisDbContext dbContext) : base(dbContext)
-        {
-            _localContext = dbContext;
-        }
-
-        #region READ QUERIES
-
         public async Task<EntityPageList<AuditPlanProcess, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var query = _entities
-                .AsNoTracking()
-                .OrderBy(x => x.Name);
-
             return await EntityPageList<AuditPlanProcess, int>
-                .CreateAsync(query, page, pageSize, cancellationToken)
+                .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken)
                 .ConfigureAwait(false);
-        }
-
-        public async Task<IEnumerable<AuditPlanProcess>?> GetAllAsync(CancellationToken cancellationToken)
-        {
-            return await _entities
-                .AsNoTracking()
-                .OrderBy(x => x.Name)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        public async Task<IEnumerable<AuditPlanProcess>?> GetActiveAsync(CancellationToken cancellationToken)
-        {
-            return await _entities
-                .Where(x => x.IsActive)
-                .AsNoTracking()
-                .OrderBy(x => x.Name)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        public async Task<IEnumerable<AuditPlanProcess>?> SearchByNameAsync(string name, CancellationToken cancellationToken)
-        {
-            return await _entities
-                .Where(x => x.Name.Contains(name))
-                .AsNoTracking()
-                .OrderBy(x => x.Name)
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        public async Task<AuditPlanProcess?> GetByNameAsync(string name, CancellationToken cancellationToken)
-        {
-            return await _entities
-                .FirstOrDefaultAsync(x => x.Name == name, cancellationToken)
-                .ConfigureAwait(false);
-        }
-
-        #endregion
-
-        #region VALIDATION & INFRASTRUCTURE
-
-        public async Task<bool> ExistsByNameAsync(string name, int? excludeId = null, CancellationToken cancellationToken = default)
-        {
-            var query = _entities.AsNoTracking().Where(x => x.Name == name);
-
-            if (excludeId.HasValue)
-            {
-                query = query.Where(x => x.Id != excludeId.Value);
-            }
-
-            return await query.AnyAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-       
-        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            
-            return await _localContext.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<AuditPlanProcess?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
-            // Using ReadOnlyDbContext which is a protected member of BaseRepository
+            // Accesses the set directly to ensure we can find the entity for deletion state change
             return await ReadOnlyDbContext.Set<AuditPlanProcess>()
-                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken)
+                .FirstOrDefaultAsync(d => d.Id == id, cancellationToken);
+        }
+
+        public async Task<IEnumerable<AuditPlanProcess>> GetAll(CancellationToken cancellationToken)
+        {
+            return await _entities
+                .AsNoTracking()
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        #endregion
+        public async Task<AuditPlanProcess?> GetWithDetailsAsync(int id, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .AsNoTracking()
+                .Include(x => x.Office)
+                .Include(x => x.AuditPlanEntry)
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        // --- Filtered Query Implementations ---
+
+        public async Task<IEnumerable<AuditPlanProcess>> FilterByOfficeId(int officeId, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .AsNoTracking()
+                .Where(x => x.OfficeId == officeId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        public async Task<IEnumerable<AuditPlanProcess>> FilterByAuditPlanEntryId(int entryId, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .AsNoTracking()
+                .Where(x => x.AuditPlanEntryId == entryId)
+                .ToListAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

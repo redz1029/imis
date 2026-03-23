@@ -42,13 +42,17 @@ namespace IMIS.Persistence
         public DbSet<StandardVersion> StandardVersions { get; set; }
         public DbSet<IsoStandard> IsoStandards { get; set; }
         public DbSet<ImprovementType> ImprovementType { get; set; }
-        
+        public DbSet<IsoAuditProcess> IsoAuditProcess { get; set; }
+        public DbSet<AuditPlanEntry>AuditPlanEntries { get; set; }
+
+
         // Audit Plan entities
         public DbSet<AuditPlan> AuditPlans { get; set; }
-        public DbSet<AuditPlanEntry> AuditPlanEntries { get; set; }
         public DbSet<AuditPlanProcess> AuditPlanProcesses { get; set; }
         public DbSet<AuditPlanPersonResponsible> AuditPlanPersonResponsibles { get; set; }
         public DbSet<AuditPlanApproval> AuditPlanApprovals { get; set; }
+        public DbSet<IsoAuditor> IsoAuditors { get; set; }
+        public DbSet<IsoStandardAuditPlan> IsoStandardAuditPlans { get; set; }
 
         public ImisDbContext(DbContextOptions<ImisDbContext> options)
             : base(options)
@@ -76,14 +80,14 @@ namespace IMIS.Persistence
                   .WithMany(o => o.AuditorOffices)
                   .HasForeignKey(x => x.OfficeId);             
             });
-            builder.Entity<AuditPlan>(entity =>
-            {
-                entity.HasOne(a => a.SelectedApprover)
-                      .WithMany()
-                      .HasForeignKey(a => a.SelectedApproverId)
-                      .OnDelete(DeleteBehavior.NoAction);
+            //builder.Entity<AuditPlan>(entity =>
+            //{
+            //    entity.HasOne(a => a.SelectedApprover)
+            //          .WithMany()
+            //          .HasForeignKey(a => a.SelectedApproverId)
+            //          .OnDelete(DeleteBehavior.NoAction);
 
-            });
+            //});
 
             builder.Entity<AuditorTeams>()
                     .HasKey(at => at.Id);

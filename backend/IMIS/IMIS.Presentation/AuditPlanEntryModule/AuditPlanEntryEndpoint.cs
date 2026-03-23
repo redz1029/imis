@@ -1,7 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AuditPlanEntryModule;
-using IMIS.Application.KraRoadMapPeriodModule;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,126 +10,136 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IMIS.Presentation.AuditPlanEntryModule
 {
-    public class AuditPlanEntryEndpoint : CarterModule
+    public class AuditPlanEntryEndPoints : CarterModule
     {
-        private const string _tag = "AuditPlanEntry";
-        public readonly AuditPlanEntryPermission _AuditPlanEntryPermission = new();
+        private const string _AuditPlanEntry = "AuditPlanEntry";
+        public readonly AuditPlanEntryPermission _permission = new();
 
-        public AuditPlanEntryEndpoint() : base("/auditplanentries")
+        public AuditPlanEntryEndPoints() : base("/auditPlanEntry")
         {
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            // --- READ OPERATIONS ---
+            // CREATE
+            app.MapPost("/", async (
+                [FromBody] AuditPlanEntryDto dto,
+                IAuditPlanEntryService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                if (dto == null)
+                    return Results.BadRequest("Invalid request.");
+
+                var conflicts = await service.GetConflictValidationsAsync(dto, cancellationToken);
+                if (conflicts.Count > 0)
+                    return Results.BadRequest(new { Errors = conflicts });
+
+                var result = await service.SaveAuditPlanEntryDetailsAsync(dto, cancellationToken);
+
+                await cache.EvictByTagAsync(_AuditPlanEntry, cancellationToken);
+
+                return result ? Results.Ok(dto) : Results.BadRequest("Failed to save Audit Plan Entry.");
+            })
+            .WithTags(_AuditPlanEntry)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
             // GET ALL
-            app.MapGet("/", async (IAuditPlanEntryService service, CancellationToken ct) =>
+            app.MapGet("/", async (
+                IAuditPlanEntryService service,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.GetAllAsync(ct);
-                return result != null ? Results.Ok(result) : Results.NoContent();
+                var result = await service.GetAllAsync(cancellationToken);
+                return Results.Ok(result);
             })
-            .WithTags(_tag);
+            .WithTags(_AuditPlanEntry)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlanEntry), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
             // GET BY ID
-            app.MapGet("/{id:int}", async (int id, IAuditPlanEntryService service, CancellationToken ct) =>
+            app.MapGet("/{id:int}", async (
+                int id,
+                IAuditPlanEntryService service,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.GetByIdAsync(id, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound("Audit Plan Entry not found.");
+                var result = await service.GetByAuditPlanEntryIdAsync(id, cancellationToken);
+
+                return result != null ? Results.Ok(result) : Results.NotFound();
             })
-            .WithTags(_tag);
+            .WithTags(_AuditPlanEntry)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlanEntry), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
-            // PAGINATION - Explicitly using FromQuery for clarity
-            app.MapGet("/page", async ([FromQuery] int page, [FromQuery] int pageSize, IAuditPlanEntryService service, CancellationToken ct) =>
+            // GET BY AUDIT PLAN ID
+            app.MapGet("/by-audit-plan/{auditPlanId:int}", async (
+                int auditPlanId,
+                IAuditPlanEntryService service,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.GetPaginatedAsync(page, pageSize, ct);
-                return result != null ? Results.Ok(result) : Results.NoContent();
-            })
-            .WithTags(_tag)
-            .CacheOutput(b => b.Expire(TimeSpan.FromMinutes(2)).Tag(_tag), true);
-
-            // --- FILTERED QUERIES ---
-
-            app.MapGet("/plan/{auditPlanId:int}", async (int auditPlanId, IAuditPlanEntryService service, CancellationToken ct) =>
-            {
-                var result = await service.GetByAuditPlanIdAsync(auditPlanId, ct);
+                var result = await service.GetAllByAuditPlanIdAsync(auditPlanId, cancellationToken);
                 return Results.Ok(result);
             })
-            .WithTags(_tag);
+            .WithTags(_AuditPlanEntry)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlanEntry), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
-            // FIX: Changed auditorId to string to match User Entity (Identity)
-            app.MapGet("/auditor/{auditorId}", async (string auditorId, IAuditPlanEntryService service, CancellationToken ct) =>
+            // UPDATE
+            app.MapPut("/{id:int}", async (
+                int id,
+                [FromBody] AuditPlanEntryDto dto,
+                IAuditPlanEntryService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.GetByAuditorIdAsync(auditorId, ct);
-                return Results.Ok(result);
-            })
-            .WithTags(_tag);
+                if (dto == null)
+                    return Results.BadRequest("Invalid request.");
 
-            app.MapGet("/office/{officeId:int}", async (int officeId, IAuditPlanEntryService service, CancellationToken ct) =>
-            {
-                var result = await service.GetByOfficeIdAsync(officeId, ct);
-                return Results.Ok(result);
-            })
-            .WithTags(_tag);
-
-            app.MapGet("/process/{processId:int}", async (int processId, IAuditPlanEntryService service, CancellationToken ct) =>
-            {
-                var result = await service.GetByProcessIdAsync(processId, ct);
-                return Results.Ok(result);
-            })
-            .WithTags(_tag);
-
-            // --- WRITE OPERATIONS ---
-
-            // CREATE / UPDATE SINGLE (Standardized with SaveOrUpdate)
-            app.MapPost("/", async ([FromBody] AuditPlanEntryDto dto, IAuditPlanEntryService service, IOutputCacheStore cache, CancellationToken ct) =>
-            {
-                if (dto == null) return Results.BadRequest("Data is required.");
-
-                await service.SaveOrUpdateAsync(dto, ct);
-                await cache.EvictByTagAsync(_tag, ct);
-
-                return Results.Ok(dto);
-            })
-            .WithTags(_tag);
-
-            // BULK POST (Referencing your IsoStandard list pattern)
-            app.MapPost("/bulk", async ([FromBody] List<AuditPlanEntryDto> dtos, IAuditPlanEntryService service, IOutputCacheStore cache, CancellationToken ct) =>
-            {
-                if (dtos == null || !dtos.Any()) return Results.BadRequest("Data list is required.");
-
-                foreach (var dto in dtos)
-                {
-                    await service.SaveOrUpdateAsync(dto, ct);
-                }
-
-                await cache.EvictByTagAsync(_tag, ct);
-                return Results.Ok(new { message = "Bulk operation successful." });
-            })
-            .WithTags(_tag);
-
-            app.MapPut("/{id:int}", async (int id, [FromBody] AuditPlanEntryDto dto, IAuditPlanEntryService service, IOutputCacheStore cache, CancellationToken ct) =>
-            {
-                var existing = await service.GetByIdAsync(id, ct);
-                if (existing == null) return Results.NotFound($"Entry with ID {id} not found.");
+                var conflicts = await service.GetConflictValidationsAsync(dto, cancellationToken);
+                if (conflicts.Count > 0)
+                    return Results.BadRequest(new { Errors = conflicts });
 
                 dto.Id = id;
-                await service.SaveOrUpdateAsync(dto, ct);
-                await cache.EvictByTagAsync(_tag, ct);
 
-                return Results.Ok(dto);
+                var result = await service.SaveAuditPlanEntryDetailsAsync(dto, cancellationToken);
+
+                await cache.EvictByTagAsync(_AuditPlanEntry, cancellationToken);
+
+                return result ? Results.Ok(dto) : Results.BadRequest("Failed to update Audit Plan Entry.");
             })
-            .WithTags(_tag);
+            .WithTags(_AuditPlanEntry)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
 
-            app.MapDelete("/{id:int}", async (int id, IAuditPlanEntryService service, IOutputCacheStore cache, CancellationToken ct) =>
+            // PAGINATION
+            app.MapGet("/page", async (
+                int page,
+                int pageSize,
+                IAuditPlanEntryService service,
+                CancellationToken cancellationToken) =>
             {
-                var success = await service.SoftDeleteAsync(id, ct);
-                if (!success) return Results.NotFound();
-
-                await cache.EvictByTagAsync(_tag, ct);
-                return Results.Ok(new { message = "Entry deleted successfully." });
+                var result = await service.GetPaginatedAsync(page, pageSize, cancellationToken);
+                return Results.Ok(result);
             })
-            .WithTags(_tag);
+            .WithTags(_AuditPlanEntry)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlanEntry), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            // DELETE (SOFT DELETE)
+            app.MapDelete("/{id:int}", async (
+                int id,
+                IAuditPlanEntryService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
+            {
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
+
+                await cache.EvictByTagAsync(_AuditPlanEntry, cancellationToken);
+
+                return result
+                    ? Results.Ok(new { message = "Audit Plan Entry deleted successfully." })
+                    : Results.NotFound(new { message = "Audit Plan Entry not found." });
+            })
+            .WithTags(_AuditPlanEntry)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
         }
     }
 }

@@ -3,140 +3,152 @@ using Base.Pagination;
 using IMIS.Application.AuditPlanEntryModule;
 using IMIS.Domain;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IMIS.Persistence.AuditPlanEntryModule
 {
-    public class AuditPlanEntryRepository : BaseRepository<AuditPlanEntry, int, ImisDbContext, User>, IAuditPlanEntryRepository
+    public class AuditPlanEntryRepository(ImisDbContext dbContext)
+        : BaseRepository<AuditPlanEntry, int, ImisDbContext, User>(dbContext), IAuditPlanEntryRepository
     {
-        public AuditPlanEntryRepository(ImisDbContext dbContext) : base(dbContext)
+        // --- Main entity retrieval ---
+
+        public async Task<AuditPlanEntry?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
-            
+            return await ReadOnlyDbContext.Set<AuditPlanEntry>()
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
         }
 
-        // --- Helper for navigation data ---
-        // Note: Using 'ResposiblePersons' to match the property name in your Domain Entity
-        private IQueryable<AuditPlanEntry> FullEntry => _entities
-            .Include(x => x.AuditPlan)
-            .Include(x => x.Office)
-            .Include(x => x.Team)
-            .Include(x => x.Auditors)
-            .Include(x => x.IsoStandards)
-            .Include(x => x.AuditPlanProcesses)
-            .Include(x => x.ResposiblePersons);
-
-        // --- Core Queries ---
-
-        public async Task<IEnumerable<AuditPlanEntry>> GetAll(CancellationToken cancellationToken)
+        public async Task<AuditPlanEntry?> GetByAuditPlanEntryIdAsync(int id, CancellationToken cancellationToken)
         {
-            return await FullEntry
-                .AsNoTracking()
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            return await ReadOnlyDbContext.Set<AuditPlanEntry>()
+                .Include(x => x.IsoAuditProcesses)
+                .Include(x => x.ResponsiblePersons)
+                .Include(x => x.IsoAuditors)
+                .Include(x => x.IsoStandardAuditPlans)
+                .Include(x => x.AuditPlanProcesses)
+                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+        }
+
+        public async Task<IEnumerable<AuditPlanEntry>> GetAllAsync(CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Include(x => x.IsoAuditProcesses)
+                .Include(x => x.ResponsiblePersons)
+                .Include(x => x.IsoAuditors)
+                .Include(x => x.IsoStandardAuditPlans)
+                .Include(x => x.AuditPlanProcesses)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IEnumerable<AuditPlanEntry>> GetAllByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken)
+        {
+            return await _entities
+                .Where(x => x.AuditPlanId == auditPlanId)
+                .Include(x => x.IsoAuditProcesses)
+                .Include(x => x.ResponsiblePersons)
+                .Include(x => x.IsoAuditors)
+                .Include(x => x.IsoStandardAuditPlans)
+                .Include(x => x.AuditPlanProcesses)
+                .ToListAsync(cancellationToken);
         }
 
         public async Task<EntityPageList<AuditPlanEntry, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
-            var query = FullEntry
-                .AsNoTracking()
-                .OrderBy(x => x.DayNumber)
-                .ThenBy(x => x.Time);
-
-            return await EntityPageList<AuditPlanEntry, int>.CreateAsync(query, page, pageSize, cancellationToken).ConfigureAwait(false);
+            return await EntityPageList<AuditPlanEntry, int>
+                .CreateAsync(_entities.AsNoTracking(), page, pageSize, cancellationToken);
         }
 
-        public async Task<AuditPlanEntry?> GetWithDetailsAsync(int id, CancellationToken cancellationToken)
+        // --- Child collection helpers ---
+
+        public async Task<List<int>> GetExistingIsoAuditProcessIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken)
         {
-            return await FullEntry
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
-                .ConfigureAwait(false);
+            return await _entities
+                .Where(x => x.Id == auditPlanEntryId)
+                .SelectMany(x => x.IsoAuditProcesses.Select(p => p.Id))
+                .ToListAsync(cancellationToken);
         }
 
-        // --- Filtered Queries ---
-
-        public async Task<IEnumerable<AuditPlanEntry>> FilterByAuditPlanId(int auditPlanId, CancellationToken cancellationToken)
+        public async Task AddIsoAuditProcessesAsync(List<IsoAuditProcess> processes, CancellationToken cancellationToken)
         {
-            return await FullEntry
-                .Where(x => x.AuditPlanId == auditPlanId)
-                .OrderBy(x => x.DayNumber)
-                .ThenBy(x => x.Time)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await ReadOnlyDbContext.Set<IsoAuditProcess>().AddRangeAsync(processes, cancellationToken);
+            await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<AuditPlanEntry>> FilterByDayNumber(int auditPlanId, int dayNumber, CancellationToken cancellationToken)
+        public async Task<List<int>> GetExistingResponsiblePersonIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken)
         {
-            return await FullEntry
-                .Where(x => x.AuditPlanId == auditPlanId && x.DayNumber == dayNumber)
-                .OrderBy(x => x.Time)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            return await _entities
+                .Where(x => x.Id == auditPlanEntryId)
+                .SelectMany(x => x.ResponsiblePersons.Select(p => p.Id))
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<AuditPlanEntry>> FilterByOfficeId(int officeId, CancellationToken cancellationToken)
+        public async Task AddResponsiblePersonsAsync(List<AuditPlanPersonResponsible> persons, CancellationToken cancellationToken)
         {
-            return await FullEntry
-                .Where(x => x.OfficeId == officeId)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await ReadOnlyDbContext.Set<AuditPlanPersonResponsible>().AddRangeAsync(persons, cancellationToken);
+            await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<AuditPlanEntry>> FilterByTeamId(int teamId, CancellationToken cancellationToken)
+        public async Task<List<int>> GetExistingIsoAuditorIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken)
         {
-            // Assuming Team is a navigation property; filtering by the FK or ID
-            return await FullEntry
-                .Where(x => x.Team != null && x.Team.Id == teamId)
-                .AsNoTracking()
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            return await _entities
+                .Where(x => x.Id == auditPlanEntryId)
+                .SelectMany(x => x.IsoAuditors.Select(p => p.Id))
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<AuditPlanEntry>> FilterByAuditorId(string auditorId, CancellationToken cancellationToken)
+        public async Task AddIsoAuditorsAsync(List<IsoAuditor> auditors, CancellationToken cancellationToken)
         {
-            return await FullEntry
-                .Where(x => x.Auditors.Any(a => a.Id == auditorId))
-                .AsNoTracking()
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await ReadOnlyDbContext.Set<IsoAuditor>().AddRangeAsync(auditors, cancellationToken);
+            await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<AuditPlanEntry>> FilterByProcessId(int processId, CancellationToken cancellationToken)
+        public async Task<List<int>> GetExistingIsoStandardAuditPlanIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken)
         {
-            return await FullEntry
-                .Where(x => x.AuditPlanProcesses.Any(p => p.Id == processId))
-                .AsNoTracking()
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            return await _entities
+                .Where(x => x.Id == auditPlanEntryId)
+                .SelectMany(x => x.IsoStandardAuditPlans.Select(p => p.Id))
+                .ToListAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<AuditPlanEntry>> FilterByResponsiblePersonId(int personId, CancellationToken cancellationToken)
+        public async Task AddIsoStandardAuditPlansAsync(List<IsoStandardAuditPlan> standards, CancellationToken cancellationToken)
         {
-            return await FullEntry
-                .Where(x => x.ResposiblePersons.Any(r => r.Id == personId))
-                .AsNoTracking()
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            await ReadOnlyDbContext.Set<IsoStandardAuditPlan>().AddRangeAsync(standards, cancellationToken);
+            await GetDbContext().SaveChangesAsync(cancellationToken);
         }
 
-        public async Task<IEnumerable<AuditPlanEntry>> FilterByIsoStandardId(int standardId, CancellationToken cancellationToken)
+        public async Task<List<int>> GetExistingAuditPlanProcessIdsAsync(int auditPlanEntryId, CancellationToken cancellationToken)
         {
-            return await FullEntry
-                .Where(x => x.IsoStandards.Any(s => s.Id == standardId))
-                .AsNoTracking()
-                .ToListAsync(cancellationToken)
-                .ConfigureAwait(false);
+            return await _entities
+                .Where(x => x.Id == auditPlanEntryId)
+                .SelectMany(x => x.AuditPlanProcesses.Select(p => p.Id))
+                .ToListAsync(cancellationToken);
         }
 
-        // --- Infrastructure ---
-
-        public async Task<AuditPlanEntry?> GetByIdForSoftDeleteAsync(int id, CancellationToken cancellationToken)
+        public async Task AddAuditPlanProcessesAsync(List<AuditPlanProcess> processes, CancellationToken cancellationToken)
         {
-            // Matches the IsoStandardRepository pattern using ReadOnlyDbContext
-            return await ReadOnlyDbContext.Set<AuditPlanEntry>()
-                .FirstOrDefaultAsync(x => x.Id == id, cancellationToken)
-                .ConfigureAwait(false);
+            await ReadOnlyDbContext.Set<AuditPlanProcess>().AddRangeAsync(processes, cancellationToken);
+            await GetDbContext().SaveChangesAsync(cancellationToken);
+        }
+
+        public async Task AddAuditPlanEntryCollectionsAsync(AuditPlanEntry entity, CancellationToken cancellationToken)
+        {
+            if (entity.IsoAuditProcesses?.Any() == true)
+                await AddIsoAuditProcessesAsync(entity.IsoAuditProcesses.ToList(), cancellationToken);
+
+            if (entity.ResponsiblePersons?.Any() == true)
+                await AddResponsiblePersonsAsync(entity.ResponsiblePersons.ToList(), cancellationToken);
+
+            if (entity.IsoAuditors?.Any() == true)
+                await AddIsoAuditorsAsync(entity.IsoAuditors.ToList(), cancellationToken);
+
+            if (entity.IsoStandardAuditPlans?.Any() == true)
+                await AddIsoStandardAuditPlansAsync(entity.IsoStandardAuditPlans.ToList(), cancellationToken);
+
+            if (entity.AuditPlanProcesses?.Any() == true)
+                await AddAuditPlanProcessesAsync(entity.AuditPlanProcesses.ToList(), cancellationToken);
         }
     }
 }

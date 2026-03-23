@@ -14,7 +14,7 @@ namespace IMIS.Domain
         public required DateTime Timestamp { get; set; }
         public string? Comments { get; set; }
 
-        // Add this property to match your logic
-       
+
+
     }
 }

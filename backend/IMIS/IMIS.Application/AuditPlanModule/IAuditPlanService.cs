@@ -1,29 +1,33 @@
 using Base.Abstractions;
 using Base.Pagination;
+using Base.Primitives;
 using IMIS.Domain;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IMIS.Application.AuditPlanModule
 {
     public interface IAuditPlanService : IService
     {
-        // Retrieval Operations
-        Task<DtoPageList<AuditPlanDto, AuditPlan, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+        // --- Retrieval ---
         Task<List<AuditPlanDto>?> GetAllAsync(CancellationToken cancellationToken);
         Task<AuditPlanDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
-        Task<AuditPlanDto?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken);
-        Task<List<AuditPlanDto>?> GetByPreparerIdAsync(string preparerId, CancellationToken cancellationToken);
-        Task<List<AuditPlanDto>?> GetByApproverIdAsync(string approverId, CancellationToken cancellationToken);
-        Task<List<AuditPlanDto>?> GetByStatusAsync(string status, CancellationToken cancellationToken);
-        Task<List<AuditPlanDto>?> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken);
 
-        // Persistence Operations
-        Task<AuditPlanDto> CreateAsync(AuditPlanDto auditPlanDto, CancellationToken cancellationToken);
-        Task<AuditPlanDto> UpdateAsync(AuditPlanDto auditPlanDto, CancellationToken cancellationToken);
+        // --- Save / Update ---
+        Task<bool> SaveAuditPlanAsync(AuditPlanDto dto, CancellationToken cancellationToken);
+
+        // --- Pagination ---
+        Task<DtoPageList<AuditPlanDto, AuditPlan, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
+
+        // --- Soft Delete ---
         Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
 
-        // Workflow & Business Logic
-        Task<AuditPlanDto?> SubmitForApprovalAsync(int id, CancellationToken cancellationToken);
-        Task<AuditPlanDto?> ApproveAsync(int id, string approverId, CancellationToken cancellationToken);
-        Task<AuditPlanDto?> RejectAsync(int id, string approverId, string comments, CancellationToken cancellationToken);
+        // --- Validation ---
+        Task<List<string>> GetConflictValidationsAsync(AuditPlanDto dto, CancellationToken cancellationToken);
+
+        // --- Generic Save for parent + child collections ---
+        Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
+            where TEntity : Entity<TId>;
     }
 }

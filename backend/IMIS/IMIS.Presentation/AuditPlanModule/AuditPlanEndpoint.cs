@@ -1,7 +1,6 @@
 ﻿using Base.Auths.Permissions;
 using Carter;
 using IMIS.Application.AuditPlanModule;
-using IMIS.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,133 +10,123 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace IMIS.Presentation.AuditPlanModule
 {
-    public class AuditPlanEndpoint : CarterModule
+    public class AuditPlanEndPoints : CarterModule
     {
-        private const string _auditPlanTag = "AuditPlan";
+        private const string _AuditPlan = "AuditPlan";
+        public readonly AuditPlanPermission _permission = new();
 
-        public AuditPlanEndpoint() : base("/audit-plans")
+        public AuditPlanEndPoints() : base("/auditPlan")
         {
         }
 
         public override void AddRoutes(IEndpointRouteBuilder app)
         {
-            var group = app.MapGroup("/").WithTags(_auditPlanTag);
-
-            #region GET ROUTES
-
-            group.MapGet("/", async (IAuditPlanService service, CancellationToken ct) =>
+            // CREATE
+            app.MapPost("/", async (
+                [FromBody] AuditPlanDto dto,
+                IAuditPlanService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.GetAllAsync(ct);
-                return result != null ? Results.Ok(result) : Results.NoContent();
-            });
+                if (dto == null)
+                    return Results.BadRequest("Invalid request.");
 
-            group.MapGet("/{id:int}", async (int id, IAuditPlanService service, CancellationToken ct) =>
-            {
-                var result = await service.GetByIdAsync(id, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound("Audit Plan not found.");
-            });
+                var conflicts = await service.GetConflictValidationsAsync(dto, cancellationToken);
+                if (conflicts.Count > 0)
+                    return Results.BadRequest(new { Errors = conflicts });
 
-            group.MapGet("/{id:int}/details", async (int id, IAuditPlanService service, CancellationToken ct) =>
-            {
-                var result = await service.GetByIdWithDetailsAsync(id, ct);
-                return result != null ? Results.Ok(result) : Results.NotFound("Audit Plan details not found.");
-            });
+                var result = await service.SaveAuditPlanAsync(dto, cancellationToken);
 
-            group.MapGet("/page", async ([FromQuery] int page, [FromQuery] int pageSize, IAuditPlanService service, CancellationToken ct) =>
-            {
-                var result = await service.GetPaginatedAsync(page, pageSize, ct);
-                return result != null && result.Items.Any() ? Results.Ok(result) : Results.NoContent();
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken);
+
+                return result ? Results.Ok(dto) : Results.BadRequest("Failed to save Audit Plan.");
             })
-            .CacheOutput(p => p.Expire(TimeSpan.FromMinutes(2)).Tag(_auditPlanTag));
+            .WithTags(_AuditPlan)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Add));
 
-            #endregion
-
-            #region FILTER ROUTES
-
-            group.MapGet("/preparer/{preparerId}", async (string preparerId, IAuditPlanService service, CancellationToken ct) =>
+            // GET ALL
+            app.MapGet("/", async (
+                IAuditPlanService service,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.GetByPreparerIdAsync(preparerId, ct);
-                return result != null ? Results.Ok(result) : Results.NoContent();
-            });
+                var result = await service.GetAllAsync(cancellationToken);
+                return Results.Ok(result);
+            })
+            .WithTags(_AuditPlan)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlan), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
-            group.MapGet("/approver/{approverId}", async (string approverId, IAuditPlanService service, CancellationToken ct) =>
+            // GET BY ID
+            app.MapGet("/{id:int}", async (
+                int id,
+                IAuditPlanService service,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.GetByApproverIdAsync(approverId, ct);
-                return result != null ? Results.Ok(result) : Results.NoContent();
-            });
+                var result = await service.GetByIdAsync(id, cancellationToken);
 
-            group.MapGet("/status/{status}", async (string status, IAuditPlanService service, CancellationToken ct) =>
+                return result != null ? Results.Ok(result) : Results.NotFound();
+            })
+            .WithTags(_AuditPlan)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlan), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
+
+            // UPDATE
+            app.MapPut("/{id:int}", async (
+                int id,
+                [FromBody] AuditPlanDto dto,
+                IAuditPlanService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.GetByStatusAsync(status, ct);
-                return result != null ? Results.Ok(result) : Results.NoContent();
-            });
+                if (dto == null)
+                    return Results.BadRequest("Invalid request.");
 
-            group.MapGet("/date-range", async ([FromQuery] DateTime start, [FromQuery] DateTime end, IAuditPlanService service, CancellationToken ct) =>
-            {
-                var result = await service.GetByDateRangeAsync(start, end, ct);
-                return result != null ? Results.Ok(result) : Results.NoContent();
-            });
+                var conflicts = await service.GetConflictValidationsAsync(dto, cancellationToken);
+                if (conflicts.Count > 0)
+                    return Results.BadRequest(new { Errors = conflicts });
 
-            #endregion
-
-            #region COMMAND ROUTES
-
-            group.MapPost("/", async ([FromBody] AuditPlanDto dto, IAuditPlanService service, IOutputCacheStore cache, CancellationToken ct) =>
-            {
-                var result = await service.CreateAsync(dto, ct);
-                await cache.EvictByTagAsync(_auditPlanTag, ct);
-                return Results.Created($"/audit-plans/{result.Id}", result);
-            });
-
-            group.MapPut("/{id:int}", async (int id, [FromBody] AuditPlanDto dto, IAuditPlanService service, IOutputCacheStore cache, CancellationToken ct) =>
-            {
                 dto.Id = id;
-                var result = await service.UpdateAsync(dto, ct);
-                await cache.EvictByTagAsync(_auditPlanTag, ct);
-                return Results.Ok(result);
-            });
 
-            group.MapDelete("/{id:int}", async (int id, IAuditPlanService service, IOutputCacheStore cache, CancellationToken ct) =>
+                var result = await service.SaveAuditPlanAsync(dto, cancellationToken);
+
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken);
+
+                return result ? Results.Ok(dto) : Results.BadRequest("Failed to update Audit Plan.");
+            })
+            .WithTags(_AuditPlan)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
+
+            // PAGINATION
+            app.MapGet("/page", async (
+                int page,
+                int pageSize,
+                IAuditPlanService service,
+                CancellationToken cancellationToken) =>
             {
-                var success = await service.SoftDeleteAsync(id, ct);
-                if (!success) return Results.NotFound("Audit Plan not found.");
-
-                await cache.EvictByTagAsync(_auditPlanTag, ct);
-                return Results.Ok(new { message = "Audit Plan soft deleted successfully." });
-            });
-
-            #endregion
-
-            #region WORKFLOW ROUTES
-
-            group.MapPost("/{id:int}/submit", async (int id, IAuditPlanService service, IOutputCacheStore cache, CancellationToken ct) =>
-            {
-                var result = await service.SubmitForApprovalAsync(id, ct);
-                if (result == null) return Results.NotFound();
-
-                await cache.EvictByTagAsync(_auditPlanTag, ct);
+                var result = await service.GetPaginatedAsync(page, pageSize, cancellationToken);
                 return Results.Ok(result);
-            });
+            })
+            .WithTags(_AuditPlan)
+            .CacheOutput(builder => builder.Expire(TimeSpan.FromMinutes(2)).Tag(_AuditPlan), true)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.View));
 
-            group.MapPost("/{id:int}/approve", async (int id, [FromQuery] string approverId, IAuditPlanService service, IOutputCacheStore cache, CancellationToken ct) =>
+            // DELETE (SOFT DELETE)
+            app.MapDelete("/{id:int}", async (
+                int id,
+                IAuditPlanService service,
+                IOutputCacheStore cache,
+                CancellationToken cancellationToken) =>
             {
-                var result = await service.ApproveAsync(id, approverId, ct);
-                if (result == null) return Results.NotFound();
+                var result = await service.SoftDeleteAsync(id, cancellationToken);
 
-                await cache.EvictByTagAsync(_auditPlanTag, ct);
-                return Results.Ok(result);
-            });
+                await cache.EvictByTagAsync(_AuditPlan, cancellationToken);
 
-            group.MapPost("/{id:int}/reject", async (int id, [FromQuery] string approverId, [FromBody] string comments, IAuditPlanService service, IOutputCacheStore cache, CancellationToken ct) =>
-            {
-                var result = await service.RejectAsync(id, approverId, comments, ct);
-                if (result == null) return Results.NotFound();
-
-                await cache.EvictByTagAsync(_auditPlanTag, ct);
-                return Results.Ok(result);
-            });
-
-            #endregion
+                return result
+                    ? Results.Ok(new { message = "Audit Plan deleted successfully." })
+                    : Results.NotFound(new { message = "Audit Plan not found." });
+            })
+            .WithTags(_AuditPlan)
+            .RequireAuthorization(e => e.RequireClaim(PermissionClaimType.Claim, _permission.Edit));
         }
     }
 }

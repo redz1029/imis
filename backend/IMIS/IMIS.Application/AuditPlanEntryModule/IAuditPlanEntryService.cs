@@ -1,34 +1,38 @@
 using Base.Abstractions;
 using Base.Pagination;
+using Base.Primitives;
 using IMIS.Domain;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IMIS.Application.AuditPlanEntryModule
 {
     public interface IAuditPlanEntryService : IService
     {
-        // READ
+        // Get all audit plan entries
         Task<List<AuditPlanEntryDto>?> GetAllAsync(CancellationToken cancellationToken);
-        Task<AuditPlanEntryDto?> GetByIdAsync(int id, CancellationToken cancellationToken);
+
+        // Validate conflicts (duplicate auditors, processes, missing collections, etc.)
+        Task<List<string>> GetConflictValidationsAsync(AuditPlanEntryDto dto, CancellationToken cancellationToken);
+
+        // Get all audit plan entries by AuditPlanId
+        Task<List<AuditPlanEntryDto>?> GetAllByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken);
+
+        // Get a single audit plan entry by Id
+        Task<AuditPlanEntryDto?> GetByAuditPlanEntryIdAsync(int id, CancellationToken cancellationToken);
+
+        // Soft delete an audit plan entry
+        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+
+        // Save or update an audit plan entry and its child collections
+        Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
+            where TEntity : Entity<TId>;
+
+        // Get paginated list of audit plan entries
         Task<DtoPageList<AuditPlanEntryDto, AuditPlanEntry, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken);
 
-        // Relationship-Based Queries
-        Task<List<AuditPlanEntryDto>?> GetByAuditPlanIdAsync(int auditPlanId, CancellationToken cancellationToken);
-        Task<List<AuditPlanEntryDto>?> GetByDayNumberAsync(int auditPlanId, int dayNumber, CancellationToken cancellationToken);
-        Task<List<AuditPlanEntryDto>?> GetByOfficeIdAsync(int officeId, CancellationToken cancellationToken);
-        Task<List<AuditPlanEntryDto>?> GetByTeamIdAsync(int teamId, CancellationToken cancellationToken);
-
-        // Filtering by related entities
-        Task<List<AuditPlanEntryDto>?> GetByAuditorIdAsync(string auditorId, CancellationToken cancellationToken);
-        Task<List<AuditPlanEntryDto>?> GetByProcessIdAsync(int processId, CancellationToken cancellationToken);
-        Task<List<AuditPlanEntryDto>?> GetByResponsiblePersonIdAsync(int personId, CancellationToken cancellationToken);
-        Task<List<AuditPlanEntryDto>?> GetByIsoStandardIdAsync(int standardId, CancellationToken cancellationToken);
-
-        // COMMANDS
-        Task<AuditPlanEntryDto> CreateAsync(AuditPlanEntryDto entryDto, CancellationToken cancellationToken);
-        Task<AuditPlanEntryDto> UpdateAsync(AuditPlanEntryDto entryDto, CancellationToken cancellationToken);
-        Task<List<AuditPlanEntryDto>> CreateMultipleAsync(List<AuditPlanEntryDto> entriesDto, CancellationToken cancellationToken);
-
-        // DELETION
-        Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken);
+        // Save audit plan entry details (wrapper for SaveOrUpdateAsync)
+        Task<bool> SaveAuditPlanEntryDetailsAsync(AuditPlanEntryDto dto, CancellationToken cancellationToken);
     }
 }

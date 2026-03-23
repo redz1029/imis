@@ -4,10 +4,11 @@ namespace IMIS.Domain
 {
     public class AuditPlanProcess : Entity<int>
     {
-        public required string Name { get; set; }
-        public string? Description { get; set; }
-        public required bool IsActive { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public DateTime LastModifiedDate { get; set; }
+        public required int OfficeId { get; set; }
+        public Office? Office { get; set; }
+        public required int AuditPlanEntryId { get; set; }
+        public AuditPlanEntry? AuditPlanEntry { get; set; }
+
+        
     }
 }

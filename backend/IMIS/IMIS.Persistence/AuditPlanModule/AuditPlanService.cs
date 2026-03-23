@@ -1,9 +1,14 @@
-using Base.Pagination;
+﻿using Base.Pagination;
 using Base.Primitives;
 using IMIS.Application.AuditPlanModule;
 using IMIS.Domain;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
-namespace IMIS.Persistence.AuditPlanModule
+namespace IMIS.Application.AuditPlanModule
 {
     public class AuditPlanService : IAuditPlanService
     {
@@ -14,172 +19,148 @@ namespace IMIS.Persistence.AuditPlanModule
             _repository = repository;
         }
 
-        #region SOFT DELETE
-
-        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
+        public async Task<bool> SaveAuditPlanAsync(AuditPlanDto dto, CancellationToken cancellationToken)
         {
-            var auditPlan = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
-            if (auditPlan == null) return false;
-
-            auditPlan.IsDeleted = true;
-            // Accessing the context through the repository's base capability
-            var context = _repository.GetDbContext();
-            await context.SaveChangesAsync(cancellationToken);
+            if (dto == null) return false;
+            await SaveOrUpdateAsync(dto, cancellationToken);
             return true;
         }
 
-        #endregion
+        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
+    where TEntity : Entity<TId>
+        {
+            if (dto is not AuditPlanDto aDto)
+                throw new InvalidOperationException("Invalid DTO type.");
 
-        #region GET METHODS
+            var entity = aDto.ToEntity();
+            var dbContext = _repository.GetDbContext();
 
+            // 1️⃣ Save main AuditPlan first
+            if (entity.Id == 0)
+            {
+                dbContext.Add(entity);
+                await dbContext.SaveChangesAsync(cancellationToken); // EF will handle transaction
+            }
+            else
+            {
+                var existing = await _repository.GetByIdWithDetailsAsync(entity.Id, cancellationToken);
+                if (existing != null)
+                {
+                    // Remove old children first to avoid FK conflicts
+                    if (existing.Entries?.Any() == true)
+                        dbContext.Set<AuditPlanEntry>().RemoveRange(existing.Entries);
+
+                    if (existing.Approvals?.Any() == true)
+                        dbContext.Set<AuditPlanApproval>().RemoveRange(existing.Approvals);
+
+                    await dbContext.SaveChangesAsync(cancellationToken);
+
+                    // Update main entity
+                    await _repository.UpdateAsync(entity, entity.Id, cancellationToken);
+                }
+            }
+
+            // 2️⃣ Save AuditPlanEntries
+            if (entity.Entries?.Any() == true)
+            {
+                foreach (var entry in entity.Entries)
+                {
+                    entry.AuditPlanId = entity.Id; // FK must exist
+                    dbContext.Set<AuditPlanEntry>().Add(entry);
+                }
+                await dbContext.SaveChangesAsync(cancellationToken);
+
+                // 3️⃣ Save nested children for each entry
+                foreach (var entry in entity.Entries)
+                {
+                    if (entry.IsoAuditors?.Any() == true)
+                    {
+                        foreach (var auditor in entry.IsoAuditors)
+                            auditor.AuditPlanEntryId = entry.Id;
+                        dbContext.Set<IsoAuditor>().AddRange(entry.IsoAuditors);
+                    }
+
+                    if (entry.ResponsiblePersons?.Any() == true)
+                    {
+                        foreach (var person in entry.ResponsiblePersons)
+                            person.AuditPlanEntryId = entry.Id;
+                        dbContext.Set<AuditPlanPersonResponsible>().AddRange(entry.ResponsiblePersons);
+                    }
+
+                    if (entry.IsoAuditProcesses?.Any() == true)
+                    {
+                        foreach (var process in entry.IsoAuditProcesses)
+                            process.AuditPlanEntryId = entry.Id;
+                        dbContext.Set<IsoAuditProcess>().AddRange(entry.IsoAuditProcesses);
+                    }
+
+                    if (entry.IsoStandardAuditPlans?.Any() == true)
+                    {
+                        foreach (var plan in entry.IsoStandardAuditPlans)
+                            plan.AuditPlanEntryId = entry.Id;
+                        dbContext.Set<IsoStandardAuditPlan>().AddRange(entry.IsoStandardAuditPlans);
+                    }
+
+                    if (entry.AuditPlanProcesses?.Any() == true)
+                    {
+                        foreach (var planProcess in entry.AuditPlanProcesses)
+                            planProcess.AuditPlanEntryId = entry.Id;
+                        dbContext.Set<AuditPlanProcess>().AddRange(entry.AuditPlanProcesses);
+                    }
+                }
+
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+
+            // 4️⃣ Save Approvals
+            if (entity.Approvals?.Any() == true)
+            {
+                foreach (var approval in entity.Approvals)
+                    approval.AuditPlanId = entity.Id;
+
+                dbContext.Set<AuditPlanApproval>().AddRange(entity.Approvals);
+                await dbContext.SaveChangesAsync(cancellationToken);
+            }
+        }
+        // Other retrieval methods...
         public async Task<List<AuditPlanDto>?> GetAllAsync(CancellationToken cancellationToken)
         {
-            var auditPlans = await _repository.GetAllAsync(cancellationToken);
-            return auditPlans?.Select(x => new AuditPlanDto(x)).ToList();
+            var entities = await _repository.GetAllAsync(cancellationToken);
+            return entities?.Select(e => new AuditPlanDto(e)).ToList();
         }
 
         public async Task<AuditPlanDto?> GetByIdAsync(int id, CancellationToken cancellationToken)
         {
-            var auditPlan = await _repository.GetByIdAsync(id, cancellationToken);
-            return auditPlan != null ? new AuditPlanDto(auditPlan) : null;
+            var entity = await _repository.GetByIdAsync(id, cancellationToken);
+            return entity != null ? new AuditPlanDto(entity) : null;
         }
 
-        public async Task<AuditPlanDto?> GetByIdWithDetailsAsync(int id, CancellationToken cancellationToken)
+        public async Task<List<string>> GetConflictValidationsAsync(AuditPlanDto dto, CancellationToken cancellationToken)
         {
-            var auditPlan = await _repository.GetByIdWithDetailsAsync(id, cancellationToken);
-            return auditPlan != null ? new AuditPlanDto(auditPlan) : null;
+            var errors = new List<string>();
+            if (dto.StartDate > dto.EndDate)
+                errors.Add("Start date cannot be greater than end date.");
+            if (string.IsNullOrWhiteSpace(dto.PlanStatus))
+                errors.Add("PlanStatus is required.");
+            if (dto.Entries == null || !dto.Entries.Any())
+                errors.Add("At least one Audit Plan Entry is required.");
+            return errors;
         }
 
-        public async Task<List<AuditPlanDto>?> GetByPreparerIdAsync(string preparerId, CancellationToken cancellationToken)
+        public async Task<bool> SoftDeleteAsync(int id, CancellationToken cancellationToken)
         {
-            var plans = await _repository.GetByPreparerIdAsync(preparerId, cancellationToken);
-            return plans?.Select(x => new AuditPlanDto(x)).ToList();
-        }
-
-        public async Task<List<AuditPlanDto>?> GetByApproverIdAsync(string approverId, CancellationToken cancellationToken)
-        {
-            var plans = await _repository.GetByApproverIdAsync(approverId, cancellationToken);
-            return plans?.Select(x => new AuditPlanDto(x)).ToList();
-        }
-
-        public async Task<List<AuditPlanDto>?> GetByStatusAsync(string status, CancellationToken cancellationToken)
-        {
-            var plans = await _repository.GetByStatusAsync(status, cancellationToken);
-            return plans?.Select(x => new AuditPlanDto(x)).ToList();
-        }
-
-        public async Task<List<AuditPlanDto>?> GetByDateRangeAsync(DateTime startDate, DateTime endDate, CancellationToken cancellationToken)
-        {
-            var plans = await _repository.GetByDateRangeAsync(startDate, endDate, cancellationToken);
-            return plans?.Select(x => new AuditPlanDto(x)).ToList();
+            var entity = await _repository.GetByIdForSoftDeleteAsync(id, cancellationToken);
+            if (entity == null) return false;
+            entity.IsDeleted = true;
+            await _repository.GetDbContext().SaveChangesAsync(cancellationToken);
+            return true;
         }
 
         public async Task<DtoPageList<AuditPlanDto, AuditPlan, int>> GetPaginatedAsync(int page, int pageSize, CancellationToken cancellationToken)
         {
             var result = await _repository.GetPaginatedAsync(page, pageSize, cancellationToken);
+            if (result.TotalCount == 0) return null;
             return DtoPageList<AuditPlanDto, AuditPlan, int>.Create(result.Items, page, pageSize, result.TotalCount);
         }
-
-        #endregion
-
-        #region CREATE & UPDATE
-
-        public async Task<AuditPlanDto> CreateAsync(AuditPlanDto dto, CancellationToken cancellationToken)
-        {
-            var entity = dto.ToEntity();
-            entity.CreatedDate = DateTime.UtcNow;
-            entity.PlanStatus = "Draft"; // Domain uses string now
-            entity.IsDeleted = false;
-
-            _repository.Add(entity);
-            await _repository.SaveOrUpdateAsync(entity, cancellationToken);
-
-            return new AuditPlanDto(entity);
-        }
-
-        public async Task<AuditPlanDto> UpdateAsync(AuditPlanDto dto, CancellationToken cancellationToken)
-        {
-            var existing = await _repository.GetByIdAsync(dto.Id, cancellationToken);
-            if (existing == null) throw new KeyNotFoundException($"AuditPlan with ID {dto.Id} not found.");
-
-            // Update the entity fields from DTO
-            existing.StartDate = dto.StartDate;
-            existing.EndDate = dto.EndDate;
-            existing.SelectedApproverId = dto.SelectedApproverId;
-            existing.LastModifiedDate = DateTime.UtcNow;
-
-            await _repository.UpdateAsync(existing, existing.Id, cancellationToken);
-            await _repository.SaveOrUpdateAsync(existing, cancellationToken);
-
-            return new AuditPlanDto(existing);
-        }
-
-        #endregion
-
-        #region WORKFLOW
-
-        public async Task<AuditPlanDto?> SubmitForApprovalAsync(int id, CancellationToken cancellationToken)
-        {
-            var auditPlan = await _repository.GetByIdAsync(id, cancellationToken);
-            if (auditPlan == null) return null;
-
-            auditPlan.PlanStatus = "Pending Approval";
-            auditPlan.LastModifiedDate = DateTime.UtcNow;
-
-            await _repository.UpdateAsync(auditPlan, auditPlan.Id, cancellationToken);
-            await _repository.SaveOrUpdateAsync(auditPlan, cancellationToken);
-
-            return new AuditPlanDto(auditPlan);
-        }
-
-        public async Task<AuditPlanDto?> ApproveAsync(int id, string approverId, CancellationToken cancellationToken)
-        {
-            var auditPlan = await _repository.GetByIdAsync(id, cancellationToken);
-            if (auditPlan == null) return null;
-
-            auditPlan.PlanStatus = "Approved";
-            auditPlan.LastModifiedDate = DateTime.UtcNow;
-
-            await _repository.UpdateAsync(auditPlan, auditPlan.Id, cancellationToken);
-            await _repository.SaveOrUpdateAsync(auditPlan, cancellationToken);
-
-            return new AuditPlanDto(auditPlan);
-        }
-
-        public async Task<AuditPlanDto?> RejectAsync(int id, string approverId, string comments, CancellationToken cancellationToken)
-        {
-            var auditPlan = await _repository.GetByIdAsync(id, cancellationToken);
-            if (auditPlan == null) return null;
-
-            auditPlan.PlanStatus = "Draft"; // Return to draft status
-            auditPlan.LastModifiedDate = DateTime.UtcNow;
-
-            // Note: If you have an AuditPlanApproval table, you would add a record here with the 'comments'
-
-            await _repository.UpdateAsync(auditPlan, auditPlan.Id, cancellationToken);
-            await _repository.SaveOrUpdateAsync(auditPlan, cancellationToken);
-
-            return new AuditPlanDto(auditPlan);
-        }
-
-        public async Task SaveOrUpdateAsync<TEntity, TId>(BaseDto<TEntity, TId> dto, CancellationToken cancellationToken)
-            where TEntity : Entity<TId>
-        {
-            if (dto is AuditPlanDto planDto)
-            {
-                if (planDto.Id == 0)
-                {
-                    // Routes to the logic that sets "Draft" status and CreatedDate
-                    await CreateAsync(planDto, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    // Routes to the logic that updates fields and LastModifiedDate
-                    await UpdateAsync(planDto, cancellationToken).ConfigureAwait(false);
-                }
-            }
-        }
-
-        #endregion
     }
 }

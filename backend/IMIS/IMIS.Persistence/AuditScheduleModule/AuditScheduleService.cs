@@ -11,7 +11,7 @@ namespace IMIS.Persistence.AuditScheduleModule
     {
         private readonly IAuditScheduleRepository _auditScheduleRepository = auditScheduleRepository;
         private readonly IAuditScheduleDetailRepository _auditScheduleDetailsRepository = auditScheduleDetailsRepository;
-        private readonly ITeamRepository _teamRepository = teamRepository;
+        private readonly ITeamRepository _teamRepository = teamRepository; 
         public async Task<AuditScheduleDto?> GenerateAuditScheduleDetail(int auditScheduleId, double noOfHoursPerAudit, CancellationToken cancellationToken)
         {
             var auditSchedule = await _auditScheduleRepository.GetByIdAsync(auditScheduleId, cancellationToken).ConfigureAwait(false);
