@@ -46,55 +46,70 @@ class _AnnouncementListState extends State<AnnouncementList> {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: const Color(0xFFeeeeee),
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
         children: [
           Center(
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Announcements',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: primaryTextColor,
+                Expanded(
+                  child: Text(
+                    'Announcements',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: primaryTextColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
 
-                const SizedBox(width: 40),
-                PermissionWidget(
-                  allowedRoles: [
-                    PermissionString.roleAdmin,
-                    PermissionString.mcc,
-                  ],
-                  child: Tooltip(
-                    message: 'Add announcement',
-                    child: Ink(
-                      decoration: const ShapeDecoration(
-                        color: Colors.blue,
-                        shape: CircleBorder(),
-                      ),
-                      child: IconButton(
-                        onPressed: () => showAnnouncementFormDialog(),
-                        icon: const Icon(Icons.add, color: primaryColor),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    PermissionWidget(
+                      allowedRoles: [
+                        PermissionString.roleAdmin,
+                        PermissionString.mcc,
+                      ],
+                      child: Tooltip(
+                        message: 'Add announcement',
+                        child: Ink(
+                          decoration: const ShapeDecoration(
+                            color: Colors.blue,
+                            shape: CircleBorder(),
+                          ),
+                          child: IconButton(
+                            onPressed: () => showAnnouncementFormDialog(),
+                            icon: const Icon(Icons.add, color: primaryColor),
+                            iconSize: 18,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-                PermissionWidget(
-                  allowedRoles: [
-                    PermissionString.roleAdmin,
-                    PermissionString.mcc,
-                  ],
-                  child: Tooltip(
-                    message: 'Manage announcement',
-                    child: IconButton(
-                      onPressed: () => _showManageAnnouncementsDialog(),
-                      icon: const Icon(Icons.list),
+                    const SizedBox(width: 4),
+                    PermissionWidget(
+                      allowedRoles: [
+                        PermissionString.roleAdmin,
+                        PermissionString.mcc,
+                      ],
+                      child: Tooltip(
+                        message: 'Manage announcement',
+                        child: IconButton(
+                          onPressed: () => _showManageAnnouncementsDialog(),
+                          icon: const Icon(Icons.list),
+                          iconSize: 18,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -130,13 +145,6 @@ class _AnnouncementListState extends State<AnnouncementList> {
                   );
                 }
 
-                final colors = [
-                  Colors.orange,
-                  Colors.green,
-                  Colors.blue,
-                  Colors.red,
-                ];
-
                 return RefreshIndicator(
                   onRefresh: _refreshAnnouncements,
                   child: ListView.builder(
@@ -144,7 +152,7 @@ class _AnnouncementListState extends State<AnnouncementList> {
                     itemBuilder: (context, index) {
                       return _AnnouncementCard(
                         announcement: announcements[index],
-                        borderColor: colors[index % 4],
+                        borderColor: Color(0xFFCD2C58),
                         onEdit: (announcement) {
                           showAnnouncementFormDialog(
                             id: announcement.id.toString(),
@@ -601,17 +609,23 @@ class _AnnouncementCard extends StatelessWidget {
     final displayDate =
         fromDateStr == toDateStr ? fromDateStr : '$fromDateStr - $toDateStr';
 
-    final backgroundColor = borderColor.withValues(alpha: 0.3);
-
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: backgroundColor,
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFFCD2C58).withValues(alpha: 0.05),
+            const Color.fromARGB(255, 102, 209, 241).withValues(alpha: 0.20),
+            const Color(0xFFCD2C58).withValues(alpha: 0.30),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(5),
-        border: Border(
-          left: BorderSide(color: borderColor.withValues(alpha: .8), width: 4),
+        border: const Border(
+          left: BorderSide(color: Color(0xFFCD2C58), width: 4),
         ),
       ),
       child: Column(

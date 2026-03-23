@@ -91,7 +91,7 @@ class DynamicSideColumn1 extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         Card(
-          color: const Color(0xFFeeeeee),
+          color: Theme.of(context).cardColor,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
