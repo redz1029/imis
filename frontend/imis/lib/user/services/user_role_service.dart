@@ -3,12 +3,28 @@ import 'package:flutter/rendering.dart';
 import 'package:imis/roles/models/roles.dart';
 import 'package:imis/user/models/user_role.dart';
 import 'package:imis/utils/api_endpoint.dart';
+import 'package:imis/utils/page_list.dart';
+import 'package:imis/utils/pagination_util.dart';
 import '../../utils/http_util.dart';
 
 class UserRoleService {
   final Dio dio;
 
   UserRoleService(this.dio);
+  Future<PageList<UserRoles>> getuserRoles({
+    int page = 1,
+    int pageSize = 15,
+    String? searchQuery,
+  }) async {
+    final paginationUtil = PaginationUtil(dio);
+    return await paginationUtil.fetchPaginatedData(
+      endpoint: ApiEndpoint().userRole,
+      page: page,
+      pageSize: pageSize,
+      searchQuery: searchQuery,
+      fromJson: (json) => UserRoles.fromJson(json),
+    );
+  }
 
   Future<List<Roles>> fetchRoles() async {
     var url = ApiEndpoint().roles;

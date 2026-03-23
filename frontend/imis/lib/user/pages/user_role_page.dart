@@ -1,6 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 import 'package:dio/dio.dart';
 import 'package:dropdown_search/dropdown_search.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:imis/common_services/common_service.dart';
 import 'package:imis/user/models/user.dart';
@@ -605,19 +606,258 @@ class UserRolePageState extends State<UserRolePage> {
     );
   }
 
+  // @override
+  // Widget build(BuildContext context) {
+  //   final isMinimized = MediaQuery.of(context).size.width < 600;
+  //   return Scaffold(
+  //     backgroundColor: mainBgColor,
+  //     appBar: AppBar(
+  //       title: Text('User Role Information'),
+  //       backgroundColor: mainBgColor,
+  //     ),
+  //     body: Padding(
+  //       padding: const EdgeInsets.all(20.0),
+  //       child: Column(
+  //         children: [
+  //           Row(
+  //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //             children: [
+  //               SizedBox(
+  //                 height: 30,
+  //                 width: 300,
+  //                 child: TextField(
+  //                   focusNode: isSearchfocus,
+  //                   controller: searchController,
+  //                   decoration: InputDecoration(
+  //                     enabledBorder: OutlineInputBorder(
+  //                       borderSide: BorderSide(color: lightGrey),
+  //                     ),
+  //                     focusedBorder: OutlineInputBorder(
+  //                       borderSide: BorderSide(color: primaryColor),
+  //                     ),
+  //                     floatingLabelBehavior: FloatingLabelBehavior.never,
+  //                     labelStyle: TextStyle(color: grey, fontSize: 14),
+  //                     labelText: 'Search Name',
+  //                     prefixIcon: Icon(
+  //                       Icons.search,
+  //                       color: isSearchfocus.hasFocus ? primaryColor : grey,
+  //                       size: 20,
+  //                     ),
+  //                     border: OutlineInputBorder(
+  //                       borderRadius: BorderRadius.circular(4),
+  //                     ),
+  //                     filled: true,
+  //                     fillColor: secondaryColor,
+  //                     contentPadding: EdgeInsets.symmetric(
+  //                       vertical: 5,
+  //                       horizontal: 5,
+  //                     ),
+  //                   ),
+  //                   onChanged: filterSearchResults,
+  //                 ),
+  //               ),
+  //               if (!isMinimized)
+  //                 ElevatedButton(
+  //                   style: ElevatedButton.styleFrom(
+  //                     backgroundColor: primaryColor,
+  //                     shape: RoundedRectangleBorder(
+  //                       borderRadius: BorderRadius.circular(4),
+  //                     ),
+  //                   ),
+  //                   onPressed: () => showFormDialog(),
+  //                   child: Row(
+  //                     mainAxisSize: MainAxisSize.min,
+  //                     children: [
+  //                       Icon(Icons.add, color: Colors.white),
+  //                       SizedBox(width: 5),
+  //                       Text('Add New', style: TextStyle(color: Colors.white)),
+  //                     ],
+  //                   ),
+  //                 ),
+  //             ],
+  //           ),
+  //           SizedBox(height: 20),
+  //           Expanded(
+  //             child: SingleChildScrollView(
+  //               child: Column(
+  //                 children:
+  //                     userList
+  //                         .where(
+  //                           (user) =>
+  //                               filteredList.any((ur) => ur.userId == user.id),
+  //                         )
+  //                         .map((user) {
+  //                           final userRolesForUser =
+  //                               filteredList
+  //                                   .where((ur) => ur.userId == user.id)
+  //                                   .toList();
+
+  //                           final roleChips =
+  //                               userRolesForUser
+  //                                   .expand((userRole) => userRole.roles ?? [])
+  //                                   .map((assignedRole) {
+  //                                     final matchedRole = roleList.firstWhere(
+  //                                       (r) => r.id == assignedRole.roleId,
+  //                                       orElse:
+  //                                           () => Roles(
+  //                                             'unknown',
+  //                                             'Unknown',
+  //                                             '',
+  //                                             null,
+  //                                           ),
+  //                                     );
+  //                                     return matchedRole.name;
+  //                                   })
+  //                                   .toList();
+
+  //                           return Card(
+  //                             color: secondaryColor,
+  //                             elevation: 0,
+  //                             margin: const EdgeInsets.symmetric(
+  //                               vertical: 4,
+  //                               horizontal: 8,
+  //                             ),
+  //                             shape: RoundedRectangleBorder(
+  //                               borderRadius: BorderRadius.circular(8),
+  //                             ),
+  //                             child: Padding(
+  //                               padding: const EdgeInsets.symmetric(
+  //                                 vertical: 12,
+  //                                 horizontal: 16,
+  //                               ),
+  //                               child: Row(
+  //                                 crossAxisAlignment: CrossAxisAlignment.center,
+  //                                 children: [
+  //                                   // Left: name + role chips
+  //                                   Expanded(
+  //                                     child: Column(
+  //                                       crossAxisAlignment:
+  //                                           CrossAxisAlignment.start,
+  //                                       children: [
+  //                                         Text(
+  //                                           user.fullName,
+  //                                           style: const TextStyle(
+  //                                             fontWeight: FontWeight.bold,
+  //                                             fontSize: 15,
+  //                                           ),
+  //                                         ),
+  //                                         const SizedBox(height: 6),
+  //                                         Wrap(
+  //                                           spacing: 6,
+  //                                           runSpacing: 4,
+  //                                           children:
+  //                                               roleChips.map((roleName) {
+  //                                                 return Chip(
+  //                                                   label: Text(
+  //                                                     roleName,
+  //                                                     style: const TextStyle(
+  //                                                       fontSize: 12,
+  //                                                     ),
+  //                                                   ),
+  //                                                   backgroundColor:
+  //                                                       mainBgColor,
+  //                                                   padding:
+  //                                                       const EdgeInsets.symmetric(
+  //                                                         horizontal: 4,
+  //                                                       ),
+  //                                                   materialTapTargetSize:
+  //                                                       MaterialTapTargetSize
+  //                                                           .shrinkWrap,
+  //                                                   visualDensity:
+  //                                                       VisualDensity.compact,
+  //                                                 );
+  //                                               }).toList(),
+  //                                         ),
+  //                                       ],
+  //                                     ),
+  //                                   ),
+
+  //                                   // Right: edit + delete buttons
+  //                                   Row(
+  //                                     mainAxisSize: MainAxisSize.min,
+  //                                     children: [
+  //                                       IconButton(
+  //                                         icon: const Icon(
+  //                                           Icons.edit,
+  //                                           size: 20,
+  //                                         ),
+  //                                         onPressed:
+  //                                             () => showFormDialog(
+  //                                               id: user.id,
+  //                                               selectedUserId: user.id,
+  //                                             ),
+  //                                       ),
+  //                                       IconButton(
+  //                                         icon: Icon(
+  //                                           Icons.delete,
+  //                                           color: primaryColor,
+  //                                           size: 20,
+  //                                         ),
+  //                                         onPressed:
+  //                                             () => showDeleteDialog(user.id),
+  //                                       ),
+  //                                     ],
+  //                                   ),
+  //                                 ],
+  //                               ),
+  //                             ),
+  //                           );
+  //                         })
+  //                         .toList(),
+  //               ),
+  //             ),
+  //           ),
+  //           Container(
+  //             padding: EdgeInsets.all(10),
+  //             color: secondaryColor,
+  //             child: Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //               children: [
+  //                 PaginationInfo(
+  //                   currentPage: _currentPage,
+  //                   totalItems: _totalCount,
+  //                   itemsPerPage: _pageSize,
+  //                 ),
+  //                 PaginationControls(
+  //                   currentPage: _currentPage,
+  //                   totalItems: _totalCount,
+  //                   itemsPerPage: _pageSize,
+  //                   isLoading: _isLoading,
+  //                   onPageChanged: (page) => fetchUserRoles(page: page),
+  //                 ),
+  //                 Container(width: 60),
+  //               ],
+  //             ),
+  //           ),
+  //         ],
+  //       ),
+  //     ),
+  //     floatingActionButton:
+  //         isMinimized
+  //             ? FloatingActionButton(
+  //               backgroundColor: primaryColor,
+  //               onPressed: () => showFormDialog(),
+  //               child: Icon(Icons.add),
+  //             )
+  //             : null,
+  //   );
+  // }
   @override
   Widget build(BuildContext context) {
-    final isMinimized = MediaQuery.of(context).size.width < 600;
+    final width = MediaQuery.of(context).size.width;
+    final isMobile = width < 600;
+
     return Scaffold(
-      backgroundColor: mainBgColor,
-      appBar: AppBar(
-        title: Text('User Role Information'),
-        backgroundColor: mainBgColor,
-      ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const Text(
+              "Roadmap Information",
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            ),
+            gap16px,
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -635,7 +875,7 @@ class UserRolePageState extends State<UserRolePage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      labelStyle: const TextStyle(color: grey, fontSize: 14),
                       labelText: 'Search Name',
                       prefixIcon: Icon(
                         Icons.search,
@@ -647,7 +887,7 @@ class UserRolePageState extends State<UserRolePage> {
                       ),
                       filled: true,
                       fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
+                      contentPadding: const EdgeInsets.symmetric(
                         vertical: 5,
                         horizontal: 5,
                       ),
@@ -655,7 +895,7 @@ class UserRolePageState extends State<UserRolePage> {
                     onChanged: filterSearchResults,
                   ),
                 ),
-                if (!isMinimized)
+                if (!isMobile)
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
@@ -664,7 +904,7 @@ class UserRolePageState extends State<UserRolePage> {
                       ),
                     ),
                     onPressed: () => showFormDialog(),
-                    child: Row(
+                    child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.add, color: Colors.white),
@@ -675,136 +915,349 @@ class UserRolePageState extends State<UserRolePage> {
                   ),
               ],
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 26),
             Expanded(
-              child: SingleChildScrollView(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Column(
-                  children:
-                      userList
-                          .where(
-                            (user) =>
-                                filteredList.any((ur) => ur.userId == user.id),
-                          )
-                          .map((user) {
-                            final userRolesForUser =
-                                filteredList
-                                    .where((ur) => ur.userId == user.id)
-                                    .toList();
-                            return Card(
-                              color: mainBgColor,
-                              elevation: 0,
-                              margin: EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 8,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: ListView.separated(
+                        itemCount:
+                            userList
+                                .where(
+                                  (user) => filteredList.any(
+                                    (ur) => ur.userId == user.id,
+                                  ),
+                                )
+                                .length,
+                        separatorBuilder:
+                            (context, index) => Divider(
+                              height: 1,
+                              color: Colors.grey.withOpacity(0.2),
+                            ),
+                        itemBuilder: (context, index) {
+                          final filteredUsers =
+                              userList
+                                  .where(
+                                    (user) => filteredList.any(
+                                      (ur) => ur.userId == user.id,
+                                    ),
+                                  )
+                                  .toList();
+
+                          final user = filteredUsers[index];
+
+                          final userRolesForUser =
+                              filteredList
+                                  .where((ur) => ur.userId == user.id)
+                                  .toList();
+
+                          final roleChips =
+                              userRolesForUser
+                                  .expand((userRole) => userRole.roles ?? [])
+                                  .map((assignedRole) {
+                                    final matchedRole = roleList.firstWhere(
+                                      (r) => r.id == assignedRole.roleId,
+                                      orElse:
+                                          () => Roles(
+                                            'unknown',
+                                            'Unknown',
+                                            '',
+                                            null,
+                                          ),
+                                    );
+                                    return matchedRole.name;
+                                  })
+                                  .toList();
+                          if (!isMobile) {
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 14,
+                                horizontal: 12,
                               ),
-                              child: Theme(
-                                data: Theme.of(
-                                  context,
-                                ).copyWith(dividerColor: Colors.transparent),
-                                child: ExpansionTile(
-                                  collapsedBackgroundColor: secondaryColor,
-                                  backgroundColor: secondaryBgButton,
-                                  tilePadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: primaryColor.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        user.fullName
+                                            .trim()
+                                            .split(' ')
+                                            .map((e) => e[0])
+                                            .take(2)
+                                            .join()
+                                            .toUpperCase(),
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w600,
+                                          color: primaryColor,
+                                        ),
+                                      ),
+                                    ),
                                   ),
-                                  childrenPadding: EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                  ),
-                                  title: Text(user.fullName),
-                                  children: [
-                                    Column(
+                                  const SizedBox(width: 12),
+
+                                  Expanded(
+                                    child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      children:
-                                          userRolesForUser.expand((userRole) {
-                                            return userRole.roles!.map((
-                                              assignedRole,
-                                            ) {
-                                              final matchedRole = roleList
-                                                  .firstWhere(
-                                                    (r) =>
-                                                        r.id ==
-                                                        assignedRole.roleId,
-                                                    orElse:
-                                                        () => Roles(
-                                                          'unknown',
-                                                          'Unknown',
-                                                          '',
-                                                          null,
-                                                        ),
-                                                  );
-                                              return Container(
-                                                width: double.infinity,
-                                                padding: EdgeInsets.symmetric(
-                                                  vertical: 4,
-                                                  horizontal: 16,
-                                                ),
-                                                child: Text(matchedRole.name),
-                                              );
-                                            });
-                                          }).toList(),
-                                    ),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.end,
                                       children: [
-                                        IconButton(
-                                          icon: Icon(Icons.edit, size: 20),
-                                          onPressed:
-                                              () => showFormDialog(
-                                                id: user.id,
-                                                selectedUserId: user.id,
-                                              ),
-                                        ),
-                                        IconButton(
-                                          icon: Icon(
-                                            Icons.delete,
-                                            color: primaryColor,
+                                        Text(
+                                          user.fullName,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
                                           ),
-                                          onPressed:
-                                              () => showDeleteDialog(user.id),
+                                        ),
+                                        const SizedBox(height: 5),
+                                        Wrap(
+                                          spacing: 5,
+                                          runSpacing: 4,
+                                          children:
+                                              roleChips.map((roleName) {
+                                                return Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 3,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: primaryColor
+                                                        .withValues(
+                                                          alpha: 0.07,
+                                                        ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    roleName,
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: primaryColor,
+                                                    ),
+                                                  ),
+                                                );
+                                              }).toList(),
                                         ),
                                       ],
                                     ),
-                                  ],
-                                ),
+                                  ),
+
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      IconButton(
+                                        icon: Icon(
+                                          Icons.edit_outlined,
+                                          size: 18,
+                                        ),
+                                        onPressed:
+                                            () => showFormDialog(
+                                              id: user.id,
+                                              selectedUserId: user.id,
+                                            ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(
+                                          CupertinoIcons.delete_simple,
+                                          color: Colors.redAccent,
+                                          size: 18,
+                                        ),
+                                        onPressed:
+                                            () => showDeleteDialog(user.id),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             );
-                          })
-                          .toList(),
+                          }
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 14,
+                              horizontal: 4,
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 38,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: primaryColor.withOpacity(0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      user.fullName
+                                          .trim()
+                                          .split(' ')
+                                          .map((e) => e[0])
+                                          .take(2)
+                                          .join()
+                                          .toUpperCase(),
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        user.fullName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 5),
+                                      Wrap(
+                                        spacing: 5,
+                                        runSpacing: 4,
+                                        children:
+                                            roleChips.map((roleName) {
+                                              return Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 3,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.07),
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  roleName,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: primaryColor,
+                                                  ),
+                                                ),
+                                              );
+                                            }).toList(),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                                PopupMenuButton<String>(
+                                  color: Theme.of(context).cardColor,
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    color: Colors.grey.shade500,
+                                  ),
+                                  onSelected: (value) {
+                                    if (value == 'edit') {
+                                      showFormDialog(
+                                        id: user.id,
+                                        selectedUserId: user.id,
+                                      );
+                                    }
+                                    if (value == 'delete') {
+                                      showDeleteDialog(user.id.toString());
+                                    }
+                                  },
+                                  itemBuilder:
+                                      (_) => [
+                                        PopupMenuItem(
+                                          value: 'edit',
+                                          child: Row(
+                                            children: const [
+                                              Icon(
+                                                Icons.edit_outlined,
+                                                size: 18,
+                                              ),
+                                              SizedBox(width: 8),
+                                              Text('Edit'),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                CupertinoIcons.delete_simple,
+                                                color: Colors.redAccent,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              const Text('Delete'),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      color: Theme.of(context).cardColor,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          PaginationInfo(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                          ),
+                          PaginationControls(
+                            currentPage: _currentPage,
+                            totalItems: _totalCount,
+                            itemsPerPage: _pageSize,
+                            isLoading: _isLoading,
+                            onPageChanged: (page) => fetchUserRoles(page: page),
+                          ),
+                          const SizedBox(width: 60),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.all(10),
-              color: secondaryColor,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PaginationInfo(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                  ),
-                  PaginationControls(
-                    currentPage: _currentPage,
-                    totalItems: _totalCount,
-                    itemsPerPage: _pageSize,
-                    isLoading: _isLoading,
-                    onPageChanged: (page) => fetchUserRoles(page: page),
-                  ),
-                  Container(width: 60),
-                ],
               ),
             ),
           ],
         ),
       ),
       floatingActionButton:
-          isMinimized
+          isMobile
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
-                child: Icon(Icons.add),
+                child: const Icon(Icons.add, color: Colors.white),
               )
               : null,
     );

@@ -264,7 +264,7 @@ class TeamPageState extends State<TeamPage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      labelStyle: const TextStyle(color: grey, fontSize: 14),
                       labelText: 'Search Team',
                       prefixIcon: Icon(
                         Icons.search,
@@ -276,7 +276,7 @@ class TeamPageState extends State<TeamPage> {
                       ),
                       filled: true,
                       fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
+                      contentPadding: const EdgeInsets.symmetric(
                         vertical: 5,
                         horizontal: 5,
                       ),
@@ -323,44 +323,6 @@ class TeamPageState extends State<TeamPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// DESKTOP HEADER
-                    if (!isMobile)
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.grey.shade300),
-                          ),
-                        ),
-                        child: Row(
-                          children: const [
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                "Team Name",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 5),
-
                     Expanded(
                       child:
                           _isLoading
@@ -369,156 +331,201 @@ class TeamPageState extends State<TeamPage> {
                                   color: primaryColor,
                                 ),
                               )
-                              : ListView.builder(
+                              : ListView.separated(
                                 itemCount: filteredList.length,
+                                separatorBuilder:
+                                    (context, index) => Divider(
+                                      height: 1,
+                                      color: Colors.grey.withValues(alpha: 0.2),
+                                    ),
                                 itemBuilder: (context, index) {
                                   final team = filteredList[index];
-                                  int itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
+
+                                  final initials =
+                                      team.name.trim().isNotEmpty
+                                          ? team.name
+                                              .trim()
+                                              .split(' ')
+                                              .map((e) => e[0])
+                                              .take(2)
+                                              .join()
+                                              .toUpperCase()
+                                          : '?';
                                   if (!isMobile) {
-                                    return Container(
+                                    return Padding(
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade200,
-                                          ),
-                                        ),
+                                        vertical: 14,
+                                        horizontal: 12,
                                       ),
                                       child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Text("$itemNumber"),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Text(team.name),
-                                          ),
-
-                                          Expanded(
-                                            flex: 2,
-                                            child: Row(
-                                              children: [
-                                                Tooltip(
-                                                  message: 'Edit',
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      Icons.edit_outlined,
-                                                    ),
-                                                    onPressed: () {
-                                                      showFormDialog(
-                                                        id: team.id.toString(),
-                                                        name: team.name,
-                                                      );
-                                                    },
-                                                  ),
-                                                ),
-
-                                                IconButton(
-                                                  icon: const Icon(
-                                                    CupertinoIcons
-                                                        .delete_simple,
-                                                    color: Colors.redAccent,
-                                                  ),
-                                                  onPressed:
-                                                      () => showDeleteDialog(
-                                                        team.id.toString(),
-                                                      ),
-                                                ),
-                                              ],
+                                          // Avatar
+                                          Container(
+                                            width: 38,
+                                            height: 38,
+                                            decoration: BoxDecoration(
+                                              color: primaryColor.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              shape: BoxShape.circle,
                                             ),
+                                            child: Center(
+                                              child: Text(
+                                                initials,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: primaryColor,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+
+                                          // Team name
+                                          Expanded(
+                                            child: Text(
+                                              team.name,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+
+                                          // Actions
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.edit_outlined,
+                                                  size: 18,
+                                                ),
+                                                onPressed:
+                                                    () => showFormDialog(
+                                                      id: team.id.toString(),
+                                                      name: team.name,
+                                                    ),
+                                              ),
+                                              IconButton(
+                                                icon: Icon(
+                                                  CupertinoIcons.delete_simple,
+                                                  size: 18,
+                                                  color: Colors.redAccent,
+                                                ),
+                                                onPressed:
+                                                    () => showDeleteDialog(
+                                                      team.id.toString(),
+                                                    ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
                                     );
                                   }
-
-                                  return Container(
+                                  return Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
+                                      vertical: 14,
+                                      horizontal: 4,
                                     ),
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey.shade200,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Column(
+                                    child: Row(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          CrossAxisAlignment.center,
                                       children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              "$itemNumber",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
+                                        // Avatar
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: primaryColor.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              initials,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: primaryColor,
                                               ),
                                             ),
-                                            const Spacer(),
-                                            PopupMenuButton<String>(
-                                              color:
-                                                  Theme.of(context).cardColor,
-                                              icon: const Icon(Icons.more_vert),
-                                              onSelected: (value) async {
-                                                if (value == 'edit') {
-                                                  showFormDialog(
-                                                    id: team.id.toString(),
-                                                    name: team.name,
-                                                  );
-                                                }
-
-                                                if (value == 'delete') {
-                                                  showDeleteDialog(
-                                                    team.id.toString(),
-                                                  );
-                                                }
-                                              },
-                                              itemBuilder:
-                                                  (_) => [
-                                                    PopupMenuItem(
-                                                      value: 'edit',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            Icons.edit_outlined,
-                                                            size: 18,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text('Edit'),
-                                                        ],
-                                                      ),
-                                                    ),
-
-                                                    PopupMenuItem(
-                                                      value: 'delete',
-
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            CupertinoIcons
-                                                                .delete_simple,
-                                                            color: Colors.red,
-                                                            size: 18,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text('Delete'),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                            ),
-                                          ],
+                                          ),
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text("Team Name: ${team.name}"),
+                                        const SizedBox(width: 12),
+
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                team.name,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        PopupMenuButton<String>(
+                                          color: Theme.of(context).cardColor,
+                                          icon: Icon(
+                                            Icons.more_vert,
+                                            color: Colors.grey.shade500,
+                                          ),
+                                          onSelected: (value) {
+                                            if (value == 'edit') {
+                                              showFormDialog(
+                                                id: team.id.toString(),
+                                                name: team.name,
+                                              );
+                                            }
+                                            if (value == 'delete') {
+                                              showDeleteDialog(
+                                                team.id.toString(),
+                                              );
+                                            }
+                                          },
+                                          itemBuilder:
+                                              (_) => [
+                                                PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(
+                                                        Icons.edit_outlined,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Edit'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        CupertinoIcons
+                                                            .delete_simple,
+                                                        color: Colors.redAccent,
+                                                        size: 18,
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      const Text('Delete'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                        ),
                                       ],
                                     ),
                                   );
@@ -559,7 +566,7 @@ class TeamPageState extends State<TeamPage> {
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
-                child: Icon(Icons.add, color: Colors.white),
+                child: const Icon(Icons.add, color: Colors.white),
               )
               : null,
     );

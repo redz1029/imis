@@ -9,16 +9,15 @@ class RolesService {
   final Dio dio;
 
   RolesService(this.dio);
-
   Future<PageList<Roles>> getRoles({
     int page = 1,
     int pageSize = 15,
     String? searchQuery,
   }) async {
     final paginationUtil = PaginationUtil(dio);
+
     return await paginationUtil.fetchPaginatedData<Roles>(
-      endpoint: ApiEndpoint().roles,
-      // endpoint: '${ApiEndpoint().roles}/page',
+      endpoint: '${ApiEndpoint.baseUrl}/page/roles',
       page: page,
       pageSize: pageSize,
       searchQuery: searchQuery,

@@ -508,7 +508,6 @@ class OfficePageState extends State<OfficePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// DESKTOP HEADER
                     if (!isMobile)
                       Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -826,7 +825,7 @@ class OfficePageState extends State<OfficePage> {
                   await fetchOffices();
                   MotionToast.success(
                     toastAlignment: Alignment.topCenter,
-                    description: Text('Officedeleted successfully'),
+                    description: Text('Office deleted successfully'),
                   ).show(context);
                 } catch (e) {
                   MotionToast.error(description: Text('Failed to Delete Role'));

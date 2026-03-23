@@ -1204,7 +1204,6 @@ class PerformanceGovernanceSystemPageState
                   ),
                   const SizedBox(height: 8),
 
-                  /// OFFICE
                   SizedBox(
                     height: 38,
                     child: PermissionWidget(
@@ -1244,7 +1243,6 @@ class PerformanceGovernanceSystemPageState
 
                   const SizedBox(height: 8),
 
-                  /// START DATE
                   SizedBox(
                     height: 38,
                     child: SearchableDropdown(
@@ -1285,7 +1283,6 @@ class PerformanceGovernanceSystemPageState
 
                   const SizedBox(height: 8),
 
-                  /// END DATE
                   SizedBox(
                     height: 38,
                     child: SearchableDropdown(
@@ -1338,7 +1335,6 @@ class PerformanceGovernanceSystemPageState
                   ),
                   const SizedBox(width: 8),
 
-                  /// OFFICE
                   _buildDropdown(
                     child: PermissionWidget(
                       permission: AppPermissions.viewOffice,
@@ -1377,7 +1373,6 @@ class PerformanceGovernanceSystemPageState
 
                   const SizedBox(width: 8),
 
-                  /// START DATE
                   _buildDropdown(
                     child: SearchableDropdown(
                       items: [
@@ -1417,7 +1412,6 @@ class PerformanceGovernanceSystemPageState
 
                   const SizedBox(width: 8),
 
-                  /// END DATE
                   _buildDropdown(
                     child: SearchableDropdown(
                       items: [
@@ -1457,7 +1451,6 @@ class PerformanceGovernanceSystemPageState
 
                   const Spacer(),
 
-                  /// ADD BUTTON
                   PermissionWidget(
                     permission: AppPermissions.addPerformanceGovernanceSystem,
                     child: ElevatedButton.icon(
@@ -1500,7 +1493,6 @@ class PerformanceGovernanceSystemPageState
               ),
             const SizedBox(height: 26),
 
-            /// CARD CONTAINER
             Expanded(
               child: Container(
                 padding: const EdgeInsets.all(20),

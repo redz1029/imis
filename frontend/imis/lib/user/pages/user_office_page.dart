@@ -546,7 +546,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                         borderSide: BorderSide(color: primaryColor),
                       ),
                       floatingLabelBehavior: FloatingLabelBehavior.never,
-                      labelStyle: TextStyle(color: grey, fontSize: 14),
+                      labelStyle: const TextStyle(color: grey, fontSize: 14),
                       labelText: 'Search...',
                       prefixIcon: Icon(
                         Icons.search,
@@ -558,7 +558,7 @@ class UserOfficePageState extends State<UserOfficePage> {
                       ),
                       filled: true,
                       fillColor: secondaryColor,
-                      contentPadding: EdgeInsets.symmetric(
+                      contentPadding: const EdgeInsets.symmetric(
                         vertical: 5,
                         horizontal: 5,
                       ),
@@ -605,50 +605,6 @@ class UserOfficePageState extends State<UserOfficePage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    /// DESKTOP HEADER
-                    if (!isMobile)
-                      Container(
-                        padding: const EdgeInsets.symmetric(vertical: 10),
-                        decoration: BoxDecoration(
-                          border: Border(
-                            bottom: BorderSide(color: Colors.grey.shade300),
-                          ),
-                        ),
-                        child: Row(
-                          children: const [
-                            Expanded(
-                              flex: 1,
-                              child: Text(
-                                "#",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 3,
-                              child: Text(
-                                "Name",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                "Office",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                            Expanded(
-                              flex: 2,
-                              child: Text(
-                                "Actions",
-                                style: TextStyle(fontWeight: FontWeight.bold),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    const SizedBox(height: 5),
-
                     Expanded(
                       child:
                           _isLoading
@@ -657,13 +613,14 @@ class UserOfficePageState extends State<UserOfficePage> {
                                   color: primaryColor,
                                 ),
                               )
-                              : ListView.builder(
+                              : ListView.separated(
                                 itemCount: filteredList.length,
+                                separatorBuilder:
+                                    (context, index) => Divider(
+                                      height: 1,
+                                      color: Colors.grey.withOpacity(0.2),
+                                    ),
                                 itemBuilder: (context, index) {
-                                  int itemNumber =
-                                      ((_currentPage - 1) * _pageSize) +
-                                      index +
-                                      1;
                                   final userOffice = filteredList[index];
                                   final matchedOffice = officenameList
                                       .firstWhere(
@@ -680,7 +637,6 @@ class UserOfficePageState extends State<UserOfficePage> {
                                             ),
                                       );
                                   final officeName = matchedOffice.name;
-
                                   final matchUserName = userList.firstWhere(
                                     (user) => user.id == userOffice.userId,
                                     orElse:
@@ -691,170 +647,270 @@ class UserOfficePageState extends State<UserOfficePage> {
                                         ),
                                   );
                                   final userName = matchUserName.fullName;
+
+                                  final initials =
+                                      userName.trim().isNotEmpty
+                                          ? userName
+                                              .trim()
+                                              .split(' ')
+                                              .map((e) => e[0])
+                                              .take(2)
+                                              .join()
+                                              .toUpperCase()
+                                          : '?';
+
                                   if (!isMobile) {
-                                    return Container(
+                                    return Padding(
                                       padding: const EdgeInsets.symmetric(
-                                        vertical: 6,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        border: Border(
-                                          bottom: BorderSide(
-                                            color: Colors.grey.shade200,
-                                          ),
-                                        ),
+                                        vertical: 10,
+                                        horizontal: 4,
                                       ),
                                       child: Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.center,
                                         children: [
-                                          Expanded(
-                                            flex: 1,
-                                            child: Text("$itemNumber"),
-                                          ),
-                                          Expanded(
-                                            flex: 3,
-                                            child: Text(userName),
-                                          ),
-                                          Expanded(
-                                            flex: 2,
-                                            child: Text(officeName),
-                                          ),
-                                          Expanded(
-                                            flex: 2,
-                                            child: Row(
-                                              children: [
-                                                Tooltip(
-                                                  message: 'Edit',
-                                                  child: IconButton(
-                                                    icon: const Icon(
-                                                      Icons.edit_outlined,
-                                                    ),
-                                                    onPressed: () {
-                                                      showFormDialog(
-                                                        id:
-                                                            userOffice.id
-                                                                .toString(),
-                                                        selectedUserId:
-                                                            userOffice.userId,
-                                                        selectedOfficeId:
-                                                            userOffice.officeId
-                                                                .toString(),
-                                                        isOfficeHead:
-                                                            userOffice
-                                                                .isOfficeHead,
-                                                      );
-                                                    },
-                                                  ),
+                                          // Avatar
+                                          Container(
+                                            width: 36,
+                                            height: 36,
+                                            decoration: BoxDecoration(
+                                              color: primaryColor.withValues(
+                                                alpha: 0.1,
+                                              ),
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Center(
+                                              child: Text(
+                                                initials,
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: primaryColor,
                                                 ),
+                                              ),
+                                            ),
+                                          ),
 
-                                                IconButton(
-                                                  icon: const Icon(
-                                                    CupertinoIcons
-                                                        .delete_simple,
-                                                    color: Colors.redAccent,
+                                          const SizedBox(width: 12),
+
+                                          Expanded(
+                                            flex: 4,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
+                                              children: [
+                                                Text(
+                                                  userName,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 14,
                                                   ),
-                                                  onPressed:
-                                                      () => showDeleteDialog(
-                                                        userOffice.id
-                                                            .toString(),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                                const SizedBox(height: 4),
+                                                Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 10,
+                                                        vertical: 4,
                                                       ),
+                                                  decoration: BoxDecoration(
+                                                    color: primaryColor
+                                                        .withValues(
+                                                          alpha: 0.07,
+                                                        ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
+                                                  ),
+                                                  child: Text(
+                                                    officeName,
+                                                    style: TextStyle(
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: primaryColor,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
                                                 ),
                                               ],
                                             ),
+                                          ),
+
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.edit_outlined,
+                                                  size: 18,
+                                                ),
+                                                onPressed:
+                                                    () => showFormDialog(
+                                                      id:
+                                                          userOffice.id
+                                                              .toString(),
+                                                      selectedUserId:
+                                                          userOffice.userId,
+                                                      selectedOfficeId:
+                                                          userOffice.officeId
+                                                              .toString(),
+                                                      isOfficeHead:
+                                                          userOffice
+                                                              .isOfficeHead,
+                                                    ),
+                                              ),
+                                              IconButton(
+                                                icon: Icon(
+                                                  CupertinoIcons.delete_simple,
+                                                  size: 18,
+                                                  color: Colors.redAccent,
+                                                ),
+                                                onPressed:
+                                                    () => showDeleteDialog(
+                                                      userOffice.id.toString(),
+                                                    ),
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
                                     );
                                   }
 
-                                  return Container(
+                                  return Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      vertical: 12,
+                                      vertical: 14,
+                                      horizontal: 4,
                                     ),
-                                    margin: const EdgeInsets.only(bottom: 12),
-                                    decoration: BoxDecoration(
-                                      border: Border(
-                                        bottom: BorderSide(
-                                          color: Colors.grey.shade200,
-                                        ),
-                                      ),
-                                    ),
-                                    child: Column(
+                                    child: Row(
                                       crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                          CrossAxisAlignment.center,
                                       children: [
-                                        Row(
-                                          children: [
-                                            Text(
-                                              "$itemNumber",
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
+                                        // Avatar
+                                        Container(
+                                          width: 36,
+                                          height: 36,
+                                          decoration: BoxDecoration(
+                                            color: primaryColor.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              initials,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: primaryColor,
                                               ),
                                             ),
-                                            const Spacer(),
-                                            PopupMenuButton<String>(
-                                              color:
-                                                  Theme.of(context).cardColor,
-                                              icon: const Icon(Icons.more_vert),
-                                              onSelected: (value) async {
-                                                if (value == 'edit') {
-                                                  showFormDialog(
-                                                    id:
-                                                        userOffice.id
-                                                            .toString(),
-                                                    selectedUserId:
-                                                        userOffice.userId,
-                                                    selectedOfficeId:
-                                                        userOffice.officeId
-                                                            .toString(),
-                                                    isOfficeHead:
-                                                        userOffice.isOfficeHead,
-                                                  );
-                                                }
-
-                                                if (value == 'delete') {
-                                                  showDeleteDialog(
-                                                    userOffice.id.toString(),
-                                                  );
-                                                }
-                                              },
-                                              itemBuilder:
-                                                  (_) => [
-                                                    PopupMenuItem(
-                                                      value: 'edit',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            Icons.edit_outlined,
-                                                            size: 18,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text('Edit'),
-                                                        ],
-                                                      ),
-                                                    ),
-
-                                                    PopupMenuItem(
-                                                      value: 'delete',
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            CupertinoIcons
-                                                                .delete_simple,
-                                                            color: Colors.red,
-                                                            size: 18,
-                                                          ),
-                                                          SizedBox(width: 8),
-                                                          Text('Delete'),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                            ),
-                                          ],
+                                          ),
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text("Name: $userName"),
-                                        const SizedBox(height: 4),
-                                        Text("Office: $officeName"),
+                                        const SizedBox(width: 12),
+
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                userName,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 5),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 8,
+                                                      vertical: 3,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color: primaryColor
+                                                      .withValues(alpha: 0.07),
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                ),
+                                                child: Text(
+                                                  officeName,
+                                                  style: TextStyle(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: primaryColor,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+
+                                        PopupMenuButton<String>(
+                                          color: Theme.of(context).cardColor,
+                                          icon: Icon(
+                                            Icons.more_vert,
+                                            color: Colors.grey.shade500,
+                                          ),
+                                          onSelected: (value) {
+                                            if (value == 'edit') {
+                                              showFormDialog(
+                                                id: userOffice.id.toString(),
+                                                selectedUserId:
+                                                    userOffice.userId,
+                                                selectedOfficeId:
+                                                    userOffice.officeId
+                                                        .toString(),
+                                                isOfficeHead:
+                                                    userOffice.isOfficeHead,
+                                              );
+                                            }
+                                            if (value == 'delete') {
+                                              showDeleteDialog(
+                                                userOffice.id.toString(),
+                                              );
+                                            }
+                                          },
+                                          itemBuilder:
+                                              (_) => [
+                                                PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: const [
+                                                      Icon(
+                                                        Icons.edit_outlined,
+                                                        size: 18,
+                                                      ),
+                                                      SizedBox(width: 8),
+                                                      Text('Edit'),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        CupertinoIcons
+                                                            .delete_simple,
+                                                        color: Colors.redAccent,
+                                                        size: 18,
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      const Text('Delete'),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                        ),
                                       ],
                                     ),
                                   );
@@ -896,7 +952,7 @@ class UserOfficePageState extends State<UserOfficePage> {
               ? FloatingActionButton(
                 backgroundColor: primaryColor,
                 onPressed: () => showFormDialog(),
-                child: Icon(Icons.add, color: Colors.white),
+                child: const Icon(Icons.add, color: Colors.white),
               )
               : null,
     );
